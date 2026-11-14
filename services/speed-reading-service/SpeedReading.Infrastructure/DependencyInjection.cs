@@ -108,17 +108,29 @@ public static class DependencyInjection
                     .CreateProtector("EduPlatform.SpeedReading.NewsletterTokens.v1"),
                 serviceProvider.GetRequiredService<TimeProvider>(),
                 configuration["PublicApp:BaseUrl"] ?? "https://masterhizliokuma.com"));
+        // Billing parity (14.11.2026). Without a message bus (unit hosts) nothing is sent and the services work as before.
+        static ISpeedReadingSubscriptionNotices? Notices(IServiceProvider serviceProvider) =>
+            serviceProvider.GetService<MassTransit.IPublishEndpoint>() is { } publishEndpoint
+                ? new SpeedReadingSubscriptionNotices(serviceProvider.GetRequiredService<ISpeedReadingDataContext>(), publishEndpoint)
+                : null;
         services.AddScoped<ISpeedReadingSubscription>(serviceProvider =>
             new LegacySpeedReadingSubscription(
                 serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
                 serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>(),
                 serviceProvider.GetRequiredService<ISpeedReadingPaymentProvider>(),
                 serviceProvider.GetRequiredService<IyzicoOptions>(),
-                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
+                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>())
+            { Notices = Notices(serviceProvider) });
         services.AddScoped<ISpeedReadingSales>(serviceProvider =>
             new SpeedReadingSalesService(
                 serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
-                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
+                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>())
+            { Notices = Notices(serviceProvider) });
+        services.AddScoped<ISpeedReadingSubscriptionLifecycle>(serviceProvider =>
+            new SpeedReadingSubscriptionLifecycle(
+                serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>(),
+                Notices(serviceProvider),
+                serviceProvider.GetRequiredService<TimeProvider>()));
         services.AddScoped<ISpeedReadingNotifications, LegacySpeedReadingNotifications>();
         services.AddScoped<ISpeedReadingAnnouncements, LegacySpeedReadingAnnouncements>();
         services.AddScoped<ISpeedReadingEmailTemplates, LegacySpeedReadingEmailTemplates>();

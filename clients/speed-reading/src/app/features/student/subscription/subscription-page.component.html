@@ -1,0 +1,55 @@
+<section class="subscription-page" data-testid="subscription-page">
+  <header>
+    <h1>Aboneliğim</h1>
+    <p>Abonelik durumunuz, ödeme talepleriniz, faturalarınız ve cayma talebiniz burada.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="muted" role="status">Yükleniyor…</p>
+  } @else {
+    @if (failed()) {
+      <p class="notice error" role="alert">Bilgilerin bir kısmı yüklenemedi. Sayfayı yenileyip yeniden deneyin.</p>
+    }
+
+    <div class="card" data-testid="subscription-status">
+      <h2>Abonelik durumu</h2>
+      @if (active().length) {
+        @for (subscription of active(); track subscription.id) {
+          <div class="status-row">
+            <div>
+              <strong>{{ subscription.plan.name }}</strong>
+              <span>{{ subscription.productName }}</span>
+            </div>
+            <div class="until">
+              <span class="badge active">Etkin</span>
+              @if (subscription.endDate) {
+                <span>{{ subscription.endDate | date:'d MMMM y':'':'tr' }} gününe kadar</span>
+              } @else {
+                <span>Süresiz</span>
+              }
+            </div>
+          </div>
+        }
+        @if (endsSoon()) {
+          <p class="notice" data-testid="ends-soon">Aboneliğiniz bir hafta içinde sona eriyor. Şimdi yenilerseniz yeni dönem, mevcut dönemin bittiği gün başlar.</p>
+          <a class="action" routerLink="/odeme">Aboneliği yenile</a>
+        }
+      } @else {
+        <p class="muted" data-testid="no-subscription">
+          Etkin bir aboneliğiniz yok.
+          @if (lastEnded(); as ended) { Son aboneliğiniz ({{ ended.plan.name }}) {{ ended.endDate | date:'d MMMM y':'':'tr' }} günü sona erdi. }
+        </p>
+        <a class="action" routerLink="/odeme">Planları gör</a>
+      }
+    </div>
+
+    <div class="card">
+      <h2>Ödeme talepleriniz</h2>
+      @if (requests().length) {
+        <app-payment-requests [requests]="requests()" (changed)="replaceRequest($event)" />
+      } @else {
+        <p class="muted" data-testid="no-requests">Henüz bir ödeme talebiniz yok.</p>
+      }
+    </div>
+  }
+</section>

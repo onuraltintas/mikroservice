@@ -100,6 +100,8 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
     DbSet<LegacyBankTransferPaymentSettings> ISpeedReadingDataContext.BankTransferPaymentSettings => Set<LegacyBankTransferPaymentSettings>();
     DbSet<LegacyBankTransferPaymentRequest> ISpeedReadingDataContext.BankTransferPaymentRequests => Set<LegacyBankTransferPaymentRequest>();
+    DbSet<LegacySubscriptionInvoice> ISpeedReadingDataContext.SubscriptionInvoices => Set<LegacySubscriptionInvoice>();
+    DbSet<LegacySubscriptionNoticeReceipt> ISpeedReadingDataContext.SubscriptionNoticeReceipts => Set<LegacySubscriptionNoticeReceipt>();
     DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Set<LegacyUserNotification>();
     DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => Set<LegacyNotificationPreference>();
     DbSet<LegacyNotificationTypePreference> ISpeedReadingDataContext.NotificationTypePreferences => Set<LegacyNotificationTypePreference>();
@@ -837,6 +839,24 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.SellerEmail).HasMaxLength(320);
             entity.Property(item => item.SellerPhone).HasMaxLength(40);
         });
+        modelBuilder.Entity<LegacySubscriptionInvoice>(entity =>
+        {
+            entity.ToTable("subscription_invoices");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.InvoiceNumber).HasMaxLength(40).IsRequired();
+            entity.Property(item => item.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.Sha256).HasMaxLength(64).IsRequired();
+            entity.HasIndex(item => item.PaymentRequestId).IsUnique();
+            entity.HasIndex(item => item.InvoiceNumber).IsUnique();
+        });
+        modelBuilder.Entity<LegacySubscriptionNoticeReceipt>(entity =>
+        {
+            entity.ToTable("subscription_notice_receipts");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Stage).HasMaxLength(40).IsRequired();
+            entity.HasIndex(item => new { item.SubscriptionId, item.Stage }).IsUnique();
+        });
         modelBuilder.Entity<LegacyBankTransferPaymentRequest>(entity =>
         {
             entity.ToTable("bank_transfer_payment_requests");
@@ -854,6 +874,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.WithdrawalStatus).HasMaxLength(20);
             entity.Property(item => item.WithdrawalReason).HasMaxLength(500);
             entity.Property(item => item.WithdrawalReviewNote).HasMaxLength(500);
+            entity.Property(item => item.InvoiceNumber).HasMaxLength(40);
             entity.HasIndex(item => new { item.UserId, item.CreatedAt });
             entity.HasIndex(item => new { item.Status, item.CreatedAt });
             entity.HasIndex(item => new { item.UserId, item.PaymentReference }).IsUnique();

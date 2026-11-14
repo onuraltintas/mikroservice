@@ -2,6 +2,7 @@ using System.Text.Json;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assignments;
+using EduPlatform.Shared.Contracts.Events.SpeedReading;
 using SpeedReading.Application.Subscription;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -16,6 +17,8 @@ public sealed class SpeedReadingSalesService : ISpeedReadingSales
 {
     private readonly ISpeedReadingDataContext db;
     private readonly ISpeedReadingUserDirectory userDirectory;
+    /// <summary>Billing parity (14.11.2026): tells the payer and the admin; null where nothing is sent (older tests).</summary>
+    internal ISpeedReadingSubscriptionNotices? Notices { get; init; }
 
     internal SpeedReadingSalesService(ISpeedReadingDataContext db, ISpeedReadingUserDirectory userDirectory)
     {
@@ -109,6 +112,9 @@ public sealed class SpeedReadingSalesService : ISpeedReadingSales
         request.WithdrawalReviewedAt = null;
         request.WithdrawalReviewedBy = null;
         request.UpdatedAt = now;
+        if (Notices is not null)
+            await Notices.StageAsync(new(null, null, SpeedReadingSubscriptionNoticeKinds.WithdrawalRequested, row.Value.Plan.Name, null,
+                request.PaymentReference, now), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return LegacySpeedReadingSubscription.ToBankTransferPaymentRequestSummary(request, row.Value.Plan);
     }
@@ -141,8 +147,87 @@ public sealed class SpeedReadingSalesService : ISpeedReadingSales
         request.WithdrawalReviewedAt = now;
         request.WithdrawalReviewedBy = actorId;
         request.UpdatedAt = now;
+        if (Notices is not null)
+            await Notices.StageAsync(new(request.UserId, request.UserEmail,
+                review.Approve ? SpeedReadingSubscriptionNoticeKinds.WithdrawalApproved : SpeedReadingSubscriptionNoticeKinds.WithdrawalRejected,
+                row.Value.Plan.Name, null, review.Approve ? null : note, now), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return LegacySpeedReadingSubscription.ToBankTransferPaymentRequestSummary(request, row.Value.Plan);
+    }
+
+    public const int MaxInvoiceBytes = 10 * 1024 * 1024;
+
+    public async Task<BankTransferPaymentRequestSummary?> AttachInvoiceAsync(Guid actorId, Guid requestId, string invoiceNumber, DateOnly issuedOn,
+        string fileName, Stream content, CancellationToken cancellationToken = default)
+    {
+        var number = (invoiceNumber ?? string.Empty).Trim().ToUpperInvariant();
+        if (number.Length is < 3 or > 40 || number.Any(c => !char.IsLetterOrDigit(c) && c is not ('-' or '/' or '.')))
+            throw new BusinessRuleException("Sales.InvoiceInvalid", "Fatura numarası 3–40 karakter olmalı (harf, rakam, - / .).");
+        var now = DateTime.UtcNow;
+        if (issuedOn > DateOnly.FromDateTime(now.AddDays(1)) || issuedOn.Year < 2020)
+            throw new BusinessRuleException("Sales.InvoiceInvalid", "Fatura tarihi geçersiz.");
+        // Only the last part of whatever path the browser sent, on any platform.
+        var name = (fileName ?? string.Empty).Trim();
+        name = name[(name.LastIndexOfAny(['/', '\\']) + 1)..];
+        if (!name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) || name.Length > 255)
+            throw new BusinessRuleException("Sales.InvoiceInvalid", "Fatura PDF dosyası olmalıdır.");
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81_920];
+        int read;
+        while ((read = await content.ReadAsync(chunk, cancellationToken)) > 0)
+        {
+            if (buffer.Length + read > MaxInvoiceBytes) throw new BusinessRuleException("Sales.InvoiceInvalid", "Fatura dosyası en fazla 10 MB olabilir.");
+            buffer.Write(chunk, 0, read);
+        }
+        var bytes = buffer.ToArray();
+        // The file is served back only as a download; it must at least be a PDF.
+        if (bytes.Length < 5 || !bytes.AsSpan(0, 5).SequenceEqual("%PDF-"u8))
+            throw new BusinessRuleException("Sales.InvoiceInvalid", "Dosya geçerli bir PDF değil.");
+
+        var row = await RowAsync(requestId, cancellationToken);
+        if (row is null) return null;
+        var request = row.Value.Request;
+        if (request.Status != BankTransferPaymentRules.ApprovedStatus)
+            throw new BusinessRuleException("Sales.InvoiceNotAllowed", "Yalnız onaylanmış bir ödemeye fatura eklenebilir.");
+        if (await db.SubscriptionInvoices.AnyAsync(item => item.PaymentRequestId == requestId, cancellationToken))
+            throw new BusinessRuleException("Sales.InvoiceExists", "Bu ödemenin faturası zaten kayıtlı; önce kaldırın.");
+        if (await db.SubscriptionInvoices.AnyAsync(item => item.InvoiceNumber == number, cancellationToken))
+            throw new BusinessRuleException("Sales.InvoiceExists", "Bu fatura numarası başka bir ödemede kayıtlı.");
+        db.SubscriptionInvoices.Add(new LegacySubscriptionInvoice
+        {
+            Id = Guid.NewGuid(), PaymentRequestId = requestId, InvoiceNumber = number, IssuedOn = issuedOn, FileName = name, Content = bytes,
+            SizeBytes = bytes.Length, Sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)), CreatedBy = actorId, CreatedAt = now
+        });
+        request.InvoiceNumber = number;
+        request.InvoiceIssuedOn = issuedOn;
+        request.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        return LegacySpeedReadingSubscription.ToBankTransferPaymentRequestSummary(request, row.Value.Plan);
+    }
+
+    public async Task<BankTransferPaymentRequestSummary?> RemoveInvoiceAsync(Guid requestId, CancellationToken cancellationToken = default)
+    {
+        var row = await RowAsync(requestId, cancellationToken);
+        var invoice = await db.SubscriptionInvoices.SingleOrDefaultAsync(item => item.PaymentRequestId == requestId, cancellationToken);
+        if (row is null || invoice is null) return null;
+        db.SubscriptionInvoices.Remove(invoice);
+        row.Value.Request.InvoiceNumber = null;
+        row.Value.Request.InvoiceIssuedOn = null;
+        row.Value.Request.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return LegacySpeedReadingSubscription.ToBankTransferPaymentRequestSummary(row.Value.Request, row.Value.Plan);
+    }
+
+    public async Task<SpeedReadingInvoiceFile?> OpenInvoiceAsync(Guid viewerId, Guid requestId, bool asAdmin, CancellationToken cancellationToken = default)
+    {
+        if (!asAdmin && !await db.BankTransferPaymentRequests.AsNoTracking()
+                .AnyAsync(item => item.Id == requestId && item.UserId == viewerId, cancellationToken))
+            return null;
+        var invoice = await db.SubscriptionInvoices.AsNoTracking()
+            .Where(item => item.PaymentRequestId == requestId)
+            .Select(item => new { item.Content, item.FileName })
+            .SingleOrDefaultAsync(cancellationToken);
+        return invoice is null ? null : new(invoice.Content, invoice.FileName);
     }
 
     private async Task<(LegacyBankTransferPaymentRequest Request, LegacySubscriptionPlan Plan)?> RowAsync(Guid requestId, CancellationToken cancellationToken)

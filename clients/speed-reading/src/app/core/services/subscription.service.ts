@@ -227,6 +227,9 @@ export interface BankTransferPaymentRequest {
   withdrawalReviewedAt?: string | null;
   /** The last moment a withdrawal can be asked (14 days after approval); null while not approved. */
   withdrawableUntil?: string | null;
+  /** Set when the seller recorded the invoice of this payment. */
+  invoiceNumber?: string | null;
+  invoiceIssuedOn?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -329,6 +332,16 @@ export class SubscriptionService {
   requestBankTransferWithdrawal(requestId: string, reason: string | null): Observable<BankTransferPaymentRequest> {
     return this.http.post<any>(`${this.bankTransferUrl}/requests/${requestId}/withdrawal`, { reason })
       .pipe(map(result => result?.data ?? result));
+  }
+
+  /** The buyer's own invoice (PDF) of an approved payment. */
+  downloadInvoice(requestId: string): Observable<Blob> {
+    return this.http.get(`${this.bankTransferUrl}/requests/${requestId}/invoice`, { responseType: 'blob' });
+  }
+
+  /** The signed-in user's own subscriptions, newest first. */
+  getMySubscriptions(): Observable<UserSubscription[]> {
+    return this.http.get<any>(`${this.subsUrl}/my-subscriptions`).pipe(map(result => result?.data ?? result ?? []));
   }
 
   // ── User search (autocomplete) ────────────────────────────────────────────

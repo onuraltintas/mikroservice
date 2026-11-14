@@ -110,7 +110,10 @@ public sealed record BankTransferPaymentRequestSummary(
     string? WithdrawalReviewNote = null,
     DateTime? WithdrawalReviewedAt = null,
     /// <summary>The last moment a withdrawal can be asked: 14 days after the approval; null while not approved.</summary>
-    DateTime? WithdrawableUntil = null);
+    DateTime? WithdrawableUntil = null,
+    /// <summary>Set when the seller recorded the invoice of this payment; the buyer downloads it from the subscription page.</summary>
+    string? InvoiceNumber = null,
+    DateOnly? InvoiceIssuedOn = null);
 
 public sealed record CreateProductRequest(
     string Slug,

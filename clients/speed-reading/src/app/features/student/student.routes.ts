@@ -83,6 +83,12 @@ export const studentRoutes: Routes = [
         loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent)
       },
       {
+        // Billing parity (14.11.2026): open without a subscription too — a buyer follows a pending payment here.
+        path: 'subscription',
+        canActivate: [authGuard],
+        loadComponent: () => import('./subscription/subscription-page.component').then(m => m.SubscriptionPageComponent)
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent)

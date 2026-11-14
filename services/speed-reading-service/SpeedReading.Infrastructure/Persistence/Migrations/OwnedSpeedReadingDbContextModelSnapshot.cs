@@ -4432,6 +4432,13 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<DateOnly?>("InvoiceIssuedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("InvoiceNumber")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PlanId");
@@ -6554,6 +6561,82 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.HasIndex("StudentId", "IsDeleted");
 
                     b.ToTable("adaptive_reading_profiles", "speed_reading");
+                });
+
+            modelBuilder.Entity("SpeedReading.Infrastructure.Legacy.LegacySubscriptionInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateOnly>("IssuedOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("PaymentRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique();
+
+                    b.HasIndex("PaymentRequestId")
+                        .IsUnique();
+
+                    b.ToTable("subscription_invoices", "speed_reading");
+                });
+
+            modelBuilder.Entity("SpeedReading.Infrastructure.Legacy.LegacySubscriptionNoticeReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId", "Stage")
+                        .IsUnique();
+
+                    b.ToTable("subscription_notice_receipts", "speed_reading");
                 });
 
             modelBuilder.Entity("SpeedReading.Infrastructure.Legacy.LegacySubscriptionPlan", b =>

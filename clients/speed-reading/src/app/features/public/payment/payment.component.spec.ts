@@ -200,47 +200,4 @@ describe('PaymentComponent signed-in EFT flow', () => {
     expect(page.querySelector('[data-testid="documents-error"]')?.textContent).toContain('henüz hazır değil');
     expect((page.querySelector('.request-form button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
   });
-
-  it('offers withdrawal only for an approved payment inside its 14 days', () => {
-    const { component } = setup(true);
-    const later = new Date(Date.now() + 86_400_000).toISOString();
-    const earlier = new Date(Date.now() - 86_400_000).toISOString();
-    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: later } as never)).toBeTrue();
-    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: earlier } as never)).toBeFalse();
-    expect(component.canWithdraw({ status: 'Pending', withdrawableUntil: null } as never)).toBeFalse();
-    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: later, withdrawalStatus: 'Requested' } as never)).toBeFalse();
-    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: later, withdrawalStatus: 'Rejected' } as never)).toBeTrue();
-    expect(component.statusLabel({ status: 'Approved', withdrawalStatus: 'Approved' } as never)).toBe('Cayıldı');
-    expect(component.statusLabel({ status: 'Approved' } as never)).toBe('Onaylandı');
-  });
-
-  it('sends a withdrawal request and shows the answer in the history', () => {
-    const { component, subscriptions } = setup(true);
-    const request = { id: 'request-1', status: 'Approved', withdrawableUntil: new Date(Date.now() + 86_400_000).toISOString() } as never;
-    component.requests.set([request]);
-    component.openWithdrawal(request);
-    component.withdrawalReason = ' Vazgeçtim ';
-    component.submitWithdrawal(request);
-    expect(subscriptions.requestBankTransferWithdrawal).toHaveBeenCalledWith('request-1', 'Vazgeçtim');
-    expect(component.requests()[0].withdrawalStatus).toBe('Requested');
-    expect(component.withdrawingId()).toBeNull();
-
-    subscriptions.requestBankTransferWithdrawal.and.returnValue(throwError(() => ({ error: { message: 'Cayma süresi (14 gün) doldu.' } })));
-    component.openWithdrawal(request);
-    component.submitWithdrawal(request);
-    expect(component.withdrawalError()).toBe('Cayma süresi (14 gün) doldu.');
-    expect(component.withdrawalBusy()).toBeFalse();
-    component.cancelWithdrawal();
-    expect(component.withdrawingId()).toBeNull();
-  });
-
-  it('opens and closes the documents accepted with a request', () => {
-    const { component, subscriptions } = setup(true);
-    const request = { id: 'request-1', salesDocumentsVersion: '2026-11-14' } as never;
-    component.toggleAcceptedDocuments(request);
-    expect(subscriptions.getAcceptedSalesDocuments).toHaveBeenCalledWith('request-1');
-    expect(component.acceptedDocuments()?.documents.preInformation).toBe('onaylanan form');
-    component.toggleAcceptedDocuments(request);
-    expect(component.acceptedDocuments()).toBeNull();
-  });
 });

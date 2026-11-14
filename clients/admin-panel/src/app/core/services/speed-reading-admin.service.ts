@@ -1615,6 +1615,9 @@ export interface SpeedReadingBankTransferRequest {
   withdrawalRequestedAt?: string | null;
   withdrawalReviewNote?: string | null;
   withdrawalReviewedAt?: string | null;
+  /** Set when an invoice is recorded for this payment. */
+  invoiceNumber?: string | null;
+  invoiceIssuedOn?: string | null;
   id: string;
   userId: string;
   userName: string;
@@ -1817,6 +1820,23 @@ export class SpeedReadingAdminService {
     return this.http.put<{ success: boolean; data: SpeedReadingBankTransferRequest }>(
       `${this.url}/bank-transfer/requests/${id}/withdrawal/review`, { approve, note }
     ).pipe(map(response => response.data));
+  }
+
+  /** Records the manually issued invoice of an approved payment: the PDF is the request body. */
+  attachInvoice(id: string, invoiceNumber: string, issuedOn: string, file: Blob, fileName: string) {
+    const params = new HttpParams().set('invoiceNumber', invoiceNumber).set('issuedOn', issuedOn).set('fileName', fileName);
+    return this.http.post<{ success: boolean; data: SpeedReadingBankTransferRequest }>(
+      `${this.url}/bank-transfer/requests/${id}/invoice`, file, { params, headers: { 'Content-Type': 'application/pdf' } }
+    ).pipe(map(response => response.data));
+  }
+
+  removeInvoice(id: string) {
+    return this.http.delete<{ success: boolean; data: SpeedReadingBankTransferRequest }>(`${this.url}/bank-transfer/requests/${id}/invoice`)
+      .pipe(map(response => response.data));
+  }
+
+  downloadInvoice(id: string) {
+    return this.http.get(`${this.url}/bank-transfer/requests/${id}/invoice/admin`, { responseType: 'blob' });
   }
 
   deleteBankTransferRequest(id: string) {
