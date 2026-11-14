@@ -264,4 +264,26 @@ describe('StaffAuthService product-scoped sessions', () => {
     await verifying;
     expect(service.isAuthenticated()).toBe(true);
   });
+
+  // Paket J (user decision 14.11.2026): the site's session may be a student's or a parent's; the portal must not sign them out.
+  it('forgets a session without staff access for itself and never revokes it', async () => {
+    const restoring = service.restoreSession();
+    http.expectOne('/api/auth/refresh-token').flush({ accessToken: 'student-access', expiresInMinutes: 15, tokenType: 'Bearer' });
+    await new Promise(resolve => setTimeout(resolve));
+    http.expectOne('/api/auth/staff-session/products').flush([]);
+    await restoring;
+    expect(service.notStaffAccount()).toBe(true);
+    expect(service.products()).toEqual([]);
+    http.expectNone('/api/auth/revoke-token');
+  });
+
+  it('does not revoke the session either when the staff products cannot be read', async () => {
+    const restoring = service.restoreSession();
+    http.expectOne('/api/auth/refresh-token').flush({ accessToken: 'some-access', expiresInMinutes: 15, tokenType: 'Bearer' });
+    await new Promise(resolve => setTimeout(resolve));
+    http.expectOne('/api/auth/staff-session/products').flush('down', { status: 503, statusText: 'Service Unavailable' });
+    await restoring;
+    expect(service.notStaffAccount()).toBe(false);
+    http.expectNone('/api/auth/revoke-token');
+  });
 });

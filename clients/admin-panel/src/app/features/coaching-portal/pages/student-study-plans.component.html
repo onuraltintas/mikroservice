@@ -4,7 +4,7 @@
         <option value="Active">Aktif plan</option><option value="Draft">Taslak</option><option value="Archived">Geçmiş planlar</option><option value="">Tüm planlar</option>
       </select>
       </div><button type="button" class="secondary" (click)="loadList(page().pageNumber)" [disabled]="loading() || busy()">Listeyi yenile</button>
-      <p class="muted">Tek aktif planla ilerlersin. Yeni bir plan yayımlandığında önceki çalışma kayıtların geçmişte korunur.</p></div>
+      <p class="muted">{{ staffStudentId ? 'Öğrenci tek aktif planla ilerler. Yeni bir plan yayımlandığında önceki çalışma kayıtları geçmişte korunur.' : 'Tek aktif planla ilerlersin. Yeni bir plan yayımlandığında önceki çalışma kayıtların geçmişte korunur.' }}</p></div>
       <details class="plan-picker" [open]="!selected() || filter !== 'Active'"><summary>Plan seçimi · {{ page().totalCount }} plan</summary>
       @if (loading()) { <p role="status">Planlar yükleniyor…</p> }
       @else if (!page().items.length) { <p>{{ filter === 'Active' ? 'Henüz aktif planın yok. Mevcut taslağını açabilir veya sihirbazla bir plan hazırlayabilirsin.' : 'Bu görünümde plan bulunmuyor.' }}</p> }
@@ -165,7 +165,7 @@
         }
         @for (task of visibleTasks(); track task.id) { <ng-container *ngTemplateOutlet="taskDetail; context: { $implicit: task, plan: plan }" /> }
         @if(planView()==='list'&&plan.weeklySource&&filteredTasks().length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }} · {{ filteredTasks().length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=filteredTasks().length||busy()">Sonraki çalışmalar</button></div>}
-      } @else { <div class="empty"><h2>Planına buradan devam et</h2><p>Listeden bir plan seç veya yeni bir taslak oluştur.</p></div> }
+      } @else { <div class="empty"><h2>{{ staffStudentId ? 'Plana buradan devam et' : 'Planına buradan devam et' }}</h2><p>Listeden bir plan seç veya yeni bir taslak oluştur.</p></div> }
       @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     </div>
   </div>

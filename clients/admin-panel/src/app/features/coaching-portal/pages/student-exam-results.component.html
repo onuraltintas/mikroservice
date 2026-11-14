@@ -28,7 +28,7 @@
 
       <app-practice-exam-editor [profiles]="availableProfiles()" [value]="practiceExam" (valueChange)="practiceChanged($event)" [disabled]="busy()" [locked]="!!selected?.practiceExam"></app-practice-exam-editor>
       <section class="panel" aria-label="Yayıncı puanı ve ölçeği"><h3>Yayıncı puanı</h3><p class="muted">Denemenin sonuç belgesi varsa üzerindeki puanı ve puan ölçeğini gir; yoksa puanı boş bırak. Netin doğru ve yanlış sayılarından hesaplanır.</p>
-      <div class="fields"><label>Sonuç belgesindeki puan <small>(isteğe bağlı)</small><input type="number" name="score" [(ngModel)]="score" (ngModelChange)="changed()" min="0" [max]="maxScore" step="0.01" data-testid="exam-score"></label>
+      <div class="fields"><label>Puan (isteğe bağlı)<input type="number" name="score" [(ngModel)]="score" (ngModelChange)="changed()" min="0" [max]="maxScore" step="0.01" data-testid="exam-score"></label>
         <label>Puan ölçeği<input type="number" name="max" [(ngModel)]="maxScore" (ngModelChange)="changed()" min="0.01" max="999.99" step="0.01" required></label></div>
       </section>
       @if (!practiceExam) {

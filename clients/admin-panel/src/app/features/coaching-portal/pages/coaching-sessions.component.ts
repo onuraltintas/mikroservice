@@ -87,7 +87,8 @@ export class CoachingSessionsComponent implements OnInit {
     const now = Date.now(); const time = (session: CoachingSession) => new Date(session.startTime).getTime();
     const coming = this.sessions().filter(session => time(session) >= now).sort((a, b) => time(a) - time(b));
     const past = this.sessions().filter(session => time(session) < now).sort((a, b) => time(b) - time(a));
-    return [...coming, ...past];
+    // 14.11.2026: a cancelled coming session comes after the ones that still take place.
+    return [...coming.filter(session => session.status !== 'Cancelled'), ...coming.filter(session => session.status === 'Cancelled'), ...past];
   }
 
   trackById(_: number, session: CoachingSession) {

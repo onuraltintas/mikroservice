@@ -38,7 +38,7 @@
       <select id="staff-coaching-student-grade" name="gradeLevel" data-testid="grade-filter"
         [ngModel]="gradeLevelFilter()" (ngModelChange)="setGradeLevel($event)">
         <option [ngValue]="null">Tüm sınıflar</option>
-        @for (grade of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track grade) {
+        @for (grade of [5, 6, 7, 8, 9, 10, 11, 12]; track grade) {
           <option [ngValue]="grade">{{ grade }}. sınıf</option>
         }
       </select>

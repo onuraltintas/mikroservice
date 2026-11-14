@@ -124,7 +124,7 @@
           </div>
         }
         @case ('summary') {
-          <app-wizard-summary-step [staffStudentId]="staffStudentId" [reviewDays]="reviewDays()" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [finishByMode]="tempoMode()" [tempo]="tempo()"
+          <app-wizard-summary-step [staffStudentId]="staffStudentId" [reviewDays]="reviewDays()" [dayBudgets]="routine()?.dayBudgets ?? []" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [finishByMode]="tempoMode()" [tempo]="tempo()"
             [windows]="staffWindows()" [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()" [replaceOnOpen]="replaceOnOpen" [choices]="summaryChoices"
             (addHours)="addHours($event)" (changeReviews)="changeReviews()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (draftSaved)="draftSaved($event)" (back)="previous()" />
         }

@@ -280,7 +280,7 @@ describe('WizardSummaryStepComponent', () => {
     await keep(fixture);
     expect(engine.focusEstimate).toHaveBeenCalledOnce();
     expect(engine.focusEstimate).toHaveBeenCalledWith(expect.objectContaining({ endDate: '2027-05-12', prioritizeWhenShort: false }), undefined);
-    expect(text(el.querySelector('[data-testid="focus-hint"]'))).toContain('“Önemli konulara odaklan” dersen 1 derste 2 konu dışarıda kalır; gerisi yetişir.');
+    expect(text(el.querySelector('[data-testid="focus-hint"]'))).toContain('“Önemli konulara odaklan” dersen 1 derste 2 konu dışarıda kalır; planını o hâliyle yayımlayabilirsin.');
   });
 
   it('asks for no estimate when every course finishes, and keeps the plain hint when the estimate fails', async () => {
@@ -297,6 +297,34 @@ describe('WizardSummaryStepComponent', () => {
     await keep(failing.fixture);
     expect(text(failing.el.querySelector('[data-testid="focus-hint"]'))).toContain('dersen sığmayan konular dışarıda kalır');
     expect(failing.el.querySelector('[data-testid="preview-error"]')?.textContent ?? '').toBe('');
+  });
+
+  // Paket J (user decision 14.11.2026, "uyar ve öner").
+  describe('a saved week that no longer suits', () => {
+    const day = (d: string, start: number): WeeklySlot => ({ ...saved, id: `${d}-${start}`, day: d as WeeklySlot['day'], startMinute: start, durationMinutes: 60 });
+    const heavy = [day('Monday', 960), day('Monday', 1020), day('Monday', 1200), day('Tuesday', 960), day('Tuesday', 1020), day('Wednesday', 960)];
+    const none = (mode: WeeklyProposalMode) => proposalOf(mode, [], { neededMinutes: 180, shortageMinutes: 0, coveredMinutes: 180 });
+    it('names the day with more lessons than the daily time and the hours beyond the need, and offers the week by need', async () => {
+      const { el, c, fixture, weekly, toaster } = await setup({ slots: heavy, proposal: none });
+      c.dayBudgets = [{ day: 'Monday', minutes: 60 }, { day: 'Tuesday', minutes: 60 }, { day: 'Wednesday', minutes: 60 }];
+      fixture.componentRef.changeDetectorRef.markForCheck(); fixture.detectChanges();
+      const notice = text(el.querySelector('[data-testid="saved-week-notice"]'))!;
+      expect(notice).toContain('Pazartesi günü 3 saat ders var; günlük süren 1 saat. 1 gün daha böyle.');
+      expect(notice).toContain('Kayıtlı haftan 6 saat; derslerin için haftada yaklaşık 3 saat yetiyor.');
+      // The yearly preview is open (nothing new was proposed), and the offer is still there.
+      expect(el.querySelector('[data-testid="annual-summary"]')).not.toBeNull();
+      button(el.querySelector('[data-testid="saved-week-notice"]') as HTMLElement, 'Haftanı ihtiyaca göre yeniden öner')!.click();
+      await fixture.whenStable(); fixture.detectChanges();
+      expect(toaster.confirm).toHaveBeenCalled();
+      expect(weekly.proposal.mock.calls.at(-1)![0]).toBe('Replace');
+      expect(weekly.save).not.toHaveBeenCalled();   // nothing changes by itself
+    });
+    it('says nothing of a week within its daily times and close to the need', async () => {
+      const { el, c, fixture } = await setup({ slots: heavy.slice(0, 4), proposal: none });
+      c.dayBudgets = [{ day: 'Monday', minutes: 180 }, { day: 'Tuesday', minutes: 60 }];
+      fixture.componentRef.changeDetectorRef.markForCheck(); fixture.detectChanges();
+      expect(el.querySelector('[data-testid="saved-week-notice"]')).toBeNull();
+    });
   });
 
   it('says that no review is planned when the student chose none', async () => {

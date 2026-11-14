@@ -61,6 +61,11 @@ export class AppComponent implements AfterViewInit {
     const product = new URLSearchParams(this.document.defaultView?.location.search ?? '').get('product');
     return product === 'speed-reading' || product === 'course-management' ? product : 'coaching';
   }
+  /**
+   * Paket J (user decision 14.11.2026): Kurs Yönetimi is a pilot. Its login choice and its "katıl" card are shown only to a page
+   * opened for it (?product=course-management, or a course link); the route and the pilot accounts' access are unchanged.
+   */
+  readonly courseManagementOffered = this.selectedProduct === 'course-management';
   email = '';
   password = '';
   rememberMe = false;

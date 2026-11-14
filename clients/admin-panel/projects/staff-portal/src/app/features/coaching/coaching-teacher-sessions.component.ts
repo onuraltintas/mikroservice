@@ -158,6 +158,17 @@ export class CoachingTeacherSessionsComponent implements OnInit {
     });
   }
 
+  /**
+   * Live test 14.11.2026: a cancelled session stood on top of the teacher's list with its join link. The coming sessions that
+   * still take place come first (the nearest on top), then the cancelled coming ones, then the past ones (the latest on top).
+   */
+  orderedSessions() {
+    const now = Date.now(); const time = (session: { startTime: string }) => new Date(session.startTime).getTime();
+    const coming = this.sessions().filter(session => time(session) >= now).sort((a, b) => time(a) - time(b));
+    const past = this.sessions().filter(session => time(session) < now).sort((a, b) => time(b) - time(a));
+    return [...coming.filter(session => session.status !== 'Cancelled'), ...coming.filter(session => session.status === 'Cancelled'), ...past];
+  }
+
   upcomingCount(): number {
     const now = Date.now();
     return this.sessions().filter(session => session.status !== 'Cancelled' && new Date(session.startTime).getTime() >= now).length;

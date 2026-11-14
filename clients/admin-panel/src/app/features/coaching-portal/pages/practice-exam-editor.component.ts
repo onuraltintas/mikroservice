@@ -8,9 +8,9 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, examTypeForPro
     :host { display:block; margin:1rem 0; }
     label { display:flex; flex-direction:column; gap:.4rem; }
     input,select { box-sizing:border-box; min-height:2.5rem; width:100%; padding:.5rem; font:inherit; color:inherit; background:transparent; border:1px solid var(--ui-border); border-radius:.4rem; }
-    .table-wrap { overflow-x:auto; margin-top:1rem; } table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:.5rem; border-bottom:1px solid var(--ui-border); } th:first-child { min-width:9rem; }
+    .table-wrap { overflow-x:auto; margin-top:1rem; } table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:.5rem .35rem; border-bottom:1px solid var(--ui-border); } th:first-child { min-width:7rem; }
     /* Three digits must fit (a test may have 100+ questions): fixed width, little side padding, no spinner arrows taking room. */
-    td input { width:4.75rem; min-width:4.75rem; padding:.5rem .25rem; text-align:center; font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield; }
+    td input { width:4.25rem; min-width:4.25rem; padding:.5rem .25rem !important; text-align:center; font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield; }
     td input::-webkit-outer-spin-button, td input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
     td[data-label=Soru], td[data-label=Boş] { font-variant-numeric:tabular-nums; white-space:nowrap; }
     .summary { padding:.8rem; border:1px solid var(--ui-border); border-radius:.5rem; } .error { color:var(--ui-danger); } tr.invalid td.net { color:var(--ui-danger); } td.net { white-space:nowrap; font-variant-numeric:tabular-nums; }
