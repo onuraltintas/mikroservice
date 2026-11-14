@@ -26,13 +26,13 @@ public sealed class SpeedReadingAdultPayerPostgresTests(PostgresFixture postgres
             var now = DateTime.UtcNow;
             Add("LegacyProduct", new { Id = product, Slug = "speed-reading", Name = "Speed", IsActive = true, IsPublic = true, CreatedAt = now, UpdatedAt = now });
             Add("LegacySubscriptionPlan", new { Id = plan, ProductId = product, Slug = "annual", Name = "Annual", Price = 499m, IsActive = true, IsPublic = true, BillingPeriod = "Annual", DurationDays = 365, CreatedAt = now });
-            Add("LegacyBankTransferPaymentSettings", new { Id = Guid.Parse("4c18b5a8-96e8-4af6-9195-0d4fdde3dcf2"), AccountHolder = "Test", BankName = "Bank", Iban = "TR330006100519786457841326", IsEnabled = true, CreatedAt = now });
+            Add("LegacyBankTransferPaymentSettings", new { Id = Guid.Parse("4c18b5a8-96e8-4af6-9195-0d4fdde3dcf2"), AccountHolder = "Test", BankName = "Bank", Iban = "TR330006100519786457841326", IsEnabled = true, CreatedAt = now, SellerTitle = "ONAL LTD", SellerAddress = "Yozgat", SellerTaxOffice = "YOZGAT", SellerTaxNumber = "6421076848", SellerEmail = "satici@example.invalid", SellerPhone = "0505 000 00 00" });
             await db.SaveChangesAsync();
             var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Legacy.LegacySpeedReadingSubscription")!;
             var service = (ISpeedReadingSubscription)Activator.CreateInstance(serviceType,
                 BindingFlags.Instance | BindingFlags.NonPublic, null, [db, db, null, null, new Directory(user)], null)!;
             // 13.11.2026: a request without the declaration is accepted and records no declaration.
-            var request = new CreateBankTransferPaymentRequest(plan, "EFT-ADULT-01", "Adult", null);
+            var request = new CreateBankTransferPaymentRequest(plan, "EFT-ADULT-01", "Adult", null, SalesDocumentsVersion: SpeedReadingSalesDocumentTexts.Version);
             var created = await service.CreateBankTransferPaymentRequestAsync(user, request, "adult-create-key-0001");
             Assert.NotNull(created);
             Assert.Null(created.AdultPayerDeclarationVersion);

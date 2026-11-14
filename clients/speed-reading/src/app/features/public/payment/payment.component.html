@@ -79,9 +79,28 @@
                     <span>Not <em>(isteğe bağlı)</em></span>
                     <textarea [(ngModel)]="note" name="note" maxlength="2000" rows="3" placeholder="Ödemeyle ilgili ek bilgi"></textarea>
                   </label>
+                  @if (documents(); as salesDocuments) {
+                    <div class="sales-documents" data-testid="sales-documents">
+                      <p class="documents-intro">Ödeme talebinden önce aşağıdaki iki belgeyi okuyun.</p>
+                      <details>
+                        <summary>Ön bilgilendirme formu</summary>
+                        <pre>{{ salesDocuments.preInformation }}</pre>
+                      </details>
+                      <details>
+                        <summary>Mesafeli satış sözleşmesi</summary>
+                        <pre>{{ salesDocuments.distanceSales }}</pre>
+                      </details>
+                      <label class="accept">
+                        <input type="checkbox" [(ngModel)]="documentsAccepted" name="documentsAccepted" data-testid="accept-documents" />
+                        <span>Ön bilgilendirme formunu ve mesafeli satış sözleşmesini okudum, onaylıyorum.</span>
+                      </label>
+                    </div>
+                  } @else if (documentsError()) {
+                    <p class="message error" role="alert" data-testid="documents-error">{{ documentsError() }}</p>
+                  }
                   @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
                   @if (success()) { <p class="message success" role="status">{{ success() }}</p> }
-                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting() || !documents()">
                     {{ submitting() ? 'Talep iletiliyor…' : 'Ödeme talebini ilet' }}
                   </button>
                 } @else {
@@ -118,8 +137,50 @@
           @for (request of requests(); track request.id) {
             <article>
               <div><strong>{{ request.planName }}</strong><span>{{ request.paymentReference }}</span></div>
-              <div><span class="status" [class.approved]="request.status === 'Approved'" [class.rejected]="request.status === 'Rejected'">{{ request.status === 'Pending' ? 'İnceleniyor' : request.status === 'Approved' ? 'Onaylandı' : 'Reddedildi' }}</span><time>{{ request.createdAt | date:'d MMMM y, HH:mm':'':'tr' }}</time></div>
+              <div><span class="status" [class.approved]="request.status === 'Approved' && request.withdrawalStatus !== 'Approved'" [class.rejected]="request.status === 'Rejected' || request.withdrawalStatus === 'Approved'">{{ statusLabel(request) }}</span><time>{{ request.createdAt | date:'d MMMM y, HH:mm':'':'tr' }}</time></div>
               @if (request.reviewNote) { <p>{{ request.reviewNote }}</p> }
+              @if (request.withdrawalStatus === 'Requested') {
+                <p class="withdrawal-note" data-testid="withdrawal-requested">Cayma talebiniz alındı; inceleniyor.</p>
+              } @else if (request.withdrawalStatus) {
+                <p class="withdrawal-note" data-testid="withdrawal-answer">@if (request.withdrawalStatus === 'Approved') {{{ request.withdrawalReviewNote || 'Cayma onaylandı.' }}} @else {Cayma talebi reddedildi@if (request.withdrawalReviewNote) {: {{ request.withdrawalReviewNote }}}}</p>
+              }
+              <div class="request-actions">
+                @if (request.salesDocumentsVersion) {
+                  <button type="button" class="link-button" (click)="toggleAcceptedDocuments(request)" data-testid="show-accepted-documents">
+                    {{ acceptedDocuments()?.requestId === request.id ? 'Belgeleri gizle' : 'Onayladığınız belgeler' }}
+                  </button>
+                }
+                @if (canWithdraw(request) && withdrawingId() !== request.id) {
+                  <button type="button" class="link-button" (click)="openWithdrawal(request)" data-testid="open-withdrawal">Cayma talebi</button>
+                }
+              </div>
+              @if (canWithdraw(request)) {
+                <p class="withdrawal-hint">Cayma hakkınızı {{ request.withdrawableUntil | date:'d MMMM y':'':'tr' }} gününe kadar kullanabilirsiniz.</p>
+              }
+              @if (withdrawingId() === request.id) {
+                <div class="withdrawal-form" data-testid="withdrawal-form">
+                  <label>
+                    <span>Gerekçe <em>(isteğe bağlı)</em></span>
+                    <textarea [(ngModel)]="withdrawalReason" [ngModelOptions]="{ standalone: true }" maxlength="500" rows="2"></textarea>
+                  </label>
+                  <p class="withdrawal-hint">Talebiniz onaylandığında aboneliğiniz sona erer ve ödediğiniz tutarın tamamı ödeme yaptığınız hesaba iade edilir.</p>
+                  @if (withdrawalError()) { <p class="message error" role="alert">{{ withdrawalError() }}</p> }
+                  <div class="request-actions">
+                    <button mat-stroked-button type="button" (click)="cancelWithdrawal()" [disabled]="withdrawalBusy()">Vazgeç</button>
+                    <button mat-raised-button color="warn" type="button" (click)="submitWithdrawal(request)" [disabled]="withdrawalBusy()" data-testid="submit-withdrawal">
+                      {{ withdrawalBusy() ? 'Gönderiliyor…' : 'Cayma talebini gönder' }}
+                    </button>
+                  </div>
+                </div>
+              }
+              @if (acceptedDocuments(); as shown) {
+                @if (shown.requestId === request.id) {
+                  <div class="sales-documents" data-testid="accepted-documents">
+                    <details open><summary>Ön bilgilendirme formu</summary><pre>{{ shown.documents.preInformation }}</pre></details>
+                    <details><summary>Mesafeli satış sözleşmesi</summary><pre>{{ shown.documents.distanceSales }}</pre></details>
+                  </div>
+                }
+              }
             </article>
           }
         </div>
@@ -132,8 +193,9 @@
         <li>Giriş yapın veya kayıt olup hesabınıza giriş yapın.</li>
         <li>Size uygun erişim planını seçin.</li>
         <li>Yayınlanan banka hesabına havale/EFT yapın.</li>
-        <li>İşlem referansını ödeme talebiyle iletin.</li>
+        <li>Ön bilgilendirme formunu ve mesafeli satış sözleşmesini okuyup onaylayın; işlem referansını ödeme talebiyle iletin.</li>
         <li>Yönetici banka hareketini doğrular; erişim süreniz onay tarihinde başlar.</li>
+        <li>Onaydan sonraki 14 gün içinde bu sayfadaki "Cayma talebi" ile gerekçe göstermeden cayabilirsiniz; ödemenizin tamamı iade edilir.</li>
       </ol>
     </section>
   </section>

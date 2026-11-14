@@ -1596,9 +1596,25 @@ export interface SpeedReadingBankTransferSettingsRequest {
   isEnabled: boolean;
 }
 
+/** The seller block of the Hızlı Okuma sales documents; a sale needs all but MERSİS. */
+export interface SpeedReadingSellerInfo {
+  title: string | null;
+  address: string | null;
+  taxOffice: string | null;
+  taxNumber: string | null;
+  mersisNumber: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
 export interface SpeedReadingBankTransferRequest {
-  adultPayerDeclarationVersion?: number | null;
-  adultPayerDeclaredAt?: string | null;
+  salesDocumentsVersion?: string | null;
+  salesDocumentsAcceptedAt?: string | null;
+  withdrawalStatus?: 'Requested' | 'Approved' | 'Rejected' | null;
+  withdrawalReason?: string | null;
+  withdrawalRequestedAt?: string | null;
+  withdrawalReviewNote?: string | null;
+  withdrawalReviewedAt?: string | null;
   id: string;
   userId: string;
   userName: string;
@@ -1785,6 +1801,21 @@ export class SpeedReadingAdminService {
       `${this.url}/bank-transfer/requests/${id}/review`,
       { status, reviewNote },
       { headers: this.idempotencyHeaders(idempotencyKey) }
+    ).pipe(map(response => response.data));
+  }
+
+  getSeller() {
+    return this.http.get<{ success: boolean; data: SpeedReadingSellerInfo }>(`${this.url}/bank-transfer/seller`).pipe(map(response => response.data));
+  }
+
+  updateSeller(seller: SpeedReadingSellerInfo) {
+    return this.http.put<{ success: boolean; data: SpeedReadingSellerInfo }>(`${this.url}/bank-transfer/seller`, seller).pipe(map(response => response.data));
+  }
+
+  /** Approving ends the access the payment gave (the refund is made by bank); rejecting needs a reason. */
+  reviewBankTransferWithdrawal(id: string, approve: boolean, note: string | null) {
+    return this.http.put<{ success: boolean; data: SpeedReadingBankTransferRequest }>(
+      `${this.url}/bank-transfer/requests/${id}/withdrawal/review`, { approve, note }
     ).pipe(map(response => response.data));
   }
 

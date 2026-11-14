@@ -19,6 +19,8 @@ async function mockPaymentApi(page, authenticated) {
     } else if (path.endsWith('/bank-transfer')) {
       banks.push(path);
       response = { accountHolder: 'Test hesabı', bankName: 'Test bankası', iban: 'TEST-IBAN' };
+    } else if (path.endsWith('/bank-transfer/documents')) {
+      response = { version: '2026-11-14', preInformation: 'ÖN BİLGİLENDİRME FORMU\nTest satıcı', distanceSales: 'MESAFELİ SATIŞ SÖZLEŞMESİ\nTest satıcı' };
     } else if (path.endsWith('/bank-transfer/requests/my')) {
       response = [];
     }
@@ -48,6 +50,14 @@ test('signed-in user can view the selected plans bank details and EFT form', asy
   await expect(page.locator('input[name="paymentReference"]')).toBeVisible();
   await expect(page.locator('input[name="adultPayerDeclaration"]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Ödeme talebini ilet', exact: true })).toBeEnabled();
+  // Legal check Y1 (14.11.2026): the two sales documents are shown with an acceptance box before the request can be sent.
+  await expect(page.getByTestId('sales-documents')).toContainText('Mesafeli satış sözleşmesi');
+  await page.getByText('Ön bilgilendirme formu', { exact: true }).click();
+  await expect(page.getByTestId('sales-documents')).toContainText('Test satıcı');
+  await expect(page.getByTestId('accept-documents')).not.toBeChecked();
+  await page.locator('input[name="paymentReference"]').fill('EFT-TEST-1');
+  await page.getByRole('button', { name: 'Ödeme talebini ilet', exact: true }).click();
+  await expect(page.locator('.message.error')).toContainText('okuyup onaylayın');
   expect(new URL(page.url()).searchParams.get('plan')).toBe('plan-1');
   expect(banks).toHaveLength(1);
   expect(writes).toEqual([]);

@@ -13,7 +13,7 @@ namespace SpeedReading.Infrastructure.Legacy;
 
 public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 {
-    private static readonly Guid BankTransferSettingsId = Guid.Parse("4c18b5a8-96e8-4af6-9195-0d4fdde3dcf2");
+    internal static readonly Guid BankTransferSettingsId = Guid.Parse("4c18b5a8-96e8-4af6-9195-0d4fdde3dcf2");
     private const string BankTransferSettingsScope = "speed-reading.bank-transfer.settings";
     private const string SubscriptionRequirementScope = "speed-reading.subscription.requirement";
     private const long SettingsWriteLockKey = 0x5352535542534D;
@@ -434,8 +434,24 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var userName = $"{user.FirstName} {user.LastName}".Trim();
         if (string.IsNullOrWhiteSpace(userName)) userName = user.Email.Trim();
         var now = DateTime.UtcNow;
+        // Legal check Y1: no payment notice without the pre-information form and the distance-sales contract. The buyer
+        // accepts the version in force; the texts are rendered here and kept with the request exactly as accepted.
+        var sellerSettings = await db.BankTransferPaymentSettings.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == BankTransferSettingsId, cancellationToken);
+        var seller = SpeedReadingSalesService.Seller(sellerSettings);
+        if (!seller.IsComplete)
+            throw new BusinessRuleException("Sales.SellerMissing", "Satış belgeleri henüz hazır değil. Lütfen daha sonra tekrar deneyin.");
+        if (!string.Equals(request.SalesDocumentsVersion?.Trim(), SpeedReadingSalesDocumentTexts.Version, StringComparison.Ordinal))
+            throw new BusinessRuleException("Sales.DocumentsNotAccepted",
+                "Ödeme bildirimi için ön bilgilendirme formunu ve mesafeli satış sözleşmesini okuyup onaylamanız gerekir.");
+        if (planRow.Plan.DurationDays is not > 0) return null;
+        var documents = SpeedReadingSalesDocumentTexts.Render(new(seller, userName, user.Email.Trim(), planRow.Plan.Name,
+            planRow.Plan.DurationDays.Value, planRow.Plan.Price, "TRY", now, settings.Instructions ?? string.Empty));
         var paymentRequest = new LegacyBankTransferPaymentRequest
         {
+            SalesDocumentsVersion = documents.Version,
+            SalesDocumentsJson = JsonSerializer.Serialize(documents),
+            SalesDocumentsAcceptedAt = now,
             Id = Guid.NewGuid(),
             UserId = userId,
             UserName = userName,
@@ -1464,7 +1480,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                 settings.Iban),
             settings.UpdatedAt ?? settings.CreatedAt);
 
-    private static BankTransferPaymentRequestSummary ToBankTransferPaymentRequestSummary(
+    internal static BankTransferPaymentRequestSummary ToBankTransferPaymentRequestSummary(
         LegacyBankTransferPaymentRequest paymentRequest,
         LegacySubscriptionPlan plan) =>
         new(
@@ -1486,7 +1502,17 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             paymentRequest.ReviewedAt,
             paymentRequest.ReviewNote,
             paymentRequest.AdultPayerDeclarationVersion,
-            paymentRequest.AdultPayerDeclaredAt);
+            paymentRequest.AdultPayerDeclaredAt,
+            paymentRequest.SalesDocumentsVersion,
+            paymentRequest.SalesDocumentsAcceptedAt,
+            paymentRequest.WithdrawalStatus,
+            paymentRequest.WithdrawalReason,
+            paymentRequest.WithdrawalRequestedAt,
+            paymentRequest.WithdrawalReviewNote,
+            paymentRequest.WithdrawalReviewedAt,
+            string.Equals(paymentRequest.Status, BankTransferPaymentRules.ApprovedStatus, StringComparison.Ordinal) && paymentRequest.ReviewedAt is { } approvedAt
+                ? approvedAt.AddDays(SpeedReadingSalesDocumentTexts.WithdrawalDays)
+                : null);
 
     private static string? NormalizeRequired(string? value, int maxLength)
     {

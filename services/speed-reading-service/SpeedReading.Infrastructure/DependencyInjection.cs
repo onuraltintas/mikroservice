@@ -115,6 +115,10 @@ public static class DependencyInjection
                 serviceProvider.GetRequiredService<ISpeedReadingPaymentProvider>(),
                 serviceProvider.GetRequiredService<IyzicoOptions>(),
                 serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
+        services.AddScoped<ISpeedReadingSales>(serviceProvider =>
+            new SpeedReadingSalesService(
+                serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
+                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
         services.AddScoped<ISpeedReadingNotifications, LegacySpeedReadingNotifications>();
         services.AddScoped<ISpeedReadingAnnouncements, LegacySpeedReadingAnnouncements>();
         services.AddScoped<ISpeedReadingEmailTemplates, LegacySpeedReadingEmailTemplates>();

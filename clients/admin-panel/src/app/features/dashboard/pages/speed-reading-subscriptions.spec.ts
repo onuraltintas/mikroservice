@@ -21,10 +21,15 @@ describe('SpeedReadingSubscriptionsComponent', () => {
     expect(ADMIN_PERMISSIONS.speedReadingSubscriptionManage).toBe('Permissions.SpeedReading.SubscriptionManage');
   });
 
-  it('distinguishes historical requests from an adult payer self-declaration', () => {
+  // Legal check Y1/Y9 (14.11.2026): no 18+ payer label; the row tells which sales documents were accepted and the withdrawal state.
+  it('labels the accepted sales documents and the withdrawal state instead of an adult payer declaration', () => {
     const { component } = createComponent();
-    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: null, adultPayerDeclaredAt: null })).toBe('Yetişkin beyanı yok');
-    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: 1, adultPayerDeclaredAt: '2026-10-05T09:00:00Z' })).toContain('yaş doğrulaması değildir');
+    expect('adultPayerLabel' in component).toBe(false);
+    expect(component.salesDocumentsLabel({ salesDocumentsVersion: '2026-11-14' })).toBe('Satış belgeleri onaylandı · sürüm 2026-11-14');
+    expect(component.salesDocumentsLabel({ salesDocumentsVersion: null })).toContain('eski talep');
+    expect(component.withdrawalLabel({ withdrawalStatus: 'Requested' })).toBe('Cayma talebi bekliyor');
+    expect(component.withdrawalLabel({ withdrawalStatus: 'Approved' })).toBe('Cayma onaylandı');
+    expect(component.withdrawalLabel({ withdrawalStatus: 'Rejected' })).toBe('Cayma reddedildi');
   });
   const emptyPage = { items: [], totalCount: 0, page: 1, pageSize: 25 };
 
@@ -38,7 +43,11 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       getBankTransferRequests: vi.fn(() => of(emptyPage)),
       updateUserSubscription: vi.fn(() => of({})),
       createInstitutionAccess: vi.fn(() => of({ createdCount: 2, existingCount: 0 })),
-      deleteBankTransferRequest: vi.fn(() => of(undefined))
+      deleteBankTransferRequest: vi.fn(() => of(undefined)),
+      getBankTransferSettings: vi.fn(() => of(null)),
+      getSeller: vi.fn(() => of({ title: 'ONAL', address: null, taxOffice: null, taxNumber: null, mersisNumber: null, email: null, phone: null })),
+      updateSeller: vi.fn((seller: unknown) => of(seller)),
+      reviewBankTransferWithdrawal: vi.fn((id: string, approve: boolean) => of({ id, status: 'Approved', withdrawalStatus: approve ? 'Approved' : 'Rejected' }))
     };
     const toaster = {
       confirm: vi.fn(() => Promise.resolve(true)),
@@ -219,5 +228,34 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       paymentReference: 'EFT-2026-0001',
       notes: 'Örnek Okul'
     });
+  });
+
+  // Legal check Y1 (14.11.2026): the seller block of the sales documents and the withdrawal review.
+  it('loads the seller with the bank settings and tells whether the sales documents can be made', () => {
+    const { component, service } = createComponent();
+    component.selectTab('bankSettings');
+    expect(service.getSeller).toHaveBeenCalled();
+    expect(component.sellerDraft.title).toBe('ONAL');
+    expect(component.sellerComplete()).toBe(false);
+
+    component.sellerDraft = { title: ' ONAL LTD ', address: 'Yozgat', taxOffice: 'YOZGAT', taxNumber: '6421076848', mersisNumber: ' ', email: 'info@example.invalid', phone: '0505' };
+    component.saveSeller();
+    expect(service.updateSeller).toHaveBeenCalledWith({ title: 'ONAL LTD', address: 'Yozgat', taxOffice: 'YOZGAT', taxNumber: '6421076848', mersisNumber: null, email: 'info@example.invalid', phone: '0505' });
+    expect(component.sellerComplete()).toBe(true);
+  });
+
+  it('approves a withdrawal after a confirmation and rejects one only with a reason', async () => {
+    const { component, service, toaster } = createComponent();
+    const request = { id: 'request-1', userName: 'Veli', amount: 499, currency: 'TRY', status: 'Approved', withdrawalStatus: 'Requested' } as never;
+    await component.approveWithdrawal(request);
+    expect(toaster.confirm).toHaveBeenCalled();
+    expect(service.reviewBankTransferWithdrawal).toHaveBeenCalledWith('request-1', true, null);
+
+    toaster.prompt.mockResolvedValueOnce('  ');
+    await component.rejectWithdrawal(request);
+    expect(service.reviewBankTransferWithdrawal).toHaveBeenCalledTimes(1);
+    toaster.prompt.mockResolvedValueOnce(' Süre doldu ');
+    await component.rejectWithdrawal(request);
+    expect(service.reviewBankTransferWithdrawal).toHaveBeenLastCalledWith('request-1', false, 'Süre doldu');
   });
 });

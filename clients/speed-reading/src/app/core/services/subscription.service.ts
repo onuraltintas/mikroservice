@@ -188,6 +188,15 @@ export interface CreateBankTransferPaymentRequest {
   paymentReference: string;
   payerName: string | null;
   note: string | null;
+  /** The version of the pre-information form and distance-sales contract the buyer read and accepted. */
+  salesDocumentsVersion: string;
+}
+
+/** The pre-information form and the distance-sales contract, as plain text. */
+export interface SalesDocuments {
+  version: string;
+  preInformation: string;
+  distanceSales: string;
 }
 
 export interface BankTransferPaymentRequest {
@@ -208,6 +217,16 @@ export interface BankTransferPaymentRequest {
   reviewedBy: string | null;
   reviewedAt: string | null;
   reviewNote: string | null;
+  salesDocumentsVersion?: string | null;
+  salesDocumentsAcceptedAt?: string | null;
+  /** Withdrawal (cayma): null when none was asked. */
+  withdrawalStatus?: 'Requested' | 'Approved' | 'Rejected' | null;
+  withdrawalReason?: string | null;
+  withdrawalRequestedAt?: string | null;
+  withdrawalReviewNote?: string | null;
+  withdrawalReviewedAt?: string | null;
+  /** The last moment a withdrawal can be asked (14 days after approval); null while not approved. */
+  withdrawableUntil?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -292,6 +311,24 @@ export class SubscriptionService {
   getMyBankTransferPaymentRequests(): Observable<BankTransferPaymentRequest[]> {
     return this.http.get<any>(`${this.bankTransferUrl}/requests/my`)
       .pipe(map(result => result?.data ?? result ?? []));
+  }
+
+  /** The documents to read and accept before a payment notice for this plan. */
+  getSalesDocuments(planId: string): Observable<SalesDocuments> {
+    return this.http.get<any>(`${this.bankTransferUrl}/documents`, { params: new HttpParams().set('planId', planId) })
+      .pipe(map(result => result?.data ?? result));
+  }
+
+  /** The documents accepted with one of the buyer's own payment requests. */
+  getAcceptedSalesDocuments(requestId: string): Observable<SalesDocuments> {
+    return this.http.get<any>(`${this.bankTransferUrl}/requests/${requestId}/documents`)
+      .pipe(map(result => result?.data ?? result));
+  }
+
+  /** Withdrawal (cayma) from an approved payment, within 14 days of its approval. */
+  requestBankTransferWithdrawal(requestId: string, reason: string | null): Observable<BankTransferPaymentRequest> {
+    return this.http.post<any>(`${this.bankTransferUrl}/requests/${requestId}/withdrawal`, { reason })
+      .pipe(map(result => result?.data ?? result));
   }
 
   // ── User search (autocomplete) ────────────────────────────────────────────

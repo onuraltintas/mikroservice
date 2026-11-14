@@ -37,6 +37,19 @@ internal static class SpeedReadingFinancialRetention
         + await db.Payments.CountAsync(item => item.UserId == userId && item.Status.ToLower() == Paid, ct)
         + await db.BankTransferPaymentRequests.CountAsync(item => item.UserId == userId && item.Status.ToLower() == Approved, ct);
 
+    /// <summary>Replaces the buyer's name and e-mail inside the stored documents, in plain and JSON-escaped form.</summary>
+    internal static string? Redact(string? json, params string?[] values)
+    {
+        if (json is null) return null;
+        foreach (var value in values.Where(item => !string.IsNullOrWhiteSpace(item) && item != AnonymizedName).Select(item => item!.Trim()).Distinct()
+                     .OrderByDescending(item => item.Length))
+        {
+            json = json.Replace(value, AnonymizedName, StringComparison.Ordinal)
+                .Replace(System.Text.Json.JsonEncodedText.Encode(value).ToString(), AnonymizedName, StringComparison.Ordinal);
+        }
+        return json;
+    }
+
     public static async Task AnonymizeAsync(ISpeedReadingDataContext db, Guid userId, DateTime now, CancellationToken ct)
     {
         // Not stored anywhere else, so the anonymised rows cannot be linked back to the erased account.
@@ -59,12 +72,16 @@ internal static class SpeedReadingFinancialRetention
         }
         foreach (var transfer in await db.BankTransferPaymentRequests.Where(item => item.UserId == userId).ToListAsync(ct))
         {
+            // Legal check Y1: the accepted sales documents name the buyer; the contract itself stays as the financial record.
+            transfer.SalesDocumentsJson = Redact(transfer.SalesDocumentsJson, transfer.UserName, transfer.UserEmail, transfer.PayerName);
             transfer.UserId = surrogate;
             transfer.UserName = AnonymizedName;
             transfer.UserEmail = string.Empty;
             transfer.PayerName = null;
             transfer.Note = null;
             transfer.ReviewNote = null;
+            transfer.WithdrawalReason = null;
+            transfer.WithdrawalReviewNote = null;
             transfer.UpdatedAt = now;
         }
     }

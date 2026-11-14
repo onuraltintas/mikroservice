@@ -32,9 +32,19 @@ describe('PaymentComponent adult payer declaration', () => {
     component.settings.set({ bankName: 'Bank' } as never);
     component.paymentReference = ' EFT-123 ';
     // 13.11.2026: no adult payer declaration is asked or sent any more.
+    // Legal check Y1 (14.11.2026): nothing is sent before the sales documents are loaded and accepted.
     component.submitBankTransferRequest();
-    expect(submit).toHaveBeenCalledWith({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null });
+    expect(submit).not.toHaveBeenCalled();
+    expect(component.error()).toContain('Satış belgeleri');
+    component.documents.set({ version: '2026-11-14', preInformation: 'form', distanceSales: 'sözleşme' });
+    component.submitBankTransferRequest();
+    expect(submit).not.toHaveBeenCalled();
+    expect(component.error()).toContain('okuyup onaylayın');
+    component.documentsAccepted = true;
+    component.submitBankTransferRequest();
+    expect(submit).toHaveBeenCalledWith({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null, salesDocumentsVersion: '2026-11-14' });
     expect(component.error()).toBeNull();
+    expect(component.documentsAccepted).toBeFalse();
   });
 });
 
@@ -46,7 +56,10 @@ describe('PaymentComponent signed-in EFT flow', () => {
       getPublicPlans: jasmine.createSpy('plans').and.returnValue(of([{ id: 'plan-1', price: 499, isContactOnly: false }])),
       getPublicBankTransferSettings: jasmine.createSpy('settings').and.returnValue(of({ bankName: 'Bank' })),
       getMyBankTransferPaymentRequests: jasmine.createSpy('history').and.returnValue(of([])),
-      createBankTransferPaymentRequest: jasmine.createSpy('submit').and.returnValue(of({ id: 'request-1' }))
+      createBankTransferPaymentRequest: jasmine.createSpy('submit').and.returnValue(of({ id: 'request-1' })),
+      getSalesDocuments: jasmine.createSpy('documents').and.returnValue(of({ version: '2026-11-14', preInformation: 'ÖN BİLGİLENDİRME FORMU', distanceSales: 'MESAFELİ SATIŞ SÖZLEŞMESİ' })),
+      getAcceptedSalesDocuments: jasmine.createSpy('accepted').and.returnValue(of({ version: '2026-11-14', preInformation: 'onaylanan form', distanceSales: 'onaylanan sözleşme' })),
+      requestBankTransferWithdrawal: jasmine.createSpy('withdraw').and.returnValue(of({ id: 'request-1', status: 'Approved', withdrawalStatus: 'Requested' }))
     };
     TestBed.configureTestingModule({ providers: [
       { provide: AuthService, useValue: auth },
@@ -122,6 +135,7 @@ describe('PaymentComponent signed-in EFT flow', () => {
     const { component, subscriptions } = setup(true);
     component.ngOnInit();
     component.paymentReference = 'EFT-123';
+    component.documentsAccepted = true;
     subscriptions.createBankTransferPaymentRequest.and.returnValue(throwError(() => ({ error: { message: 'Yeniden deneyin.' } })));
     component.submitBankTransferRequest();
     expect(component.error()).toBe('Yeniden deneyin.');
@@ -152,5 +166,81 @@ describe('PaymentComponent signed-in EFT flow', () => {
     component.selectedPlanId.set(null);
     component.continueToLogin();
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { returnUrl: '/odeme' } });
+  });
+
+  // Legal check Y1 (14.11.2026): the sales documents, their acceptance and the withdrawal request.
+  it('loads the sales documents of the selected plan and drops the acceptance when the plan changes', () => {
+    const { component, subscriptions } = setup(true);
+    subscriptions.getPublicPlans.and.returnValue(of([{ id: 'plan-1', price: 499, isContactOnly: false }, { id: 'plan-2', price: 899, isContactOnly: false }]));
+    component.ngOnInit();
+    expect(subscriptions.getSalesDocuments).toHaveBeenCalledWith('plan-1');
+    expect(component.documents()?.version).toBe('2026-11-14');
+    component.documentsAccepted = true;
+    component.selectPlan({ id: 'plan-2' } as never);
+    expect(subscriptions.getSalesDocuments).toHaveBeenCalledWith('plan-2');
+    expect(component.documentsAccepted).toBeFalse();
+  });
+
+  it('shows the documents with an acceptance box and keeps the button off while they are missing', () => {
+    TestBed.overrideComponent(PaymentComponent, {
+      remove: { imports: [NavbarComponent, FooterComponent] },
+      add: { imports: [PaymentTestNavbar, PaymentTestFooter] }
+    });
+    const { subscriptions } = setup(true);
+    const fixture = TestBed.createComponent(PaymentComponent);
+    fixture.detectChanges();
+    const page: HTMLElement = fixture.nativeElement;
+    expect(page.querySelector('[data-testid="sales-documents"]')?.textContent).toContain('MESAFELİ SATIŞ SÖZLEŞMESİ');
+    expect(page.querySelector('[data-testid="accept-documents"]')).not.toBeNull();
+    expect((page.querySelector('.request-form button[type="submit"]') as HTMLButtonElement).disabled).toBeFalse();
+
+    subscriptions.getSalesDocuments.and.returnValue(throwError(() => ({ error: { message: 'Satış belgeleri henüz hazır değil.' } })));
+    fixture.componentInstance.selectPlan({ id: 'plan-1' } as never);
+    fixture.detectChanges();
+    expect(page.querySelector('[data-testid="documents-error"]')?.textContent).toContain('henüz hazır değil');
+    expect((page.querySelector('.request-form button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
+  });
+
+  it('offers withdrawal only for an approved payment inside its 14 days', () => {
+    const { component } = setup(true);
+    const later = new Date(Date.now() + 86_400_000).toISOString();
+    const earlier = new Date(Date.now() - 86_400_000).toISOString();
+    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: later } as never)).toBeTrue();
+    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: earlier } as never)).toBeFalse();
+    expect(component.canWithdraw({ status: 'Pending', withdrawableUntil: null } as never)).toBeFalse();
+    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: later, withdrawalStatus: 'Requested' } as never)).toBeFalse();
+    expect(component.canWithdraw({ status: 'Approved', withdrawableUntil: later, withdrawalStatus: 'Rejected' } as never)).toBeTrue();
+    expect(component.statusLabel({ status: 'Approved', withdrawalStatus: 'Approved' } as never)).toBe('Cayıldı');
+    expect(component.statusLabel({ status: 'Approved' } as never)).toBe('Onaylandı');
+  });
+
+  it('sends a withdrawal request and shows the answer in the history', () => {
+    const { component, subscriptions } = setup(true);
+    const request = { id: 'request-1', status: 'Approved', withdrawableUntil: new Date(Date.now() + 86_400_000).toISOString() } as never;
+    component.requests.set([request]);
+    component.openWithdrawal(request);
+    component.withdrawalReason = ' Vazgeçtim ';
+    component.submitWithdrawal(request);
+    expect(subscriptions.requestBankTransferWithdrawal).toHaveBeenCalledWith('request-1', 'Vazgeçtim');
+    expect(component.requests()[0].withdrawalStatus).toBe('Requested');
+    expect(component.withdrawingId()).toBeNull();
+
+    subscriptions.requestBankTransferWithdrawal.and.returnValue(throwError(() => ({ error: { message: 'Cayma süresi (14 gün) doldu.' } })));
+    component.openWithdrawal(request);
+    component.submitWithdrawal(request);
+    expect(component.withdrawalError()).toBe('Cayma süresi (14 gün) doldu.');
+    expect(component.withdrawalBusy()).toBeFalse();
+    component.cancelWithdrawal();
+    expect(component.withdrawingId()).toBeNull();
+  });
+
+  it('opens and closes the documents accepted with a request', () => {
+    const { component, subscriptions } = setup(true);
+    const request = { id: 'request-1', salesDocumentsVersion: '2026-11-14' } as never;
+    component.toggleAcceptedDocuments(request);
+    expect(subscriptions.getAcceptedSalesDocuments).toHaveBeenCalledWith('request-1');
+    expect(component.acceptedDocuments()?.documents.preInformation).toBe('onaylanan form');
+    component.toggleAcceptedDocuments(request);
+    expect(component.acceptedDocuments()).toBeNull();
   });
 });

@@ -829,6 +829,13 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.BankName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Iban).HasMaxLength(34).IsRequired();
             entity.Property(item => item.Instructions).HasMaxLength(2_000);
+            entity.Property(item => item.SellerTitle).HasMaxLength(200);
+            entity.Property(item => item.SellerAddress).HasMaxLength(500);
+            entity.Property(item => item.SellerTaxOffice).HasMaxLength(100);
+            entity.Property(item => item.SellerTaxNumber).HasMaxLength(11);
+            entity.Property(item => item.SellerMersisNumber).HasMaxLength(16);
+            entity.Property(item => item.SellerEmail).HasMaxLength(320);
+            entity.Property(item => item.SellerPhone).HasMaxLength(40);
         });
         modelBuilder.Entity<LegacyBankTransferPaymentRequest>(entity =>
         {
@@ -843,6 +850,10 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Note).HasMaxLength(2_000);
             entity.Property(item => item.Status).HasMaxLength(50).IsRequired().IsConcurrencyToken();
             entity.Property(item => item.ReviewNote).HasMaxLength(2_000);
+            entity.Property(item => item.SalesDocumentsVersion).HasMaxLength(20);
+            entity.Property(item => item.WithdrawalStatus).HasMaxLength(20);
+            entity.Property(item => item.WithdrawalReason).HasMaxLength(500);
+            entity.Property(item => item.WithdrawalReviewNote).HasMaxLength(500);
             entity.HasIndex(item => new { item.UserId, item.CreatedAt });
             entity.HasIndex(item => new { item.Status, item.CreatedAt });
             entity.HasIndex(item => new { item.UserId, item.PaymentReference }).IsUnique();

@@ -113,10 +113,28 @@ internal sealed class LegacyBankTransferPaymentSettings
     public DateTime CreatedAt { get; set; }
     public Guid? UpdatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    /// <summary>Legal check Y1: the seller block of the sales documents. A sale needs all but MERSİS.</summary>
+    public string? SellerTitle { get; set; }
+    public string? SellerAddress { get; set; }
+    public string? SellerTaxOffice { get; set; }
+    public string? SellerTaxNumber { get; set; }
+    public string? SellerMersisNumber { get; set; }
+    public string? SellerEmail { get; set; }
+    public string? SellerPhone { get; set; }
 }
 
 internal sealed class LegacyBankTransferPaymentRequest
 {
+    /// <summary>Legal check Y1: the documents the buyer accepted, exactly as shown (JSON of SpeedReadingSalesDocuments).</summary>
+    public string? SalesDocumentsVersion { get; set; }
+    public string? SalesDocumentsJson { get; set; }
+    public DateTime? SalesDocumentsAcceptedAt { get; set; }
+    public string? WithdrawalStatus { get; set; }
+    public string? WithdrawalReason { get; set; }
+    public DateTime? WithdrawalRequestedAt { get; set; }
+    public string? WithdrawalReviewNote { get; set; }
+    public DateTime? WithdrawalReviewedAt { get; set; }
+    public Guid? WithdrawalReviewedBy { get; set; }
     public int? AdultPayerDeclarationVersion { get; set; }
     public DateTime? AdultPayerDeclaredAt { get; set; }
     public Guid Id { get; set; }

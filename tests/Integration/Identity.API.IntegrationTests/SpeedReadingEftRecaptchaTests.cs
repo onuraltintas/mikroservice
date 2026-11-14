@@ -32,7 +32,7 @@ public sealed class SpeedReadingEftRecaptchaTests
     {
         var subscriptions = DispatchProxy.Create<ISpeedReadingSubscription, SubscriptionSpy>();
         var validator = new CaptchaSpy(accepted);
-        var controller = new BankTransferPaymentsController(subscriptions, validator, new GoogleRecaptchaOptions { Enabled = enabled });
+        var controller = new BankTransferPaymentsController(subscriptions, null!, validator, new GoogleRecaptchaOptions { Enabled = enabled });
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())], "test"));
