@@ -103,12 +103,12 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         Rows(context, "LegacyUserSubscription").Should().ContainSingle();
         var receipt = await context.ErasureExecutions.SingleAsync();
         receipt.SubjectUserId.Should().Be(subject);
-        receipt.FinancialRetentionUntil.Should().BeCloseTo(result.CompletedAt.AddYears(1), TimeSpan.FromSeconds(1));
+        receipt.FinancialRetentionUntil.Should().BeCloseTo(result.CompletedAt.AddYears(10), TimeSpan.FromSeconds(1));
         receipt.FinancialAnonymizedAt.Should().BeNull();
     }
 
     [Fact]
-    public async Task Retained_financial_records_are_anonymised_after_a_year()
+    public async Task Retained_financial_records_are_anonymised_after_ten_years()
     {
         await using var context = CreateContext();
         var subject = Guid.NewGuid();
@@ -127,8 +127,8 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         await new SpeedReadingErasureExecutionService(context, new Directory(null), clock).ExecuteAsync(Request(subject), CancellationToken.None);
         var processor = new SpeedReadingFinancialRetentionProcessor(context, clock);
 
-        (await processor.AnonymizeDueAsync(CancellationToken.None)).Should().Be(0, "nothing is due within the year");
-        clock.Now = now.AddYears(1).AddDays(1);
+        (await processor.AnonymizeDueAsync(CancellationToken.None)).Should().Be(0, "nothing is due within the ten years");
+        clock.Now = now.AddYears(10).AddDays(1);
         (await processor.AnonymizeDueAsync(CancellationToken.None)).Should().Be(1);
 
         context.ChangeTracker.Clear();

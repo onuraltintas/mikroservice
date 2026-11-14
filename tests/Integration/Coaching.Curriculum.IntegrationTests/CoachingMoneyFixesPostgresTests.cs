@@ -245,10 +245,10 @@ public sealed class CoachingMoneyFixesPostgresTests
         var clock = new Clock(DateTime.UtcNow);
         var studentExecution = await Erase(f.Db, files, student, clock);
         var parentExecution = await Erase(f.Db, files, parent, clock);
-        Assert.Equal<DateTime?>(studentExecution.CompletedAt.AddYears(5), studentExecution.FinancialRetentionUntil);
+        Assert.Equal<DateTime?>(studentExecution.CompletedAt.AddYears(10), studentExecution.FinancialRetentionUntil);
         Assert.True(parentExecution.RetainedFinancialRecordCount >= 1);
 
-        clock.Now = DateTimeOffset.UtcNow.AddYears(5).AddDays(1);
+        clock.Now = DateTimeOffset.UtcNow.AddYears(10).AddDays(1);
         await new CoachingFinancialRetentionProcessor(f.Db, clock, NullLogger<CoachingFinancialRetentionProcessor>.Instance).AnonymizeDueAsync(default);
 
         f.Db.ChangeTracker.Clear();

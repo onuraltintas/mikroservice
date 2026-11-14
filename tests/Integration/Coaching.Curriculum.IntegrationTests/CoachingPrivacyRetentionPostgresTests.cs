@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
-// Package 6 of claude/coaching-fix-plan.md; retention period five years since the coaching audit of 31.10.2026.
+// Package 6 of claude/coaching-fix-plan.md; retention period ten years since the legal check of 14.11.2026 (five years after the coaching audit of 31.10.2026).
 public sealed class CoachingPrivacyRetentionPostgresTests
 {
     private static readonly DateTime Start = new(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc);
@@ -36,7 +36,7 @@ public sealed class CoachingPrivacyRetentionPostgresTests
         var execution = await new CoachingErasureExecutionService(pg.Db, files.Storage, clock)
             .ExecuteAsync(new(Guid.NewGuid(), requestId, subject, Start, PersonalDataScope.Account), default);
         Assert.Equal(4, execution.RetainedFinancialRecordCount);
-        Assert.Equal<DateTime?>(Start.AddYears(5), execution.FinancialRetentionUntil);
+        Assert.Equal<DateTime?>(Start.AddYears(10), execution.FinancialRetentionUntil);
 
         // During the retention period everything stays as it was; only the institution seat is released.
         pg.Db.ChangeTracker.Clear();
@@ -47,9 +47,9 @@ public sealed class CoachingPrivacyRetentionPostgresTests
         var seat = await pg.Db.CoachingSubscriptionSeats.SingleAsync(x => x.Id == mine.Seat);
         Assert.True(seat.IsSuspended); Assert.Equal(subject, seat.StudentId);
 
-        clock.Now = Start.AddYears(5).AddMinutes(-1);
+        clock.Now = Start.AddYears(10).AddMinutes(-1);
         Assert.Equal(0, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
-        clock.Now = Start.AddYears(5).AddMinutes(1);
+        clock.Now = Start.AddYears(10).AddMinutes(1);
         Assert.Equal(1, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
         Assert.Equal(0, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
 
@@ -87,13 +87,13 @@ public sealed class CoachingPrivacyRetentionPostgresTests
 
         var hold = CoachingLegalHold.Place(subject, "Vergi incelemesi", Guid.NewGuid(), Start.AddMonths(6));
         pg.Db.Add(hold); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
-        clock.Now = Start.AddYears(5).AddDays(1);
+        clock.Now = Start.AddYears(10).AddDays(1);
         Assert.Equal(0, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
         Assert.Equal("ayse@example.test", (await pg.Db.CoachingPaymentRecords.SingleAsync(x => x.Id == mine.Payment)).UserEmail);
 
         var stored = await pg.Db.CoachingLegalHolds.SingleAsync();
-        stored.Release(Guid.NewGuid(), Start.AddYears(5).AddDays(2)); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
-        clock.Now = Start.AddYears(5).AddDays(3);
+        stored.Release(Guid.NewGuid(), Start.AddYears(10).AddDays(2)); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
+        clock.Now = Start.AddYears(10).AddDays(3);
         Assert.Equal(1, await Processor(pg.Db, clock).AnonymizeDueAsync(default));
         pg.Db.ChangeTracker.Clear();
         Assert.Equal("", (await pg.Db.CoachingPaymentRecords.SingleAsync(x => x.Id == mine.Payment)).UserEmail);

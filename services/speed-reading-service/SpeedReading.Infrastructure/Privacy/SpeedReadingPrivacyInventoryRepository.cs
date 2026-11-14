@@ -30,7 +30,7 @@ public sealed class SpeedReadingPrivacyInventoryRepository(OwnedSpeedReadingDbCo
                 + await context.UserAchievements.CountAsync(item => item.UserId == userId, cancellationToken),
             ["vocabularyProgress"] = await context.UserVocabularyProgresses.CountAsync(item => item.UserId == userId, cancellationToken),
             ["subscriptions"] = await legacy.UserSubscriptions.CountAsync(item => item.UserId == userId, cancellationToken),
-            // Review H2b: records kept for a year after erasure (failed card attempts are erased, not kept).
+            // Review H2b: records kept for ten years after erasure (legal check 14.11.2026; one year before) (failed card attempts are erased, not kept).
             ["financialRecords"] = await SpeedReadingFinancialRetention.CountAsync(legacy, userId, cancellationToken)
         };
 
