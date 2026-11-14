@@ -77,7 +77,7 @@ builder.Services.AddRequestTimeouts(options =>
 // Registered before AddReverseProxy so YARP's TryAdd keeps this factory.
 builder.Services.AddSingleton<IForwarderHttpClientFactory, GatewayForwarderHttpClientFactory>();
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(CourseManagementRouting.ReverseProxySection(builder.Configuration))
+    .LoadFromConfig(OptionalProductRouting.ReverseProxySection(builder.Configuration))
     .AddConfigFilter<GatewayProxyConfigFilter>()
     .AddGatewayRequestTransforms();
 
@@ -205,7 +205,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 // Used by the admin maintenance screen to list per-service maintenance switches.
 app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
 {
-    var clusters = CourseManagementRouting.VisibleClusterIds(configuration)
+    var clusters = OptionalProductRouting.VisibleClusterIds(configuration)
         .Select(id => id.Replace("-cluster", ""))
         .ToList();
     return Results.Ok(clusters);

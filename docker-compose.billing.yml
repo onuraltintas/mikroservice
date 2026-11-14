@@ -1,0 +1,69 @@
+# Optional development overlay for the Billing service ("Abonelik ve Ödeme"); existing services keep their
+# configuration. Billing is built in stages and goes live in one release at the end (decision 14.11.2026), so no
+# environment runs it unless this overlay (or the production one) is used.
+#   docker compose --env-file .env -f docker-compose.yml -f docker-compose.billing.yml up -d
+services:
+  billing-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: billing
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: ${BILLING_DB_PASSWORD:?Set a separate billing database password}
+    ports:
+      - "127.0.0.1:${BILLING_DB_PORT:-5436}:5432"
+    volumes:
+      - billing_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billing -d billing"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [edu-network]
+
+  billing-migrations:
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      BILLING_CONNECTION_STRING: "Host=billing-db;Database=billing;Username=billing;Password=${BILLING_DB_PASSWORD};GSS Encryption Mode=Disable"
+    depends_on:
+      billing-db:
+        condition: service_healthy
+    networks: [edu-network]
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      BILLING_CONNECTION_STRING: "Host=billing-db;Database=billing;Username=billing;Password=${BILLING_DB_PASSWORD};GSS Encryption Mode=Disable"
+      JWT_SECRET: ${JWT_SECRET:?Set Identity JWT secret}
+      JWT_ISSUER: ${JWT_ISSUER:?Set Identity JWT issuer}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:?Set Identity JWT audience}
+      JWT_KEY_ID: ${JWT_KEY_ID:-}
+      JWT_PREVIOUS_SECRETS: ${JWT_PREVIOUS_SECRETS:-}
+      JWT_PREVIOUS_KEY_IDS: ${JWT_PREVIOUS_KEY_IDS:-}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?Set RabbitMQ user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set RabbitMQ password}
+      AllowedHosts: "localhost;127.0.0.1;billing-service"
+    ports:
+      - "127.0.0.1:${BILLING_PORT:-5006}:8080"
+    depends_on:
+      billing-migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    networks: [edu-network]
+
+  api-gateway:
+    environment:
+      - Billing__Enabled=true
+      - ReverseProxy__Clusters__billing-cluster__Destinations__destination1__Address=http://billing-service:8080
+
+volumes:
+  billing_data:

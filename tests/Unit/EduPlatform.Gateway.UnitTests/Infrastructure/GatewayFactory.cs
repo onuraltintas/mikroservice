@@ -27,7 +27,8 @@ public sealed class GatewayFactory : WebApplicationFactory<Program>
         "coaching-cluster",
         "notification-cluster",
         "speed-reading-cluster",
-        "course-management-cluster"
+        "course-management-cluster",
+        "billing-cluster"
     ];
 
     private readonly string _backendBaseAddress;
@@ -48,6 +49,8 @@ public sealed class GatewayFactory : WebApplicationFactory<Program>
         builder.UseSetting("JWT_KEY_ID", "tests");
         // Production runs without Course Management; the contract tests cover the routes it adds.
         builder.UseSetting("CourseManagement:Enabled", "true");
+        // Billing goes live in one release at the end; the contract tests cover the routes it adds.
+        builder.UseSetting("Billing:Enabled", "true");
 
         foreach (var clusterId in ClusterIds)
         {
