@@ -29,11 +29,37 @@ public sealed record StudyTaskRescheduleInput([property: JsonRequired] [Range(0,
 public sealed record StudyTasksMoveInput([property: JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,
     [Required] IReadOnlyList<Guid> TaskIds, DateOnly PlannedDate, [Range(0,1439)] int StartMinute);
 public sealed record StudyTaskTitleInput([property:JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,[Required,MaxLength(200)] string Title);
-public sealed record ManualStudyTaskView(Guid Id, DateOnly PlannedDate, string Title, int PlannedMinutes,
-    Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null,
-    string? SourceName = null, int? PlannedQuestions = null, int? ActualQuestions = null,
-    IReadOnlyList<StudyTaskOutcomeView>? Outcomes = null,int? PlannedStartMinute=null,Guid? WeeklyLessonId=null,string? LessonName=null, IReadOnlyList<StudyRealizationChange>? RealizationHistory=null, int? RemainingMinutes=null, int? RemainingQuestions=null, Guid? OriginalTaskId=null, Guid? PredecessorTaskId=null, IReadOnlyList<StudyWorkDay>? WorkDays=null,
-    Guid? CompletionSourceTaskId=null,StudyContinuationView? Continuation=null,DateTime? SkippedAt=null,string? PlanKind=null,string? PlanReason=null);
+/// <summary>
+/// A task as a plan shows it. An empty field is left out of the JSON instead of being written as null: a year plan holds
+/// thousands of tasks and every change to one answers with the whole plan (measured on live 14.11.2026: 4,496 tasks, 3.9 MB).
+/// </summary>
+public sealed record ManualStudyTaskView(Guid Id,
+    DateOnly PlannedDate,
+    string Title,
+    int PlannedMinutes,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? TopicId,
+    bool IsPinned,
+    bool IsCompleted,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ActualMinutes,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTime? CompletedAt = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? SourceName = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? PlannedQuestions = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ActualQuestions = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<StudyTaskOutcomeView>? Outcomes = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? PlannedStartMinute=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? WeeklyLessonId=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LessonName=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<StudyRealizationChange>? RealizationHistory=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? RemainingMinutes=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? RemainingQuestions=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? OriginalTaskId=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? PredecessorTaskId=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<StudyWorkDay>? WorkDays=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? CompletionSourceTaskId=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] StudyContinuationView? Continuation=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTime? SkippedAt=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PlanKind=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PlanReason=null);
 public sealed record StudyTaskOutcomeView(Guid OutcomeId, string Code, string Name, Guid EstimateId, int EstimateNumber,
     int AllocatedMinutes, string Origin);
 public sealed record ManualStudyPlanView(Guid Id, int Version, string Title, StudyPlanStatus Status,

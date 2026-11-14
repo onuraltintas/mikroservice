@@ -1058,7 +1058,7 @@
     "services/coaching-service/Coaching.Application/StudyPlanning/IAutomaticStudyPlanPreviewService.cs": "d059cba41a704934ff3861c230ca65664f3c2165e0251fda93228317be94c67f",
     "services/coaching-service/Coaching.Application/StudyPlanning/IGoalTargetService.cs": "1353c7753694a40af193f3ae19cbbc5a865d0af035bf86a9b14a7d23274277c3",
     "services/coaching-service/Coaching.Application/StudyPlanning/ILearningSetupService.cs": "baea294525e66d8f7461c0d7bd5646ba7db8d05f3b033049f4ec67cd4981ceba",
-    "services/coaching-service/Coaching.Application/StudyPlanning/IManualStudyPlanService.cs": "5ca9b2ff833575bbb0ba52d96a280b4d216715e5dfe5272a4d47ad8aa0ed6df9",
+    "services/coaching-service/Coaching.Application/StudyPlanning/IManualStudyPlanService.cs": "31a8bd929146d1451a9ba5a8a99995c0e76574e2d94f3325552ae43ddf808339",
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudentExamService.cs": "1331e7c86f2de2a3601998cd64180f80b721b96217bee86d4215c1d74ddd3a8e",
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudentStudyReportService.cs": "1495655d3706a70c9e63c16261957aaa2fb1f95af77415babf8a61dfd62a6caf",
     "services/coaching-service/Coaching.Application/StudyPlanning/IStudyAvailabilityService.cs": "fe924b5e48ec0a707be067a8efb471eda906e47262f2bc5d72c796ef6d9b5c43",
