@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject, finalize, firstValueFrom, takeUntil, switchMap } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 import {clock} from './weekly-calendar';
+import {planDayItems} from './plan-short-runs';
 import {CoachingLearningSetupService,LearningLesson} from '../../../core/services/coaching-learning-setup.service';
 import {lessonColors,lessonKey} from './study-plan-colors';
 import {computed} from '@angular/core';
@@ -85,6 +86,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private readonly changeDetector=inject(ChangeDetectorRef);
   @ViewChild('calendarTaskDetail') private calendarTaskDetail?:ElementRef<HTMLElement>;
   selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);afterNextRender(()=>this.calendarTaskDetail?.nativeElement.focus(),{injector:this.injector});}
+  /** Paket J: a day's rows; a lesson's short back-to-back tasks are one row that opens (view only, each stays its own task). */
+  readonly dayItems=planDayItems;
   visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];const tasks=this.filteredTasks();return plan?.weeklySource?tasks.slice((this.taskPage-1)*50,this.taskPage*50):tasks;}
   readonly taskColors=computed(()=>lessonColors(this.selected()?.tasks??[]));
   taskColor(task:StudyTask){return this.taskColors().get(lessonKey(task));}

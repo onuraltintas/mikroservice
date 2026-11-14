@@ -70,3 +70,9 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 /* The record's own actions sit apart from the card above them; deleting is on the far side and reads as dangerous. */
 .record-actions { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--ui-border); justify-content: space-between; align-items: center; }
 .record-actions .danger { color: var(--ui-danger); border-color: currentColor; }
+
+/* Paket J: a lesson's short topics shown as one row that opens. */
+.short-run { border: 1px solid var(--ui-border); border-radius: .7rem; background: var(--ui-surface); }
+.short-run > summary { cursor: pointer; padding: .7rem .9rem; display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline; }
+.short-run[open] > summary { border-bottom: 1px solid var(--ui-border); }
+.short-run > :not(summary) { margin: .5rem; }

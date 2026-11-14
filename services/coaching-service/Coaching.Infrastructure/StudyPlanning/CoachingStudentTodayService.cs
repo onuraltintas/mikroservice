@@ -35,13 +35,12 @@ public sealed class CoachingStudentTodayService(CoachingDbContext db, CoachingMo
         var plan = await db.StudyPlanRevisions.AsNoTracking().Where(x => x.StudentId == student && x.Status == StudyPlanStatus.Active)
             .Select(x => (Guid?)x.Id).SingleOrDefaultAsync(ct);
         var week = new StudentTodayWeek(weekStart, 0, 0);
-        if (plan is { } planId)
+        if (plan.HasValue)
         {
-            var counts = await db.StudyPlanTasks.AsNoTracking()
-                .Where(x => x.StudentId == student && x.RevisionId == planId && x.SkippedAt == null
-                    && x.PlannedDate >= weekStart && x.PlannedDate <= weekStart.AddDays(6))
-                .GroupBy(x => x.IsCompleted).Select(g => new { Done = g.Key, Count = g.Count() }).ToArrayAsync(ct);
-            week = new(weekStart, counts.Sum(x => x.Count), counts.Where(x => x.Done).Sum(x => x.Count));
+            // Live test 14.11.2026: after a new plan was published in the middle of a week the page said 0/35 while the weekly
+            // report of the same week said 1/43 (the work finished in the archived plan). The week is counted as the report counts it.
+            var totals = (await CoachingStudentStudyReportService.WeeksAsync(db, student, weekStart, 1, ct))[0];
+            week = new(weekStart, totals.ScheduledTasks, totals.CompletedTasks);
         }
 
         var streak = await motivation.GetAsync(student, student, ct);

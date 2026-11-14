@@ -20,6 +20,8 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         return await Send(actor, email, role, institution, teacherUserId, true, message, ct);
     }
 
+    public const string TeacherInviteAlreadyStudent = "Bu öğrenci zaten öğrencinizdir; yeniden davet etmeniz gerekmez.";
+
     public const string TeacherInviteNeedsInstitutionMember =
         "Bu öğrenci kurumunuzun öğrencisi değil. Önce kurum yöneticinizin öğrenciyi kuruma davet etmesi gerekir; öğrenci kuruma katıldıktan sonra davetinizi gönderebilirsiniz.";
 
@@ -29,13 +31,18 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         await RequireTeacher(actor, institution, ct);
         // Live test 13.11.2026 (decision 4): an institution's teacher could invite a student outside the institution, and the
         // student could never accept ("Davet mevcut kurum üyeliğinizle uyuşmuyor"). The teacher is told before anything is sent.
+        var student = string.IsNullOrWhiteSpace(email) ? null : await accounts.FindByEmailAsync(email.Trim(), ct);
         if (institution is { } own)
         {
-            var student = string.IsNullOrWhiteSpace(email) ? null : await accounts.FindByEmailAsync(email.Trim(), ct);
             if (student is null || !await db.CoachingInstitutionMemberships.AnyAsync(x => x.UserId == student.UserId
                     && x.InstitutionId == own && x.Role == CoachingMemberRole.Student && x.IsActive, ct))
                 throw CoachingProfileStore.Conflict(TeacherInviteNeedsInstitutionMember);
         }
+        // Live test 14.11.2026: a student who was already this teacher's student was invited again, and had to accept an
+        // invitation that changed nothing.
+        if (student is not null && await db.CoachingTeacherStudentAssignments.AnyAsync(x => x.TeacherUserId == actor
+                && x.StudentUserId == student.UserId && x.IsActive, ct))
+            throw CoachingProfileStore.Conflict(TeacherInviteAlreadyStudent);
         return await Send(actor, email, "Student", institution, actor, false, message, ct);
     }
 

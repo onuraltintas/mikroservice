@@ -125,6 +125,15 @@
           </article>
 </ng-template>
 
+<!-- Paket J (user decision 14.11.2026): a lesson's short topics are one row; opened, each task is marked on its own. -->
+<ng-template #shortRun let-item>
+  <details class="short-run" data-testid="short-run">
+    <summary><strong>{{ item.run.lessonName }}</strong> · {{ item.tasks.length }} kısa konu · {{ item.run.minutes }} dk · {{ clock(item.run.startMinute) }}–{{ clock(item.run.startMinute + item.run.minutes) }}
+      <span class="muted">{{ item.run.done }}/{{ item.tasks.length }} tamamlandı</span></summary>
+    @for (task of item.tasks; track task.id) { <ng-container *ngTemplateOutlet="taskRow; context: { $implicit: task }" /> }
+  </details>
+</ng-template>
+
 <ng-template #taskRow let-task>
   <app-plan-task-row [task]="task" [color]="taskColor(task)" [badge]="sourceBadge(task)" [badgeTone]="sourceTone(task)" [overdue]="isOverdue(task)" [canComplete]="canQuickComplete(task)" [justCompleted]="lastCompletedId() === task.id" [busy]="busy()"
     (opened)="openTask(task.id)" (completed)="quickComplete(task)" (undone)="undoComplete(task)" />
@@ -224,7 +233,10 @@
         </div>
         <h2 class="day-title">{{ dayTitle(selectedDay() ?? planToday()) }}</h2>
         <div class="plan-tasks">
-          @for (task of dayTasks(); track task.id) { <ng-container *ngTemplateOutlet="taskRow; context: { $implicit: task }" /> }
+          @for (item of dayItems(dayTasks()); track $index) {
+            @if (item.run) { <ng-container *ngTemplateOutlet="shortRun; context: { $implicit: item }" /> }
+            @else { <ng-container *ngTemplateOutlet="taskRow; context: { $implicit: item.task }" /> }
+          }
           @empty { <p class="day-empty">Bu gün için planlı çalışman yok.</p> }
         </div>
       } @else {
@@ -234,7 +246,10 @@
         <div class="plan-tasks">
           @for (group of dayGroups().slice(0, listDays()); track group.date) {
             <section class="day-group"><h3 [attr.data-date]="group.date">{{ dayTitle(group.date) }}</h3>
-              @for (task of group.tasks; track task.id) { <ng-container *ngTemplateOutlet="taskRow; context: { $implicit: task }" /> }
+              @for (item of dayItems(group.tasks); track $index) {
+            @if (item.run) { <ng-container *ngTemplateOutlet="shortRun; context: { $implicit: item }" /> }
+            @else { <ng-container *ngTemplateOutlet="taskRow; context: { $implicit: item.task }" /> }
+          }
             </section>
           } @empty { <p class="day-empty">Bu süzgeçte çalışma yok.</p> }
           @if (dayGroups().length > listDays()) { <button type="button" class="secondary more" (click)="listDays.set(listDays() + 14)">Sonraki günleri göster</button> }
