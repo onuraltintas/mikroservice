@@ -579,4 +579,42 @@ public sealed class WeeklyProposalEngineTests
         Assert.Equal(60, again.Lessons.Single(x => x.LessonId == Id(2)).ProposedMinutes);
         Assert.Empty(WeeklyProposalEngine.RebuildGains(fill, again));
     }
+
+    [Fact]
+    public void SpacedReviewsFollowTheStudentsChoice()
+    {
+        Assert.Equal(300, WeeklyProposalEngine.WeeklyNeed(300, 2, 60, 1, Array.Empty<int>()));
+        Assert.Equal(300 + 2 * 3 * WeeklyPlanEngine.SpacedMinutes, WeeklyProposalEngine.WeeklyNeed(300, 2, 60, 1, new[] { 7, 30, 45 }));
+        // A review that would fall after the plan ends is not counted.
+        Assert.Equal(300 + 2 * 1 * WeeklyPlanEngine.SpacedMinutes, WeeklyProposalEngine.WeeklyNeed(300, 2, 20, 1, new[] { 7, 30, 45 }));
+        Assert.Equal(new[] { 30 }, WeeklyPlanEngine.RulesFor(new[] { 30 }).SpacedIntervalDays);
+        Assert.Equal(WeeklyPlanEngine.DefaultSpacedDays, WeeklyPlanEngine.RulesFor(null).SpacedIntervalDays);
+
+        var preferences = Coaching.Domain.Entities.StudyPlanPreferences.Create(Guid.NewGuid());
+        Assert.Null(preferences.SpacedReviewDayList());
+        preferences.SetSpacedReviewDays(new[] { 45, 7, 7 });
+        Assert.Equal("7,45", preferences.SpacedReviewDays);
+        preferences.SetSpacedReviewDays(Array.Empty<int>());
+        Assert.Empty(preferences.SpacedReviewDayList()!);
+        Assert.Throws<ArgumentException>(() => preferences.SetSpacedReviewDays(new[] { 14 }));
+    }
+
+    [Fact]
+    public void BackToBackOutcomesOfOneTopicAreOneSessionUpToAnHour()
+    {
+        var day = new DateOnly(2026, 11, 16); var lesson = Guid.NewGuid(); var topic = Guid.NewGuid(); var other = Guid.NewGuid();
+        WeeklyOutcomeSlice Piece(Guid topicId, int start, int minutes, string kind = "Learn", DateOnly? date = null) =>
+            new(date ?? day, start, lesson, "Tarih", new WeeklyOutcomeWork(topicId, "Konu", Guid.NewGuid(), "K", "Kazanım", Guid.NewGuid(), 1, minutes), minutes, false, kind, null, 2);
+        // 9+9+9+9+9+7 = 52 fits one hour; the next 9 would pass it and opens a new session.
+        var pieces = new[] { Piece(topic, 540, 9), Piece(topic, 549, 9), Piece(topic, 558, 9), Piece(topic, 567, 9), Piece(topic, 576, 9), Piece(topic, 585, 7),
+            Piece(topic, 592, 9), Piece(other, 601, 20), Piece(other, 630, 20), Piece(other, 650, 10, "Spaced"), Piece(other, 660, 20, date: day.AddDays(1)) };
+
+        var sessions = WeeklyOutcomeScheduler.Sessions(pieces, WeeklyPlanEngine.DefaultTopicSessionMinutes);
+
+        // One topic's hour, its rest, another topic, the same topic after a gap, a spaced review, the next day.
+        Assert.Equal(new[] { 6, 1, 1, 1, 1, 1 }, sessions.Select(x => x.Count).ToArray());
+        Assert.Equal(new[] { 52, 9, 20, 20, 10, 20 }, sessions.Select(x => x.Sum(p => p.Minutes)).ToArray());
+        Assert.Equal(pieces, sessions.SelectMany(x => x).ToArray());
+        Assert.All(WeeklyOutcomeScheduler.Sessions(pieces, 0), x => Assert.Single(x));
+    }
 }

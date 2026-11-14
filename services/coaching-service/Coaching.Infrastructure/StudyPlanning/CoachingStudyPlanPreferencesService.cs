@@ -36,6 +36,31 @@ public sealed class CoachingStudyPlanPreferencesService(CoachingDbContext db, IC
         return View(await db.Set<StudyPlanPreferences>().AsNoTracking().SingleAsync(x => x.StudentId == studentId, cancellationToken), true);
     }
 
+    public async Task<StudyPlanPreferencesView> SetSpacedReviewsAsync(SpacedReviewChoice request, CancellationToken cancellationToken = default)
+    {
+        var studentId = RequireStudent();
+        ArgumentNullException.ThrowIfNull(request);
+        var days = (request.Days ?? []).Distinct().ToArray();
+        if (days.Any(x => !StudyPlanPreferences.SpacedReviewDayChoices.Contains(x)))
+            throw new StudyPlanValidationException("Aralıklı tekrar 7, 30 ya da 45 gün sonra olabilir.");
+        var row = await db.Set<StudyPlanPreferences>().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
+        if (row is null)
+        {
+            row = StudyPlanPreferences.Create(studentId);
+            db.Add(row);
+        }
+        row.SetSpacedReviewDays(days);
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch (ConcurrencyException) { throw Conflict(); }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" }) { throw Conflict(); }
+        return View(await db.Set<StudyPlanPreferences>().AsNoTracking().SingleAsync(x => x.StudentId == studentId, cancellationToken),
+            await CoachingStudyRoutineService.PreparesForYksAsync(db, studentId, cancellationToken));
+    }
+
+    /// <summary>The review days the plan uses for this student: her choice, or <see cref="WeeklyPlanEngine.DefaultSpacedDays"/> while she has not chosen.</summary>
+    public static async Task<IReadOnlyList<int>> SpacedDaysAsync(CoachingDbContext db, Guid studentId, CancellationToken cancellationToken) =>
+        (await RowAsync(db, studentId, cancellationToken))?.SpacedReviewDayList() ?? WeeklyPlanEngine.DefaultSpacedDays;
+
     /// <summary>Checks the names (Turkish sentences for the student); a focus is cleared, not refused, when she does not prepare for YKS.</summary>
     public static (StudyExamFocus? Focus, StudyTempo? Tempo) Validate(StudyExamFocus? focus, StudyTempo? tempo, bool preparesForYks)
     {
@@ -66,7 +91,7 @@ public sealed class CoachingStudyPlanPreferencesService(CoachingDbContext db, IC
     }
 
     public static StudyPlanPreferencesView View(StudyPlanPreferences row, bool preparesForYks) =>
-        new(preparesForYks ? Focus(row) : null, Tempo(row), row.Version, row.UpdatedAt);
+        new(preparesForYks ? Focus(row) : null, Tempo(row), row.Version, row.UpdatedAt) { SpacedReviewDays = row.SpacedReviewDayList() };
 
     public static StudyExamFocus? Focus(StudyPlanPreferences row) => Enum.TryParse<StudyExamFocus>(row.ExamFocus, out var focus) ? focus : null;
     public static StudyTempo? Tempo(StudyPlanPreferences row) => Enum.TryParse<StudyTempo>(row.Tempo, out var tempo) ? tempo : null;

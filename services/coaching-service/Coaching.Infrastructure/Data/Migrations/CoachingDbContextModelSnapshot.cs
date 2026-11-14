@@ -3002,6 +3002,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("exam_id");
 
+                    b.Property<bool>("HasNoScore")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_no_score");
+
                     b.Property<string>("LessonAnswersJson")
                         .HasColumnType("jsonb")
                         .HasColumnName("lesson_answers");
@@ -4319,6 +4323,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ExamFocus")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("SpacedReviewDays")
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 

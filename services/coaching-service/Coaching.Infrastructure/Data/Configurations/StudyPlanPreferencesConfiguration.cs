@@ -17,6 +17,7 @@ public sealed class StudyPlanPreferencesConfiguration : IEntityTypeConfiguration
         builder.HasIndex(x => x.StudentId).IsUnique();
         builder.Property(x => x.ExamFocus).HasMaxLength(16);
         builder.Property(x => x.Tempo).HasMaxLength(16);
+        builder.Property(x => x.SpacedReviewDays).HasMaxLength(16);
         builder.Property(x => x.Version).IsConcurrencyToken();
     }
 }

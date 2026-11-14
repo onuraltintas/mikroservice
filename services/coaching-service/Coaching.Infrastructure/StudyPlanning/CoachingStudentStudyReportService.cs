@@ -72,15 +72,16 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
         var start = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var end = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
         var exams = await db.ExamResults.AsNoTracking()
+            // Paket I4: a result saved without a score has none to average or to count as score evidence; its lesson answers still count.
             .Where(x => x.StudentId == student && x.Exam.ExamDate >= start && x.Exam.ExamDate <= end)
             .OrderBy(x => x.Exam.ExamDate).ThenBy(x => x.Id)
-            .Select(x => new { ResultId = x.Id, x.ExamId, x.Exam.ExamDate, x.Exam.StudentOwnerId, x.Exam.ExamType, x.Exam.MaxScore, x.Score, x.LessonAnswersJson })
+            .Select(x => new { ResultId = x.Id, x.ExamId, x.Exam.ExamDate, x.Exam.StudentOwnerId, x.Exam.ExamType, x.Exam.MaxScore, x.Score, x.HasNoScore, x.LessonAnswersJson })
             .Take(1001).ToListAsync(cancellationToken);
         if (exams.Count > 1000) throw ReportLimit();
-        var evidence = exams.Select(x => new GoalScoreEvidence(x.ResultId, x.ExamId,
+        var evidence = exams.Where(x => !x.HasNoScore).Select(x => new GoalScoreEvidence(x.ResultId, x.ExamId,
             x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType,
             x.MaxScore, x.Score, x.ExamDate)).ToArray();
-        var groups = exams.Where(x => x.MaxScore > 0).GroupBy(x => new { Source = x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType, x.MaxScore })
+        var groups = exams.Where(x => x.MaxScore > 0 && !x.HasNoScore).GroupBy(x => new { Source = x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType, x.MaxScore })
             .Select(g => new StudyExamGroup(g.Key.Source, g.Key.ExamType, g.Key.MaxScore, g.Count(),
                 decimal.Round(g.Average(x => 100m * x.Score / x.MaxScore), 1)))
             .OrderBy(x => x.Source).ThenBy(x => x.ExamType).ThenBy(x => x.MaxScore).ToArray();

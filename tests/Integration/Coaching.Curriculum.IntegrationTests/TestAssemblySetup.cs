@@ -11,4 +11,15 @@ internal static class TestAssemblySetup
     /// </summary>
     [ModuleInitializer]
     internal static void PlanTheCatalogMinutes() => WeeklyPlanEngine.ContentFactor = 1m;
+
+    /// <summary>
+    /// The suite's plans expect the one-week spaced review. Paket I5 made reviews the student's choice (none by default); the suite
+    /// pins the default to one week and tests the choice on its own (WeeklyProposalEngineTests).
+    /// </summary>
+    [ModuleInitializer]
+    internal static void ReviewAfterAWeek() => WeeklyPlanEngine.DefaultSpacedDays = [7];
+
+    /// <summary>Paket I5: the suite's plans expect one task per outcome; the sessions of a topic are tested on their own.</summary>
+    [ModuleInitializer]
+    internal static void OneTaskPerOutcome() => WeeklyPlanEngine.TopicSessionMinutes = 0;
 }

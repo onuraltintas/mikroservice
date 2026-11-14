@@ -5,12 +5,13 @@ using Coaching.Domain.Enums;
 
 namespace Coaching.Application.StudyPlanning;
 
+/// <summary><c>Score</c> is the score on the result document; null when there is none (Paket I4: a practice exam solved at home).</summary>
 public sealed record StudentExamInput([Required] string Title, ExamType ExamType, DateOnly ExamDate,
-    decimal Score, decimal MaxScore, int CorrectAnswers, int WrongAnswers, int EmptyAnswers,
+    decimal? Score, decimal MaxScore, int CorrectAnswers, int WrongAnswers, int EmptyAnswers,
     [Required] IReadOnlyList<LessonAnswerStatistics> Lessons, PracticeExamInput? PracticeExam = null);
 public sealed record ReplaceStudentExamRequest([Required] StudentExamInput Exam, [property: JsonRequired] int ExpectedVersion);
 public sealed record StudentExamView(Guid Id, int Version, string Title, ExamType ExamType, DateOnly ExamDate,
-    decimal Score, decimal MaxScore, int CorrectAnswers, int WrongAnswers, int EmptyAnswers,
+    decimal? Score, decimal MaxScore, int CorrectAnswers, int WrongAnswers, int EmptyAnswers,
     string Source, IReadOnlyList<LessonAnswerStatistics> Lessons, PracticeExamInput? PracticeExam = null, PracticeExamSummary? NetSummary = null);
 public interface IStudentExamService
 {

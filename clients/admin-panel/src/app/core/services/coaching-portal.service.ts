@@ -192,7 +192,7 @@ export interface ExamResult {
   examTitle: string;
   examDate: string;
   examType: string;
-  score: number;
+  score: number | null; // null: a student-reported result saved without a score (Paket I4)
   maxScore: number;
   correctAnswers?: number;
   wrongAnswers?: number;

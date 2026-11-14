@@ -67,12 +67,22 @@ export class WizardSummaryStepComponent implements OnInit {
   @Input() windows: WeeklyProposalWindow[] | null = null;
   /** "Sınavına kadar tek tempo var…" when the tempo step was skipped. */
   @Input() tempoNote = '';
+  /** Paket I5: the review days the student chose (none: no spaced reviews in the plan). */
+  @Input() reviewDays: number[] = [];
+  reviewNote() {
+    const days = this.reviewDays, who = this.staffStudentId ? 'Öğrencinin bitirdiği' : 'Bitirdiğin';
+    if (!days.length) return this.staffStudentId ? 'Öğrenci aralıklı tekrar seçmedi; plana tekrar konmaz.' : 'Aralıklı tekrar seçmedin; plana tekrar konmaz. İstersen “Tekrar” adımından ekleyebilirsin.';
+    const list = days.length === 1 ? `${days[0]}` : `${days.slice(0, -1).join(', ')} ve ${days[days.length - 1]}`;
+    return `${who} her konu ${list} gün sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).`;
+  }
   @Input() context: LearningContext | null = null;
   @Input() canGoBack = true;
   /** H5's "Yeniden öner" (?yeniden=oner): open with "Haftanı baştan öner" (after the usual confirmation). */
   @Input() replaceOnOpen = false;
   @Input() choices = new SummaryChoices();
   @Output() addHours = new EventEmitter<void>();
+  /** Paket I5: "Tekrar seçimini değiştir" (the wizard opens the step that holds the review choice). */
+  @Output() changeReviews = new EventEmitter<void>();
   @Output() planCreated = new EventEmitter<string>();
   @Output() contextSaved = new EventEmitter<LearningSetupView>();
   /** Review of PR 135 (S1): the weekly draft was saved or reloaded; true when it has cards (the next proposal is Fill). */
@@ -244,6 +254,43 @@ export class WizardSummaryStepComponent implements OnInit {
     if (names.length > 3) return `${names.slice(0, 3).join(', ')} ve ${names.length - 3} ders daha`;
     return names.length > 1 ? `${names.slice(0, -1).join(', ')} ve ${names.at(-1)}` : names[0] ?? '';
   }
+  // --- Paket I5 (user decision 14.11.2026): what is short, by how much, and what would close it ---------------------------------
+  /** The weekly minutes a lesson still lacks after the saved and proposed cards. */
+  lessonGap(lesson: { neededMinutes: number; existingMinutes: number; proposedMinutes: number }) {
+    return Math.max(0, lesson.neededMinutes - lesson.existingMinutes - lesson.proposedMinutes);
+  }
+  /**
+   * How much time closes the week's shortage, as two ready amounts: the same extra on each of the five weekdays, or the whole of it
+   * at the weekend. Rounded up to half hours; "yaklaşık", since sessions are whole hours and the week is proposed again afterwards.
+   */
+  addHoursAdvice(view: WeeklyProposal) {
+    const half = (minutes: number) => Math.ceil(minutes / 30) * 30;
+    const weekday = this.hours(half(view.shortageMinutes / 5)), weekend = this.hours(half(view.shortageMinutes));
+    return this.staffStudentId
+      ? `Öğrenci hafta içi her gün yaklaşık ${weekday} saat daha ya da hafta sonu toplam ${weekend} saat eklerse bütün derslerine yetişir.`
+      : `Hafta içi her gün yaklaşık ${weekday} saat daha ya da hafta sonu toplam ${weekend} saat eklersen bütün derslerine yetişirsin.`;
+  }
+  /** The lesson that lacks the most weekly time. */
+  biggestGap(view: WeeklyProposal) {
+    const lesson = [...view.lessons].sort((a, b) => this.lessonGap(b) - this.lessonGap(a) || a.lessonName.localeCompare(b.lessonName, 'tr'))[0];
+    return lesson && this.lessonGap(lesson) > 0 ? `En çok açık veren ders: ${lesson.lessonName} (haftada ${this.hours(this.lessonGap(lesson))} saat eksik).` : '';
+  }
+  reviewDayList() { const days = this.reviewDays; return days.length === 1 ? `${days[0]}` : `${days.slice(0, -1).join(', ')} ve ${days[days.length - 1]}`; }
+  /** The topic the yearly plan reaches in a lesson that does not finish (its last scheduled new work). */
+  reachedTopic(lessonId: string) {
+    const tasks = (this.preview()?.schedule.tasks ?? []).filter(x => x.lessonId === lessonId && x.kind !== 'Spaced');
+    return tasks.length ? tasks[tasks.length - 1].outcome.topicName : '';
+  }
+  /** What the spaced reviews of the shown plan take per week, in minutes (0 without reviews). */
+  reviewWeeklyMinutes() {
+    const p = this.preview(); if (!p) return 0;
+    const minutes = p.schedule.tasks.filter(x => x.kind === 'Spaced').reduce((sum, x) => sum + x.minutes, 0);
+    const [fy, fm, fd] = p.request.startDate.split('-').map(Number), [ty, tm, td] = p.request.endDate.split('-').map(Number);
+    const weeks = Math.max(1, Math.ceil((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86_400_000 / 7));
+    return minutes / weeks;
+  }
+  anyLate() { return this.lessons().some(x => this.late(x)); }
+
   lessonsWithoutTime(view: WeeklyProposal) { return view.lessons.filter(x => x.noTime).map(x => x.lessonName).join(', '); }
   emptyText(view: WeeklyProposal) {
     const staff = !!this.staffStudentId;

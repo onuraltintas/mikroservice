@@ -19,7 +19,8 @@ test('one 10-minute review a week after a topic, and the plan asks for 75 % of a
     'clients/admin-panel/src/app/features/coaching-portal/pages/student-weekly-outcome-plan.component.html']) {
     const page = await read(path);
     assert.doesNotMatch(page, /1, 7 ve 30/);
-    assert.match(page, /bir hafta sonra 10 dakikalık kısa bir tekrarla/);
+    // Paket I5: the review days are the student's choice, so no page promises a review after a week.
+    assert.doesNotMatch(page, /bir hafta sonra 10 dakikalık kısa bir tekrarla/);
   }
 });
 

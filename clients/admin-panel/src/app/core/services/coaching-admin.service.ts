@@ -81,7 +81,7 @@ export interface CoachingAdminStudentDetail {
   totalSessions: number;
   totalGoals: number;
   assignments: { id: string; title: string; status: string; dueDate: string; score?: number | null }[];
-  exams: { id: string; title: string; score: number; maxScore: number; examDate: string }[];
+  exams: { id: string; title: string; score: number | null; maxScore: number; examDate: string }[];
 }
 
 export type CoachingStudentHistoryType = 'Assignments' | 'Exams' | 'Sessions' | 'Goals';

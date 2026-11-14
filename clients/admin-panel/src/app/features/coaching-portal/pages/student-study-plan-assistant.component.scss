@@ -26,3 +26,7 @@
 
 // Paket I2: the way to the suggested lessons reads as the step's main action (as .step-actions .primary-link).
 a.button-link{display:inline-block;padding:.6rem 1rem;border-radius:.6rem;font-weight:650;text-decoration:none;background:var(--ui-brand);color:var(--ui-brand-contrast);border-color:var(--ui-brand)}
+/* Paket I5: the spaced review choice sits apart from the step's own questions. */
+.review-choice{display:grid;gap:.5rem;margin:1rem 0;padding:.9rem 1rem;border:1px solid var(--ui-border);border-radius:.6rem}.review-choice legend{font-weight:650;padding:0 .3rem}.review-choice p{margin:0}
+/* Paket I5: the ready ways to close a shortage. */
+.solutions{display:grid;gap:.35rem;margin:.6rem 0 0;padding-left:1.1rem}.solutions li{line-height:1.45}

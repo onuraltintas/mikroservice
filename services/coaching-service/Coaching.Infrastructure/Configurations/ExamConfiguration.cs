@@ -131,6 +131,11 @@ public class ExamResultConfiguration : IEntityTypeConfiguration<ExamResult>
             .HasPrecision(5, 2)
             .IsRequired();
 
+        builder.Property(x => x.HasNoScore)
+            .HasColumnName("has_no_score")
+            .IsRequired();
+        builder.Ignore(x => x.DeclaredScore);
+
         builder.Property(x => x.CorrectAnswers)
             .HasColumnName("correct_answers");
 

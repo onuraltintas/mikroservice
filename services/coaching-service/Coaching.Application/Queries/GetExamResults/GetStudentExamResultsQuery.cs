@@ -25,7 +25,7 @@ public record ExamResultDto(
     string ExamTitle,
     DateTime ExamDate,
     string ExamType,
-    decimal Score,
+    decimal? Score,
     decimal MaxScore,
     int? CorrectAnswers,
     int? WrongAnswers,

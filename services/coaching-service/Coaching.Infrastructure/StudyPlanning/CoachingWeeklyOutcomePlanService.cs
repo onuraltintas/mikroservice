@@ -121,7 +121,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var work=curriculum.Work;
         var blocked=placements.Select(x=>new WeeklyBlockedTime(x.Date,x.Start,x.Minutes))
             .Concat(completed.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes))).ToArray();
-        var rules=v2?WeeklyPlanEngine.Rules:null;
+        var rules=v2?WeeklyPlanEngine.RulesFor(await CoachingStudyPlanPreferencesService.SpacedDaysAsync(db,student,ct)):null;
         var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
         var yieldWeights=new Dictionary<Guid,int>();
         if(v2&&request.PrioritizeWhenShort&&schedule.Lessons.Where(x=>x.RemainingMinutes>0).Select(x=>x.LessonId).ToArray() is {Length:>0} shortLessons)
@@ -340,14 +340,20 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             if(await db.StudyPlanRevisions.AnyAsync(x=>x.StudentId==student&&x.Status==StudyPlanStatus.Draft,ct))throw new BusinessRuleException(WeeklyOutcomePlanCodes.DraftExists,"Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.");
             revision.SetWeeklySource(prepared.Source);var tasks=new List<StudyPlanTask>();var links=new List<StudyPlanTaskOutcome>();
             var v2=request.Preview.EngineVersion==WeeklyPlanEngine.CurrentVersion;
-            foreach(var slice in preview.Schedule.Tasks)
+            // Paket I5: the back-to-back outcomes of one topic are one task (a session); each outcome keeps its own link and minutes.
+            foreach(var session in WeeklyOutcomeScheduler.Sessions(preview.Schedule.Tasks,v2?WeeklyPlanEngine.TopicSessionMinutes:0))
             {
+                var slice=session[0];var sessionMinutes=session.Sum(x=>x.Minutes);
+                int? sessionQuestions=session.Any(x=>x.PlannedQuestions.HasValue)?session.Sum(x=>x.PlannedQuestions??0):null;
                 var title=slice.Kind=="Spaced"?"Tekrar · "+slice.Outcome.TopicName:slice.Outcome.TopicName;
-                var task=StudyPlanTask.Create(revision,slice.Date,title.Length>200?title[..200]:title,slice.Minutes,slice.Outcome.TopicId,plannedQuestions:slice.PlannedQuestions);
+                var task=StudyPlanTask.Create(revision,slice.Date,title.Length>200?title[..200]:title,sessionMinutes,slice.Outcome.TopicId,plannedQuestions:sessionQuestions);
                 task.SetWeeklyPlacement(slice.LessonId,slice.LessonName,slice.StartMinute);if(v2)task.SetPlanDecision(slice.Kind,slice.Reason);tasks.Add(task);
                 // A spaced review revisits finished curriculum; it must not count as new outcome coverage.
                 if(slice.Kind=="Spaced")continue;
-                var link=StudyPlanTaskOutcome.Create(task.Id,slice.Outcome.OutcomeId,slice.Outcome.EstimateId,slice.Minutes,"Catalog");link.CaptureText(slice.Outcome.Code,slice.Outcome.Name);links.Add(link);
+                foreach(var part in session)
+                {
+                    var link=StudyPlanTaskOutcome.Create(task.Id,part.Outcome.OutcomeId,part.Outcome.EstimateId,part.Minutes,"Catalog");link.CaptureText(part.Outcome.Code,part.Outcome.Name);links.Add(link);
+                }
             }
             foreach(var placement in prepared.Placements)
             {

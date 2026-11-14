@@ -286,6 +286,18 @@ public class ExamResult : Entity
     public Guid StudentId { get; private set; }
 
     public decimal Score { get; private set; }
+    /// <summary>
+    /// Paket I4 (user decision 14.11.2026): a practice exam solved at home has no result document, so no score. True only on
+    /// a student's own record that was saved without one; <see cref="Score"/> is 0 then and is not a score.
+    /// </summary>
+    public bool HasNoScore { get; private set; }
+    /// <summary>The score to show: null when the result was saved without one.</summary>
+    public decimal? DeclaredScore => HasNoScore ? null : Score;
+    public void SetScoreDeclared(bool declared)
+    {
+        HasNoScore = !declared;
+        if (!declared) Score = 0;
+    }
     public int? CorrectAnswers { get; private set; }
     public int? WrongAnswers { get; private set; }
     public int? EmptyAnswers { get; private set; }

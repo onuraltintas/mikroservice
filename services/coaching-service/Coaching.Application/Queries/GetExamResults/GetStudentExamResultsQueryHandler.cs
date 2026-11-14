@@ -49,7 +49,7 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
                 ExamTitle: exam.Title,
                 ExamDate: exam.ExamDate,
                 ExamType: exam.ExamType.ToString(),
-                Score: studentResult.Score,
+                Score: studentResult.DeclaredScore,
                 MaxScore: exam.MaxScore,
                 CorrectAnswers: studentResult.CorrectAnswers,
                 WrongAnswers: studentResult.WrongAnswers,

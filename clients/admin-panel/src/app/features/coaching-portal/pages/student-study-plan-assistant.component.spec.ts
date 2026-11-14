@@ -61,7 +61,8 @@ describe('StudentStudyPlanAssistantComponent', () => {
       get: vi.fn((..._a: unknown[]) => of({ id: 'p', version: 1, title: 'Plan', status: 'Active', tasks: [], weeklySource: o.activeEnd ? { endDate: o.activeEnd } : null })),
       publish: vi.fn() };
     const routines = { get: vi.fn((_s?: string | null) => of(o.routine ?? null)), save: vi.fn((u: StudyRoutineUpdate) => of({ ...routineOf(u.answers), version: 3 })) };
-    const prefs = { get: vi.fn((_s?: string | null) => of(o.prefs ?? null)), save: vi.fn((u: StudyPlanPreferences) => of({ ...u, version: 1, updatedAt: null })) };
+    const prefs = { get: vi.fn((_s?: string | null) => of(o.prefs ?? null)), save: vi.fn((u: StudyPlanPreferences) => of({ ...u, version: 1, updatedAt: null })),
+      saveSpacedReviews: vi.fn((days: number[]) => of({ examFocus: null, tempo: null, version: 2, updatedAt: null, spacedReviewDays: days })) };
     TestBed.configureTestingModule({ imports: [StudentStudyPlanAssistantComponent], providers: [provideRouter([]),
       { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingLearningSetupService, useValue: learning },
       { provide: CoachingWeeklyOutcomePlanService, useValue: engine }, { provide: CoachingStudyPlanningService, useValue: planning },
@@ -286,7 +287,7 @@ describe('StudentStudyPlanAssistantComponent', () => {
       const { el } = await setup({ active: true, routine: routineOf(answers), availability: hours });
       expect(el.querySelector('#edit-title')?.textContent).toBe('Planında neyi değiştirmek istiyorsun?');
       expect(document.activeElement?.id).toBe('edit-title');
-      expect(['Saatlerim Okul, yemek, kurs ve çalışma saatlerin', 'Derslerim Derslerinin önceliği ve zorluğu', 'Tempo Konuları ne zaman bitireceğin']
+      expect(['Saatlerim Okul, yemek, kurs ve çalışma saatlerin', 'Derslerim Derslerinin önceliği ve zorluğu', 'Tekrar ve tempo Aralıklı tekrar seçimin ve konuları ne zaman bitireceğin']
         .map(x => !!button(el, x))).toEqual([true, true, true]);
       expect(button(el, 'Planı baştan kur')).toBeTruthy();
     });
@@ -501,6 +502,45 @@ describe('StudentStudyPlanAssistantComponent', () => {
     expect(el.textContent).not.toContain('Konulardan plan');
     expect(el.querySelector('app-student-automatic-plan')).toBeNull();
     expect(el.textContent).not.toMatch(/Yapay zekâ|kurallı olarak değerlendirilir/);
+  });
+
+  // Paket I5 (user decision 14.11.2026): spaced reviews are the student's own choice.
+  describe('spaced review choice', () => {
+    const boxes = (el: HTMLElement) => Array.from(el.querySelectorAll<HTMLInputElement>('[data-testid="review-day"]'));
+    it('chooses nothing for a student who was never asked and says that no review is planned', async () => {
+      const { c, el, fixture } = await setup({ routine: routineOf(answers), availability: hours });
+      c.next(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      expect(c.currentStep()).toBe('courses');
+      expect(boxes(el).map(x => x.checked)).toEqual([false, false, false]);
+      expect(el.querySelector('[data-testid="review-text"]')?.textContent).toContain('plana tekrar konmaz');
+    });
+    it('saves the days as they are chosen and reads the tempo options again', async () => {
+      const { c, el, fixture, prefs, weekly } = await setup({ routine: routineOf(answers), availability: hours, prefs: { examFocus: null, tempo: null, spacedReviewDays: [7] } });
+      c.next(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      expect(boxes(el).map(x => x.checked)).toEqual([true, false, false]);
+      boxes(el)[2].dispatchEvent(new Event('change')); fixture.detectChanges();
+      expect(prefs.saveSpacedReviews).toHaveBeenCalledWith([7, 45]);
+      expect(el.querySelector('[data-testid="review-text"]')?.textContent).toContain('7 ve 45 gün sonra');
+      const before = weekly.tempoOptions.mock.calls.length;
+      c.next(); fixture.detectChanges(); await fixture.whenStable();
+      expect(weekly.tempoOptions.mock.calls.length).toBe(before + 1);
+    });
+    it('keeps the earlier choice and says so when the save fails', async () => {
+      const { c, el, fixture, prefs } = await setup({ routine: routineOf(answers), availability: hours, prefs: { examFocus: null, tempo: null, spacedReviewDays: [] } });
+      prefs.saveSpacedReviews.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      c.next(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      boxes(el)[0].dispatchEvent(new Event('change')); fixture.detectChanges();
+      expect(c.reviewDays()).toEqual([]);
+      expect(el.querySelector('[data-testid="review-choice"] [role="alert"]')?.textContent).toContain('kaydedilemedi');
+    });
+    it('shows a teacher the choice read only', async () => {
+      const { c, el, fixture, prefs } = await setup({ staff: 'student-1', routine: routineOf(answers), availability: hours, prefs: { examFocus: null, tempo: null, spacedReviewDays: [7, 30] } });
+      c.next(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      expect(el.querySelector<HTMLFieldSetElement>('[data-testid="review-choice"]')?.disabled).toBe(true);
+      c.setReview(45);
+      expect(prefs.saveSpacedReviews).not.toHaveBeenCalled();
+      expect(c.reviewDays()).toEqual([7, 30]);
+    });
   });
 });
 

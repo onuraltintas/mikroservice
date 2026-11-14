@@ -216,7 +216,8 @@ export class CoachingPortalProgressComponent implements OnInit {
 
 
   scorePercentage(result: ExamResult) {
-    return result.maxScore > 0 ? Math.round(result.score / result.maxScore * 100) : null;
+    // Paket I4: a result saved without a score has no percentage.
+    return result.maxScore > 0 && result.score !== null && result.score !== undefined ? Math.round(result.score / result.maxScore * 100) : null;
   }
 
   subjectScoreLabel(scores?: Record<string, number>) {

@@ -32,7 +32,7 @@ test('admin panel: no broken menu entry, a plan period agrees with its days', as
 
 test('screens say what happened', async () => {
   assert.match(await read('clients/admin-panel/shared/coaching-notification-target.ts'), /Invitation: 'Davet'/);
-  assert.match(await read(app + 'features/coaching-portal/pages/student-exam-results.component.ts'), /"Sonuç belgesindeki puan" boş/);
+  assert.match(await read(app + 'features/coaching-portal/pages/student-exam-results.component.ts'), /puanın yoksa alanı boş bırak/);
   const exams = await read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-exams.component.html');
   assert.match(exams, /data-testid="future-exam-warning"/);
   assert.match(await read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-subscription.component.ts'), /Koltuk bekliyor/);

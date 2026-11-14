@@ -45,7 +45,9 @@ public static class WeeklyProposalEngine
     public static int SessionsBeforeBreak(bool middleSchool) => middleSchool ? 1 : 3;
 
     /// <summary>The spaced reviews (one per interval of <see cref="WeeklyPlanEngine.SpacedIntervalDays"/>) that fall inside a plan of this many days.</summary>
-    public static int ReviewsWithin(int days) => WeeklyPlanEngine.SpacedIntervalDays.Count(x => x < days);
+    public static int ReviewsWithin(int days) => ReviewsWithin(days, WeeklyPlanEngine.SpacedIntervalDays);
+    /// <summary>Paket I5: the same with the student's own review days.</summary>
+    public static int ReviewsWithin(int days, IReadOnlyList<int> intervals) => intervals.Count(x => x < days);
 
     /// <summary>
     /// A lesson's weekly need: its remaining work plus one <see cref="WeeklyPlanEngine.SpacedMinutes"/> review per finished topic for each
@@ -53,8 +55,8 @@ public static class WeeklyProposalEngine
     /// (<paramref name="timesPerWeekday"/>, at least 1). A weekly hour on such a day gives the plan at least that many hours, so a week
     /// without shortage fits the annual plan. Near the exam (under a week) every weekday comes once and the need is the whole work.
     /// </summary>
-    public static int WeeklyNeed(int workMinutes, int finishedTopics, int days, int timesPerWeekday) =>
-        (int)Math.Ceiling((Math.Max(0, workMinutes) + Math.Max(0, finishedTopics) * ReviewsWithin(days) * WeeklyPlanEngine.SpacedMinutes) / (double)Math.Max(1, timesPerWeekday));
+    public static int WeeklyNeed(int workMinutes, int finishedTopics, int days, int timesPerWeekday, IReadOnlyList<int>? intervals = null) =>
+        (int)Math.Ceiling((Math.Max(0, workMinutes) + Math.Max(0, finishedTopics) * ReviewsWithin(days, intervals ?? WeeklyPlanEngine.SpacedIntervalDays) * WeeklyPlanEngine.SpacedMinutes) / (double)Math.Max(1, timesPerWeekday));
 
     /// <summary>How many times each weekday comes from <paramref name="today"/> to <paramref name="end"/>, both included.</summary>
     public static IReadOnlyDictionary<DayOfWeek, int> Occurrences(DateOnly today, DateOnly end)

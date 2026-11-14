@@ -66,3 +66,7 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 .outside-actions { margin-bottom: 1rem; align-items: center; }
 .link-button { display: inline-flex; align-items: center; min-height: 44px; padding: .65rem .9rem; border-radius: .5rem; background: var(--ui-brand); color: var(--ui-brand-contrast); font-size: .9rem; font-weight: 600; text-decoration: none; }
 .link-button:focus-visible { outline: 2px solid var(--coaching-focus); outline-offset: 3px; }
+
+/* The record's own actions sit apart from the card above them; deleting is on the far side and reads as dangerous. */
+.record-actions { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--ui-border); justify-content: space-between; align-items: center; }
+.record-actions .danger { color: var(--ui-danger); border-color: currentColor; }
