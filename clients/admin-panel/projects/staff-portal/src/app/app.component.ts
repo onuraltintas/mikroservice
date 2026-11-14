@@ -37,6 +37,7 @@ export class AppComponent implements AfterViewInit {
   }
   readonly auth = inject(StaffAuthService);
   readonly theme = inject(DarkModeService);
+  reloadPage(): void { globalThis.location?.reload(); }
   readonly menuOpen = signal(false);
   @ViewChild('teacherMenuToggle') private teacherMenuToggle?: ElementRef<HTMLButtonElement>;
   closeTeacherMenu(): void { this.menuOpen.set(false); this.teacherMenuToggle?.nativeElement.focus(); }

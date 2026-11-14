@@ -563,9 +563,17 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             .Where(x => x.StudentUserId == studentUserId && x.IsActive).ToListAsync(ct);
         var names = (await accounts.GetAccountsAsync(rows.Select(x => x.TeacherUserId).Distinct().ToArray(), ct))
             .ToDictionary(x => x.UserId, x => $"{x.FirstName} {x.LastName}".Trim());
+        // Live test 13.11.2026: the student never saw which institution she had joined. A name that cannot be read is left out.
+        var institutions = new Dictionary<Guid, string?>();
+        foreach (var id in rows.Where(x => x.InstitutionId.HasValue).Select(x => x.InstitutionId!.Value).Distinct())
+        {
+            try { institutions[id] = await accounts.InstitutionNameAsync(id, ct); }
+            catch (Exception e) when (e is HttpRequestException or InvalidOperationException) { institutions[id] = null; }
+        }
         return rows.GroupBy(x => (x.TeacherUserId, x.InstitutionId)).Select(group => group.OrderBy(x => x.StartDate).First())
             .Select(x => new CoachingStudentTeacherLink(x.TeacherUserId, names.GetValueOrDefault(x.TeacherUserId) ?? "Öğretmen",
-                x.InstitutionId, x.StartDate, x.InstitutionId == null))
+                x.InstitutionId, x.StartDate, x.InstitutionId == null,
+                x.InstitutionId is { } institution ? institutions.GetValueOrDefault(institution) : null))
             .OrderByDescending(x => x.CanLeave).ThenBy(x => x.TeacherName, StringComparer.Create(new System.Globalization.CultureInfo("tr-TR"), true))
             .ToArray();
     }

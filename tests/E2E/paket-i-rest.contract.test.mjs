@@ -71,3 +71,13 @@ test('small screen items: invitations, teacher report, parent page, diploma grad
   for (const file of ['coaching-institution-analytics.component.ts', 'coaching-institution-exams.component.ts'])
     assert.doesNotMatch(await read(staff + file), /length: 12 \}|\[1, 2, 3, 4, 5/, file);
 });
+
+test('the staff portal warns about another account, an institution has a name, one student has no percentile band', async () => {
+  const staff = 'clients/admin-panel/projects/staff-portal/src/app/';
+  assert.match(await read(staff + 'auth/staff-auth.service.ts'), /new BroadcastChannel\('eduivme-session'\)/);
+  assert.match(await read(staff + 'app.component.html'), /data-testid="other-account-warning"/);
+  assert.match(await read('services/identity-service/Identity.API/Controllers/InternalCoachingController.cs'), /name = institution\?\.Name/);
+  assert.match(await read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs'), /accounts\.InstitutionNameAsync\(id, ct\)/);
+  assert.match(await read(app + 'features/coaching-portal/pages/student-teachers.component.ts'), /teacher\.institutionName \+ ' öğretmeni'/);
+  assert.match(await read(staff + 'features/coaching/coaching-institution-exams.component.html'), /data\.results\.length > 1 \? 'İlk '/);
+});

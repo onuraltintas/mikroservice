@@ -5,7 +5,8 @@ using EduPlatform.Shared.Contracts.Coaching;
 namespace Coaching.Application.Profiles;
 
 /// <summary>Roadmap O12: one of the student's active teacher links. Only independent links can be ended by the student.</summary>
-public sealed record CoachingStudentTeacherLink(Guid TeacherUserId, string TeacherName, Guid? InstitutionId, DateTime Since, bool CanLeave);
+public sealed record CoachingStudentTeacherLink(Guid TeacherUserId, string TeacherName, Guid? InstitutionId, DateTime Since, bool CanLeave,
+    string? InstitutionName = null);
 
 public interface ICoachingAccountDirectory
 {
@@ -13,6 +14,8 @@ public interface ICoachingAccountDirectory
     Task<CoachingAccount?> FindByEmailAsync(string email, CancellationToken cancellationToken);
     Task<CoachingAdminAccessScope?> AuthorizeAdminAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> IsActiveInstitutionAsync(Guid institutionId, CancellationToken cancellationToken);
+    /// <summary>Paket I3: the institution's name for display; null when the directory does not know it.</summary>
+    Task<string?> InstitutionNameAsync(Guid institutionId, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
     Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewerUserId, Guid studentUserId, CancellationToken cancellationToken);
 
     /// <summary>

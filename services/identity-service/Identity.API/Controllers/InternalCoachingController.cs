@@ -44,8 +44,12 @@ public sealed class InternalCoachingController : ControllerBase
     [HttpGet("institutions/{institutionId:guid}/active")]
     [AllowAnonymous]
     [InternalServiceKey]
-    public async Task<IActionResult> InstitutionActive(Guid institutionId, CancellationToken ct) =>
-        Ok(new { isActive = (await _institutionRepository.GetByIdAsync(institutionId, ct)) is { IsActive: true } });
+    public async Task<IActionResult> InstitutionActive(Guid institutionId, CancellationToken ct)
+    {
+        // Paket I3: the name travels with the state, so a student's screen can say which institution a teacher belongs to.
+        var institution = await _institutionRepository.GetByIdAsync(institutionId, ct);
+        return Ok(new { isActive = institution is { IsActive: true }, name = institution?.Name });
+    }
 
     private const int MaxStudentTargets = 100;
     private const int MaxReportPageSize = 100;

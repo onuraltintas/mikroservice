@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 /** Roadmap O12: one of the student's teachers; only independent links can be ended by the student. */
-export interface CoachingStudentTeacher { teacherUserId: string; teacherName: string; institutionId: string | null; since: string; canLeave: boolean }
+export interface CoachingStudentTeacher { teacherUserId: string; teacherName: string; institutionId: string | null; institutionName?: string | null; since: string; canLeave: boolean }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudentTeachersService {
