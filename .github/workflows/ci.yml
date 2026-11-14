@@ -882,7 +882,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, billing-tests, course-management-postgres-smoke, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend, coaching-development-regression]
+    needs: [dotnet, tests, course-management-postgres-smoke, billing-tests, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend, coaching-development-regression]
     strategy:
       fail-fast: false
       matrix:
