@@ -173,7 +173,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 </div>
                 <div class="mt-4 grid gap-4 lg:grid-cols-3 text-sm">
                   <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status | coachingLabel }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
-                  <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }} · {{ exam.score }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
+                  <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }} · {{ exam.score ?? 'puan yok' }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
                   <div><h4 class="font-semibold">Hedefler</h4>@for (goal of studentGoals(); track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.progress }}%</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }</div>
                 </div>
               }

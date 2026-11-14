@@ -132,6 +132,40 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    // Paket I4 (user decision 14.11.2026): a practice exam solved at home has no result document, so no score.
+    [Fact]
+    public async Task StudentExam_IsSavedWithoutAScoreAndIsNotCountedAsOne()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var actor = new Actor(); var access = new CoachingAccessPolicy(actor);
+            var service = new CoachingStudentExamService(db, access);
+
+            var created = await service.CreateAsync(new StudentExamInput("Evde çözdüm", ExamType.Mock, new(2026, 10, 1), null, 100, 8, 1, 1, []));
+            Assert.Null(created.Score);
+            db.ChangeTracker.Clear();
+            var row = await db.ExamResults.AsNoTracking().SingleAsync();
+            Assert.True(row.HasNoScore); Assert.Equal(0m, row.Score); Assert.Null(row.DeclaredScore);
+            Assert.Null((await service.ListAsync(1, 10)).Items.Single().Score);
+            // No score to average: the study report has no exam group for it.
+            var report = await new CoachingStudentStudyReportService(db, access).GetAsync(new(2026, 10, 1), new(2026, 10, 2));
+            Assert.Empty(report.ExamGroups);
+
+            // A score added later is a score; taking it away again is not a zero.
+            var withScore = await service.ReplaceAsync(created.Id, new(new StudentExamInput("Evde çözdüm", ExamType.Mock, new(2026, 10, 1), 70, 100, 8, 1, 1, []), created.Version));
+            Assert.Equal(70m, withScore.Score);
+            db.ChangeTracker.Clear();
+            Assert.False((await db.ExamResults.AsNoTracking().SingleAsync()).HasNoScore);
+            var without = await service.ReplaceAsync(created.Id, new(new StudentExamInput("Evde çözdüm", ExamType.Mock, new(2026, 10, 1), null, 100, 8, 1, 1, []), withScore.Version));
+            Assert.Null(without.Score);
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(new StudentExamInput("Hatalı", ExamType.Mock, new(2026, 10, 1), 120, 100, 8, 1, 1, [])));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     // K4 (31.10.2026): changing an LGS deneme into a plain mock removes its deneme scope instead of keeping the old one.
     [Fact]
     public async Task StudentExam_ChangingAnLgsDenemeToAMockDropsTheDenemeScope()

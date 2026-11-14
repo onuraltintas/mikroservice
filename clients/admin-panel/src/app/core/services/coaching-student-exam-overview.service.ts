@@ -7,7 +7,7 @@ export type StudentExamSource = 'Student' | 'Teacher' | 'Institution';
 export interface StudentExamSection { sectionCode: string; name: string; questionCount: number; correct: number; wrong: number; empty: number; net: number }
 export interface StudentExamOverviewItem {
   examId: string; resultId: string; source: StudentExamSource; title: string; examDate: string; examType: string;
-  examCode: string | null; examName: string | null; net: number | null; score: number; maxScore: number;
+  examCode: string | null; examName: string | null; net: number | null; score: number | null; maxScore: number;
   sections: StudentExamSection[]; rank: number | null; participants: number | null; topPercent: number | null;
 }
 export interface StudentExamTrendPoint { examId: string; examDate: string; net: number; source: StudentExamSource }

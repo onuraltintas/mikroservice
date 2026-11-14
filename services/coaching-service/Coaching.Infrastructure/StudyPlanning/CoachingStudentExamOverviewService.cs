@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed record StudentExamOverviewItem(Guid ExamId, Guid ResultId, string Source, string Title, DateTime ExamDate, string ExamType,
-    string? ExamCode, string? ExamName, decimal? Net, decimal Score, decimal MaxScore, IReadOnlyList<PracticeSectionSummary> Sections,
+    string? ExamCode, string? ExamName, decimal? Net, decimal? Score, decimal MaxScore, IReadOnlyList<PracticeSectionSummary> Sections,
     int? Rank, int? Participants, decimal? TopPercent);
 public sealed record StudentExamTrendPoint(Guid ExamId, DateTime ExamDate, decimal Net, string Source);
 public sealed record StudentExamTrend(string ExamCode, string ExamName, decimal MaxNet, IReadOnlyList<StudentExamTrendPoint> Points);
@@ -44,7 +44,7 @@ public sealed class CoachingStudentExamOverviewService(CoachingDbContext db, ICo
                           select new
                           {
                               ExamId = exam.Id, ResultId = result.Id, exam.Title, exam.ExamDate, exam.ExamType, exam.MaxScore,
-                              exam.StudentOwnerId, exam.CreatedByAdminId, result.Score, result.PracticeExamJson
+                              exam.StudentOwnerId, exam.CreatedByAdminId, result.Score, result.HasNoScore, result.PracticeExamJson
                           }).Take(MaxExams).ToListAsync(ct);
 
         var parsed = rows.Select(x =>
@@ -62,7 +62,7 @@ public sealed class CoachingStudentExamOverviewService(CoachingDbContext db, ICo
         {
             places.TryGetValue(x.Row.ExamId, out var place);
             return new StudentExamOverviewItem(x.Row.ExamId, x.Row.ResultId, x.Source, x.Row.Title, x.Row.ExamDate, x.Row.ExamType.ToString(),
-                x.Summary?.ExamCode, x.Summary?.Name, x.Summary?.Net, x.Row.Score, x.Row.MaxScore, x.Summary?.Sections ?? [],
+                x.Summary?.ExamCode, x.Summary?.Name, x.Summary?.Net, x.Row.HasNoScore ? null : x.Row.Score, x.Row.MaxScore, x.Summary?.Sections ?? [],
                 place?.Rank, place?.Participants, place?.TopPercent);
         }).ToArray();
 

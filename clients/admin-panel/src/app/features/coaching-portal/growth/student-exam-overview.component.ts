@@ -66,7 +66,7 @@ import { possessive } from '../parent/parent-model';
       <span class="when"><strong>{{ day(exam.examDate) }}</strong></span>
       <span class="what"><strong>{{ exam.title }}</strong><small>{{ kind(exam) }}@if (place(exam)) { · {{ place(exam) }} }</small></span>
       <cs-status-chip [label]="source(exam)" [tone]="tone(exam)" />
-      <span class="result">@if (exam.net !== null) { <strong>{{ net(exam.net) }} net</strong> } @else { <strong>{{ net(exam.score) }}</strong><small>/ {{ net(exam.maxScore) }} puan</small> }</span>
+      <span class="result">@if (exam.net !== null) { <strong>{{ net(exam.net) }} net</strong> } @else if (exam.score !== null && exam.score !== undefined) { <strong>{{ net(exam.score) }}</strong><small>/ {{ net(exam.maxScore) }} puan</small> } @else { <small>Puan girilmedi</small> }</span>
     </ng-template>`
 })
 export class StudentExamOverviewComponent implements OnInit {

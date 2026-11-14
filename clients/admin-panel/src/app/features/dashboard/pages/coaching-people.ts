@@ -89,7 +89,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
                   <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status | coachingLabel }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
-                  <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
+                  <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score ?? 'puan yok' }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
                 </div>
                 <p class="text-xs text-gray-500">Bu öğrenciye erişim aktif kurum üyeliğiyle doğrulanır; ayrıntı kurum değişikliği dâhil tüm koçluk geçmişini kapsar.</p>
               }

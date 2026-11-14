@@ -146,13 +146,14 @@ export class StudentExamResultsComponent {
     // Live test 13.11.2026: one message for every mistake did not say which field was wrong.
     const missing = !this.title.trim() ? 'Deneme adını yaz.'
       : !Number.isFinite(date.getTime()) ? 'Deneme tarihini seç.'
-      : this.score === null || !Number.isFinite(this.score) ? '"Sonuç belgesindeki puan" boş; puanı yaz.'
-      : this.score < 0 || this.score > this.maxScore ? 'Puan, 0 ile puan ölçeği arasında olmalı.' : null;
+      // Paket I4 (user decision 14.11.2026): a practice exam solved at home has no result document; the score may be left empty.
+      : this.score !== null && !Number.isFinite(this.score) ? 'Puan sayı olmalı; puanın yoksa alanı boş bırak.'
+      : this.score !== null && (this.score < 0 || this.score > this.maxScore) ? 'Puan, 0 ile puan ölçeği arasında olmalı.' : null;
     if (missing) { this.error.set(missing); return; }
     if (!this.title.trim() || this.title.trim().length > 200 || !Number.isFinite(date.getTime())
       || date.toISOString().slice(0, 10) !== this.examDate || this.examDate <= '0001-01-01'
-      || this.score === null || !Number.isFinite(this.score) || !Number.isFinite(this.maxScore)
-      || this.score < 0 || this.score > this.maxScore || this.maxScore <= 0 || this.maxScore > 999.99
+      || !Number.isFinite(this.maxScore) || this.maxScore <= 0 || this.maxScore > 999.99
+      || this.score !== null && (!Number.isFinite(this.score) || this.score < 0 || this.score > this.maxScore)
       || counts.some(x => !Number.isInteger(x) || x < 0) || counts.reduce((a, x) => a + x, 0) > 1000
       || this.lessons.some(x => !Number.isInteger(x.questionCount) || x.questionCount < 1 || x.questionCount > 1000
         || [x.correct, x.wrong, x.empty].some(n => !Number.isInteger(n) || n < 0) || x.correct + x.wrong + x.empty !== x.questionCount)) {

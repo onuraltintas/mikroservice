@@ -1013,7 +1013,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         var examItems = await exams
             .OrderByDescending(item => item.Exam.ExamDate)
             .Select(item => new CoachingAdminStudentExamDto(
-                item.ExamId, item.Exam.Title, item.Score, item.Exam.MaxScore, item.Exam.ExamDate,
+                item.ExamId, item.Exam.Title, item.HasNoScore ? (decimal?)null : item.Score, item.Exam.MaxScore, item.Exam.ExamDate,
                 item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded"))
             .Take(10).ToListAsync(cancellationToken);
 
@@ -1111,7 +1111,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                         item.Exam.Title,
                         item.Exam.ExamDate,
                         "Result",
-                        item.Score,
+                        item.DeclaredScore,
                         item.Exam.MaxScore,
                         null, null, item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded") {
                             NetSummary = item.GetPracticeExam() is { } practice ? PracticeExamRules.Summarize(practice) : null

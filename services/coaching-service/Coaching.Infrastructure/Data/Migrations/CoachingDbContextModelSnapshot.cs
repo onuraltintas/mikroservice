@@ -3002,6 +3002,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("exam_id");
 
+                    b.Property<bool>("HasNoScore")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_no_score");
+
                     b.Property<string>("LessonAnswersJson")
                         .HasColumnType("jsonb")
                         .HasColumnName("lesson_answers");
