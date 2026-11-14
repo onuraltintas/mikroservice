@@ -155,6 +155,26 @@ export class AuthService implements OnDestroy {
 
     private _userProfile = signal<UserProfile | null>(null);
     userProfile = this._userProfile.asReadonly();
+
+    // Live test 13.11.2026 (Paket I3): tabs of one browser share the sign-in cookie, so signing in with another account in
+    // one tab silently changed who the other tabs acted as. The tabs tell each other; the page warns, it does not sign out
+    // (user decision 14.11.2026).
+    private readonly _otherAccountSignedIn = signal(false);
+    /** True when this browser signed in with another account than the one this tab shows. */
+    readonly otherAccountSignedIn = this._otherAccountSignedIn.asReadonly();
+    private readonly sessionChannel: BroadcastChannel | null = (() => {
+        try {
+            if (typeof BroadcastChannel === 'undefined') return null;
+            const channel = new BroadcastChannel('eduivme-session');
+            channel.onmessage = event => this.noteSignedInAccount((event.data as { id?: unknown } | null)?.id);
+            return channel;
+        } catch { return null; }
+    })();
+    /** Another tab (or this one, after a silent refresh) reports the account the browser is signed in with. */
+    noteSignedInAccount(id: unknown): void {
+        const mine = this._userProfile()?.id;
+        if (typeof id === 'string' && id && mine) this._otherAccountSignedIn.set(id !== mine);
+    }
     private _accessToken = signal('');
     private accessTokenExpiresAt = 0;
     private refreshTimer?: ReturnType<typeof setTimeout>;
@@ -460,6 +480,12 @@ export class AuthService implements OnDestroy {
         ];
         const mainRole = appRoles.find(role => rolesArray.includes(role)) || rolesArray[0] || 'User';
 
+        const previousId = this._userProfile()?.id;
+        const signedInId = parsedToken.sub || parsedToken.id;
+        // The same tab got another account's token without a sign-in here (the shared cookie was replaced elsewhere).
+        if (previousId && signedInId && previousId !== signedInId) this._otherAccountSignedIn.set(true);
+        else if (!previousId) this._otherAccountSignedIn.set(false);
+        try { if (signedInId) this.sessionChannel?.postMessage({ id: signedInId }); } catch { /* a closed channel only loses the warning */ }
         this._userProfile.set({
             id: parsedToken.sub || parsedToken.id,
             email: parsedToken.email || parsedToken.unique_name,

@@ -21,7 +21,7 @@ const scopes = institutionExamScopes;
 export class CoachingInstitutionExamsComponent implements OnInit {
   private readonly api = inject(CoachingInstitutionExamsService);
   readonly scopes = scopes;
-  readonly grades = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  readonly grades = [5, 6, 7, 8, 9, 10, 11, 12]; // Paket I6: the product starts at grade 5
   readonly exams = signal<InstitutionExamPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
   readonly selected = signal<InstitutionExam | null>(null);
   readonly report = signal<InstitutionExamReport | null>(null);

@@ -143,6 +143,12 @@ export class StudentExamResultsComponent {
     const date = /^\d{4}-\d{2}-\d{2}$/.test(this.examDate) ? new Date(`${this.examDate}T00:00:00Z`) : new Date(NaN);
     const counts = totals ? [totals.correct, totals.wrong, totals.empty] : this.lessons.length ? [this.lessons.reduce((a, x) => a + x.correct, 0), this.lessons.reduce((a, x) => a + x.wrong, 0), this.lessons.reduce((a, x) => a + x.empty, 0)]
       : [this.correctAnswers, this.wrongAnswers, this.emptyAnswers];
+    // Live test 13.11.2026: one message for every mistake did not say which field was wrong.
+    const missing = !this.title.trim() ? 'Deneme adını yaz.'
+      : !Number.isFinite(date.getTime()) ? 'Deneme tarihini seç.'
+      : this.score === null || !Number.isFinite(this.score) ? '"Sonuç belgesindeki puan" boş; puanı yaz.'
+      : this.score < 0 || this.score > this.maxScore ? 'Puan, 0 ile puan ölçeği arasında olmalı.' : null;
+    if (missing) { this.error.set(missing); return; }
     if (!this.title.trim() || this.title.trim().length > 200 || !Number.isFinite(date.getTime())
       || date.toISOString().slice(0, 10) !== this.examDate || this.examDate <= '0001-01-01'
       || this.score === null || !Number.isFinite(this.score) || !Number.isFinite(this.maxScore)

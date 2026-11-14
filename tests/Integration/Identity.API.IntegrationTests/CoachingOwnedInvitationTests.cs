@@ -43,6 +43,29 @@ public sealed class CoachingOwnedInvitationTests
         Assert.Single(f.Accounts.Users[student].Roles); Assert.Equal("Student", f.Accounts.Users[student].Roles[0]);
     }
 
+    // Live test 13.11.2026 (Paket I3, decision 4): the invitation was sent and the student could never accept it.
+    [Fact]
+    public async Task AnInstitutionTeacherInvitesOnlyTheInstitutionsStudents()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
+        var inst = Guid.NewGuid(); f.Accounts.Institutions.Add(inst);
+        var admin = f.AddAccount("InstitutionAdmin"); f.Accounts.Admins[admin] = new(false, inst);
+        var teacher = f.AddAccount("Teacher"); var student = f.AddAccount("Student");
+        await f.Store.SetMembershipAsync(admin, inst, teacher, CoachingMemberRole.Teacher, true, default);
+        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System, new Events(), new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
+
+        var refused = await Assert.ThrowsAnyAsync<Exception>(() => service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default));
+        Assert.Equal(CoachingInvitationStore.TeacherInviteNeedsInstitutionMember, refused.Message);
+        var unknown = await Assert.ThrowsAnyAsync<Exception>(() => service.SendTeacherAsync(teacher, "kayitsiz@example.test", null, default));
+        Assert.Equal(CoachingInvitationStore.TeacherInviteNeedsInstitutionMember, unknown.Message);
+        Assert.Empty(await f.Db.CoachingInvitations.ToArrayAsync());
+
+        await f.Store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, true, default);
+        var invitation = await service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default);
+        await service.AcceptAsync(student, invitation.Id, default);
+        Assert.Equal(CoachingInvitationStatus.Accepted, (await f.Db.CoachingInvitations.SingleAsync()).Status);
+    }
+
     [Fact]
     public async Task RevokedInviterAndWrongProductRoleCannotBeAccepted()
     {

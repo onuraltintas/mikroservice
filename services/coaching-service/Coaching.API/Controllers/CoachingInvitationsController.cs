@@ -35,7 +35,10 @@ public sealed class CoachingInvitationsController(CoachingDbContext db, Coaching
         var rows = await db.CoachingInvitations.AsNoTracking().Where(x => x.RecipientEmail == email
             && x.Status == CoachingInvitationStatus.Pending && x.ExpiresAt > now).OrderByDescending(x => x.CreatedAt).ToArrayAsync(ct);
         var senders = (await accounts.GetAccountsAsync(rows.Select(x => x.InviterUserId).Distinct().ToArray(), ct)).ToDictionary(x => x.UserId);
+        // Live test 13.11.2026: the student saw only the sender's e-mail address; the name says who is inviting.
+        static string? FullName(EduPlatform.Shared.Contracts.Coaching.CoachingAccount? account) => account is null ? null : $"{account.FirstName} {account.LastName}".Trim() is { Length: > 0 } name ? name : null;
         return Ok(rows.Select(x => new { x.Id, inviterEmail = senders.GetValueOrDefault(x.InviterUserId)?.Email,
+            inviterName = FullName(senders.GetValueOrDefault(x.InviterUserId)),
             type = x.Type, status = x.Status.ToString(), x.Message, x.CreatedAt, x.ExpiresAt }));
     }
 

@@ -76,7 +76,7 @@
             </div>
           </div>
           <div class="student-context">
-            <span>{{ student.institutionName || 'Bağımsız öğrenci' }}</span>
+            <span>{{ student.institutionName || (student.institutionId ? 'Kurum öğrencisi' : 'Bağımsız öğrenci') }}</span>
             <small>Atama: {{ formatAssignmentDate(student.assignmentStartDate) }}</small>
           </div>
           <button class="student-open" type="button" data-testid="open-student-report"

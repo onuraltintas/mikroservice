@@ -23,3 +23,6 @@
 .focus-topics{display:grid;gap:.5rem;padding-top:.8rem;border-top:1px solid var(--ui-border)}.focus-topics h4{margin:0}.topic-picker{display:grid;gap:.4rem}.topic-list,.chosen-topics{list-style:none;margin:0;padding:0;display:grid;gap:.3rem;max-height:18rem;overflow:auto}.topic-list li,.chosen-topics li{display:flex;justify-content:space-between;gap:.5rem;align-items:center;font-size:.88rem}.small{padding:.3rem .6rem;font-size:.8rem}
 .edit-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem}.edit-choices .choice{margin:0;text-align:left;display:grid;gap:.2rem;padding:.9rem}.link-button{justify-self:start;background:none;border:0;padding:.3rem 0;color:var(--ui-text-muted);text-decoration:underline}
 @media(max-width:760px){.range-picker{grid-template-columns:1fr}.step-actions{justify-content:stretch}.step-actions>*{flex:1 1 auto}}
+
+// Paket I2: the way to the suggested lessons reads as the step's main action (as .step-actions .primary-link).
+a.button-link{display:inline-block;padding:.6rem 1rem;border-radius:.6rem;font-weight:650;text-decoration:none;background:var(--ui-brand);color:var(--ui-brand-contrast);border-color:var(--ui-brand)}

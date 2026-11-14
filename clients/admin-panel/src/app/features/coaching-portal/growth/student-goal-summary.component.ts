@@ -105,6 +105,7 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
         <form class="cs-diploma" (ngSubmit)="saveDiploma()">
           <label for="diploma-grade">Diploma notun <small>(YKS puanına eklenir)</small></label>
           <input id="diploma-grade" name="diploma" type="number" inputmode="decimal" min="50" max="100" step="0.01" [(ngModel)]="diploma">
+          @if (usesProfileDiploma()) { <small data-testid="diploma-from-profile">Boş bırakırsan profilindeki diploma notu kullanılır; tahminine şu an o not dahil.</small> }
           <button type="submit" class="cs-growth-secondary">Hesapla</button>
         </form>
       }
@@ -140,6 +141,8 @@ export class StudentGoalSummaryComponent implements OnInit {
   readonly hasYks = computed(() => [...this.data()?.estimates ?? [], ...this.data()?.notComputed ?? []].some(x => scoreGroup(x) === 'YKS'));
   readonly notComputed = (item: ScoreTypeNotComputed) => notComputedText(item);
   diploma: number | null = null;
+  /** Live test 13.11.2026: the field was empty although the profile's diploma grade was in the estimate. */
+  usesProfileDiploma() { return this.diploma == null && (this.data()?.estimates ?? []).some(x => x.includesDiplomaGrade); }
 
   ngOnInit() {
     try { const saved = Number(localStorage.getItem(this.key)); if (saved >= 50 && saved <= 100) this.diploma = saved; } catch { /* storage unavailable */ }

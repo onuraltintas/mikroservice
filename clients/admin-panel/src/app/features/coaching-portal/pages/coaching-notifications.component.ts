@@ -15,7 +15,8 @@ import { NotificationService } from '../../../core/services/notification.service
   styleUrl: './coaching-notifications.component.scss'
 })
 export class CoachingNotificationsComponent {
-  readonly typeLabel = coachingNotificationLabel;
+  /** A type without a Turkish name is shown as "Bildirim", never as its code. */
+  readonly typeLabel = (type: string) => { const label = coachingNotificationLabel(type); return label === type ? 'Bildirim' : label; };
   readonly target = (notification: Parameters<typeof coachingNotificationTarget>[0]) => coachingNotificationTarget(notification, 'student');
   private readonly notificationService = inject(NotificationService);
 

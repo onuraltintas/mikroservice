@@ -51,7 +51,7 @@
         <h5>Sıralama</h5>
         <table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Şube</th><th>Net</th><th>Puan</th><th>Dilim</th></tr></thead>
           <tbody>@for (row of data.results; track row.studentId) {
-            <tr><td>{{ row.rank }}</td><td>{{ row.studentName }}</td><td>{{ row.classBranch || '—' }}</td><td>{{ net(row.net) }}</td><td>{{ row.score }}</td><td>İlk {{ percent(row.topPercent) }}</td></tr>
+            <tr><td>{{ row.rank }}</td><td>{{ row.studentName }}</td><td>{{ row.classBranch || '—' }}</td><td>{{ net(row.net) }}</td><td>{{ row.score }}</td><td>{{ data.results.length > 1 ? 'İlk ' + percent(row.topPercent) : '—' }}</td></tr>
           } @empty { <tr><td colspan="6">Henüz sonuç yok. Sonuç dosyasını yükleyin.</td></tr> }</tbody></table>
       }
     </section>

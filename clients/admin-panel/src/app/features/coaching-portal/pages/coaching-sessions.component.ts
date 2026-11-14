@@ -77,8 +77,17 @@ export class CoachingSessionsComponent implements OnInit {
     });
   }
 
+  // Live test 13.11.2026: a cancelled session was counted as upcoming and kept its join link; the farthest session came first.
   upcomingSessions() {
-    return this.sessions().filter(session => new Date(session.startTime).getTime() >= Date.now());
+    return this.sessions().filter(session => session.status !== 'Cancelled' && new Date(session.startTime).getTime() >= Date.now());
+  }
+
+  /** Coming sessions first, the nearest on top; then the past ones, the latest on top. */
+  orderedSessions() {
+    const now = Date.now(); const time = (session: CoachingSession) => new Date(session.startTime).getTime();
+    const coming = this.sessions().filter(session => time(session) >= now).sort((a, b) => time(a) - time(b));
+    const past = this.sessions().filter(session => time(session) < now).sort((a, b) => time(b) - time(a));
+    return [...coming, ...past];
   }
 
   trackById(_: number, session: CoachingSession) {

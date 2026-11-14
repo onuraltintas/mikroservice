@@ -281,6 +281,14 @@ export class CoachingTeacherExamsComponent implements OnInit {
     this.cancelExamResultEdit();
     this.errorMessage.set(null);
     this.loadResults(exam, 1, false);
+    // Live test 13.11.2026: the result form opened below a long list, out of sight.
+    setTimeout(() => globalThis.document?.querySelector('[data-testid="exam-results-panel"]')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }));
+  }
+
+  /** Live test 13.11.2026: results entered for an exam dated in the future stay hidden from the student, and nothing said so. */
+  isFutureExam(exam: CoachingTeacherExam): boolean {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date());
+    return (exam.examDate ?? '').slice(0, 10) > today;
   }
 
   closeResults(): void {

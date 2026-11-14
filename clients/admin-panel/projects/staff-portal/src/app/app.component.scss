@@ -266,3 +266,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .page-footer { flex-direction: column; gap: 6px; }
 }
 
+
+// Paket I3: another account signed in on this browser.
+.other-account { position: sticky; top: 0; z-index: 70; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
+  padding: .7rem 1rem; background: var(--ui-warning-soft, #fef3c7); color: var(--ui-text, #1f2937); border-bottom: 1px solid var(--ui-warning, #f59e0b); font-size: .9rem;
+  button { border: 1px solid var(--ui-warning, #b45309); border-radius: .5rem; background: var(--ui-surface, #fff); color: inherit; padding: .35rem .8rem; font-weight: 600; cursor: pointer; } }

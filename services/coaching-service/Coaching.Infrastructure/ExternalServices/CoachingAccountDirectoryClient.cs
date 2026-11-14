@@ -43,6 +43,9 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
     public async Task<bool> IsActiveInstitutionAsync(Guid institutionId, CancellationToken ct) =>
         (await SendAsync<InstitutionState>(HttpMethod.Get, $"institutions/{institutionId}/active", null, ct))?.IsActive == true;
 
+    public async Task<string?> InstitutionNameAsync(Guid institutionId, CancellationToken ct) =>
+        (await SendAsync<InstitutionState>(HttpMethod.Get, $"institutions/{institutionId}/active", null, ct))?.Name;
+
     public Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeRepresentativeAsync(Guid viewerUserId, Guid studentUserId, CancellationToken ct) =>
         representatives.AuthorizeAsync(viewerUserId, studentUserId, ct);
 
@@ -73,7 +76,7 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
 
     private sealed record AdminScope(bool IsGlobal, Guid? InstitutionId, InstitutionRow[]? Institutions = null);
     private sealed record InstitutionRow(Guid Id, string Name);
-    private sealed record InstitutionState(bool IsActive);
+    private sealed record InstitutionState(bool IsActive, string? Name = null);
     // The relationship is informational here; accept it as a name or a number.
     private sealed record ParentRead(Guid RelationshipId, System.Text.Json.JsonElement Relationship);
 }

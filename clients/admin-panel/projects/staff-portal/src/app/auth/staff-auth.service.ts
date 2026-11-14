@@ -28,6 +28,30 @@ export class StaffAuthService {
   private accessTokenExpiresAt = 0;
   private refreshPromise?: Promise<boolean>;
 
+  // Paket I3 (user decision 14.11.2026): tabs of one browser share the sign-in cookie. A tab left on another account warns;
+  // it neither signs out nor navigates. The same channel as the student portal's AuthService.
+  private readonly _otherAccountSignedIn = signal(false);
+  readonly otherAccountSignedIn = this._otherAccountSignedIn.asReadonly();
+  private signedInId: string | null = null;
+  private readonly sessionChannel: BroadcastChannel | null = (() => {
+    try {
+      if (typeof BroadcastChannel === 'undefined') return null;
+      const channel = new BroadcastChannel('eduivme-session');
+      channel.onmessage = event => this.noteSignedInAccount((event.data as { id?: unknown } | null)?.id);
+      return channel;
+    } catch { return null; }
+  })();
+  noteSignedInAccount(id: unknown): void {
+    if (typeof id === 'string' && id && this.signedInId) this._otherAccountSignedIn.set(id !== this.signedInId);
+  }
+  private rememberSignedIn(id: string | null | undefined): void {
+    if (!id) return;
+    if (this.signedInId && this.signedInId !== id) this._otherAccountSignedIn.set(true);
+    else if (!this.signedInId) this._otherAccountSignedIn.set(false);
+    this.signedInId = id;
+    try { this.sessionChannel?.postMessage({ id }); } catch { /* a closed channel only loses the warning */ }
+  }
+
   readonly products = this._products.asReadonly();
   readonly activeProduct = this._activeProduct.asReadonly();
 
@@ -275,10 +299,12 @@ export class StaffAuthService {
     const product = claims?.platform_product ?? fallbackProduct ?? null;
     this._activeProduct.set(product);
     if (product) this.storeActiveProduct(product);
+    this.rememberSignedIn(claims?.sub);
   }
 
   private clearSession(): void {
     this._accessToken.set('');
+    this.signedInId = null; this._otherAccountSignedIn.set(false);
     this._products.set([]);
     this._activeProduct.set(null);
     this.accessTokenExpiresAt = 0;

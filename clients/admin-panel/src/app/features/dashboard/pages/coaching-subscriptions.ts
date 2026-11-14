@@ -63,7 +63,7 @@ type SubscriptionTab = 'requirement' | 'plans' | 'requests' | 'subscriptions' | 
 
       @if (tab() === 'requests') {
         <section class="space-y-4" aria-labelledby="coaching-requests-heading">
-          <div><h2 id="coaching-requests-heading" class="text-lg font-semibold">Banka/EFT talepleri</h2><p class="muted">Ödeme sağlayıcısı entegrasyonu değil; dekont/refarans banka hareketiyle doğrulanır. Onay aboneliği tek işlemde açar.</p></div>
+          <div><h2 id="coaching-requests-heading" class="text-lg font-semibold">Banka/EFT talepleri</h2><p class="muted">Ödeme sağlayıcısı entegrasyonu değil; dekont/referans banka hareketiyle doğrulanır. Onay aboneliği tek işlemde açar.</p></div>
           <form class="inline-filter" (ngSubmit)="loadRequests()"><input [(ngModel)]="requestSearch" name="requestSearch" maxlength="100" placeholder="Kullanıcı, plan veya referans ara" /><select [(ngModel)]="requestStatus" name="requestStatus"><option value="">Tüm durumlar</option><option value="Pending">Bekleyen</option><option value="Approved">Onaylı</option><option value="Rejected">Reddedilen</option><option value="Cancelled">İptal edilen</option><option value="Withdrawn">Geri çekilen</option><option value="Expired">Süresi dolan</option></select><button class="secondary" type="submit">Filtrele</button></form>
           <div class="data-card overflow-x-auto"><table class="data-table"><thead><tr><th>Kullanıcı</th><th>Plan / tutar</th><th>Ödeme referansı</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of requests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div></td><td>{{ request.plan.name }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td>{{ request.paymentReference }}@if (duplicateWarning(request); as warning) {<div class="duplicate-warning" role="note">{{ warning }}</div>}<div class="muted">{{ request.payerName || '' }} {{ request.note || '' }}</div><div class="muted">{{ adultPayerLabel(request) }} @if (request.adultPayerDeclaredAt) { · {{ request.adultPayerDeclaredAt | date:'dd.MM.yyyy HH:mm' }} }</div></td><td>{{ statusLabel(request.status) }}<div class="muted">{{ request.reviewNote }}</div></td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="reviewRequest(request, 'Approved')">Onayla</button><button type="button" (click)="reviewRequest(request, 'Rejected')">Reddet</button>}@if (request.status === 'Approved') {<button type="button" (click)="cancelApprovedRequest(request)">Onayı iptal et</button>}@if (request.status !== 'Approved' && request.status !== 'Cancelled') {<button type="button" (click)="deleteRequest(request)">Sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi yok.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ requests().totalCount }}</span><button type="button" (click)="changePage('requests', -1)" [disabled]="requestPage <= 1">Önceki</button><button type="button" (click)="changePage('requests', 1)" [disabled]="requestPage >= pageCount(requests())">Sonraki</button></div></div>
         </section>
@@ -230,7 +230,17 @@ export class CoachingSubscriptionsComponent implements OnInit {
   cancelPlanEdit() { this.planEditing.set(false); this.planEditingId = null; }
   setPlanFeatures(value: string) { this.planDraft.features = value.split(',').map(item => item.trim()).filter(Boolean).slice(0, 30); }
   syncContactOnlyPrice() { if (this.planDraft.isContactOnly) this.planDraft.price = 0; }
+  /** Live test 13.11.2026: a 30-day plan was saved as "Yıllık". A period and its length in days must agree. */
+  planPeriodMismatch(): string | null {
+    const days = Number(this.planDraft.durationDays);
+    const ranges: Record<string, [number, number, string]> = { Monthly: [28, 31, 'Aylık plan 28–31 gün'], Quarterly: [89, 92, 'Üç aylık plan 89–92 gün'], Annual: [365, 366, 'Yıllık plan 365–366 gün'] };
+    const range = ranges[this.planDraft.billingPeriod];
+    return range && (days < range[0] || days > range[1]) ? `${range[2]} sürmelidir; süreyi ya da ödeme dönemini düzeltin ("Tek seferlik" her süreyle seçilebilir).` : null;
+  }
+
   async savePlan() {
+    const mismatch = this.planPeriodMismatch();
+    if (mismatch) { this.error.set(mismatch); return; }
     this.saving.set(true); this.error.set(null);
     try {
       const trialDays = this.planDraft.audience === 'Institution' ? 0 : Math.max(0, Math.min(90, Math.trunc(Number(this.planDraft.trialDays) || 0)));

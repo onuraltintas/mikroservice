@@ -83,6 +83,8 @@ jobs:
           node --test tests/E2E/final-legal-texts.contract.test.mjs
           node --test tests/E2E/paket-i1-payments.contract.test.mjs
           node --test tests/E2E/paket-i2-plan-wizard.contract.test.mjs
+          node --test tests/E2E/paket-i-rest.contract.test.mjs
+          node --test tests/E2E/coaching-student-mobile.contract.test.mjs
           node --test tests/E2E/support/litespeed-signalr-routing.test.mjs
 
   frontend:

@@ -20,7 +20,7 @@ import {
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Koçluk ödevleri</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Kitap ödevleri ve fotoğraf teslim metadata'sı.</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Kitap ödevleri ve fotoğraf teslimlerinin kayıtları.</p>
       </div>
         <div class="flex gap-2">
           @if (canManage()) {

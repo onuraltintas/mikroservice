@@ -64,7 +64,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
         <div class="space-y-5 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div>
             <h2 class="font-semibold text-gray-900 dark:text-white">Kurum / sınıf karşılaştırması</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yalnızca Identity tarafından aktif kurum kapsamına alınan öğrenciler aggregate edilir.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yalnızca aktif bir kuruma bağlı öğrenciler sayılır.</p>
           </div>
           <div class="grid gap-4 md:grid-cols-4">
             <label class="text-sm text-gray-700 dark:text-gray-200">Kurum adıyla ara

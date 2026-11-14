@@ -18,7 +18,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kurum Yönetimi</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Tenant yaşam döngüsü, lisans limitleri ve aktiflik durumu.</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Kurumların açılışı, kapanışı, lisans limitleri ve aktiflik durumu.</p>
         </div>
         @if (canCreate()) { <button type="button" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white" (click)="showCreate.set(!showCreate())">
           {{ showCreate() ? 'Vazgeç' : 'Yeni Kurum' }}

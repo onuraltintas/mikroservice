@@ -1,4 +1,10 @@
 @if (auth.isAuthenticated()) {
+  @if (otherAccount()) {
+    <div class="other-account" role="alert" data-testid="other-account-warning">
+      <span>Bu tarayıcıda başka bir hesapla giriş yapıldı. Bu sekme önceki hesapla açık kaldı; burada yapacağınız işlemler hata verebilir. Devam etmeden önce sayfayı yenileyin.</span>
+      <button type="button" (click)="reloadPage()">Sayfayı yenile</button>
+    </div>
+  }
   <div class="portal-shell" [class.coaching-shell]="isTeacherWorkspaceSelected" [class.coaching-staff-shell]="isTeacherWorkspaceSelected" [class.staff-phone-menu]="hasPhoneMenu" [class.menu-open]="menuOpen()">
     @if (isTeacherWorkspaceSelected) { <a class="teacher-skip" href="#teacher-main">İçeriğe geç</a> }
     @if (hasPhoneMenu && menuOpen()) { <button class="teacher-scrim" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"></button> }

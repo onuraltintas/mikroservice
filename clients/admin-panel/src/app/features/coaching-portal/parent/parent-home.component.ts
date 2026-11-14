@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -100,7 +100,31 @@ export class ParentHomeComponent implements OnInit {
   code = '';
   relationship: ParentRelationship = 'Mother';
 
-  ngOnInit(): void { this.load(); }
+  private readonly destroyRef = inject(DestroyRef);
+  /** How often a waiting request is asked about again. */
+  static readonly PENDING_POLL_MS = 20_000;
+
+  ngOnInit(): void {
+    this.load();
+    // Live test 13.11.2026: after the child approved the request this page stayed as it was until a reload. While a
+    // request is waiting, the links are asked again every 20 seconds and when the parent comes back to the tab.
+    const again = () => { if (this.pending().length && !this.busy() && globalThis.document?.visibilityState !== 'hidden') this.refreshQuietly(); };
+    const timer = setInterval(again, ParentHomeComponent.PENDING_POLL_MS);
+    globalThis.document?.addEventListener('visibilitychange', again);
+    this.destroyRef.onDestroy(() => { clearInterval(timer); globalThis.document?.removeEventListener('visibilitychange', again); });
+  }
+
+  /** The links again, without the loading state; a failure is left to the next turn. */
+  private refreshQuietly(): void {
+    this.service.getLinks().subscribe({
+      next: links => {
+        const approved = this.pending().filter(before => links.some(now => now.id === before.id && now.status !== 'Pending'));
+        this.links.set(links);
+        if (approved.length) { this.success.set(`${approved.map(link => link.studentName).join(', ')} bağlantı isteğini onayladı.`); this.loadStatuses(); }
+      },
+      error: () => undefined
+    });
+  }
 
   relationshipLabel(value: string): string { return parentRelationshipLabel(value); }
   productsOf(link: ParentLink) { return visibleProducts(link); }

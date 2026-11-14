@@ -30,7 +30,7 @@ interface TeacherProfile { version: number; isActive: boolean; title?: string | 
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
   /** Paket D review (L2): the student's exam asks the YKS diploma grade (missing on an older API: asked). */
   examAsksDiploma?: boolean }
-interface Invitation { id: string; inviterEmail: string; type: string; message?: string; expiresAt: string; }
+interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; }
 /** E4 #23: what saving a new education would remove or leave not fitting (asked from the server before saving). */
 interface EducationImpact { examNoLongerFits: boolean; exam: string | null; diplomaGradeRemoved: number | null; target: string | null }
 type FieldName = 'educationStage' | 'gradeLevel' | 'graduationYear' | 'birthDate' | 'homeDistrict' | 'diplomaGrade' | 'experience';
@@ -175,8 +175,9 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
         <button type="button" [disabled]="working() || invitationLoading()" (click)="loadInvitations()">Yeniden dene</button> }
       @if (invitationLoading()) { <p role="status">Davetler yükleniyor…</p> }
       @else if (!invitations().length && !invitationError()) { <p>{{ t('Bekleyen koçluk davetiniz yok.', 'Bekleyen koçluk davetin yok.') }}</p> }
+      @if (invitationNotice(); as notice) { <p role="status" data-testid="invitation-notice">{{ notice }}</p> }
       @for (invite of invitations(); track invite.id) {
-        <article><strong>{{ invite.inviterEmail }}</strong><p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
+        <article><strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
           @if (invite.message) { <p>{{ invite.message }}</p> }
           @if (role === 'Student' && invite.type !== 'TeacherToInstitution') {
             <p class="history-notice">{{ invite.type === 'StudentToInstitution' ? 'Kabul edersen bu kurumun yöneticileri ve öğretmenleri' : 'Kabul edersen bu öğretmen' }} önceki öğretmen ve kurumlarındaki çalışma geçmişini (ödevler, denemeler, seanslar, hedefler) görebilir.</p>
@@ -203,6 +204,9 @@ export class CoachingProfileComponent implements OnInit {
   readonly loading = signal(false); readonly working = signal(false); readonly ready = signal(false);
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   readonly invitations = signal<Invitation[]>([]); readonly invitationError = signal<string | null>(null); readonly invitationLoading = signal(false);
+  /** Live test 13.11.2026: accepting an invitation gave no word and the page's other lists stayed as they were. */
+  readonly invitationNotice = signal<string | null>(null);
+  readonly invitationAccepted = output<void>();
   student: StudentProfile | null = null; teacher: TeacherProfile | null = null; subjects = ''; dirty = false;
   readonly provinces = signal<Place[] | null>(null); readonly districts = signal<Place[]>([]);
   homeProvince = ''; homeDistrictId = ''; private savedDiploma: number | null = null; private savedEducation = ''; private examAsksDiploma = true;
@@ -521,11 +525,13 @@ export class CoachingProfileComponent implements OnInit {
   respond(id: string, action: 'accept' | 'reject') {
     if (this.working()) return;
     if (this.dirty) { this.invitationError.set(this.t('Davet işlemi öncesinde profil değişikliklerini kaydedin.', 'Daveti yanıtlamadan önce profil değişikliklerini kaydet.')); return; }
-    this.working.set(true); this.invitationError.set(null);
+    this.working.set(true); this.invitationError.set(null); this.invitationNotice.set(null);
     this.http.post(`${this.base}/invitations/${encodeURIComponent(id)}/${action}`, {}).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false)))
       .subscribe({ next: () => {
         this.loadInvitations();
+        this.invitationNotice.set(action === 'accept' ? this.t('Davet kabul edildi.', 'Daveti kabul ettin.') : this.t('Davet reddedildi.', 'Daveti reddettin.'));
         if (action !== 'accept') return;
+        this.invitationAccepted.emit();
         this.loadProfile();
         // F2/F3: a new teacher or institution can open menu items; the refresh is forced past a request in flight. Called this way it
         // works with refresh(reset) and refresh({ force, reset }) (PR #122).

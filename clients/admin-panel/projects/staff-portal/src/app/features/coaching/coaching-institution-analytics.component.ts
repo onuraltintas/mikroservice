@@ -65,7 +65,8 @@ export class CoachingInstitutionAnalyticsComponent implements OnChanges {
   readonly error = signal('');
   readonly comparison = signal<InstitutionCoachingComparison | null>(null);
   readonly warnings = signal<InstitutionEarlyWarningReport | null>(null);
-  readonly grades = Array.from({ length: 12 }, (_, index) => index + 1);
+  // Live test 13.11.2026: the product starts at grade 5; grades 1–4 were listed.
+  readonly grades = Array.from({ length: 8 }, (_, index) => index + 5);
   fromDate = this.localDate(new Date(Date.now() - 29 * 86_400_000));
   toDate = this.localDate(new Date());
   gradeLevel: number | null = null;

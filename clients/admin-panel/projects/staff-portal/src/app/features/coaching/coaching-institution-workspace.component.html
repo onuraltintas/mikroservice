@@ -98,7 +98,7 @@
     } @else if (activeSection() === 'students') {
       <section class="roster-section" aria-labelledby="institution-students-title">
         <div class="section-heading">
-          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci · sunucu tarafında kurum kapsamı, arama ve filtreleme</p></div>
+          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci · ad, sınıf ve durumla arayıp süzebilirsiniz</p></div>
           <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents() || isMembershipSaving() || !!editingStudentId()">Yenile</button>
         </div>
 

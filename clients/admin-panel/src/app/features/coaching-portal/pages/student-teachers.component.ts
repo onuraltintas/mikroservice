@@ -19,7 +19,7 @@ import { apiMessage } from '../parent/parent-home.component';
       @if (loading()) { <p role="status" class="mt-3 text-sm">Öğretmenlerin yükleniyor…</p> }
       @for (teacher of teachers(); track teacher.teacherUserId + (teacher.institutionId ?? '')) {
         <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800">
-          <span><strong>{{ teacher.teacherName }}</strong> · {{ teacher.institutionId ? 'Kurum öğretmeni' : 'Bağımsız öğretmen' }} · {{ teacher.since | coachingDate }} tarihinden beri</span>
+          <span><strong>{{ teacher.teacherName }}</strong> · {{ teacher.institutionId ? (teacher.institutionName ? teacher.institutionName + ' öğretmeni' : 'Kurum öğretmeni') : 'Bağımsız öğretmen' }} · {{ teacher.since | coachingDate }} tarihinden beri</span>
           @if (teacher.canLeave) {
             <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 disabled:opacity-50 dark:border-slate-700" [attr.data-leave-teacher]="teacher.teacherUserId" [disabled]="busy()" (click)="leave(teacher)">Öğretmenden ayrıl</button>
           } @else { <span class="text-slate-500 dark:text-slate-400">Bu bağlantıyı kurum yönetimi değiştirir.</span> }

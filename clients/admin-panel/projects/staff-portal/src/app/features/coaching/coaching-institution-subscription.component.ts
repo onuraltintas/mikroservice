@@ -31,7 +31,8 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
         }
         <ul>
           @for (student of students(); track student.userId) {
-            <li><span>{{ student.firstName }} {{ student.lastName }}<small>{{ student.email }}</small></span>
+            <li><span>{{ student.firstName }} {{ student.lastName }}<small>{{ student.email }}</small>
+              @if (!isActive(student.userId)) { <small class="waiting" [attr.data-testid]="'seat-waiting-' + student.userId">Koltuk bekliyor{{ atCapacity() ? ': kontenjan dolu, önce bir koltuğu boşaltın ya da ek koltuk isteyin.' : '.' }}</small> }</span>
               <button type="button" [attr.data-testid]="'institution-seat-' + student.userId" [disabled]="saving() || (!isActive(student.userId) && atCapacity())"
                 (click)="setSeat(student.userId, isActive(student.userId))">{{ isActive(student.userId) ? 'Kontenjanı kaldır' : 'Koltuk ata' }}</button></li>
           } @empty { <li>Kurumda öğrenci kaydı bulunamadı.</li> }
@@ -52,7 +53,7 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
     ul { list-style:none; padding:0; } li, .departed { padding:.8rem 0; border-top:1px solid #e8ece5; }
     button { min-height:2.4rem; border:1px solid #9aa99b; border-radius:.5rem; background:#fffefa; padding:.35rem .7rem; color:#29473b; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; } .error { color:#991b1b; }
-    .hint { font-size:.9rem; }
+    .hint { font-size:.9rem; } .waiting { color:#92400e; }
     .upcoming { padding:.6rem .75rem; border-radius:.6rem; background:#f1f5ee; color:#243b36; }
   `]
 })

@@ -43,8 +43,9 @@
         </article>
         <article class="summary-card exam-card">
           <span class="summary-index">02 · SINAV</span>
-          <strong>{{ summary.totalExams }} sınav</strong>
+          <strong>{{ summary.totalExams }} öğretmen/kurum sınavı</strong>
           <small>Ortalama: {{ summary.averageExamPercentage == null ? '—' : '%' + summary.averageExamPercentage }}</small>
+          <small data-testid="exam-card-note">Öğrencinin kendi girdiği denemeler aşağıda listelenir; bu sayıya ve ortalamaya girmez.</small>
         </article>
         <article class="summary-card goal-card">
           <span class="summary-index">03 · HEDEF</span>
@@ -128,7 +129,7 @@
                   <p>{{section.name}}: {{section.net | number:'1.2-2'}} net ({{section.correct}} doğru / {{section.wrong}} yanlış / {{section.empty}} boş)</p>
                 }</details>
               }
-              <p>{{ formatDate(item.eventDate) }} <span aria-hidden="true">·</span> {{ statusLabel(item.status) }}
+              <p>{{ formatDate(item.eventDate, item.type !== 'Exams') }} <span aria-hidden="true">·</span> {{ statusLabel(item.status) }}
                 @if (item.category) { <span> · {{ item.category | coachingLabel }}</span> }
               </p>
             </div>

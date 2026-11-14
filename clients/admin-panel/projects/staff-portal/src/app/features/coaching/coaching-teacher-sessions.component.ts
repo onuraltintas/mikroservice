@@ -160,7 +160,7 @@ export class CoachingTeacherSessionsComponent implements OnInit {
 
   upcomingCount(): number {
     const now = Date.now();
-    return this.sessions().filter(session => new Date(session.startTime).getTime() >= now).length;
+    return this.sessions().filter(session => session.status !== 'Cancelled' && new Date(session.startTime).getTime() >= now).length;
   }
 
   studentLabel(studentId: string): string {
