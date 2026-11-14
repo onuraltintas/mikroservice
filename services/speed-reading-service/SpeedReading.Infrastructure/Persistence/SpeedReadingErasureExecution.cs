@@ -11,8 +11,8 @@ public sealed class SpeedReadingErasureExecutionReceipt
     public DateTime? FinancialRetentionUntil { get; private set; }
     public DateTime? FinancialAnonymizedAt { get; private set; }
 
-    /// <summary>Paid records are kept unchanged for this long after erasure, then their personal fields are removed.</summary>
-    public const int FinancialRetentionYears = 1;
+    /// <summary>Paid records are kept unchanged for this long after erasure, then their personal fields are removed. Ten years since the legal check of 14.11.2026 (the KVKK text says so); one year before.</summary>
+    public const int FinancialRetentionYears = 10;
 
     private SpeedReadingErasureExecutionReceipt() { }
 

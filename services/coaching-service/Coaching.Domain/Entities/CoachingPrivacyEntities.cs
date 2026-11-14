@@ -125,8 +125,8 @@ public sealed class CoachingErasureAssessment : AggregateRoot
 
 public sealed class CoachingErasureExecution : AggregateRoot
 {
-    /// <summary>Subscription, seat, bank transfer and payment records are kept unchanged for this many years after erasure.</summary>
-    public const int FinancialRetentionYears = 5;
+    /// <summary>Subscription, seat, bank transfer and payment records are kept unchanged for this many years after erasure. Ten since the legal check of 14.11.2026 (the KVKK text says so); five before.</summary>
+    public const int FinancialRetentionYears = 10;
 
     public Guid RequestId { get; private set; }
     public int DeletedRecordCount { get; private set; }
