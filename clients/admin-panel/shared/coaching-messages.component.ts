@@ -88,9 +88,9 @@ export class CoachingMessageListComponent {
         @if (picking()) {
           <form class="picker" (ngSubmit)="start()">
             @if (contacts().length) {
-              <label>Kime yazacaksın?
+              <label>{{ viewerRole === 'Teacher' ? 'Kime yazacaksınız?' : 'Kime yazacaksın?' }}
                 <select name="contact" [(ngModel)]="contactKey" required>
-                  <option value="">Seç</option>
+                  <option value="">{{ viewerRole === 'Teacher' ? 'Seçin' : 'Seç' }}</option>
                   @for (contact of contacts(); track key(contact)) { <option [value]="key(contact)">{{ contactLabel(contact) }}</option> }
                 </select>
               </label>

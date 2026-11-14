@@ -201,12 +201,16 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
     }
   }
 
-  formatDate(value: string): string {
+  /**
+   * Live test 13.11.2026: an exam has a day, not an hour; its date is stored at midnight UTC and was shown as "03:00".
+   * `withTime` is false for exams.
+   */
+  formatDate(value: string, withTime = true): string {
     const date = new Date(value);
     if (!value || Number.isNaN(date.getTime())) return '—';
-    return new Intl.DateTimeFormat('tr-TR', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    }).format(date);
+    return new Intl.DateTimeFormat('tr-TR', withTime
+      ? { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+      : { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date);
   }
 
   statusLabel(status: string): string {

@@ -14,7 +14,7 @@ import { StudentTeachersComponent } from './student-teachers.component';
       <h1 id="profile-title">Profilim</h1>
       <p>Öğretmenlerin seni bu bilgilerle tanır.</p>
     </header>
-    <edu-coaching-profile [apiUrl]="apiUrl" [role]="'Student'" />
+    <edu-coaching-profile [apiUrl]="apiUrl" [role]="'Student'" (invitationAccepted)="teachers?.load()" />
     <section aria-label="Öğretmenlerim"><app-student-teachers /></section>
     <section aria-label="Veli bağlantıları"><app-student-parent-links /></section>
   </div>`
@@ -22,5 +22,7 @@ import { StudentTeachersComponent } from './student-teachers.component';
 export class StudentCoachingProfileComponent {
   readonly apiUrl = environment.apiUrl;
   @ViewChild(CoachingProfileComponent) profile?: CoachingProfileComponent;
+  /** The list of teachers is reloaded when an invitation is accepted on this page. */
+  @ViewChild(StudentTeachersComponent) teachers?: StudentTeachersComponent;
   async canLeavePage() { return await this.profile?.canLeavePage() ?? true; }
 }

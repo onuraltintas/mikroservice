@@ -37,7 +37,7 @@ test('screens say what happened', async () => {
   assert.match(exams, /data-testid="future-exam-warning"/);
   assert.match(await read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-subscription.component.ts'), /Koltuk bekliyor/);
   assert.doesNotMatch(await read(app + 'features/coaching-portal/growth/student-week-summary.component.ts'), /Bu haftanın değerlendirmesi tamam/);
-  assert.match(await read(app + 'features/coaching-portal/pages/coaching-finance.component.html'), /Öğrencilerinizle olan koçluk ücretlerini/);
+  assert.match(await read(app + 'features/coaching-portal/pages/coaching-finance.component.html'), /Öğrencilerle olan koçluk ücretlerini/);
   assert.doesNotMatch(await read('services/coaching-service/Coaching.Application/Consumers/WelcomeGoal.cs'), /koç aramaya/);
 });
 
@@ -53,4 +53,21 @@ test('sessions, the staff portal locale and the other-account warning', async ()
   // User decision 14.11.2026: the tab warns; it neither signs out nor navigates.
   const layout = await read(app + 'features/coaching-portal/layout/coaching-portal-layout.component.html');
   assert.match(layout, /data-testid="other-account-warning"/);
+});
+
+test('small screen items: invitations, teacher report, parent page, diploma grade, wizard', async () => {
+  const profile = await read('clients/admin-panel/shared/coaching-profile.component.ts');
+  assert.match(profile, /data-testid="invitation-notice"/);
+  assert.match(profile, /this\.invitationAccepted\.emit\(\);/);
+  assert.match(await read(app + 'features/coaching-portal/pages/student-coaching-profile.component.ts'), /\(invitationAccepted\)="teachers\?\.load\(\)"/);
+  const staff = 'clients/admin-panel/projects/staff-portal/src/app/features/coaching/';
+  const report = await read(staff + 'coaching-teacher-student-detail.component.html');
+  assert.match(report, /formatDate\(item\.eventDate, item\.type !== 'Exams'\)/);
+  assert.match(report, /data-testid="exam-card-note"/);
+  assert.match(await read(staff + 'coaching-teacher-students.component.html'), /student\.institutionId \? 'Kurum öğrencisi' : 'Bağımsız öğrenci'/);
+  assert.match(await read(app + 'features/coaching-portal/parent/parent-home.component.ts'), /PENDING_POLL_MS = 20_000/);
+  assert.match(await read(app + 'features/coaching-portal/growth/student-goal-summary.component.ts'), /data-testid="diploma-from-profile"/);
+  assert.match(await read(app + 'features/coaching-portal/pages/wizard-courses-step.component.html'), /data-testid="choose-suggested-courses"/);
+  for (const file of ['coaching-institution-analytics.component.ts', 'coaching-institution-exams.component.ts'])
+    assert.doesNotMatch(await read(staff + file), /length: 12 \}|\[1, 2, 3, 4, 5/, file);
 });
