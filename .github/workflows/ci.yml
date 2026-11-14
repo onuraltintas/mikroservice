@@ -79,6 +79,7 @@ jobs:
           node --test tests/E2E/support/production-images.contract.test.mjs
           node --test tests/E2E/support/ci-failure-report.contract.test.mjs
           node --test tests/E2E/course-management-foundation.contract.test.mjs
+          node --test tests/E2E/billing-service-wiring.contract.test.mjs
           node --test tests/E2E/email-verification-links.contract.test.mjs
           node --test tests/E2E/final-legal-texts.contract.test.mjs
           node --test tests/E2E/paket-i1-payments.contract.test.mjs
@@ -755,6 +756,27 @@ jobs:
           COURSE_MANAGEMENT_DB_PASSWORD: ci-course-management-only
         run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml config --quiet
 
+      - name: Validate the optional Billing overlays
+        env:
+          BILLING_DB_PASSWORD: ci-billing-only
+          BILLING_CONNECTION_STRING: 'Host=postgres;Port=5432;Database=billing_ci;Username=ci;Password=ci-only'
+          DATAPROTECTION_CERTIFICATE_HOST_PATH: ${{ runner.temp }}/dataprotection-ci.pfx
+          DATAPROTECTION_CERTIFICATE_PASSWORD: ci-config-only
+          RELEASE_TAG: ci
+          SMTP_HOST: smtp-ci.invalid
+          SMTP_PORT: 25
+          SMTP_FROM_EMAIL: ci@example.invalid
+          SMTP_USERNAME: ci-only
+          SMTP_PASSWORD: ci-only
+          SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
+        run: |
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.billing.yml config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); const env=config.services["api-gateway"].environment; if (env.Billing__Enabled!=="true" || env["ReverseProxy__Clusters__billing-cluster__Destinations__destination1__Address"]!=="http://billing-service:8080") throw new Error("The Billing overlay must switch the gateway on and point it at the service.");'
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.production.yml config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); if (config.services["billing-service"] || config.services["api-gateway"].environment.Billing__Enabled) throw new Error("Production must not run Billing without its overlay.");'
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.billing.production.yml config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); const service=config.services["billing-service"]; if (!service || service.environment.ASPNETCORE_ENVIRONMENT!=="Production" || !service.depends_on["billing-migrations"] || config.services["api-gateway"].environment.Billing__Enabled!=="true") throw new Error("The Billing production overlay is incomplete.");'
+
       - name: Validate staging VPS configuration
         env:
           SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
@@ -902,6 +924,9 @@ jobs:
           - name: course-management
             context: .
             dockerfile: services/course-management-service/Dockerfile
+          - name: billing
+            context: .
+            dockerfile: services/billing-service/Dockerfile
           - name: gateway
             context: .
             dockerfile: services/api-gateway/Dockerfile

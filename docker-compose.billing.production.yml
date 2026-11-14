@@ -1,0 +1,60 @@
+# Optional production overlay for the Billing service ("Abonelik ve Ödeme").
+# Use with docker-compose.yml and docker-compose.production.yml. Billing goes live in one release at the end of its
+# build (decision 14.11.2026); until then production runs without this overlay and the gateway answers 404 on
+# /api/billing. Provision a dedicated database and least-privilege role before running the migration job.
+services:
+  billing-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/billing-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      BILLING_CONNECTION_STRING: ${BILLING_CONNECTION_STRING:?BILLING_CONNECTION_STRING must target the dedicated Billing database and role}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - edu-network
+
+  billing-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/billing-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      BILLING_CONNECTION_STRING: ${BILLING_CONNECTION_STRING:?BILLING_CONNECTION_STRING must target the dedicated Billing database and role}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_ISSUER: ${JWT_ISSUER:?JWT_ISSUER must be set}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:?JWT_AUDIENCE must be set}
+      JWT_KEY_ID: ${JWT_KEY_ID:-}
+      JWT_PREVIOUS_SECRETS: ${JWT_PREVIOUS_SECRETS:-}
+      JWT_PREVIOUS_KEY_IDS: ${JWT_PREVIOUS_KEY_IDS:-}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER must be set}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS must be set}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${BILLING_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: EduPlatform.Billing
+      OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
+      AllowedHosts: ${BILLING_ALLOWED_HOSTS:-billing-service}
+    depends_on:
+      billing-migrations:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - edu-network
+
+  api-gateway:
+    environment:
+      Billing__Enabled: "true"
+      ReverseProxy__Clusters__billing-cluster__Destinations__destination1__Address: http://billing-service:8080
+    depends_on:
+      billing-service:
+        condition: service_started

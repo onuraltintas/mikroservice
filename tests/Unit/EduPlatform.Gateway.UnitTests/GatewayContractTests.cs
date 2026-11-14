@@ -138,6 +138,51 @@ public sealed class GatewayContractTests
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Theory]
+    [InlineData("/api/billing/v1/catalog/coaching")]
+    [InlineData("/api/billing/v1/admin/products")]
+    public async Task Billing_paths_are_not_routed_when_billing_is_disabled(string path)
+    {
+        await using var gateway = _fixture.CreateGateway(new Dictionary<string, string?> { ["Billing:Enabled"] = "false" });
+        using var client = gateway.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            GatewayFactory.CreateToken(Guid.NewGuid().ToString(), roles: ["SystemAdmin"]));
+        request.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+
+        using var response = await client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Billing_catalog_is_public_and_the_rest_of_billing_needs_a_signed_in_user()
+    {
+        await using var gateway = _fixture.CreateGateway();
+        using var client = gateway.CreateClient();
+
+        using var catalog = new HttpRequestMessage(HttpMethod.Get, "/api/billing/v1/catalog/coaching");
+        catalog.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var catalogResponse = await client.SendAsync(catalog);
+        catalogResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await EchoResponse.ReadAsync(catalogResponse)).Cluster.Should().Be("billing");
+
+        using var anonymous = new HttpRequestMessage(HttpMethod.Get, "/api/billing/v1/admin/products");
+        anonymous.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var anonymousResponse = await client.SendAsync(anonymous);
+        anonymousResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        using var signedIn = new HttpRequestMessage(HttpMethod.Get, "/api/billing/v1/admin/products");
+        signedIn.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            GatewayFactory.CreateToken(Guid.NewGuid().ToString(), roles: ["SystemAdmin"]));
+        signedIn.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var signedInResponse = await client.SendAsync(signedIn);
+        signedInResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await EchoResponse.ReadAsync(signedInResponse)).Cluster.Should().Be("billing");
+    }
+
     [Fact]
     public async Task Other_routes_and_the_service_list_are_unchanged_when_course_management_is_disabled()
     {
@@ -157,7 +202,7 @@ public sealed class GatewayContractTests
         using var listResponse = await client.SendAsync(list);
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var services = await listResponse.Content.ReadFromJsonAsync<string[]>();
-        services.Should().BeEquivalentTo(["identity", "coaching", "notification", "speed-reading"]);
+        services.Should().BeEquivalentTo(["identity", "coaching", "notification", "speed-reading", "billing"]);
     }
 
     [Fact]
