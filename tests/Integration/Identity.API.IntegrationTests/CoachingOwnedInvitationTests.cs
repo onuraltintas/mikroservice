@@ -64,6 +64,11 @@ public sealed class CoachingOwnedInvitationTests
         var invitation = await service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default);
         await service.AcceptAsync(student, invitation.Id, default);
         Assert.Equal(CoachingInvitationStatus.Accepted, (await f.Db.CoachingInvitations.SingleAsync()).Status);
+
+        // Live test 14.11.2026: a student who is already the teacher's student is not invited again.
+        var again = await Assert.ThrowsAnyAsync<Exception>(() => service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default));
+        Assert.Equal(CoachingInvitationStore.TeacherInviteAlreadyStudent, again.Message);
+        Assert.Single(await f.Db.CoachingInvitations.ToArrayAsync());
     }
 
     [Fact]
