@@ -17,3 +17,16 @@ test('the week of the today page is counted as the weekly report counts it', asy
   assert.match(today, /CoachingStudentStudyReportService\.WeeksAsync\(db, student, weekStart, 1, ct\)/);
   assert.doesNotMatch(today, /x\.RevisionId == planId && x\.SkippedAt == null/);
 });
+
+test('a lesson\'s short tasks are grouped in the view only; each stays its own task', async () => {
+  const pages = 'clients/admin-panel/src/app/features/coaching-portal/pages/';
+  const page = await read(pages + 'student-study-plans.component.html');
+  assert.equal(page.match(/@for \(item of dayItems\(/g).length, 2);
+  assert.match(page, /<details class="short-run" data-testid="short-run">/);
+  const rule = await read(pages + 'plan-short-runs.ts');
+  assert.match(rule, /SHORT_TASK_MINUTES = 20;/);
+  assert.match(rule, /SHORT_RUN_MINUTES = 60;/);
+  // The scheduler's sessions still join outcomes of one topic only.
+  const scheduler = await read('services/coaching-service/Coaching.Application/StudyPlanning/WeeklyOutcomeScheduler.cs');
+  assert.match(scheduler, /last\.Outcome\.TopicId==slice\.Outcome\.TopicId/);
+});
