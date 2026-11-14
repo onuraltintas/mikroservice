@@ -66,12 +66,12 @@ public sealed class SpeedReadingSalesDocumentsPostgresTests(PostgresFixture post
             var product = Guid.NewGuid();
             var plan = Guid.NewGuid();
             var now = DateTime.UtcNow;
+            var assembly = typeof(OwnedSpeedReadingDbContext).Assembly;
             Add("LegacyProduct", new { Id = product, Slug = "hizliokuma", Name = "Hızlı Okuma", IsActive = true, IsPublic = true, CreatedAt = now, UpdatedAt = now });
             Add("LegacySubscriptionPlan", new { Id = plan, ProductId = product, Slug = "annual", Name = "Yıllık plan", Price = 499m, IsActive = true, IsPublic = true, BillingPeriod = "Annual", DurationDays = (int?)365, CreatedAt = now });
             Add("LegacyBankTransferPaymentSettings", new { Id = SettingsId, AccountHolder = "Test", BankName = "Bank", Iban = "TR330006100519786457841326", IsEnabled = true, CreatedAt = now });
             await db.SaveChangesAsync();
             db.ChangeTracker.Clear();
-            var assembly = typeof(OwnedSpeedReadingDbContext).Assembly;
             var directory = new Directory();
             var subscriptions = (ISpeedReadingSubscription)Activator.CreateInstance(
                 assembly.GetType("SpeedReading.Infrastructure.Legacy.LegacySpeedReadingSubscription")!,

@@ -116,7 +116,10 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         Add(context, "LegacyPayment", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m, Status = "Success",
             Provider = "Iyzico", ProviderResponse = "{\"cardHolder\":\"Ada\"}", CreatedAt = now, UpdatedAt = now });
         Add(context, "LegacyBankTransferPaymentRequest", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Amount = 100m,
-            PaymentReference = "EFT-1", Status = "Approved", PayerName = "Veli Ada", Note = "not", ReviewNote = "ok", CreatedAt = now, UpdatedAt = now });
+            PaymentReference = "EFT-1", Status = "Approved", PayerName = "Veli Ada", Note = "not", ReviewNote = "ok", CreatedAt = now, UpdatedAt = now,
+            // Legal check Y1: the accepted sales documents name the buyer and the withdrawal carries the buyer's words.
+            SalesDocumentsVersion = "2026-11-14", SalesDocumentsJson = System.Text.Json.JsonSerializer.Serialize(new { PreInformation = "Ad soyad: Ada\nE-posta: ada@example.test\nÖdenecek toplam tutar 100,00 TRY" }),
+            WithdrawalStatus = "Rejected", WithdrawalReason = "Ada vazgeçti", WithdrawalReviewNote = "Ada için süre doldu" });
         Add(context, "LegacyUserSubscription", new { Id = Guid.NewGuid(), UserId = subject, UserName = "Ada", UserEmail = "ada@example.test", Notes = "not", Status = "Active",
             StartDate = now, CreatedAt = now });
         await context.SaveChangesAsync();
@@ -139,6 +142,12 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         Get(transfer, "PayerName").Should().BeNull();
         Get(transfer, "Note").Should().BeNull();
         Get(transfer, "PaymentReference").Should().Be("EFT-1");
+        var documents = (string)Get(transfer, "SalesDocumentsJson")!;
+        documents.Should().NotContain("Ada").And.NotContain("ada@example.test").And.Contain("100,00 TRY", "the contract itself stays as the financial record");
+        Get(transfer, "SalesDocumentsVersion").Should().Be("2026-11-14");
+        Get(transfer, "WithdrawalStatus").Should().Be("Rejected");
+        Get(transfer, "WithdrawalReason").Should().BeNull();
+        Get(transfer, "WithdrawalReviewNote").Should().BeNull();
         var subscription = Rows(context, "LegacyUserSubscription").Single();
         Get(subscription, "UserId").Should().Be(Get(payment, "UserId"));
         Get(subscription, "UserEmail").Should().BeNull();

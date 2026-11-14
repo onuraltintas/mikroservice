@@ -1941,7 +1941,7 @@
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/program-template-validation.contract.test.mjs": "519d4bcffa641dd238b9cf86dc43bd2856b21a4a698bf55afc09f72c6c422fe9",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingDataRetention.cs": "e0cb15aecbdb535ee9aeb418c5f93791940be3841be39980057bd3d702c51a46",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingErasureExecutionService.cs": "9edaa5d8677b4aa28c78b489363d25556acb0b25fa6ecc93f7195755b757361f",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingFinancialRetention.cs": "cedecaf397d28aae88fbf5bae36629714ded0b4182f6949f6196beb2aaa04c74",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingFinancialRetention.cs": "de1562001ae31f6d3fb4a21bdc34da4591e1a2c095cb7cb8e890fa3523379bf5",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingPersonalDataExportService.cs": "1c92b19276c7cef2cdd880b10736ae201196cb097f72dd68b43ace6047ee8646",
     "services/speed-reading-service/SpeedReading.Infrastructure/Privacy/SpeedReadingPrivacyInventoryRepository.cs": "732dab0a9656dadaf3914caf30c02f2061feefd95c2970293353f4fa36361b89",
     "services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj": "387260a58adf1b34f8d4ed88b1658cf74fa24b108b715937c14404c37ee39b37",
