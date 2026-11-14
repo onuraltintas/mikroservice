@@ -142,7 +142,7 @@
               @if (request.withdrawalStatus === 'Requested') {
                 <p class="withdrawal-note" data-testid="withdrawal-requested">Cayma talebiniz alındı; inceleniyor.</p>
               } @else if (request.withdrawalStatus) {
-                <p class="withdrawal-note">{{ request.withdrawalStatus === 'Approved' ? 'Cayma onaylandı' : 'Cayma talebi reddedildi' }}@if (request.withdrawalReviewNote) {: {{ request.withdrawalReviewNote }}}</p>
+                <p class="withdrawal-note" data-testid="withdrawal-answer">@if (request.withdrawalStatus === 'Approved') {{{ request.withdrawalReviewNote || 'Cayma onaylandı.' }}} @else {Cayma talebi reddedildi@if (request.withdrawalReviewNote) {: {{ request.withdrawalReviewNote }}}}</p>
               }
               <div class="request-actions">
                 @if (request.salesDocumentsVersion) {
