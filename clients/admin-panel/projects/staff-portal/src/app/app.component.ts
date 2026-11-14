@@ -38,6 +38,8 @@ export class AppComponent implements AfterViewInit {
   readonly auth = inject(StaffAuthService);
   readonly theme = inject(DarkModeService);
   reloadPage(): void { globalThis.location?.reload(); }
+  /** Paket I3: this browser signed in with another account while this tab stayed open (false with an auth double that has no such signal). */
+  otherAccount(): boolean { return this.auth.otherAccountSignedIn?.() ?? false; }
   readonly menuOpen = signal(false);
   @ViewChild('teacherMenuToggle') private teacherMenuToggle?: ElementRef<HTMLButtonElement>;
   closeTeacherMenu(): void { this.menuOpen.set(false); this.teacherMenuToggle?.nativeElement.focus(); }
