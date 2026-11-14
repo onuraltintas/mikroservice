@@ -41,7 +41,7 @@
       <div class="edit-choices">
         <button type="button" class="secondary choice" (click)="edit('hours')"><strong>Saatlerim</strong><small>Okul, yemek, kurs ve çalışma saatlerin</small></button>
         <button type="button" class="secondary choice" (click)="edit('courses')"><strong>Derslerim</strong><small>Derslerinin önceliği ve zorluğu</small></button>
-        <button type="button" class="secondary choice" (click)="edit('tempo')"><strong>Tempo</strong><small>Konuları ne zaman bitireceğin</small></button>
+        <button type="button" class="secondary choice" (click)="edit('tempo')"><strong>Tekrar ve tempo</strong><small>Aralıklı tekrar seçimin ve konuları ne zaman bitireceğin</small></button>
       </div>
       <button type="button" class="link-button" (click)="edit('all')">Planı baştan kur</button>
     </section>
@@ -64,7 +64,8 @@
         @case ('courses') {
           <app-wizard-courses-step [staffStudentId]="staffStudentId" [context]="learningContext()" [lessons]="lessons()" [canGoBack]="canGoBack()"
             (saved)="coursesSaved($event)" (reload)="loadLearning()" (done)="next()" (back)="previous()" />
-          <!-- Paket H1 (P8): the topics are marked in Başlangıç durumum (Çalışma tercihlerim); the wizard only counts them. -->
+<ng-container *ngTemplateOutlet="reviewChoice"></ng-container>
+                    <!-- Paket H1 (P8): the topics are marked in Başlangıç durumum (Çalışma tercihlerim); the wizard only counts them. -->
           @if (learningContext()) {
             <p class="starting-status" data-testid="starting-status">
               @if (staffStudentId) {
@@ -98,6 +99,7 @@
             @if (tempoLoading()) { <p role="status" class="muted">Tempo seçenekleri hesaplanıyor…</p> }
             @if (tempoError()) { <p class="notice error" role="alert" data-testid="tempo-error">{{ tempoError() }} <button type="button" class="secondary" (click)="retryTempo()" [disabled]="tempoLoading()">Yeniden dene</button></p> }
             @if (tempoReplaced()) { <p class="notice" role="status" data-testid="tempo-replaced">{{ staffStudentId ? 'Öğrencinin kayıtlı temposu artık sınav tarihine uymuyor; en yakın tempo seçildi.' : 'Kayıtlı temponun bitiş tarihi artık uygun değil; sana en yakın tempoyu seçtim.' }}</p> }
+            <ng-container *ngTemplateOutlet="reviewChoice"></ng-container>
             @if (tempoOptions(); as options) {
               <div class="tempo-cards" role="radiogroup" aria-labelledby="tempo-question">
                 <p id="tempo-question" class="question-text">{{ staffStudentId ? 'Öğrenci konuları ne zaman bitirsin?' : 'Konuları ne zaman bitirmek istersin?' }}</p>
@@ -122,11 +124,26 @@
           </div>
         }
         @case ('summary') {
-          <app-wizard-summary-step [staffStudentId]="staffStudentId" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [finishByMode]="tempoMode()" [tempo]="tempo()"
+          <app-wizard-summary-step [staffStudentId]="staffStudentId" [reviewDays]="reviewDays()" [examFocus]="isYks() ? examFocus() : null" [finishBy]="finishBy()" [finishByMode]="tempoMode()" [tempo]="tempo()"
             [windows]="staffWindows()" [tempoNote]="tempoNote()" [context]="learningContext()" [canGoBack]="canGoBack()" [replaceOnOpen]="replaceOnOpen" [choices]="summaryChoices"
-            (addHours)="addHours()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (draftSaved)="draftSaved($event)" (back)="previous()" />
+            (addHours)="addHours()" (changeReviews)="changeReviews()" (planCreated)="onPlanCreated($event)" (contextSaved)="contextSaved($event)" (draftSaved)="draftSaved($event)" (back)="previous()" />
         }
       }
     </section>
   }
 </section>
+
+<!-- Paket I5 (user decision 14.11.2026): spaced reviews are the student's own choice; nothing is chosen for her. -->
+<ng-template #reviewChoice>
+  <fieldset class="review-choice" data-testid="review-choice" [disabled]="savingReviews() || !!staffStudentId">
+    <legend>{{ staffStudentId ? 'Öğrencinin aralıklı tekrar seçimi' : 'Bitirdiğin konuları sonradan kısa tekrarlarla hatırlatalım mı?' }}</legend>
+    <p class="muted">{{ staffStudentId ? 'Tekrar günlerini yalnız öğrenci seçebilir.' : 'İstediğin günleri işaretle. Her tekrar 10 dakikadır ve haftalık çalışma süreni artırır; tempo adımındaki saatler buna göre hesaplanır.' }}</p>
+    <div class="chips">
+      @for (day of reviewChoices; track day) {
+        <label class="chip"><input type="checkbox" [checked]="reviewDays().includes(day)" (change)="setReview(day)" data-testid="review-day" /><span>{{ day }} gün sonra</span></label>
+      }
+    </div>
+    <p class="muted" role="status" data-testid="review-text">{{ savingReviews() ? 'Kaydediliyor…' : reviewText() }}</p>
+    @if (reviewError()) { <p class="notice error" role="alert">{{ reviewError() }}</p> }
+  </fieldset>
+</ng-template>

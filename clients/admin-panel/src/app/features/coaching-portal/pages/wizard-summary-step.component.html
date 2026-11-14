@@ -21,7 +21,7 @@
         <h4>Derslere ayrılan süre</h4>
         <ul class="lesson-hours" data-testid="proposal-lessons">
           @for (lesson of view.lessons; track lesson.lessonId) {
-            <li>{{ lesson.lessonName }} · @if (lesson.noTime) { <strong>saat verilemedi</strong> } @else { haftada {{ hours(lesson.existingMinutes + lesson.proposedMinutes) }} saat }</li>
+            <li>{{ lesson.lessonName }} · @if (lesson.noTime) { <strong>saat verilemedi</strong> } @else { haftada {{ hours(lesson.existingMinutes + lesson.proposedMinutes) }} saat }@if (lessonGap(lesson) > 0) { <span class="warning" data-testid="lesson-gap"> · {{ hours(lessonGap(lesson)) }} saat eksik</span> }</li>
           }
         </ul>
       }
@@ -52,6 +52,13 @@
             <p>Seçtiğin saatler derslerine yetmiyor. Bütün derslerine yetişmek için haftada yaklaşık <strong>{{ hours(view.neededMinutes) }} saat</strong> gerekiyor; şu an <strong>{{ hours(savedCoveredMinutes(view)) }} saat</strong> var. Bu öneriyle <strong>{{ hours(view.coveredMinutes) }} saat</strong> olur.</p>
           }
           @if (lessonsWithoutTime(view)) { <p data-testid="no-time-lessons">Saat verilemeyen dersler: {{ lessonsWithoutTime(view) }}.</p> }
+          <!-- Paket I5: ready ways to close the shortage, each with its amount. -->
+          <ul class="solutions" data-testid="shortage-solutions">
+            <li><strong>Saat ekle:</strong> {{ addHoursAdvice(view) }}</li>
+            @if (biggestGap(view)) { <li><strong>Ders çıkar ya da hafiflet:</strong> {{ biggestGap(view) }}</li> }
+            @if (reviewDays.length) { <li><strong>Tekrarı azalt:</strong> Aralıklı tekrar seçili ({{ reviewDayList() }} gün sonra); azaltırsan haftalık ihtiyaç düşer.</li> }
+            <li><strong>Önemli derslerle devam et:</strong> {{ staffStudentId ? 'Hafta bu hâliyle kalır; yıllık planda hangi dersin nereye kadar geldiğini görürsün.' : 'Haftan bu hâliyle kalır; yıllık planda hangi dersin nereye kadar geldiğini görürsün.' }}</li>
+          </ul>
         </div>
       }
     }
@@ -62,6 +69,7 @@
         @if (!staffStudentId) {
           <button type="button" class="secondary" (click)="addHours.emit()">Saat ekle</button>
           <a routerLink="/coaching-portal/account/settings" [queryParams]="{ adim: 'dersler', donus: 'sihirbaz' }">Ders çıkar</a>
+          @if (reviewDays.length) { <button type="button" class="secondary" data-testid="change-reviews" (click)="changeReviews.emit()">Tekrar seçimini değiştir</button> }
         }
         @if (view.slots.length) { <button type="button" class="secondary" (click)="keepWeek()" [disabled]="busy()">Önemli derslerle devam et</button> }
       </div>
@@ -92,6 +100,9 @@
               @if (topics.length) { <span class="left-out" data-testid="left-out">Dışarıda kalan konular: {{ topics.length }} ({{ leftOutNames(lesson.lessonId) }})</span> }
             }
             @if (late(lesson)) {
+              @if (lesson.remainingMinutes > 0) {
+                <span class="warning" data-testid="late-detail">@if (lesson.extraWeeklyMinutes > 0) { Yetişmesi için haftada yaklaşık {{ hours(lesson.extraWeeklyMinutes) }} saat daha gerekiyor. }@if (reachedTopic(lesson.lessonId)) { Plan “{{ reachedTopic(lesson.lessonId) }}” konusuna kadar geliyor; sonrası sığmıyor. }</span>
+              }
               <div class="actions" data-testid="late-fixes">
                 @if (!staffStudentId) {
                   <button type="button" class="secondary" (click)="addHours.emit()" [disabled]="busy()">Saat ekle</button>
@@ -103,7 +114,12 @@
           </li>
         }
       </ul>
-      <p class="muted">{{ staffStudentId ? 'Bitirdiği her konu bir hafta sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).' : 'Bitirdiğin her konu bir hafta sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).' }}</p>
+      <p class="muted" data-testid="review-note">{{ reviewNote() }}</p>
+      @if (anyLate() && reviewWeeklyMinutes() >= 15) {
+        <p class="notice" data-testid="review-cost">Aralıklı tekrarlar haftada yaklaşık {{ hours(reviewWeeklyMinutes()) }} saat tutuyor; azaltırsan bu süre konulara kalır.
+          @if (!staffStudentId) { <button type="button" class="secondary small" (click)="changeReviews.emit()" [disabled]="busy()">Tekrar seçimini değiştir</button> }</p>
+      }
+      @if (anyLate() && !choices.prioritizeWhenShort()) { <p class="muted" data-testid="focus-hint">“Önemli konulara odaklan” dersen sığmayan konular dışarıda kalır; hangileri olduğunu burada görürsün ve istersen geri alırsın.</p> }
       @if (choices.prioritizeWhenShort()) {
         <p class="notice" data-testid="prioritized">Süre yetmediği için önemli konular öne alındı; sığmayanlar dışarıda kaldı.
           <button type="button" class="secondary small" (click)="planAllTopics()" [disabled]="busy()">Bütün konuları planla</button></p>

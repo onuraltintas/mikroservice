@@ -20,4 +20,12 @@ internal static class TestAssemblySetup
     /// <summary>The suite's study plans are written against the catalog minutes; Paket I2's planning share is pinned to 1.</summary>
     [ModuleInitializer]
     internal static void PlanTheCatalogMinutes() => Coaching.Application.StudyPlanning.WeeklyPlanEngine.ContentFactor = 1m;
+
+    /// <summary>Paket I5: reviews are the student's choice (none by default); the suite's plans expect the one-week review.</summary>
+    [ModuleInitializer]
+    internal static void ReviewAfterAWeek() => Coaching.Application.StudyPlanning.WeeklyPlanEngine.DefaultSpacedDays = [7];
+
+    /// <summary>Paket I5: the suite's plans expect one task per outcome; the sessions of a topic are tested on their own.</summary>
+    [ModuleInitializer]
+    internal static void OneTaskPerOutcome() => Coaching.Application.StudyPlanning.WeeklyPlanEngine.TopicSessionMinutes = 0;
 }

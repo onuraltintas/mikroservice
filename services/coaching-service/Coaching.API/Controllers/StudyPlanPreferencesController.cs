@@ -30,6 +30,17 @@ public sealed class StudyPlanPreferencesController(IStudyPlanPreferencesService 
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public Task<IActionResult> Replace([FromBody] StudyPlanPreferencesUpdate request, CancellationToken cancellationToken = default) =>
         StudyRoutineController.Respond(this, async () => Ok(new { success = true, data = await preferences.ReplaceAsync(request, cancellationToken) }));
+
+    /// <summary>Paket I5: the spaced review choice (any of 7, 30 and 45 days; an empty list for none).</summary>
+    [HttpPut("spaced-reviews")]
+    [RequestSizeLimit(1024)]
+    [EnableRateLimiting("study-planning-write")]
+    [ProducesResponseType(typeof(StudyPlanPreferencesView), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> SetSpacedReviews([FromBody] SpacedReviewChoice request, CancellationToken cancellationToken = default) =>
+        StudyRoutineController.Respond(this, async () => Ok(new { success = true, data = await preferences.SetSpacedReviewsAsync(request, cancellationToken) }));
 }
 
 /// <summary>Paket H4a: a teacher or institution administrator reads a student's plan preferences; only the student can change them.</summary>

@@ -8,7 +8,7 @@ import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyLesson, WeeklyPropos
 import { CoachingLearningSetupService, LearningContext, LearningSetupView, RETIRED_PURPOSE_NOTICE, isRetiredPurpose } from '../../../core/services/coaching-learning-setup.service';
 import { CoachingStudyPlanningService, StudyAvailability } from '../../../core/services/coaching-study-planning.service';
 import { CoachingStudyRoutineService, StudyRoutineExamFocus, StudyRoutineView, StudyTempo } from '../../../core/services/coaching-study-routine.service';
-import { CoachingPlanPreferencesService, StudyPlanPreferences } from '../../../core/services/coaching-plan-preferences.service';
+import { CoachingPlanPreferencesService, SPACED_REVIEW_DAYS, StudyPlanPreferences } from '../../../core/services/coaching-plan-preferences.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { DEFAULT_MAX_DAY_MINUTES } from './weekly-calendar';
 import { WizardHoursStepComponent } from './wizard-hours-step.component';
@@ -141,6 +141,7 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.loadHours();
     this.preferences.get(this.staffStudentId).pipe(takeUntilDestroyed(this.destroy)).subscribe(prefs => {
       if (prefs) this.stored = { examFocus: prefs.examFocus ?? null, tempo: prefs.tempo ?? null };
+      this.storedReviews = prefs?.spacedReviewDays ?? null; this.reviewDays.set(this.storedReviews ?? []);
       this.prefsLoaded = true; this.applyStored(); this.start();
     });
     if (!this.staffStudentId) this.checkPlans();
@@ -296,6 +297,39 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   /** S6: the confirmed choice is kept in the plan preferences (never through the routine, so the free hours stay as they are). */
   focusNext() { this.savePreferences({ examFocus: TO_ROUTINE_FOCUS[this.examFocus()] }); }
 
+  // --- Spaced reviews (Paket I5, user decision 14.11.2026) -------------------------------------------------------------------
+  /** The student's own choice: any of 7, 30 and 45 days after a finished topic, or none. Nothing is chosen for her. */
+  readonly reviewChoices = SPACED_REVIEW_DAYS;
+  readonly reviewDays = signal<number[]>([]);
+  /** Null while the student has never answered. */
+  private storedReviews: number[] | null = null;
+  toggleReview(day: number) { this.reviewDays.update(days => (days.includes(day) ? days.filter(x => x !== day) : [...days, day]).sort((a, b) => a - b)); }
+  reviewText() {
+    const days = this.reviewDays();
+    if (!days.length) return this.staffStudentId ? 'Öğrenci aralıklı tekrar seçmedi; plana tekrar konmaz.' : 'Hiçbirini seçmezsen plana tekrar konmaz.';
+    const list = days.length === 1 ? `${days[0]}` : `${days.slice(0, -1).join(', ')} ve ${days[days.length - 1]}`;
+    return `${this.staffStudentId ? 'Öğrencinin bitirdiği' : 'Bitirdiğin'} her konu ${list} gün sonra 10 dakikalık kısa bir tekrarla hatırlatılır.`;
+  }
+  /**
+   * A student's choice is saved as she makes it (also "none", so that she is not asked as if for the first time); the weekly need
+   * changes with it, so the tempo options are read again. A teacher only reads the choice.
+   */
+  readonly savingReviews = signal(false);
+  readonly reviewError = signal('');
+  setReview(day: number) {
+    if (this.staffStudentId || this.savingReviews()) return;
+    const before = this.reviewDays(); this.toggleReview(day);
+    const days = this.reviewDays(); this.savingReviews.set(true); this.reviewError.set('');
+    this.preferences.saveSpacedReviews(days).pipe(catchError(e => e?.status === 409 && e?.error?.code === 'StudyPlanning.Conflict' ? this.preferences.saveSpacedReviews(days) : throwError(() => e)),
+      takeUntilDestroyed(this.destroy), finalize(() => this.savingReviews.set(false))).subscribe({
+      next: view => {
+        this.storedReviews = view.spacedReviewDays ?? days; this.reviewDays.set(this.storedReviews); this.tempoOptions.set(null);
+        if (this.step() === 'tempo') this.loadTempo('tempo', 1);
+      },
+      error: e => { this.reviewDays.set(before); this.reviewError.set(typeof e?.error?.message === 'string' ? e.error.message : 'Tekrar seçimin kaydedilemedi. Yeniden deneyebilirsin.'); }
+    });
+  }
+
   // --- Step 4 ---------------------------------------------------------------------------------------------------------------
   /** Tempo options for the current focus, hours and proposal mode; one option skips the step (the summary says so). */
   private loadTempo(target: WizardStep, direction: 1 | -1) {
@@ -378,6 +412,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     if (!this.flow().includes('hours')) { this.hoursAdded = true; this.flow.update(flow => ['hours', ...flow]); }
     this.returnToSummary.set(true); this.hoursWithQuestions.set(!this.staffStudentId); this.go('hours');
   }
+  /** Paket I5, "Tekrar seçimini değiştir": the step that always shows the review choice, then back to the summary. */
+  changeReviews() { this.endHoursDetour(); this.editing = true; this.flow.set(['courses', 'summary']); this.go('courses'); }
   /** S1: the summary saved (or reloaded) the weekly draft; the next tempo options follow its mode. */
   draftSaved(hasCards: boolean) { this.draftHasCards = hasCards; }
   contextSaved(view: LearningSetupView) { this.applyLearning(view); }

@@ -86,6 +86,27 @@ public static class WeeklyOutcomeScheduler
         return new(rules is null?tasks:Merge(tasks),summaries,recommended,free);
     }
 
+    /// <summary>
+    /// Paket I5: the scheduled pieces as the tasks the student sees. Pieces that follow each other without a gap on one day, in one
+    /// lesson and topic, of the same kind and reason and with different outcomes, are one session while it stays within
+    /// <paramref name="maxMinutes"/>. A spaced review is always its own task; 0 minutes keeps every piece apart. The order is kept.
+    /// </summary>
+    public static IReadOnlyList<IReadOnlyList<WeeklyOutcomeSlice>> Sessions(IReadOnlyList<WeeklyOutcomeSlice> slices,int maxMinutes)
+    {
+        ArgumentNullException.ThrowIfNull(slices);
+        var sessions=new List<List<WeeklyOutcomeSlice>>();
+        foreach(var slice in slices)
+        {
+            var open=sessions.Count==0?null:sessions[^1];var last=open is null?null:open[^1];
+            if(maxMinutes>0&&open is not null&&last is not null&&slice.Kind!="Spaced"&&last.Kind==slice.Kind&&last.Date==slice.Date&&last.LessonId==slice.LessonId
+                &&last.ReusedSlot==slice.ReusedSlot&&last.Reason==slice.Reason&&last.Outcome.TopicId==slice.Outcome.TopicId
+                &&last.StartMinute+last.Minutes==slice.StartMinute&&open.All(x=>x.Outcome.OutcomeId!=slice.Outcome.OutcomeId)
+                &&open.Sum(x=>x.Minutes)+slice.Minutes<=maxMinutes)open.Add(slice);
+            else sessions.Add(new List<WeeklyOutcomeSlice>{slice});
+        }
+        return sessions;
+    }
+
     /// <summary>Roadmap O7: back-to-back hours of the same work on one day become a single task.</summary>
     private static List<WeeklyOutcomeSlice> Merge(List<WeeklyOutcomeSlice> slices)
     {

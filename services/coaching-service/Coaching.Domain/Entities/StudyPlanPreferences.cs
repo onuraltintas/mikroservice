@@ -14,6 +14,12 @@ public sealed class StudyPlanPreferences : AggregateRoot
     public Guid StudentId { get; private set; }
     public string? ExamFocus { get; private set; }
     public string? Tempo { get; private set; }
+    /// <summary>
+    /// Paket I5 (user decision 14.11.2026): the days after finishing a topic on which the student wants a short review, in ascending
+    /// order and comma separated ("7,30"). Empty: she wants none. Null: she has not been asked yet (no reviews either).
+    /// </summary>
+    public string? SpacedReviewDays { get; private set; }
+    public static readonly IReadOnlyList<int> SpacedReviewDayChoices = [7, 30, 45];
     private StudyPlanPreferences() { }
 
     public static StudyPlanPreferences Create(Guid studentId)
@@ -30,4 +36,17 @@ public sealed class StudyPlanPreferences : AggregateRoot
         Tempo = tempo;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void SetSpacedReviewDays(IEnumerable<int> days)
+    {
+        ArgumentNullException.ThrowIfNull(days);
+        var chosen = days.Distinct().OrderBy(x => x).ToArray();
+        if (chosen.Any(x => !SpacedReviewDayChoices.Contains(x))) throw new ArgumentException("Unknown review day.", nameof(days));
+        SpacedReviewDays = string.Join(',', chosen);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Null while the student has not been asked.</summary>
+    public IReadOnlyList<int>? SpacedReviewDayList() => SpacedReviewDays is null ? null
+        : SpacedReviewDays.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
 }

@@ -219,6 +219,53 @@ describe('WizardSummaryStepComponent', () => {
     expect(issue.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=new-plan');
   });
 
+  // Paket I5 (user decision 14.11.2026): what is short, by how much, and ready ways to close it.
+  it('says how much each lesson lacks and how many hours would close the week', async () => {
+    const short = (mode: WeeklyProposalMode) => proposalOf(mode, [tuesday], { neededMinutes: 420, shortageMinutes: 240, coveredMinutes: 180, lessons: [
+      { lessonId: 'math', lessonName: 'Matematik', examCode: 'LGS', existingMinutes: 60, proposedMinutes: 60, neededMinutes: 180, noTime: false },
+      { lessonId: 'tur', lessonName: 'Türkçe', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 60, neededMinutes: 240, noTime: false }] });
+    const { el, c, fixture } = await setup({ proposal: short });
+    const gaps = [...el.querySelectorAll('[data-testid="lesson-gap"]')].map(x => text(x));
+    expect(gaps).toEqual(['· 1 saat eksik', '· 3 saat eksik']);
+    const solutions = text(el.querySelector('[data-testid="shortage-solutions"]'))!;
+    // 240 minutes: 48 a weekday, rounded up to an hour; or four hours at the weekend.
+    expect(solutions).toContain('Hafta içi her gün yaklaşık 1 saat daha ya da hafta sonu toplam 4 saat eklersen bütün derslerine yetişirsin.');
+    expect(solutions).toContain('En çok açık veren ders: Türkçe (haftada 3 saat eksik).');
+    expect(solutions).not.toContain('Tekrarı azalt');
+    expect(el.querySelector('[data-testid="change-reviews"]')).toBeNull();
+
+    const changed = vi.fn(); c.changeReviews.subscribe(changed);
+    c.reviewDays = [7, 30]; fixture.componentRef.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    expect(text(el.querySelector('[data-testid="shortage-solutions"]'))).toContain('Tekrarı azalt: Aralıklı tekrar seçili (7 ve 30 gün sonra)');
+    (el.querySelector('[data-testid="change-reviews"]') as HTMLButtonElement).click();
+    expect(changed).toHaveBeenCalledOnce();
+  });
+
+  it('says for a course that does not finish how much more it needs, where the plan stops, and what the reviews cost', async () => {
+    const { el, c, fixture, engine } = await setup();
+    engine.preview.mockImplementation((request: WeeklyOutcomeRequest) => { const p = previewOf(request); return of({ ...p, schedule: { ...p.schedule, tasks: [...p.schedule.tasks,
+      { date: '2026-11-17', startMinute: 1080, lessonId: 'tur', lessonName: 'Türkçe', minutes: 60, reusedSlot: false, kind: 'Learn',
+        outcome: { topicId: 'f', topicName: 'Fiilimsiler', outcomeId: 'o2', code: 'T', name: 'n', estimateId: 'e2', estimateNumber: 1, minutes: 60 } },
+      { date: '2026-11-24', startMinute: 1080, lessonId: 'tur', lessonName: 'Türkçe', minutes: 870, reusedSlot: false, kind: 'Spaced',
+        outcome: { topicId: 'f', topicName: 'Fiilimsiler', outcomeId: 'o2', code: 'T', name: 'n', estimateId: 'e2', estimateNumber: 1, minutes: 10 } }] } }); });
+    c.reviewDays = [7];
+    await keep(fixture);
+    const rows = [...el.querySelectorAll('[data-testid="course-finish"] li')];
+    expect(rows[0].querySelector('[data-testid="late-detail"]')).toBeNull();
+    expect(text(rows[1].querySelector('[data-testid="late-detail"]'))).toBe('Yetişmesi için haftada yaklaşık 0,5 saat daha gerekiyor. Plan “Fiilimsiler” konusuna kadar geliyor; sonrası sığmıyor.');
+    expect(text(el.querySelector('[data-testid="review-note"]'))).toBe('Bitirdiğin her konu 7 gün sonra 10 dakikalık kısa bir tekrarla hatırlatılır (aralıklı tekrar).');
+    // 900 review minutes over the 27 weeks from 9 November to 12 May: about half an hour a week.
+    expect(text(el.querySelector('[data-testid="review-cost"]'))).toContain('Aralıklı tekrarlar haftada yaklaşık 0,5 saat tutuyor');
+    expect(el.querySelector('[data-testid="focus-hint"]')).not.toBeNull();
+  });
+
+  it('says that no review is planned when the student chose none', async () => {
+    const { el, fixture } = await setup();
+    await keep(fixture);
+    expect(text(el.querySelector('[data-testid="review-note"]'))).toContain('Aralıklı tekrar seçmedin; plana tekrar konmaz.');
+    expect(el.querySelector('[data-testid="review-cost"]')).toBeNull();
+  });
+
   it('saves the kept week with its version, then previews the year to the tempo\'s finish date and shows each course', async () => {
     const { el, fixture, weekly, engine, events } = await setup();
     await keep(fixture);

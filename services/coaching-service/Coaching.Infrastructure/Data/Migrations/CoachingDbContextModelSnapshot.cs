@@ -4326,6 +4326,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<string>("SpacedReviewDays")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
 

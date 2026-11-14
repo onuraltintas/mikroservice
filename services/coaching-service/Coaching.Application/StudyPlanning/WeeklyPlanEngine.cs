@@ -26,6 +26,19 @@ public static class WeeklyPlanEngine
     public static int PlanMinutes(int catalogMinutes, decimal factor) =>
         catalogMinutes <= 0 ? 0 : Math.Max(5, (int)Math.Round(catalogMinutes * factor, MidpointRounding.AwayFromZero));
     public static WeeklyPlanRules Rules { get; } = new(SpacedIntervalDays, SpacedMinutes);
+    /// <summary>
+    /// Paket I5 (user decision 14.11.2026): spaced reviews are the student's choice. These are the review days of a student who has
+    /// not chosen: none. Settable so that tests written with the one-week review pin it.
+    /// </summary>
+    public static IReadOnlyList<int> DefaultSpacedDays { get; set; } = [];
+    /// <summary>
+    /// Paket I5 (user decision 14.11.2026): back-to-back outcomes of one topic become one task of at most this many minutes (a study
+    /// session), instead of a row of 7-9 minute tasks. 0 keeps one task per outcome; settable so that tests written that way pin it.
+    /// </summary>
+    public const int DefaultTopicSessionMinutes = 60;
+    public static int TopicSessionMinutes { get; set; } = DefaultTopicSessionMinutes;
+    /// <summary>The rules of a plan with the student's review days (null: she has not chosen).</summary>
+    public static WeeklyPlanRules RulesFor(IReadOnlyList<int>? chosenDays) => new(chosenDays ?? DefaultSpacedDays, SpacedMinutes);
 
     public sealed record LessonPreference(int Priority, int? Difficulty);
 
