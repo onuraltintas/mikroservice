@@ -45,6 +45,9 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       createInstitutionAccess: vi.fn(() => of({ createdCount: 2, existingCount: 0 })),
       deleteBankTransferRequest: vi.fn(() => of(undefined)),
       getBankTransferSettings: vi.fn(() => of(null)),
+      attachInvoice: vi.fn((id: string, invoiceNumber: string) => of({ id, status: 'Approved', invoiceNumber })),
+      removeInvoice: vi.fn((id: string) => of({ id, status: 'Approved', invoiceNumber: null })),
+      downloadInvoice: vi.fn(() => of(new Blob(['%PDF-']))),
       getSeller: vi.fn(() => of({ title: 'ONAL', address: null, taxOffice: null, taxNumber: null, mersisNumber: null, email: null, phone: null })),
       updateSeller: vi.fn((seller: unknown) => of(seller)),
       reviewBankTransferWithdrawal: vi.fn((id: string, approve: boolean) => of({ id, status: 'Approved', withdrawalStatus: approve ? 'Approved' : 'Rejected' }))
@@ -257,5 +260,30 @@ describe('SpeedReadingSubscriptionsComponent', () => {
     toaster.prompt.mockResolvedValueOnce(' Süre doldu ');
     await component.rejectWithdrawal(request);
     expect(service.reviewBankTransferWithdrawal).toHaveBeenLastCalledWith('request-1', false, 'Süre doldu');
+  });
+
+  // Billing parity (14.11.2026): the invoice of an approved payment.
+  it('records an invoice only with a number, a date and a PDF, and removes it after a confirmation', async () => {
+    const { component, service, toaster } = createComponent();
+    const request = { id: 'request-1', userName: 'Veli', paymentReference: 'EFT-1', status: 'Approved' } as never;
+    component.startInvoice(request);
+    expect(component.invoiceFor()).toBe(request);
+    expect(component.invoiceDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    component.attachInvoice();
+    component.invoiceNumber = ' ONL2026000001 ';
+    component.attachInvoice();
+    expect(service.attachInvoice).not.toHaveBeenCalled();
+    expect(toaster.error).toHaveBeenCalledTimes(2);
+
+    const file = new File(['%PDF-1.7'], 'fatura.pdf', { type: 'application/pdf' });
+    component.chooseInvoice({ target: { files: [file] } } as unknown as Event);
+    component.attachInvoice();
+    expect(service.attachInvoice).toHaveBeenCalledWith('request-1', 'ONL2026000001', component.invoiceDate, file, 'fatura.pdf');
+    expect(component.invoiceFor()).toBeNull();
+
+    await component.removeInvoice({ id: 'request-1', invoiceNumber: 'ONL2026000001' } as never);
+    expect(toaster.confirm).toHaveBeenCalled();
+    expect(service.removeInvoice).toHaveBeenCalledWith('request-1');
   });
 });

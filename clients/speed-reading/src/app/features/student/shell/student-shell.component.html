@@ -180,6 +180,15 @@
                 </a>
                 @if (isStudent()) {
                   <a
+                    routerLink="/student/subscription"
+                    class="sp-dropdown__item"
+                    role="menuitem"
+                    data-testid="subscription-menu"
+                    (click)="closeUserMenu()">
+                    <span class="material-icons sp-dropdown__item-icon">receipt_long</span>
+                    Aboneliğim
+                  </a>
+                  <a
                     routerLink="/veli-baglantisi"
                     class="sp-dropdown__item"
                     role="menuitem"

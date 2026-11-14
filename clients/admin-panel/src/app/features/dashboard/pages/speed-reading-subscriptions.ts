@@ -88,7 +88,10 @@ type SubscriptionTab = 'settings' | 'products' | 'plans' | 'bankSettings' | 'tra
         <section class="space-y-4" aria-labelledby="transfer-requests-title">
           <div><h2 id="transfer-requests-title" class="text-lg font-semibold text-gray-900 dark:text-white">EFT talep kuyruğu</h2><p class="muted">Öğrencinin referansını banka hareketiyle doğrulayın. Onay işlemi, planın erişimini bir kez açar.</p></div>
           <form (ngSubmit)="loadBankTransferRequests()" class="inline-filter"><input [(ngModel)]="bankTransferSearch" name="bankTransferSearch" placeholder="Ad, e-posta veya referans ara" maxlength="100" /><select [(ngModel)]="bankTransferStatus" name="bankTransferStatus"><option value="">Tüm durumlar</option><option value="Pending">İnceleniyor</option><option value="Approved">Onaylandı</option><option value="Rejected">Reddedildi</option></select><button type="submit" class="secondary">Filtrele</button></form>
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Talep</th><th>Plan / tutar</th><th>Referans</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of bankTransferRequests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div>@if (request.payerName) {<div class="muted">Gönderen: {{ request.payerName }}</div>}@if (request.note) {<div class="muted">{{ request.note }}</div>}</td><td>{{ request.planName }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td class="font-mono">{{ request.paymentReference }}<div class="muted">{{ salesDocumentsLabel(request) }}</div></td><td>{{ bankTransferStatusLabel(request.status) }}@if (request.reviewNote) {<div class="muted">{{ request.reviewNote }}</div>}@if (request.withdrawalStatus) {<div class="muted" data-testid="withdrawal-state">{{ withdrawalLabel(request) }}@if (request.withdrawalReason) { · {{ request.withdrawalReason }}}@if (request.withdrawalReviewNote) { · {{ request.withdrawalReviewNote }}}</div>}</td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="approveBankTransferRequest(request)">Onayla</button><button type="button" (click)="rejectBankTransferRequest(request)">Reddet</button>}@if (request.withdrawalStatus === 'Requested') {<button type="button" (click)="approveWithdrawal(request)">Caymayı onayla</button><button type="button" (click)="rejectWithdrawal(request)">Caymayı reddet</button>}@if (request.status !== 'Approved') {<button type="button" class="danger" (click)="deleteBankTransferRequest(request)">Kalıcı sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ bankTransferRequests().totalCount }}</span><button type="button" (click)="changeBankTransferPage(bankTransferPage - 1)" [disabled]="bankTransferPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeBankTransferPage(bankTransferPage + 1)" [disabled]="bankTransferPage >= bankTransferTotalPages() || loading()">Sonraki</button></div></div>
+          @if (invoiceFor(); as invoiceRequest) {
+            <form (ngSubmit)="attachInvoice()" class="form-card" data-testid="invoice-form"><h3>Fatura ekle: {{ invoiceRequest.userName }} · {{ invoiceRequest.paymentReference }}</h3><p class="muted">Düzenlediğiniz faturanın PDF dosyasını yükleyin; alıcı "Aboneliğim" sayfasından indirir.</p><div class="form-grid"><label>Fatura no<input [(ngModel)]="invoiceNumber" name="invoiceNumber" maxlength="40" required /></label><label>Düzenlenme tarihi<input type="date" [(ngModel)]="invoiceDate" name="invoiceDate" required /></label><label class="wide">PDF<input type="file" accept="application/pdf,.pdf" (change)="chooseInvoice($event)" /></label></div><div class="form-actions"><button type="button" (click)="invoiceFor.set(null)">Vazgeç</button><button type="submit" class="primary" [disabled]="saving()">Faturayı ekle</button></div></form>
+          }
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Talep</th><th>Plan / tutar</th><th>Referans</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of bankTransferRequests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div>@if (request.payerName) {<div class="muted">Gönderen: {{ request.payerName }}</div>}@if (request.note) {<div class="muted">{{ request.note }}</div>}</td><td>{{ request.planName }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td class="font-mono">{{ request.paymentReference }}<div class="muted">{{ salesDocumentsLabel(request) }}</div></td><td>{{ bankTransferStatusLabel(request.status) }}@if (request.reviewNote) {<div class="muted">{{ request.reviewNote }}</div>}@if (request.withdrawalStatus) {<div class="muted" data-testid="withdrawal-state">{{ withdrawalLabel(request) }}@if (request.withdrawalReason) { · {{ request.withdrawalReason }}}@if (request.withdrawalReviewNote) { · {{ request.withdrawalReviewNote }}}</div>}</td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="approveBankTransferRequest(request)">Onayla</button><button type="button" (click)="rejectBankTransferRequest(request)">Reddet</button>}@if (request.status === 'Approved') {@if (request.invoiceNumber) {<button type="button" (click)="downloadInvoice(request)">Fatura {{ request.invoiceNumber }}</button><button type="button" (click)="removeInvoice(request)">Faturayı kaldır</button>} @else {<button type="button" [attr.data-testid]="'add-invoice-' + request.id" (click)="startInvoice(request)">Fatura ekle</button>}}@if (request.withdrawalStatus === 'Requested') {<button type="button" (click)="approveWithdrawal(request)">Caymayı onayla</button><button type="button" (click)="rejectWithdrawal(request)">Caymayı reddet</button>}@if (request.status !== 'Approved') {<button type="button" class="danger" (click)="deleteBankTransferRequest(request)">Kalıcı sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ bankTransferRequests().totalCount }}</span><button type="button" (click)="changeBankTransferPage(bankTransferPage - 1)" [disabled]="bankTransferPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeBankTransferPage(bankTransferPage + 1)" [disabled]="bankTransferPage >= bankTransferTotalPages() || loading()">Sonraki</button></div></div>
         </section>
       }
 
@@ -169,6 +172,11 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   readonly payments = signal<{ items: SpeedReadingPayment[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly bankTransferSettings = signal<SpeedReadingBankTransferSettings | null>(null);
   readonly seller = signal<SpeedReadingSellerInfo | null>(null);
+  /** The approved request whose invoice form is open. */
+  readonly invoiceFor = signal<SpeedReadingBankTransferRequest | null>(null);
+  invoiceNumber = '';
+  invoiceDate = '';
+  private invoiceFile: File | null = null;
   sellerDraft: SpeedReadingSellerInfo = { title: null, address: null, taxOffice: null, taxNumber: null, mersisNumber: null, email: null, phone: null };
   readonly bankTransferRequests = signal<SpeedReadingBankTransferRequestPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly students = signal<UserDto[]>([]);
@@ -544,6 +552,55 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
       this.seller.set(value);
       this.sellerDraft = { ...value };
       this.toaster.success(this.sellerComplete() ? 'Satıcı bilgileri kaydedildi; satış belgeleri hazır.' : 'Satıcı bilgileri kaydedildi ancak eksik alan var.');
+    });
+  }
+
+  startInvoice(request: SpeedReadingBankTransferRequest): void {
+    this.invoiceFor.set(request);
+    this.invoiceNumber = '';
+    this.invoiceDate = new Date().toISOString().slice(0, 10);
+    this.invoiceFile = null;
+  }
+
+  chooseInvoice(event: Event): void {
+    this.invoiceFile = (event.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  attachInvoice(): void {
+    const request = this.invoiceFor();
+    if (!request) return;
+    const number = this.invoiceNumber.trim();
+    if (!number || !this.invoiceDate) { this.toaster.error('Fatura numarasını ve tarihini girin.'); return; }
+    if (!this.invoiceFile) { this.toaster.error('Faturanın PDF dosyasını seçin.'); return; }
+    if (this.invoiceFile.size > 10 * 1024 * 1024) { this.toaster.error('Fatura dosyası en fazla 10 MB olabilir.'); return; }
+    this.saveRequest(this.service.attachInvoice(request.id, number, this.invoiceDate, this.invoiceFile, this.invoiceFile.name), result => {
+      this.replaceBankTransferRequest(result);
+      this.invoiceFor.set(null);
+      this.toaster.success('Fatura eklendi; alıcı Aboneliğim sayfasından indirebilir.');
+    });
+  }
+
+  async removeInvoice(request: SpeedReadingBankTransferRequest): Promise<void> {
+    const accepted = await this.toaster.confirm(`${request.invoiceNumber} numaralı fatura kaydı kaldırılsın mı? Alıcı artık indiremez.`,
+      { title: 'Faturayı kaldır', confirmText: 'Kaldır' });
+    if (!accepted) return;
+    this.saveRequest(this.service.removeInvoice(request.id), result => {
+      this.replaceBankTransferRequest(result);
+      this.toaster.success('Fatura kaydı kaldırıldı.');
+    });
+  }
+
+  downloadInvoice(request: SpeedReadingBankTransferRequest): void {
+    this.service.downloadInvoice(request.id).subscribe({
+      next: file => {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `fatura-${request.invoiceNumber}.pdf`.replace(/[\\/]/g, '-');
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.toaster.error('Fatura indirilemedi.')
     });
   }
 

@@ -16,6 +16,7 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { FooterComponent } from '../../../shared/components/footer/footer';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
+import { PaymentRequestsComponent } from './payment-requests.component';
 
 @Component({
   selector: 'app-payment',
@@ -29,7 +30,8 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar';
     MatIconModule,
     MatProgressSpinnerModule,
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
+    PaymentRequestsComponent
   ],
   templateUrl: './payment.component.html',
   styleUrl: './payment.component.scss'
@@ -50,18 +52,11 @@ export class PaymentComponent implements OnInit {
   /** Legal check Y1: the pre-information form and distance-sales contract of the selected plan. */
   readonly documents = signal<SalesDocuments | null>(null);
   readonly documentsError = signal<string | null>(null);
-  /** The documents accepted with an earlier request, opened from the history. */
-  readonly acceptedDocuments = signal<{ requestId: string; documents: SalesDocuments } | null>(null);
-  /** The request whose withdrawal form is open. */
-  readonly withdrawingId = signal<string | null>(null);
-  readonly withdrawalBusy = signal(false);
-  readonly withdrawalError = signal<string | null>(null);
   plans: SubscriptionPlan[] = [];
   paymentReference = '';
   payerName = '';
   note = '';
   documentsAccepted = false;
-  withdrawalReason = '';
 
   ngOnInit(): void {
     const requestedPlanId = this.route.snapshot.queryParamMap.get('plan');
@@ -128,50 +123,8 @@ export class PaymentComponent implements OnInit {
     });
   }
 
-  statusLabel(request: BankTransferPaymentRequest): string {
-    if (request.withdrawalStatus === 'Approved') return 'Cayıldı';
-    return request.status === 'Pending' ? 'İnceleniyor' : request.status === 'Approved' ? 'Onaylandı' : 'Reddedildi';
-  }
-
-  canWithdraw(request: BankTransferPaymentRequest): boolean {
-    return request.status === 'Approved' && !!request.withdrawableUntil && new Date(request.withdrawableUntil).getTime() > Date.now()
-      && request.withdrawalStatus !== 'Requested' && request.withdrawalStatus !== 'Approved';
-  }
-
-  openWithdrawal(request: BankTransferPaymentRequest): void {
-    this.withdrawingId.set(request.id);
-    this.withdrawalReason = '';
-    this.withdrawalError.set(null);
-  }
-
-  cancelWithdrawal(): void {
-    this.withdrawingId.set(null);
-    this.withdrawalError.set(null);
-  }
-
-  submitWithdrawal(request: BankTransferPaymentRequest): void {
-    if (this.withdrawalBusy()) return;
-    this.withdrawalBusy.set(true);
-    this.withdrawalError.set(null);
-    this.subscriptions.requestBankTransferWithdrawal(request.id, this.withdrawalReason.trim() || null).subscribe({
-      next: updated => {
-        this.requests.update(items => items.map(item => item.id === updated.id ? updated : item));
-        this.withdrawingId.set(null);
-        this.withdrawalBusy.set(false);
-      },
-      error: error => {
-        this.withdrawalError.set(error?.error?.message ?? 'Cayma talebi gönderilemedi. Lütfen yeniden deneyin.');
-        this.withdrawalBusy.set(false);
-      }
-    });
-  }
-
-  toggleAcceptedDocuments(request: BankTransferPaymentRequest): void {
-    if (this.acceptedDocuments()?.requestId === request.id) { this.acceptedDocuments.set(null); return; }
-    this.subscriptions.getAcceptedSalesDocuments(request.id).subscribe({
-      next: documents => this.acceptedDocuments.set({ requestId: request.id, documents }),
-      error: () => this.acceptedDocuments.set(null)
-    });
+  replaceRequest(updated: BankTransferPaymentRequest): void {
+    this.requests.update(items => items.map(item => item.id === updated.id ? updated : item));
   }
 
   continueToLogin(): void {

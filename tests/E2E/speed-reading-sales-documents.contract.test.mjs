@@ -71,8 +71,11 @@ test('the migration adds only nullable columns and the snapshot knows them', asy
 test('the payment page shows both documents, asks for acceptance and offers withdrawal', async () => {
   const html = await read('clients/speed-reading/src/app/features/public/payment/payment.component.html');
   const component = await read('clients/speed-reading/src/app/features/public/payment/payment.component.ts');
-  for (const id of ['sales-documents', 'accept-documents', 'documents-error', 'open-withdrawal', 'withdrawal-form', 'submit-withdrawal', 'show-accepted-documents'])
-    assert.ok(html.includes(`data-testid="${id}"`), id);
+  // Billing parity (14.11.2026): the request list with documents and withdrawal is its own component, also used on the subscription page.
+  const list = await read('clients/speed-reading/src/app/features/public/payment/payment-requests.component.html');
+  for (const id of ['sales-documents', 'accept-documents', 'documents-error']) assert.ok(html.includes(`data-testid="${id}"`), id);
+  for (const id of ['open-withdrawal', 'withdrawal-form', 'submit-withdrawal', 'show-accepted-documents']) assert.ok(list.includes(`data-testid="${id}"`), id);
+  assert.match(html, /<app-payment-requests \[requests\]="requests\(\)"/);
   assert.match(html, /\[disabled\]="submitting\(\) \|\| !documents\(\)"/);
   assert.match(component, /salesDocumentsVersion: documents\.version/);
   assert.match(component, /this\.documentsAccepted = false;/);

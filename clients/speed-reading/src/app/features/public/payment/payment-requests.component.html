@@ -1,0 +1,57 @@
+<div class="request-list">
+    @for (request of requests; track request.id) {
+      <article>
+        <div><strong>{{ request.planName }}</strong><span>{{ request.paymentReference }}</span></div>
+        <div><span class="status" [class.approved]="request.status === 'Approved' && request.withdrawalStatus !== 'Approved'" [class.rejected]="request.status === 'Rejected' || request.withdrawalStatus === 'Approved'">{{ statusLabel(request) }}</span><time>{{ request.createdAt | date:'d MMMM y, HH:mm':'':'tr' }}</time></div>
+        @if (request.reviewNote) { <p>{{ request.reviewNote }}</p> }
+        @if (request.withdrawalStatus === 'Requested') {
+          <p class="withdrawal-note" data-testid="withdrawal-requested">Cayma talebiniz alındı; inceleniyor.</p>
+        } @else if (request.withdrawalStatus) {
+          <p class="withdrawal-note" data-testid="withdrawal-answer">@if (request.withdrawalStatus === 'Approved') {{{ request.withdrawalReviewNote || 'Cayma onaylandı.' }}} @else {Cayma talebi reddedildi@if (request.withdrawalReviewNote) {: {{ request.withdrawalReviewNote }}}}</p>
+        }
+        <div class="request-actions">
+          @if (request.salesDocumentsVersion) {
+            <button type="button" class="link-button" (click)="toggleAcceptedDocuments(request)" data-testid="show-accepted-documents">
+              {{ acceptedDocuments()?.requestId === request.id ? 'Belgeleri gizle' : 'Onayladığınız belgeler' }}
+            </button>
+          }
+          @if (request.invoiceNumber) {
+            <button type="button" class="link-button" (click)="downloadInvoice(request)" [disabled]="invoiceBusy() === request.id" data-testid="download-invoice">
+              Fatura {{ request.invoiceNumber }} (PDF)
+            </button>
+          }
+          @if (canWithdraw(request) && withdrawingId() !== request.id) {
+            <button type="button" class="link-button" (click)="openWithdrawal(request)" data-testid="open-withdrawal">Cayma talebi</button>
+          }
+        </div>
+        @if (canWithdraw(request)) {
+          <p class="withdrawal-hint">Cayma hakkınızı {{ request.withdrawableUntil | date:'d MMMM y':'':'tr' }} gününe kadar kullanabilirsiniz.</p>
+        }
+        @if (withdrawingId() === request.id) {
+          <div class="withdrawal-form" data-testid="withdrawal-form">
+            <label>
+              <span>Gerekçe <em>(isteğe bağlı)</em></span>
+              <textarea [(ngModel)]="withdrawalReason" [ngModelOptions]="{ standalone: true }" maxlength="500" rows="2"></textarea>
+            </label>
+            <p class="withdrawal-hint">Talebiniz onaylandığında aboneliğiniz sona erer ve ödediğiniz tutarın tamamı ödeme yaptığınız hesaba iade edilir.</p>
+            @if (withdrawalError()) { <p class="message error" role="alert">{{ withdrawalError() }}</p> }
+            <div class="request-actions">
+              <button mat-stroked-button type="button" (click)="cancelWithdrawal()" [disabled]="withdrawalBusy()">Vazgeç</button>
+              <button mat-raised-button color="warn" type="button" (click)="submitWithdrawal(request)" [disabled]="withdrawalBusy()" data-testid="submit-withdrawal">
+                {{ withdrawalBusy() ? 'Gönderiliyor…' : 'Cayma talebini gönder' }}
+              </button>
+            </div>
+          </div>
+        }
+        @if (acceptedDocuments(); as shown) {
+          @if (shown.requestId === request.id) {
+            <div class="sales-documents" data-testid="accepted-documents">
+              <details open><summary>Ön bilgilendirme formu</summary><pre>{{ shown.documents.preInformation }}</pre></details>
+              <details><summary>Mesafeli satış sözleşmesi</summary><pre>{{ shown.documents.distanceSales }}</pre></details>
+            </div>
+          }
+        }
+      </article>
+    }
+</div>
+@if (invoiceError()) { <p class="message error" role="alert">{{ invoiceError() }}</p> }

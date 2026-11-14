@@ -22,6 +22,10 @@ import { AuthService } from '../../core/services/auth.service';
             <span class="material-icons">shopping_cart</span>
             Abonelik Planlarını Gör
           </a>
+          <a routerLink="/student/subscription" class="ns-btn ns-btn--outline" data-testid="my-subscription-link">
+            <span class="material-icons">receipt_long</span>
+            Ödeme Taleplerim
+          </a>
           <button class="ns-btn ns-btn--outline" (click)="logout()">
             <span class="material-icons">logout</span>
             Çıkış Yap
