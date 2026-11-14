@@ -56,7 +56,7 @@
       <div class="pagination"><button type="button" (click)="searchTopics(topics().pageNumber - 1)" [disabled]="busy() || topics().pageNumber <= 1">Önceki</button>
         <span>{{ topics().totalCount }} konu</span><button type="button" (click)="searchTopics(topics().pageNumber + 1)" [disabled]="busy() || topics().pageNumber * topics().pageSize >= topics().totalCount">Sonraki</button></div>
     </div> }
-    @if (selected) { <div class="actions"><button type="button" class="secondary" (click)="open(selected.id)" [disabled]="busy()">Kaydı yeniden yükle</button>
-      <button type="button" class="secondary" (click)="deleteSelected()" [disabled]="busy() || dirty || stale()">Sonucu sil</button></div> }
+    @if (selected) { <div class="actions record-actions" data-testid="exam-record-actions"><button type="button" class="secondary" (click)="open(selected.id)" [disabled]="busy()">Kaydı yeniden yükle</button>
+      <button type="button" class="secondary danger" (click)="deleteSelected()" [disabled]="busy() || dirty || stale()">Sonucu sil</button></div> }
   </div></div>
 </section>
