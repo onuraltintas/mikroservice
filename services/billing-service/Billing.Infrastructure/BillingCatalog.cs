@@ -214,19 +214,26 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock) : IB
         var alert = Optional(request.AlertEmail, 320, "Uyarı e-postası");
         if (email is not null && !email.Contains('@') || alert is not null && !alert.Contains('@'))
             throw new BusinessRuleException("Billing.SellerInvalid", "E-posta adresi geçersiz.");
+        // Everything is checked before the row is touched, so a refused request leaves nothing behind.
+        var title = Optional(request.Title, 200, "Unvan");
+        var address = Optional(request.Address, 500, "Adres");
+        var taxOffice = Optional(request.TaxOffice, 100, "Vergi dairesi");
+        var taxNumber = Digits(request.TaxNumber, 10, 11, "Vergi numarası");
+        var mersisNumber = Digits(request.MersisNumber, 16, 16, "MERSİS numarası");
+        var phone = Optional(request.Phone, 40, "Telefon");
         var seller = await db.Sellers.SingleOrDefaultAsync(item => item.Id == Seller.SingleId, cancellationToken);
         if (seller is null)
         {
             seller = new Seller();
             db.Sellers.Add(seller);
         }
-        seller.Title = Optional(request.Title, 200, "Unvan");
-        seller.Address = Optional(request.Address, 500, "Adres");
-        seller.TaxOffice = Optional(request.TaxOffice, 100, "Vergi dairesi");
-        seller.TaxNumber = Digits(request.TaxNumber, 10, 11, "Vergi numarası");
-        seller.MersisNumber = Digits(request.MersisNumber, 16, 16, "MERSİS numarası");
+        seller.Title = title;
+        seller.Address = address;
+        seller.TaxOffice = taxOffice;
+        seller.TaxNumber = taxNumber;
+        seller.MersisNumber = mersisNumber;
         seller.Email = email;
-        seller.Phone = Optional(request.Phone, 40, "Telefon");
+        seller.Phone = phone;
         seller.AlertEmail = alert;
         seller.UpdatedBy = actorId;
         seller.UpdatedAt = Now;
