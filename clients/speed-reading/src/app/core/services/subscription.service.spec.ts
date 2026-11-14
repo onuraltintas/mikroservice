@@ -30,7 +30,8 @@ describe('SubscriptionService bank transfer payments', () => {
       planId: 'plan-1',
       paymentReference: 'EFT-2026-000123',
       payerName: 'Örnek Öğrenci',
-      note: 'Açıklama'
+      note: 'Açıklama',
+      salesDocumentsVersion: '2026-11-14'
     }, 'bank-transfer-request-key').subscribe();
 
     const request = http.expectOne('/api/speed-reading/bank-transfer/requests');
@@ -38,6 +39,7 @@ describe('SubscriptionService bank transfer payments', () => {
     expect(request.request.headers.get('Idempotency-Key')).toBe('bank-transfer-request-key');
     expect(request.request.body.planId).toBe('plan-1');
     expect('adultPayerDeclaration' in request.request.body).toBe(false);
+    expect(request.request.body.salesDocumentsVersion).toBe('2026-11-14');
     request.flush({ success: true, data: { id: 'request-1', status: 'Pending' } });
   });
 });

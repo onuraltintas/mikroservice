@@ -15,6 +15,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/bank-transfer")]
 public sealed class BankTransferPaymentsController(
     ISpeedReadingSubscription subscriptions,
+    ISpeedReadingSales sales,
     IGoogleRecaptchaValidator recaptcha,
     GoogleRecaptchaOptions recaptchaOptions) : ControllerBase
 {
@@ -95,6 +96,63 @@ public sealed class BankTransferPaymentsController(
         return result is null
             ? BadRequest(new { success = false, message = "Plan, EFT ayarı veya ödeme referansı geçerli değil." })
             : Ok(new { success = true, data = result, message = "EFT payment request created" });
+    }
+
+    // ---- Legal check Y1: seller details, sales documents and withdrawal (cayma) ----
+
+    [HttpGet("seller")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
+    public async Task<IActionResult> GetSeller(CancellationToken cancellationToken = default) =>
+        Ok(new { success = true, data = await sales.GetSellerAsync(cancellationToken), message = "Seller retrieved" });
+
+    [HttpPut("seller")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
+    public async Task<IActionResult> UpdateSeller([FromBody] SpeedReadingSellerInfo request, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId)) return Unauthorized();
+        return Ok(new { success = true, data = await sales.UpdateSellerAsync(request, actorId, cancellationToken), message = "Seller updated" });
+    }
+
+    /// <summary>The pre-information form and distance-sales contract the buyer reads before sending a payment notice.</summary>
+    [HttpGet("documents")]
+    [Authorize]
+    public async Task<IActionResult> GetDocuments([FromQuery] Guid planId, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        var documents = await sales.RenderAsync(userId, planId, cancellationToken);
+        return documents is null
+            ? NotFound(new { success = false, message = "Bu plan için satış belgeleri hazırlanamadı." })
+            : Ok(new { success = true, data = documents, message = "Sales documents rendered" });
+    }
+
+    [HttpGet("requests/{id:guid}/documents")]
+    [Authorize]
+    public async Task<IActionResult> GetAcceptedDocuments(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        var documents = await sales.GetAcceptedAsync(userId, id, cancellationToken);
+        return documents is null ? NotFound() : Ok(new { success = true, data = documents, message = "Sales documents retrieved" });
+    }
+
+    [HttpPost("requests/{id:guid}/withdrawal")]
+    [Authorize]
+    public async Task<IActionResult> RequestWithdrawal(Guid id, [FromBody] BankTransferWithdrawalRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        var result = await sales.RequestWithdrawalAsync(userId, id, request.Reason, cancellationToken);
+        return result is null ? NotFound() : Ok(new { success = true, data = result, message = "Withdrawal requested" });
+    }
+
+    [HttpPut("requests/{id:guid}/withdrawal/review")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SubscriptionManage)]
+    public async Task<IActionResult> ReviewWithdrawal(Guid id, [FromBody] ReviewBankTransferWithdrawalRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId)) return Unauthorized();
+        var result = await sales.ReviewWithdrawalAsync(id, request, actorId, cancellationToken);
+        return result is null ? NotFound() : Ok(new { success = true, data = result, message = "Withdrawal reviewed" });
     }
 
     [HttpGet("requests/my")]

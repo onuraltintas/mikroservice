@@ -179,3 +179,24 @@ code { overflow-wrap: anywhere; color: #283a9e; font-family: ui-monospace, SFMon
   .request-list article { align-items: flex-start; }
   .request-list time, .status { text-align: left; }
 }
+
+.sales-documents { display: grid; gap: 8px; min-width: 0; }
+.documents-intro { margin: 0; color: #54617c; font-size: .9rem; }
+.sales-documents details { border: 1px solid #d9deee; border-radius: 8px; background: #fff; }
+.sales-documents summary { padding: 10px 12px; font-weight: 700; cursor: pointer; }
+.sales-documents pre {
+  max-height: 320px; margin: 0; padding: 0 12px 12px; overflow: auto;
+  font: inherit; font-size: .86rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.sales-documents .accept { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; font-size: .92rem; line-height: 1.45; }
+.sales-documents .accept input { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.request-list article .request-actions { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 14px; }
+.link-button { padding: 0; border: 0; background: none; color: #3b46c4; font: inherit; font-size: .88rem; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.withdrawal-note, .withdrawal-hint { margin: 0; color: #54617c; font-size: .86rem; line-height: 1.45; }
+.withdrawal-form { display: grid; gap: 10px; padding: 12px; border: 1px solid #ecd6d9; border-radius: 8px; background: #fff8f8; }
+.withdrawal-form label { display: grid; gap: 6px; font-size: .88rem; }
+.withdrawal-form textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cfd5e6; border-radius: 6px; font: inherit; }
+.request-list article > .request-actions,
+.request-list article > .withdrawal-form,
+.request-list article > .sales-documents { flex-basis: 100%; }
+.request-list article .withdrawal-form .request-actions { justify-content: flex-end; }

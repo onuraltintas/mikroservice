@@ -7,6 +7,7 @@ import {
   SpeedReadingBankTransferRequest,
   SpeedReadingBankTransferRequestPage,
   SpeedReadingBankTransferSettings,
+  SpeedReadingSellerInfo,
   SpeedReadingBankTransferSettingsRequest,
   SpeedReadingInstitutionAccessRequest,
   SpeedReadingManualSubscriptionRequest,
@@ -79,6 +80,7 @@ type SubscriptionTab = 'settings' | 'products' | 'plans' | 'bankSettings' | 'tra
         <section class="space-y-4" aria-labelledby="bank-settings-title">
           <div><h2 id="bank-settings-title" class="text-lg font-semibold text-gray-900 dark:text-white">Havale/EFT banka ayarı</h2><p class="muted">Bu bilgiler yalnızca etkin olduğunda ödeme sayfasında görünür. IBAN ve hesap sahibi bilgilerini yazmadan etkinleştiremezsiniz.</p></div>
           <form (ngSubmit)="saveBankTransferSettings()" class="form-card"><div class="form-grid"><label>Hesap sahibi<input [(ngModel)]="bankTransferSettingsDraft.accountHolder" name="bankAccountHolder" required maxlength="200" autocomplete="organization" /></label><label>Banka adı<input [(ngModel)]="bankTransferSettingsDraft.bankName" name="bankName" required maxlength="200" /></label><label class="wide">IBAN<input [(ngModel)]="bankTransferSettingsDraft.iban" name="bankIban" required maxlength="34" placeholder="TR00 0000 0000 0000 0000 0000 00" autocomplete="off" /></label><label class="wide">Ödeme yönergesi<textarea [(ngModel)]="bankTransferSettingsDraft.instructions" name="bankInstructions" maxlength="2000" placeholder="Örn. Açıklamaya öğrenci adını ve işlem referansını yazın."></textarea></label><label class="check"><input type="checkbox" [(ngModel)]="bankTransferSettingsDraft.isEnabled" name="bankTransferEnabled" /> Ödeme sayfasında yayınla</label></div><p class="muted">Durum: {{ bankTransferSettings()?.isPubliclyAvailable ? 'Yayında' : 'Yayında değil' }}</p><div class="form-actions"><button type="submit" class="primary" [disabled]="saving()">Banka ayarını kaydet</button></div></form>
+          <form (ngSubmit)="saveSeller()" class="form-card" data-testid="seller-form"><h3>Satıcı bilgileri</h3><p class="muted">Ön bilgilendirme formu ve mesafeli satış sözleşmesinin başında yer alır. MERSİS dışındaki alanlar dolmadan ödeme sayfası ödeme talebi kabul etmez.</p><div class="form-grid"><label class="wide">Unvan<input [(ngModel)]="sellerDraft.title" name="sellerTitle" maxlength="200" autocomplete="organization" /></label><label class="wide">Adres<input [(ngModel)]="sellerDraft.address" name="sellerAddress" maxlength="500" /></label><label>Vergi dairesi<input [(ngModel)]="sellerDraft.taxOffice" name="sellerTaxOffice" maxlength="100" /></label><label>Vergi numarası<input [(ngModel)]="sellerDraft.taxNumber" name="sellerTaxNumber" maxlength="11" inputmode="numeric" /></label><label>MERSİS numarası <span class="muted">(isteğe bağlı)</span><input [(ngModel)]="sellerDraft.mersisNumber" name="sellerMersis" maxlength="16" inputmode="numeric" /></label><label>E-posta<input type="email" [(ngModel)]="sellerDraft.email" name="sellerEmail" maxlength="320" /></label><label>Telefon<input [(ngModel)]="sellerDraft.phone" name="sellerPhone" maxlength="40" /></label></div><p class="muted" data-testid="seller-state">Durum: {{ sellerComplete() ? 'Satış belgeleri hazır' : 'Eksik — satış belgeleri oluşturulamaz' }}</p><div class="form-actions"><button type="submit" class="primary" [disabled]="saving()">Satıcı bilgilerini kaydet</button></div></form>
         </section>
       }
 
@@ -86,7 +88,7 @@ type SubscriptionTab = 'settings' | 'products' | 'plans' | 'bankSettings' | 'tra
         <section class="space-y-4" aria-labelledby="transfer-requests-title">
           <div><h2 id="transfer-requests-title" class="text-lg font-semibold text-gray-900 dark:text-white">EFT talep kuyruğu</h2><p class="muted">Öğrencinin referansını banka hareketiyle doğrulayın. Onay işlemi, planın erişimini bir kez açar.</p></div>
           <form (ngSubmit)="loadBankTransferRequests()" class="inline-filter"><input [(ngModel)]="bankTransferSearch" name="bankTransferSearch" placeholder="Ad, e-posta veya referans ara" maxlength="100" /><select [(ngModel)]="bankTransferStatus" name="bankTransferStatus"><option value="">Tüm durumlar</option><option value="Pending">İnceleniyor</option><option value="Approved">Onaylandı</option><option value="Rejected">Reddedildi</option></select><button type="submit" class="secondary">Filtrele</button></form>
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Talep</th><th>Plan / tutar</th><th>Referans</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of bankTransferRequests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div>@if (request.payerName) {<div class="muted">Gönderen: {{ request.payerName }}</div>}@if (request.note) {<div class="muted">{{ request.note }}</div>}</td><td>{{ request.planName }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td class="font-mono">{{ request.paymentReference }}<div class="muted">{{ adultPayerLabel(request) }} @if (request.adultPayerDeclaredAt) { · {{ request.adultPayerDeclaredAt | date:'dd.MM.yyyy HH:mm' }} }</div></td><td>{{ bankTransferStatusLabel(request.status) }}@if (request.reviewNote) {<div class="muted">{{ request.reviewNote }}</div>}</td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="approveBankTransferRequest(request)">Onayla</button><button type="button" (click)="rejectBankTransferRequest(request)">Reddet</button>}@if (request.status !== 'Approved') {<button type="button" class="danger" (click)="deleteBankTransferRequest(request)">Kalıcı sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ bankTransferRequests().totalCount }}</span><button type="button" (click)="changeBankTransferPage(bankTransferPage - 1)" [disabled]="bankTransferPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeBankTransferPage(bankTransferPage + 1)" [disabled]="bankTransferPage >= bankTransferTotalPages() || loading()">Sonraki</button></div></div>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Talep</th><th>Plan / tutar</th><th>Referans</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of bankTransferRequests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div>@if (request.payerName) {<div class="muted">Gönderen: {{ request.payerName }}</div>}@if (request.note) {<div class="muted">{{ request.note }}</div>}</td><td>{{ request.planName }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td class="font-mono">{{ request.paymentReference }}<div class="muted">{{ salesDocumentsLabel(request) }}</div></td><td>{{ bankTransferStatusLabel(request.status) }}@if (request.reviewNote) {<div class="muted">{{ request.reviewNote }}</div>}@if (request.withdrawalStatus) {<div class="muted" data-testid="withdrawal-state">{{ withdrawalLabel(request) }}@if (request.withdrawalReason) { · {{ request.withdrawalReason }}}@if (request.withdrawalReviewNote) { · {{ request.withdrawalReviewNote }}}</div>}</td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="approveBankTransferRequest(request)">Onayla</button><button type="button" (click)="rejectBankTransferRequest(request)">Reddet</button>}@if (request.withdrawalStatus === 'Requested') {<button type="button" (click)="approveWithdrawal(request)">Caymayı onayla</button><button type="button" (click)="rejectWithdrawal(request)">Caymayı reddet</button>}@if (request.status !== 'Approved') {<button type="button" class="danger" (click)="deleteBankTransferRequest(request)">Kalıcı sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ bankTransferRequests().totalCount }}</span><button type="button" (click)="changeBankTransferPage(bankTransferPage - 1)" [disabled]="bankTransferPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeBankTransferPage(bankTransferPage + 1)" [disabled]="bankTransferPage >= bankTransferTotalPages() || loading()">Sonraki</button></div></div>
         </section>
       }
 
@@ -166,6 +168,8 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   readonly subscriptions = signal<{ items: SpeedReadingSubscription[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly payments = signal<{ items: SpeedReadingPayment[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly bankTransferSettings = signal<SpeedReadingBankTransferSettings | null>(null);
+  readonly seller = signal<SpeedReadingSellerInfo | null>(null);
+  sellerDraft: SpeedReadingSellerInfo = { title: null, address: null, taxOffice: null, taxNumber: null, mersisNumber: null, email: null, phone: null };
   readonly bankTransferRequests = signal<SpeedReadingBankTransferRequestPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly students = signal<UserDto[]>([]);
   readonly institutions = signal<InstitutionDto[]>([]);
@@ -343,6 +347,10 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
           }
         : this.emptyBankTransferSettings();
     });
+    this.loadRequest(this.service.getSeller(), value => {
+      this.seller.set(value);
+      this.sellerDraft = { ...value };
+    });
   }
 
   syncContactOnlyPrice(): void { if (this.planDraft.isContactOnly) this.planDraft.price = 0; }
@@ -511,10 +519,54 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   subscriptionTotalPages(): number { return Math.max(1, Math.ceil(this.subscriptions().totalCount / this.pageSize)); }
   paymentTotalPages(): number { return Math.max(1, Math.ceil(this.payments().totalCount / this.pageSize)); }
   bankTransferTotalPages(): number { return Math.max(1, Math.ceil(this.bankTransferRequests().totalCount / this.pageSize)); }
-  adultPayerLabel(request: Pick<SpeedReadingBankTransferRequest, 'adultPayerDeclarationVersion' | 'adultPayerDeclaredAt'>): string {
-    return request.adultPayerDeclarationVersion && request.adultPayerDeclaredAt
-      ? `18+ ödeme beyanı · sürüm ${request.adultPayerDeclarationVersion} (yaş doğrulaması değildir)`
-      : 'Yetişkin beyanı yok';
+  /** Legal check Y1/Y9: the 18+ payer label is gone; the row says which sales documents the buyer accepted. */
+  salesDocumentsLabel(request: Pick<SpeedReadingBankTransferRequest, 'salesDocumentsVersion'>): string {
+    return request.salesDocumentsVersion ? `Satış belgeleri onaylandı · sürüm ${request.salesDocumentsVersion}` : 'Satış belgesi onayı yok (eski talep)';
+  }
+
+  withdrawalLabel(request: Pick<SpeedReadingBankTransferRequest, 'withdrawalStatus'>): string {
+    return request.withdrawalStatus === 'Requested' ? 'Cayma talebi bekliyor'
+      : request.withdrawalStatus === 'Approved' ? 'Cayma onaylandı' : 'Cayma reddedildi';
+  }
+
+  sellerComplete(): boolean {
+    const seller = this.seller();
+    return !!seller && [seller.title, seller.address, seller.taxOffice, seller.taxNumber, seller.email, seller.phone].every(value => !!value?.trim());
+  }
+
+  saveSeller(): void {
+    const text = (value: string | null) => value?.trim() || null;
+    const draft = this.sellerDraft;
+    this.saveRequest(this.service.updateSeller({
+      title: text(draft.title), address: text(draft.address), taxOffice: text(draft.taxOffice), taxNumber: text(draft.taxNumber),
+      mersisNumber: text(draft.mersisNumber), email: text(draft.email), phone: text(draft.phone)
+    }), value => {
+      this.seller.set(value);
+      this.sellerDraft = { ...value };
+      this.toaster.success(this.sellerComplete() ? 'Satıcı bilgileri kaydedildi; satış belgeleri hazır.' : 'Satıcı bilgileri kaydedildi ancak eksik alan var.');
+    });
+  }
+
+  async approveWithdrawal(request: SpeedReadingBankTransferRequest): Promise<void> {
+    const accepted = await this.toaster.confirm(
+      `${request.userName} için cayma talebi onaylansın mı? Erişimi hemen sona erer; ${request.amount.toLocaleString('tr-TR')} ${request.currency} tutarındaki iadeyi 14 gün içinde bankadan sizin yapmanız gerekir.`,
+      { title: 'Cayma talebini onayla', confirmText: 'Onayla' }
+    );
+    if (!accepted) return;
+    this.saveRequest(this.service.reviewBankTransferWithdrawal(request.id, true, null), result => {
+      this.replaceBankTransferRequest(result);
+      this.toaster.success('Cayma onaylandı ve erişim sona erdi. İadeyi bankadan yapmayı unutmayın.');
+      this.loadSubscriptions();
+    });
+  }
+
+  async rejectWithdrawal(request: SpeedReadingBankTransferRequest): Promise<void> {
+    const note = await this.toaster.prompt('Alıcının göreceği reddetme gerekçesini yazın.', '', { title: 'Cayma talebini reddet', confirmText: 'Reddet' });
+    if (!note?.trim()) return;
+    this.saveRequest(this.service.reviewBankTransferWithdrawal(request.id, false, note.trim()), result => {
+      this.replaceBankTransferRequest(result);
+      this.toaster.success('Cayma talebi reddedildi.');
+    });
   }
 
   private loadRequest<T>(request: import('rxjs').Observable<T>, apply: (value: T) => void): void {

@@ -107,8 +107,8 @@ describe('CoachingSubscriptionsComponent', () => {
     const fixture = TestBed.createComponent(CoachingSubscriptionsComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
-    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: null, adultPayerDeclaredAt: null })).toBe('Yetişkin beyanı yok');
-    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: 1, adultPayerDeclaredAt: '2026-10-05T09:00:00Z' })).toContain('yaş doğrulaması değildir');
+    // Legal check Y9 (14.11.2026): the 18+ payer label is gone from the request table.
+    expect('adultPayerLabel' in component).toBe(false);
     component.selectTab('plans');
     component.startPlanCreate();
     expect(component.planDraft.isPublic).toBe(false);

@@ -99,7 +99,18 @@ public sealed record BankTransferPaymentRequestSummary(
     DateTime? ReviewedAt,
     string? ReviewNote,
     int? AdultPayerDeclarationVersion = null,
-    DateTime? AdultPayerDeclaredAt = null);
+    DateTime? AdultPayerDeclaredAt = null,
+    /// <summary>The version of the pre-information form and distance-sales contract accepted with the request; null on older requests.</summary>
+    string? SalesDocumentsVersion = null,
+    DateTime? SalesDocumentsAcceptedAt = null,
+    /// <summary>Requested, Approved or Rejected; null when no withdrawal (cayma) was asked.</summary>
+    string? WithdrawalStatus = null,
+    string? WithdrawalReason = null,
+    DateTime? WithdrawalRequestedAt = null,
+    string? WithdrawalReviewNote = null,
+    DateTime? WithdrawalReviewedAt = null,
+    /// <summary>The last moment a withdrawal can be asked: 14 days after the approval; null while not approved.</summary>
+    DateTime? WithdrawableUntil = null);
 
 public sealed record CreateProductRequest(
     string Slug,
@@ -157,7 +168,9 @@ public sealed record CreateBankTransferPaymentRequest(
     string? PayerName,
     string? Note,
     /// <summary>No longer asked (user decision 13.11.2026): kept so an older client that still sends it is accepted; when sent it is recorded.</summary>
-    bool AdultPayerDeclaration = false);
+    bool AdultPayerDeclaration = false,
+    /// <summary>The version of the sales documents the buyer read and accepted; must be the one in force.</summary>
+    string? SalesDocumentsVersion = null);
 
 public sealed record ReviewBankTransferPaymentRequest(
     string Status,
