@@ -141,6 +141,8 @@
           }
           @case ('weekday') {
             <h3 id="question-title" tabindex="-1" #questionTitle>Hafta içi günde toplam ne kadar çalışmak istersin?</h3>
+            @if (added()) { <p class="notice" role="status" data-testid="added-hours">{{ addedText() }}</p> }
+            @if (showFromTheStart()) { <p class="muted">Günlük süre saatlerine sığmazsa okuldan sonraki başlangıcını ya da en geç bitiş saatini de değiştirebilirsin. <button type="button" class="secondary small" data-testid="from-the-start" (click)="fromTheStart()">Diğer soruları da gör</button></p> }
             <label for="weekday-minutes">Günlük süre</label>
             <select id="weekday-minutes" [attr.aria-describedby]="invalid() ? 'question-issue' : null" [attr.aria-invalid]="invalid() ? 'true' : null" [ngModel]="answers().weekdayMinutes" (ngModelChange)="set('weekdayMinutes', +$event)">@for (m of minutes(); track m) { <option [ngValue]="m">{{ hoursText(m) }}</option> }</select>
           }

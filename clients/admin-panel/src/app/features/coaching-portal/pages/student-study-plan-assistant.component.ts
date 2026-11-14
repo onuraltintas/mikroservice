@@ -240,8 +240,10 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
   }
   private toMenu() { this.editing = false; this.endHoursDetour(); this.hoursWithQuestions.set(false); this.step.set('menu'); this.focusTitle(); }
   /** The "Saat ekle" detour ends: no return flag, and the hours step leaves a flow it was only added to. */
+  /** Paket I6: the minutes "Saat ekle" asks the hours step to add to each weekday (0: none). */
+  readonly extraWeekday = signal(0);
   private endHoursDetour() {
-    this.returnToSummary.set(false);
+    this.returnToSummary.set(false); this.extraWeekday.set(0);
     if (this.hoursAdded) { this.hoursAdded = false; this.flow.update(flow => flow.filter(x => x !== 'hours')); }
   }
 
@@ -408,7 +410,8 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
 
   // --- Step 5 ---------------------------------------------------------------------------------------------------------------
   /** "Saat ekle": step 1's change, then straight back to the summary (Geri returns there too). */
-  addHours() {
+  addHours(extraWeekdayMinutes = 0) {
+    this.extraWeekday.set(Math.max(0, extraWeekdayMinutes || 0));
     if (!this.flow().includes('hours')) { this.hoursAdded = true; this.flow.update(flow => ['hours', ...flow]); }
     this.returnToSummary.set(true); this.hoursWithQuestions.set(!this.staffStudentId); this.go('hours');
   }

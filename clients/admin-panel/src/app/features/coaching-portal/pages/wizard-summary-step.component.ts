@@ -80,7 +80,8 @@ export class WizardSummaryStepComponent implements OnInit {
   /** H5's "Yeniden öner" (?yeniden=oner): open with "Haftanı baştan öner" (after the usual confirmation). */
   @Input() replaceOnOpen = false;
   @Input() choices = new SummaryChoices();
-  @Output() addHours = new EventEmitter<void>();
+  /** "Saat ekle", with the minutes to add to each weekday that would close the shortage (0 when not known). */
+  @Output() addHours = new EventEmitter<number>();
   /** Paket I5: "Tekrar seçimini değiştir" (the wizard opens the step that holds the review choice). */
   @Output() changeReviews = new EventEmitter<void>();
   @Output() planCreated = new EventEmitter<string>();
@@ -270,6 +271,35 @@ export class WizardSummaryStepComponent implements OnInit {
       ? `Öğrenci hafta içi her gün yaklaşık ${weekday} saat daha ya da hafta sonu toplam ${weekend} saat eklerse bütün derslerine yetişir.`
       : `Hafta içi her gün yaklaşık ${weekday} saat daha ya da hafta sonu toplam ${weekend} saat eklersen bütün derslerine yetişirsin.`;
   }
+  /** Paket I6: the extra minutes on each of the five weekdays that close a weekly shortage, rounded up to half an hour. */
+  weekdayExtra(weeklyMinutes: number) { return weeklyMinutes > 0 ? Math.ceil(weeklyMinutes / 5 / 30) * 30 : 0; }
+  /**
+   * Paket I6 (user decision 14.11.2026): what "Önemli konulara odaklan" would leave out, known before it is chosen. Asked in the
+   * background only when the shown plan has a course that does not finish; null while not known (or not needed).
+   */
+  readonly focusEstimate = signal<{ leftOut: number; lessons: number; stillLate: number } | null>(null);
+  private estimateRun = 0;
+  private estimateFocus(request: WeeklyOutcomeRequest, student: string | undefined) {
+    const run = ++this.estimateRun; this.focusEstimate.set(null);
+    if (!this.anyLate() || this.choices.prioritizeWhenShort()) return;
+    this.engine.focusEstimate(request, student).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+      next: p => {
+        if (run !== this.estimateRun) return;
+        const out = p.leftOutTopics ?? [];
+        this.focusEstimate.set({ leftOut: out.length, lessons: new Set(out.map(x => x.lessonId.toLowerCase())).size,
+          stillLate: p.schedule.lessons.filter(x => x.remainingMinutes > 0).length });
+      },
+      // The estimate is a help; without it the button still works and shows the result.
+      error: () => undefined
+    });
+  }
+  focusEstimateText() {
+    const e = this.focusEstimate();
+    if (!e) return '“Önemli konulara odaklan” dersen sığmayan konular dışarıda kalır; hangileri olduğunu burada görürsün ve istersen geri alırsın.';
+    const out = e.leftOut ? `${e.lessons} derste ${e.leftOut} konu dışarıda kalır` : 'hiçbir konu dışarıda kalmaz';
+    const rest = e.stillLate ? `yine de ${e.stillLate} ders yetişmez` : 'gerisi yetişir';
+    return `“Önemli konulara odaklan” dersen ${out}; ${rest}. Hangileri olduğunu burada görürsün ve istersen geri alırsın.`;
+  }
   /** The lesson that lacks the most weekly time. */
   biggestGap(view: WeeklyProposal) {
     const lesson = [...view.lessons].sort((a, b) => this.lessonGap(b) - this.lessonGap(a) || a.lessonName.localeCompare(b.lessonName, 'tr'))[0];
@@ -352,9 +382,10 @@ export class WizardSummaryStepComponent implements OnInit {
     // publish is never published from it.
     this.dropCreated();
     this.previewing.set(true); this.previewError.set(''); this.notChosen.set([]); this.preview.set(null); this.publishIssue.set(null);
+    this.estimateRun++; this.focusEstimate.set(null);
     this.engine.options(student).pipe(takeUntilDestroyed(this.destroy), switchMap(options => { this.options.set(options); return this.engine.preview(this.request(options), student); }),
       finalize(() => this.previewing.set(false))).subscribe({
-      next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); },
+      next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); this.estimateFocus(preview.request, student); },
       error: e => {
         this.notChosen.set(e?.status === 409 && e?.error?.code === LESSONS_NOT_CHOSEN ? e.error.lessons ?? [] : []);
         this.previewError.set(typeof e?.error?.message === 'string' ? e.error.message : 'Yıllık plan hesaplanamadı. Yeniden deneyebilirsin.');

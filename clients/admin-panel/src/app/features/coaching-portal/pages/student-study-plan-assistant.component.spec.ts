@@ -330,12 +330,14 @@ describe('StudentStudyPlanAssistantComponent', () => {
     expect(title(el)).toBe('Özet');
     await click(fixture, 'Saat ekle');
     expect(title(el)).toBe('Saatlerin');
-    expect(el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question')).toBe('shift');
+    // Paket I6: the questions open on the weekday time, with the time that closes the shortage already chosen.
+    expect(el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question')).toBe('weekday');
+    expect(el.querySelector('[data-testid="added-hours"]')?.textContent).toContain('olarak seçtim; istersen değiştir.');
     await click(fixture, 'Geri');
     expect(title(el)).toBe('Özet'); expect(document.activeElement?.id).toBe('step-title');
     // Save the answers this time: straight back to the summary.
     await click(fixture, 'Saat ekle');
-    for (let i = 0; i < 7; i++) await click(fixture, 'Devam');
+    for (let i = 0; i < 2; i++) await click(fixture, 'Devam');
     await click(fixture, 'Kaydet ve devam');
     expect(routines.save).toHaveBeenCalledTimes(1);
     expect(title(el)).toBe('Özet');

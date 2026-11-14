@@ -17,13 +17,13 @@ describe('WizardHoursStepComponent', () => {
   };
   const hours: StudyAvailability = { version: 6, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1140 }] };
   async function setup(opts: { routine?: StudyRoutineView | null; availability?: StudyAvailability | null; staff?: boolean; yks?: boolean; limit?: number; questions?: boolean;
-    save?: ReturnType<typeof vi.fn>; allowNoSchool?: boolean; examFocus?: 'Tyt' | 'Balanced' | 'Ayt' | null; tempo?: 'Relaxed' | 'Balanced' | 'Intense' | null; disabled?: boolean } = {}) {
+    save?: ReturnType<typeof vi.fn>; allowNoSchool?: boolean; examFocus?: 'Tyt' | 'Balanced' | 'Ayt' | null; tempo?: 'Relaxed' | 'Balanced' | 'Intense' | null; disabled?: boolean; add?: number } = {}) {
     const save = opts.save ?? vi.fn((u: StudyRoutineUpdate) => of(routineOf(u.answers)));
     TestBed.configureTestingModule({ imports: [WizardHoursStepComponent], providers: [{ provide: CoachingStudyRoutineService, useValue: { save } }] });
     const fixture = TestBed.createComponent(WizardHoursStepComponent), c = fixture.componentInstance;
     c.routine = opts.routine ?? null; c.availability = opts.availability ?? null; c.staffStudentId = opts.staff ? 'student-1' : null;
     c.yks = !!opts.yks; c.limit = opts.limit ?? 480; c.startWithQuestions = !!opts.questions; c.allowNoSchool = opts.allowNoSchool ?? !!opts.yks;
-    c.examFocus = opts.examFocus ?? null; c.tempo = opts.tempo ?? null; c.disabled = !!opts.disabled;
+    c.examFocus = opts.examFocus ?? null; c.tempo = opts.tempo ?? null; c.disabled = !!opts.disabled; c.addWeekdayMinutes = opts.add ?? 0;
     const done = vi.fn(), saved = vi.fn(), reload = vi.fn();
     c.done.subscribe(done); c.routineSaved.subscribe(saved); c.reload.subscribe(reload);
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
@@ -196,5 +196,42 @@ describe('WizardHoursStepComponent', () => {
     button(el, 'Salı')!.click(); c.setStaffMinutes(120); button(el, 'Devam')!.click();
     expect(done).toHaveBeenCalledWith([{ day: 'Tuesday', startMinute: 1080, endMinute: 1200 }]);
     expect(save).not.toHaveBeenCalled();
+  });
+
+  // Paket I6 (user decision 14.11.2026), "Saat ekle": the questions open on the weekday time with the needed time already chosen.
+  describe('"Saat ekle" with an amount', () => {
+    const question = (el: HTMLElement) => el.querySelector('[data-testid="routine-question"]')?.getAttribute('data-question');
+    it('opens on the weekday time with the sum chosen, saves nothing by itself and lets "Geri" leave the questions', async () => {
+      const { el, c, save, fixture } = await setup({ routine: routineOf(answers), availability: hours, questions: true, add: 60 });
+      expect(question(el)).toBe('weekday');
+      expect(c.answers().weekdayMinutes).toBe(240);
+      expect(text(el.querySelector('[data-testid="added-hours"]'))).toBe('Derslerine yetişmen için günlük süreni 3 saat yerine 4 saat olarak seçtim; istersen değiştir.');
+      expect(save).not.toHaveBeenCalled(); expect(c.dirty()).toBe(true);
+      const back = vi.fn(); c.back.subscribe(back);
+      // No earlier question is walked: "Geri" hands back to the wizard (the summary).
+      c.previous(); fixture.detectChanges();
+      expect(back).toHaveBeenCalledOnce(); expect(question(el)).toBe('weekday');
+    });
+    it('never passes the day limit and names the rest for the weekend', async () => {
+      const { el, c } = await setup({ routine: routineOf(answers), availability: hours, questions: true, add: 90, limit: 240 });
+      expect(c.answers().weekdayMinutes).toBe(240);
+      // 30 minutes a weekday do not fit: two and a half hours for the weekend.
+      expect(text(el.querySelector('[data-testid="added-hours"]'))).toBe('Derslerine yetişmen için günlük süreni 3 saat yerine 4 saat olarak seçtim; istersen değiştir. Kalan yaklaşık 2,5 saat için hafta sonuna süre ekleyebilirsin.');
+    });
+    it('says so when the weekday time is already the highest', async () => {
+      const { el, c } = await setup({ routine: routineOf({ ...answers, weekdayMinutes: 240 }), availability: hours, questions: true, add: 60, limit: 240 });
+      expect(c.answers().weekdayMinutes).toBe(240); expect(c.dirty()).toBe(false);
+      expect(text(el.querySelector('[data-testid="added-hours"]'))).toBe('Hafta içi günlük süren zaten en yüksek değerde. Kalan yaklaşık 5 saat için hafta sonuna süre ekleyebilirsin.');
+    });
+    it('"Diğer soruları da gör" walks the questions from the first one', async () => {
+      const { el, fixture } = await setup({ routine: routineOf(answers), availability: hours, questions: true, add: 60 });
+      (el.querySelector('[data-testid="from-the-start"]') as HTMLButtonElement).click(); fixture.detectChanges();
+      expect(question(el)).toBe('shift');
+      expect(el.querySelector('[data-testid="from-the-start"]')).toBeNull();
+    });
+    it('opens on the first question as before without an amount', async () => {
+      const { el } = await setup({ routine: routineOf(answers), availability: hours, questions: true });
+      expect(question(el)).toBe('shift'); expect(el.querySelector('[data-testid="added-hours"]')).toBeNull();
+    });
   });
 });

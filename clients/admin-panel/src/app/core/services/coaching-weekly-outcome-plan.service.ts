@@ -27,6 +27,11 @@ export class CoachingWeeklyOutcomePlanService {
   private scopedUrl(studentId?:string){return studentId?`${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/weekly-outcome-plans`:this.url;}
   options(studentId?:string){return this.http.get<{data:WeeklyOutcomeOptions}>(this.scopedUrl(studentId)+'/options').pipe(map(r=>r.data));}
   preview(request:WeeklyOutcomeRequest,studentId?:string){return this.http.post<{data:WeeklyOutcomePreview}>(this.scopedUrl(studentId)+'/preview',request).pipe(map(r=>r.data));}
+  /**
+   * Paket I6: what "Önemli konulara odaklan" would do to this plan, asked only while a course does not finish: the same preview with
+   * the important topics first. Nothing is saved.
+   */
+  focusEstimate(request:WeeklyOutcomeRequest,studentId?:string){return this.preview({...request,prioritizeWhenShort:true},studentId);}
   /** Student only: her own exam date; null returns to the date the admin set. */
   setExamDate(examDate:string|null){return this.http.put<{data:WeeklyOutcomeOptions}>(this.url+'/exam-date',{examDate}).pipe(map(r=>r.data));}
   create(request:{title:string;preview:WeeklyOutcomeRequest;fingerprint:string},studentId?:string){return this.http.post<{data:{id:string;version:number}}>(this.scopedUrl(studentId)+'/drafts',request).pipe(map(r=>r.data));}
