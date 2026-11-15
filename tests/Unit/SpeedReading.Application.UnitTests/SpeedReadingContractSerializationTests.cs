@@ -28,33 +28,6 @@ public sealed class SpeedReadingContractSerializationTests
     }
 
     [Fact]
-    public void Institution_access_request_keeps_the_institution_and_transfer_reference()
-    {
-        var institutionId = Guid.NewGuid();
-        var request = new CreateInstitutionAccessRequest(
-            institutionId,
-            Guid.NewGuid(),
-            DateTime.UtcNow,
-            [new InstitutionAccessRecipient(Guid.NewGuid(), "Ada Yılmaz", "ada@example.test")],
-            "EFT-2026-0001",
-            "Eylül dönemi");
-
-        request.InstitutionId.Should().Be(institutionId);
-        request.PaymentReference.Should().Be("EFT-2026-0001");
-    }
-
-    [Fact]
-    public void Institution_student_access_change_keeps_the_action_and_reason()
-    {
-        var request = new InstitutionStudentAccessChangeRequest(
-            IsSuspended: true,
-            Reason: "Kurum talebi");
-
-        request.IsSuspended.Should().BeTrue();
-        request.Reason.Should().Be("Kurum talebi");
-    }
-
-    [Fact]
     public void Assignment_recipients_must_all_be_within_the_teacher_scope()
     {
         var assignedStudent = Guid.NewGuid();

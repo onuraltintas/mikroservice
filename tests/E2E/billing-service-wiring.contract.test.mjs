@@ -186,7 +186,7 @@ test('Aboneliğim is one shared page, wrapped by each client application, and th
 
 test('Hızlı Okuma asks billing who may train only where billing runs', () => {
   const client = read('services/speed-reading-service/SpeedReading.Infrastructure/ExternalServices/BillingAccessClient.cs');
-  assert.match(client, /GetValue\("Billing:Enabled", false\)/, 'Without the overlay the product decides by its own records.');
+  assert.match(client, /GetValue\("Billing:Enabled", false\)/, 'Without the overlay the product asks for no subscription.');
   assert.match(client, /\/internal\/billing\/v1\/entitlements\?userId=/);
   assert.match(client, /InternalServiceAuthentication\.HeaderName/);
   const middleware = read('services/speed-reading-service/SpeedReading.API/Security/SpeedReadingSubscriptionAccessMiddleware.cs');
@@ -219,7 +219,8 @@ test('Koçluk asks billing which students may use it only where billing runs', (
   assert.match(client, /\/internal\/billing\/v1\/entitlements\?userId=/);
   assert.match(client, /BillingProductCodes\.Coaching/);
   const service = read('services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionService.cs');
-  assert.match(service, /if \(billing is \{ Enabled: true \}\)\s*\n\s*return CoachingBillingRules\.Summary\(/);
+  assert.match(service, /CoachingBillingRules\.Summary\(billing is \{ Enabled: true \} \? await billing\.GetAsync\(userId, cancellationToken\) : Open\)/);
+  assert.doesNotMatch(service, /CoachingDbContext|CoachingSubscriptions\b/, 'Koçluk keeps no subscription records of its own any more.');
   for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
     assert.match(read(file), /coaching-service:\s*\n\s+environment:[\s\S]*?Billing__Enabled[:=]\s*"?true/, file);
 });
@@ -250,4 +251,20 @@ test('Koçluk shows the shared Aboneliğim page; a subscription is bought in the
   for (const page of ['coaching-teacher-subscription', 'coaching-institution-subscription'])
     assert.match(read(`clients/admin-panel/projects/staff-portal/src/app/features/coaching/${page}.component.ts`), /<staff-my-subscription product="coaching"/, page);
   assert.doesNotMatch(read('services/billing-service/Billing.Application/OrderContracts.cs'), /BeneficiaryUserId = null/, 'Orders are for the buyer or the buyer\'s institution.');
+});
+
+test('the products keep no subscription, payment or sales code of their own', () => {
+  for (const gone of ['services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingSubscription.cs',
+    'services/speed-reading-service/SpeedReading.Infrastructure/Payments/IyzicoPaymentProvider.cs',
+    'services/speed-reading-service/SpeedReading.API/Controllers/BankTransferPaymentsController.cs',
+    'services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesService.cs',
+    'services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionLifecycle.cs',
+    'services/coaching-service/Coaching.API/Controllers/CoachingSubscriptionsAdminController.cs',
+    'clients/admin-panel/shared/coaching-checkout.component.ts',
+    'clients/speed-reading/src/app/features/public/payment/payment.component.ts'])
+    assert.throws(() => read(gone), /ENOENT/, gone);
+  const coaching = read('services/coaching-service/Coaching.Application/Subscriptions/CoachingSubscriptionContracts.cs');
+  assert.doesNotMatch(coaching, /BankTransfer|Coupon|Invoice|Withdrawal|CreateSubscriptionAsync/);
+  const speedReading = read('services/speed-reading-service/SpeedReading.API/Controllers/SubscriptionsController.cs');
+  assert.doesNotMatch(speedReading, /HttpPost|HttpPut|HttpDelete/, 'Hızlı Okuma only answers who has access.');
 });
