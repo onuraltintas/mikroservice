@@ -71,7 +71,7 @@ describe('Abonelik ve Ödeme pages', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   it('are three SystemAdmin-only routes and one menu section', () => {
-    for (const path of ['billing/orders', 'billing/statements', 'billing/subscriptions', 'billing/withdrawals', 'billing/coupons', 'billing/products', 'billing/plans', 'billing/settings']) {
+    for (const path of ['billing/overview', 'billing/orders', 'billing/statements', 'billing/subscriptions', 'billing/withdrawals', 'billing/coupons', 'billing/products', 'billing/plans', 'billing/settings']) {
       const route = DASHBOARD_ROUTES.find(item => item.path === path);
       expect(route?.data?.['role'], path).toBe('SystemAdmin');
       expect(route?.canActivate?.length, path).toBe(1);
@@ -85,7 +85,7 @@ describe('Abonelik ve Ödeme pages', () => {
     const sidebar = TestBed.createComponent(SidebarComponent).componentInstance;
     const section = () => sidebar.menuItems().find(item => item.label === 'Abonelik ve Ödeme');
     expect(section()?.children?.map((child: { route: string }) => child.route))
-      .toEqual(['/dashboard/billing/orders', '/dashboard/billing/statements', '/dashboard/billing/subscriptions', '/dashboard/billing/withdrawals', '/dashboard/billing/coupons', '/dashboard/billing/products', '/dashboard/billing/plans', '/dashboard/billing/settings']);
+      .toEqual(['/dashboard/billing/overview', '/dashboard/billing/orders', '/dashboard/billing/statements', '/dashboard/billing/subscriptions', '/dashboard/billing/withdrawals', '/dashboard/billing/coupons', '/dashboard/billing/products', '/dashboard/billing/plans', '/dashboard/billing/settings']);
     // Another manager with every permission still does not see it: the service answers the system admin only.
     profile.set({ roles: ['Editor'], permissions: Object.values(ADMIN_PERMISSIONS) as string[] });
     expect(section()).toBeUndefined();

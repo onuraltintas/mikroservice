@@ -285,6 +285,28 @@ export function billingErrorMessage(error: unknown, fallback: string): string {
   return typeof detail === 'string' && detail.trim() ? detail : fallback;
 }
 
+export interface BillingOverview {
+  waitingOrders: number;
+  declaredOrders: number;
+  withdrawalRequests: number;
+  unmatchedTransactions: number;
+  currentSubscriptions: number;
+  approvedThisMonth: number;
+  approvedLastMonth: number;
+  currency: string;
+  endingSoon: BillingAdminSubscription[];
+}
+
+export interface BillingGrantRequest {
+  userId: string | null;
+  organizationId: string | null;
+  displayName: string;
+  email: string | null;
+  planId: string;
+  days: number | null;
+  note: string;
+}
+
 /** The admin section "Abonelik ve Ödeme": catalog and settings of the billing service (stage 1). */
 @Injectable({ providedIn: 'root' })
 export class BillingAdminService {
@@ -382,4 +404,17 @@ export class BillingAdminService {
     return this.http.put<BillingBankAccount>(`${this.url}/bank-accounts/${id}`, request);
   }
   removeBankAccount(id: string): Observable<void> { return this.http.delete<void>(`${this.url}/bank-accounts/${id}`); }
+
+  getOverview(productCode: string): Observable<BillingOverview> {
+    return this.http.get<BillingOverview>(`${this.url}/overview`, { params: productCode ? new HttpParams().set('product', productCode) : undefined });
+  }
+  grantSubscription(request: BillingGrantRequest): Observable<BillingAdminSubscription> {
+    return this.http.post<BillingAdminSubscription>(`${this.url}/subscriptions`, request);
+  }
+  extendSubscription(id: string, days: number, note: string): Observable<BillingAdminSubscription> {
+    return this.http.post<BillingAdminSubscription>(`${this.url}/subscriptions/${id}/extend`, { days, note });
+  }
+  cancelSubscription(id: string, note: string): Observable<BillingAdminSubscription> {
+    return this.http.post<BillingAdminSubscription>(`${this.url}/subscriptions/${id}/cancel`, { note });
+  }
 }

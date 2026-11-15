@@ -5,6 +5,12 @@ import { ADMIN_PERMISSIONS } from '../../core/auth/permissions';
 export const DASHBOARD_ROUTES: Routes = [
     // "Abonelik ve Ödeme" (billing service, stage 1): one section for every product; the system admin only.
     {
+        path: 'billing/overview',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin' },
+        loadComponent: () => import('../billing/billing-overview').then(m => m.BillingOverviewComponent)
+    },
+    {
         path: 'billing/orders',
         canActivate: [permissionGuard],
         data: { role: 'SystemAdmin' },
