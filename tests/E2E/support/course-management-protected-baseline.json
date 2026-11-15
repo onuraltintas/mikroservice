@@ -734,6 +734,8 @@
     "clients/speed-reading/src/app/services/review.service.spec.ts": "fd27096cb63c698835fb452ff63b7c002aaf9a7f4addfc39a60e9d1606d57e60",
     "clients/speed-reading/src/app/services/review.service.ts": "ab0389b644a9d9cd7e0c2193c27f252b56de1ecb3e3ac0685511621e9fb01e95",
     "clients/speed-reading/src/app/services/series-access.service.ts": "b3f762ae06aacce345c08ca9309df60e725cd4659e9b3927671dc0c69bcce237",
+    "clients/speed-reading/src/app/shared/billing/my-subscription.component.spec.ts": "53565e5c6185d47e64d3f2fb7dab6b22952160a74cdd83a662772768035c4d53",
+    "clients/speed-reading/src/app/shared/billing/my-subscription.component.ts": "4c0697ca5677182f139f05ed3cf13fddd4b3d26bcf6aa38a4aa1fbe2af10049f",
     "clients/speed-reading/src/app/shared/components/announcement-banner/announcement-banner.component.html": "4db858821c172b42d2ed3c4c0b8af6226d38136f7acb2b85005c75d95ad85bca",
     "clients/speed-reading/src/app/shared/components/announcement-banner/announcement-banner.component.scss": "1aa2c94fd1ca3dcb60e92f39b1908972203977dc0dd1bc97459b63ba17538e37",
     "clients/speed-reading/src/app/shared/components/announcement-banner/announcement-banner.component.ts": "7b2a03e7100b5e8fde329a3b8401f8b80e2b37aeab29edd46d8301d9e2251988",
