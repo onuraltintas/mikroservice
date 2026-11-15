@@ -5,7 +5,8 @@ subscriptions, seats, invoices and notices. Plan and stages: project docs `billi
 `billing-service-design.md`, `billing-service-progress.md`.
 
 ## Status
-Stage 1: catalog and settings. Billing goes live in one release at the end of its build (decision 14.11.2026).
+Stage 2: catalog and settings; orders by bank transfer with a payment code, manual review, subscriptions and
+entitlement grants. Billing goes live in one release at the end of its build (decision 14.11.2026).
 Until then no environment runs it unless its overlay is used, and the gateway answers 404 on `/api/billing`.
 
 ## Run locally
@@ -26,7 +27,9 @@ gateway on (`Billing__Enabled=true`). The service listens on `127.0.0.1:5006`; t
 | Path | Who |
 |---|---|
 | `GET /api/billing/v1/catalog/{productCode}` | Everybody |
-| `/api/billing/v1/admin/*` (products, settings, entitlements, plans, seller, bank accounts) | SystemAdmin |
+| `GET /api/billing/v1/me?product=`, `GET documents?planId=&buyerName=`, `GET/POST orders`, `POST orders/{id}/paid` (form: `note`, `receipt`), `DELETE orders/{id}`, `GET orders/{id}/documents`, `GET orders/{id}/receipt` | Signed-in user (own orders only) |
+| `/api/billing/v1/admin/*` (products, settings, entitlements, plans, seller, bank accounts; `orders`, `orders/{id}/approve|reject|reverse|receipt`, `subscriptions`) | SystemAdmin |
+| `GET /internal/billing/v1/entitlements?userId=&product=` | Product services, with `X-Internal-Service-Key`; not routed by the gateway |
 | `/health/live`, `/health/ready` | Inside the network |
 
 ## Migrations
