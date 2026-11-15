@@ -51,7 +51,7 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> SetPlanningPermission(Guid studentId,StudentPlanningPermissionInput request,CancellationToken ct)=>Respond(async()=>
         Ok(new{success=true,data=PlanningView(await planning!.SetForStudentAsync(studentId,request.StudentMayPlan,ct))}));
 
-    internal static object PlanningView(StudentPlanningState state)=>new{hasTeacher=state.HasTeacher,allowedByTeacher=state.AllowedByTeacher,studentMayPlan=state.StudentMayPlan};
+    internal static object PlanningView(StudentPlanningState state)=>new{hasTeacher=state.HasTeacher,allowedByTeacher=state.AllowedByTeacher,studentMayPlan=state.StudentMayPlan,partialPlanEnd=state.PartialPlanEnd};
 
     /// <summary>Paket H2: the student's weekly proposal, as she sees it (read access, like the weekly draft).</summary>
     /// <remarks>Paket H2 review: a student without saved study times can get a proposal from the teacher's answers (windows), never saved.</remarks>

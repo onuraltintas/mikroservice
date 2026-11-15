@@ -14,7 +14,8 @@ namespace Coaching.Infrastructure.StudyPlanning;
 /// </summary>
 /// <param name="HasTeacher">An active teacher assignment exists.</param>
 /// <param name="AllowedByTeacher">The switch on the student's profile; it matters only with a teacher.</param>
-public sealed record StudentPlanningState(bool HasTeacher, bool AllowedByTeacher)
+/// <param name="PartialPlanEnd">The plan in force covers only part of the way to the exam and ends on this day; else null.</param>
+public sealed record StudentPlanningState(bool HasTeacher, bool AllowedByTeacher, DateOnly? PartialPlanEnd = null)
 {
     public bool StudentMayPlan => !HasTeacher || AllowedByTeacher;
 }
@@ -30,7 +31,10 @@ public static class StudentPlanningPermission
             .AnyAsync(x => x.StudentUserId == studentId && x.IsActive, ct);
         var allowed = await db.CoachingStudentProfiles.AsNoTracking().Where(x => x.UserId == studentId)
             .Select(x => x.CanPlanOwnStudy).SingleOrDefaultAsync(ct);
-        return new(hasTeacher, allowed);
+        // The weekly source is one JSON value: read for the plan in force only.
+        var source = await db.StudyPlanRevisions.AsNoTracking().Where(x => x.StudentId == studentId && x.IsActive)
+            .Select(x => x.WeeklySource).SingleOrDefaultAsync(ct);
+        return new(hasTeacher, allowed, source is { Partial: true } ? source.EndDate : null);
     }
 
     /// <summary>For the student's own plan-changing requests.</summary>

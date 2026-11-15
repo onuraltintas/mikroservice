@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Coaching.Infrastructure.Reminders;
 
 public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEventPublisher events, TimeProvider clock,
-    CoachingReminderScanState? scans = null)
+    CoachingReminderScanState? scans = null, Coaching.Application.Profiles.ICoachingAccountDirectory? accounts = null)
 {
     // Scans that found nothing more to send; recorded only after their transaction committed.
     private readonly List<(string Kind, string Zone, DateOnly Date)> finishedScans = [];
@@ -90,12 +90,26 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         var plans = await db.StudyPlanRevisions.AsNoTracking().Where(x => x.IsActive && x.WeeklySource != null)
             .Select(x => new { x.Id, x.StudentId, x.CreatedByTeacherId, x.WeeklySource }).ToListAsync(ct);
         var count = 0;
-        foreach (var plan in plans.Where(x => x.WeeklySource is { Partial: true } source && source.EndDate >= today && source.EndDate <= today.AddDays(1))
-            .OrderBy(x => x.StudentId))
+        var ending = plans.Where(x => x.WeeklySource is { Partial: true } source && source.EndDate >= today && source.EndDate <= today.AddDays(1))
+            .OrderBy(x => x.StudentId).ToArray();
+        // A teacher is told whose plan it is. Without the name (the directory is away) the reminder still goes out.
+        var names = new Dictionary<Guid, string>();
+        var taught = ending.Where(x => x.CreatedByTeacherId.HasValue).Select(x => x.StudentId).Distinct().ToArray();
+        if (accounts is not null && taught.Length > 0)
+        {
+            try
+            {
+                foreach (var account in await accounts.GetAccountsAsync(taught, ct))
+                    names[account.UserId] = $"{account.FirstName} {account.LastName}".Trim();
+            }
+            catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested) { }
+        }
+        foreach (var plan in ending)
         {
             var receipt = CoachingReminderReceipt.Create(plan.CreatedByTeacherId ?? plan.StudentId, plan.Id, "PlanEnding",
                 plan.WeeklySource!.EndDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), due, now.UtcDateTime);
-            if (await QueueAsync(receipt, ct)) count++;
+            var student = plan.CreatedByTeacherId.HasValue && names.TryGetValue(plan.StudentId, out var name) && name.Length > 0 ? name : null;
+            if (await QueueAsync(receipt, ct, student)) count++;
             if (count == BatchSize) break;
         }
         return count;

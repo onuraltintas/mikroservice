@@ -1,3 +1,5 @@
+import { CoachingPlanningPermissionService } from '../../../../../../src/app/core/services/coaching-planning-permission.service';
+import { of as planSpanOf } from 'rxjs';
 import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -190,3 +192,8 @@ function historyItem(id: string, type: CoachingInstitutionHistoryType): Coaching
 }
 
 beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });
+
+// The report also asks whether the plan in force is a short one (its own spec: plan-span note below); here it has none.
+beforeEach(() => { TestBed.overrideProvider(CoachingPlanningPermissionService, { useValue: {
+  own: () => planSpanOf({ hasTeacher: false, allowedByTeacher: false, studentMayPlan: true, partialPlanEnd: null }),
+  forStudent: () => planSpanOf({ hasTeacher: true, allowedByTeacher: false, studentMayPlan: false, partialPlanEnd: null }) } }); });

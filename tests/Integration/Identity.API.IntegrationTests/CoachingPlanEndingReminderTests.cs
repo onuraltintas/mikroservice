@@ -34,13 +34,20 @@ public sealed partial class CoachingReminderTests
             var byStudent = Plan(own, today, true);
             db.AddRange(byTeacher, byStudent, Plan(yearly, today.AddDays(1), false), Plan(later, today.AddDays(4), true));
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
-            var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock);
+            // The teacher's reminder names the student; the student's own reminder names nobody.
+            var accounts = new CoachingOwnedProfilePersistenceTests.FakeAccounts();
+            accounts.Users[taught] = new(taught, "Deneme", "Öğrenci", "taught@example.test", true, true, ["Student"], null);
+            accounts.Users[own] = new(own, "Başka", "Kişi", "own@example.test", true, true, ["Student"], null);
+            var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock, null, accounts);
 
             Assert.Equal(2, await processor.ProcessAsync());
             var receipts = await db.CoachingReminderReceipts.AsNoTracking().OrderBy(x => x.SourceId).ToListAsync();
             Assert.All(receipts, receipt => Assert.Equal("PlanEnding", receipt.Kind));
             Assert.Equal(new[] { (teacher, byTeacher.Id), (own, byStudent.Id) }.ToHashSet(),
                 receipts.Select(x => (x.RecipientUserId, x.SourceId)).ToHashSet());
+            var bodies = (await db.Set<MassTransit.EntityFrameworkCoreIntegration.OutboxMessage>().AsNoTracking().ToListAsync()).Select(x => x.Body).ToArray();
+            Assert.Single(bodies, body => body.Contains("Deneme Öğrenci") || body.Contains("Deneme \\u00D6\\u011Frenci"));
+            Assert.DoesNotContain(bodies, body => body.Contains("Başka") || body.Contains("Ba\\u015Fka"));
             // The same plan does not remind again, neither later that day nor the next.
             Assert.Equal(0, await processor.ProcessAsync());
             clock.Now = clock.Now.AddDays(1);

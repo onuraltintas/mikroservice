@@ -43,3 +43,12 @@ test('the wizard asks how far the plan runs and the plan page continues a short 
   assert.match(extend, /Bu sefer plana eklenmesin/);
   assert.equal(read(pages + 'student-study-plans.component.html').match(/<app-plan-extend /g)?.length, 2);
 });
+
+test('a teacher is told whose plan is ending, and the report says when its figures count a short plan only', () => {
+  const processor = read(coaching + 'Coaching.Infrastructure/Reminders/CoachingReminderProcessor.cs');
+  assert.match(processor, /ICoachingAccountDirectory\? accounts = null\)/);
+  assert.match(processor, /plan\.CreatedByTeacherId\.HasValue && names\.TryGetValue\(plan\.StudentId, out var name\)/);
+  assert.match(read('services/notification-service/Notification.Application/Consumers/CoachingReminderDueConsumer.cs'), /için hazırladığın çalışma planı/);
+  assert.match(read(coaching + 'Coaching.Infrastructure/StudyPlanning/StudentPlanningPermission.cs'), /source is \{ Partial: true \} \? source\.EndDate : null/);
+  assert.match(read(pages + 'student-study-report.component.ts'), /data-testid="partial-plan-note"/);
+});

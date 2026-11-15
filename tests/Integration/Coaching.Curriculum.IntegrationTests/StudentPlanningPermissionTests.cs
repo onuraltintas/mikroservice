@@ -106,6 +106,22 @@ public sealed class StudentPlanningPermissionTests
     }
 
     [Fact]
+    public async Task The_state_says_when_the_plan_in_force_covers_only_part_of_the_way()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); var (student, _, _) = await SeedAsync(f, withTeacher: false);
+        Assert.Null((await StudentPlanningPermission.StateAsync(f.Db, student, default)).PartialPlanEnd);
+
+        var end = new DateOnly(2026, 11, 22);
+        foreach (var old in await f.Db.StudyPlanRevisions.Where(x => x.StudentId == student && x.IsActive).ToListAsync()) old.Archive();
+        await f.Db.SaveChangesAsync();
+        var plan = Coaching.Domain.Entities.StudyPlanRevision.Create(student, Guid.NewGuid(), 2, "Bu hafta");
+        plan.SetWeeklySource(new(1, null, new(2026, 11, 16), end, true, "test-fingerprint", null, null, Partial: true));
+        plan.Activate(); f.Db.Add(plan); await f.Db.SaveChangesAsync();
+
+        Assert.Equal(end, (await StudentPlanningPermission.StateAsync(f.Db, student, default)).PartialPlanEnd);
+    }
+
+    [Fact]
     public async Task The_student_reads_her_own_state()
     {
         await using var f = new CurriculumManagementTests.Fixture(); await SeedAsync(f, withTeacher: true);
