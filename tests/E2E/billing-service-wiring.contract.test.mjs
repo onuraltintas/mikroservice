@@ -169,3 +169,17 @@ test('billing notices reach the notification service on their own queue, and ret
   assert.match(program, /IBillingLifecycle/);
   assert.match(read('services/billing-service/Billing.Domain/Extras.cs'), /AddYears\(10\)|RetentionYears = 10/);
 });
+
+test('Aboneliğim is one shared page, wrapped by each client application, and the admin has an overview', () => {
+  const shared = read('clients/shared/billing/my-subscription.ts');
+  assert.doesNotMatch(shared, /from '@angular|from 'rxjs/, 'The shared page stays framework-free: each application compiles it with its own packages.');
+  for (const app of ['admin-panel', 'speed-reading']) {
+    const wrapper = read(`clients/${app}/src/app/shared/billing/my-subscription.component.ts`);
+    assert.match(wrapper, /template: MY_SUBSCRIPTION_TEMPLATE/, app);
+    assert.match(wrapper, /new MySubscriptionController\(/, app);
+  }
+  const endpoints = read('services/billing-service/Billing.API/AdministrationEndpoints.cs');
+  assert.match(endpoints, /MapGroup\("\/api\/billing\/v1\/admin"\)\.RequireAuthorization\(BillingPolicies\.Admin\)/);
+  for (const route of ['/overview', '/subscriptions"', '/subscriptions/{id:guid}/extend', '/subscriptions/{id:guid}/cancel'])
+    assert.ok(endpoints.includes(route), route);
+});

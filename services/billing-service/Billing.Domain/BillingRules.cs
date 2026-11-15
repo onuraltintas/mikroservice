@@ -91,6 +91,9 @@ public static partial class BillingRules
     /// When a new paid period starts and ends: right away, or on the day the running subscription ends, so a renewal
     /// never loses days.
     /// </summary>
+    public const int MaxManualDays = 3650;
+    public const int EndingSoonDays = 14;
+
     public static (DateTime StartsAt, DateTime EndsAt) NextPeriod(DateTime now, DateTime? runningUntil, int durationDays)
     {
         var start = runningUntil is { } end && end > now ? end : now;

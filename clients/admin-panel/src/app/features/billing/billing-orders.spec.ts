@@ -135,7 +135,8 @@ describe('Abonelik ve Ödeme: orders and subscriptions', () => {
 
   it('subscriptions with seats show the pool, who is beyond the capacity, and take a seat back after asking', () => {
     const { component, billing, element, fixture } = setup(BillingSubscriptionsComponent, { getSubscriptions: vi.fn(() => of([subscription, seated])) });
-    expect(element.querySelectorAll('tbody tr .actions button').length).toBe(1);
+    // Only the subscription with seats offers its seats; the hand actions are on every row.
+    expect([...element.querySelectorAll('tbody tr .actions button')].filter(button => button.textContent!.includes('Koltuk')).length).toBe(1);
     component.toggleSeats(seated);
     fixture.detectChanges();
     expect(billing.getSeats).toHaveBeenCalledWith('s2');

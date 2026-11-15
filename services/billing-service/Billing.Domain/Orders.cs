@@ -188,6 +188,10 @@ public sealed class SubscriptionPeriod
     public DateTime EndsAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CancelledAt { get; set; }
+    /// <summary>The admin who gave, extended or ended the period by hand; null for payments and trials.</summary>
+    public Guid? ActorId { get; set; }
+    /// <summary>Why it was given or ended by hand.</summary>
+    public string? Note { get; set; }
 }
 
 /// <summary>Who holds which entitlement until when. The only table the entitlement query of the products reads.</summary>

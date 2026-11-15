@@ -304,3 +304,33 @@ public interface IBillingLifecycle
     /// <summary>Removes what names the person from records whose retention time is over; returns how many accounts.</summary>
     Task<int> RedactExpiredAsync(CancellationToken cancellationToken = default);
 }
+
+/// <summary>What the admin sees first: what waits for a decision, what ends soon, what was approved this month.</summary>
+public sealed record BillingOverview(
+    int WaitingOrders,
+    /// <summary>Of the waiting orders, those whose buyer said the money was sent.</summary>
+    int DeclaredOrders,
+    int WithdrawalRequests,
+    int UnmatchedTransactions,
+    int CurrentSubscriptions,
+    decimal ApprovedThisMonth,
+    decimal ApprovedLastMonth,
+    string Currency,
+    /// <summary>Current subscriptions that end within 14 days, soonest first (at most 50).</summary>
+    IReadOnlyList<AdminSubscriptionView> EndingSoon);
+
+/// <summary>A subscription the admin gives by hand. Exactly one of <paramref name="UserId"/> and <paramref name="OrganizationId"/> is set.</summary>
+public sealed record GrantSubscriptionRequest(Guid? UserId, Guid? OrganizationId, string? DisplayName, string? Email, Guid PlanId, int? Days, string? Note);
+public sealed record ExtendSubscriptionRequest(int Days, string? Note);
+public sealed record CancelSubscriptionRequest(string? Note);
+
+/// <summary>The admin's overview and the subscriptions given, extended and ended by hand (stage 6).</summary>
+public interface IBillingAdministration
+{
+    Task<BillingOverview> GetOverviewAsync(string? productCode, CancellationToken cancellationToken = default);
+    /// <summary>Gives a plan without a payment; on a running subscription of the same plan the time is added to its end.</summary>
+    Task<AdminSubscriptionView> GrantAsync(GrantSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    Task<AdminSubscriptionView?> ExtendAsync(Guid subscriptionId, ExtendSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    /// <summary>Ends a subscription now. Payments stay as they are: money is handled by reversing an approval or by a withdrawal.</summary>
+    Task<AdminSubscriptionView?> CancelAsync(Guid subscriptionId, CancelSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
+}

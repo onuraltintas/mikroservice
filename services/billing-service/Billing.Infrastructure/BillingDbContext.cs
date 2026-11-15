@@ -202,6 +202,7 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.HasKey(item => item.Id);
             entity.Property(item => item.Source).HasConversion<string>().HasMaxLength(20);
             entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Note).HasMaxLength(500);
             entity.HasIndex(item => item.SubscriptionId);
             entity.HasIndex(item => item.PaymentId).IsUnique();
             entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
