@@ -34,7 +34,6 @@ using SpeedReading.Application.Privacy;
 using SpeedReading.Infrastructure.ExternalServices;
 using SpeedReading.Infrastructure.Exports;
 using SpeedReading.Infrastructure.Legacy;
-using SpeedReading.Infrastructure.Payments;
 using SpeedReading.Infrastructure.Persistence;
 using SpeedReading.Infrastructure.Privacy;
 

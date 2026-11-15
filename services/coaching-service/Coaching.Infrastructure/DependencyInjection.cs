@@ -181,10 +181,7 @@ public static class DependencyInjection
         services.AddScoped<CoachingMessagingService>();
         services.AddScoped<CoachingScoreEstimateService>();
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingStudentExamOverviewService>();
-        services.AddScoped<CoachingSalesService>();
-        services.AddScoped<CoachingSeatRequestService>();
         services.AddScoped<CoachingCalendarSubscriptionService>();
-        services.AddScoped<CoachingAdminToolsService>();
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingMotivationService>();
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingStudentTodayService>();
         services.AddScoped<Coaching.Infrastructure.Finance.CoachingFeeService>();
@@ -205,9 +202,6 @@ public static class DependencyInjection
         services.AddScoped<ICoachingEventPublisher, MassTransitCoachingEventPublisher>();
         services.AddSingleton<Coaching.Infrastructure.Reminders.CoachingReminderScanState>();
         services.AddScoped<Coaching.Infrastructure.Reminders.CoachingReminderProcessor>();
-        services.AddScoped<CoachingSubscriptionLifecycleProcessor>();
-        if (configuration.GetValue("Coaching:Subscriptions:LifecycleEnabled", true))
-            services.AddHostedService<CoachingSubscriptionLifecycleWorker>();
         services.AddScoped<CoachingParentWeeklySummaryProcessor>();
         if (configuration.GetValue("Coaching:Parents:WeeklySummaryEnabled", true))
             services.AddHostedService<CoachingParentWeeklySummaryWorker>();

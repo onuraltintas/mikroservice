@@ -113,7 +113,7 @@ public sealed class CoachingBillingAccessTests
         var (client, billing, _) = Create();
         billing.Answer = () => Billing.Json(Entitled);
         // The service's own records are not looked at: no database is given.
-        var service = new CoachingSubscriptionService(null!, null!, null, client);
+        var service = new CoachingSubscriptionService(null!, client);
         var access = await service.GetMyAccessAsync(User);
         (access.HasAccess, access.EnforcementEnabled, access.Subscriptions.Count).Should().Be((true, true, 0));
         billing.Requests.Should().ContainSingle();
@@ -124,7 +124,7 @@ public sealed class CoachingBillingAccessTests
     {
         var (client, billing, _) = Create();
         billing.Answer = () => Billing.Json(Entitled);
-        var service = new CoachingSubscriptionService(null!, null!, null, client);
+        var service = new CoachingSubscriptionService(null!, client);
         var cache = new MemoryCache(new MemoryCacheOptions());
         async Task<int> CallAsync()
         {
