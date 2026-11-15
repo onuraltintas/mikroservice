@@ -87,7 +87,7 @@ public sealed class SpeedReadingInstitutionProfileControllerTests
 
     private static InstitutionDto CreateInstitution(Guid id) => new(
         id, "Örnek Kurum", default, null, null, null, null, null, null, null, null, null,
-        default, 100, 10, null, null, true, 0, 0, 1, DateTime.UtcNow);
+        true, 0, 0, 1, DateTime.UtcNow);
 
     private sealed class TestCurrentUserService(Guid? userId) : ICurrentUserService
     {
