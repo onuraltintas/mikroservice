@@ -19,6 +19,7 @@ sayı döndürür. İmajlar sunucuda derlenmez; `pull-release-images.sh` ile çe
 | Veli | Çocuk adına ödeme formu | Yalnız çocuğun abonelik durumunu görür; abonelik öğrencinin hesabından alınır |
 | Kurum lisansı (Identity) | Lisans türü, öğrenci/öğretmen sınırı, tarih | Okunmuyor ve değiştirilemiyor; sütunlar duruyor |
 | Eski abonelik tabloları (Koçluk, Hızlı Okuma) | Kullanılıyor | Kullanılmıyor; **bu yayında silinmiyor** |
+| Koçluk'ta plan süresi (karar 15.11.2026) | Plan her zaman sınava kadar | Sihirbazda seçim: sınava kadar (varsayılan), yalnız bu hafta ya da seçilen tarihe kadar. Kısa plan "Gelecek haftayı ekle" ile sürdürülür; bitmeden planı yapana hatırlatma gider. Yayım onayı neyin değişeceğini sayılarla söyler |
 | Koçluk'ta planı kim yapar (karar 15.11.2026) | Öğretmene bağlı öğrenci de kendi planını yapar | Etkin öğretmeni olan öğrenci, öğretmeni izin verene kadar planını ve haftalık düzenini değiştiremez (varsayılan kapalı); öğretmeni olmayan öğrenci serbest. Öğretmen haftalık düzeni kaydedince ve ayarı değiştirince öğrenciye bildirim gider |
 
 **Dikkat (plan ayarı):** yayından sonra etkin öğretmeni olan her öğrencide plan yapma kapalı başlar; öğretmen açana
@@ -33,7 +34,7 @@ ve banka hesabı girildikten sonra kendisi açar.
 |---|---|
 | billing-service | 7 migration, boş veritabanına: `InitialBillingCatalog` … `ManualPeriods` |
 | speed-reading-service | 1: `20261114190000_SalesDocumentsAndWithdrawal` (91 → 92). Eklediği alanları artık kullanan kod yok; eski tablolarla birlikte sonra silinecek |
-| coaching-service | 1: `20261124090000_StudentCanPlanOwnStudy` (103 → 104): öğrenci profiline `CanPlanOwnStudy` sütunu, varsayılan kapalı |
+| coaching-service | 2 (103 → 105): `20261124090000_StudentCanPlanOwnStudy` (öğrenci profiline `CanPlanOwnStudy` sütunu, varsayılan kapalı) ve `20261125090000_PlanEndingReminder` (hatırlatma türlerine `PlanEnding` eklenir) |
 | identity, notification | Yok |
 
 ## P. Prova (canlıdan önce, yedekten kurulmuş kopyada)
@@ -50,6 +51,11 @@ ve banka hesabı girildikten sonra kendisi açar.
    - Plan ayarı: öğretmene bağlı test öğrencisi "Planım"da uyarıyı görür, "Planı düzenle" sekmesi yoktur ve haftalık düzeni
      kaydedemez. Öğretmen personel portalında "Öğrenci kendi planını yapabilsin"i açar; öğrenci bildirim alır ve plan
      yapabilir. Öğretmen haftalık düzeni kaydeder; öğrenci bildirim alır.
+   - Plan süresi: sihirbazın özet adımında "Yalnız bu hafta" seçilir; "yetişmiyor" uyarısı çıkmaz, plan yayımlanır. Planım'da
+     "Gelecek haftayı ekle" görünür; iki seçenekle de (kalanlar önce / eklenmesin) denenir. Yeni plan bugünden bir hafta
+     sonrasına uzanır, tamamlanan çalışmalar yerinde kalır. Aynısı öğretmenin öğrenci sayfasından denenir.
+   - Hatırlatma: bitişi bugün ya da yarın olan haftalık planı yapan kişi 09:00'dan sonra bir kez "Çalışma planı bitiyor"
+     bildirimi alır.
 4. Sonuç ve süreler rapora yazılır. Kopya, kullanıcı onayından sonra kaldırılır.
 
 ## A. Hazırlık ve denetimler (salt okunur)
@@ -75,7 +81,7 @@ ve banka hesabı girildikten sonra kendisi açar.
    1. `identity-service`
    2. `notification-service` (yeni `billing-notice` kuyruğunu dinler)
    3. `billing-migrations` (bir kez çalışır, 7 migration), ardından `billing-service`
-   4. `coaching-migrations` (1 migration), ardından `coaching-service`
+   4. `coaching-migrations` (2 migration), ardından `coaching-service` (yeni hatırlatma türünü bildirim servisi 2. adımda tanımış olmalı)
    5. `speed-reading-migrations`, ardından `speed-reading-service`
    6. `api-gateway`
    7. `admin-panel`, `staff-portal`, `speed-reading-frontend`

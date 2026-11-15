@@ -255,6 +255,18 @@ public sealed class WeeklyOutcomePlanTests
         var old=System.Text.Json.JsonSerializer.Deserialize<WeeklyPlanSource>("{\"DraftVersion\":1,\"LearningContextVersion\":null,\"StartDate\":\"2027-05-24\",\"EndDate\":\"2027-06-01\",\"ReuseFreedSlots\":true,\"Fingerprint\":\"x\",\"ActiveRevisionId\":null,\"ActiveRevisionVersion\":null,\"TimeZoneId\":\"Europe/Istanbul\"}")!;
         Assert.False(old.Partial);
     }
+    // User decision 15.11.2026: when a plan is continued, the topics of untouched past tasks come first unless the user leaves them out.
+    [Fact]
+    public async Task UntouchedPastWorkIsPlannedAgainUnlessTheUserLeavesItOut()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var old=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive);
+        var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();var estimate=await f.Db.Set<OutcomeDurationEstimate>().SingleAsync();var topic=await f.Db.StudyCatalogTopics.SingleAsync();
+        var missed=StudyPlanTask.Create(old,Input.StartDate.AddDays(-3),"Kaçan çalışma",15,topic.Id);f.Db.Add(missed);f.Db.Add(StudyPlanTaskOutcome.Create(missed.Id,outcome.Id,estimate.Id,15,"Catalog"));await f.Db.SaveChangesAsync();
+        var again=await service.PreviewAsync(Input,default);Assert.Contains(again.Schedule.Tasks,x=>x.Outcome.OutcomeId==outcome.Id);
+        var left=await service.PreviewAsync(Input with {Partial=true,LeaveUnfinished=true},default);Assert.DoesNotContain(left.Schedule.Tasks,x=>x.Outcome.OutcomeId==outcome.Id);
+        // Asked again at the next plan: nothing was marked on the topic itself.
+        Assert.Contains((await service.PreviewAsync(Input,default)).Schedule.Tasks,x=>x.Outcome.OutcomeId==outcome.Id);
+    }
     // Roadmap D1: creating a plan shares the catalog lock with other plans (only catalog changes take it exclusively),
     // so one student's plan no longer waits for every other student's plan.
     [CurriculumPostgresTests.LocalPostgresFact]

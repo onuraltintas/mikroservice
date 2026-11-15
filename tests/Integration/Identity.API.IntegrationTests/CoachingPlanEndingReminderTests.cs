@@ -39,8 +39,8 @@ public sealed partial class CoachingReminderTests
             Assert.Equal(2, await processor.ProcessAsync());
             var receipts = await db.CoachingReminderReceipts.AsNoTracking().OrderBy(x => x.SourceId).ToListAsync();
             Assert.All(receipts, receipt => Assert.Equal("PlanEnding", receipt.Kind));
-            Assert.Equal(new[] { (teacher, byTeacher.Id), (own, byStudent.Id) }.OrderBy(x => x.Item2),
-                receipts.Select(x => (x.RecipientUserId, x.SourceId)));
+            Assert.Equal(new[] { (teacher, byTeacher.Id), (own, byStudent.Id) }.ToHashSet(),
+                receipts.Select(x => (x.RecipientUserId, x.SourceId)).ToHashSet());
             // The same plan does not remind again, neither later that day nor the next.
             Assert.Equal(0, await processor.ProcessAsync());
             clock.Now = clock.Now.AddDays(1);
