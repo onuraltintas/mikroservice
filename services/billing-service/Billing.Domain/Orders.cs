@@ -94,6 +94,8 @@ public sealed class Order
     public string PlanName { get; set; } = string.Empty;
     public BuyerType BuyerType { get; set; }
     public decimal ListPrice { get; set; }
+    /// <summary>The coupon the discount comes from; its use is counted while the order waits or is paid.</summary>
+    public string? CouponCode { get; set; }
     public decimal Discount { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = BillingRules.DefaultCurrency;

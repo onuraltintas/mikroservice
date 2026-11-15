@@ -6,7 +6,7 @@ namespace Billing.Application;
 public sealed record BillingUser(Guid Id, string? Email, IReadOnlyCollection<string> Roles);
 
 /// <summary><paramref name="OrganizationId"/>: the institution an institution plan is bought for; the buyer must administer it.</summary>
-public sealed record CreateOrderRequest(Guid PlanId, string? DocumentsVersion, string? BuyerName, Guid? OrganizationId = null);
+public sealed record CreateOrderRequest(Guid PlanId, string? DocumentsVersion, string? BuyerName, Guid? OrganizationId = null, string? CouponCode = null);
 
 public sealed record CreateSeatOrderRequest(int Count, string? DocumentsVersion, string? BuyerName);
 
@@ -87,7 +87,15 @@ public sealed record OrderView(
     string? ReviewNote,
     string DocumentsVersion,
     OrderKind Kind = OrderKind.Subscription,
-    int? ExtraSeats = null);
+    int? ExtraSeats = null,
+    decimal ListPrice = 0,
+    decimal Discount = 0,
+    string? CouponCode = null,
+    /// <summary>The state of the buyer's withdrawal (cayma) request, if there is one.</summary>
+    WithdrawalStatus? Withdrawal = null,
+    /// <summary>A paid order can be withdrawn from until this moment; null when it cannot.</summary>
+    DateTime? WithdrawUntil = null,
+    bool HasInvoice = false);
 
 public sealed record AdminOrderView(
     OrderView Order,
@@ -146,7 +154,7 @@ public interface IBillingEvents
 public interface IBillingOrders
 {
     /// <summary>The documents for a plan the buyer is about to order; null when the plan is unknown.</summary>
-    Task<SalesDocuments?> PreviewDocumentsAsync(BillingUser user, Guid planId, string? buyerName, CancellationToken cancellationToken = default);
+    Task<SalesDocuments?> PreviewDocumentsAsync(BillingUser user, Guid planId, string? buyerName, string? couponCode = null, CancellationToken cancellationToken = default);
     Task<OrderView> CreateOrderAsync(BillingUser user, CreateOrderRequest request, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<OrderView>> GetMyOrdersAsync(Guid userId, CancellationToken cancellationToken = default);
     /// <summary>"I have paid", with an optional note and receipt. Null when the order is not the caller's.</summary>
@@ -215,4 +223,67 @@ public interface IBillingBankStatements
     /// <summary>An admin ties a line to a waiting order of the same amount and approves it. Null when either is unknown.</summary>
     Task<BankTransactionView?> ApproveWithOrderAsync(Guid transactionId, Guid orderId, Guid actorId, CancellationToken cancellationToken = default);
     Task<BankTransactionView?> SetIgnoredAsync(Guid transactionId, bool ignored, string? note, Guid actorId, CancellationToken cancellationToken = default);
+}
+
+public sealed record CouponView(
+    Guid Id,
+    string Code,
+    CouponKind Kind,
+    decimal Value,
+    DateTime? StartsAt,
+    DateTime? EndsAt,
+    int? MaxUses,
+    /// <summary>Waiting and paid orders that carry the code.</summary>
+    int UsedCount,
+    IReadOnlyList<Guid> PlanIds,
+    bool IsActive);
+
+public sealed record CouponRequest(string Code, CouponKind Kind, decimal Value, DateTime? StartsAt, DateTime? EndsAt, int? MaxUses, IReadOnlyList<Guid>? PlanIds, bool IsActive);
+
+public sealed record CouponQuoteRequest(Guid PlanId, string? Code);
+public sealed record CouponQuote(string Code, decimal ListPrice, decimal Discount, decimal Amount, string Currency);
+
+public sealed record StartTrialRequest(Guid PlanId, string? BuyerName);
+
+public sealed record WithdrawalRequest(string? Reason);
+public sealed record ReviewWithdrawalRequest(bool Approve, string? Note);
+
+public sealed record WithdrawalView(
+    Guid Id,
+    Guid OrderId,
+    WithdrawalStatus Status,
+    string? Reason,
+    DateTime RequestedAt,
+    string? ReviewNote,
+    DateTime? ReviewedAt,
+    string AccountName,
+    string? AccountEmail,
+    string PlanName,
+    string PaymentCode,
+    decimal Amount,
+    string Currency);
+
+public sealed record InvoiceUpload(string Number, DateOnly IssuedOn, string FileName, byte[] Content);
+public sealed record InvoiceFile(string Number, string FileName, byte[] Content);
+
+/// <summary>Coupons, free trials, withdrawal (cayma) and invoices (stage 5).</summary>
+public interface IBillingExtras
+{
+    Task<IReadOnlyList<CouponView>> GetCouponsAsync(CancellationToken cancellationToken = default);
+    Task<CouponView> CreateCouponAsync(CouponRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    Task<CouponView?> UpdateCouponAsync(Guid id, CouponRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    /// <summary>What a plan costs the caller with a code; throws why when the code cannot be used.</summary>
+    Task<CouponQuote> QuoteCouponAsync(BillingUser user, CouponQuoteRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Starts the plan's free trial for the caller: once, and only for somebody who never had the product.</summary>
+    Task<SubscriptionView> StartTrialAsync(BillingUser user, StartTrialRequest request, CancellationToken cancellationToken = default);
+
+    Task<OrderView?> RequestWithdrawalAsync(Guid userId, Guid orderId, string? reason, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<WithdrawalView>> GetWithdrawalsAsync(WithdrawalStatus? status, CancellationToken cancellationToken = default);
+    Task<WithdrawalView?> ReviewWithdrawalAsync(Guid id, ReviewWithdrawalRequest request, Guid actorId, CancellationToken cancellationToken = default);
+
+    Task<AdminOrderView?> AttachInvoiceAsync(Guid orderId, InvoiceUpload upload, Guid actorId, CancellationToken cancellationToken = default);
+    Task<bool> RemoveInvoiceAsync(Guid orderId, CancellationToken cancellationToken = default);
+    /// <summary>The invoice for the buyer, or for an admin (<paramref name="userId"/> null).</summary>
+    Task<InvoiceFile?> GetInvoiceAsync(Guid? userId, Guid orderId, CancellationToken cancellationToken = default);
 }

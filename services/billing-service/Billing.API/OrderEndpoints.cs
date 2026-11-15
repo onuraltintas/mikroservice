@@ -18,9 +18,9 @@ public static class OrderEndpoints
 
         user.MapGet("/me", async ([FromQuery] string product, ClaimsPrincipal principal, IBillingOrders orders, CancellationToken cancellationToken) =>
             OkOrNotFound(await orders.GetMyBillingAsync(UserId(principal), product, cancellationToken)));
-        user.MapGet("/documents", async ([FromQuery] Guid planId, [FromQuery] string? buyerName, ClaimsPrincipal principal, IBillingOrders orders,
-            CancellationToken cancellationToken) =>
-            OkOrNotFound(await orders.PreviewDocumentsAsync(User(principal), planId, buyerName, cancellationToken)));
+        user.MapGet("/documents", async ([FromQuery] Guid planId, [FromQuery] string? buyerName, [FromQuery] string? coupon, ClaimsPrincipal principal,
+            IBillingOrders orders, CancellationToken cancellationToken) =>
+            OkOrNotFound(await orders.PreviewDocumentsAsync(User(principal), planId, buyerName, coupon, cancellationToken)));
         user.MapGet("/orders", (ClaimsPrincipal principal, IBillingOrders orders, CancellationToken cancellationToken) =>
             orders.GetMyOrdersAsync(UserId(principal), cancellationToken));
         user.MapPost("/orders", async (CreateOrderRequest request, ClaimsPrincipal principal, IBillingOrders orders, CancellationToken cancellationToken) =>
