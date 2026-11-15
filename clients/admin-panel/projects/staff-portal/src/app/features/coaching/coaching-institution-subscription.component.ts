@@ -2,12 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, Input, OnChanges, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, finalize, forkJoin } from 'rxjs';
-import { CoachingInstitutionSeatRequestsComponent } from './coaching-institution-seat-requests.component';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionSubscription } from './coaching-institution.service';
 
 import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscription.component';
 @Component({
-  selector: 'staff-coaching-institution-subscription', standalone: true, imports: [CommonModule, CoachingInstitutionSeatRequestsComponent, StaffMySubscriptionComponent],
+  selector: 'staff-coaching-institution-subscription', standalone: true, imports: [CommonModule, StaffMySubscriptionComponent],
   template: `
     <section aria-labelledby="institution-plan-title" class="institution-plan">
       <header><div><h3 id="institution-plan-title">Kurum aboneliği ve kontenjan</h3><p>Etkin kurum lisansınızın öğrenci erişimini yönetin.</p></div>
@@ -28,7 +27,6 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
         }
         <p><strong>{{ plan.usedStudentSeats }} / {{ plan.includedStudentSeats }}</strong> öğrenci koltuğu ayrılmış.@if (plan.extraSeats) { <span data-testid="institution-extra-seats"> ({{ plan.extraSeats }} ek koltuk dahil; lisans bitince sona erer)</span> }</p>
         @if (!plan.startsAt && plan.extraSeatPrice) {
-          <staff-coaching-institution-seat-requests [subscription]="plan" />
         } @else if (!plan.startsAt && atCapacity()) {
           <p class="hint">Kontenjanınız doldu. Ek koltuk için platform yöneticisiyle iletişime geçin.</p>
         }

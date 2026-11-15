@@ -54,9 +54,7 @@ function parentProviders(service: object) {
     { provide: CoachingParentService, useValue: service },
     { provide: CoachingStudentExamOverviewService, useValue: { get: vi.fn(() => of({ trends: [], subjects: [], exams: [] })) } },
     { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of({ estimates: [], target: null, notice: null })) } },
-    { provide: CoachingManagementService, useValue: {
-      getPublicSubscriptionPlans: () => of([{ id: 'plan-1', name: 'Bireysel yıllık', audience: 'Individual', price: 1200, isContactOnly: false, isActive: true, isPublic: true, durationDays: 365, billingPeriod: 'Annual', features: [] }]),
-      getPublicBankTransferSettings: () => of({ currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Banka', iban: 'TR…', paymentInstructions: null }) } },
+    { provide: CoachingManagementService, useValue: {} },
     { provide: ToasterService, useValue: { confirm: vi.fn().mockResolvedValue(true), success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }];
 }
 

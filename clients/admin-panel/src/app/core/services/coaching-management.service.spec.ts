@@ -3,51 +3,19 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { CoachingManagementService } from './coaching-management.service';
 
-describe('CoachingManagementService student subscription flow', () => {
-  it('keeps plan discovery, own access, requests and payment submission on Coaching endpoints', () => {
+describe('CoachingManagementService public pages', () => {
+  it('reads the public plans and their currency from the billing catalog', () => {
     const { service, http } = setup();
-    const plan = { id: 'plan-1', name: 'Bireysel', audience: 'Individual' };
-
-    service.getPublicSubscriptionPlans().subscribe(plans => expect(plans).toEqual([plan]));
-    http.expectOne('/api/coaching/subscription-plans').flush({ success: true, data: [plan] });
-
-    service.getMyCoachingSubscriptionAccess().subscribe(access => expect(access.hasAccess).toBe(true));
-    http.expectOne('/api/coaching/subscriptions/my-access').flush({ success: true, data: { hasAccess: true } });
-
-    service.getMyCoachingBankTransferRequests().subscribe(requests => expect(requests).toEqual([]));
-    http.expectOne('/api/coaching/subscriptions/my-bank-transfer-requests').flush({ success: true, data: [] });
-
-    service.createMyCoachingBankTransferRequest({ planId: 'plan-1', paymentReference: ' EFT-123 ', payerName: null, note: null }).subscribe();
-    const request = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests');
-    expect(request.request.method).toBe('POST');
-    expect(request.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9._~-]{16,128}$/);
-    expect(request.request.body).toEqual({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null });
-    request.flush({ success: true, data: { id: 'request-1' } });
-    http.verify();
-  });
-
-  it('lets the payer correct or withdraw a pending payment notice', () => {
-    const { service, http } = setup();
-    service.updateMyCoachingBankTransferRequest('request/1', { paymentReference: ' EFT-FIXED ', payerName: ' Ada ', note: ' ' }).subscribe(row => expect(row.id).toBe('request/1'));
-    const update = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests/request%2F1');
-    expect(update.request.method).toBe('PUT');
-    expect(update.request.body).toEqual({ paymentReference: 'EFT-FIXED', payerName: 'Ada', note: null });
-    update.flush({ success: true, data: { id: 'request/1' } });
-
-    service.withdrawMyCoachingBankTransferRequest('request/1').subscribe(row => expect(row.status).toBe('Withdrawn'));
-    const withdraw = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests/request%2F1/withdraw');
-    expect(withdraw.request.method).toBe('POST');
-    withdraw.flush({ success: true, data: { id: 'request/1', status: 'Withdrawn' } });
-    http.verify();
-  });
-
-  it('records the amount received for a manually granted license', () => {
-    const { service, http } = setup();
-    service.createSubscription({ planId: 'plan-1', userId: 'user-1', userName: null, userEmail: null, institutionId: null, studentIds: [],
-      startDate: '2026-11-01T00:00:00.000Z', notes: null, paymentReference: null, amount: 900 }).subscribe();
-    const request = http.expectOne('/api/coaching-admin/subscriptions');
-    expect(request.request.body.amount).toBe(900);
-    request.flush(null);
+    const plan = { id: 'pl1', name: 'TEST Aylık', description: 'TEST', buyerType: 'Individual', price: 200, currency: 'TRY', durationDays: 30, trialDays: 7,
+      seatCount: null, extraSeatPrice: null, isContactOnly: false, features: ['TEST özellik'], sortOrder: 2 };
+    service.getPublicSubscriptionPlans().subscribe(plans => expect(plans).toEqual([{ id: 'pl1', slug: 'pl1', name: 'TEST Aylık', description: 'TEST',
+      audience: 'Individual', price: 200, isContactOnly: false, billingPeriod: '', durationDays: 30, includedStudentSeats: null, features: ['TEST özellik'],
+      isActive: true, isPublic: true, sortOrder: 2, trialDays: 7, extraSeatPrice: null }]));
+    http.expectOne('/api/billing/v1/catalog/coaching').flush({ plans: [plan] });
+    service.getPublicPlanCurrency().subscribe(currency => expect(currency).toBe('TRY'));
+    http.expectOne('/api/billing/v1/catalog/coaching').flush({ plans: [plan] });
+    service.getPublicPlanCurrency().subscribe(currency => expect(currency).toBeNull());
+    http.expectOne('/api/billing/v1/catalog/coaching').flush({ plans: [] });
     http.verify();
   });
 
@@ -111,37 +79,6 @@ describe('CoachingManagementService student subscription flow', () => {
     expect(create.request.method).toBe('POST');
     expect(create.request.body).toMatchObject({ author: 'Ece', publishedAt: '2026-09-20T09:30:00Z' });
     create.flush({ success: true, data: { id: 'entry-1' } });
-    http.verify();
-  });
-
-  function setup() {
-    TestBed.configureTestingModule({ providers: [CoachingManagementService, provideHttpClient(), provideHttpClientTesting()] });
-    return { service: TestBed.inject(CoachingManagementService), http: TestBed.inject(HttpTestingController) };
-  }
-});
-
-describe('CoachingManagementService subscription administration', () => {
-  it('uses idempotency keys for settings and EFT reviews and supports deleting EFT requests', () => {
-    const { service, http } = setup();
-    service.updateSubscriptionSettings({
-      requireActiveSubscription: false, currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Banka',
-      iban: 'TR330006100519786457841326', paymentInstructions: null, bankTransferEnabled: true
-    }).subscribe();
-    const settings = http.expectOne('/api/coaching-admin/subscriptions/settings');
-    expect(settings.request.method).toBe('PUT');
-    expect(settings.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9._~-]{16,128}$/);
-    settings.flush({ success: true, data: { currency: 'TRY' } });
-
-    service.reviewTransferRequest('request-1', 'Rejected', 'Banka hareketi doğrulanamadı.').subscribe();
-    const review = http.expectOne('/api/coaching-admin/subscriptions/transfer-requests/request-1/review');
-    expect(review.request.method).toBe('POST');
-    expect(review.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9._~-]{16,128}$/);
-    review.flush({ success: true });
-
-    service.deleteTransferRequest('request-1').subscribe();
-    const remove = http.expectOne('/api/coaching-admin/subscriptions/transfer-requests/request-1');
-    expect(remove.request.method).toBe('DELETE');
-    remove.flush(null);
     http.verify();
   });
 

@@ -1,30 +1,21 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { educationLabel } from '../../../../../../src/app/features/coaching-portal/coaching-education';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { firstValueFrom, forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { CoachingTeacherStudentsService, CoachingTeacherStudent } from './coaching-teacher-students.service';
-import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
-import { environment } from '../../../environments/environment';
-import { CoachingCheckoutComponent } from '../../../../../../shared/coaching-checkout.component';
-import { CoachingMyPaymentsComponent } from '../../../../../../shared/coaching-my-payments.component';
-import { CoachingCheckoutChoice, CoachingSalesApi, coachingErrorMessage, coachingMoney } from '../../../../../../shared/coaching-sales.api';
-import {
-  CoachingTeacherBankTransferRequest,
-  CoachingTeacherBankTransferSettings,
-  CoachingTeacherSeatSummary,
-  CoachingTeacherSubscriptionPlan,
-  CoachingTeacherSubscriptionService
-} from './coaching-teacher-subscription.service';
-
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscription.component';
+import { CoachingTeacherStudentsService, CoachingTeacherStudent } from './coaching-teacher-students.service';
+import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from './coaching-teacher-subscription.service';
+
+/**
+ * The independent teacher's plan and seats. The plan is bought, renewed and paid for in the shared "Aboneliğim" page
+ * (billing service); here the teacher gives its seats to the students assigned to them in Koçluk.
+ */
 @Component({
   selector: 'staff-coaching-teacher-subscription',
   standalone: true,
-  imports: [CoachingCheckoutComponent, CoachingMyPaymentsComponent, CommonModule, FormsModule, StaffMySubscriptionComponent],
+  imports: [CommonModule, StaffMySubscriptionComponent],
   template: `
     <section class="teacher-plan" aria-labelledby="teacher-plan-title">
       <header class="plan-heading">
@@ -69,67 +60,8 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
             <p class="muted">Koçlukta size atanmış öğrenci yok. Öğrenci ataması oluştuğunda burada kontenjan verebilirsiniz.</p>
           }
         } @else {
-          <p class="muted">Aktif bir bağımsız öğretmen planınız yok. Kurumunuza bağlıysanız kurum yöneticinizin lisansını kullanın; bağımsızsanız aşağıdaki planlardan birini seçin.</p>
+          <p class="muted" data-testid="teacher-no-plan">Aktif bir bağımsız öğretmen planınız yok. Kurumunuza bağlıysanız kurum yöneticinizin lisansını kullanın; bağımsızsanız yukarıdaki Aboneliğim bölümünden bir öğretmen planı alın.</p>
         }
-      </section>
-
-      <section class="card" aria-labelledby="teacher-plans-title">
-        <h3 id="teacher-plans-title">Öğretmen planları</h3>
-        @if (plans().length === 0) {
-          <p class="muted">Şu anda yayımlanmış öğretmen planı bulunmuyor.</p>
-        } @else {
-          <ul class="plans">
-            @for (plan of plans(); track plan.id) {
-              <li [class.selected]="selectedPlanId === plan.id">
-                <label><input type="radio" name="teacherPlan" [attr.data-testid]="'teacher-plan-' + plan.id" [value]="plan.id" [(ngModel)]="selectedPlanId" [disabled]="savingRequest() || isSmallerPlan(plan)" />
-                  <span><strong>{{ plan.name }}</strong>@if (planChangeLabel(plan); as change) { <em class="plan-tag">{{ change }}</em> }<small>{{ plan.description }}</small><small>{{ plan.includedStudentSeats }} öğrenci koltuğu · {{ plan.durationDays }} gün · {{ plan.isContactOnly ? 'Fiyat için iletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (settings()?.currency || 'TRY') }}</small></span>
-                </label>
-                @if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly && !seatSummary()) {
-                  <button type="button" class="secondary trial" [attr.data-testid]="'teacher-trial-' + plan.id" [disabled]="trialPlanId() !== null" (click)="startTrial(plan)">{{ trialPlanId() === plan.id ? 'Başlatılıyor…' : plan.trialDays + ' gün ücretsiz deneyin' }}</button>
-                }
-              </li>
-            }
-          </ul>
-        }
-
-        @if (settings()?.bankTransferEnabled) {
-          <div class="bank-details">
-            <h4>Havale / EFT bilgileri</h4>
-            <p><strong>{{ settings()?.accountHolder }}</strong> · {{ settings()?.bankName }}</p>
-            <p class="iban">{{ settings()?.iban }}</p>
-            @if (settings()?.paymentInstructions) { <p>{{ settings()?.paymentInstructions }}</p> }
-            @if (seatSummary()) { <p class="muted">Planınız sürerken aynı planı yenileyebilir veya daha fazla koltuklu bir plana geçebilirsiniz. Yükseltme onaylanınca koltuklarınız korunur, yeni süre mevcut sürenin sonuna eklenir.</p> }
-          </div>
-          <form class="payment-form" (ngSubmit)="submitRequest()">
-            <label>Ödeme referansı<input name="paymentReference" [(ngModel)]="paymentReference" required maxlength="120" autocomplete="off" /></label>
-            <label>Ödeyen adı<input name="payerName" [(ngModel)]="payerName" maxlength="200" autocomplete="name" /></label>
-            <label>Not<textarea name="paymentNote" [(ngModel)]="paymentNote" maxlength="1000" rows="2"></textarea></label>
-            <edu-coaching-checkout [api]="sales" [planId]="selectedPlanId" [price]="selectedPlan?.price ?? 0" [currency]="settings()?.currency || 'TRY'" [formal]="true" [sellerReady]="settings()?.sellerInfoComplete !== false" (choiceChange)="checkout = $event" />
-            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !checkout.acceptSalesContract">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
-          </form>
-        } @else {
-          <p class="muted">Havale / EFT bilgileri şu anda yayımlanmıyor; ödeme bildirimi gönderilemez.</p>
-        }
-      </section>
-
-      <section class="card" aria-labelledby="teacher-payment-history-title">
-        <h3 id="teacher-payment-history-title">Ödeme bildirimlerim</h3>
-        @for (request of requests(); track request.id) {
-          <div class="request-row"><span><strong>{{ request.plan.name }}</strong><small>{{ request.amount | number:'1.2-2' }} {{ request.currency }} · {{ request.paymentReference }} · {{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (request.couponCode) { · {{ request.couponCode }} ile {{ money(request.discountAmount) }} {{ request.currency }} indirim }</small></span><span>{{ statusLabel(request.status) }} @if (request.reviewNote) {<small>{{ request.reviewNote }}</small>}
-            @if (request.status === 'Pending' && editingRequestId() !== request.id) { <span class="request-actions"><button type="button" class="secondary" [attr.data-testid]="'edit-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="startEdit(request)">Düzelt</button><button type="button" class="secondary" [attr.data-testid]="'withdraw-request-' + request.id" [disabled]="busyRequestId() === request.id" (click)="withdraw(request)">Geri çek</button></span> }</span></div>
-          @if (editingRequestId() === request.id) {
-            <form class="payment-form" (ngSubmit)="saveEdit()">
-              <label>Ödeme referansı<input name="editReference" [(ngModel)]="editReference" required maxlength="120" autocomplete="off" /></label>
-              <label>Ödeyen adı<input name="editPayerName" [(ngModel)]="editPayerName" maxlength="200" autocomplete="name" /></label>
-              <label>Not<input name="editNote" [(ngModel)]="editNote" maxlength="1000" /></label>
-              <span class="request-actions"><button type="submit" [disabled]="busyRequestId() === request.id">Kaydet</button><button type="button" class="secondary" (click)="editingRequestId.set(null)">Vazgeç</button></span>
-            </form>
-          }
-        } @empty { <p class="muted">Henüz ödeme bildiriminiz yok.</p> }
-      </section>
-
-      <section class="card" aria-label="Onaylanan ödemelerim">
-        <edu-coaching-my-payments [api]="sales" [formal]="true" heading="Ödemelerim, faturalar ve cayma" />
       </section>
     </section>
   `,
@@ -168,65 +100,30 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
   `]
 })
 export class CoachingTeacherSubscriptionComponent implements OnInit {
-  /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
   readonly educationLabel = educationLabel;
   private readonly subscriptions = inject(CoachingTeacherSubscriptionService);
   private readonly teacherStudents = inject(CoachingTeacherStudentsService);
 
-  readonly plans = signal<CoachingTeacherSubscriptionPlan[]>([]);
-  readonly settings = signal<CoachingTeacherBankTransferSettings | null>(null);
-  readonly requests = signal<CoachingTeacherBankTransferRequest[]>([]);
   readonly seatSummary = signal<CoachingTeacherSeatSummary | null>(null);
   readonly students = signal<CoachingTeacherStudent[]>([]);
   readonly loading = signal(false);
-  readonly savingRequest = signal(false);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   readonly studentPage = signal(1);
   readonly studentTotalPages = signal(1);
   readonly studentTotalCount = signal(0);
   private readonly busyStudents = signal<ReadonlySet<string>>(new Set());
-  selectedPlanId = '';
-  paymentReference = '';
-  payerName = '';
-  paymentNote = '';
-  /** Roadmap O10: discount code and contract acceptance from the checkout. */
-  checkout: CoachingCheckoutChoice = { couponCode: null, acceptSalesContract: false };
-  readonly sales = new CoachingSalesApi(inject(HttpClient), environment.apiUrl);
-  readonly money = coachingMoney;
-  readonly trialPlanId = signal<string | null>(null);
-  private readonly checkoutForm = viewChild(CoachingCheckoutComponent);
-  private readonly toaster = inject(ToasterService);
-  readonly editingRequestId = signal<string | null>(null);
-  readonly busyRequestId = signal<string | null>(null);
-  editReference = '';
-  editPayerName = '';
-  editNote = '';
 
   ngOnInit(): void {
     this.load();
   }
 
-  get selectedPlan(): CoachingTeacherSubscriptionPlan | null {
-    return this.plans().find(plan => plan.id === this.selectedPlanId) ?? null;
-  }
-
   load(): void {
     this.loading.set(true);
     this.error.set(null);
-    forkJoin({
-      plans: this.subscriptions.getTeacherPlans().pipe(catchError(() => { this.error.set('Öğretmen planları yüklenemedi.'); return of([]); })),
-      settings: this.subscriptions.getBankTransferSettings().pipe(catchError(() => of(null))),
-      requests: this.subscriptions.getMyBankTransferRequests().pipe(catchError(() => { this.error.set('Ödeme bildirimleriniz yüklenemedi.'); return of([]); })),
-      seats: this.subscriptions.getMySeatSummary().pipe(catchError(() => { this.error.set('Öğretmen kontenjanı yüklenemedi.'); return of(null); }))
-    }).subscribe(result => {
-      this.plans.set(result.plans);
-      this.settings.set(result.settings);
-      this.requests.set(result.requests);
-      this.seatSummary.set(result.seats);
-      if (!this.selectedPlanId && result.plans.length) this.selectedPlanId = (result.plans.find(plan => !this.isSmallerPlan(plan)) ?? result.plans[0]).id;
-      this.loading.set(false);
-      this.loadStudents();
+    this.subscriptions.getMySeatSummary().subscribe({
+      next: seats => { this.seatSummary.set(seats); this.loading.set(false); this.loadStudents(); },
+      error: () => { this.error.set('Öğretmen kontenjanı yüklenemedi.'); this.seatSummary.set(null); this.loading.set(false); this.loadStudents(); }
     });
   }
 
@@ -260,34 +157,6 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
     return this.busyStudents().has(studentId);
   }
 
-  async submitRequest(): Promise<void> {
-    if (!this.selectedPlanId || this.selectedPlan?.isContactOnly || !this.paymentReference.trim() || !this.settings()?.bankTransferEnabled || this.savingRequest()) return;
-    if (!this.checkout.acceptSalesContract) { this.error.set('Ödeme bildiriminden önce ön bilgilendirme formunu ve mesafeli satış sözleşmesini açıp onaylamanız gerekir.'); return; }
-    this.savingRequest.set(true);
-    this.error.set(null);
-    this.success.set(null);
-    try {
-      await firstValueFrom(this.subscriptions.createBankTransferRequest({
-        planId: this.selectedPlanId,
-        paymentReference: this.paymentReference,
-        payerName: this.payerName,
-        note: this.paymentNote,
-        couponCode: this.checkout.couponCode,
-        acceptSalesContract: this.checkout.acceptSalesContract
-      }));
-      this.paymentReference = '';
-      this.payerName = '';
-      this.paymentNote = '';
-      this.checkoutForm()?.reset();
-      this.success.set('Ödeme bildiriminiz alındı. Onay sonrasında öğretmen planınız etkinleşir.');
-      this.subscriptions.getMyBankTransferRequests().subscribe({ next: requests => this.requests.set(requests) });
-    } catch (error) {
-      this.error.set(this.errorMessage(error, 'Ödeme bildirimi gönderilemedi. Bilgileri kontrol edip tekrar deneyin.'));
-    } finally {
-      this.savingRequest.set(false);
-    }
-  }
-
   async assignStudent(student: CoachingTeacherStudent): Promise<void> {
     const summary = this.seatSummary();
     if (!summary || this.isAtCapacity(summary) || this.isStudentBusy(student.userId)) return;
@@ -297,78 +166,6 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   async removeStudent(student: CoachingTeacherStudent): Promise<void> {
     if (this.isStudentBusy(student.userId)) return;
     await this.updateSeat(student, () => this.subscriptions.removeStudent(student.userId), 'Öğrenci için öğretmen planı koltuğu kaldırıldı.');
-  }
-
-  /** Roadmap O10: a teacher plan with trial days opens the plan right away, once per account. */
-  async startTrial(plan: CoachingTeacherSubscriptionPlan): Promise<void> {
-    if (this.trialPlanId() || !(plan.trialDays ?? 0)) return;
-    this.trialPlanId.set(plan.id); this.error.set(null); this.success.set(null);
-    try {
-      const trial = await firstValueFrom(this.sales.startTrial(plan.id, 'Teacher'));
-      this.success.set(`${plan.trialDays} günlük ücretsiz denemeniz başladı. Planınız ${new Date(trial.endDate).toLocaleDateString('tr-TR')} tarihine kadar açık.`);
-      this.load();
-    } catch (error) {
-      this.error.set(coachingErrorMessage(error, 'Ücretsiz deneme başlatılamadı.'));
-    } finally { this.trialPlanId.set(null); }
-  }
-
-  statusLabel(status: string): string {
-    return ({ Pending: 'İncelemede', Approved: 'Onaylandı', Rejected: 'Reddedildi', Cancelled: 'İptal edildi', Withdrawn: 'Geri çekildi', Expired: 'Süresi doldu' } as Record<string, string>)[status] ?? status;
-  }
-
-  /** While a plan runs only the same plan or a larger one can be bought; a smaller one would take seats away. */
-  isSmallerPlan(plan: CoachingTeacherSubscriptionPlan): boolean {
-    const current = this.seatSummary();
-    if (!current) return false;
-    const seats = plan.includedStudentSeats ?? 0;
-    return seats < current.includedStudentSeats || (seats === current.includedStudentSeats && plan.name !== current.planName);
-  }
-
-  planChangeLabel(plan: CoachingTeacherSubscriptionPlan): string {
-    const current = this.seatSummary();
-    if (!current) return '';
-    if (this.isSmallerPlan(plan)) return 'Mevcut planınızdan küçük';
-    return (plan.includedStudentSeats ?? 0) > current.includedStudentSeats ? 'Yükseltme' : 'Yenileme';
-  }
-
-  startEdit(request: CoachingTeacherBankTransferRequest): void {
-    if (request.status !== 'Pending') return;
-    this.editingRequestId.set(request.id);
-    this.editReference = request.paymentReference; this.editPayerName = request.payerName ?? ''; this.editNote = request.note ?? '';
-    this.error.set(null); this.success.set(null);
-  }
-
-  async saveEdit(): Promise<void> {
-    const id = this.editingRequestId();
-    if (!id || this.busyRequestId()) return;
-    if (!this.editReference.trim()) { this.error.set('Ödeme referansı zorunludur.'); return; }
-    this.busyRequestId.set(id); this.error.set(null);
-    try {
-      const updated = await firstValueFrom(this.subscriptions.updateBankTransferRequest(id, {
-        paymentReference: this.editReference.trim(), payerName: this.editPayerName.trim() || null, note: this.editNote.trim() || null
-      }));
-      this.replaceRequest(updated); this.editingRequestId.set(null);
-      this.success.set('Ödeme bildiriminiz güncellendi.');
-    } catch (error) {
-      this.error.set(this.errorMessage(error, 'Ödeme bildirimi güncellenemedi.'));
-    } finally { this.busyRequestId.set(null); }
-  }
-
-  async withdraw(request: CoachingTeacherBankTransferRequest): Promise<void> {
-    if (request.status !== 'Pending' || this.busyRequestId()) return;
-    if (!await this.toaster.confirm(`${request.paymentReference} referanslı ödeme bildirimi geri çekilsin mi?`)) return;
-    this.busyRequestId.set(request.id); this.error.set(null);
-    try {
-      this.replaceRequest(await firstValueFrom(this.subscriptions.withdrawBankTransferRequest(request.id)));
-      if (this.editingRequestId() === request.id) this.editingRequestId.set(null);
-      this.success.set('Ödeme bildiriminiz geri çekildi.');
-    } catch (error) {
-      this.error.set(this.errorMessage(error, 'Ödeme bildirimi geri çekilemedi.'));
-    } finally { this.busyRequestId.set(null); }
-  }
-
-  private replaceRequest(updated: CoachingTeacherBankTransferRequest): void {
-    this.requests.update(items => items.map(item => item.id === updated.id ? { ...item, ...updated } : item));
   }
 
   private async updateSeat(student: CoachingTeacherStudent, request: () => ReturnType<CoachingTeacherSubscriptionService['assignStudent']>, message: string): Promise<void> {

@@ -7,10 +7,6 @@ import { StaffAuthRecaptchaService } from './staff-auth-recaptcha.service';
 export const STAFF_AUTH_RECAPTCHA_TOKEN_HEADER = 'X-Auth-Recaptcha-Token';
 
 export function getStaffAuthRecaptchaAction(request: HttpRequest<unknown>): string | null {
-  if (request.method === 'POST'
-      && request.url === `${environment.apiUrl}/coaching/subscriptions/teacher-bank-transfer-requests`) {
-    return 'coaching_eft_submit';
-  }
   if (request.method !== 'POST' || !request.url.startsWith(`${environment.apiUrl}/auth/`)) {
     return null;
   }
@@ -34,20 +30,13 @@ export const staffAuthRecaptchaInterceptor: HttpInterceptorFn = (request, next) 
   if (!action) return next(request);
 
   const service = inject(StaffAuthRecaptchaService);
-  const isPayment = action === 'coaching_eft_submit';
-  const tokenPromise = isPayment
-    ? service.createToken(action, `${environment.apiUrl}/coaching/subscriptions/recaptcha`)
-    : service.createToken(action);
-  return from(tokenPromise.then(token => {
-    if (isPayment && !token) throw new Error('EFT CAPTCHA token is required.');
-    return token;
-  })).pipe(
+  return from(service.createToken(action)).pipe(
     catchError(() => throwError(() => new HttpErrorResponse({
       status: 403,
       url: request.url,
       error: {
         success: false,
-        code: isPayment ? 'Coaching.CaptchaFailed' : 'Auth.CaptchaFailed',
+        code: 'Auth.CaptchaFailed',
         message: 'Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.'
       }
     }))),

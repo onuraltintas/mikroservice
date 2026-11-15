@@ -116,19 +116,6 @@ export const DASHBOARD_ROUTES: Routes = [
       loadComponent: () => import('./pages/coaching-cms').then(m => m.CoachingCmsComponent)
     },
     {
-      path: 'coaching/subscriptions',
-      canActivate: [permissionGuard],
-      data: { permission: ADMIN_PERMISSIONS.coachingSubscriptionManage },
-      loadComponent: () => import('./pages/coaching-subscriptions').then(m => m.CoachingSubscriptionsComponent)
-    },
-    {
-      // Roadmap O10: discount codes, seller details, withdrawals and invoices.
-      path: 'coaching/sales',
-      canActivate: [permissionGuard],
-      data: { permission: ADMIN_PERMISSIONS.coachingSubscriptionManage, role: 'SystemAdmin' },
-      loadComponent: () => import('./pages/coaching-sales').then(m => m.CoachingSalesComponent)
-    },
-    {
         path: 'coaching/assignments/new',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingManage },
@@ -157,12 +144,6 @@ export const DASHBOARD_ROUTES: Routes = [
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.speedReadingProgressView, defaultTab: 'progress' },
         loadComponent: () => import('./pages/speed-reading-analytics').then(m => m.SpeedReadingAnalyticsComponent)
-    },
-    {
-      path: 'speed-reading/subscriptions',
-      canActivate: [permissionGuard],
-      data: { permission: ADMIN_PERMISSIONS.speedReadingSubscriptionManage },
-      loadComponent: () => import('./pages/speed-reading-subscriptions').then(m => m.SpeedReadingSubscriptionsComponent)
     },
     {
       path: 'speed-reading/content-configuration',

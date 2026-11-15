@@ -23,11 +23,8 @@ test('an institution teacher cannot invite a student outside the institution, an
   assert.match(await read(app + 'features/coaching-portal/onboarding/student-onboarding.component.html'), /invitation\.inviterName \|\|/);
 });
 
-test('admin panel: no broken menu entry, a plan period agrees with its days', async () => {
+test('admin panel: no broken menu entry', async () => {
   assert.doesNotMatch(await read(app + 'features/dashboard/layout/sidebar/sidebar.ts'), /label: 'Kurs Yönetimi'/);
-  const plans = await read(app + 'features/dashboard/pages/coaching-subscriptions.ts');
-  assert.match(plans, /planPeriodMismatch\(\)/);
-  assert.doesNotMatch(plans, /refarans/);
 });
 
 test('screens say what happened', async () => {

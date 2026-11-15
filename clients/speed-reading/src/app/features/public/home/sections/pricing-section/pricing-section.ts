@@ -20,14 +20,6 @@ export class PricingSectionComponent implements OnInit {
   plans: SubscriptionPlan[] = [];
   loading = true;
 
-  private readonly periodLabel: Record<string, string> = {
-    OneTime: 'tek seferlik',
-    Monthly: '/ay',
-    Quarterly: '/3 ay',
-    Annual: '/yıl',
-    Lifetime: 'tek seferlik'
-  };
-
   ngOnInit() {
     this.loadPlans();
   }
@@ -50,11 +42,15 @@ export class PricingSectionComponent implements OnInit {
     return `₺${plan.price.toLocaleString('tr-TR')}`;
   }
 
+  /** "1 ay", "3 ay", "1 yıl": the time the plan gives access for. */
   getPeriod(plan: SubscriptionPlan): string {
-    return this.periodLabel[plan.billingPeriod] ?? '';
+    const days = plan.durationDays;
+    if (days % 365 === 0) return days === 365 ? '/ 1 yıl' : `/ ${days / 365} yıl`;
+    if (days % 30 === 0) return days === 30 ? '/ 1 ay' : `/ ${days / 30} ay`;
+    return `/ ${days} gün`;
   }
 
   isPopular(plan: SubscriptionPlan): boolean {
-    return (plan.includedProductSlugs?.length ?? 0) > 0;
+    return plan.isBundle;
   }
 }

@@ -100,24 +100,6 @@ export interface CoachingSubscriptionPlan {
   extraSeatPrice?: number | null;
 }
 
-export type CoachingSubscriptionPlanRequest = Omit<CoachingSubscriptionPlan, 'id'>;
-
-export interface CoachingSubscriptionSettings {
-  requireActiveSubscription: boolean;
-  currency: string;
-  accountHolder: string | null;
-  bankName: string | null;
-  iban: string | null;
-  paymentInstructions: string | null;
-  bankTransferEnabled: boolean;
-  isPubliclyAvailable: boolean;
-  updatedAt: string | null;
-  /** False while the seller details printed on the sales documents are missing; no payment notice is taken then. */
-  sellerInfoComplete?: boolean;
-}
-
-export type CoachingSubscriptionSettingsRequest = Omit<CoachingSubscriptionSettings, 'isPubliclyAvailable' | 'updatedAt' | 'sellerInfoComplete'>;
-
 export interface CoachingSubscription {
   id: string;
   planId: string;
@@ -138,22 +120,6 @@ export interface CoachingSubscription {
   extraSeats?: number;
 }
 
-/** Roadmap D6: a license in the ending / ended lists or after an edit. */
-export interface CoachingLicenseRow {
-  id: string; audience: string; planName: string; ownerName: string | null; ownerEmail: string | null;
-  userId: string | null; institutionId: string | null; status: string; startDate: string; endDate: string;
-  daysLeft: number; seatCapacity: number | null; assignedSeats: number;
-}
-
-export interface CoachingChurnRow { month: string; audience: string; ended: number; renewed: number; notRenewed: number; pending: number; churnRate: number | null; }
-
-export interface CoachingSubscriptionSeat {
-  studentId: string;
-  isSuspended: boolean;
-  suspensionReason: string | null;
-  assignedAt: string;
-}
-
 export interface CoachingSubscriptionAccess {
   hasAccess: boolean;
   enforcementEnabled: boolean;
@@ -161,69 +127,6 @@ export interface CoachingSubscriptionAccess {
   status: string | null;
   accessUntil: string | null;
   subscriptions: CoachingSubscription[];
-}
-
-export interface CoachingBankTransferRequestCreate {
-  planId: string;
-  paymentReference: string;
-  payerName: string | null;
-  note: string | null;
-  /** Roadmap O10: an optional discount code and the accepted pre-information form and distance-sales contract. */
-  couponCode?: string | null;
-  acceptSalesContract?: boolean;
-}
-
-export interface CoachingBankTransferRequest {
-  adultPayerDeclarationVersion?: number | null;
-  adultPayerDeclaredAt?: string | null;
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  plan: CoachingSubscriptionPlan;
-  amount: number;
-  currency: string;
-  paymentReference: string;
-  payerName: string | null;
-  note: string | null;
-  status: string;
-  subscriptionId: string | null;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  reviewNote: string | null;
-  createdAt: string;
-  /** Plan length fixed when the notice was sent. */
-  durationDays?: number | null;
-  /** Other payers who sent the same receipt number (admin list). */
-  duplicateReferenceCount?: number;
-  /** Roadmap O10: price before the discount code, the code and the version of the accepted contract. */
-  listPrice?: number | null;
-  couponCode?: string | null;
-  discountAmount?: number;
-  salesContractVersion?: string | null;
-  withdrawalStatus?: string | null;
-}
-
-export interface CoachingBankTransferRequestUpdate {
-  paymentReference: string;
-  payerName: string | null;
-  note: string | null;
-}
-
-export interface CoachingPayment {
-  id: string;
-  /** Empty for an institution license. */
-  userId: string | null;
-  institutionId?: string | null;
-  userName: string;
-  userEmail: string;
-  planName: string;
-  amount: number;
-  currency: string;
-  status: string;
-  provider: string;
-  reference: string | null;
-  createdAt: string;
 }
 
 export type CoachingNewsletterSubscriberStatus = 'PendingConfirmation' | 'Active' | 'Unsubscribed';
@@ -249,8 +152,6 @@ export interface CoachingNewsletterSubscriber {
 export class CoachingManagementService {
   private readonly http = inject(HttpClient);
   private readonly coachingCmsAdminUrl = `${environment.apiUrl}/coaching-admin/cms`;
-  private readonly coachingSubscriptionsAdminUrl = `${environment.apiUrl}/coaching-admin/subscriptions`;
-  private readonly coachingPublicSubscriptionUrl = `${environment.apiUrl}/coaching/subscriptions`;
   private readonly coachingNewsletterPublicUrl = `${environment.apiUrl}/coaching/cms/newsletter`;
   private readonly coachingNewsletterAdminUrl = `${this.coachingCmsAdminUrl}/newsletter/subscribers`;
 
@@ -374,15 +275,26 @@ export class CoachingManagementService {
     return this.http.delete<void>(`${this.coachingCmsAdminUrl}/media/${encodeURIComponent(id)}`);
   }
 
-  getPlans(includeInactive = true) {
-    const params = new HttpParams().set('includeInactive', includeInactive);
-    return this.http.get<{ data: CoachingSubscriptionPlan[] }>(`${this.coachingSubscriptionsAdminUrl}/plans`, { params })
-      .pipe(map(response => response.data));
+  /** The public plans of Koçluk. Plans are kept by the billing service ("Abonelik ve Ödeme"); this reads its open catalog. */
+  getPublicSubscriptionPlans() {
+    return this.getPublicBillingCatalog().pipe(map(catalog => catalog.plans.map((plan): CoachingSubscriptionPlan => ({
+      id: plan.id, slug: plan.id, name: plan.name, description: plan.description, audience: plan.buyerType, price: plan.price,
+      isContactOnly: plan.isContactOnly, billingPeriod: '', durationDays: plan.durationDays, includedStudentSeats: plan.seatCount,
+      features: plan.features, isActive: true, isPublic: true, sortOrder: plan.sortOrder ?? 0, trialDays: plan.trialDays, extraSeatPrice: plan.extraSeatPrice
+    }))));
   }
 
-  getPublicSubscriptionPlans() {
-    return this.http.get<{ data: CoachingSubscriptionPlan[] }>(`${environment.apiUrl}/coaching/subscription-plans`)
-      .pipe(map(response => response.data));
+  /** The currency the public plans are priced in; null when there is no plan. */
+  getPublicPlanCurrency() {
+    return this.getPublicBillingCatalog().pipe(map(catalog => catalog.plans[0]?.currency ?? null));
+  }
+
+  private getPublicBillingCatalog() {
+    return this.http.get<{ plans: {
+      id: string; name: string; description: string; buyerType: 'Individual' | 'Institution' | 'Teacher'; price: number; currency: string;
+      durationDays: number; trialDays: number; seatCount: number | null; extraSeatPrice: number | null; isContactOnly: boolean; features: string[];
+      sortOrder?: number;
+    }[] }>(`${environment.apiUrl}/billing/v1/catalog/coaching`);
   }
 
   getPublicCmsBlocks(group = 'HomePage') {
@@ -413,152 +325,5 @@ export class CoachingManagementService {
       .pipe(map(response => response.data));
   }
 
-  getPublicBankTransferSettings() {
-    return this.http.get<{ data: CoachingSubscriptionSettings }>(`${this.coachingPublicSubscriptionUrl}/bank-transfer-settings`)
-      .pipe(map(response => response.data));
-  }
 
-  getMyCoachingSubscriptionAccess() {
-    return this.http.get<{ data: CoachingSubscriptionAccess }>(`${this.coachingPublicSubscriptionUrl}/my-access`)
-      .pipe(map(response => response.data));
-  }
-
-  getMyCoachingBankTransferRequests() {
-    return this.http.get<{ data: CoachingBankTransferRequest[] }>(`${this.coachingPublicSubscriptionUrl}/my-bank-transfer-requests`)
-      .pipe(map(response => response.data));
-  }
-
-  createMyCoachingBankTransferRequest(request: CoachingBankTransferRequestCreate) {
-    return this.http.post<{ data: CoachingBankTransferRequest }>(`${this.coachingPublicSubscriptionUrl}/bank-transfer-requests`, {
-      ...request,
-      paymentReference: request.paymentReference.trim(),
-      payerName: request.payerName?.trim() || null,
-      note: request.note?.trim() || null
-    }, { headers: this.idempotencyHeaders() }).pipe(map(response => response.data));
-  }
-
-  /** Corrects a notice that is still waiting for review. */
-  updateMyCoachingBankTransferRequest(id: string, request: CoachingBankTransferRequestUpdate) {
-    return this.http.put<{ data: CoachingBankTransferRequest }>(`${this.coachingPublicSubscriptionUrl}/bank-transfer-requests/${encodeURIComponent(id)}`, {
-      paymentReference: request.paymentReference.trim(),
-      payerName: request.payerName?.trim() || null,
-      note: request.note?.trim() || null
-    }).pipe(map(response => response.data));
-  }
-
-  /** Takes back a notice that is still waiting for review. */
-  withdrawMyCoachingBankTransferRequest(id: string) {
-    return this.http.post<{ data: CoachingBankTransferRequest }>(`${this.coachingPublicSubscriptionUrl}/bank-transfer-requests/${encodeURIComponent(id)}/withdraw`, {})
-      .pipe(map(response => response.data));
-  }
-
-  createPlan(request: CoachingSubscriptionPlanRequest) {
-    return this.http.post<{ data: { id: string } }>(`${this.coachingSubscriptionsAdminUrl}/plans`, request);
-  }
-
-  updatePlan(id: string, request: CoachingSubscriptionPlanRequest) {
-    return this.http.put<void>(`${this.coachingSubscriptionsAdminUrl}/plans/${encodeURIComponent(id)}`, request);
-  }
-
-  deactivatePlan(id: string) {
-    return this.http.delete<void>(`${this.coachingSubscriptionsAdminUrl}/plans/${encodeURIComponent(id)}`);
-  }
-
-  getSubscriptionSettings() {
-    return this.http.get<{ data: CoachingSubscriptionSettings }>(`${this.coachingSubscriptionsAdminUrl}/settings`)
-      .pipe(map(response => response.data));
-  }
-
-  updateSubscriptionSettings(request: CoachingSubscriptionSettingsRequest) {
-    return this.http.put<{ data: CoachingSubscriptionSettings }>(`${this.coachingSubscriptionsAdminUrl}/settings`, request, { headers: this.idempotencyHeaders() })
-      .pipe(map(response => response.data));
-  }
-
-  getTransferRequests(pageNumber = 1, pageSize = 25, search = '', status = '') {
-    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    if (search.trim()) params = params.set('search', search.trim());
-    if (status) params = params.set('status', status);
-    return this.http.get<{ data: CoachingManagementPage<CoachingBankTransferRequest> }>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests`, { params })
-      .pipe(map(response => response.data));
-  }
-
-  reviewTransferRequest(id: string, status: 'Approved' | 'Rejected', reviewNote: string | null) {
-    return this.http.post<void>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests/${encodeURIComponent(id)}/review`, { status, reviewNote }, { headers: this.idempotencyHeaders() });
-  }
-
-  cancelApprovedTransferRequest(id: string, reason: string) {
-    return this.http.post<void>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests/${encodeURIComponent(id)}/cancel`, { reason });
-  }
-
-  deleteTransferRequest(id: string) {
-    return this.http.delete<void>(`${this.coachingSubscriptionsAdminUrl}/transfer-requests/${encodeURIComponent(id)}`);
-  }
-
-  getSubscriptions(pageNumber = 1, pageSize = 25, search = '', status = '') {
-    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    if (search.trim()) params = params.set('search', search.trim());
-    if (status) params = params.set('status', status);
-    return this.http.get<{ data: CoachingManagementPage<CoachingSubscription> }>(this.coachingSubscriptionsAdminUrl, { params })
-      .pipe(map(response => response.data));
-  }
-
-  createSubscription(request: {
-    planId: string; userId: string | null; userName: string | null; userEmail: string | null;
-    institutionId: string | null; studentIds: string[]; startDate: string; notes: string | null; paymentReference?: string | null;
-    /** Money received for this license; the plan price when empty. */
-    amount?: number | null;
-  }) {
-    return this.http.post<void>(this.coachingSubscriptionsAdminUrl, request);
-  }
-
-  updateSubscription(id: string, status: string, endDate: string, notes: string | null) {
-    return this.http.put<void>(`${this.coachingSubscriptionsAdminUrl}/${encodeURIComponent(id)}`, { status, endDate, notes });
-  }
-
-  getSubscriptionSeats(id: string) {
-    return this.http.get<{ data: CoachingSubscriptionSeat[] }>(`${this.coachingSubscriptionsAdminUrl}/${encodeURIComponent(id)}/students`)
-      .pipe(map(response => response.data));
-  }
-
-  private idempotencyHeaders() {
-    const key = globalThis.crypto?.randomUUID?.()
-      ?? `coaching-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    return new HttpHeaders({ 'Idempotency-Key': key });
-  }
-
-  changeStudentSeat(subscriptionId: string, studentId: string, isSuspended: boolean, reason: string | null) {
-    return this.http.put<void>(`${this.coachingSubscriptionsAdminUrl}/${encodeURIComponent(subscriptionId)}/students/${encodeURIComponent(studentId)}/suspension`, { isSuspended, reason });
-  }
-
-  /** Roadmap D6: end date (Türkiye wall-clock time, e.g. 2027-06-30T23:59:00) and/or seat capacity of an institution license. */
-  updateLicense(id: string, change: { endDate?: string | null; seatCapacity?: number | null }) {
-    return this.http.put<{ data: CoachingLicenseRow }>(`${this.coachingSubscriptionsAdminUrl}/${encodeURIComponent(id)}/license`, change)
-      .pipe(map(response => response.data));
-  }
-
-  licenseWindow(window: 'ending' | 'ended') {
-    return this.http.get<{ data: CoachingLicenseRow[] }>(`${this.coachingSubscriptionsAdminUrl}/window`, { params: { window } })
-      .pipe(map(response => response.data));
-  }
-
-  exportPayments(fromDate: string, toDate: string, status = '') {
-    let params = new HttpParams();
-    if (fromDate) params = params.set('fromDate', fromDate);
-    if (toDate) params = params.set('toDate', toDate);
-    if (status) params = params.set('status', status);
-    return this.http.get(`${this.coachingSubscriptionsAdminUrl}/payments/export`, { params, responseType: 'blob' });
-  }
-
-  churn(months = 12) {
-    return this.http.get<{ data: CoachingChurnRow[] }>(`${this.coachingSubscriptionsAdminUrl}/churn`, { params: { months } })
-      .pipe(map(response => response.data));
-  }
-
-  getPayments(pageNumber = 1, pageSize = 25, search = '', status = '') {
-    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    if (search.trim()) params = params.set('search', search.trim());
-    if (status) params = params.set('status', status);
-    return this.http.get<{ data: CoachingManagementPage<CoachingPayment> }>(`${this.coachingSubscriptionsAdminUrl}/payments`, { params })
-      .pipe(map(response => response.data));
-  }
 }

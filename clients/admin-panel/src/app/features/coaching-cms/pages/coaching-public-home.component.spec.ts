@@ -119,7 +119,7 @@ describe('CoachingPublicHomeComponent', () => {
         plan('institution-plan', 'Kurum planı', 'Institution'),
         plan('hidden-plan', 'Gizli plan', 'Individual', false)
       ])),
-      getPublicBankTransferSettings: vi.fn(() => of(settings)),
+      getPublicPlanCurrency: vi.fn(() => of(settings.currency)),
       getPublicCmsBlog: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 3, totalCount: 0 }))
     };
     TestBed.configureTestingModule({

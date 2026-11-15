@@ -136,7 +136,7 @@ describe('CoachingTeacherWorkspaceComponent', () => {
     expect(subscriptionTab).toBeTruthy();
     await fixture.componentInstance.selectSection('subscription');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Öğretmen planları');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen planım');
     await fixture.componentInstance.selectSection('tracking');
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('İşlem bekleyen çalışmaları');

@@ -1,413 +1,53 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-// ---------------------------------------------------------------------------
-// Product
-// ---------------------------------------------------------------------------
-
-export interface Product {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  /** Bu ürünle birlikte erişim sağlanan ürün slug'ları (combo için) */
-  includedProductSlugs: string[];
-  isActive: boolean;
-  isPublic: boolean;
-  sortOrder: number;
-}
-
-export interface CreateProductRequest {
-  slug: string;
-  name: string;
-  description: string;
-  includedProductSlugs: string[];
-  isActive: boolean;
-  isPublic: boolean;
-  sortOrder: number;
-}
-
-export interface UpdateProductRequest {
-  name?: string;
-  description?: string;
-  includedProductSlugs?: string[];
-  isActive?: boolean;
-  isPublic?: boolean;
-  sortOrder?: number;
-}
-
-// ---------------------------------------------------------------------------
-// Subscription Plan
-// ---------------------------------------------------------------------------
-
+/** A plan as the public pricing section shows it. Plans are kept by the billing service ("Abonelik ve Ödeme"). */
 export interface SubscriptionPlan {
   id: string;
   name: string;
   description: string;
-  slug: string;
-  // Ürün bilgileri
-  productId: string;
-  productSlug: string;
-  productName: string;
-  /** Bu planın erişim sağladığı tüm ürün slug'ları */
-  includedProductSlugs: string[];
-  /** Geriye dönük uyumluluk — eski kod için */
-  modules: string[];
   price: number;
+  currency: string;
+  durationDays: number;
   isContactOnly: boolean;
-  billingPeriod: 'OneTime' | 'Monthly' | 'Quarterly' | 'Annual' | 'Lifetime';
-  durationDays: number | null;
-  isActive: boolean;
-  isPublic: boolean;
-  sortOrder: number;
-  features: string[] | null;
+  features: string[];
+  /** The plan also opens another product (a bundle). */
+  isBundle: boolean;
 }
 
-export interface CreatePlanRequest {
-  name: string;
-  description: string;
-  slug: string;
-  productId: string;
-  price: number;
-  isContactOnly: boolean;
-  billingPeriod: string;
-  durationDays: number | null;
-  isActive: boolean;
-  isPublic: boolean;
-  sortOrder: number;
-  features: string[] | null;
-}
-
-export interface UpdatePlanRequest {
-  name?: string;
-  description?: string;
-  price?: number;
-  isContactOnly?: boolean;
-  isActive?: boolean;
-  isPublic?: boolean;
-  sortOrder?: number;
-  features?: string[] | null;
-}
-
-// ---------------------------------------------------------------------------
-// User Subscription
-// ---------------------------------------------------------------------------
-
-export interface UserSubscription {
-  id: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string | null;
-  plan: SubscriptionPlan;
-  productSlug: string;
-  productName: string;
-  status: 'Active' | 'Expired' | 'Cancelled' | 'Trial';
-  startDate: string;
-  endDate: string | null;
-  notes: string | null;
-  createdAt: string;
-  isActive: boolean;
-}
-
-export interface CreateSubscriptionRequest {
-  userId: string;
-  userName: string | null;
-  userEmail: string | null;
-  planId: string;
-  startDate: string;
-  endDate: string | null;
-  notes: string | null;
-}
-
-export interface UpdateSubscriptionRequest {
-  status: string;
-  endDate: string | null;
-  notes: string | null;
-}
-
-export interface SubscriptionPagedResult {
-  items: UserSubscription[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-}
-
-// ---------------------------------------------------------------------------
-// Access / Modules
-// ---------------------------------------------------------------------------
-
-/** Yeni erişim modeli — ürün slug'larına dayalı */
-export interface UserAccess {
-  products: string[];
-  hasSpeedReading: boolean;
-  hasCoaching: boolean;
-}
-
-/** Geriye dönük uyumluluk */
+/** What the student may use, as the Hızlı Okuma service answers (it asks the billing service). */
 export interface UserModules {
   modules: string[];
   hasSpeedReading: boolean;
   hasCoaching: boolean;
 }
 
-export interface InstitutionAccessLicense {
-  id: string;
-  institutionId: string;
-  plan: SubscriptionPlan;
-  status: string;
-  seatCount: number;
-  usedSeatCount: number;
-  activeStudentIds: string[];
-  suspendedStudentIds: string[];
-  startDate: string;
-  endDate: string;
-  paymentReference: string | null;
-  notes: string | null;
-  approvedAt: string;
+interface BillingCatalog {
+  plans: {
+    id: string; name: string; description: string; buyerType: 'Individual' | 'Teacher' | 'Institution'; price: number; currency: string;
+    durationDays: number; isContactOnly: boolean; features: string[]; productCodes: string[];
+  }[];
 }
-
-// ---------------------------------------------------------------------------
-// Bank transfer payments
-// ---------------------------------------------------------------------------
-
-export interface BankTransferPaymentSettings {
-  id: string | null;
-  accountHolder: string;
-  bankName: string;
-  iban: string;
-  instructions: string | null;
-  isEnabled: boolean;
-  isPubliclyAvailable: boolean;
-  updatedAt: string | null;
-}
-
-export interface CreateBankTransferPaymentRequest {
-  planId: string;
-  paymentReference: string;
-  payerName: string | null;
-  note: string | null;
-  /** The version of the pre-information form and distance-sales contract the buyer read and accepted. */
-  salesDocumentsVersion: string;
-}
-
-/** The pre-information form and the distance-sales contract, as plain text. */
-export interface SalesDocuments {
-  version: string;
-  preInformation: string;
-  distanceSales: string;
-}
-
-export interface BankTransferPaymentRequest {
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  planId: string;
-  planName: string;
-  amount: number;
-  currency: string;
-  paymentReference: string;
-  payerName: string | null;
-  note: string | null;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  subscriptionId: string | null;
-  createdAt: string;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  reviewNote: string | null;
-  salesDocumentsVersion?: string | null;
-  salesDocumentsAcceptedAt?: string | null;
-  /** Withdrawal (cayma): null when none was asked. */
-  withdrawalStatus?: 'Requested' | 'Approved' | 'Rejected' | null;
-  withdrawalReason?: string | null;
-  withdrawalRequestedAt?: string | null;
-  withdrawalReviewNote?: string | null;
-  withdrawalReviewedAt?: string | null;
-  /** The last moment a withdrawal can be asked (14 days after approval); null while not approved. */
-  withdrawableUntil?: string | null;
-}
-
-// ---------------------------------------------------------------------------
-// Misc
-// ---------------------------------------------------------------------------
-
-export interface UserSearchResult {
-  id: string;
-  fullName: string;
-  email: string;
-  roles: string[];
-}
-
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionService {
   private readonly http = inject(HttpClient);
-  private readonly productsUrl = `${environment.speedReadingApiUrl}/products`;
-  private readonly plansUrl    = `${environment.speedReadingApiUrl}/subscription-plans`;
-  private readonly subsUrl     = `${environment.speedReadingApiUrl}/subscriptions`;
-  private readonly bankTransferUrl = `${environment.speedReadingApiUrl}/bank-transfer`;
 
-  // ── Products ──────────────────────────────────────────────────────────────
-  getPublicProducts(): Observable<Product[]> {
-    return this.http.get<any>(this.productsUrl).pipe(map(result => result?.data ?? result ?? []));
-  }
-
-  getAllProducts(): Observable<Product[]> {
-    return this.http.get<any>(`${this.productsUrl}/all`).pipe(map(result => result?.data ?? result ?? []));
-  }
-
-  createProduct(request: CreateProductRequest): Observable<Product> {
-    return this.http.post<any>(this.productsUrl, request).pipe(map(result => result?.data ?? result));
-  }
-
-  updateProduct(id: string, request: UpdateProductRequest): Observable<Product> {
-    return this.http.put<any>(`${this.productsUrl}/${id}`, request).pipe(map(result => result?.data ?? result));
-  }
-
-  deactivateProduct(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.productsUrl}/${id}`);
-  }
-
-  // ── Plans ─────────────────────────────────────────────────────────────────
+  /** The plans a visitor can buy for themself, from the billing service's open catalog. */
   getPublicPlans(): Observable<SubscriptionPlan[]> {
-    return this.http.get<any>(this.plansUrl).pipe(map(result => result?.data ?? result ?? []));
+    return this.http.get<BillingCatalog>(`${environment.apiUrl}/billing/v1/catalog/speed-reading`).pipe(
+      map(catalog => (catalog?.plans ?? []).filter(plan => plan.buyerType === 'Individual').map(plan => ({
+        id: plan.id, name: plan.name, description: plan.description, price: plan.price, currency: plan.currency,
+        durationDays: plan.durationDays, isContactOnly: plan.isContactOnly, features: plan.features ?? [],
+        isBundle: (plan.productCodes?.length ?? 0) > 1
+      }))));
   }
 
-  getAllPlans(): Observable<SubscriptionPlan[]> {
-    return this.http.get<any>(`${this.plansUrl}/all`).pipe(map(result => result?.data ?? result ?? []));
-  }
-
-  createPlan(request: CreatePlanRequest): Observable<SubscriptionPlan> {
-    return this.http.post<any>(this.plansUrl, request).pipe(map(result => result?.data ?? result));
-  }
-
-  updatePlan(id: string, request: UpdatePlanRequest): Observable<SubscriptionPlan> {
-    return this.http.put<any>(`${this.plansUrl}/${id}`, request).pipe(map(result => result?.data ?? result));
-  }
-
-  deactivatePlan(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.plansUrl}/${id}`);
-  }
-
-  // ── Bank transfer payments ────────────────────────────────────────────────
-  getPublicBankTransferSettings(): Observable<BankTransferPaymentSettings | null> {
-    return this.http.get<any>(this.bankTransferUrl).pipe(map(result => result?.data ?? result ?? null));
-  }
-
-  createBankTransferPaymentRequest(
-    request: CreateBankTransferPaymentRequest,
-    idempotencyKey?: string
-  ): Observable<BankTransferPaymentRequest> {
-    return this.http.post<any>(`${this.bankTransferUrl}/requests`, request, {
-      headers: this.idempotencyHeaders(idempotencyKey)
-    }).pipe(map(result => result?.data ?? result));
-  }
-
-  getMyBankTransferPaymentRequests(): Observable<BankTransferPaymentRequest[]> {
-    return this.http.get<any>(`${this.bankTransferUrl}/requests/my`)
-      .pipe(map(result => result?.data ?? result ?? []));
-  }
-
-  /** The documents to read and accept before a payment notice for this plan. */
-  getSalesDocuments(planId: string): Observable<SalesDocuments> {
-    return this.http.get<any>(`${this.bankTransferUrl}/documents`, { params: new HttpParams().set('planId', planId) })
-      .pipe(map(result => result?.data ?? result));
-  }
-
-  /** The documents accepted with one of the buyer's own payment requests. */
-  getAcceptedSalesDocuments(requestId: string): Observable<SalesDocuments> {
-    return this.http.get<any>(`${this.bankTransferUrl}/requests/${requestId}/documents`)
-      .pipe(map(result => result?.data ?? result));
-  }
-
-  /** Withdrawal (cayma) from an approved payment, within 14 days of its approval. */
-  requestBankTransferWithdrawal(requestId: string, reason: string | null): Observable<BankTransferPaymentRequest> {
-    return this.http.post<any>(`${this.bankTransferUrl}/requests/${requestId}/withdrawal`, { reason })
-      .pipe(map(result => result?.data ?? result));
-  }
-
-  // ── User search (autocomplete) ────────────────────────────────────────────
-  searchUsers(search: string): Observable<UserSearchResult[]> {
-    const params = new HttpParams().set('searchTerm', search).set('pageSize', '10');
-    return this.http.get<any>(`${environment.apiUrl}/v1/users`, { params })
-      .pipe(map((r: any) => {
-        const items: any[] = r?.items ?? [];
-        return items.map(u => ({
-          id: u.id,
-          fullName: (u.fullName || '').trim() || u.email?.split('@')[0] || u.id,
-          email: u.email ?? '',
-          roles: u.roles ?? []
-        } as UserSearchResult));
-      }));
-  }
-
-  // ── Subscriptions ─────────────────────────────────────────────────────────
-  getSubscriptions(params?: {
-    search?: string;
-    status?: string;
-    page?: number;
-    pageSize?: number;
-  }): Observable<SubscriptionPagedResult> {
-    let httpParams = new HttpParams();
-    if (params?.search)    httpParams = httpParams.set('search', params.search);
-    if (params?.status)    httpParams = httpParams.set('status', params.status);
-    if (params?.page)      httpParams = httpParams.set('page', params.page.toString());
-    if (params?.pageSize)  httpParams = httpParams.set('pageSize', params.pageSize.toString());
-    return this.http.get<any>(this.subsUrl, { params: httpParams }).pipe(
-      map(result => result?.data ?? result)
-    );
-  }
-
-  getUserSubscriptions(userId: string): Observable<UserSubscription[]> {
-    return this.http.get<any>(`${this.subsUrl}/user/${userId}`).pipe(map(result => result?.data ?? result ?? []));
-  }
-
-  createSubscription(request: CreateSubscriptionRequest): Observable<UserSubscription> {
-    return this.http.post<any>(this.subsUrl, request).pipe(map(result => result?.data ?? result));
-  }
-
-  updateSubscription(id: string, request: UpdateSubscriptionRequest): Observable<UserSubscription> {
-    return this.http.put<any>(`${this.subsUrl}/${id}`, request).pipe(map(result => result?.data ?? result));
-  }
-
-  deleteSubscription(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.subsUrl}/${id}`);
-  }
-
-  // ── Access ────────────────────────────────────────────────────────────────
-  /** Yeni erişim endpoint'i — ürün slug'larına dayalı */
-  getMyAccess(): Observable<UserAccess> {
-    return this.http.get<any>(`${this.subsUrl}/my-access`).pipe(map(result => result?.data ?? result));
-  }
-
-  /** Geriye dönük uyumluluk */
   getMyModules(): Observable<UserModules> {
-    return this.http.get<any>(`${this.subsUrl}/my-modules`).pipe(map(result => result?.data ?? result));
-  }
-
-  getMyInstitutionAccess(): Observable<InstitutionAccessLicense | null> {
-    return this.http.get<any>(`${this.subsUrl}/institution-access/my`)
-      .pipe(map(result => result?.data ?? null));
-  }
-
-  changeMyInstitutionStudentAccess(studentId: string, isSuspended: boolean, reason?: string): Observable<void> {
-    return this.http.post<void>(`${this.subsUrl}/institution-access/my/students/${studentId}/suspension`, {
-      isSuspended,
-      reason: reason?.trim() || null
-    });
-  }
-
-  private idempotencyHeaders(idempotencyKey?: string): HttpHeaders {
-    return new HttpHeaders({ 'Idempotency-Key': idempotencyKey ?? this.newIdempotencyKey() });
-  }
-
-  private newIdempotencyKey(): string {
-    return `speed-reading-bank-transfer-${globalThis.crypto?.randomUUID?.()
-      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
+    return this.http.get<{ data?: UserModules } & UserModules>(`${environment.speedReadingApiUrl}/subscriptions/my-modules`)
+      .pipe(map(result => result?.data ?? result));
   }
 }

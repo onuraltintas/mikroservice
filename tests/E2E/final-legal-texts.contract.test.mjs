@@ -47,13 +47,14 @@ test('age: no minimum age and no adult payer rule, in the texts or at the checko
     assert.doesNotMatch(final.get(slug).content, /\d+ yaş|yaşını doldurmuş|yaş ve üzeri|yaş beyanı|yasal temsilci/, slug);
   assert.match(final.get('coaching-terms').content, /Koçluk öğrencilere, velilere, öğretmenlere ve kurumlara yöneliktir\./);
   assert.match(final.get('speed-reading-terms').content, /Hızlı Okuma öğrencilere, velilere, öğretmenlere ve kurumlara yöneliktir\./);
-  // The four payment screens no longer show the declaration and the servers no longer require it.
-  for (const screen of ['clients/admin-panel/src/app/features/coaching-portal/pages/coaching-subscription.component.ts',
+  // The purchase screens (the shared "Aboneliğim" page and what stands around it) ask for no age and no adult payer.
+  for (const screen of ['clients/shared/billing/my-subscription.ts',
+    'clients/admin-panel/src/app/features/coaching-portal/pages/student-payments.component.ts',
     'clients/admin-panel/src/app/features/coaching-portal/parent/parent-payments.component.ts',
     'clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-subscription.component.ts',
-    'clients/speed-reading/src/app/features/public/payment/payment.component.html',
-    'clients/speed-reading/src/app/features/public/payment/payment.component.ts'])
-    assert.doesNotMatch(await read(screen), /adultPayerDeclaration|18 yaş/, screen);
+    'clients/speed-reading/src/app/features/student/subscription/student-subscription.component.ts',
+    'services/billing-service/Billing.Application/SalesDocuments.cs'])
+    assert.doesNotMatch(await read(screen), /adultPayerDeclaration|18 yaş|yasal temsilci/, screen);
   for (const contract of ['services/coaching-service/Coaching.Application/Subscriptions/CoachingSubscriptionContracts.cs',
     'services/speed-reading-service/SpeedReading.Application/Subscription/SpeedReadingSubscriptionContracts.cs']) {
     const source = await read(contract);
@@ -163,7 +164,4 @@ test('the sales documents are the approved texts: no draft note, full refund on 
   assert.doesNotMatch(documents, /iadeden düşülebilir/);
   assert.match(documents, /İade, ödenen tutarın tamamıdır;/);
   assert.match(documents, /bedelin tamamını alıcının ödeme yaptığı hesaba iade eder;/);
-  const admin = await read('clients/admin-panel/src/app/features/dashboard/pages/coaching-sales.ts');
-  assert.doesNotMatch(admin, /taslaktır|avukata/);
-  assert.match(admin, /data-testid="documents-note">[^<]*onaylanmış <strong>esas metinlerdir<\/strong>/);
 });
