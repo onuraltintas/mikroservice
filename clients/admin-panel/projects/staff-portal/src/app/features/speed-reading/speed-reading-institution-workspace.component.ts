@@ -17,6 +17,7 @@ import { SpeedReadingStudentReportComponent } from './speed-reading-institution-
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 import { SpeedReadingAssignmentManagementComponent } from './speed-reading-assignment-management.component';
 import { SpeedReadingInstitutionSettingsComponent } from './speed-reading-institution-settings.component';
+import { SpeedReadingInstitutionSeatsComponent } from './speed-reading-institution-seats.component';
 import { speedReadingReportLabel } from '../../../../../../../shared/utils/speed-reading-report-labels';
 
 type MemberStatusFilter = 'all' | 'active' | 'inactive';
@@ -41,7 +42,7 @@ function utcDateInput(daysAgo: number): string {
 @Component({
   selector: 'staff-speed-reading-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent, StaffPendingInvitationsComponent, SpeedReadingAssignmentManagementComponent, SpeedReadingInstitutionSettingsComponent],
+  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent, StaffPendingInvitationsComponent, SpeedReadingAssignmentManagementComponent, SpeedReadingInstitutionSettingsComponent, SpeedReadingInstitutionSeatsComponent],
   templateUrl: './speed-reading-institution-workspace.component.html',
   styleUrl: './speed-reading-institution-workspace.component.scss',
 })
@@ -90,6 +91,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   readonly invitationRefreshKey = signal(0);
   readonly assignmentManagementVisible = signal(false);
   readonly institutionSettingsVisible = signal(false);
+  readonly seatsVisible = signal(false);
 
   searchInput = '';
   invitationEmail = '';

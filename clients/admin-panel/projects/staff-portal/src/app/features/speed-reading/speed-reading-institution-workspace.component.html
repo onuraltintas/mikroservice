@@ -18,11 +18,13 @@
       <div class="workspace-heading-actions">
         <span class="member-count">{{ totalCount() }} {{ selectedRole() === 'Student' ? 'öğrenci' : 'öğretmen' }}</span>
         <button type="button" class="text-button" data-testid="toggle-institution-assignment-management" [attr.aria-expanded]="assignmentManagementVisible()" (click)="assignmentManagementVisible.update(value => !value)">Ödevleri yönet</button>
+        <button type="button" class="text-button" data-testid="toggle-institution-seats" [attr.aria-expanded]="seatsVisible()" (click)="seatsVisible.update(value => !value)">Abonelik ve koltuklar</button>
         <button type="button" class="text-button" data-testid="toggle-institution-settings" [attr.aria-expanded]="institutionSettingsVisible()" (click)="institutionSettingsVisible.update(value => !value)">Kurum ayarları</button>
       </div>
     </header>
 
     @if (assignmentManagementVisible()) { <staff-speed-reading-assignment-management [institutionId]="currentInstitution.institutionId" /> }
+    @if (seatsVisible()) { <staff-speed-reading-institution-seats [institutionId]="currentInstitution.institutionId" /> }
     @if (institutionSettingsVisible()) { <staff-speed-reading-institution-settings /> }
 
     <section class="overview-section" aria-labelledby="institution-overview-title">

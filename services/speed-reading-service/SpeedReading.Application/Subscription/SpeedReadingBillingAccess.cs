@@ -66,3 +66,16 @@ public sealed class SpeedReadingBillingSettingsChangedConsumer(ISpeedReadingBill
         return Task.CompletedTask;
     }
 }
+
+/// <summary>
+/// The seats of an institution's Hızlı Okuma plan, kept by the billing service. Who may sit (an active student of the
+/// institution) is this product's to check; billing only counts.
+/// </summary>
+public interface ISpeedReadingBillingSeats
+{
+    bool Enabled { get; }
+    /// <summary>The institution's running pool; null when it has no running plan with seats.</summary>
+    Task<BillingSeatPoolResponse?> GetPoolAsync(Guid institutionId, CancellationToken cancellationToken = default);
+    Task<BillingSeatChangeResponse> AssignAsync(Guid institutionId, Guid studentId, Guid actorId, CancellationToken cancellationToken = default);
+    Task<BillingSeatChangeResponse> ReleaseAsync(Guid institutionId, Guid studentId, Guid actorId, string? reason, CancellationToken cancellationToken = default);
+}
