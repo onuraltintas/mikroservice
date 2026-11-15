@@ -78,4 +78,9 @@ public interface ISpeedReadingBillingSeats
     Task<BillingSeatPoolResponse?> GetPoolAsync(Guid institutionId, CancellationToken cancellationToken = default);
     Task<BillingSeatChangeResponse> AssignAsync(Guid institutionId, Guid studentId, Guid actorId, CancellationToken cancellationToken = default);
     Task<BillingSeatChangeResponse> ReleaseAsync(Guid institutionId, Guid studentId, Guid actorId, string? reason, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Frees the seat of a student whose membership ended. Ending a membership must not fail because billing is away:
+    /// a seat that could not be freed stays listed for the institution's admin, who can take it back by hand.
+    /// </summary>
+    Task ReleaseWhenLeavingAsync(Guid institutionId, Guid studentId, Guid actorId, CancellationToken cancellationToken = default);
 }

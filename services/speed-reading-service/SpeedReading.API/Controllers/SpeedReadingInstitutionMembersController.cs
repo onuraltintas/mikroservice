@@ -22,7 +22,9 @@ public sealed class SpeedReadingInstitutionMembersController(
     ISpeedReadingInstitutionMemberEligibility memberEligibility,
     ISpeedReadingInstitutionAdministrationAuthorization administrationAuthorization,
     ISpeedReadingInstitutionDirectory institutionDirectory,
-    ISpeedReadingUserDirectory userDirectory) : ControllerBase
+    ISpeedReadingUserDirectory userDirectory,
+    SpeedReading.Application.Subscription.ISpeedReadingBillingSeats? billingSeats = null,
+    SpeedReading.Application.Subscription.ISpeedReadingBillingAccess? billingAccess = null) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetMembers(
@@ -255,6 +257,13 @@ public sealed class SpeedReadingInstitutionMembersController(
             actorId,
             DateTime.UtcNow,
             cancellationToken);
+        // A student who is no longer the institution's does not keep its seat (billing stage 7).
+        if (change == SpeedReadingMembershipChange.Updated && !request.IsActive && request.Role == SpeedReadingInstitutionMemberRole.Student
+            && billingSeats is not null)
+        {
+            await billingSeats.ReleaseWhenLeavingAsync(institutionId, userId, actorId, cancellationToken);
+            billingAccess?.Forget(userId);
+        }
         return change switch
         {
             SpeedReadingMembershipChange.Updated => NoContent(),

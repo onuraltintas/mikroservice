@@ -3,12 +3,13 @@ using System.Net.Http.Json;
 using EduPlatform.Shared.Contracts.Billing;
 using EduPlatform.Shared.Security.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SpeedReading.Application.Subscription;
 
 namespace SpeedReading.Infrastructure.ExternalServices;
 
 /// <summary>Gives and takes the seats of an institution's plan at the billing service. A failure is the caller's to show: a seat is never assumed.</summary>
-public sealed class BillingSeatsClient(HttpClient httpClient, IConfiguration configuration) : ISpeedReadingBillingSeats
+public sealed class BillingSeatsClient(HttpClient httpClient, IConfiguration configuration, ILogger<BillingSeatsClient> logger) : ISpeedReadingBillingSeats
 {
     private readonly string baseUrl = (configuration["Services:BillingService"] ?? "http://localhost:5006").TrimEnd('/');
     private readonly string? serviceApiKey = configuration["INTERNAL_SERVICE_API_KEY"] ?? configuration["Internal:ServiceApiKey"];
@@ -29,6 +30,19 @@ public sealed class BillingSeatsClient(HttpClient httpClient, IConfiguration con
 
     public Task<BillingSeatChangeResponse> ReleaseAsync(Guid institutionId, Guid studentId, Guid actorId, string? reason, CancellationToken cancellationToken = default) =>
         ChangeAsync("/release", institutionId, studentId, actorId, reason, cancellationToken);
+
+    public async Task ReleaseWhenLeavingAsync(Guid institutionId, Guid studentId, Guid actorId, CancellationToken cancellationToken = default)
+    {
+        if (!Enabled) return;
+        try
+        {
+            await ChangeAsync("/release", institutionId, studentId, actorId, "Öğrencinin kurum üyeliği sona erdi.", cancellationToken);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(exception, "A seat could not be freed at the billing service when a membership ended; the institution's admin can take it back by hand.");
+        }
+    }
 
     private async Task<BillingSeatChangeResponse> ChangeAsync(string path, Guid institutionId, Guid studentId, Guid actorId, string? reason,
         CancellationToken cancellationToken)
