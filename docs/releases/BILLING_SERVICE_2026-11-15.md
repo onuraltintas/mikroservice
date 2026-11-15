@@ -138,12 +138,24 @@ Her biri `-v publish_day='<gün Ay yıl>'` ile çalıştırılır; çıktıdaki 
 - Kurs Yönetimi canlıda kurulu değil; billing bağlantısı yalnız kod düzeyinde hazır.
 
 ## Geri dönüş
+- Billing'i yeniden başlatmak: `docker compose … up -d --no-deps billing-service` (`start billing-service` reddedilir:
+  migration işi `run --rm` ile çalıştığı için geride container bırakmaz ve "missing dependency billing-migrations" hatası verir).
 - Yalnız billing sorunluysa: `billing-service` durdurulur. Ürünler son 24 saatin yanıtıyla çalışır; "abonelik iste"
   kapalıyken zaten herkes girer. Satın alma durur.
 - Bütün yayın geri alınacaksa: `RELEASE_TAG=92624d7`, eski birim dosyası (üç Compose dosyası), servisler ters sırayla
   eski imajlara döner. Hızlı Okuma'nın yeni migration'ı yalnız ekleme yapar; eski kod onunla çalışır, geri alınması
   gerekmez. Billing veritabanı yerinde bırakılır. Yasal metinler bir önceki revizyona yönetici panelinden döndürülür.
 - Veritabanı yedeğine dönmek yalnız veri bozulmasında ve kullanıcı onayıyla.
+
+## Provada bulunanlar (15.11.2026)
+- İmaj çekme betiği canlı klasörde çalışıyor; klasör önce yayın commit'ine alınmalı (B.4 eklendi).
+- Hesap silme talebi ve onayı 500 veriyordu (istek kayıtlarındaki doğrulama öznitelikleri yanlış yerdeydi); Hızlı Okuma
+  davetlerinde de aynı kalıp vardı. Bu yayından gelmiyordu; düzeltildi. Canlıda da büyük olasılıkla kırıktı.
+- Billing her SQL komutunu logluyordu (günde yaklaşık 650 bin satır); EF logları uyarı düzeyine alındı.
+- Billing'in migration geçmişi `public."__EFMigrationsHistory"` tablosunda (kendi veritabanında); bilerek değiştirilmedi.
+- Canlı yapılandırmada bütün `security.mfa.*` kategorileri kapalı; silme, rol atama ve kurum koltuğu MFA istemeden çalışıyor.
+  Bu yayının konusu değil; kullanıcıya bildirildi.
+- İlk beş deneme (yönetici kurulumu, satın alma, onay ve geri alma, billing kesintisi, öğretmen ve kurum koltukları) geçti.
 
 ## Denenmemiş olanlar
 - Yeni servis ile arayüzler şimdiye kadar birlikte çalıştırılmadı; ilk kez provada çalışacak.

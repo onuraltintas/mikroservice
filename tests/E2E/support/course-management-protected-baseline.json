@@ -1521,7 +1521,7 @@
     "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInstitutionMembersController.cs": "4fa3841643cb74dc2bc6c5de4d616db4c26ff7035e71ee56f86ecca099255557",
     "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInstitutionSeatsController.cs": "4f415418dd536030159577d4879c4180c4d977340b14f39afae4a566caf097fc",
     "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInstitutionTeacherStudentsController.cs": "d094616bbd993930cb6e4be6c67aec91445c00729015451115a940868d51ab2a",
-    "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInvitationsController.cs": "05eae912ad15834c599c1c40ad61113c324f13df58482213493640eb8c274c6d",
+    "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInvitationsController.cs": "41e95f262c1459c8f944271d74eddfceeb5fc8997523e5f43dc4d8e994c82c08",
     "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingNewsletterAdminController.cs": "42bec5319b61e80dd854416a27c534d492444a9136f9b522f703c09b26c8c744",
     "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingParentsController.cs": "ae0da21b60f10f11f90c060769fd8ac573a8b0ae279bd7f1d77e2a316830e042",
     "services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingTeacherStudentsController.cs": "c7027ca3a98acc1c15355f3354c4a4dc0620fb27f0e33f1dc18aa248c310600e",
