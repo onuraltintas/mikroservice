@@ -59,3 +59,28 @@ public sealed class CoachingBillingSettingsChangedConsumer(ICoachingBillingAcces
         return Task.CompletedTask;
     }
 }
+
+/// <summary>Whose seat pool: an independent teacher's own plan, or an institution's. Exactly one is set.</summary>
+public sealed record CoachingSeatOwner(Guid? TeacherId, Guid? InstitutionId)
+{
+    public static CoachingSeatOwner Teacher(Guid teacherId) => new(teacherId, null);
+    public static CoachingSeatOwner Institution(Guid institutionId) => new(null, institutionId);
+}
+
+/// <summary>
+/// The seats of a teacher's or an institution's Koçluk plan, kept by the billing service. Who may sit (a student
+/// assigned to the teacher, an active student of the institution) is Koçluk's to check; billing only counts.
+/// </summary>
+public interface ICoachingBillingSeats
+{
+    bool Enabled { get; }
+    /// <summary>The owner's running pool; null when there is no running plan with seats.</summary>
+    Task<BillingSeatPoolResponse?> GetPoolAsync(CoachingSeatOwner owner, CancellationToken cancellationToken = default);
+    Task<BillingSeatChangeResponse> AssignAsync(CoachingSeatOwner owner, Guid studentId, Guid actorId, CancellationToken cancellationToken = default);
+    Task<BillingSeatChangeResponse> ReleaseAsync(CoachingSeatOwner owner, Guid studentId, Guid actorId, string? reason, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Frees the seat of a student who left (the teacher, the institution). Leaving must not fail because billing is
+    /// away: a seat that could not be freed stays listed for its owner, who can take it back by hand.
+    /// </summary>
+    Task ReleaseWhenLeavingAsync(CoachingSeatOwner owner, Guid studentId, string reason, CancellationToken cancellationToken = default);
+}

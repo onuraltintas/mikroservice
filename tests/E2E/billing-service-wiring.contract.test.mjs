@@ -223,3 +223,15 @@ test('Koçluk asks billing which students may use it only where billing runs', (
   for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
     assert.match(read(file), /coaching-service:\s*\n\s+environment:[\s\S]*?Billing__Enabled[:=]\s*"?true/, file);
 });
+
+test('Koçluk gives teacher and institution seats at billing, and frees them when a student leaves', () => {
+  const client = read('services/coaching-service/Coaching.Infrastructure/ExternalServices/CoachingBillingSeatsClient.cs');
+  assert.match(client, /\/internal\/billing\/v1\/seats/);
+  assert.match(client, /ownerUserId=/);
+  assert.match(client, /organizationId=/);
+  const service = read('services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionService.cs');
+  assert.match(service, /IsAssignedIndependentTeacherStudentAsync\(teacherId, studentId, cancellationToken\)\) return false;\s*\n\s*var given = \(await billingSeats\.AssignAsync/,
+    'A teacher seat goes only to a student assigned to that teacher.');
+  const store = read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs');
+  assert.equal((store.match(/billingSeats\.ReleaseWhenLeavingAsync\(/g) ?? []).length, 3);
+});

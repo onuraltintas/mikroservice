@@ -11,11 +11,23 @@ using Npgsql;
 
 namespace Coaching.Infrastructure.Management;
 
-public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db, ICoachingAdminScopeAuthorization scopes, ICurrentUserService actor)
+public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db, ICoachingAdminScopeAuthorization scopes, ICurrentUserService actor,
+    ICoachingBillingSeats? billingSeats = null, ICoachingBillingAccess? billing = null)
 {
     public async Task<CoachingInstitutionSubscriptionSummary?> GetAsync(CancellationToken ct = default)
     {
         var scope = await RequireScopeAsync(ct);
+        // Where the billing service runs, the institution's plan and its seats are kept there.
+        if (billingSeats is { Enabled: true })
+        {
+            var pool = await billingSeats.GetPoolAsync(CoachingSeatOwner.Institution(scope.InstitutionId!.Value), ct);
+            if (pool is null) return null;
+            var held = (pool.Seats ?? []).ToArray();
+            var current = await MemberIdsAsync(scope.InstitutionId!.Value, held.Select(seat => seat.UserId).ToArray(), ct);
+            return new(pool.SubscriptionId, pool.PlanName, pool.EndsAt, pool.Capacity, pool.Used, held.Select(seat => new CoachingInstitutionSubscriptionSeat(
+                seat.UserId, seat.IsSuspended, seat.AssignedAt, current.Contains(seat.UserId) || scope.StudentIds!.Contains(seat.UserId))).ToArray(),
+                null, null, pool.ExtraSeats, pool.ExtraSeatPrice);
+        }
         var now = DateTime.UtcNow;
         var rows = await ManageableSubscriptions(scope.InstitutionId!.Value).ToListAsync(ct);
         // The running license comes first; a license bought ahead of time is shown next to it, or on its own until it starts.
@@ -48,6 +60,16 @@ public sealed class CoachingInstitutionSubscriptionService(CoachingDbContext db,
         // Seats follow membership, not progress sharing: a student who hides their progress still takes a seat.
         if (!isSuspended && !scope.StudentIds!.Contains(studentId)
             && !(await MemberIdsAsync(scope.InstitutionId!.Value, [studentId], ct)).Contains(studentId)) throw Forbidden();
+        if (billingSeats is { Enabled: true })
+        {
+            // The pool is the institution's; the subscription id in the request only names it for the page.
+            var owner = CoachingSeatOwner.Institution(scope.InstitutionId!.Value);
+            var changed = (isSuspended
+                ? await billingSeats.ReleaseAsync(owner, studentId, actor.UserId!.Value, "Kurum yöneticisi kontenjanı kaldırdı.", ct)
+                : await billingSeats.AssignAsync(owner, studentId, actor.UserId!.Value, ct)).Done;
+            if (changed) billing?.Forget(studentId);
+            return changed;
+        }
         var attempts = 0;
         return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
             if (attempts++ > 0) db.ChangeTracker.Clear();
