@@ -17,6 +17,7 @@ public sealed class BillingBankStatements(BillingDbContext db, BillingOrders ord
 {
     public const int MaxListed = 500;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private static readonly System.Globalization.CultureInfo Turkish = new("tr-TR");
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
     public StatementPreview Preview(string fileName, byte[] content)
@@ -110,7 +111,7 @@ public sealed class BillingBankStatements(BillingDbContext db, BillingOrders ord
         }
         if (order.Amount != line.Amount)
         {
-            line.Note = $"Tutar farklı: sipariş {order.Amount:0.00} {order.Currency}.";
+            line.Note = $"Tutar farklı: sipariş {order.Amount.ToString("N2", Turkish)} {order.Currency}.";
             return;
         }
         line.Status = BankTransactionStatus.Matched;

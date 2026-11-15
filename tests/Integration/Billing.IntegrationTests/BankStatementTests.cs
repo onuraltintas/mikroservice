@@ -273,7 +273,7 @@ public sealed class BankStatementsPostgresTests : IAsyncLifetime
         Assert.Equal(1, result.Import.AutoApprovedCount);
         var notes = result.Transactions.Where(item => item.Status == BankTransactionStatus.Unmatched).Select(item => item.Note).ToArray();
         Assert.Equal(3, notes.Length);
-        Assert.Contains("Tutar farklı: sipariş 200.00 TRY.", notes);
+        Assert.Contains("Tutar farklı: sipariş 200,00 TRY.", notes);
         Assert.Contains("EDU-ZZZZZZ kodlu sipariş bulunamadı.", notes);
         Assert.Contains("Bu sipariş zaten onaylanmış; ikinci ödeme olabilir.", notes);
         await using var db = Db();
