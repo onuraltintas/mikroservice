@@ -37,6 +37,8 @@ public sealed class CoachingFollowUpTests
   var rescheduled=await service.RescheduleForStudentAsync(student,plan.Id,task.Id,renamed.Version,new(2027,1,7));Assert.Equal(3,publisher.Messages.Count);
   var draft=await service.CreateForStudentAsync(student,new("Taslak",[new(new(2027,1,8),"Türkçe",30,null,false,PlannedStartMinute:1080)]));
   await service.MoveForStudentAsync(student,draft.Id,new(draft.Version,[draft.Tasks[0].Id],new(2027,1,9),1080));Assert.Equal(3,publisher.Messages.Count);
+  // The student's own move (allowed by her teacher) is not reported back to her.
+  await StudentPlanningTestSupport.AllowOwnPlanningAsync(f.Db,student);
   f.User.UserId=student;f.User.Roles=["Student"];await service.MoveTasksAsync(plan.Id,new(rescheduled.Version,[task.Id],new(2027,1,8),1080));Assert.Equal(3,publisher.Messages.Count);
   Assert.Equal(history,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.IsCompleted).ToArrayAsync()));Assert.Equal(outcomes,JsonSerializer.Serialize(await f.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().ToArrayAsync()));
  }

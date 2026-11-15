@@ -116,6 +116,7 @@ public sealed class PlanAccuracyTests
             StudyPlanTask.Create(old, past, "Eski plan geçmiş", 30, topic.Id),
             CoachingTeacherProfile.Create(teacher), CoachingStudentProfile.Create(student), CoachingTeacherStudentAssignment.Create(teacher, student, null, null, teacher));
         await pg.Db.SaveChangesAsync();
+        await StudentPlanningTestSupport.AllowOwnPlanningAsync(pg.Db, student);
         f.User.UserId = student; f.User.Roles = ["Student"];
         var next = StudyPlanRevision.Create(student, Guid.NewGuid(), 2, "Yeni plan"); pg.Db.Add(next);
         pg.Db.AddRange(StudyPlanTask.Create(next, future, "Yeni plan gelecek 1", 40, topic.Id), StudyPlanTask.Create(next, future, "Yeni plan gelecek 2", 40, topic.Id));

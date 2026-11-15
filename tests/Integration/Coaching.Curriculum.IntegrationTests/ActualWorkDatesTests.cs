@@ -49,6 +49,7 @@ public sealed class ActualWorkDatesTests
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();var plan=await f.Db.StudyPlanRevisions.SingleAsync();var student=plan.StudentId;
         var reviews=await WeeklyReviewPostgresTests.Setup(pg,student,Guid.NewGuid());f.User.UserId=student;f.User.Roles=["Student"];
+        await StudentPlanningTestSupport.AllowOwnPlanningAsync(f.Db,student);
         var task=StudyPlanTask.Create(plan,First,"Tarihli iş",60);f.Db.Add(task);await f.Db.SaveChangesAsync();
         var access=new CoachingAccessPolicy(f.User);var manual=new CoachingManualStudyPlanService(f.Db,access,new CoachingAutomaticStudyPlanPreviewService(f.Db,access),new CurriculumManagementTests.NoopPublisher());
         var saved=await manual.RecordRealizationAsync(plan.Id,task.Id,new(plan.Version,20,8,false,RemainingMinutes:40,WorkedOn:First),false);
