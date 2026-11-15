@@ -38,7 +38,7 @@ ve banka hesabı girildikten sonra kendisi açar.
 | identity, notification | Yok |
 
 ## P. Prova (canlıdan önce, yedekten kurulmuş kopyada)
-1. Son yedeklerden (identity, coaching, speed-reading) ayrı bir Compose projesinde kopya kurulur; canlı container'lara,
+1. Son yedeklerden (identity, coaching, speed-reading, notification) ayrı bir Compose projesinde kopya kurulur; canlı container'lara,
    canlı veritabanlarına ve canlı alan adlarına dokunulmaz. Kopyadan e-posta çıkmamalıdır (SMTP ayarı boş ya da sahte).
 2. A–D bölümleri kopyada uygulanır.
 3. Kopyada denenecekler (hepsi "TEST" işaretli verilerle):
@@ -67,17 +67,40 @@ ve banka hesabı girildikten sonra kendisi açar.
 5. Eski tablolardaki kayıt sayıları not edilir (yalnız sayı): Koçluk ve Hızlı Okuma'da abonelik, havale talebi, ödeme.
 
 ## B. Billing veritabanı ve ayarlar
-1. Mevcut PostgreSQL'de ayrı bir veritabanı ve yalnız o veritabanında yetkili bir rol oluşturulur (başka servislerin
-   veritabanına erişimi olmaz). Parola sunucuda üretilir, hiçbir yere yazdırılmaz.
-2. `.env` dosyasına `BILLING_CONNECTION_STRING` eklenir (yerel geliştirme dosyasındaki biçimle; sunucu adı `postgres`).
+1. Mevcut PostgreSQL'de ayrı bir veritabanı ve rol oluşturulur. Parola sunucuda `openssl rand -hex 24` ile üretilir ve
+   psql'e stdin'den `\set pw` olarak verilir; hiçbir yere yazdırılmaz (provada denendi, 15.11.2026):
+   ```sql
+   CREATE ROLE billing WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD :'pw';
+   CREATE DATABASE billing_db OWNER billing;
+   REVOKE ALL ON DATABASE billing_db FROM PUBLIC;
+   ```
+2. **Ayrı adım, kullanıcının ayrı onayıyla:** diğer veritabanlarında bağlanma yetkisi varsayılan olarak herkese (PUBLIC)
+   açıktır; yukarıdaki üç satırla `billing` rolü onlara da bağlanabilir (şemalarını okuyamaz). Bunu kapatmak mevcut
+   rollerin yetkisini değiştirir, bu yüzden önce salt okunur denetim yapılır: giriş yapabilen roller ve her veritabanının
+   sahibi listelenir; PUBLIC yetkisine dayanan her role önce açık yetki verilir, sonra PUBLIC'ten alınır, sonra her
+   servisin kendi veritabanına bağlanabildiği denenir. Provada kullanılan (yalnız `speedreading_owned_runtime` PUBLIC
+   yetkisine dayanıyordu):
+   ```sql
+   GRANT CONNECT, TEMPORARY ON DATABASE postgres, identity_db, coaching_db, notification_db, speedreading_owned_db TO speedreading_owned_runtime;
+   REVOKE CONNECT, TEMPORARY ON DATABASE postgres, identity_db, coaching_db, notification_db, speedreading_owned_db FROM PUBLIC;
+   ```
+   Canlıda roller provadakinden farklıysa bu adım atlanır ve kullanıcıya yazılır.
+3. `.env` dosyasına `BILLING_CONNECTION_STRING` eklenir:
+   `Host=postgres;Port=5432;Database=billing_db;Username=billing;Password=…;Maximum Pool Size=20;GSS Encryption Mode=Disable`.
    İsteğe bağlı: `BILLING_ALLOWED_HOSTS`, `BILLING_OTLP_ENDPOINT`.
-3. `docker-compose.billing.production.yml` ve yeni `infrastructure/systemd/eduivme-production.service` sunucuya alınır;
-   `systemctl daemon-reload`. Birim dosyası artık dört Compose dosyasıyla çalışır.
-4. `docker compose … config --quiet` hatasız geçer (dört dosyayla).
+4. **`/opt/eduivme` çalışma kopyası yayın commit'ine alınır** (provada eksik çıkan adım: imaj çekme betiği bu klasörde
+   çalışır ve `docker-compose.billing.production.yml` dosyasını orada arar). Yalnız dosyalar güncellenir; çalışan
+   container'lara dokunulmaz.
+5. Canlıdaki systemd birimi depodakiyle **değiştirilmez**: canlı birimde depoda olmayan `Environment=RELEASE_TAG=…` ve
+   `--pull never` var. Canlı birimin `ExecStartPre`, `ExecStart` ve `ExecStop` satırlarına
+   `-f /opt/eduivme/docker-compose.billing.production.yml` ve bir `ConditionPathExists` satırı eklenir; gerisi olduğu
+   gibi kalır. `systemctl daemon-reload`. Önceki birim dosyası geri dönüş için saklanır.
+6. `docker compose … config --quiet` hatasız geçer (dört dosyayla).
 
 ## C. İmajlar ve geçiş
-1. `infrastructure/scripts/pull-release-images.sh <7 karakterlik commit>` → "PASS: all 9 images".
-2. `.env` içinde `RELEASE_TAG` yeni commit olur.
+1. `infrastructure/scripts/pull-release-images.sh <7 karakterlik commit>` → "PASS: all 9 images". (Provada kopya
+   klasöründe: `EDUIVME_DIR=<kopya klasörü> EDUIVME_PROJECT=<kopya proje adı>` ile.)
+2. `RELEASE_TAG` yeni commit olur: `.env` içinde ve canlı systemd birimindeki `Environment=RELEASE_TAG=` satırında.
 3. Sıra (her adımdan sonra sağlık ve log denetimi):
    1. `identity-service`
    2. `notification-service` (yeni `billing-notice` kuyruğunu dinler)
@@ -125,4 +148,6 @@ Her biri `-v publish_day='<gün Ay yıl>'` ile çalıştırılır; çıktıdaki 
 ## Denenmemiş olanlar
 - Yeni servis ile arayüzler şimdiye kadar birlikte çalıştırılmadı; ilk kez provada çalışacak.
 - Halkbank döküm okuyucusu gerçek dosyayla kodda çalıştırılmadı; düzeni kullanıcının verdiği örnekten öğrenildi.
-- Bu talimatın B bölümündeki rol ve veritabanı adımları için hazır betik yok; provada yazılıp buraya eklenmelidir.
+- Provada (15.11.2026) kopyadan e-posta çıkmadı ama içerikleri de görülemedi (sahte SMTP kimlik doğrulamayı
+  desteklemiyor): yeni servisin e-posta metinleri ilk kez canlıda görülecek.
+- Depodaki systemd birimi ile canlıdaki birim farklı (`RELEASE_TAG`, `--pull never`); depodaki dosya canlıya kopyalanmaz.

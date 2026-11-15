@@ -7,12 +7,14 @@ set -eu
 tag=${1:?Usage: pull-release-images.sh <7-character commit id>}
 case "$tag" in *[!0-9a-f]*) echo "Tag must be a lowercase hexadecimal commit id" >&2; exit 2 ;; esac
 [ "${#tag}" -eq 7 ] || { echo "Tag must be the 7-character commit id" >&2; exit 2; }
-cd /opt/eduivme
+# Rehearsal 15.11.2026: a copy of the stack lives in another folder under another project name. EDUIVME_DIR and
+# EDUIVME_PROJECT point the script at it; without them it works on the production folder as before.
+cd "${EDUIVME_DIR:-/opt/eduivme}"
 repo=$(sed -n 's/^PRODUCTION_IMAGE_REPOSITORY=//p' .env | tr -d '"' | tail -n 1)
 case "$repo" in ghcr.io/*) ;; *) echo "PRODUCTION_IMAGE_REPOSITORY in .env must point to ghcr.io" >&2; exit 3 ;; esac
 services="identity-service coaching-service speed-reading-service notification-service billing-service api-gateway speed-reading-frontend admin-panel staff-portal"
 # shellcheck disable=SC2086
-RELEASE_TAG="$tag" docker compose --env-file .env -p eduivme-production -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.production.litespeed.yml -f docker-compose.billing.production.yml pull --quiet $services
+RELEASE_TAG="$tag" docker compose --env-file .env -p "${EDUIVME_PROJECT:-eduivme-production}" -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.production.litespeed.yml -f docker-compose.billing.production.yml pull --quiet $services
 status=0
 for name in $services; do
   image="$repo/$name:$tag"
