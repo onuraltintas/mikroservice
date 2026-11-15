@@ -322,4 +322,25 @@ public sealed class BillingLifecyclePostgresTests : IAsyncLifetime
         var kept = await check.BankTransactions.SingleAsync(item => item.Id == recent);
         Assert.Equal(("Deneme Gönderen", "TEST ilgisiz havale"), (kept.Sender, kept.Description));
     }
+
+    // Rehearsal 15.11.2026: inside somebody else's transaction (the message outbox) the erasure joins it and does not commit.
+    [Fact]
+    public async Task An_erasure_inside_an_open_transaction_joins_it_and_leaves_the_commit_to_its_owner()
+    {
+        var kept = Student("kalan@example.invalid"); var gone = Student("giden@example.invalid");
+        await using (var db = Db())
+        {
+            await using var outer = await db.Database.BeginTransactionAsync();
+            await Lifecycle(db).EraseUserAsync(kept.Id);
+            await outer.RollbackAsync();
+        }
+        await using (var db = Db())
+        {
+            await using var outer = await db.Database.BeginTransactionAsync();
+            await Lifecycle(db).EraseUserAsync(gone.Id);
+            await outer.CommitAsync();
+        }
+        await using var check = Db();
+        Assert.Equal([gone.Id], await check.ErasureReceipts.Select(item => item.UserId).ToArrayAsync());
+    }
 }

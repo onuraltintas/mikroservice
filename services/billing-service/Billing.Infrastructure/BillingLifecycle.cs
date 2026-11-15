@@ -69,7 +69,9 @@ public sealed class BillingLifecycle(BillingDbContext db, BillingOrders orders, 
         if (await db.ErasureReceipts.AnyAsync(item => item.UserId == userId, cancellationToken)) return 0;
         var now = Now;
         var changed = 0;
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        // Rehearsal 15.11.2026: the erasure consumer already runs inside the outbox's transaction on this connection;
+        // opening a second one failed every delivery. An ambient transaction is joined and left to its owner to commit.
+        await using var transaction = db.Database.CurrentTransaction is null ? await db.Database.BeginTransactionAsync(cancellationToken) : null;
         db.ErasureReceipts.Add(new ErasureReceipt { UserId = userId, ErasedAt = now, RedactAfter = now.AddYears(RetentionRules.FinancialRetentionYears) });
 
         // Waiting orders of the account are closed; nothing can be approved for it any more.
@@ -109,7 +111,7 @@ public sealed class BillingLifecycle(BillingDbContext db, BillingOrders orders, 
             await orders.RebuildGrantsAsync(pool, now, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return changed;
     }
 
