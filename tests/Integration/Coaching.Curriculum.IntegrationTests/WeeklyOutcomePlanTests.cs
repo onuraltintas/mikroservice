@@ -284,8 +284,12 @@ public sealed class WeeklyOutcomePlanTests
         Assert.DoesNotContain(preview.Schedule.Tasks,x=>x.Date<=Input.StartDate);
         Assert.Equal(15,preview.Schedule.Tasks.Sum(x=>x.Minutes));
         var created=await service.CreateAsync(new("Gelecek hafta",request,preview.Fingerprint),default);
-        var copy=await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x=>x.RevisionId==created.Id&&x.PredecessorTaskId==waiting.Id);
+        var copy=await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x=>x.RevisionId==created.Id&&x.Title=="Bu haftanın çalışması");
         Assert.Equal((Input.StartDate,(int?)1080,15),(copy.PlannedDate,copy.PlannedStartMinute,copy.PlannedMinutes));
+        // Rehearsal 15.11.2026: a kept task is not a continuation of started work. Otherwise the next plan would have to
+        // carry it even when the user leaves untouched past work out.
+        Assert.Null(copy.PredecessorTaskId);Assert.Null(copy.OriginalTaskId);
+        Assert.Equal(15,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>x.TaskId==copy.Id).SumAsync(x=>x.AllocatedMinutes));
         Assert.DoesNotContain("KeepUntil",System.Text.Json.JsonSerializer.Serialize(Input));
     }
     // Roadmap D1: creating a plan shares the catalog lock with other plans (only catalog changes take it exclusively),

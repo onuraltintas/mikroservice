@@ -63,3 +63,11 @@ test('continuing a plan keeps the rest of the current week in place and plans ne
   assert.match(extend, /gününde ve saatinde kalır/);
   assert.doesNotMatch(extend, /yeniden dağıtılır/);
 });
+
+test('a task that only keeps its place is not a continuation of started work (rehearsal 15.11.2026)', () => {
+  const continuation = read(coaching + 'Coaching.Infrastructure/StudyPlanning/CoachingStudyContinuation.cs');
+  assert.match(continuation, /Copy\(StudyPlanRevision plan, Placement placement, bool carry = true\)/);
+  assert.match(continuation, /if\(carry\)copy\.CarryFrom\(prior\);/);
+  const service = read(coaching + 'Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs');
+  assert.match(service, /Copy\(revision,placement,!prepared\.KeptOnly\.Contains\(placement\.Source\.Id\)\)/);
+});

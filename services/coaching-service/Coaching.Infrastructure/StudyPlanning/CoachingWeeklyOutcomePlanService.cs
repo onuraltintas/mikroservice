@@ -65,7 +65,11 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     public async Task<WeeklyOutcomePlanPreview> PreviewForStudentAsync(Guid student,WeeklyOutcomePlanRequest request,CancellationToken ct)
     {if(staffAccess is null)throw Forbidden();await staffAccess.RequireAsync(student,ct);return (await Prepare(request,student,ct)).Preview;}
 
-    private sealed record Prepared(WeeklyOutcomePlanPreview Preview,WeeklyPlanSource Source,StudyPlanTask[] Protected,StudyPlanTaskOutcome[] PinnedLinks, CoachingStudyContinuation.Placement[] Placements);
+    private sealed record Prepared(WeeklyOutcomePlanPreview Preview,WeeklyPlanSource Source,StudyPlanTask[] Protected,StudyPlanTaskOutcome[] PinnedLinks, CoachingStudyContinuation.Placement[] Placements)
+    {
+        /// <summary>Waiting tasks that only keep their place (KeepUntil): copied without becoming continuations of started work.</summary>
+        public HashSet<Guid> KeptOnly{get;init;}=[];
+    }
     private async Task<Prepared> Prepare(WeeklyOutcomePlanRequest request,Guid student,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -98,13 +102,15 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
         var active=await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
         var sources=await CoachingStudyContinuation.SourcesAsync(db,student,ct);
+        var keptOnly=new HashSet<Guid>();
         if(request.KeepUntil is {} keepUntil&&active is not null)
         {
             // The rest of the current week stays as it is: its waiting tasks are carried like started work, after the started ones.
             var carried=sources.Select(x=>x.Id).ToHashSet();
             var kept=await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&!x.IsCompleted&&x.SkippedAt==null
                 &&x.PlannedDate>=request.StartDate&&x.PlannedDate<=keepUntil).ToArrayAsync(ct);
-            sources=sources.Concat(kept.Where(x=>!carried.Contains(x.Id)).OrderBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id)).ToArray();
+            var added=kept.Where(x=>!carried.Contains(x.Id)).OrderBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id).ToArray();
+            keptOnly=added.Select(x=>x.Id).ToHashSet();sources=sources.Concat(added).ToArray();
         }
         var completed=active is null?[]:await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&x.IsCompleted).ToArrayAsync(ct);
         var protectedTasks=sources.Concat(completed).OrderBy(x=>x.Id).ToArray();
@@ -180,7 +186,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var fits=schedule.Lessons.All(x=>x.RemainingMinutes==0)||v2&&request.PrioritizeWhenShort||request.Partial;
         var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&fits&&schedule.Tasks.Count+pending.Count<=10000;
         return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,placements.Select(x=>new WeeklyProtectedTask(x.Date,x.Start,x.Source.Title,x.Minutes)).ToArray(),leftOut,unscheduled),
-            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId,request.Partial),protectedTasks,pinnedLinks,placements);
+            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId,request.Partial),protectedTasks,pinnedLinks,placements){KeptOnly=keptOnly};
     }
 
     /// <summary>
@@ -382,7 +388,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             }
             foreach(var placement in prepared.Placements)
             {
-                var copy=CoachingStudyContinuation.Copy(revision,placement);tasks.Add(copy);
+                var copy=CoachingStudyContinuation.Copy(revision,placement,!prepared.KeptOnly.Contains(placement.Source.Id));tasks.Add(copy);
                 links.AddRange(prepared.PinnedLinks.Where(x=>x.TaskId==placement.Source.Id).Select(x=>CoachingStudyContinuation.CopyLink(copy,x)));
             }
             db.Add(revision);db.AddRange(tasks);db.AddRange(links);await db.SaveChangesAsync(ct);return new(revision.Id,revision.Version);
