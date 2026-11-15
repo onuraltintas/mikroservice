@@ -136,3 +136,23 @@ test('seats are given by product services inside the network, and buying for an 
   for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
     assert.match(read(file), /Services__IdentityService: http:\/\/identity-service:8080/, file);
 });
+
+test('coupons are counted from live orders, withdrawal follows the legal time, and invoices are the buyer\'s and the admin\'s', () => {
+  const orders = read('services/billing-service/Billing.Infrastructure/BillingOrders.cs');
+  assert.match(orders, /FROM billing\.coupons WHERE \\"Code\\" = \{normalized\} FOR UPDATE/, 'Counting and taking a coupon is one locked step.');
+  assert.match(orders, /item\.CouponCode == normalized && \(item\.Status == OrderStatus\.Pending \|\| item\.Status == OrderStatus\.Paid\)/);
+  assert.match(orders, /item\.OrderId == order\.Id && item\.Status == WithdrawalStatus\.Requested/, 'A reversal settles a waiting withdrawal.');
+  const rules = read('services/billing-service/Billing.Domain/Extras.cs');
+  assert.match(rules, /public const int WithdrawalDays = 14;/);
+  assert.match(rules, /public const int MaxInvoiceBytes = 10 \* 1024 \* 1024;/);
+  const extras = read('services/billing-service/Billing.Infrastructure/BillingExtras.cs');
+  assert.match(extras, /item\.Id == orderId && item\.OrderedByUserId == userId/, 'Only the buyer asks to withdraw.');
+  assert.match(extras, /item\.OrderedByUserId == owner \|\| item\.BeneficiaryUserId == owner/, 'Only the buyer opens the invoice.');
+  assert.match(extras, /Billing\.TrialUsed/);
+  const endpoints = read('services/billing-service/Billing.API/ExtrasEndpoints.cs');
+  for (const path of ['/coupons', '/withdrawals', '/withdrawals/{id:guid}/review', '/orders/{id:guid}/invoice'])
+    assert.ok(endpoints.includes(`admin.Map`) && endpoints.includes(`"${path}"`), `${path} is an admin endpoint`);
+  assert.doesNotMatch(endpoints, /\bapp\.Map(Get|Post|Put|Delete)\(|AllowAnonymous/);
+  const context = read('services/billing-service/Billing.Infrastructure/BillingDbContext.cs');
+  assert.match(context, /HasDatabaseName\("IX_withdrawals_one_live_per_order"\)/);
+});
