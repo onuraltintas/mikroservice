@@ -48,7 +48,7 @@ public sealed class BillingOrdersPostgresTests : IAsyncLifetime
         PlanRequest Plan(string name, BuyerType buyer, decimal price, int days, int? seats, params PlanEntitlementRequest[] gives) =>
             new(name, null, buyer, price, days, 0, seats, null, false, true, true, 0, [], gives);
         _monthly = (await catalog.CreatePlanAsync(Plan("TEST Aylık", BuyerType.Individual, 200, 30, null,
-            new(entitlements["speed-reading.student"], EntitlementHolder.Buyer, null)), Admin)).Id;
+            new PlanEntitlementRequest(entitlements["speed-reading.student"], EntitlementHolder.Buyer, null)), Admin)).Id;
         _bundle = (await catalog.CreatePlanAsync(Plan("TEST Paket", BuyerType.Individual, 500, 90, null,
             new(entitlements["speed-reading.student"], EntitlementHolder.Buyer, null),
             new(entitlements["coaching.student"], EntitlementHolder.Buyer, null)), Admin)).Id;
