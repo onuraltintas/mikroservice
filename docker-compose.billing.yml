@@ -67,5 +67,11 @@ services:
       - Billing__Enabled=true
       - ReverseProxy__Clusters__billing-cluster__Destinations__destination1__Address=http://billing-service:8080
 
+  # Hızlı Okuma asks billing who may train (never through the gateway).
+  speed-reading-service:
+    environment:
+      - Billing__Enabled=true
+      - Services__BillingService=http://billing-service:8080
+
 volumes:
   billing_data:

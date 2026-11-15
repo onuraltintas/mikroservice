@@ -13,7 +13,7 @@ namespace SpeedReading.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/speed-reading/subscriptions")]
 [Authorize]
-public sealed class SubscriptionsController(ISpeedReadingSubscription subscriptions) : ControllerBase
+public sealed class SubscriptionsController(ISpeedReadingSubscription subscriptions, ISpeedReadingAccess accessDecisions) : ControllerBase
 {
     [HttpGet("settings")]
     [Authorize(Roles = "Admin,SystemAdmin")]
@@ -130,14 +130,14 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
     public async Task<IActionResult> GetMyAccess(CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var userId)) return Unauthorized();
-        return Ok(new { success = true, data = await subscriptions.GetMyAccessAsync(userId, cancellationToken), message = "Access retrieved" });
+        return Ok(new { success = true, data = await accessDecisions.GetAsync(userId, cancellationToken), message = "Access retrieved" });
     }
 
     [HttpGet("my-modules")]
     public async Task<IActionResult> GetMyModules(CancellationToken cancellationToken = default)
     {
         if (!TryGetActor(out var userId)) return Unauthorized();
-        var access = await subscriptions.GetMyAccessAsync(userId, cancellationToken);
+        var access = await accessDecisions.GetAsync(userId, cancellationToken);
         return Ok(new
         {
             success = true,

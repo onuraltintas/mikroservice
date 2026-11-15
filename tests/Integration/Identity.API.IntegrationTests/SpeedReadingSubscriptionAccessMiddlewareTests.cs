@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Http;
@@ -151,23 +150,11 @@ public sealed class SpeedReadingSubscriptionAccessMiddlewareTests
         return context;
     }
 
-    private static ISpeedReadingSubscription CreateSubscription(bool active)
+    private static ISpeedReadingAccess CreateSubscription(bool active) => new FixedAccess(active);
+
+    private sealed class FixedAccess(bool active) : ISpeedReadingAccess
     {
-        var subscription = DispatchProxy.Create<ISpeedReadingSubscription, SubscriptionProxy>();
-        ((SubscriptionProxy)subscription).Active = active;
-        return subscription;
-    }
-
-    public class SubscriptionProxy : DispatchProxy
-    {
-        public bool Active { get; set; }
-
-        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
-        {
-            if (targetMethod?.Name == nameof(ISpeedReadingSubscription.GetMyAccessAsync))
-                return Task.FromResult(new UserAccessSummary([], Active, false));
-
-            throw new NotSupportedException(targetMethod?.Name);
-        }
+        public Task<UserAccessSummary> GetAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new UserAccessSummary([], active, false));
     }
 }

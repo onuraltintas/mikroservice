@@ -183,6 +183,13 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
         services.AddScoped<ISpeedReadingParentReports, OwnedSpeedReadingParentReports>();
+        // Billing service ("Abonelik ve Ödeme"): who may train is asked there when the deployment runs it (Billing:Enabled).
+        services.AddSingleton<BillingAccessCacheState>();
+        services.AddHttpClient<ISpeedReadingBillingAccess, BillingAccessClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(3);
+        }).AddCorrelationIdPropagation();
+        services.AddScoped<ISpeedReadingAccess, SpeedReadingAccess>();
         services.AddHttpClient<ISpeedReadingUserDirectory, IdentityUserDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);

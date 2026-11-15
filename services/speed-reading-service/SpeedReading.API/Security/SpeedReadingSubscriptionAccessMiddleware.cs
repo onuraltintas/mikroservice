@@ -10,7 +10,7 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
 {
     public async Task InvokeAsync(
         HttpContext context,
-        ISpeedReadingSubscription subscriptions,
+        ISpeedReadingAccess accessDecisions,
         OwnedSpeedReadingDbContext db)
     {
         if (context.User.Identity?.IsAuthenticated == true
@@ -51,14 +51,14 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
             return;
         }
 
-        var access = await subscriptions.GetMyAccessAsync(userId, context.RequestAborted);
+        var access = await accessDecisions.GetAsync(userId, context.RequestAborted);
         if (!access.HasSpeedReading)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             await context.Response.WriteAsJsonAsync(new
             {
                 code = "SubscriptionRequired",
-                message = "Hızlı okuma aboneliğiniz sona erdi. Devam etmek için aboneliğinizi yenileyin."
+                message = "Hızlı Okuma için etkin bir aboneliğiniz yok. Devam etmek için Aboneliğim sayfasından abonelik alın ya da yenileyin."
             }, context.RequestAborted);
             return;
         }
