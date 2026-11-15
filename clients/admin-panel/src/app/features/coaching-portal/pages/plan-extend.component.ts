@@ -9,8 +9,9 @@ function addDays(iso: string, days: number) { const [y, m, d] = iso.split('-').m
 function shortDate(iso: string) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
 
 /**
- * User decision 15.11.2026: a plan made for a week (or up to a chosen date) is continued with one click. The plan is made
- * again from today to a week after its end, so what is left of this week is planned again in order and next week is added.
+ * User decision 15.11.2026: a plan made for a week (or up to a chosen date) is continued with one click. A new plan runs
+ * from today to a week after the current end; the waiting work of the days up to the current end keeps its day and time
+ * (keepUntil) and new work is added only after it.
  * The user chooses whether the topics of untouched past tasks come first or are left out this time.
  */
 @Component({
@@ -21,8 +22,8 @@ function shortDate(iso: string) { const [y, m, d] = iso.split('-'); return `${d}
       @if (!asking()) {
         <button type="button" data-testid="plan-extend-open" (click)="asking.set(true)" [disabled]="busy()">Gelecek haftayı ekle</button>
       } @else {
-        <p>Plan bugünden {{ date(nextEnd()) }} tarihine kadar yeniden hazırlanır ve yayındaki planın yerini alır. Tamamlanan çalışmalar korunur;
-          bekleyen çalışmalar yeni plana göre yeniden dağıtılır.</p>
+        <p>Plan {{ date(nextEnd()) }} tarihine kadar uzatılır. Tamamlanan çalışmalar korunur; {{ date(source!.endDate) }} tarihine kadar olan bekleyen
+          çalışmalar gününde ve saatinde kalır, yeni çalışmalar ondan sonraki günlere eklenir.</p>
         <fieldset [disabled]="busy()"><legend>Önceki günlerden kalan, hiç başlanmamış çalışmalar</legend>
           <label class="check"><input type="radio" name="plan-extend-carry" [checked]="!leave()" (change)="leave.set(false)"> Önce onlar yerleşsin, yeni konular kalan boşluğa girsin</label>
           <label class="check"><input type="radio" name="plan-extend-carry" [checked]="leave()" (change)="leave.set(true)"> Bu sefer plana eklenmesin (sonraki eklemede yeniden sorulur)</label>
@@ -66,7 +67,9 @@ export class PlanExtendComponent {
         const wanted = this.nextEnd(), partial = wanted < options.endDate;
         const request: WeeklyOutcomeRequest = { startDate: options.startDate, endDate: partial ? wanted : options.endDate,
           expectedWeeklyDraftVersion: options.weeklyDraftVersion, reuseFreedSlots: true, engineVersion: 2,
-          ...(partial ? { partial: true } : {}), ...(this.leave() ? { leaveUnfinished: true } : {}) };
+          ...(partial ? { partial: true } : {}), ...(this.leave() ? { leaveUnfinished: true } : {}),
+          // The rest of the current plan stays where it is; only what comes after it is new.
+          ...(this.source!.endDate >= options.startDate ? { keepUntil: this.source!.endDate } : {}) };
         return this.engine.preview(request, student);
       }),
       switchMap(preview => preview.canCreate ? of(preview)

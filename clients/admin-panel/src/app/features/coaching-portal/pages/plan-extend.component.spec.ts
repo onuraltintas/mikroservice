@@ -39,7 +39,8 @@ describe('PlanExtendComponent', () => {
     const { fixture, engine, planning, extended, el } = mount();
     click(el, 'plan-extend-open'); fixture.detectChanges();
     click(el, 'plan-extend-confirm');
-    expect(engine.preview).toHaveBeenCalledWith({ startDate: '2026-11-13', endDate: '2026-11-22', expectedWeeklyDraftVersion: 4, reuseFreedSlots: true, engineVersion: 2, partial: true }, undefined);
+    // The rest of the current week (to 15.11) keeps its place; new work comes after it.
+    expect(engine.preview).toHaveBeenCalledWith({ startDate: '2026-11-13', endDate: '2026-11-22', expectedWeeklyDraftVersion: 4, reuseFreedSlots: true, engineVersion: 2, partial: true, keepUntil: '2026-11-15' }, undefined);
     expect(engine.create).toHaveBeenCalledWith(expect.objectContaining({ fingerprint: 'p'.repeat(64) }), undefined);
     expect(planning.publish).toHaveBeenCalledWith('next-plan', 1, null);
     expect(extended).toHaveBeenCalledWith('next-plan');
@@ -58,6 +59,7 @@ describe('PlanExtendComponent', () => {
     const { fixture, engine, el } = mount({ source: source({ endDate: '2026-11-01' }) });
     click(el, 'plan-extend-open'); fixture.detectChanges(); click(el, 'plan-extend-confirm');
     expect(engine.preview).toHaveBeenCalledWith(expect.objectContaining({ startDate: '2026-11-13', endDate: '2026-11-19' }), undefined);
+    expect(engine.preview.mock.calls.at(-1)![0]).not.toHaveProperty('keepUntil');
   });
 
   it('publishes nothing and says why when the week cannot be made or the server refuses', () => {

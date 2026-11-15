@@ -16,7 +16,10 @@ public sealed record WeeklyOutcomePlanRequest(DateOnly StartDate,DateOnly EndDat
     // plan's untouched tasks dated before StartDate are not planned this time (they are asked about again at the next plan).
     // Both are left out of the JSON when false, so the fingerprint of a request without them stays as it was.
     [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingDefault)] bool Partial=false,
-    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingDefault)] bool LeaveUnfinished=false);
+    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingDefault)] bool LeaveUnfinished=false,
+    // User decision 15.11.2026 ("Gelecek haftayı ekle"): the active plan's waiting tasks from StartDate to this day keep their
+    // day and time, and nothing new is planned in those days; new work starts the day after. Left out of the JSON when null.
+    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingNull)] DateOnly? KeepUntil=null);
 public sealed record WeeklyExamDateRequest(DateOnly? ExamDate);
 public sealed record WeeklyLeftOutTopic(Guid LessonId,string LessonName,Guid TopicId,string TopicName,int Minutes);
 public sealed record WeeklyOutcomePlanSave([Required,MaxLength(200)] string Title,[Required] WeeklyOutcomePlanRequest Preview,[Required] string Fingerprint);

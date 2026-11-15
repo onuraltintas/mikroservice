@@ -11,7 +11,7 @@ const pages = 'clients/admin-panel/src/app/features/coaching-portal/pages/';
 test('a plan for part of the way can be created although the lessons do not finish, and remembers it', () => {
   const contract = read(coaching + 'Coaching.Application/StudyPlanning/IWeeklyOutcomePlanService.cs');
   assert.match(contract, /JsonIgnoreCondition\.WhenWritingDefault\)\] bool Partial=false,/);
-  assert.match(contract, /JsonIgnoreCondition\.WhenWritingDefault\)\] bool LeaveUnfinished=false\);/);
+  assert.match(contract, /JsonIgnoreCondition\.WhenWritingDefault\)\] bool LeaveUnfinished=false,/);
   const service = read(coaching + 'Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs');
   assert.match(service, /v2&&request\.PrioritizeWhenShort\|\|request\.Partial;/);
   assert.match(service, /draft\.TimeZoneId,request\.Partial\)/);
@@ -51,4 +51,15 @@ test('a teacher is told whose plan is ending, and the report says when its figur
   assert.match(read('services/notification-service/Notification.Application/Consumers/CoachingReminderDueConsumer.cs'), /için hazırladığın çalışma planı/);
   assert.match(read(coaching + 'Coaching.Infrastructure/StudyPlanning/StudentPlanningPermission.cs'), /source is \{ Partial: true \} \? source\.EndDate : null/);
   assert.match(read(pages + 'student-study-report.component.ts'), /data-testid="partial-plan-note"/);
+});
+
+test('continuing a plan keeps the rest of the current week in place and plans new work after it', () => {
+  assert.match(read(coaching + 'Coaching.Application/StudyPlanning/IWeeklyOutcomePlanService.cs'), /JsonIgnoreCondition\.WhenWritingNull\)\] DateOnly\? KeepUntil=null\);/);
+  const service = read(coaching + 'Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs');
+  assert.match(service, /if\(request\.KeepUntil is \{\} keepUntil&&active is not null\)[\s\S]*?x\.PlannedDate>=request\.StartDate&&x\.PlannedDate<=keepUntil/);
+  assert.match(service, /request\.KeepUntil is \{\} keptUntil\?[\s\S]*?new WeeklyBlockedTime\(day,x\.StartMinute,x\.DurationMinutes\)/);
+  const extend = read(pages + 'plan-extend.component.ts');
+  assert.match(extend, /keepUntil: this\.source!\.endDate/);
+  assert.match(extend, /gününde ve saatinde kalır/);
+  assert.doesNotMatch(extend, /yeniden dağıtılır/);
 });

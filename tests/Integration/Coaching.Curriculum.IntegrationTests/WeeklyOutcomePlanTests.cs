@@ -267,6 +267,27 @@ public sealed class WeeklyOutcomePlanTests
         // Asked again at the next plan: nothing was marked on the topic itself.
         Assert.Contains((await service.PreviewAsync(Input,default)).Schedule.Tasks,x=>x.Outcome.OutcomeId==outcome.Id);
     }
+    // User decision 15.11.2026: "Gelecek haftayı ekle" leaves the rest of the current week as it is and adds new work after it.
+    [Fact]
+    public async Task ContinuingAPlanKeepsTheRestOfTheWeekInPlaceAndPlansNewWorkAfterIt()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var old=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive);
+        var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();var estimate=await f.Db.Set<OutcomeDurationEstimate>().SingleAsync();var topic=await f.Db.StudyCatalogTopics.SingleAsync();
+        var waiting=StudyPlanTask.Create(old,Input.StartDate,"Bu haftanın çalışması",15,topic.Id);waiting.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);f.Db.Add(waiting);
+        f.Db.Add(StudyPlanTaskOutcome.Create(waiting.Id,outcome.Id,estimate.Id,15,"Catalog"));await f.Db.SaveChangesAsync();
+        // Without the choice the waiting task is not carried: its topic is planned afresh from the first day.
+        var afresh=await service.PreviewAsync(Input,default);Assert.Contains(afresh.Schedule.Tasks,x=>x.Date==Input.StartDate);
+        var request=Input with {KeepUntil=Input.StartDate,Partial=true};
+        var preview=await service.PreviewAsync(request,default);Assert.True(preview.CanCreate);
+        var kept=Assert.Single(preview.ProtectedTasks!,x=>x.Title=="Bu haftanın çalışması");Assert.Equal((Input.StartDate,(int?)1080,15),(kept.Date,kept.StartMinute,kept.Minutes));
+        // The kept day takes nothing new, and what the kept task already covers is not planned twice.
+        Assert.DoesNotContain(preview.Schedule.Tasks,x=>x.Date<=Input.StartDate);
+        Assert.Equal(15,preview.Schedule.Tasks.Sum(x=>x.Minutes));
+        var created=await service.CreateAsync(new("Gelecek hafta",request,preview.Fingerprint),default);
+        var copy=await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x=>x.RevisionId==created.Id&&x.PredecessorTaskId==waiting.Id);
+        Assert.Equal((Input.StartDate,(int?)1080,15),(copy.PlannedDate,copy.PlannedStartMinute,copy.PlannedMinutes));
+        Assert.DoesNotContain("KeepUntil",System.Text.Json.JsonSerializer.Serialize(Input));
+    }
     // Roadmap D1: creating a plan shares the catalog lock with other plans (only catalog changes take it exclusively),
     // so one student's plan no longer waits for every other student's plan.
     [CurriculumPostgresTests.LocalPostgresFact]
