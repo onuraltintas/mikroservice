@@ -19,7 +19,8 @@ public sealed class CoachingSubscriptionService(
     CoachingDbContext db,
     ICoachingIdentityAuthorizationClient identityAuthorizationClient,
     ICoachingEventPublisher? events = null,
-    ICoachingBillingAccess? billing = null) : ICoachingSubscription
+    ICoachingBillingAccess? billing = null,
+    ICoachingBillingSeats? billingSeats = null) : ICoachingSubscription
 {
     private static readonly System.Globalization.CultureInfo TurkishCulture = new("tr-TR");
 
@@ -1389,6 +1390,14 @@ public sealed class CoachingSubscriptionService(
             return null;
         }
 
+        // Where the billing service runs, the teacher's plan and its seats are kept there.
+        if (billingSeats is { Enabled: true })
+        {
+            var pool = await billingSeats.GetPoolAsync(CoachingSeatOwner.Teacher(teacherId), cancellationToken);
+            return pool is null ? null : new CoachingTeacherSubscriptionSeatManagementSummary(pool.SubscriptionId, pool.PlanName, pool.EndsAt, pool.Capacity, pool.Used,
+                (pool.Seats ?? []).Select(seat => new CoachingSubscriptionSeatSummary(seat.UserId, seat.IsSuspended, null, seat.AssignedAt)).ToArray());
+        }
+
         var active = await GetActiveTeacherSubscriptionAsync(teacherId, cancellationToken);
         if (active is null)
         {
@@ -1424,6 +1433,15 @@ public sealed class CoachingSubscriptionService(
         if (teacherId == Guid.Empty || studentId == Guid.Empty)
         {
             return false;
+        }
+
+        if (billingSeats is { Enabled: true })
+        {
+            // Billing only counts; that the student is this teacher's is checked here, as before.
+            if (!await IsAssignedIndependentTeacherStudentAsync(teacherId, studentId, cancellationToken)) return false;
+            var given = (await billingSeats.AssignAsync(CoachingSeatOwner.Teacher(teacherId), studentId, teacherId, cancellationToken)).Done;
+            if (given) billing?.Forget(studentId);
+            return given;
         }
 
         var active = await GetActiveTeacherSubscriptionAsync(teacherId, cancellationToken);
@@ -1494,6 +1512,14 @@ public sealed class CoachingSubscriptionService(
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
+        if (billingSeats is { Enabled: true })
+        {
+            var taken = (await billingSeats.ReleaseAsync(CoachingSeatOwner.Teacher(teacherId), studentId, teacherId,
+                "Öğretmen abonelik koltuğunu kaldırdı.", cancellationToken)).Done;
+            if (taken) billing?.Forget(studentId);
+            return taken;
+        }
+
         var active = await GetActiveTeacherSubscriptionAsync(teacherId, cancellationToken);
         if (active is null)
         {

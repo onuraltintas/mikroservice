@@ -12,7 +12,8 @@ namespace Coaching.Infrastructure.Profiles;
 
 public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoachingAccountDirectory accounts,
     Coaching.Application.Interfaces.ICoachingEventPublisher? events = null, TimeProvider? clock = null,
-    Coaching.Application.CatalogAdministration.ICoachingLocationDirectory? locations = null) : ICoachingProfileProvisioner
+    Coaching.Application.CatalogAdministration.ICoachingLocationDirectory? locations = null,
+    Coaching.Application.Subscriptions.ICoachingBillingSeats? billingSeats = null) : ICoachingProfileProvisioner
 {
     public Task<CoachingStudentProfile?> GetStudentAsync(Guid userId, CancellationToken ct) =>
         db.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == userId, ct);
@@ -227,6 +228,8 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (role == CoachingMemberRole.Student)
                 await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.InstitutionId == institutionId), userId,
                     "Öğrenci kurumdan ayrıldı.", ct);
+            if (billingSeats is not null && role == CoachingMemberRole.Student)
+                await billingSeats.ReleaseWhenLeavingAsync(Coaching.Application.Subscriptions.CoachingSeatOwner.Institution(institutionId), userId, "Öğrenci kurumdan ayrıldı.", ct);
             // Institution-wide read access (imported from the legacy system) belonged to this institution.
             // It must not carry over to the teacher's next institution.
             if (role == CoachingMemberRole.Teacher
@@ -343,6 +346,8 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (ended.Any(x => x.InstitutionId == null))
                 await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == teacherUserId), studentUserId,
                     "Öğretmen bağlantısı sona erdi.", ct);
+            if (billingSeats is not null && ended.Any(x => x.InstitutionId == null))
+                await billingSeats.ReleaseWhenLeavingAsync(Coaching.Application.Subscriptions.CoachingSeatOwner.Teacher(teacherUserId), studentUserId, "Öğretmen bağlantısı sona erdi.", ct);
             if (ended.Length > 0 && events is not null)
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(teacherUserId, studentUserId,
                     await StudentNameAsync(studentUserId, ct),
@@ -490,6 +495,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             var closed = await CloseTeachingWorkAsync(link.TeacherUserId, studentUserId, null, ct);
             await ReleaseSeatsAsync(db.CoachingSubscriptions.Where(x => x.UserId == link.TeacherUserId), studentUserId,
                 "Öğrenci bir kuruma katıldı.", ct);
+            if (billingSeats is not null) await billingSeats.ReleaseWhenLeavingAsync(Coaching.Application.Subscriptions.CoachingSeatOwner.Teacher(link.TeacherUserId), studentUserId, "Öğrenci bir kuruma katıldı.", ct);
             if (events is not null)
                 await events.PublishAsync(new CoachingTeacherLinkEndedEvent(link.TeacherUserId, studentUserId, name,
                     CoachingTeacherLinkEndedReasons.JoinedInstitution)

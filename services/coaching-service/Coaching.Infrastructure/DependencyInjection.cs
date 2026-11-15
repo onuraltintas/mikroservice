@@ -171,6 +171,10 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(3);
         });
+        services.AddHttpClient<ICoachingBillingSeats, Coaching.Infrastructure.ExternalServices.CoachingBillingSeatsClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
         services.AddScoped<ICoachingSubscription, CoachingSubscriptionService>();
         services.AddScoped<CoachingInstitutionSubscriptionService>();
         services.AddScoped<CoachingInstitutionExamService>();
