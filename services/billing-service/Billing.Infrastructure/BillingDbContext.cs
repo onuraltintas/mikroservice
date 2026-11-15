@@ -19,6 +19,13 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
     public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
     public DbSet<Seller> Sellers => Set<Seller>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderReceipt> OrderReceipts => Set<OrderReceipt>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<SubscriptionPeriod> SubscriptionPeriods => Set<SubscriptionPeriod>();
+    public DbSet<EntitlementGrant> EntitlementGrants => Set<EntitlementGrant>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +107,104 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.Property(item => item.Instructions).HasMaxLength(2_000);
             entity.Property(item => item.StatementTemplate).HasMaxLength(40);
             entity.HasIndex(item => item.Iban).IsUnique();
+        });
+
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.ToTable("accounts");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Type).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Email).HasMaxLength(320);
+            // One account per user and one per organization, whatever the product.
+            entity.HasIndex(item => item.UserId).IsUnique();
+            entity.HasIndex(item => item.OrganizationId).IsUnique();
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.ToTable("orders");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.PlanName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.BuyerType).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.ListPrice).HasPrecision(12, 2);
+            entity.Property(item => item.Discount).HasPrecision(12, 2);
+            entity.Property(item => item.Amount).HasPrecision(12, 2);
+            entity.Property(item => item.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(item => item.EntitlementsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.PaymentCode).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.DocumentsVersion).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.DocumentsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.PayerNote).HasMaxLength(500);
+            entity.Property(item => item.ReviewNote).HasMaxLength(2_000);
+            entity.HasIndex(item => item.PaymentCode).IsUnique();
+            // An account waits for one payment per plan at a time.
+            entity.HasIndex(item => new { item.AccountId, item.PlanId, item.BeneficiaryUserId }).IsUnique()
+                .HasFilter("\"Status\" = 'Pending'").HasDatabaseName("IX_orders_one_pending_per_plan");
+            entity.HasIndex(item => new { item.Status, item.ExpiresAt });
+            entity.HasIndex(item => item.OrderedByUserId);
+            entity.HasOne<Account>().WithMany().HasForeignKey(item => item.AccountId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Plan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OrderReceipt>(entity =>
+        {
+            entity.ToTable("order_receipts");
+            entity.HasKey(item => item.OrderId);
+            entity.Property(item => item.FileName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.ContentType).HasMaxLength(100).IsRequired();
+            entity.HasOne<Order>().WithOne().HasForeignKey<OrderReceipt>(item => item.OrderId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.ToTable("payments");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Method).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Amount).HasPrecision(12, 2);
+            entity.Property(item => item.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(item => item.ReversalReason).HasMaxLength(1_000);
+            // An order is paid once.
+            entity.HasIndex(item => item.OrderId).IsUnique();
+            entity.HasOne<Order>().WithMany().HasForeignKey(item => item.OrderId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.ToTable("subscriptions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.PlanName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.EntitlementsJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(item => new { item.AccountId, item.PlanId, item.BeneficiaryUserId }).IsUnique();
+            entity.HasIndex(item => item.BeneficiaryUserId);
+            entity.HasOne<Account>().WithMany().HasForeignKey(item => item.AccountId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Plan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SubscriptionPeriod>(entity =>
+        {
+            entity.ToTable("subscription_periods");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Source).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.HasIndex(item => item.SubscriptionId);
+            entity.HasIndex(item => item.PaymentId).IsUnique();
+            entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Payment>().WithMany().HasForeignKey(item => item.PaymentId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EntitlementGrant>(entity =>
+        {
+            entity.ToTable("entitlement_grants");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Key).HasMaxLength(100).IsRequired();
+            entity.HasIndex(item => new { item.UserId, item.ProductId, item.EndsAt });
+            entity.HasIndex(item => item.SubscriptionId);
+            entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Entitlement>().WithMany().HasForeignKey(item => item.EntitlementId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

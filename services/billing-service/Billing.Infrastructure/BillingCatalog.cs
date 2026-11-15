@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Billing.Application;
 using Billing.Domain;
+using EduPlatform.Shared.Contracts.Events.Billing;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,7 @@ namespace Billing.Infrastructure;
 /// The catalog and settings of the billing service: products with their two billing settings, entitlements, plans
 /// (who buys, seats, which entitlements), the seller and the bank accounts.
 /// </summary>
-public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock) : IBillingCatalog
+public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBillingEvents? events = null) : IBillingCatalog
 {
     public const int MaxFeatures = 20;
     public const int MaxFeatureLength = 200;
@@ -58,6 +59,9 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock) : IB
             throw new BusinessRuleException("Billing.ProductInvalid", "EFT onay türü geçersiz.");
         var product = await db.Products.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (product is null) return null;
+        // Products cache the switch; they hear of a change with the transaction that makes it.
+        if (product.RequireSubscription != request.RequireSubscription && events is not null)
+            await events.PublishAsync(new BillingProductSettingsChangedV1(product.Code, request.RequireSubscription, Now), cancellationToken);
         product.RequireSubscription = request.RequireSubscription;
         product.BankTransferApproval = request.BankTransferApproval;
         product.UpdatedAt = Now;
@@ -99,6 +103,8 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock) : IB
         if (entitlement is null) return false;
         if (await db.PlanEntitlements.AnyAsync(item => item.EntitlementId == entitlementId, cancellationToken))
             throw new BusinessRuleException("Billing.EntitlementInUse", "Bu hakkı veren plan var; önce plandan çıkarın.");
+        if (await db.EntitlementGrants.AnyAsync(item => item.EntitlementId == entitlementId, cancellationToken))
+            throw new BusinessRuleException("Billing.EntitlementInUse", "Bu hak süren aboneliklerde kullanılıyor; silinemez.");
         db.Entitlements.Remove(entitlement);
         await db.SaveChangesAsync(cancellationToken);
         return true;

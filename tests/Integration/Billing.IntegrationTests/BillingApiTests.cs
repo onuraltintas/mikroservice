@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Billing.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,6 +20,7 @@ public sealed class BillingApiTests : IAsyncLifetime
     private const string Secret = "billing-tests-secret-0123456789-abcdefghijklmnopqrstuvwxyz";
     private const string Issuer = "eduplatform.identity";
     private const string Audience = "eduplatform.api";
+    private const string ServiceKey = "billing-tests-internal-service-key-0123456789";
     private readonly PostgresFixture _postgres = new();
     private WebApplicationFactory<Program> _factory = null!;
 
@@ -36,6 +38,8 @@ public sealed class BillingApiTests : IAsyncLifetime
             builder.UseSetting("JWT_AUDIENCE", Audience);
             builder.UseSetting("JWT_KEY_ID", "tests");
             builder.UseSetting("AllowedHosts", "*");
+            builder.UseSetting("INTERNAL_SERVICE_API_KEY", ServiceKey);
+            builder.UseSetting("Billing:RunWorkers", "false");
         });
     }
 
@@ -45,13 +49,13 @@ public sealed class BillingApiTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    private HttpClient Client(string? role)
+    private HttpClient Client(string? role, Guid? userId = null)
     {
         var client = _factory.CreateClient();
         if (role is null) return client;
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Secret)) { KeyId = "tests" };
         var token = new JwtSecurityToken(Issuer, Audience,
-            [new Claim("sub", Guid.NewGuid().ToString()), new Claim(ClaimTypes.Role, role)],
+            [new Claim("sub", (userId ?? Guid.NewGuid()).ToString()), new Claim("email", "kullanici@example.invalid"), new Claim(ClaimTypes.Role, role)],
             expires: DateTime.UtcNow.AddMinutes(5), signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", new JwtSecurityTokenHandler().WriteToken(token));
         return client;
@@ -92,5 +96,92 @@ public sealed class BillingApiTests : IAsyncLifetime
             new { bankName = "Banka", accountHolder = "Sahip", iban = "TR00", isActive = true, sortOrder = 1 });
         Assert.Equal(HttpStatusCode.BadRequest, broken.StatusCode);
         Assert.Contains("Billing.BankAccountInvalid", await broken.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task A_student_buys_by_bank_transfer_the_admin_approves_and_the_product_sees_the_entitlement()
+    {
+        var admin = Client("SystemAdmin");
+        var studentId = Guid.NewGuid();
+        var student = Client("Student", studentId);
+
+        // The admin opens sales: seller, a bank account, a plan, and "subscription required" for the product.
+        (await admin.PutAsJsonAsync("/api/billing/v1/admin/seller", new { title = "TEST Satıcı Ltd.", address = "Bir adres", taxOffice = "Daire",
+            taxNumber = "1234567890", email = "satici@example.invalid", phone = "0212" })).EnsureSuccessStatusCode();
+        (await admin.PostAsJsonAsync("/api/billing/v1/admin/bank-accounts", new { bankName = "Test Bankası", accountHolder = "TEST Satıcı Ltd.",
+            iban = "TR330006100519786457841326", isActive = true, sortOrder = 1 })).EnsureSuccessStatusCode();
+        (await admin.PutAsJsonAsync($"/api/billing/v1/admin/products/{BillingSeed.SpeedReading}/settings",
+            new { requireSubscription = true, bankTransferApproval = "Manual" })).EnsureSuccessStatusCode();
+        var products = await admin.GetFromJsonAsync<JsonElement>("/api/billing/v1/admin/products");
+        var entitlementId = products.EnumerateArray().Single(item => item.GetProperty("code").GetString() == "speed-reading")
+            .GetProperty("entitlements").EnumerateArray().Single(item => item.GetProperty("key").GetString() == "speed-reading.student").GetProperty("id").GetString();
+        var plan = await (await admin.PostAsJsonAsync("/api/billing/v1/admin/plans", new { name = "TEST Aylık", buyerType = "Individual", price = 200,
+            durationDays = 30, trialDays = 0, isContactOnly = false, isActive = true, isPublic = true, sortOrder = 1,
+            entitlements = new[] { new { entitlementId, holder = "Buyer" } } })).Content.ReadFromJsonAsync<JsonElement>();
+        var planId = plan.GetProperty("id").GetString();
+
+        // The buyer reads the documents, orders, and says the money is sent, with a receipt.
+        var documents = await student.GetFromJsonAsync<JsonElement>($"/api/billing/v1/documents?planId={planId}&buyerName=Deneme%20%C3%96%C4%9Frenci");
+        var version = documents.GetProperty("version").GetString();
+        Assert.Contains("MESAFELİ SATIŞ SÖZLEŞMESİ", documents.GetProperty("distanceSales").GetString());
+        var refused = await student.PostAsJsonAsync("/api/billing/v1/orders", new { planId, buyerName = "Deneme Öğrenci" });
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains("Billing.DocumentsNotAccepted", await refused.Content.ReadAsStringAsync());
+        var order = await (await student.PostAsJsonAsync("/api/billing/v1/orders", new { planId, documentsVersion = version, buyerName = "Deneme Öğrenci" }))
+            .Content.ReadFromJsonAsync<JsonElement>();
+        var orderId = order.GetProperty("id").GetString();
+        Assert.Equal("Pending", order.GetProperty("status").GetString());
+        Assert.StartsWith("EDU-", order.GetProperty("paymentCode").GetString());
+
+        using var form = new MultipartFormDataContent { { new StringContent("Gönderdim"), "note" } };
+        var file = new ByteArrayContent("%PDF-1.7 test"u8.ToArray());
+        file.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        form.Add(file, "receipt", "dekont.pdf");
+        var paid = await student.PostAsync($"/api/billing/v1/orders/{orderId}/paid", form);
+        Assert.Equal(HttpStatusCode.OK, paid.StatusCode);
+        Assert.True((await paid.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("hasReceipt").GetBoolean());
+
+        // Another user sees nothing of it; a non-admin cannot review.
+        var stranger = Client("Student");
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync($"/api/billing/v1/orders/{orderId}/documents")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync($"/api/billing/v1/orders/{orderId}/receipt")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.DeleteAsync($"/api/billing/v1/orders/{orderId}")).StatusCode);
+        Assert.Equal("[]", await stranger.GetStringAsync("/api/billing/v1/orders"));
+        Assert.Equal(HttpStatusCode.Forbidden, (await student.PostAsJsonAsync($"/api/billing/v1/admin/orders/{orderId}/approve", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await student.GetAsync("/api/billing/v1/admin/orders")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client(null).GetAsync("/api/billing/v1/orders")).StatusCode);
+
+        // The admin's queue, the receipt, the approval.
+        var queue = await admin.GetFromJsonAsync<JsonElement>("/api/billing/v1/admin/orders?status=Pending&product=speed-reading");
+        Assert.Equal(orderId, queue.EnumerateArray().Single().GetProperty("order").GetProperty("id").GetString());
+        var receipt = await admin.GetAsync($"/api/billing/v1/admin/orders/{orderId}/receipt");
+        Assert.Equal("application/pdf", receipt.Content.Headers.ContentType?.MediaType);
+        var approved = await admin.PostAsync($"/api/billing/v1/admin/orders/{orderId}/approve", null);
+        Assert.Equal(HttpStatusCode.OK, approved.StatusCode);
+        var again = await admin.PostAsync($"/api/billing/v1/admin/orders/{orderId}/approve", null);
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode);
+
+        // "Aboneliğim" and the product's own question.
+        var mine = await student.GetFromJsonAsync<JsonElement>("/api/billing/v1/me?product=speed-reading");
+        Assert.Equal("speed-reading.student", mine.GetProperty("entitlements").EnumerateArray().Single().GetProperty("key").GetString());
+        Assert.True(mine.GetProperty("subscriptions").EnumerateArray().Single().GetProperty("isCurrent").GetBoolean());
+
+        var internalPath = $"/internal/billing/v1/entitlements?userId={studentId}&product=speed-reading";
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client(null).GetAsync(internalPath)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await admin.GetAsync(internalPath)).StatusCode);
+        using var wrong = new HttpRequestMessage(HttpMethod.Get, internalPath);
+        wrong.Headers.Add("X-Internal-Service-Key", new string('x', ServiceKey.Length));
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client(null).SendAsync(wrong)).StatusCode);
+        using var keyed = new HttpRequestMessage(HttpMethod.Get, internalPath);
+        keyed.Headers.Add("X-Internal-Service-Key", ServiceKey);
+        var access = await (await Client(null).SendAsync(keyed)).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(access.GetProperty("requireSubscription").GetBoolean());
+        Assert.Equal("speed-reading.student", access.GetProperty("entitlements").EnumerateArray().Single().GetProperty("key").GetString());
+
+        // Taking the approval back needs a reason and ends the access.
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.PostAsJsonAsync($"/api/billing/v1/admin/orders/{orderId}/reverse", new { note = "" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await admin.PostAsJsonAsync($"/api/billing/v1/admin/orders/{orderId}/reverse", new { note = "Ödeme bankadan geri döndü." })).StatusCode);
+        var after = await student.GetFromJsonAsync<JsonElement>("/api/billing/v1/me?product=speed-reading");
+        Assert.Empty(after.GetProperty("entitlements").EnumerateArray());
     }
 }
