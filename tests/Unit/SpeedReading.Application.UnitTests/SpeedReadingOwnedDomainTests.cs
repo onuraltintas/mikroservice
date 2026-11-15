@@ -979,7 +979,7 @@ public sealed class SpeedReadingOwnedDomainTests
             typeof(ISpeedReadingSeriesAccess),
             typeof(ISpeedReadingStudentProgram),
             typeof(ISpeedReadingStudentReading),
-            typeof(ISpeedReadingSubscription),
+            typeof(ISpeedReadingAccess),
             typeof(ISpeedReadingCms),
             typeof(ISpeedReadingVisualization),
             typeof(ISpeedReadingVocabulary),

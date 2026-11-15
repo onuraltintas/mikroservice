@@ -132,18 +132,15 @@ public sealed class SpeedReadingBillingAccessTests
     }
 
     [Fact]
-    public async Task Without_billing_the_products_own_records_decide_and_with_it_billing_does()
+    public async Task Without_billing_the_product_is_open_and_with_it_billing_decides()
     {
         var (disabled, untouched, _) = Create(enabled: false);
         disabled.Enabled.Should().BeFalse();
-        var answer = new UserAccessSummary(["hizliokuma", "kocluk"], true, true);
-        var own = System.Reflection.DispatchProxy.Create<ISpeedReadingSubscription, OwnRecords>();
-        ((OwnRecords)(object)own).Answer = answer;
-        (await new SpeedReadingAccess(disabled, own).GetAsync(User)).Should().BeSameAs(answer);
+        (await new SpeedReadingAccess(disabled).GetAsync(User)).Should().BeEquivalentTo(new UserAccessSummary(["hizliokuma"], true, false));
         untouched.Requests.Should().BeEmpty();
 
         var (enabled, billing, _) = Create();
-        (await new SpeedReadingAccess(enabled, own).GetAsync(User)).Should().BeEquivalentTo(new UserAccessSummary([], false, false));
+        (await new SpeedReadingAccess(enabled).GetAsync(User)).Should().BeEquivalentTo(new UserAccessSummary([], false, false));
         billing.Requests.Should().ContainSingle();
     }
 
@@ -159,12 +156,5 @@ public sealed class SpeedReadingBillingAccessTests
         public T Value { get; set; } = null!;
         protected override object? Invoke(System.Reflection.MethodInfo? targetMethod, object?[]? args) =>
             targetMethod?.Name == "get_Message" ? Value : throw new NotSupportedException(targetMethod?.Name);
-    }
-
-    public class OwnRecords : System.Reflection.DispatchProxy
-    {
-        public UserAccessSummary Answer { get; set; } = null!;
-        protected override object? Invoke(System.Reflection.MethodInfo? targetMethod, object?[]? args) =>
-            targetMethod?.Name == nameof(ISpeedReadingSubscription.GetMyAccessAsync) ? Task.FromResult(Answer) : throw new NotSupportedException(targetMethod?.Name);
     }
 }

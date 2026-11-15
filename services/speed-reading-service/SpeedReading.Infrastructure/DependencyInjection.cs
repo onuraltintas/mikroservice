@@ -78,18 +78,6 @@ public static class DependencyInjection
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
         services.AddSingleton<ISpeedReadingCmsMediaStorage, LocalCmsMediaStorage>();
 
-        var iyzicoOptions = configuration
-            .GetSection(IyzicoOptions.SectionName)
-            .Get<IyzicoOptions>()
-            ?? new IyzicoOptions();
-        iyzicoOptions.ApplyEnvironmentOverrides(configuration);
-        services.AddSingleton(iyzicoOptions);
-        services.AddHttpClient<ISpeedReadingPaymentProvider, IyzicoPaymentProvider>(client =>
-        {
-            client.BaseAddress = new Uri(iyzicoOptions.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(20);
-        });
-
         services.AddSingleton<ISpeedReadingReadingTextExporter, ReadingTextExportService>();
         services.AddScoped<ISpeedReadingDataContext>(serviceProvider =>
             serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>());
@@ -108,17 +96,6 @@ public static class DependencyInjection
                     .CreateProtector("EduPlatform.SpeedReading.NewsletterTokens.v1"),
                 serviceProvider.GetRequiredService<TimeProvider>(),
                 configuration["PublicApp:BaseUrl"] ?? "https://masterhizliokuma.com"));
-        services.AddScoped<ISpeedReadingSubscription>(serviceProvider =>
-            new LegacySpeedReadingSubscription(
-                serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
-                serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>(),
-                serviceProvider.GetRequiredService<ISpeedReadingPaymentProvider>(),
-                serviceProvider.GetRequiredService<IyzicoOptions>(),
-                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
-        services.AddScoped<ISpeedReadingSales>(serviceProvider =>
-            new SpeedReadingSalesService(
-                serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
-                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
         services.AddScoped<ISpeedReadingNotifications, LegacySpeedReadingNotifications>();
         services.AddScoped<ISpeedReadingAnnouncements, LegacySpeedReadingAnnouncements>();
         services.AddScoped<ISpeedReadingEmailTemplates, LegacySpeedReadingEmailTemplates>();
