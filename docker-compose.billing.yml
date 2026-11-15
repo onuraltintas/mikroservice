@@ -79,5 +79,10 @@ services:
       - Billing__Enabled=true
       - Services__BillingService=http://billing-service:8080
 
+  # An account erasure waits for billing's answer too.
+  identity-service:
+    environment:
+      - Billing__Enabled=true
+
 volumes:
   billing_data:

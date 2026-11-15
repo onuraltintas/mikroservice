@@ -72,9 +72,20 @@ public sealed record DataSubjectRequestPageDto(
 
 public static class DataErasureAssessmentScopePolicy
 {
-    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope) => scope switch
+    /// <summary>
+    /// The billing service ("Abonelik ve Ödeme") runs only where the deployment enables it (Billing:Enabled); there an
+    /// account is not erased until billing has answered too. Set once at start-up.
+    /// </summary>
+    public static bool BillingEnabled { get; set; }
+
+    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope) => RequiredServices(scope, BillingEnabled);
+
+    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope, bool billingEnabled) => scope switch
     {
-        PersonalDataScope.Account => ["Coaching", "Notification", "SpeedReading", "CourseManagement"],
+        // A product-only request leaves the account, and so its payments and subscriptions, in place: billing is not asked.
+        PersonalDataScope.Account => billingEnabled
+            ? ["Coaching", "Notification", "SpeedReading", "CourseManagement", "Billing"]
+            : ["Coaching", "Notification", "SpeedReading", "CourseManagement"],
         PersonalDataScope.Coaching => ["Coaching"],
         PersonalDataScope.SpeedReading => ["SpeedReading"],
         _ => throw new ArgumentOutOfRangeException(nameof(scope))
