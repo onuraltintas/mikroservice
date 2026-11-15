@@ -23,6 +23,7 @@ interface StudyReport {
       source: string; examDate: string; score: number; targetAttainmentPercentage: number; remainingScore: number; targetReached: boolean }[] } }[];
 }
 
+import { CoachingPlanningPermissionService } from '../../../core/services/coaching-planning-permission.service';
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
   styles: [`
     :host-context(staff-coaching-study) { display: block; margin-top: 1.25rem; min-width: 0; }
@@ -51,6 +52,7 @@ interface StudyReport {
       <p *ngIf="error()" role="alert" class="text-sm text-red-600">{{ error() }}</p>
       <div *ngIf="report() as data" aria-live="polite">
         <p class="text-sm text-slate-500">{{ data.fromDate | date:'dd.MM.yyyy' }} – {{ data.toDate | date:'dd.MM.yyyy' }}</p>
+        <p *ngIf="partialPlanEnd() as end" class="mt-2 text-sm" role="note" data-testid="partial-plan-note">{{ adminStudentId || staffStudentId ? 'Öğrencinin yayındaki planı' : 'Yayındaki planın' }} yalnız {{ end | date:'dd.MM.yyyy' }} tarihine kadar hazırlandı. Bu rapordaki plan rakamları o plana göredir; sınava kadar olan bütün konuları göstermez.</p>
         <p *ngIf="data.reason === 'NoScheduledTasks'" class="mt-3">Bu döneme planlanmış çalışma yok. Başarı oranı hesaplanmadı.</p>
         <p>Plan yükü planlanan tarihlere, kaydedilen süre ve sorular fiili çalışma günlerine göre hesaplanır.</p><p *ngIf="data.legacyDateActualMinutes != null">{{data.legacyDateActualMinutes}} dakika eski kaydın sabitlenmiş plan tarihine aittir; fiili tarihi bilinmiyor.</p><dl *ngIf="data.scheduledTasks > 0 || data.actualMinutes != null" class="mt-4 grid gap-4 sm:grid-cols-3">
           <div><dt>Tamamlanan çalışma</dt><dd class="text-xl font-semibold">{{ data.completedTasks }} / {{ data.scheduledTasks }} · {{data.completionPercentage == null ? 'Oran yok' : '%' + data.completionPercentage}}</dd></div>
@@ -133,6 +135,7 @@ export class StudentStudyReportComponent implements OnChanges {
   private request?: Subscription;
   ngOnChanges() { this.request?.unsubscribe(); this.report.set(null); this.previousReport.set(null); this.error.set(null); this.busy.set(false); if (this.autoWeekly) this.useLastWeek(); }
   private readonly http = inject(HttpClient);
+  private readonly permissions = inject(CoachingPlanningPermissionService);
   private readonly destroyRef = inject(DestroyRef);
   readonly report = signal<StudyReport | null>(null);
   readonly previousReport = signal<StudyReport | null>(null);
@@ -161,8 +164,18 @@ export class StudentStudyReportComponent implements OnChanges {
       : reason === 'SubjectTargetNotComparable' ? 'Ders hedefi toplam sınav puanıyla karşılaştırılamaz.'
       : 'Otomatik karşılaştırma için hedef puanı, sınav türü ve puan ölçeğini birlikte belirle.';
   }
+  /** User decision 15.11.2026: a plan made for a week (or up to a date): the plan figures below count only that plan. */
+  readonly partialPlanEnd = signal<string | null>(null);
+  private loadPlanSpan() {
+    this.partialPlanEnd.set(null);
+    // The admin view has no planning endpoint; its report stands without the note.
+    if (this.adminStudentId) return;
+    (this.staffStudentId ? this.permissions.forStudent(this.staffStudentId) : this.permissions.own()).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: state => this.partialPlanEnd.set(state.partialPlanEnd ?? null), error: () => undefined });
+  }
   load() {
     if (this.busy()) return;
+    this.loadPlanSpan();
     this.report.set(null); this.previousReport.set(null); this.error.set(null);
     const from = this.parseDate(this.fromDate), to = this.parseDate(this.toDate);
     if (from === null || to === null || to < from || to - from > 365 * 86400000) {

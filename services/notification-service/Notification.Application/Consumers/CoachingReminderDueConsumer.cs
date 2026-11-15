@@ -23,8 +23,10 @@ public sealed class CoachingReminderDueConsumer(ICoachingNotificationDispatcher 
         }
         if (reminder.Kind == "PlanEnding")
             // User decision 15.11.2026: a plan made for a week (or up to a chosen date) is ending; whoever made it is told.
+            // A teacher's reminder carries the student's name (SubjectTitle); the student's own does not.
             return dispatcher.SendAsync(reminder.ReminderId, [reminder.RecipientUserId], "Çalışma planı bitiyor",
-                "Hazırladığın çalışma planı bitmek üzere ve devamı henüz hazır değil. Plan sayfasındaki \"Gelecek haftayı ekle\" ile devamını hazırlayabilirsin.",
+                (string.IsNullOrWhiteSpace(reminder.SubjectTitle) ? "Hazırladığın çalışma planı" : $"{reminder.SubjectTitle.Trim()} için hazırladığın çalışma planı")
+                    + " bitmek üzere ve devamı henüz hazır değil. Plan sayfasındaki \"Gelecek haftayı ekle\" ile devamını hazırlayabilirsin.",
                 "StudyPlanEndingReminder", reminder.SourceId.ToString(), context.CancellationToken);
         return dispatcher.SendAsync(reminder.ReminderId, [reminder.RecipientUserId],
             overdue ? "Geciken çalışmaların var" : fee ? "Koçluk ödeme hatırlatması" : study ? "Bugünkü çalışma planın" : "Yaklaşan koçluk seansı",

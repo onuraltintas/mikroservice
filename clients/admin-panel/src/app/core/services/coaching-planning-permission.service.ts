@@ -7,7 +7,9 @@ import { environment } from '../../../environments/environment';
  * User decision 15.11.2026: a student with an active teacher makes or changes her own plan only when the teacher allows it
  * (off by default); without a teacher she plans freely. studentMayPlan is the outcome of the two.
  */
-export interface PlanningPermission { hasTeacher: boolean; allowedByTeacher: boolean; studentMayPlan: boolean }
+export interface PlanningPermission { hasTeacher: boolean; allowedByTeacher: boolean; studentMayPlan: boolean;
+  /** The plan in force covers only part of the way to the exam and ends on this day (yyyy-MM-dd); else null. */
+  partialPlanEnd?: string | null }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingPlanningPermissionService {
