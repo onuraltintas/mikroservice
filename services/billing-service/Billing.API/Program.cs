@@ -61,6 +61,9 @@ builder.Services.AddMassTransit(x =>
         options.UseBusOutbox();
         options.QueryDelay = TimeSpan.FromSeconds(builder.Configuration.GetValue("Billing:OutboxQueryDelaySeconds", 1));
     });
+    // Account erasure: Identity asks every service what it holds, then tells it to erase.
+    x.AddConsumer<BillingErasureAssessmentRequestedConsumer>();
+    x.AddConsumer<BillingErasureExecutionRequestedConsumer>();
     x.AddConfigureEndpointsCallback((context, _, endpoint) =>
     {
         endpoint.UseMessageRetry(retry => retry.Exponential(

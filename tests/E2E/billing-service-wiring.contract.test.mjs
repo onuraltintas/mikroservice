@@ -268,3 +268,14 @@ test('the products keep no subscription, payment or sales code of their own', ()
   const speedReading = read('services/speed-reading-service/SpeedReading.API/Controllers/SubscriptionsController.cs');
   assert.doesNotMatch(speedReading, /HttpPost|HttpPut|HttpDelete/, 'Hızlı Okuma only answers who has access.');
 });
+
+test('billing takes part in an account erasure, and Identity waits for it only where billing runs', () => {
+  const program = read('services/billing-service/Billing.API/Program.cs');
+  assert.match(program, /AddConsumer<BillingErasureAssessmentRequestedConsumer>/);
+  assert.match(program, /AddConsumer<BillingErasureExecutionRequestedConsumer>/);
+  const policy = read('services/identity-service/Identity.Application/DataSubjectRequests/DataSubjectRequestUseCases.cs');
+  assert.match(policy, /billingEnabled\s*\n?\s*\? \["Coaching", "Notification", "SpeedReading", "CourseManagement", "Billing"\]/);
+  assert.match(read('services/identity-service/Identity.API/Program.cs'), /BillingEnabled = builder\.Configuration\.GetValue\("Billing:Enabled", false\)/);
+  for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
+    assert.match(read(file), /identity-service:\s*\n\s+environment:\s*\n\s+-? ?Billing__Enabled[:=]\s*"?true/, file);
+});
