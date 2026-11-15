@@ -6,6 +6,7 @@ using Billing.Infrastructure;
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
+using EduPlatform.Shared.Security.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,11 @@ if (migrationOnly)
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IBillingCatalog, BillingCatalog>();
+builder.Services.AddScoped<IBillingOrders, BillingOrders>();
+builder.Services.AddScoped<IBillingEvents, MassTransitBillingEvents>();
+// Product services ask for entitlements with the shared service key; there is no fallback value.
+InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
+if (builder.Configuration.GetValue("Billing:RunWorkers", true)) builder.Services.AddHostedService<PendingOrderExpiryWorker>();
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Billing");
 
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? builder.Configuration["RabbitMQ:Host"];
@@ -77,6 +83,8 @@ builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddAuthorization(options =>
 {
     // The whole "Abonelik ve Ödeme" section belongs to the system admin (user decision 14.11.2026: no finer roles).
+    options.AddPolicy(BillingPolicies.User, policy => policy.RequireAuthenticatedUser()
+        .RequireAssertion(context => Guid.TryParse(context.User.FindFirstValue("sub"), out var id) && id != Guid.Empty));
     options.AddPolicy(BillingPolicies.Admin, policy => policy.RequireAuthenticatedUser()
         .RequireRole("SystemAdmin")
         .RequireAssertion(context => Guid.TryParse(context.User.FindFirstValue("sub"), out var id) && id != Guid.Empty));
@@ -91,6 +99,7 @@ app.UseAuthorization();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 app.MapBillingCatalogEndpoints();
+app.MapBillingOrderEndpoints();
 app.Run();
 
 public partial class Program { }

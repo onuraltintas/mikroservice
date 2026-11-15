@@ -50,6 +50,37 @@ public static partial class BillingRules
         return null;
     }
 
+    /// <summary>A pending order waits this long for its payment, then drops (carried over from Koçluk).</summary>
+    public const int PendingOrderDays = 14;
+    public const int MaxReceiptBytes = 5 * 1024 * 1024;
+    public const string PaymentCodePrefix = "EDU-";
+    /// <summary>No 0/O, 1/I/L: the code is typed by hand into a bank's description field.</summary>
+    public const string PaymentCodeAlphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+    public const int PaymentCodeLength = 6;
+
+    /// <summary>EDU-7K4Q2M: short enough to type, 31^6 (about 887 million) values.</summary>
+    public static string NewPaymentCode(Func<int, int> nextIndex) =>
+        PaymentCodePrefix + string.Concat(Enumerable.Range(0, PaymentCodeLength).Select(_ => PaymentCodeAlphabet[nextIndex(PaymentCodeAlphabet.Length)]));
+
+    /// <summary>The content type of a receipt by its first bytes (PDF, JPEG, PNG); null for anything else.</summary>
+    public static string? ReceiptContentType(ReadOnlySpan<byte> content)
+    {
+        if (content.StartsWith("%PDF-"u8)) return "application/pdf";
+        if (content.StartsWith(new byte[] { 0xFF, 0xD8, 0xFF })) return "image/jpeg";
+        if (content.StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A })) return "image/png";
+        return null;
+    }
+
+    /// <summary>
+    /// When a new paid period starts and ends: right away, or on the day the running subscription ends, so a renewal
+    /// never loses days.
+    /// </summary>
+    public static (DateTime StartsAt, DateTime EndsAt) NextPeriod(DateTime now, DateTime? runningUntil, int durationDays)
+    {
+        var start = runningUntil is { } end && end > now ? end : now;
+        return (start, start.AddDays(durationDays));
+    }
+
     /// <summary>A plan can be bought online when it has a price and is not a "contact us" plan.</summary>
     public static bool CanBeOrdered(decimal price, bool isContactOnly) => price > 0 && !isContactOnly;
 

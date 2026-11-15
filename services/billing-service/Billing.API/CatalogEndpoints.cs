@@ -6,6 +6,8 @@ namespace Billing.API;
 public static class BillingPolicies
 {
     public const string Admin = "BillingAdmin";
+    /// <summary>Any signed-in user: a buyer manages only their own orders.</summary>
+    public const string User = "BillingUser";
 }
 
 /// <summary>

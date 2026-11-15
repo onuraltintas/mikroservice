@@ -70,3 +70,29 @@ test('the image runs as the non-root app user and CI builds, tests and checks it
   assert.match(workflow, /has-pending-model-changes \\\s+--project services\/billing-service\/Billing\.Infrastructure\/Billing\.Infrastructure\.csproj/);
   assert.match(workflow, /Validate the optional Billing overlays/);
 });
+
+test('buyers reach only their own orders, reviews are the admin\'s, and the entitlement query stays inside the network', () => {
+  const endpoints = read('services/billing-service/Billing.API/OrderEndpoints.cs');
+  assert.match(endpoints, /MapGroup\("\/api\/billing\/v1"\)\.RequireAuthorization\(BillingPolicies\.User\)/);
+  assert.match(endpoints, /MapGroup\("\/api\/billing\/v1\/admin"\)\.RequireAuthorization\(BillingPolicies\.Admin\)/);
+  for (const review of ['approve', 'reject', 'reverse'])
+    assert.match(endpoints, new RegExp(`admin\\.MapPost\\("/orders/\\{id:guid\\}/${review}"`), `${review} is an admin endpoint`);
+  // The gateway routes /api/billing only; the internal path is outside it and asks for the shared service key.
+  assert.match(endpoints, /app\.MapGet\("\/internal\/billing\/v1\/entitlements"[\s\S]*?InternalServiceAuthentication\.IsValid\(request, configuration\)[\s\S]*?Results\.Unauthorized\(\)/);
+  assert.equal((endpoints.match(/\bapp\.Map(Get|Post|Put|Delete)\(/g) ?? []).length, 1, 'Only the internal query is mapped outside the two groups.');
+  const proxy = JSON.parse(read('services/api-gateway/appsettings.json')).ReverseProxy;
+  for (const [name, route] of Object.entries(proxy.Routes))
+    assert.doesNotMatch(route.Match?.Path ?? '', /^\/internal/i, `${name} must not expose an internal path.`);
+  assert.match(read('services/billing-service/Billing.API/Program.cs'), /InternalServiceAuthentication\.ValidateConfiguration\(builder\.Configuration\)/);
+  for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
+    assert.match(read(file), /INTERNAL_SERVICE_API_KEY: \$\{INTERNAL_SERVICE_API_KEY:\?/, file);
+});
+
+test('an approval is single-shot and a payment is never deleted', () => {
+  const orders = read('services/billing-service/Billing.Infrastructure/BillingOrders.cs');
+  assert.match(orders, /FROM billing\.orders WHERE \\"Id\\" = \{id\} FOR UPDATE/);
+  assert.doesNotMatch(orders, /db\.Payments\.Remove|Payments[\s\S]{0,80}ExecuteDeleteAsync/);
+  const context = read('services/billing-service/Billing.Infrastructure/BillingDbContext.cs');
+  assert.match(context, /HasIndex\(item => item\.OrderId\)\.IsUnique\(\);/, 'An order is paid once.');
+  assert.match(context, /HasDatabaseName\("IX_orders_one_pending_per_plan"\)/);
+});
