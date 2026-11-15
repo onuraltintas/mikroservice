@@ -34,6 +34,8 @@ if (string.Equals(startupEnvironment, "Development", StringComparison.OrdinalIgn
 var builder = WebApplication.CreateBuilder(args);
 // Where the billing service runs, an account erasure also waits for its answer.
 Identity.Application.DataSubjectRequests.DataErasureAssessmentScopePolicy.BillingEnabled = builder.Configuration.GetValue("Billing:Enabled", false);
+// An account erasure waits for Kurs Yönetimi only where that product is installed.
+Identity.Application.DataSubjectRequests.DataErasureAssessmentScopePolicy.CourseManagementEnabled = builder.Configuration.GetValue("CourseManagement:Enabled", false);
 var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
 

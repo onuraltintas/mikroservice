@@ -78,14 +78,22 @@ public static class DataErasureAssessmentScopePolicy
     /// </summary>
     public static bool BillingEnabled { get; set; }
 
-    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope) => RequiredServices(scope, BillingEnabled);
+    /// <summary>
+    /// Rehearsal 15.11.2026: an account erasure waited for Kurs Yönetimi although that product is not installed, so it could
+    /// never complete. Identity waits for it only where the deployment runs it (<c>CourseManagement:Enabled</c>, the switch
+    /// the gateway and the notification service already use; the host sets this at start). True here so the rule reads as
+    /// before wherever no host has set it.
+    /// </summary>
+    public static bool CourseManagementEnabled { get; set; } = true;
 
-    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope, bool billingEnabled) => scope switch
+    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope) => RequiredServices(scope, BillingEnabled, CourseManagementEnabled);
+
+    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope, bool billingEnabled, bool courseManagementEnabled = true) => scope switch
     {
         // A product-only request leaves the account, and so its payments and subscriptions, in place: billing is not asked.
-        PersonalDataScope.Account => billingEnabled
-            ? ["Coaching", "Notification", "SpeedReading", "CourseManagement", "Billing"]
-            : ["Coaching", "Notification", "SpeedReading", "CourseManagement"],
+        PersonalDataScope.Account => new[] { "Coaching", "Notification", "SpeedReading" }
+            .Concat(courseManagementEnabled ? ["CourseManagement"] : Array.Empty<string>())
+            .Concat(billingEnabled ? ["Billing"] : Array.Empty<string>()).ToArray(),
         PersonalDataScope.Coaching => ["Coaching"],
         PersonalDataScope.SpeedReading => ["SpeedReading"],
         _ => throw new ArgumentOutOfRangeException(nameof(scope))
