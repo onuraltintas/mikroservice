@@ -1,8 +1,8 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { CoachingBankTransferRequest, CoachingBankTransferRequestCreate, CoachingSubscriptionAccess } from '../../../core/services/coaching-management.service';
+import { CoachingSubscriptionAccess } from '../../../core/services/coaching-management.service';
 import { CoachingSession, ExamResult, StudentAssignment, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
 import { ParentAdherenceWeek, ParentCoachingWeek, ParentLinkProduct, ParentSpeedReadingOverview, ParentWeeklyReview } from './parent-model';
 
@@ -98,17 +98,6 @@ export class CoachingParentService {
   getAccess(studentId: string): Observable<CoachingSubscriptionAccess> {
     return this.http.get<{ data: CoachingSubscriptionAccess }>(`${this.child(studentId)}/access`).pipe(map(r => r.data));
   }
-  getTransfers(studentId: string): Observable<CoachingBankTransferRequest[]> {
-    return this.http.get<{ data: CoachingBankTransferRequest[] }>(`${this.child(studentId)}/bank-transfer-requests`).pipe(map(r => r.data));
-  }
-  /** A notice for the child; reCAPTCHA is added by the auth interceptor. */
-  sendTransfer(studentId: string, request: CoachingBankTransferRequestCreate): Observable<CoachingBankTransferRequest> {
-    return this.http.post<{ data: CoachingBankTransferRequest }>(`${this.child(studentId)}/bank-transfer-requests`, {
-      ...request, paymentReference: request.paymentReference.trim(), payerName: request.payerName?.trim() || null, note: request.note?.trim() || null
-    }, { headers: new HttpHeaders({ 'Idempotency-Key': globalThis.crypto?.randomUUID?.() ?? `parent-${Date.now()}-${Math.random().toString(36).slice(2)}` }) })
-      .pipe(map(r => r.data));
-  }
-
   private parentChild(studentId: string): string { return `${this.api}/coaching/parents/me/children/${encodeURIComponent(studentId)}`; }
   private child(studentId: string): string { return `${this.api}/coaching/subscriptions/children/${encodeURIComponent(studentId)}`; }
   private page<T>(path: string, page = 1): Observable<ParentChildPage<T>> {

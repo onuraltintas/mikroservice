@@ -82,8 +82,8 @@ describe('Profil ve ayarlar sections', () => {
   });
 });
 
-@Component({ selector: 'app-coaching-subscription', standalone: true, template: '<h2>Abonelik durumu</h2><h2>Havale bildirimleri</h2><ng-content select="[fees]" /><h2>Faturalar</h2>' })
-class SubscriptionStub {}
+@Component({ selector: 'app-my-subscription', standalone: true, template: '<h2>Aboneliğim</h2><h2>Ödeme geçmişi</h2>' })
+class SubscriptionStub { @Input() product = ''; }
 @Component({ selector: 'app-coaching-finance', standalone: true, template: 'ücret listesi' })
 class FinanceStub { @Input() mode = ''; }
 
@@ -96,9 +96,11 @@ describe('Ödemeler page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('shows the four sections in order on one page', () => {
+  it('shows the shared Aboneliğim page for Koçluk and the fees on one page', () => {
     const el = render(true);
-    expect([...el.querySelectorAll('h2')].map(h => h.textContent?.trim())).toEqual(['Abonelik durumu', 'Havale bildirimleri', 'Ücretler', 'Faturalar']);
+    expect(el.querySelector('h1')?.textContent?.trim()).toBe('Ödemeler');
+    expect([...el.querySelectorAll('h2')].map(h => h.textContent?.trim())).toEqual(['Aboneliğim', 'Ödeme geçmişi', 'Ücretler']);
+    expect(el.querySelector('app-my-subscription')?.getAttribute('product')).toBe('coaching');
     expect(el.querySelector('app-coaching-finance')).not.toBeNull();
   });
 
@@ -109,7 +111,7 @@ describe('Ödemeler page', () => {
 
   it('leaves out Ücretler when the student has no coaching fees', () => {
     const el = render(false);
-    expect([...el.querySelectorAll('h2')].map(h => h.textContent?.trim())).toEqual(['Abonelik durumu', 'Havale bildirimleri', 'Faturalar']);
+    expect([...el.querySelectorAll('h2')].map(h => h.textContent?.trim())).toEqual(['Aboneliğim', 'Ödeme geçmişi']);
   });
 });
 

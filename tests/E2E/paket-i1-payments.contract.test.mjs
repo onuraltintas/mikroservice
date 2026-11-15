@@ -50,7 +50,6 @@ test('no payment notice is offered while the seller details are missing', async 
   const checkout = await read('clients/admin-panel/shared/coaching-checkout.component.ts');
   assert.match(checkout, /data-testid="seller-not-ready"/);
   for (const path of ['clients/admin-panel/src/app/features/coaching-portal/pages/coaching-subscription.component.ts',
-    'clients/admin-panel/src/app/features/coaching-portal/parent/parent-payments.component.ts',
     'clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-subscription.component.ts'])
     assert.match(await read(path), /\[sellerReady\]="settings\(\)\?\.sellerInfoComplete !== false"/, path);
   assert.match(await read('clients/admin-panel/src/app/features/dashboard/pages/coaching-sales.ts'), /data-testid="seller-missing"/);

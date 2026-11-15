@@ -28,11 +28,9 @@ describe('auth reCAPTCHA interceptor', () => {
     expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/users', {}))).toBeNull();
   });
 
-  // Roadmap Y7: a parent's notice for the child is protected like the student's own.
-  it('protects a parent transfer notice for a child and nothing else under children', () => {
-    expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/coaching/subscriptions/children/child-1/bank-transfer-requests', {}))).toBe('coaching_eft_submit');
-    expect(getAuthRecaptchaAction(new HttpRequest('GET', '/api/coaching/subscriptions/children/child-1/bank-transfer-requests'))).toBeNull();
-    expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/coaching/subscriptions/children/child-1/access', {}))).toBeNull();
+  // A subscription is bought in the student's own account; there is no parent notice for a child any more.
+  it('knows no payment notice under children', () => {
+    expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/coaching/subscriptions/children/child-1/bank-transfer-requests', {}))).toBeNull();
   });
 
   it('protects student EFT with the Coaching CAPTCHA configuration and fresh tokens', async () => {

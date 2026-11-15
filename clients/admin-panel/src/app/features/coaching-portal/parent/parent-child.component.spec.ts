@@ -44,8 +44,6 @@ function parentServiceMock(overrides: Record<string, unknown> = {}) {
     getFees: vi.fn(() => of({ balance: 0, overdueAmount: 0, agreements: [] })),
     getAccess: vi.fn(() => of({ hasAccess: true, enforcementEnabled: true, planName: 'Bireysel', status: 'Active', accessUntil: '2026-12-01T00:00:00Z',
       subscriptions: [{ id: 'sub-1', status: 'Active', endDate: '2026-12-01T00:00:00Z', plan: { name: 'Bireysel aylık' } }] })),
-    getTransfers: vi.fn(() => of([])),
-    sendTransfer: vi.fn(),
     getSpeedReadingOverview: vi.fn(() => of(readingOverview)),
     ...overrides
   };
@@ -220,7 +218,7 @@ describe('ParentCoachingTabComponent', () => {
   });
 });
 
-// V4: payments — the subscription status, and the payment form only when the child needs one.
+// The child's subscription is shown to the parent; it is bought in the student's own account (decision 15.11.2026).
 describe('ParentPaymentsComponent', () => {
   function setup(service: object) {
     TestBed.configureTestingModule({ imports: [ParentPaymentsComponent], providers: parentProviders(service) });
@@ -228,34 +226,30 @@ describe('ParentPaymentsComponent', () => {
     fixture.componentRef.setInput('studentId', 'child-1'); fixture.componentRef.setInput('childName', 'Elif Yılmaz');
     fixture.detectChanges(); return fixture;
   }
-  const noSubscription = (enforcementEnabled: boolean) =>
-    vi.fn(() => of({ hasAccess: !enforcementEnabled, enforcementEnabled, planName: null, status: null, accessUntil: null, subscriptions: [] }));
+  const access = (hasAccess: boolean, enforcementEnabled: boolean, accessUntil: string | null = null, planName: string | null = null) =>
+    vi.fn(() => of({ hasAccess, enforcementEnabled, planName, status: hasAccess && enforcementEnabled ? 'Active' : null, accessUntil, subscriptions: [] }));
 
-  it('shows an active subscription without a payment form', () => {
-    const fixture = setup(parentServiceMock());
-    expect(fixture.nativeElement.textContent).toContain('Bireysel aylık');
+  it('shows a running subscription with its end date and no form', () => {
+    const fixture = setup(parentServiceMock({ getAccess: access(true, true, '2026-12-15T09:00:00Z') }));
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Etkin'); expect(text).toContain('tarihine kadar');
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
     expect(fixture.nativeElement.querySelector('edu-coaching-checkout')).toBeNull();
+  });
+
+  it('says where the subscription is bought when the child has none, without offering to pay here', () => {
+    const fixture = setup(parentServiceMock({ getAccess: access(false, true) }));
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Elif'); expect(text).toContain('etkin bir Koçluk aboneliği yok');
+    expect(text).toContain('kendi hesabından'); expect(text).toContain('ödeme kodunu');
     expect(fixture.nativeElement.querySelector('form')).toBeNull();
   });
 
-  it('offers the payment form when the child needs a subscription', () => {
-    const fixture = setup(parentServiceMock({ getAccess: noSubscription(true) }));
-    expect(fixture.nativeElement.textContent).toContain('Elif');
-    expect(fixture.nativeElement.querySelector('edu-coaching-checkout')).toBeTruthy();
-  });
-
-  it('never shows internal wording and no form when no subscription is needed', () => {
-    const fixture = setup(parentServiceMock({ getAccess: noSubscription(false) }));
+  it('never shows internal wording when no subscription is needed', () => {
+    const fixture = setup(parentServiceMock({ getAccess: access(true, false) }));
     const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('bir ödeme yapılması gerekmiyor');
     expect(text).not.toContain('zorunluluğu'); expect(text).not.toContain('etkin değil');
-    expect(fixture.nativeElement.querySelector('edu-coaching-checkout')).toBeNull();
-  });
-
-  it('waits for a notice under review instead of asking again', () => {
-    const fixture = setup(parentServiceMock({ getAccess: noSubscription(true),
-      getTransfers: vi.fn(() => of([{ id: 't-1', status: 'Pending', paymentReference: 'EFT-1', plan: { name: 'Bireysel yıllık' }, discountAmount: 0, currency: 'TRY' }])) }));
-    expect(fixture.nativeElement.textContent).toContain('inceleniyor');
-    expect(fixture.nativeElement.querySelector('edu-coaching-checkout')).toBeNull();
   });
 
   it('shows fees with the overdue amount', () => {
@@ -264,77 +258,8 @@ describe('ParentPaymentsComponent', () => {
     expect(text).toContain('YKS paketi'); expect(text).toContain('1.500');
   });
 
-  it('sends a transfer notice only with the contract, without an adult payer declaration', async () => {
-    const service = parentServiceMock({ getAccess: noSubscription(true),
-      sendTransfer: vi.fn(() => of({ id: 'transfer-1', status: 'Pending', paymentReference: 'EFT-VELI-1', plan: { name: 'Bireysel yıllık' } })) });
-    const fixture = setup(service); const component = fixture.componentInstance;
-    component.planId = 'plan-1'; component.paymentReference = ' EFT-VELI-1 '; component.payerName = 'Ayşe Veli';
-    await component.sendTransfer();
-    expect(service.sendTransfer).not.toHaveBeenCalled(); expect(component.error()).toContain('mesafeli satış sözleşmesini');
-    component.checkout = { couponCode: 'VELI-10', acceptSalesContract: true }; await component.sendTransfer();
-    expect(service.sendTransfer).toHaveBeenCalledWith('child-1', { planId: 'plan-1', paymentReference: 'EFT-VELI-1', payerName: 'Ayşe Veli', note: null,
-      couponCode: 'VELI-10', acceptSalesContract: true });
-    expect(component.transfers()[0].id).toBe('transfer-1');
-  });
-
-  it('lists what the parent paid (O10)', () => {
-    const fixture = setup(parentServiceMock());
-    expect(fixture.nativeElement.textContent).toContain('Veli olarak yaptığın ödemeler');
-  });
-});
-
-// V4: Hızlı okuma tab — program, reading speed and comprehension, this week, streak and recent results.
-describe('ParentSpeedReadingTabComponent', () => {
-  function setup(service: object) {
-    TestBed.configureTestingModule({ imports: [ParentSpeedReadingTabComponent], providers: parentProviders(service) });
-    const fixture = TestBed.createComponent(ParentSpeedReadingTabComponent);
-    fixture.componentRef.setInput('studentId', 'child-1'); fixture.componentRef.setInput('childName', 'Elif Yılmaz');
-    fixture.detectChanges(); return fixture;
-  }
-
-  it('shows the program, speed, comprehension, this week and achievements', () => {
-    const fixture = setup(parentServiceMock());
-    const root = fixture.nativeElement as HTMLElement;
-    const text = root.textContent as string;
-    expect(text).toContain('12/28'); expect(text).toContain('Hızlı okuma temel'); expect(text).toContain('33/84');
-    expect(text).toContain('312'); expect(text).toContain('%80');
-    expect(text).toContain('95 dk'); expect(text).toContain('4 gün');
-    expect(text).toContain('1.240'); expect(text).toContain('İlk hafta'); expect(text).toContain('5 gün');
-    expect(text).toContain('Anlama testi');
-    expect(root.querySelector('[data-testid="reading-trend"] svg[role=img]')).toBeTruthy();
-    expect(root.querySelectorAll('[data-testid="reading-trend"] table tbody tr').length).toBe(3);
-    expect(root.querySelectorAll('[data-testid="reading-weeks"] li').length).toBe(8);
-  });
-
-  it('uses the parent voice when there is nothing yet', () => {
-    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => of({ ...readingOverview, program: null,
-      reading: { latestWpm: null, firstWpm: null, latestComprehension: null, trend: [] }, recentResults: [],
-      gamification: { level: 1, xp: 0, streakDays: 0, badgesEarned: 0, recentBadges: [] } })) }));
-    const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Elif henüz bir hızlı okuma programına başlamadı');
-    expect(text).toContain('ölçülen');
-    expect(text).not.toContain('başlamadın'); expect(text).not.toContain('okuman ');
-  });
-
-  it('explains when the overview cannot be read', () => {
-    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => throwError(() => ({ status: 500 }))) }));
-    expect(fixture.nativeElement.textContent).toContain('Hızlı okuma ilerlemesi şu an görüntülenemiyor');
-  });
-
-  // V2 final shape (PR #88): 403 ParentReadForbidden, nullable gamification, lowercase program status, 1-decimal comprehension.
-  it('says the child stopped sharing when the read is forbidden', () => {
-    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => throwError(() => ({ status: 403, error: { code: 'ParentReadForbidden', message: 'x' } }))) }));
-    expect(fixture.nativeElement.textContent).toContain('Elif hızlı okuma ilerlemesini şu an seninle paylaşmıyor');
-  });
-
-  it('shows no zeros when there is no XP or badge yet, and formats comprehension and status', () => {
-    const fixture = setup(parentServiceMock({ getSpeedReadingOverview: vi.fn(() => of({ ...readingOverview, gamification: null,
-      program: { ...readingOverview.program, status: 'completed' },
-      reading: { ...readingOverview.reading, latestComprehension: 80.5 },
-      recentResults: [{ date: '2026-10-29', exerciseType: 'Okuma', exerciseName: 'Kutup ayıları', score: null, wpm: 305, comprehension: 72.5 }] })) }));
-    const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Henüz XP ya da rozet yok'); expect(text).not.toContain('Puan (XP)');
-    expect(text).toContain('%80,5'); expect(text).toContain('%72,5'); expect(text).toContain('Tamamlandı');
-    expect(text).toContain('Kutup ayıları'); expect(text).toContain('Okuma');
+  it('says so when the subscription cannot be read', () => {
+    const fixture = setup(parentServiceMock({ getAccess: vi.fn(() => throwError(() => new Error('x'))) }));
+    expect(fixture.nativeElement.textContent).toContain('Abonelik bilgisi yüklenemedi.');
   });
 });

@@ -240,3 +240,14 @@ test('a Hızlı Okuma student whose institution membership ends does not keep th
   const members = read('services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInstitutionMembersController.cs');
   assert.match(members, /!request\.IsActive && request\.Role == SpeedReadingInstitutionMemberRole\.Student\s*\n\s*&& billingSeats is not null\)\s*\{\s*await billingSeats\.ReleaseWhenLeavingAsync\(institutionId, userId, actorId, cancellationToken\);/);
 });
+
+test('Koçluk shows the shared Aboneliğim page; a subscription is bought in the student\'s own account', () => {
+  const student = read('clients/admin-panel/src/app/features/coaching-portal/pages/student-payments.component.ts');
+  assert.match(student, /<app-my-subscription product="coaching" \/>/);
+  const parent = read('clients/admin-panel/src/app/features/coaching-portal/parent/parent-payments.component.ts');
+  assert.doesNotMatch(parent, /<form|sendTransfer|edu-coaching-checkout/, 'The parent sees the child\'s subscription; there is no parent order (decision 15.11.2026).');
+  assert.doesNotMatch(read('clients/admin-panel/src/app/features/coaching-portal/parent/coaching-parent.service.ts'), /bank-transfer-requests/);
+  for (const page of ['coaching-teacher-subscription', 'coaching-institution-subscription'])
+    assert.match(read(`clients/admin-panel/projects/staff-portal/src/app/features/coaching/${page}.component.ts`), /<staff-my-subscription product="coaching"/, page);
+  assert.doesNotMatch(read('services/billing-service/Billing.Application/OrderContracts.cs'), /BeneficiaryUserId = null/, 'Orders are for the buyer or the buyer\'s institution.');
+});
