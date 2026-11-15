@@ -221,6 +221,8 @@ export class MySubscriptionController {
     // The contract carries the name: what was read is no longer what will be accepted.
     this.documents = null;
     this.accepted = false;
+    this.seatQuote = null;
+    this.seatAccepted = false;
     this.options.changed();
   }
 
@@ -367,7 +369,9 @@ export class MySubscriptionController {
   closeSeats(): void { this.pool = null; this.seatQuote = null; this.options.changed(); }
 
   async quoteSeats(): Promise<void> {
-    if (!this.pool || this.buyerName.trim().length < 3 || !(this.seatCount >= 1)) return;
+    if (!this.pool) return;
+    if (this.buyerName.trim().length < 3) { this.error = 'Sözleşme için adını ve soyadını yaz.'; this.options.changed(); return; }
+    if (!(this.seatCount >= 1)) { this.error = 'Ek koltuk sayısı en az 1 olmalı.'; this.options.changed(); return; }
     await this.run(async () => {
       this.seatQuote = await this.http.get<SeatQuote>(
         `${this.base}/subscriptions/${this.pool!.subscriptionId}/seat-quote?count=${Math.floor(this.seatCount)}&buyerName=${encodeURIComponent(this.buyerName.trim())}`);
@@ -474,6 +478,9 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         </p>
         @if (pool.extraSeatPrice !== null) {
           <div class="bill-form">
+            <label>Adın ve soyadın (sözleşmede yer alır)
+              <input type="text" maxlength="200" autocomplete="name" [value]="c.buyerName" (input)="c.setBuyerName($any($event.target).value)" />
+            </label>
             <label>Ek koltuk sayısı
               <input type="number" min="1" [value]="c.seatCount" (input)="c.setSeatCount($any($event.target).value)" />
             </label>
@@ -667,6 +674,7 @@ export const MY_SUBSCRIPTION_STYLES = `
 .bill-row:first-of-type { border-top: 0; }
 .bill-tag { display: inline-block; margin-left: .375rem; padding: .0625rem .5rem; border-radius: 999px; font-size: .75rem; background: #eef1f6; color: #36405a; }
 .bill-tag--ok { background: #dcf5e6; color: #14532d; }
+.bill-plan .bill-tag { justify-self: start; margin-left: 0; }
 .bill-alert { padding: .75rem 1rem; border-radius: .5rem; }
 .bill-alert--ok { background: #dcf5e6; color: #14532d; }
 .bill-alert--error { background: #fde8e8; color: #7f1d1d; }
