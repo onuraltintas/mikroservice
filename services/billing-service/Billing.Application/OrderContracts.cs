@@ -107,3 +107,50 @@ public interface IBillingOrders
     /// <summary>Drops pending orders whose waiting time is over; returns how many.</summary>
     Task<int> ExpirePendingOrdersAsync(CancellationToken cancellationToken = default);
 }
+
+public sealed record StatementPreview(IReadOnlyList<IReadOnlyList<string>> Rows, int TotalRows, StatementMapping? Suggested);
+
+public sealed record BankTransactionView(
+    Guid Id,
+    Guid BankAccountId,
+    string BankName,
+    DateTime BookedAt,
+    decimal Amount,
+    string Description,
+    string? Sender,
+    string? PaymentCode,
+    BankTransactionStatus Status,
+    Guid? OrderId,
+    /// <summary>The buyer and plan of the tied order, for the admin's eye.</summary>
+    string? OrderSummary,
+    string? Note);
+
+public sealed record StatementImportView(
+    Guid Id,
+    Guid BankAccountId,
+    string BankName,
+    string FileName,
+    DateTime UploadedAt,
+    int RowCount,
+    int AddedCount,
+    int DuplicateCount,
+    int MatchedCount,
+    int AutoApprovedCount);
+
+public sealed record StatementImportResult(StatementImportView Import, IReadOnlyList<BankTransactionView> Transactions);
+
+public sealed record TieTransactionRequest(Guid OrderId);
+
+/// <summary>Bank statements: upload, matching by payment code and amount, automatic approval per product (stage 3).</summary>
+public interface IBillingBankStatements
+{
+    /// <summary>The first rows of an uploaded file and the columns guessed from its header, before anything is stored.</summary>
+    StatementPreview Preview(string fileName, byte[] content);
+    Task<StatementImportResult> ImportAsync(Guid bankAccountId, string fileName, byte[] content, StatementMapping mapping, Guid actorId,
+        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<StatementImportView>> GetImportsAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BankTransactionView>> GetTransactionsAsync(BankTransactionStatus? status, CancellationToken cancellationToken = default);
+    /// <summary>An admin ties a line to a waiting order of the same amount and approves it. Null when either is unknown.</summary>
+    Task<BankTransactionView?> ApproveWithOrderAsync(Guid transactionId, Guid orderId, Guid actorId, CancellationToken cancellationToken = default);
+    Task<BankTransactionView?> SetIgnoredAsync(Guid transactionId, bool ignored, string? note, Guid actorId, CancellationToken cancellationToken = default);
+}

@@ -206,7 +206,15 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         return code is null ? views : views.Where(item => item.Order.ProductCodes.Contains(code)).ToArray();
     }
 
-    public async Task<AdminOrderView?> ApproveOrderAsync(Guid orderId, Guid actorId, string? note, CancellationToken cancellationToken = default)
+    public Task<AdminOrderView?> ApproveOrderAsync(Guid orderId, Guid actorId, string? note, CancellationToken cancellationToken = default) =>
+        ApproveAsync(orderId, actorId, note, null, cancellationToken);
+
+    /// <summary>
+    /// Approves a waiting order. <paramref name="actorId"/> null: a bank line matched by itself. With
+    /// <paramref name="bankTransactionId"/> the line is used up in the same transaction; without it, a line already
+    /// matched to the order is taken along, so the payment always shows the bank line it stands on.
+    /// </summary>
+    public async Task<AdminOrderView?> ApproveAsync(Guid orderId, Guid? actorId, string? note, Guid? bankTransactionId, CancellationToken cancellationToken = default)
     {
         var reviewNote = Note(note, required: false);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -215,12 +223,36 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         var now = Now;
         EnsurePending(order, now);
 
+        var line = (await (bankTransactionId is { } lineId
+            ? db.BankTransactions.FromSqlInterpolated($"SELECT * FROM billing.bank_transactions WHERE \"Id\" = {lineId} FOR UPDATE")
+            : db.BankTransactions.FromSqlInterpolated($"SELECT * FROM billing.bank_transactions WHERE \"OrderId\" = {order.Id} AND \"Status\" = 'Matched' ORDER BY \"BookedAt\" LIMIT 1 FOR UPDATE"))
+            .ToListAsync(cancellationToken)).SingleOrDefault();
+        if (bankTransactionId is not null)
+        {
+            if (line is null) return null;
+            if (line.Status == BankTransactionStatus.Approved || line.PaymentId is not null)
+                throw new BusinessRuleException("Billing.BankTransactionUsed", "Bu banka hareketi başka bir ödemede kullanıldı.");
+            if (line.Amount != order.Amount)
+                throw new BusinessRuleException("Billing.AmountMismatch", "Banka hareketinin tutarı sipariş tutarıyla aynı değil.");
+        }
+
         var payment = new Payment
         {
             Id = Guid.NewGuid(), OrderId = order.Id, Method = PaymentMethod.BankTransfer, Status = PaymentStatus.Approved,
-            Amount = order.Amount, Currency = order.Currency, ApprovedBy = actorId, ApprovedAt = now
+            Amount = order.Amount, Currency = order.Currency, ApprovedBy = actorId, ApprovedAt = now, BankTransactionId = line?.Id
         };
         db.Payments.Add(payment);
+        // The payment row goes in first: the bank line points at it.
+        await db.SaveChangesAsync(cancellationToken);
+        if (line is not null)
+        {
+            line.Status = BankTransactionStatus.Approved;
+            line.OrderId = order.Id;
+            line.PaymentId = payment.Id;
+            line.ReviewedBy = actorId;
+            line.ReviewedAt = now;
+            line.Note = null;
+        }
 
         var subscription = (await db.Subscriptions.FromSqlInterpolated(
                 $"SELECT * FROM billing.subscriptions WHERE \"AccountId\" = {order.AccountId} AND \"PlanId\" = {order.PlanId} AND \"BeneficiaryUserId\" = {order.BeneficiaryUserId} FOR UPDATE")

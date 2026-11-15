@@ -277,6 +277,9 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
     {
         var account = await db.BankAccounts.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (account is null) return false;
+        // Statements and their lines are financial records of this account; it can be closed, not removed.
+        if (await db.BankStatementImports.AnyAsync(item => item.BankAccountId == id, cancellationToken))
+            throw new BusinessRuleException("Billing.BankAccountInUse", "Bu hesaba ekstre yüklendi; silinemez. Ödeme sayfasından kaldırmak için hesabı kapatın.");
         db.BankAccounts.Remove(account);
         await db.SaveChangesAsync(cancellationToken);
         return true;
