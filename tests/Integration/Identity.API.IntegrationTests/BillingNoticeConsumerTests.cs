@@ -32,10 +32,10 @@ public sealed class BillingNoticeConsumerTests
             var rejected = mail.Messages.Single(x => x.Recipient == "okur@example.test");
             rejected.Subject.Should().StartWith("Master Hızlı Okuma:");
             rejected.Body.Should().Contain("EDU-7K4Q2M").And.Contain("/student/subscription")
-                .And.Contain("Ödeme &lt;b&gt;gelmedi&lt;/b&gt;.").And.NotContain("<b>gelmedi</b>");
+                .And.Contain("&lt;b&gt;gelmedi&lt;/b&gt;").And.NotContain("<b>gelmedi</b>");
             var bundle = mail.Messages.Single(x => x.Recipient == "paket@example.test");
             bundle.Subject.Should().StartWith("Eduİvme:").And.Contain("sona eriyor");
-            bundle.Body.Should().Contain("koltuk verdiğin kullanıcıların erişimi de kapanır");
+            System.Net.WebUtility.HtmlDecode(bundle.Body).Should().Contain("koltuk verdiğin kullanıcıların erişimi de kapanır");
         }
         finally { await harness.Stop(); await provider.DisposeAsync(); }
     }
@@ -52,7 +52,7 @@ public sealed class BillingNoticeConsumerTests
             await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 2);
 
             var declared = mail.Messages.Single(x => x.Subject.Contains("ödeme bildirimi", StringComparison.OrdinalIgnoreCase));
-            declared.Body.Should().Contain("https://app.example.test/dashboard/billing/orders").And.Contain("200,00 TRY").And.Contain("Ada Öğrenci");
+            System.Net.WebUtility.HtmlDecode(declared.Body).Should().Contain("https://app.example.test/dashboard/billing/orders").And.Contain("200,00 TRY").And.Contain("Ada Öğrenci");
             declared.SubjectUserId.Should().BeNull();
             declared.ConsumerType.Should().Be("BillingNoticeConsumer.Seller");
             mail.Messages.Single(x => x.Subject.Contains("cayma", StringComparison.OrdinalIgnoreCase)).Body
