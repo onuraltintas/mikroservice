@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -106,6 +106,61 @@ export interface BillingBankAccountRequest {
   sortOrder: number;
 }
 
+export type BillingOrderStatus = 'Pending' | 'Paid' | 'Rejected' | 'Expired' | 'Withdrawn' | 'Cancelled';
+
+export interface BillingOrder {
+  id: string;
+  planId: string;
+  planName: string;
+  productCodes: string[];
+  buyerType: BuyerType;
+  amount: number;
+  currency: string;
+  durationDays: number;
+  paymentCode: string;
+  status: BillingOrderStatus;
+  createdAt: string;
+  expiresAt: string;
+  paidDeclaredAt: string | null;
+  payerNote: string | null;
+  hasReceipt: boolean;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  documentsVersion: string;
+}
+
+export interface BillingAdminOrder {
+  order: BillingOrder;
+  accountName: string;
+  accountEmail: string | null;
+  orderedByUserId: string;
+  beneficiaryUserId: string;
+  reviewedBy: string | null;
+}
+
+export interface BillingSubscription {
+  id: string;
+  planId: string;
+  planName: string;
+  productCodes: string[];
+  status: 'Active' | 'Cancelled';
+  startsAt: string;
+  endsAt: string;
+  isCurrent: boolean;
+  seatCount: number | null;
+}
+
+export interface BillingAdminSubscription {
+  subscription: BillingSubscription;
+  accountName: string;
+  accountEmail: string | null;
+  beneficiaryUserId: string;
+}
+
+export const ORDER_STATUS_LABELS: Record<BillingOrderStatus, string> = {
+  Pending: 'Ödeme bekliyor', Paid: 'Onaylandı', Rejected: 'Reddedildi', Expired: 'Süresi doldu', Withdrawn: 'Geri çekildi', Cancelled: 'Onay geri alındı'
+};
+
 export const BUYER_TYPE_LABELS: Record<BuyerType, string> = { Individual: 'Bireysel', Teacher: 'Öğretmen', Institution: 'Kurum' };
 
 /** The server explains a refused change in the admin's language; anything else gets the fallback. */
@@ -137,6 +192,20 @@ export class BillingAdminService {
   getPlans(): Observable<BillingPlan[]> { return this.http.get<BillingPlan[]>(`${this.url}/plans`); }
   createPlan(request: BillingPlanRequest): Observable<BillingPlan> { return this.http.post<BillingPlan>(`${this.url}/plans`, request); }
   updatePlan(id: string, request: BillingPlanRequest): Observable<BillingPlan> { return this.http.put<BillingPlan>(`${this.url}/plans/${id}`, request); }
+
+  getOrders(status: BillingOrderStatus | '', productCode: string): Observable<BillingAdminOrder[]> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (productCode) params = params.set('product', productCode);
+    return this.http.get<BillingAdminOrder[]>(`${this.url}/orders`, { params });
+  }
+  approveOrder(id: string): Observable<BillingAdminOrder> { return this.http.post<BillingAdminOrder>(`${this.url}/orders/${id}/approve`, {}); }
+  rejectOrder(id: string, note: string): Observable<BillingAdminOrder> { return this.http.post<BillingAdminOrder>(`${this.url}/orders/${id}/reject`, { note }); }
+  reverseApproval(id: string, note: string): Observable<BillingAdminOrder> { return this.http.post<BillingAdminOrder>(`${this.url}/orders/${id}/reverse`, { note }); }
+  getReceipt(id: string): Observable<Blob> { return this.http.get(`${this.url}/orders/${id}/receipt`, { responseType: 'blob' }); }
+  getSubscriptions(productCode: string): Observable<BillingAdminSubscription[]> {
+    return this.http.get<BillingAdminSubscription[]>(`${this.url}/subscriptions`, { params: productCode ? new HttpParams().set('product', productCode) : undefined });
+  }
 
   getSeller(): Observable<BillingSeller> { return this.http.get<BillingSeller>(`${this.url}/seller`); }
   updateSeller(request: BillingSellerRequest): Observable<BillingSeller> { return this.http.put<BillingSeller>(`${this.url}/seller`, request); }
