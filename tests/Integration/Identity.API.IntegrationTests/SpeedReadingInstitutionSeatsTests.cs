@@ -79,7 +79,7 @@ public sealed class SpeedReadingInstitutionSeatsTests
         {
             ["Billing:Enabled"] = enabled ? "true" : "false", ["Services:BillingService"] = "http://billing.test", ["INTERNAL_SERVICE_API_KEY"] = "test-key"
         }).Build();
-        var controller = new SpeedReadingInstitutionSeatsController(new BillingSeatsClient(new HttpClient(billing), configuration), access, new Members(isStudent),
+        var controller = new SpeedReadingInstitutionSeatsController(new BillingSeatsClient(new HttpClient(billing), configuration, NullLogger<BillingSeatsClient>.Instance), access, new Members(isStudent),
             new Authorization(manages), NullLogger<SpeedReadingInstitutionSeatsController>.Instance)
         {
             ControllerContext = new ControllerContext
@@ -157,6 +157,26 @@ public sealed class SpeedReadingInstitutionSeatsTests
         billing.Answer = _ => new HttpResponseMessage(HttpStatusCode.BadGateway);
         ((ObjectResult)await controller.Release(Institution, Student)).StatusCode.Should().Be(503);
         ((ObjectResult)await controller.Get(Institution)).StatusCode.Should().Be(503);
+    }
+
+    [Fact]
+    public async Task A_membership_that_ends_frees_the_seat_and_does_not_fail_when_billing_is_away()
+    {
+        var billing = new Billing { Answer = _ => Billing.Json(new BillingSeatChangeResponse(true, "Released", Pool(0))) };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Billing:Enabled"] = "true", ["Services:BillingService"] = "http://billing.test", ["INTERNAL_SERVICE_API_KEY"] = "test-key"
+        }).Build();
+        var client = new BillingSeatsClient(new HttpClient(billing), configuration, NullLogger<BillingSeatsClient>.Instance);
+        await client.ReleaseWhenLeavingAsync(Institution, Student, Admin);
+        var sent = billing.Requests.Should().ContainSingle().Subject;
+        sent.Url.Should().EndWith("/seats/release");
+        JsonSerializer.Deserialize<BillingSeatChangeRequest>(sent.Body!, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            .Should().Be(new BillingSeatChangeRequest("speed-reading", null, Institution, Student, Admin, "Öğrencinin kurum üyeliği sona erdi."));
+
+        billing.Answer = _ => new HttpResponseMessage(HttpStatusCode.BadGateway);
+        await client.ReleaseWhenLeavingAsync(Institution, Student, Admin);
+        billing.Requests.Should().HaveCount(2);
     }
 
     [Fact]

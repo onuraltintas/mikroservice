@@ -235,3 +235,8 @@ test('Koçluk gives teacher and institution seats at billing, and frees them whe
   const store = read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs');
   assert.equal((store.match(/billingSeats\.ReleaseWhenLeavingAsync\(/g) ?? []).length, 3);
 });
+
+test('a Hızlı Okuma student whose institution membership ends does not keep the seat', () => {
+  const members = read('services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInstitutionMembersController.cs');
+  assert.match(members, /!request\.IsActive && request\.Role == SpeedReadingInstitutionMemberRole\.Student\s*\n\s*&& billingSeats is not null\)\s*\{\s*await billingSeats\.ReleaseWhenLeavingAsync\(institutionId, userId, actorId, cancellationToken\);/);
+});
