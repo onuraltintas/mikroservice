@@ -8,13 +8,14 @@ ConditionPathExists=/opt/eduivme/.env
 ConditionPathExists=/opt/eduivme/docker-compose.yml
 ConditionPathExists=/opt/eduivme/docker-compose.production.yml
 ConditionPathExists=/opt/eduivme/docker-compose.production.litespeed.yml
+ConditionPathExists=/opt/eduivme/docker-compose.billing.production.yml
 
 [Service]
 Type=oneshot
 WorkingDirectory=/opt/eduivme
-ExecStartPre=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml config --quiet
-ExecStart=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml up -d --no-build --no-recreate
-ExecStop=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml stop
+ExecStartPre=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml -f /opt/eduivme/docker-compose.billing.production.yml config --quiet
+ExecStart=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml -f /opt/eduivme/docker-compose.billing.production.yml up -d --no-build --no-recreate
+ExecStop=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml -f /opt/eduivme/docker-compose.billing.production.yml stop
 RemainAfterExit=yes
 TimeoutStartSec=0
 TimeoutStopSec=120

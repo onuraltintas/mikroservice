@@ -134,6 +134,11 @@ public static class RetentionRules
 {
     /// <summary>User decision 14.11.2026: financial records of an erased account are kept ten years.</summary>
     public const int FinancialRetentionYears = 10;
+    /// <summary>
+    /// User decision 15.11.2026: a bank line that was tied to no order (an unrelated transfer, say) keeps its sender's
+    /// name and description for one year after the movement; the amount and date stay.
+    /// </summary>
+    public const int UnmatchedBankLineYears = 1;
     public const string RedactedName = "Silinmiş hesap";
     public const string RedactedText = "[Saklama süresi dolduğu için arındırıldı]";
     public const int ReminderDays = 7;

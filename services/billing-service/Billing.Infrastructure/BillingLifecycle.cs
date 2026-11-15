@@ -151,4 +151,16 @@ public sealed class BillingLifecycle(BillingDbContext db, BillingOrders orders, 
         }
         return due.Count;
     }
+
+    public async Task<int> ClearUnmatchedBankLinesAsync(CancellationToken cancellationToken = default)
+    {
+        var before = Now.AddYears(-RetentionRules.UnmatchedBankLineYears);
+        // The fingerprint stays, so the same line uploaded again is still recognised and not added twice.
+        return await db.BankTransactions
+            .Where(item => item.OrderId == null && item.BookedAt <= before
+                && (item.Sender != null || item.Note != null || item.Description != RetentionRules.RedactedText))
+            .ExecuteUpdateAsync(set => set.SetProperty(item => item.Sender, (string?)null)
+                .SetProperty(item => item.Description, RetentionRules.RedactedText)
+                .SetProperty(item => item.Note, (string?)null), cancellationToken);
+    }
 }

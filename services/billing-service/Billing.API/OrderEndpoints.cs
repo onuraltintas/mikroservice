@@ -113,6 +113,8 @@ public sealed class PendingOrderExpiryWorker(IServiceScopeFactory scopes, ILogge
                 if (reminders > 0) logger.LogInformation("Billing: {Count} subscription reminders sent.", reminders);
                 var redacted = await lifecycle.RedactExpiredAsync(stoppingToken);
                 if (redacted > 0) logger.LogInformation("Billing: records of {Count} erased accounts were redacted after their retention time.", redacted);
+                var cleared = await lifecycle.ClearUnmatchedBankLinesAsync(stoppingToken);
+                if (cleared > 0) logger.LogInformation("Billing: {Count} bank lines tied to no order were cleared of their sender after a year.", cleared);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
