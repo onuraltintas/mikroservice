@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import {
   InstitutionLocationOption,
-  SpeedReadingInstitutionAccess,
   SpeedReadingInstitutionProfile,
   SpeedReadingInstitutionSettingsService,
 } from './speed-reading-institution-settings.service';
@@ -19,14 +18,12 @@ import {
 export class SpeedReadingInstitutionSettingsComponent implements OnInit {
   private readonly service = inject(SpeedReadingInstitutionSettingsService);
   readonly profile = signal<SpeedReadingInstitutionProfile | null>(null);
-  readonly access = signal<SpeedReadingInstitutionAccess | null>(null);
   readonly provinces = signal<InstitutionLocationOption[]>([]);
   readonly districts = signal<InstitutionLocationOption[]>([]);
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly locationErrorMessage = signal<string | null>(null);
-  readonly accessErrorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
   name = '';
@@ -60,7 +57,6 @@ export class SpeedReadingInstitutionSettingsComponent implements OnInit {
       next: institution => {
         this.institutionId = institution.institutionId;
         this.loadInstitutionProfile();
-        this.loadAccess();
         this.loadProvinces();
       },
       error: () => this.errorMessage.set('Hızlı Okuma kurum bilgisi alınamadı. Kurum yöneticisi yetkinizi kontrol edip yeniden deneyin.'),
@@ -84,17 +80,6 @@ export class SpeedReadingInstitutionSettingsComponent implements OnInit {
         },
         error: () => this.errorMessage.set('Kurum iletişim bilgileri yüklenemedi. Lütfen yeniden deneyin.'),
       });
-  }
-
-  private loadAccess(): void {
-    this.accessErrorMessage.set(null);
-    this.service.getMySpeedReadingAccess().subscribe({
-      next: access => this.access.set(access),
-      error: () => {
-        this.access.set(null);
-        this.accessErrorMessage.set('Hızlı Okuma lisans bilgisi şu anda alınamıyor.');
-      },
-    });
   }
 
   private loadProvinces(): void {
@@ -155,22 +140,5 @@ export class SpeedReadingInstitutionSettingsComponent implements OnInit {
       },
       error: () => this.errorMessage.set('Kurum bilgileri güncellenemedi. Yetkinizi kontrol edip yeniden deneyin.'),
     });
-  }
-
-  licenseName(): string {
-    return this.access()?.plan?.name || 'Lisans bilgisi yok';
-  }
-
-  formatDate(value?: string | null): string {
-    if (!value) return 'Tanımlı değil';
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? 'Tanımlı değil' : new Intl.DateTimeFormat('tr-TR').format(date);
-  }
-
-  daysRemaining(): string {
-    const end = this.access()?.endDate ?? this.profile()?.subscriptionEndDate;
-    if (!end) return 'Tanımlı değil';
-    const remaining = Math.ceil((new Date(end).getTime() - Date.now()) / 86_400_000);
-    return remaining < 0 ? 'Süresi doldu' : `${remaining} gün kaldı`;
   }
 }

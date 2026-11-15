@@ -292,3 +292,14 @@ test('Kurs Yönetimi reads a workspace plan and its student limit from billing w
   for (const file of ['docker-compose.course-management.yml', 'docker-compose.course-management.production.yml'])
     assert.match(read(file), /Billing__Enabled: \$\{BILLING_ENABLED:-false\}\s*\n\s+Services__BillingService: http:\/\/billing-service:8080/, file);
 });
+
+test('an institution licence is no longer set or shown through Identity', () => {
+  const identity = 'services/identity-service/';
+  for (const file of ['Identity.Application/Commands/ManageInstitutionCommands.cs', 'Identity.Application/DTOs/InstitutionDtos.cs',
+    'Identity.API/Controllers/InstitutionsController.cs'])
+    assert.doesNotMatch(read(identity + file), /LicenseType|MaxStudents|MaxTeachers|SubscriptionEndDate/, file);
+  assert.doesNotMatch(read(identity + 'Identity.Domain/Entities/Institution.cs'), /UpgradeLicense|CanAddStudent|IsSubscriptionActive/);
+  assert.doesNotMatch(read('clients/admin-panel/src/app/features/identity/pages/institution-list.ts'), /licenseType|maxStudents|maxTeachers/);
+  const settings = 'clients/admin-panel/projects/staff-portal/src/app/features/speed-reading/speed-reading-institution-settings';
+  assert.doesNotMatch(read(settings + '.service.ts') + read(settings + '.component.html'), /institution-access|maxStudents|subscriptionEndDate/);
+});

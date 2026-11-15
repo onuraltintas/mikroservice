@@ -22,21 +22,6 @@ export interface SpeedReadingInstitutionProfile {
   districtName?: string | null;
   studentCount: number;
   teacherCount: number;
-  maxStudents?: number | null;
-  maxTeachers?: number | null;
-  subscriptionStartDate?: string | null;
-  subscriptionEndDate?: string | null;
-}
-
-export interface SpeedReadingInstitutionAccess {
-  institutionId: string;
-  plan: { name: string };
-  status: string;
-  seatCount: number;
-  usedSeatCount: number;
-  startDate: string;
-  endDate: string;
-  paymentReference?: string | null;
 }
 
 export interface InstitutionLocationOption {
@@ -58,7 +43,6 @@ export interface UpdateSpeedReadingInstitutionProfileRequest {
 export class SpeedReadingInstitutionSettingsService {
   private readonly http = inject(HttpClient);
   private readonly institutionsUrl = `${environment.apiUrl}/v1/institutions`;
-  private readonly speedReadingUrl = `${environment.apiUrl}/speed-reading`;
 
   getMyInstitution(): Observable<SpeedReadingInstitutionIdentity> {
     return this.http.get<SpeedReadingInstitutionIdentity>(`${environment.apiUrl}/institution/speed-reading/me`);
@@ -79,10 +63,6 @@ export class SpeedReadingInstitutionSettingsService {
         districtName: typeof item['district'] === 'string' ? item['district'] : null,
         studentCount: Number(item['studentCount'] ?? 0),
         teacherCount: Number(item['teacherCount'] ?? 0),
-        maxStudents: typeof item['maxStudents'] === 'number' ? item['maxStudents'] : null,
-        maxTeachers: typeof item['maxTeachers'] === 'number' ? item['maxTeachers'] : null,
-        subscriptionStartDate: typeof item['subscriptionStartDate'] === 'string' ? item['subscriptionStartDate'] : null,
-        subscriptionEndDate: typeof item['subscriptionEndDate'] === 'string' ? item['subscriptionEndDate'] : null,
       })));
   }
 
@@ -91,12 +71,6 @@ export class SpeedReadingInstitutionSettingsService {
     request: UpdateSpeedReadingInstitutionProfileRequest,
   ): Observable<void> {
     return this.http.put<void>(`${this.institutionsUrl}/${encodeURIComponent(institutionId)}`, request);
-  }
-
-  getMySpeedReadingAccess(): Observable<SpeedReadingInstitutionAccess | null> {
-    return this.http.get<SpeedReadingInstitutionAccess | null>(
-      `${this.speedReadingUrl}/subscriptions/institution-access/my`,
-    );
   }
 
   getProvinces(): Observable<InstitutionLocationOption[]> {

@@ -89,11 +89,7 @@ public sealed class InstitutionsController : ControllerBase
             request.DistrictId,
             request.Phone,
             request.Email,
-            request.Website,
-            request.LicenseType,
-            request.MaxStudents,
-            request.MaxTeachers,
-            request.SubscriptionEndDate);
+            request.Website);
 
         var result = await _mediator.Send(command, cancellationToken);
         return result.IsSuccess ? NoContent() : BadRequest(new { Error = result.Error });
@@ -168,11 +164,7 @@ public sealed class InstitutionsController : ControllerBase
         string? DistrictId,
         string? Phone,
         string? Email,
-        string? Website,
-        Identity.Domain.Enums.LicenseType? LicenseType,
-        int? MaxStudents,
-        int? MaxTeachers,
-        DateTime? SubscriptionEndDate);
+        string? Website);
 
     private PlatformProduct? ResolveProductScope(PlatformProduct? requestedProduct, out bool mismatch)
     {

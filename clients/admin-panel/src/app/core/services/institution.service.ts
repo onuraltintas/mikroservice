@@ -15,11 +15,6 @@ export interface InstitutionDto {
   phone?: string;
   email?: string;
   website?: string;
-  licenseType: number;
-  maxStudents: number;
-  maxTeachers: number;
-  subscriptionStartDate?: string;
-  subscriptionEndDate?: string;
   isActive: boolean;
   studentCount: number;
   teacherCount: number;

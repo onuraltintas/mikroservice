@@ -45,11 +45,7 @@ public sealed record UpdateInstitutionCommand(
     string? DistrictId,
     string? Phone,
     string? Email,
-    string? Website,
-    LicenseType? LicenseType,
-    int? MaxStudents,
-    int? MaxTeachers,
-    DateTime? SubscriptionEndDate) : IRequest<Result>;
+    string? Website) : IRequest<Result>;
 
 public sealed class UpdateInstitutionCommandValidator : AbstractValidator<UpdateInstitutionCommand>
 {
@@ -66,9 +62,6 @@ public sealed class UpdateInstitutionCommandValidator : AbstractValidator<Update
         RuleFor(command => command.Email).EmailAddress().MaximumLength(255)
             .When(command => !string.IsNullOrWhiteSpace(command.Email));
         RuleFor(command => command.Website).MaximumLength(500).When(command => command.Website is not null);
-        RuleFor(command => command.LicenseType).IsInEnum().When(command => command.LicenseType.HasValue);
-        RuleFor(command => command.MaxStudents).InclusiveBetween(1, 10_000).When(command => command.MaxStudents.HasValue);
-        RuleFor(command => command.MaxTeachers).InclusiveBetween(1, 1_000).When(command => command.MaxTeachers.HasValue);
     }
 }
 
@@ -254,15 +247,6 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
             return access;
         }
 
-        if (!_authorization.IsSystemAdministrator
-            && (request.LicenseType.HasValue
-                || request.MaxStudents.HasValue
-                || request.MaxTeachers.HasValue
-                || request.SubscriptionEndDate.HasValue))
-        {
-            return Result.Failure(Error.Forbidden("Lisans ve kapasite ayarlarını yalnızca sistem yöneticisi değiştirebilir."));
-        }
-
         var institution = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (institution is null)
         {
@@ -287,15 +271,6 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
 
         institution.UpdateInfo(request.Name?.Trim(), request.Address?.Trim(), null,
             null, request.Phone?.Trim(), request.Email?.Trim(), request.Website?.Trim());
-
-        if (request.LicenseType.HasValue || request.MaxStudents.HasValue || request.MaxTeachers.HasValue || request.SubscriptionEndDate.HasValue)
-        {
-            institution.UpgradeLicense(
-                request.LicenseType ?? institution.LicenseType,
-                request.MaxStudents ?? institution.MaxStudents,
-                request.MaxTeachers ?? institution.MaxTeachers,
-                request.SubscriptionEndDate ?? institution.SubscriptionEndDate ?? DateTime.UtcNow.AddDays(14));
-        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();

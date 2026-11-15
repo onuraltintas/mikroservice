@@ -41,11 +41,6 @@ describe('SpeedReadingInstitutionSettingsService', () => {
     });
     updateRequest.flush(null);
     await update;
-
-    const license = firstValueFrom(service.getMySpeedReadingAccess());
-    const licenseRequest = http.expectOne('/api/speed-reading/subscriptions/institution-access/my');
-    licenseRequest.flush({ institutionId: 'institution-1', plan: { name: 'Kurumsal' }, seatCount: 30, usedSeatCount: 12 });
-    await expect(license).resolves.toMatchObject({ seatCount: 30, usedSeatCount: 12 });
   });
 
   it('loads province and province-scoped district options', async () => {
