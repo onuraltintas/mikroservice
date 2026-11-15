@@ -5,12 +5,15 @@ import { Subscription, finalize, forkJoin } from 'rxjs';
 import { CoachingInstitutionSeatRequestsComponent } from './coaching-institution-seat-requests.component';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionSubscription } from './coaching-institution.service';
 
+import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscription.component';
 @Component({
-  selector: 'staff-coaching-institution-subscription', standalone: true, imports: [CommonModule, CoachingInstitutionSeatRequestsComponent],
+  selector: 'staff-coaching-institution-subscription', standalone: true, imports: [CommonModule, CoachingInstitutionSeatRequestsComponent, StaffMySubscriptionComponent],
   template: `
     <section aria-labelledby="institution-plan-title" class="institution-plan">
       <header><div><h3 id="institution-plan-title">Kurum aboneliği ve kontenjan</h3><p>Etkin kurum lisansınızın öğrenci erişimini yönetin.</p></div>
         <button type="button" (click)="load()" [disabled]="loading() || saving()">Yenile</button></header>
+      <!-- Billing service: the institution's plan is bought, renewed and paid for here; the seats below go to its own students. -->
+      <div data-testid="institution-billing"><staff-my-subscription product="coaching" [roles]="['InstitutionAdmin']" /></div>
       @if (error()) { <p role="alert" class="error">{{ error() }}</p> }
       @if (success()) { <p role="status">{{ success() }}</p> }
       @if (loading()) { <p role="status">Abonelik yükleniyor…</p> }

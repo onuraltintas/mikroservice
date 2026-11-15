@@ -20,10 +20,11 @@ import {
   CoachingTeacherSubscriptionService
 } from './coaching-teacher-subscription.service';
 
+import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscription.component';
 @Component({
   selector: 'staff-coaching-teacher-subscription',
   standalone: true,
-  imports: [CoachingCheckoutComponent, CoachingMyPaymentsComponent, CommonModule, FormsModule],
+  imports: [CoachingCheckoutComponent, CoachingMyPaymentsComponent, CommonModule, FormsModule, StaffMySubscriptionComponent],
   template: `
     <section class="teacher-plan" aria-labelledby="teacher-plan-title">
       <header class="plan-heading">
@@ -38,6 +39,9 @@ import {
       @if (error()) { <div class="message error" role="alert">{{ error() }}</div> }
       @if (success()) { <div class="message success" role="status">{{ success() }}</div> }
       @if (loading()) { <p class="message" role="status">Öğretmen planı bilgileri yükleniyor…</p> }
+
+      <!-- Billing service: the plan is bought, renewed and paid for here; the seats below are given to the teacher's own students. -->
+      <section class="card" data-testid="teacher-billing"><staff-my-subscription product="coaching" [roles]="['Teacher']" /></section>
 
       <section class="card" aria-labelledby="teacher-seats-title">
         <h3 id="teacher-seats-title">Öğrenci kontenjanım</h3>
