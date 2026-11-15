@@ -247,7 +247,7 @@ export class UsersService {
           district: institution.district,
           createdAt: institution.createdAt
             ? new Date(institution.createdAt)
-            : new Date(institution.subscriptionStartDate ?? 0),
+            : new Date(0),
           isActive: institution.isActive,
           teacherCount: institution.teacherCount ?? 0,
           studentCount: institution.studentCount ?? 0

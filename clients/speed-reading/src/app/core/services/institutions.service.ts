@@ -79,12 +79,7 @@ export class InstitutionsService {
       isActive: item.isActive,
       studentCount: item.studentCount ?? 0,
       teacherCount: item.teacherCount ?? 0,
-      licenseType: item.licenseType,
-      maxStudents: item.maxStudents,
-      maxTeachers: item.maxTeachers,
-      subscriptionStartDate: item.subscriptionStartDate ? new Date(item.subscriptionStartDate) : undefined,
-      subscriptionEndDate: item.subscriptionEndDate ? new Date(item.subscriptionEndDate) : undefined,
-      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(item.subscriptionStartDate ?? 0)
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(0)
     };
   }
 }

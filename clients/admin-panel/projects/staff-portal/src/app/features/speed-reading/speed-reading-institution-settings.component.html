@@ -25,21 +25,6 @@
         </form>
       </section>
 
-      <section class="settings-card" aria-labelledby="speed-reading-access-title">
-        <div><p class="workspace-eyebrow">ÜRÜN ERİŞİMİ</p><h4 id="speed-reading-access-title">Hızlı Okuma lisansı</h4></div>
-        @if (accessErrorMessage()) { <p class="field-error" role="status">{{ accessErrorMessage() }}</p> }
-        <div class="license-grid">
-          <article><span>Paket</span><strong>{{ licenseName() }}</strong></article>
-          <article><span>Durum</span><strong>{{ access()?.status || 'Onaylı erişim yok' }}</strong></article>
-          <article><span>Erişim başlangıcı</span><strong>{{ formatDate(access()?.startDate || currentProfile.subscriptionStartDate) }}</strong></article>
-          <article><span>Erişim bitişi</span><strong>{{ formatDate(access()?.endDate || currentProfile.subscriptionEndDate) }}</strong></article>
-          <article><span>Kalan süre</span><strong>{{ daysRemaining() }}</strong></article>
-          <article><span>Hızlı Okuma koltukları</span><strong>{{ access()?.usedSeatCount ?? 0 }} / {{ access()?.seatCount ?? '—' }}</strong></article>
-          <article><span>Öğrenci kontenjanı</span><strong>{{ currentProfile.studentCount }} / {{ currentProfile.maxStudents ?? '—' }}</strong></article>
-          <article><span>Öğretmen kontenjanı</span><strong>{{ currentProfile.teacherCount }} / {{ currentProfile.maxTeachers ?? '—' }}</strong></article>
-        </div>
-        <p class="license-note">Lisans, ödeme ve ek kontenjan işlemleri Eduİvme merkez yönetiminden yapılır. Bu panel yalnız Hızlı Okuma erişim özetini gösterir. Profil ve şifre işlemleri üst menüdeki “Hesap ayarları” bölümündedir.</p>
-      </section>
     </div>
   }
 </section>

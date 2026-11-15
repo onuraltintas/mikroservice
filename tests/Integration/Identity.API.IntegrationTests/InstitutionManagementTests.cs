@@ -309,10 +309,6 @@ public sealed class InstitutionManagementTests
             cankaya.Id,
             null,
             null,
-            null,
-            null,
-            null,
-            null,
             null), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -349,10 +345,6 @@ public sealed class InstitutionManagementTests
             null,
             ankara.Id,
             kadikoy.Id,
-            null,
-            null,
-            null,
-            null,
             null,
             null,
             null), CancellationToken.None);

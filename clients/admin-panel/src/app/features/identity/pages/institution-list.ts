@@ -46,11 +46,6 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editPhone" [(ngModel)]="editDraft.phone" placeholder="Telefon" maxlength="50">
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editEmail" [(ngModel)]="editDraft.email" placeholder="E-posta" type="email" maxlength="255">
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editWebsite" [(ngModel)]="editDraft.website" placeholder="Web sitesi" maxlength="500">
-          @if (canChangeTenantSettings()) { <select class="rounded-lg border p-2 dark:bg-gray-900" name="editLicense" [(ngModel)]="editDraft.licenseType">
-            @for (license of licenseTypes; track license.value) { <option [ngValue]="license.value">{{ license.label }}</option> }
-          </select>
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editMaxStudents" [(ngModel)]="editDraft.maxStudents" type="number" min="1" max="10000" placeholder="Azami öğrenci">
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editMaxTeachers" [(ngModel)]="editDraft.maxTeachers" type="number" min="1" max="1000" placeholder="Azami öğretmen"> }
           <div class="md:col-span-4 flex gap-2"><button class="rounded-lg bg-indigo-600 px-4 py-2 text-white" [disabled]="saving()">Kaydet</button><button type="button" class="rounded-lg border px-4 py-2" (click)="editing.set(null)">Vazgeç</button></div>
         </form>
       }
@@ -76,10 +71,10 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
 
       @if (error()) { <div class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error() }}</div> }
       <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <table class="min-w-full text-left text-sm"><thead class="border-b bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900"><tr><th class="p-3">Kurum</th><th class="p-3">Tür</th><th class="p-3">Kullanım</th><th class="p-3">Lisans</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
+        <table class="min-w-full text-left text-sm"><thead class="border-b bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900"><tr><th class="p-3">Kurum</th><th class="p-3">Tür</th><th class="p-3">Kullanım</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
           <tbody>
             @for (institution of institutions(); track institution.id) {
-<tr class="border-b last:border-0 dark:border-gray-700"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-gray-500">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }}/{{ institution.maxStudents }} öğrenci<br>{{ institution.teacherCount }}/{{ institution.maxTeachers }} öğretmen</td><td class="p-3">{{ licenseName(institution.licenseType) }}</td><td class="p-3"><span [class]="institution.isActive ? 'text-emerald-600' : 'text-gray-500'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/students" [queryParams]="{ institutionId: institution.id }">Koçluk öğrencileri</a><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/teachers" [queryParams]="{ institutionId: institution.id }">Koçluk öğretmenleri</a><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
+<tr class="border-b last:border-0 dark:border-gray-700"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-gray-500">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }} öğrenci<br>{{ institution.teacherCount }} öğretmen</td><td class="p-3"><span [class]="institution.isActive ? 'text-emerald-600' : 'text-gray-500'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/students" [queryParams]="{ institutionId: institution.id }">Koçluk öğrencileri</a><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/teachers" [queryParams]="{ institutionId: institution.id }">Koçluk öğretmenleri</a><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
             } @empty { <tr><td colspan="6" class="p-8 text-center text-gray-500">Kurum bulunamadı.</td></tr> }
           </tbody>
         </table>
@@ -94,9 +89,9 @@ export class InstitutionListComponent {
   private readonly authService = inject(AuthService);
   private readonly locations = inject(LocationService);
   private readonly platformId = inject(PLATFORM_ID);
+  canChangeTenantSettings = computed(() => this.authService.userProfile()?.roles.includes('SystemAdmin') ?? false);
   canManage = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.institutionsManage));
   canCreate = computed(() => this.canManage() && this.authService.userProfile()?.roles.includes('SystemAdmin'));
-  canChangeTenantSettings = computed(() => this.authService.userProfile()?.roles.includes('SystemAdmin') ?? false);
   institutions = signal<InstitutionDto[]>([]);
   totalCount = signal(0);
   currentPage = signal(1);
@@ -116,11 +111,10 @@ export class InstitutionListComponent {
   search = '';
   activeFilter: boolean | undefined = true;
   draft = { name: '', type: 1, provinceId: '', districtId: '', email: '' };
-  editDraft = { name: '', provinceId: '', districtId: '', phone: '', email: '', website: '', licenseType: 1, maxStudents: 50, maxTeachers: 5 };
+  editDraft = { name: '', provinceId: '', districtId: '', phone: '', email: '', website: '' };
   adminDraft = { userId: '', role: 2, product: 1 };
   adminUserSearch = '';
   institutionTypes = [{ value: 1, label: 'Okul' }, { value: 2, label: 'Dershane' }, { value: 3, label: 'Etüt Merkezi' }, { value: 4, label: 'Online Platform' }];
-  licenseTypes = [{ value: 1, label: 'Deneme' }, { value: 2, label: 'Basic' }, { value: 3, label: 'Premium' }, { value: 4, label: 'Enterprise' }];
   adminRoles = [{ value: 1, label: 'Kurum sahibi' }, { value: 2, label: 'Yönetici' }, { value: 3, label: 'Müdür' }];
   adminProducts = [{ value: 1, label: 'Koçluk' }, { value: 2, label: 'Hızlı Okuma' }];
 
@@ -170,10 +164,7 @@ export class InstitutionListComponent {
       districtId: institution.districtId ?? '',
       phone: institution.phone ?? '',
       email: institution.email ?? '',
-      website: institution.website ?? '',
-      licenseType: institution.licenseType,
-      maxStudents: institution.maxStudents,
-      maxTeachers: institution.maxTeachers
+      website: institution.website ?? ''
     };
     if (this.editDraft.provinceId) this.loadEditDistricts(this.editDraft.provinceId);
   }
@@ -182,16 +173,14 @@ export class InstitutionListComponent {
     const institution = this.editing();
     if (!institution || !this.editDraft.name.trim()) return;
     this.saving.set(true);
-    const payload = this.canChangeTenantSettings()
-      ? this.editDraft
-      : {
-          name: this.editDraft.name,
-          provinceId: this.editDraft.provinceId || undefined,
-          districtId: this.editDraft.districtId || undefined,
-          phone: this.editDraft.phone,
-          email: this.editDraft.email,
-          website: this.editDraft.website
-        };
+    const payload = {
+      name: this.editDraft.name,
+      provinceId: this.editDraft.provinceId || undefined,
+      districtId: this.editDraft.districtId || undefined,
+      phone: this.editDraft.phone,
+      email: this.editDraft.email,
+      website: this.editDraft.website
+    };
     this.service.update(institution.id, payload).subscribe({
       next: () => { this.saving.set(false); this.editing.set(null); this.load(); },
       error: () => { this.saving.set(false); this.error.set('Kurum güncellenemedi.'); }
@@ -293,5 +282,4 @@ export class InstitutionListComponent {
   adminRoleName(role: number) { return ['Bilinmiyor', 'Kurum sahibi', 'Yönetici', 'Müdür'][role] ?? role; }
 
   typeName(type: number) { return this.institutionTypes.find(item => item.value === type)?.label ?? type; }
-  licenseName(type: number) { return ['Bilinmiyor', 'Deneme', 'Basic', 'Premium', 'Enterprise'][type] ?? type; }
 }

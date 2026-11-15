@@ -24,6 +24,8 @@ public class Institution : AggregateRoot
     public string? TaxNumber { get; private set; }
 
     // Lisans Bilgileri
+    // Licence, limits and dates below are no longer read or changed: an institution's subscriptions and seats live in the
+    // billing service. The columns stay until a release drops them.
     public LicenseType LicenseType { get; private set; } = LicenseType.Trial;
     public int MaxStudents { get; private set; } = 50;
     public int MaxTeachers { get; private set; } = 5;
@@ -117,18 +119,6 @@ public class Institution : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpgradeLicense(LicenseType licenseType, int maxStudents, int maxTeachers, DateTime endDate)
-    {
-        LicenseType = licenseType;
-        MaxStudents = maxStudents;
-        MaxTeachers = maxTeachers;
-        SubscriptionEndDate = endDate;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public bool CanAddStudent() => _students.Count(s => s.IsActive) < MaxStudents;
-    public bool CanAddTeacher() => _teachers.Count(t => t.IsActive) < MaxTeachers;
-    public bool IsSubscriptionActive() => SubscriptionEndDate == null || SubscriptionEndDate > DateTime.UtcNow;
 
     public void Deactivate()
     {
