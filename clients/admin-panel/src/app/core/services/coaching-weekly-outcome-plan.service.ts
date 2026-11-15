@@ -10,7 +10,9 @@ export interface WeeklyOutcomeRequest {startDate:string;endDate:string;expectedW
   /** User decision 15.11.2026: the plan covers only part of the way to the exam (this week, or up to a chosen date). */
   partial?:boolean;
   /** The topics of the active plan's untouched tasks dated before startDate are not planned this time. */
-  leaveUnfinished?:boolean}
+  leaveUnfinished?:boolean;
+  /** "Gelecek haftayı ekle": the active plan's waiting tasks from startDate to this day keep their day and time; new work starts after it. */
+  keepUntil?:string}
 /** How much of the way to the exam a new plan covers. */
 export type PlanSpan='exam'|'week'|'custom';
 /** "This week": through the coming Sunday; started on a Saturday or Sunday, through the Sunday after. */

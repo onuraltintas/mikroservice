@@ -98,6 +98,14 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
         var active=await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
         var sources=await CoachingStudyContinuation.SourcesAsync(db,student,ct);
+        if(request.KeepUntil is {} keepUntil&&active is not null)
+        {
+            // The rest of the current week stays as it is: its waiting tasks are carried like started work, after the started ones.
+            var carried=sources.Select(x=>x.Id).ToHashSet();
+            var kept=await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&!x.IsCompleted&&x.SkippedAt==null
+                &&x.PlannedDate>=request.StartDate&&x.PlannedDate<=keepUntil).ToArrayAsync(ct);
+            sources=sources.Concat(kept.Where(x=>!carried.Contains(x.Id)).OrderBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id)).ToArray();
+        }
         var completed=active is null?[]:await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&x.IsCompleted).ToArrayAsync(ct);
         var protectedTasks=sources.Concat(completed).OrderBy(x=>x.Id).ToArray();
         var placements=CoachingStudyContinuation.Place(sources,request.StartDate,request.EndDate,
@@ -130,7 +138,11 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             if(left.Count>0)work=work.Select(lesson=>lesson with {Outcomes=lesson.Outcomes.Where(x=>!left.Contains(x.OutcomeId)).ToArray()}).ToList();
         }
         var blocked=placements.Select(x=>new WeeklyBlockedTime(x.Date,x.Start,x.Minutes))
-            .Concat(completed.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes))).ToArray();
+            .Concat(completed.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes)))
+            // Nothing new is planned in the days that are kept: their lesson hours count as taken.
+            .Concat(request.KeepUntil is {} keptUntil?Enumerable.Range(0,Math.Max(0,Math.Min(keptUntil.DayNumber,request.EndDate.DayNumber)-request.StartDate.DayNumber+1))
+                .Select(request.StartDate.AddDays).SelectMany(day=>draft.Slots.Where(x=>x.Day==day.DayOfWeek).Select(x=>new WeeklyBlockedTime(day,x.StartMinute,x.DurationMinutes))):[])
+            .ToArray();
         var rules=v2?WeeklyPlanEngine.RulesFor(await CoachingStudyPlanPreferencesService.SpacedDaysAsync(db,student,ct)):null;
         var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
         var yieldWeights=new Dictionary<Guid,int>();

@@ -53,7 +53,8 @@ ve banka hesabı girildikten sonra kendisi açar.
      yapabilir. Öğretmen haftalık düzeni kaydeder; öğrenci bildirim alır.
    - Plan süresi: sihirbazın özet adımında "Yalnız bu hafta" seçilir; "yetişmiyor" uyarısı çıkmaz, plan yayımlanır. Planım'da
      "Gelecek haftayı ekle" görünür; iki seçenekle de (kalanlar önce / eklenmesin) denenir. Yeni plan bugünden bir hafta
-     sonrasına uzanır, tamamlanan çalışmalar yerinde kalır. Aynısı öğretmenin öğrenci sayfasından denenir.
+     sonrasına uzanır; tamamlanan çalışmalar ve bu haftanın kalan bekleyen çalışmaları gününde ve saatinde kalır, yeni
+     çalışmalar mevcut bitişten sonraki günlere eklenir. Aynısı öğretmenin öğrenci sayfasından denenir.
    - Hatırlatma: bitişi bugün ya da yarın olan haftalık planı yapan kişi 09:00'dan sonra bir kez "Çalışma planı bitiyor"
      bildirimi alır.
 4. Sonuç ve süreler rapora yazılır. Kopya, kullanıcı onayından sonra kaldırılır.

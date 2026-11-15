@@ -52,3 +52,14 @@ test('a teacher is told whose plan is ending, and the report says when its figur
   assert.match(read(coaching + 'Coaching.Infrastructure/StudyPlanning/StudentPlanningPermission.cs'), /source is \{ Partial: true \} \? source\.EndDate : null/);
   assert.match(read(pages + 'student-study-report.component.ts'), /data-testid="partial-plan-note"/);
 });
+
+test('continuing a plan keeps the rest of the current week in place and plans new work after it', () => {
+  assert.match(read(coaching + 'Coaching.Application/StudyPlanning/IWeeklyOutcomePlanService.cs'), /JsonIgnoreCondition\.WhenWritingNull\)\] DateOnly\? KeepUntil=null\);/);
+  const service = read(coaching + 'Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs');
+  assert.match(service, /if\(request\.KeepUntil is \{\} keepUntil&&active is not null\)[\s\S]*?x\.PlannedDate>=request\.StartDate&&x\.PlannedDate<=keepUntil/);
+  assert.match(service, /request\.KeepUntil is \{\} keptUntil\?[\s\S]*?new WeeklyBlockedTime\(day,x\.StartMinute,x\.DurationMinutes\)/);
+  const extend = read(pages + 'plan-extend.component.ts');
+  assert.match(extend, /keepUntil: this\.source!\.endDate/);
+  assert.match(extend, /gününde ve saatinde kalır/);
+  assert.doesNotMatch(extend, /yeniden dağıtılır/);
+});
