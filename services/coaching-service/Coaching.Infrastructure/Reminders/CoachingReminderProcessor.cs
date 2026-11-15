@@ -26,7 +26,8 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
         var overdueCount = await LockedAsync(() => StudyDaysAsync(now, ct, true), false, ct); RememberFinishedScans();
         var feeCount = await LockedAsync(() => OverdueFeesAsync(now, ct), false, ct);
         var assignmentCount = await LockedAsync(() => AssignmentsDueAsync(now, ct), false, ct);
-        return studyCount + overdueCount + feeCount + assignmentCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
+        var endingCount = await LockedAsync(() => PlansEndingAsync(now, ct), false, ct);
+        return studyCount + overdueCount + feeCount + assignmentCount + endingCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
     }
 
     private void RememberFinishedScans()
@@ -70,6 +71,31 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                 if (count == BatchSize) break;
             }
             if (plans.Count < limit) finishedScans.Add((kind, zoneId, date));
+            if (count == BatchSize) break;
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// User decision 15.11.2026: a plan that covers only part of the way to the exam (this week, or up to a chosen date) ends
+    /// today or tomorrow and nothing follows it: whoever made it (the teacher, else the student) is told once, at 09:00.
+    /// </summary>
+    private async Task<int> PlansEndingAsync(DateTimeOffset now, CancellationToken ct)
+    {
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(Coaching.Domain.CoachingTime.ZoneId); var local = TimeZoneInfo.ConvertTime(now, zone);
+        if (local.Hour < 9) return 0;
+        var today = DateOnly.FromDateTime(local.DateTime);
+        var due = TimeZoneInfo.ConvertTimeToUtc(today.ToDateTime(new TimeOnly(9, 0)), zone);
+        // The weekly source is one JSON value; the few active plans built from a weekly schedule are looked at in memory.
+        var plans = await db.StudyPlanRevisions.AsNoTracking().Where(x => x.IsActive && x.WeeklySource != null)
+            .Select(x => new { x.Id, x.StudentId, x.CreatedByTeacherId, x.WeeklySource }).ToListAsync(ct);
+        var count = 0;
+        foreach (var plan in plans.Where(x => x.WeeklySource is { Partial: true } source && source.EndDate >= today && source.EndDate <= today.AddDays(1))
+            .OrderBy(x => x.StudentId))
+        {
+            var receipt = CoachingReminderReceipt.Create(plan.CreatedByTeacherId ?? plan.StudentId, plan.Id, "PlanEnding",
+                plan.WeeklySource!.EndDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), due, now.UtcDateTime);
+            if (await QueueAsync(receipt, ct)) count++;
             if (count == BatchSize) break;
         }
         return count;

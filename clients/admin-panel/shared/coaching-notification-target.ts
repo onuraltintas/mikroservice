@@ -16,7 +16,7 @@ export function validWeeklyDate(value: string | null | undefined): value is stri
 }
 
 const labels: Record<string, string> = {
-  StudyPlanReminder: 'Günlük çalışma hatırlatması', StudyPlanOverdueReminder: 'Geciken çalışmalar',
+  StudyPlanReminder: 'Günlük çalışma hatırlatması', StudyPlanOverdueReminder: 'Geciken çalışmalar', StudyPlanEndingReminder: 'Biten çalışma planı',
   StudyPlanPublished: 'Çalışma planı yayımlandı', StudyPlanUpdated: 'Çalışma planı güncellendi',
   AssignmentCreated: 'Yeni ödev', AssignmentUpdated: 'Ödev güncellendi',
   AssignmentSubmitted: 'Ödev teslim edildi', AssignmentGraded: 'Ödev değerlendirildi',
@@ -54,7 +54,7 @@ export function coachingNotificationTarget(notification: CoachingNotificationRef
     return notification.type === 'AssignmentSubmitted' ? {kind:'assignment', id, label:'Teslimleri incele'} : null;
   }
   switch (notification.type) {
-    case 'StudyPlanReminder': case 'StudyPlanOverdueReminder': case 'StudyPlanPublished': case 'StudyPlanUpdated': return {kind:'plan', id, label:'Planı aç'};
+    case 'StudyPlanReminder': case 'StudyPlanOverdueReminder': case 'StudyPlanEndingReminder': case 'StudyPlanPublished': case 'StudyPlanUpdated': return {kind:'plan', id, label:'Planı aç'};
     case 'AssignmentCreated': case 'AssignmentUpdated': case 'AssignmentGraded': return {kind:'assignment', id, label:'Ödevi aç'};
     default: return null;
   }

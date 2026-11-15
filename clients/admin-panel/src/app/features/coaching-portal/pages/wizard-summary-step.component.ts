@@ -8,7 +8,7 @@ import { CoachingLearningSetupService, LearningCatalog, LearningContext, Learnin
 import { CoachingStudyPlanningService, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 import { StudyTempo } from '../../../core/services/coaching-study-routine.service';
 import { CoachingWeeklyDraftService, WeeklyExamFocus, WeeklyProposal, WeeklyProposalMode, WeeklyProposalWindow } from '../../../core/services/coaching-weekly-draft.service';
-import { CoachingWeeklyOutcomePlanService, WeeklyOutcomeOptions, WeeklyOutcomePreview, WeeklyOutcomeRequest } from '../../../core/services/coaching-weekly-outcome-plan.service';
+import { CoachingWeeklyOutcomePlanService, PlanSpan, WeeklyOutcomeOptions, WeeklyOutcomePreview, WeeklyOutcomeRequest, weekSpanEnd } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { learningUpdate } from './wizard-courses-step.component';
 import { DEFAULT_MAX_DAY_MINUTES, WeeklySlot, clock, slotError, weekDays } from './weekly-calendar';
@@ -117,6 +117,15 @@ export class WizardSummaryStepComponent implements OnInit {
   readonly error = signal('');
   // The yearly preview.
   readonly options = signal<WeeklyOutcomeOptions | null>(null);
+  /** User decision 15.11.2026: the plan runs to the exam (default), through this week, or up to a chosen date. */
+  readonly span = signal<PlanSpan>('exam');
+  readonly customEnd = signal('');
+  /** The plan shown covers only part of the way to the exam: nothing is "late" or "left out", the rest is planned later. */
+  readonly partial = computed(() => !!this.preview()?.request.partial);
+  setSpan(span: PlanSpan) { this.span.set(span); if (span !== 'custom' || this.customEnd()) this.rerunForSpan(); }
+  setCustomEnd(value: string) { this.customEnd.set(value); if (this.span() === 'custom' && value) this.rerunForSpan(); }
+  private rerunForSpan() { if (this.preview() || this.previewError()) this.runPreview(); }
+  weekEnd() { const options = this.options(); return options ? weekSpanEnd(options.startDate) : null; }
   readonly preview = signal<WeeklyOutcomePreview | null>(null);
   readonly previewing = signal(false);
   readonly previewError = signal('');
@@ -394,10 +403,14 @@ export class WizardSummaryStepComponent implements OnInit {
   private request(options: WeeklyOutcomeOptions): WeeklyOutcomeRequest {
     // The tempo's finish date ends the plan; without one (or before the start) the plan ends on the server's default.
     const finishBy = this.usedFinishBy ?? this.finishBy;
-    const end = finishBy && finishBy >= options.startDate ? finishBy : options.endDate;
+    const full = finishBy && finishBy >= options.startDate ? finishBy : options.endDate;
+    // A shorter span ends the plan earlier; it never runs past the full plan's end.
+    const wanted = this.span() === 'week' ? weekSpanEnd(options.startDate) : this.span() === 'custom' ? this.customEnd() : '';
+    const partial = !!wanted && wanted >= options.startDate && wanted < full;
+    const end = partial ? wanted : full;
     const topics = this.choices.focusTopics().map(x => x.topicId);
     return { startDate: options.startDate, endDate: end, expectedWeeklyDraftVersion: options.weeklyDraftVersion, reuseFreedSlots: true, engineVersion: 2,
-      prioritizeWhenShort: this.choices.prioritizeWhenShort(), ...(topics.length ? { focusTopicIds: topics } : {}) };
+      prioritizeWhenShort: !partial && this.choices.prioritizeWhenShort(), ...(topics.length ? { focusTopicIds: topics } : {}), ...(partial ? { partial: true } : {}) };
   }
   runPreview() {
     const student = this.staffStudentId ?? undefined;
@@ -446,7 +459,7 @@ export class WizardSummaryStepComponent implements OnInit {
   }
 
   lessons() { return this.preview()?.schedule.lessons ?? []; }
-  late(lesson: { remainingMinutes: number; lessonId: string }) { return lesson.remainingMinutes > 0 || this.leftOut(lesson.lessonId).length > 0; }
+  late(lesson: { remainingMinutes: number; lessonId: string }) { return !this.partial() && (lesson.remainingMinutes > 0 || this.leftOut(lesson.lessonId).length > 0); }
   leftOut(lessonId: string) { return (this.preview()?.leftOutTopics ?? []).filter(x => x.lessonId.toLowerCase() === lessonId.toLowerCase()); }
   leftOutNames(lessonId: string) { const topics = this.leftOut(lessonId); return topics.slice(0, 3).map(x => x.topicName).join(', ') + (topics.length > 3 ? '…' : ''); }
   spacedCount(lessonId: string) { return (this.preview()?.schedule.tasks ?? []).filter(x => x.lessonId === lessonId && x.kind === 'Spaced').length; }
@@ -532,7 +545,7 @@ export class WizardSummaryStepComponent implements OnInit {
     const p = this.preview();
     if (!p || !this.canPublish()) return;
     const staff = !!this.staffStudentId, created = this.created();
-    if (!staff && !await this.toaster.confirm('Yayımlarsan bugünden sonraki çalışmaların bu plana göre değişir. Tamamladığın çalışmalar korunur.',
+    if (!staff && !await this.toaster.confirm(this.publishConfirmText(p),
       { confirmText: 'Yayımla', cancelText: 'Vazgeç' })) return;
     this.publishing.set(true); this.publishIssue.set(null);
     if (created && !staff) { this.publishCreated(created); return; }
@@ -554,6 +567,12 @@ export class WizardSummaryStepComponent implements OnInit {
           this.publishIssue.set({ message: message || 'Plan kaydedilemedi. Yeniden deneyebilirsin.' });
         }
       });
+  }
+  /** What publishing does to the plan in force, with the numbers the preview knows. */
+  publishConfirmText(p: WeeklyOutcomePreview) {
+    const carried = p.protectedTaskCount > 0 ? ` Başladığın ya da sabitlediğin ${p.protectedTaskCount} çalışma yeni plana taşınır.` : '';
+    const span = p.request.partial ? ` Bu plan ${dayMonth(p.request.endDate)} tarihine kadar olan ${p.schedule.tasks.length} çalışmayı içerir; sonrasını Planım'dan eklersin.` : '';
+    return `Yayımlarsan bu plan, yayındaki planın yerini alır: bugünden sonraki bekleyen çalışmaların bu plana göre yeniden dağıtılır. Tamamladığın çalışmalar korunur.${carried}${span}`;
   }
   private publishCreated(plan: { id: string; version: number }) {
     this.planning.publish(plan.id, plan.version).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({

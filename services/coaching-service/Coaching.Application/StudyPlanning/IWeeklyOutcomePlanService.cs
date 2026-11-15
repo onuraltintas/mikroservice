@@ -10,7 +10,13 @@ namespace Coaching.Application.StudyPlanning;
 // (engine version 2). Left out when null, so the fingerprint of a request without them stays as it was; an empty list counts as none.
 public sealed record WeeklyOutcomePlanRequest(DateOnly StartDate,DateOnly EndDate,[property:JsonRequired] int ExpectedWeeklyDraftVersion,bool ReuseFreedSlots=true,
     int EngineVersion=1,bool PrioritizeWhenShort=false,
-    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<Guid>? FocusTopicIds=null);
+    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<Guid>? FocusTopicIds=null,
+    // User decision 15.11.2026: a plan may cover only part of the way to the exam (this week, or up to a chosen date). Partial:
+    // the lessons need not finish by EndDate and the plan can still be created. LeaveUnfinished: the topics of the active
+    // plan's untouched tasks dated before StartDate are not planned this time (they are asked about again at the next plan).
+    // Both are left out of the JSON when false, so the fingerprint of a request without them stays as it was.
+    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingDefault)] bool Partial=false,
+    [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingDefault)] bool LeaveUnfinished=false);
 public sealed record WeeklyExamDateRequest(DateOnly? ExamDate);
 public sealed record WeeklyLeftOutTopic(Guid LessonId,string LessonName,Guid TopicId,string TopicName,int Minutes);
 public sealed record WeeklyOutcomePlanSave([Required,MaxLength(200)] string Title,[Required] WeeklyOutcomePlanRequest Preview,[Required] string Fingerprint);

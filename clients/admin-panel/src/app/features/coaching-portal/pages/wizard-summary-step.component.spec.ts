@@ -429,7 +429,7 @@ describe('WizardSummaryStepComponent', () => {
     await keep(fixture);
     toaster.confirm.mockResolvedValueOnce(false);
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable();
-    expect(toaster.confirm).toHaveBeenCalledWith('Yayımlarsan bugünden sonraki çalışmaların bu plana göre değişir. Tamamladığın çalışmalar korunur.', { confirmText: 'Yayımla', cancelText: 'Vazgeç' });
+    expect(toaster.confirm).toHaveBeenCalledWith('Yayımlarsan bu plan, yayındaki planın yerini alır: bugünden sonraki bekleyen çalışmaların bu plana göre yeniden dağıtılır. Tamamladığın çalışmalar korunur.', { confirmText: 'Yayımla', cancelText: 'Vazgeç' });
     expect(engine.create).not.toHaveBeenCalled();
     button(el, 'Planımı yayımla')!.click(); await fixture.whenStable();
     const request = engine.preview.mock.calls.at(-1)![0];
@@ -680,6 +680,29 @@ describe('WizardSummaryStepComponent', () => {
     expect(engine.create).toHaveBeenCalledWith(expect.objectContaining({ fingerprint: 'f'.repeat(64) }), 'student-1');
     expect(planning.publish).not.toHaveBeenCalled();
     expect(events.planCreated).toHaveBeenCalledWith('new-plan');
+  });
+
+  // User decision 15.11.2026: the plan runs to the exam, through this week, or up to a chosen date.
+  it('plans only this week when asked, without "late" warnings, and says how the rest is added', async () => {
+    const { fixture, engine, el, toaster } = await setup();
+    await keep(fixture);
+    expect(el.querySelector('[data-testid="partial-note"]')).toBeNull();
+    fixture.componentInstance.setSpan('week'); await fixture.whenStable(); fixture.detectChanges();
+    // 09.11.2026 is a Monday: the week ends on Sunday 15.11.
+    expect(engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ startDate: '2026-11-09', endDate: '2026-11-15', partial: true, prioritizeWhenShort: false }), undefined);
+    expect(text(el.querySelector('[data-testid="partial-note"]'))).toContain('Gelecek haftayı ekle');
+    expect(el.textContent).not.toContain('yetişmiyor');
+    expect(fixture.componentInstance.anyLate()).toBe(false);
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable();
+    expect(toaster.confirm.mock.calls.at(-1)![0]).toContain('sonrasını Planım\'dan eklersin');
+
+    fixture.componentInstance.setSpan('custom'); fixture.componentInstance.setCustomEnd('2026-12-06'); await fixture.whenStable();
+    expect(engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ endDate: '2026-12-06', partial: true }), undefined);
+    // A date at or past the full plan's end is the full plan.
+    fixture.componentInstance.setCustomEnd('2027-06-13'); await fixture.whenStable();
+    expect(engine.preview.mock.calls.at(-1)![0]).not.toHaveProperty('partial');
+    fixture.componentInstance.setSpan('exam'); await fixture.whenStable();
+    expect(engine.preview.mock.calls.at(-1)![0]).toMatchObject({ endDate: '2027-05-12' });
   });
 
   it('ends on the server\'s default date without a tempo and says when only one tempo fits', async () => {
