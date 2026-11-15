@@ -28,7 +28,7 @@ public sealed class BillingApiTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _postgres.InitializeAsync();
-        await using (var db = new BillingDbContext(new DbContextOptionsBuilder<BillingDbContext>().UseNpgsql(_postgres.ConnectionString).Options))
+        await using (var db = new BillingDbContext(new DbContextOptionsBuilder<BillingDbContext>().UseBillingDatabase(_postgres.ConnectionString).Options))
             await db.Database.MigrateAsync();
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {

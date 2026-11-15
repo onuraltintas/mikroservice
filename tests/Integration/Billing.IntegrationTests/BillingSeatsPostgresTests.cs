@@ -50,7 +50,7 @@ public sealed class BillingSeatsPostgresTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _postgres.InitializeAsync();
-        _options = new DbContextOptionsBuilder<BillingDbContext>().UseNpgsql(_postgres.ConnectionString).Options;
+        _options = new DbContextOptionsBuilder<BillingDbContext>().UseBillingDatabase(_postgres.ConnectionString).Options;
         _institutions.Administered[_manager.Id] = [School];
         await using var db = Db();
         await db.Database.MigrateAsync();

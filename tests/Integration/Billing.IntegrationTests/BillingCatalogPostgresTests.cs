@@ -17,7 +17,7 @@ public sealed class BillingCatalogPostgresTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _postgres.InitializeAsync();
-        _options = new DbContextOptionsBuilder<BillingDbContext>().UseNpgsql(_postgres.ConnectionString).Options;
+        _options = new DbContextOptionsBuilder<BillingDbContext>().UseBillingDatabase(_postgres.ConnectionString).Options;
         await using var db = new BillingDbContext(_options);
         await db.Database.MigrateAsync();
     }
@@ -28,6 +28,24 @@ public sealed class BillingCatalogPostgresTests : IAsyncLifetime
 
     private static PlanRequest Plan(string name, BuyerType buyer, decimal price, int? seats, params PlanEntitlementRequest[] entitlements) =>
         new(name, null, buyer, price, 30, 0, seats, null, false, true, true, 0, ["Bir özellik"], entitlements);
+
+    // Rehearsal 15.11.2026: with a role called like the schema, the second run of the migration job applied everything again.
+    [Fact]
+    public async Task The_migration_history_lives_in_the_billing_schema_and_a_second_run_applies_nothing()
+    {
+        await using var db = new BillingDbContext(_options);
+        var all = db.Database.GetMigrations().Count();
+        Assert.Equal(all, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM billing.\"__EFMigrationsHistory\"").SingleAsync());
+        Assert.Equal(0, await db.Database.SqlQueryRaw<int>(
+            "SELECT count(*)::int AS \"Value\" FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '__EFMigrationsHistory'").SingleAsync());
+
+        // A role named like the schema puts "billing" first on its search path, as on the server.
+        await db.Database.OpenConnectionAsync();
+        await db.Database.ExecuteSqlRawAsync("SET search_path TO billing, public");
+        Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+        await db.Database.MigrateAsync();
+        Assert.Equal(all, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM billing.\"__EFMigrationsHistory\"").SingleAsync());
+    }
 
     [Fact]
     public async Task Migrations_create_the_three_products_with_subscription_not_required_and_manual_approval()

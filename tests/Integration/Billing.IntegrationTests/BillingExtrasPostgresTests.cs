@@ -33,7 +33,7 @@ public sealed class BillingExtrasPostgresTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _postgres.InitializeAsync();
-        _options = new DbContextOptionsBuilder<BillingDbContext>().UseNpgsql(_postgres.ConnectionString).Options;
+        _options = new DbContextOptionsBuilder<BillingDbContext>().UseBillingDatabase(_postgres.ConnectionString).Options;
         await using var db = Db();
         await db.Database.MigrateAsync();
         var catalog = new BillingCatalog(db, _clock);

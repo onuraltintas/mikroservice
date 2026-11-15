@@ -17,7 +17,7 @@ var migrationOnly = args.Any(argument =>
 var connectionString = builder.Configuration["BILLING_CONNECTION_STRING"]
     ?? builder.Configuration.GetConnectionString("Billing")
     ?? throw new InvalidOperationException("Billing database connection is not configured.");
-builder.Services.AddDbContext<BillingDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<BillingDbContext>(options => options.UseBillingDatabase(connectionString));
 
 if (migrationOnly)
 {

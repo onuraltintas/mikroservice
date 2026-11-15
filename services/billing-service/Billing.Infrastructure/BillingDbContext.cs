@@ -352,6 +352,26 @@ public static class BillingSeed
         new() { Id = Guid.Parse(id), ProductId = productId, Key = key, Name = name, HasLimit = hasLimit, CreatedAt = SeededAt };
 }
 
+/// <summary>
+/// The one place billing's database provider is set up. The migration history table is named with its schema: without
+/// it EF looks through the role's search path ("$user", public), and with a role called like the schema it found an empty
+/// history after the first run and applied every migration again (rehearsal 15.11.2026).
+/// </summary>
+public static class BillingDatabase
+{
+    public const string Schema = "billing";
+    public const string HistoryTable = "__EFMigrationsHistory";
+
+    public static DbContextOptionsBuilder UseBillingDatabase(this DbContextOptionsBuilder options, string connectionString) =>
+        options.UseNpgsql(connectionString, npgsql => npgsql.MigrationsHistoryTable(HistoryTable, Schema));
+
+    public static DbContextOptionsBuilder<BillingDbContext> UseBillingDatabase(this DbContextOptionsBuilder<BillingDbContext> options, string connectionString)
+    {
+        ((DbContextOptionsBuilder)options).UseBillingDatabase(connectionString);
+        return options;
+    }
+}
+
 /// <summary>Lets the EF tools build the model without the web host (migrations and the CI drift check).</summary>
 public sealed class BillingDbContextFactory : IDesignTimeDbContextFactory<BillingDbContext>
 {
@@ -359,6 +379,6 @@ public sealed class BillingDbContextFactory : IDesignTimeDbContextFactory<Billin
     {
         var connectionString = Environment.GetEnvironmentVariable("BILLING_CONNECTION_STRING")
             ?? "Host=127.0.0.1;Database=billing_design;Username=billing;Password=design-time-only";
-        return new BillingDbContext(new DbContextOptionsBuilder<BillingDbContext>().UseNpgsql(connectionString).Options);
+        return new BillingDbContext(new DbContextOptionsBuilder<BillingDbContext>().UseBillingDatabase(connectionString).Options);
     }
 }
