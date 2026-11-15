@@ -73,5 +73,11 @@ services:
       - Billing__Enabled=true
       - Services__BillingService=http://billing-service:8080
 
+  # Koçluk asks billing which students may use it.
+  coaching-service:
+    environment:
+      - Billing__Enabled=true
+      - Services__BillingService=http://billing-service:8080
+
 volumes:
   billing_data:

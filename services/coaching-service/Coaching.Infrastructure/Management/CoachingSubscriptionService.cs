@@ -18,7 +18,8 @@ namespace Coaching.Infrastructure.Management;
 public sealed class CoachingSubscriptionService(
     CoachingDbContext db,
     ICoachingIdentityAuthorizationClient identityAuthorizationClient,
-    ICoachingEventPublisher? events = null) : ICoachingSubscription
+    ICoachingEventPublisher? events = null,
+    ICoachingBillingAccess? billing = null) : ICoachingSubscription
 {
     private static readonly System.Globalization.CultureInfo TurkishCulture = new("tr-TR");
 
@@ -1516,6 +1517,10 @@ public sealed class CoachingSubscriptionService(
 
     public async Task<CoachingSubscriptionAccessSummary> GetMyAccessAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        // Where the billing service runs, it decides: an individual plan or a seat given by a teacher or an institution
+        // is one entitlement there. Koçluk's own subscription records below decide only without it.
+        if (billing is { Enabled: true })
+            return CoachingBillingRules.Summary(await billing.GetAsync(userId, cancellationToken));
         var settings = await GetSettingsAsync(cancellationToken);
         var now = DateTime.UtcNow;
         var rows = await (from subscription in db.CoachingSubscriptions.AsNoTracking()

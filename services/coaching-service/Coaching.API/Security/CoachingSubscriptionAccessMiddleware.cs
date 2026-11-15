@@ -9,7 +9,7 @@ public sealed class CoachingSubscriptionAccessMiddleware(RequestDelegate next)
     /// <summary>Roadmap D1: how long an allowed student is not re-checked. Refusals are never remembered.</summary>
     public static readonly TimeSpan AllowedFor = TimeSpan.FromMinutes(1);
 
-    public async Task InvokeAsync(HttpContext context, ICoachingSubscription subscriptions)
+    public async Task InvokeAsync(HttpContext context, ICoachingSubscription subscriptions, ICoachingBillingAccess? billing = null)
     {
         if (context.User.Identity?.IsAuthenticated != true
             || !context.User.IsInRole("Student")
@@ -28,7 +28,9 @@ public sealed class CoachingSubscriptionAccessMiddleware(RequestDelegate next)
             return;
         }
 
-        var cache = context.RequestServices?.GetService<IMemoryCache>();
+        // Where billing decides, its client remembers the answer and drops it when billing says something changed;
+        // a second note here would outlive that.
+        var cache = billing is { Enabled: true } ? null : context.RequestServices?.GetService<IMemoryCache>();
         var cacheKey = "coaching-subscription-access:" + userId.ToString("N");
         if (cache?.TryGetValue(cacheKey, out _) == true)
         {

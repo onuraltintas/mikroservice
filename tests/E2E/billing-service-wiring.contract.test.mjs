@@ -212,3 +212,14 @@ test('an institution gives the seats of its Hızlı Okuma plan through the produ
   const wrapper = read('clients/admin-panel/projects/staff-portal/src/app/shared/billing/my-subscription.component.ts');
   assert.match(wrapper, /template: MY_SUBSCRIPTION_TEMPLATE/);
 });
+
+test('Koçluk asks billing which students may use it only where billing runs', () => {
+  const client = read('services/coaching-service/Coaching.Infrastructure/ExternalServices/CoachingBillingAccessClient.cs');
+  assert.match(client, /GetValue\("Billing:Enabled", false\)/);
+  assert.match(client, /\/internal\/billing\/v1\/entitlements\?userId=/);
+  assert.match(client, /BillingProductCodes\.Coaching/);
+  const service = read('services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionService.cs');
+  assert.match(service, /if \(billing is \{ Enabled: true \}\)\s*\n\s*return CoachingBillingRules\.Summary\(/);
+  for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
+    assert.match(read(file), /coaching-service:\s*\n\s+environment:[\s\S]*?Billing__Enabled[:=]\s*"?true/, file);
+});

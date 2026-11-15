@@ -164,6 +164,13 @@ public static class DependencyInjection
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingManualStudyPlanService>();
         services.AddScoped<Coaching.Application.StudyPlanning.IManualStudyPlanService>(sp => sp.GetRequiredService<Coaching.Infrastructure.StudyPlanning.CoachingManualStudyPlanService>());
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingStudentStudyReportService>();
+        // Billing service ("Abonelik ve Ödeme"): who may use Koçluk is asked there when the deployment runs it (Billing:Enabled).
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton(services, TimeProvider.System);
+        services.AddSingleton<Coaching.Infrastructure.ExternalServices.CoachingBillingCacheState>();
+        services.AddHttpClient<ICoachingBillingAccess, Coaching.Infrastructure.ExternalServices.CoachingBillingAccessClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(3);
+        });
         services.AddScoped<ICoachingSubscription, CoachingSubscriptionService>();
         services.AddScoped<CoachingInstitutionSubscriptionService>();
         services.AddScoped<CoachingInstitutionExamService>();
