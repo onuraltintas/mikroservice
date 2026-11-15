@@ -72,8 +72,8 @@ public sealed class BillingErasureConsumersTests
             await harness.Bus.Publish(message);
             Assert.True(await harness.Published.Any<PersonalDataErasureExecutionCompletedV1>(x => x.Context.Message.RequestId == request));
             await harness.Bus.Publish(message);
-            Assert.True(await harness.Consumed.SelectAsync<PersonalDataErasureExecutionRequestedV1>().Take(2).Count() == 2);
-            Assert.True(await harness.Published.SelectAsync<PersonalDataErasureExecutionCompletedV1>().Take(2).Count() == 2);
+            for (var attempt = 0; attempt < 200 && harness.Published.Select<PersonalDataErasureExecutionCompletedV1>().Count() < 2; attempt++)
+                await Task.Delay(50);
             var completions = harness.Published.Select<PersonalDataErasureExecutionCompletedV1>().Select(x => x.Context.Message).ToArray();
             Assert.All(completions, item => Assert.Equal(("Billing", BillingErasure.CompletionId(request)), (item.ServiceName, item.EventId)));
             Assert.Equal([4, 0], completions.Select(item => item.DeletedRecordCount).Order().Reverse());
