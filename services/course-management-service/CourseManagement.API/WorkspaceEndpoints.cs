@@ -18,9 +18,24 @@ public static class WorkspaceEndpoints
                 institutionCategory = workspace.InstitutionCategory?.ToString(), role = member.Role.ToString(),
                 isReadOnly = workspace.IsErasureReadOnly });
         });
-        api.MapGet("/me/memberships", async (ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        api.MapGet("/me/memberships", async (ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             var now = DateTimeOffset.UtcNow;
+            if (billing.Enabled)
+            {
+                // The plan is the owner's in the billing service; the subscription table is not read.
+                var rows = await (from membership in db.Memberships.AsNoTracking()
+                    join workspace in db.Workspaces.AsNoTracking() on membership.WorkspaceId equals workspace.Id
+                    where membership.UserId == UserId(user) && membership.IsActive
+                    orderby workspace.Name
+                    select new { workspace.Id, workspace.Name, workspace.Type, workspace.InstitutionCategory, membership.Role,
+                        workspace.IsErasureReadOnly, workspace.OwnerUserId }).Take(100).ToListAsync(ct);
+                var answer = new List<object>();
+                foreach (var row in rows)
+                    answer.Add(new { row.Id, row.Name, type = row.Type.ToString(), institutionCategory = row.InstitutionCategory?.ToString(),
+                        role = row.Role.ToString(), isReadOnly = row.IsErasureReadOnly || !(await billing.GetAsync(row.OwnerUserId, ct)).CanWriteAt(now) });
+                return Results.Ok(answer);
+            }
             var memberships = await (from membership in db.Memberships.AsNoTracking()
                 join workspace in db.Workspaces.AsNoTracking() on membership.WorkspaceId equals workspace.Id
                 join subscriptionJoin in db.WorkspaceSubscriptions.AsNoTracking()
@@ -40,9 +55,34 @@ public static class WorkspaceEndpoints
                 }).Take(100).ToListAsync(ct);
             return Results.Ok(memberships);
         });
-        api.MapGet("/me/subscriptions", async (ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        api.MapGet("/me/subscriptions", async (ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             var userId = UserId(user);
+            if (billing.Enabled)
+            {
+                // One plan for the owner, bought on the shared "Aboneliğim" page; it covers each workspace the owner has.
+                var plan = await billing.GetAsync(userId, ct);
+                var owned = await db.Workspaces.AsNoTracking().Where(workspace => workspace.OwnerUserId == userId)
+                    .OrderBy(workspace => workspace.Name).ThenBy(workspace => workspace.Id)
+                    .Select(workspace => new { workspace.Id, workspace.Name, workspace.Type,
+                        active = db.Students.Count(student => student.WorkspaceId == workspace.Id && student.IsActive) })
+                    .Take(100).ToListAsync(ct);
+                return Results.Ok(owned.Select(workspace => new
+                {
+                    workspaceId = workspace.Id,
+                    workspaceName = workspace.Name,
+                    workspaceType = workspace.Type.ToString(),
+                    activeStudentCount = workspace.active,
+                    subscription = plan.HasPlan ? new
+                    {
+                        planName = (string?)null,
+                        activeStudentLimit = plan.ActiveStudentLimit,
+                        startsAt = (DateTimeOffset?)null,
+                        endsAt = plan.EndsAt,
+                        accessStatus = WorkspaceAccessStatus.Active.ToString()
+                    } : null
+                }));
+            }
             var rows = await (from workspace in db.Workspaces.AsNoTracking()
                 where workspace.OwnerUserId == userId
                 join plan in db.WorkspaceSubscriptions.AsNoTracking() on workspace.Id equals plan.WorkspaceId into plans
@@ -185,9 +225,23 @@ public static class WorkspaceEndpoints
         // It never permits access to course data outside this user's participation endpoints.
         var participation = app.MapGroup("/api/course-management/v1/participation").RequireAuthorization("IdentityParticipant");
         participation.AddEndpointFilter<WorkspaceSubscriptionWriteAccessFilter>();
-        participation.MapGet("/invitations", async (ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        participation.MapGet("/invitations", async (ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             var now = DateTimeOffset.UtcNow;
+            if (billing.Enabled)
+            {
+                var rows = await (from invitation in db.Invitations.AsNoTracking()
+                    join workspace in db.Workspaces.AsNoTracking() on invitation.WorkspaceId equals workspace.Id
+                    where invitation.TargetUserId == UserId(user) && invitation.Status == InvitationStatus.Pending && invitation.ExpiresAt > DateTimeOffset.UtcNow
+                    orderby invitation.ExpiresAt
+                    select new { invitation.Id, invitation.WorkspaceId, workspace.Name, invitation.Role, invitation.ExpiresAt,
+                        workspace.IsErasureReadOnly, workspace.OwnerUserId }).Take(100).ToListAsync(ct);
+                var answer = new List<object>();
+                foreach (var row in rows)
+                    answer.Add(new { row.Id, row.WorkspaceId, workspaceName = row.Name, role = row.Role.ToString(), row.ExpiresAt,
+                        isReadOnly = row.IsErasureReadOnly || !(await billing.GetAsync(row.OwnerUserId, ct)).CanWriteAt(now) });
+                return Results.Ok(answer);
+            }
             return Results.Ok(await (from invitation in db.Invitations.AsNoTracking()
                 join workspace in db.Workspaces.AsNoTracking() on invitation.WorkspaceId equals workspace.Id
                 join subscriptionJoin in db.WorkspaceSubscriptions.AsNoTracking()
@@ -207,7 +261,7 @@ public static class WorkspaceEndpoints
                 }).Take(100).ToListAsync(ct));
         });
 
-        participation.MapPost("/invitations/{invitationId:guid}/accept", async (Guid invitationId, AcceptInvitationRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        participation.MapPost("/invitations/{invitationId:guid}/accept", async (Guid invitationId, AcceptInvitationRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(request.DisplayName) || request.DisplayName.Trim().Length > 200)
                 return Results.BadRequest(new { code = "Profile.InvalidName" });
@@ -276,7 +330,7 @@ public static class WorkspaceEndpoints
                             return Results.Conflict(new { code = "Student.RecordSelectionRequired" });
                     }
                 }
-                if (linkedStudent is null && !await WorkspaceStudentCapacity.CanAddAsync(db, invitation.WorkspaceId, 1, ct))
+                if (linkedStudent is null && !await WorkspaceStudentCapacity.CanAddAsync(db, billing, invitation.WorkspaceId, 1, ct))
                     return Results.Conflict(new { code = "Student.ActiveLimitReached" });
             }
             if (member is null) db.Memberships.Add(WorkspaceMembership.Create(invitation.WorkspaceId, UserId(user), invitation.Role));

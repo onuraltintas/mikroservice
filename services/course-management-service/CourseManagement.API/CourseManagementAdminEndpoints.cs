@@ -38,8 +38,10 @@ public static class CourseManagementAdminEndpoints
             });
         });
 
-        admin.MapGet("/subscriptions", async (int? skip, int? take, CourseManagementDbContext db, CancellationToken ct) =>
+        admin.MapGet("/subscriptions", async (int? skip, int? take, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
+            // With the billing service, plans are listed in its own admin pages; no workspace has one here.
+            var localPlans = !billing.Enabled;
             var offset = skip ?? 0;
             var pageSize = take ?? 50;
             if (offset < 0 || pageSize is < 1 or > 100)
@@ -47,7 +49,7 @@ public static class CourseManagementAdminEndpoints
 
             var totalCount = await db.Workspaces.AsNoTracking().CountAsync(ct);
             var rows = await (from workspace in db.Workspaces.AsNoTracking()
-                join plan in db.WorkspaceSubscriptions.AsNoTracking() on workspace.Id equals plan.WorkspaceId into plans
+                join plan in db.WorkspaceSubscriptions.AsNoTracking().Where(item => localPlans) on workspace.Id equals plan.WorkspaceId into plans
                 from subscription in plans.DefaultIfEmpty()
                 orderby workspace.Name, workspace.Id
                 select new
@@ -127,8 +129,10 @@ public static class CourseManagementAdminEndpoints
         });
 
         admin.MapPut("/workspaces/{workspaceId:guid}/subscription", async (Guid workspaceId,
-            AssignWorkspaceSubscriptionRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            AssignWorkspaceSubscriptionRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
+            // With the billing service the plan is bought or granted there ("Abonelik ve Ödeme"), not assigned here.
+            if (billing.Enabled) return Results.Conflict(new { code = "Subscription.ManagedByBilling" });
             if (string.IsNullOrWhiteSpace(request.PlanName) || request.ActiveStudentLimit < 1
                 || request.StartsAt is null || request.EndsAt is null || request.AccessStatus is null
                 || !Enum.IsDefined(request.AccessStatus.Value))

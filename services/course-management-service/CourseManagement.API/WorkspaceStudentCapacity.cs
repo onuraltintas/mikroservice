@@ -11,10 +11,20 @@ internal static class WorkspaceStudentCapacity
             .SingleAsync(ct);
     }
 
-    public static async Task<bool> CanAddAsync(CourseManagementDbContext db, Guid workspaceId, int additionalStudents,
-        CancellationToken ct)
+    public static async Task<bool> CanAddAsync(CourseManagementDbContext db, WorkspaceBillingPlans billing, Guid workspaceId,
+        int additionalStudents, CancellationToken ct)
     {
         if (additionalStudents < 1) return true;
+
+        if (billing.Enabled)
+        {
+            // The limit is the owner's plan in the billing service; the subscription table is not used.
+            var plan = await billing.GetForWorkspaceAsync(db, workspaceId, ct);
+            if (!plan.RequireSubscription) return true;
+            var active = await db.Students.AsNoTracking()
+                .CountAsync(student => student.WorkspaceId == workspaceId && student.IsActive, ct);
+            return plan.CanHold(active + additionalStudents);
+        }
 
         // Expiry and access-state write gating remains a product decision; this enforces the configured count only.
         var limit = await db.WorkspaceSubscriptions.AsNoTracking()

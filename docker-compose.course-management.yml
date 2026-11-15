@@ -37,6 +37,9 @@ services:
       JWT_PREVIOUS_KEY_IDS: ${JWT_PREVIOUS_KEY_IDS:-}
       INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?Set Identity internal service key}
       Services__IdentityService: http://identity-service:8080
+      # Set BILLING_ENABLED=true where the billing overlay runs: the workspace plan is then read from the billing service.
+      Billing__Enabled: ${BILLING_ENABLED:-false}
+      Services__BillingService: http://billing-service:8080
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Username: ${RABBITMQ_DEFAULT_USER:?Set RabbitMQ user}
       RabbitMQ__Password: ${RABBITMQ_DEFAULT_PASS:?Set RabbitMQ password}
