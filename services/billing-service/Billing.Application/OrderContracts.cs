@@ -287,3 +287,20 @@ public interface IBillingExtras
     /// <summary>The invoice for the buyer, or for an admin (<paramref name="userId"/> null).</summary>
     Task<InvoiceFile?> GetInvoiceAsync(Guid? userId, Guid orderId, CancellationToken cancellationToken = default);
 }
+
+public sealed record ErasureAssessment(int Orders, int Payments, int Subscriptions, int Seats, int Invoices);
+
+/// <summary>
+/// Reminders about subscriptions that end, and what happens to the billing records of an erased account: access ends
+/// at once, the financial records stay ten years, then what names the person is removed (stage 5).
+/// </summary>
+public interface IBillingLifecycle
+{
+    /// <summary>Sends the reminders that are due (7 days and 1 day before the end, and at the end); returns how many.</summary>
+    Task<int> SendRemindersAsync(CancellationToken cancellationToken = default);
+    Task<ErasureAssessment> AssessErasureAsync(Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>Ends the access of an erased account and starts the retention time; returns how many records changed. Safe to repeat.</summary>
+    Task<int> EraseUserAsync(Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>Removes what names the person from records whose retention time is over; returns how many accounts.</summary>
+    Task<int> RedactExpiredAsync(CancellationToken cancellationToken = default);
+}

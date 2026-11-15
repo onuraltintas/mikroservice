@@ -30,6 +30,8 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Withdrawal> Withdrawals => Set<Withdrawal>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<NoticeReceipt> NoticeReceipts => Set<NoticeReceipt>();
+    public DbSet<ErasureReceipt> ErasureReceipts => Set<ErasureReceipt>();
     public DbSet<BankStatementImport> BankStatementImports => Set<BankStatementImport>();
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
 
@@ -263,6 +265,23 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.HasIndex(item => item.OrderId);
             entity.HasOne<Payment>().WithMany().HasForeignKey(item => item.PaymentId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<Order>().WithMany().HasForeignKey(item => item.OrderId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<NoticeReceipt>(entity =>
+        {
+            entity.ToTable("notice_receipts");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Kind).HasMaxLength(30).IsRequired();
+            entity.HasIndex(item => new { item.SubscriptionId, item.Kind, item.PeriodEnd }).IsUnique();
+            entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ErasureReceipt>(entity =>
+        {
+            entity.ToTable("erasure_receipts");
+            entity.HasKey(item => item.UserId);
+            entity.Property(item => item.UserId).ValueGeneratedNever();
+            entity.HasIndex(item => new { item.RedactedAt, item.RedactAfter });
         });
 
         modelBuilder.Entity<BankStatementImport>(entity =>

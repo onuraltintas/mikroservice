@@ -47,6 +47,8 @@ public static class NotificationReceiveEndpoints
         new("coaching-weekly-decision-changed", typeof(WeeklyDecisionChangedConsumer)),
         new("coaching-reminder-due", typeof(CoachingReminderDueConsumer)),
         new("coaching-subscription-notice", typeof(CoachingSubscriptionNoticeConsumer)),
+        // One queue for every product's order, withdrawal, invoice and expiry e-mails (billing service).
+        new("billing-notice", typeof(BillingNoticeConsumer)),
         new("coaching-teacher-link-ended", typeof(CoachingTeacherLinkEndedConsumer)),
         new("coaching-message-received", typeof(CoachingMessageReceivedConsumer)),
         new("coaching-parent-weekly-summary", typeof(CoachingParentWeeklySummaryConsumer)),

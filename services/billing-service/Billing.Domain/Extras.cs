@@ -107,3 +107,34 @@ public static class ExtrasRules
         return value is { Length: >= 3 and <= 40 } ? value : null;
     }
 }
+
+/// <summary>A reminder that was sent, so that it is not sent again for the same end of the same subscription.</summary>
+public sealed class NoticeReceipt
+{
+    public Guid Id { get; set; }
+    public Guid SubscriptionId { get; set; }
+    public string Kind { get; set; } = string.Empty;
+    public DateTime PeriodEnd { get; set; }
+    public DateTime SentAt { get; set; }
+}
+
+/// <summary>
+/// An account that was erased. Its financial records are kept for ten years (tax and commercial law) and what names
+/// the person in them is removed after that.
+/// </summary>
+public sealed class ErasureReceipt
+{
+    public Guid UserId { get; set; }
+    public DateTime ErasedAt { get; set; }
+    public DateTime RedactAfter { get; set; }
+    public DateTime? RedactedAt { get; set; }
+}
+
+public static class RetentionRules
+{
+    /// <summary>User decision 14.11.2026: financial records of an erased account are kept ten years.</summary>
+    public const int FinancialRetentionYears = 10;
+    public const string RedactedName = "Silinmiş hesap";
+    public const string RedactedText = "[Saklama süresi dolduğu için arındırıldı]";
+    public const int ReminderDays = 7;
+}
