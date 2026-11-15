@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
-import { BillingAdminService, BillingAdminSubscription, BillingProduct } from '../../core/services/billing-admin.service';
+import { BillingAdminService, BillingAdminSubscription, BillingProduct, BillingSeatPool, billingErrorMessage } from '../../core/services/billing-admin.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
 /** "Abonelik ve Ödeme › Abonelikler": who has access through which plan until when, in every product. */
@@ -30,7 +30,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
         </div>
         <div class="overflow-x-auto">
           <table class="data-table">
-            <thead><tr><th>Hesap</th><th>Plan</th><th>Ürünler</th><th>Başlangıç</th><th>Bitiş</th><th>Koltuk</th><th>Durum</th></tr></thead>
+            <thead><tr><th>Hesap</th><th>Plan</th><th>Ürünler</th><th>Başlangıç</th><th>Bitiş</th><th>Koltuk</th><th>Durum</th><th></th></tr></thead>
             <tbody>
               @for (row of subscriptions(); track row.subscription.id) {
                 <tr>
@@ -41,15 +41,48 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
                   <td>{{ row.subscription.endsAt | date:'dd.MM.yyyy' }}</td>
                   <td>{{ row.subscription.seatCount ?? '—' }}</td>
                   <td><span class="badge" [class.on]="row.subscription.isCurrent" [class.off]="!row.subscription.isCurrent">{{ stateLabel(row) }}</span></td>
+                  <td class="actions">@if (row.subscription.seatCount !== null) {
+                    <button type="button" (click)="toggleSeats(row)" [attr.aria-expanded]="pool()?.subscriptionId === row.subscription.id">{{ pool()?.subscriptionId === row.subscription.id ? 'Koltukları gizle' : 'Koltuklar' }}</button>
+                  }</td>
                 </tr>
-              } @empty { <tr><td colspan="7" class="empty">{{ loading() ? 'Yükleniyor…' : 'Abonelik yok.' }}</td></tr> }
+                @if (pool(); as seats) {
+                  @if (seats.subscriptionId === row.subscription.id) {
+                    <tr class="seat-row"><td colspan="8" data-testid="seat-pool">
+                      <p class="text-sm"><strong>{{ seats.used }} / {{ seats.capacity }}</strong> koltuk dolu@if (seats.extraSeats) { <span> · {{ seats.extraSeats }} ek koltuk, {{ seats.extraSeatsUntil | date:'dd.MM.yyyy' }} tarihine kadar</span> }@if (seats.used > seats.capacity) { <span class="warn"> · {{ seats.used - seats.capacity }} koltuk kapasite dışında: erişimi yok</span> }</p>
+                      <p class="muted">Koltukları ürünün kendisi verir (öğretmen ya da kurum yöneticisi, üründeki ekrandan). Buradan yalnız geri alınabilir. Kullanıcılar kimlik numarasıyla görünür.</p>
+                      <table class="data-table mt-2">
+                        <thead><tr><th>Kullanıcı</th><th>Verildi</th><th>Durum</th><th></th></tr></thead>
+                        <tbody>
+                          @for (seat of seats.seats; track seat.userId) {
+                            <tr>
+                              <td class="font-mono">{{ seat.userId }}</td>
+                              <td>{{ seat.assignedAt | date:'dd.MM.yyyy HH:mm' }}</td>
+                              <td><span class="badge" [class.on]="seat.isCovered" [class.off]="seat.isSuspended">{{ seat.isSuspended ? 'Geri alındı' : seat.isCovered ? 'Erişimi var' : 'Kapasite dışı' }}</span></td>
+                              <td class="actions">@if (!seat.isSuspended) {
+                                @if (releasing() === seat.userId) {
+                                  <span class="muted">Koltuk geri alınsın mı?</span>
+                                  <button type="button" class="danger" (click)="release(seats.subscriptionId, seat.userId)" [disabled]="saving()">Evet, geri al</button>
+                                  <button type="button" (click)="releasing.set(null)">Vazgeç</button>
+                                } @else { <button type="button" class="danger" (click)="releasing.set(seat.userId)">Geri al</button> }
+                              }</td>
+                            </tr>
+                          } @empty { <tr><td colspan="4" class="empty">Henüz koltuk verilmedi.</td></tr> }
+                        </tbody>
+                      </table>
+                    </td></tr>
+                  }
+                }
+              } @empty { <tr><td colspan="8" class="empty">{{ loading() ? 'Yükleniyor…' : 'Abonelik yok.' }}</td></tr> }
             </tbody>
           </table>
         </div>
       </div>
     </main>
   `,
-  styles: [BILLING_PAGE_STYLES]
+  styles: [BILLING_PAGE_STYLES, `
+    .seat-row > td { background: color-mix(in srgb, var(--ui-brand) 6%, transparent); }
+    .warn { color: #b45309; }
+  `]
 })
 export class BillingSubscriptionsComponent implements OnInit {
   private readonly billing = inject(BillingAdminService);
@@ -57,6 +90,9 @@ export class BillingSubscriptionsComponent implements OnInit {
   readonly subscriptions = signal<BillingAdminSubscription[]>([]);
   readonly products = signal<BillingProduct[]>([]);
   readonly product = signal('');
+  readonly pool = signal<BillingSeatPool | null>(null);
+  readonly releasing = signal<string | null>(null);
+  readonly saving = signal(false);
   readonly loading = signal(false);
   readonly error = signal('');
 
@@ -76,6 +112,21 @@ export class BillingSubscriptionsComponent implements OnInit {
     this.billing.getSubscriptions(this.product()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: subscriptions => this.subscriptions.set(subscriptions),
       error: () => this.error.set('Abonelikler yüklenemedi.')
+    });
+  }
+
+  toggleSeats(row: BillingAdminSubscription): void {
+    this.releasing.set(null);
+    if (this.pool()?.subscriptionId === row.subscription.id) { this.pool.set(null); return; }
+    this.billing.getSeats(row.subscription.id).subscribe({ next: pool => this.pool.set(pool), error: () => this.error.set('Koltuklar yüklenemedi.') });
+  }
+
+  release(subscriptionId: string, userId: string): void {
+    this.saving.set(true);
+    this.error.set('');
+    this.billing.releaseSeat(subscriptionId, userId).pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: pool => { this.pool.set(pool); this.releasing.set(null); },
+      error: error => this.error.set(billingErrorMessage(error, 'Koltuk geri alınamadı.'))
     });
   }
 

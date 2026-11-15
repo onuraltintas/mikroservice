@@ -33,6 +33,9 @@ builder.Services.AddScoped<IBillingCatalog, BillingCatalog>();
 builder.Services.AddScoped<BillingOrders>();
 builder.Services.AddScoped<IBillingOrders>(services => services.GetRequiredService<BillingOrders>());
 builder.Services.AddScoped<IBillingBankStatements, BillingBankStatements>();
+builder.Services.AddScoped<IBillingSeats, BillingSeats>();
+builder.Services.AddHttpClient<IdentityBillingInstitutions>(client => client.Timeout = TimeSpan.FromSeconds(5));
+builder.Services.AddScoped<IBillingInstitutions>(services => services.GetRequiredService<IdentityBillingInstitutions>());
 builder.Services.AddScoped<IBillingEvents, MassTransitBillingEvents>();
 // Product services ask for entitlements with the shared service key; there is no fallback value.
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
@@ -103,6 +106,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check 
 app.MapBillingCatalogEndpoints();
 app.MapBillingOrderEndpoints();
 app.MapBillingBankStatementEndpoints();
+app.MapBillingSeatEndpoints();
 app.Run();
 
 public partial class Program { }

@@ -9,6 +9,7 @@ using Billing.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Shared.IntegrationTests.Fixtures;
 
@@ -40,6 +41,8 @@ public sealed class BillingApiTests : IAsyncLifetime
             builder.UseSetting("AllowedHosts", "*");
             builder.UseSetting("INTERNAL_SERVICE_API_KEY", ServiceKey);
             builder.UseSetting("Billing:RunWorkers", "false");
+            // Identity is not running here; nobody administers an institution.
+            builder.ConfigureServices(services => services.AddScoped<Billing.Application.IBillingInstitutions>(_ => new FakeInstitutions()));
         });
     }
 
@@ -183,5 +186,33 @@ public sealed class BillingApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, (await admin.PostAsJsonAsync($"/api/billing/v1/admin/orders/{orderId}/reverse", new { note = "Ödeme bankadan geri döndü." })).StatusCode);
         var after = await student.GetFromJsonAsync<JsonElement>("/api/billing/v1/me?product=speed-reading");
         Assert.Empty(after.GetProperty("entitlements").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Seats_are_given_only_inside_the_network_and_an_owner_reaches_only_their_own_pool()
+    {
+        var body = new { product = "coaching", ownerUserId = Guid.NewGuid(), userId = Guid.NewGuid(), actorId = Guid.NewGuid() };
+        // Through the gateway's path there is no seat endpoint at all; the internal one asks for the service key.
+        Assert.Equal(HttpStatusCode.NotFound, (await Client("SystemAdmin").PostAsJsonAsync("/api/billing/v1/seats/assign", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client("SystemAdmin").PostAsJsonAsync("/internal/billing/v1/seats/assign", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client(null).GetAsync($"/internal/billing/v1/seats?product=coaching&ownerUserId={Guid.NewGuid()}")).StatusCode);
+
+        using var keyed = new HttpRequestMessage(HttpMethod.Post, "/internal/billing/v1/seats/assign") { Content = JsonContent.Create(body) };
+        keyed.Headers.Add("X-Internal-Service-Key", ServiceKey);
+        var result = await (await Client(null).SendAsync(keyed)).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("NoPool", result.GetProperty("code").GetString());
+        using var pool = new HttpRequestMessage(HttpMethod.Get, $"/internal/billing/v1/seats?product=coaching&ownerUserId={Guid.NewGuid()}");
+        pool.Headers.Add("X-Internal-Service-Key", ServiceKey);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client(null).SendAsync(pool)).StatusCode);
+        using var both = new HttpRequestMessage(HttpMethod.Get, $"/internal/billing/v1/entitlements?product=coaching&userId={Guid.NewGuid()}&organizationId={Guid.NewGuid()}");
+        both.Headers.Add("X-Internal-Service-Key", ServiceKey);
+        Assert.Equal(HttpStatusCode.BadRequest, (await Client(null).SendAsync(both)).StatusCode);
+
+        var teacher = Client("Teacher");
+        Assert.Equal("[]", await teacher.GetStringAsync("/api/billing/v1/organizations"));
+        Assert.Equal(HttpStatusCode.NotFound, (await teacher.GetAsync($"/api/billing/v1/subscriptions/{Guid.NewGuid()}/seats")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client(null).GetAsync("/api/billing/v1/organizations")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await teacher.GetAsync($"/api/billing/v1/admin/subscriptions/{Guid.NewGuid()}/seats")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client("SystemAdmin").GetAsync($"/api/billing/v1/admin/subscriptions/{Guid.NewGuid()}/seats")).StatusCode);
     }
 }

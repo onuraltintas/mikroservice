@@ -123,6 +123,13 @@ public interface IInstitutionRepository
     Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(Guid institutionId, PlatformProduct product, CancellationToken cancellationToken);
     Task<InstitutionAdmin?> GetAdminAsync(Guid institutionId, Guid userId, PlatformProduct product, CancellationToken cancellationToken);
     Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, PlatformProduct product, CancellationToken cancellationToken);
+    /// <summary>
+    /// The active institutions a user is an active admin of, in any product: the billing service keeps one account
+    /// per institution and lets its admins buy for it.
+    /// </summary>
+    Task<IReadOnlyList<EduPlatform.Shared.Contracts.Billing.BillingInstitution>> GetAdministeredInstitutionsAsync(
+        Guid userId, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<EduPlatform.Shared.Contracts.Billing.BillingInstitution>>([]);
     Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, PlatformProduct product, CancellationToken cancellationToken);
     Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, PlatformProduct product, CancellationToken cancellationToken);
     Task<PagedList<InstitutionStudentRosterItem>> GetStudentRosterAsync(

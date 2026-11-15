@@ -5,7 +5,67 @@ namespace Billing.Application;
 /// <summary>Who is asking, from the access token. The token carries no name, so the buyer's name comes with the order.</summary>
 public sealed record BillingUser(Guid Id, string? Email, IReadOnlyCollection<string> Roles);
 
-public sealed record CreateOrderRequest(Guid PlanId, string? DocumentsVersion, string? BuyerName);
+/// <summary><paramref name="OrganizationId"/>: the institution an institution plan is bought for; the buyer must administer it.</summary>
+public sealed record CreateOrderRequest(Guid PlanId, string? DocumentsVersion, string? BuyerName, Guid? OrganizationId = null);
+
+public sealed record CreateSeatOrderRequest(int Count, string? DocumentsVersion, string? BuyerName);
+
+/// <summary>An institution as Identity knows it.</summary>
+public sealed record Institution(Guid Id, string Name);
+
+/// <summary>Asks Identity which institutions a user administers; billing keeps no membership of its own.</summary>
+public interface IBillingInstitutions
+{
+    Task<IReadOnlyList<Institution>> GetAdministeredAsync(Guid userId, CancellationToken cancellationToken = default);
+}
+
+public sealed record SeatView(Guid UserId, bool IsSuspended, DateTime AssignedAt,
+    /// <summary>The seat is within the capacity and gives access now.</summary>
+    bool IsCovered);
+
+public sealed record SeatPoolView(
+    Guid SubscriptionId,
+    string PlanName,
+    DateTime EndsAt,
+    int Capacity,
+    int Used,
+    int ExtraSeats,
+    DateTime? ExtraSeatsUntil,
+    /// <summary>The plan sells extra seats at this price for a whole period; null when it sells none.</summary>
+    decimal? ExtraSeatPrice,
+    IReadOnlyList<SeatView> Seats);
+
+public sealed record SeatQuote(int Count, decimal Amount, string Currency, int DaysLeft, SalesDocuments Documents);
+
+/// <summary>Who owns a seat pool: a user (a teacher) or an organization. Exactly one is set.</summary>
+public sealed record SeatOwner(Guid? UserId, Guid? OrganizationId);
+
+public sealed record SeatChangeRequest(string Product, Guid? OwnerUserId, Guid? OrganizationId, Guid UserId, Guid ActorId, string? Reason);
+
+/// <summary><paramref name="Code"/>: Assigned, AlreadyAssigned, Released, NoPool, PoolFull, NotAssigned.</summary>
+public sealed record SeatChangeResult(bool Done, string Code, SeatPoolView? Pool);
+
+public sealed record MyOrganization(Guid Id, string Name, IReadOnlyList<SubscriptionView> Subscriptions, IReadOnlyList<OrderView> PendingOrders);
+
+/// <summary>Seat pools of teacher and institution subscriptions, and the extra seats an institution buys (stage 4).</summary>
+public interface IBillingSeats
+{
+    /// <summary>The institutions the user administers, with what each has bought.</summary>
+    Task<IReadOnlyList<MyOrganization>> GetMyOrganizationsAsync(BillingUser user, CancellationToken cancellationToken = default);
+    /// <summary>The seats of a subscription for its owner; null when it is not the caller's.</summary>
+    Task<SeatPoolView?> GetMySeatsAsync(BillingUser user, Guid subscriptionId, CancellationToken cancellationToken = default);
+    Task<SeatQuote?> QuoteSeatOrderAsync(BillingUser user, Guid subscriptionId, int count, string? buyerName, CancellationToken cancellationToken = default);
+    Task<OrderView?> CreateSeatOrderAsync(BillingUser user, Guid subscriptionId, CreateSeatOrderRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>For product services: the running pool of an owner in a product; null when there is none.</summary>
+    Task<SeatPoolView?> GetPoolAsync(SeatOwner owner, string productCode, CancellationToken cancellationToken = default);
+    /// <summary>For product services, which have already checked that the user may sit there (membership, assignment).</summary>
+    Task<SeatChangeResult> AssignAsync(SeatChangeRequest request, CancellationToken cancellationToken = default);
+    Task<SeatChangeResult> ReleaseAsync(SeatChangeRequest request, CancellationToken cancellationToken = default);
+
+    Task<SeatPoolView?> GetSeatsAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+    Task<SeatPoolView?> AdminReleaseAsync(Guid subscriptionId, Guid userId, Guid actorId, CancellationToken cancellationToken = default);
+}
 
 public sealed record OrderView(
     Guid Id,
@@ -25,7 +85,9 @@ public sealed record OrderView(
     bool HasReceipt,
     DateTime? ReviewedAt,
     string? ReviewNote,
-    string DocumentsVersion);
+    string DocumentsVersion,
+    OrderKind Kind = OrderKind.Subscription,
+    int? ExtraSeats = null);
 
 public sealed record AdminOrderView(
     OrderView Order,

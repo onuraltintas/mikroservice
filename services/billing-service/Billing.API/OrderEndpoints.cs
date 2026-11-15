@@ -73,11 +73,14 @@ public static class OrderEndpoints
             orders.GetSubscriptionsAsync(product, cancellationToken));
 
         // Not under /api: the gateway never routes it. Product services call it with the shared service key.
-        app.MapGet("/internal/billing/v1/entitlements", async ([FromQuery] Guid userId, [FromQuery] string product, HttpRequest request,
-            IConfiguration configuration, IBillingOrders orders, CancellationToken cancellationToken) =>
+        // A holder is a user, or an organization for what an institution plan gives the institution itself.
+        app.MapGet("/internal/billing/v1/entitlements", async ([FromQuery] Guid? userId, [FromQuery] Guid? organizationId, [FromQuery] string product,
+            HttpRequest request, IConfiguration configuration, IBillingOrders orders, CancellationToken cancellationToken) =>
             !InternalServiceAuthentication.IsValid(request, configuration)
                 ? Results.Unauthorized()
-                : OkOrNotFound(await orders.GetAccessAsync(userId, product, cancellationToken)))
+                : (userId is null) == (organizationId is null)
+                    ? Results.BadRequest()
+                    : OkOrNotFound(await orders.GetAccessAsync((userId ?? organizationId)!.Value, product, cancellationToken)))
             .AllowAnonymous();
     }
 
