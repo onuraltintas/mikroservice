@@ -26,6 +26,8 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<SubscriptionPeriod> SubscriptionPeriods => Set<SubscriptionPeriod>();
     public DbSet<EntitlementGrant> EntitlementGrants => Set<EntitlementGrant>();
+    public DbSet<BankStatementImport> BankStatementImports => Set<BankStatementImport>();
+    public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -205,6 +207,38 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.HasIndex(item => item.SubscriptionId);
             entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<Entitlement>().WithMany().HasForeignKey(item => item.EntitlementId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<BankStatementImport>(entity =>
+        {
+            entity.ToTable("bank_statement_imports");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.FileName).HasMaxLength(200).IsRequired();
+            entity.HasIndex(item => item.UploadedAt);
+            entity.HasOne<BankAccount>().WithMany().HasForeignKey(item => item.BankAccountId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<BankTransaction>(entity =>
+        {
+            entity.ToTable("bank_transactions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Amount).HasPrecision(12, 2);
+            entity.Property(item => item.Description).HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.Sender).HasMaxLength(200);
+            entity.Property(item => item.Reference).HasMaxLength(100);
+            entity.Property(item => item.PaymentCode).HasMaxLength(20);
+            entity.Property(item => item.Fingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Note).HasMaxLength(1_000);
+            // The same statement line is stored once, and a line pays one order.
+            entity.HasIndex(item => item.Fingerprint).IsUnique();
+            entity.HasIndex(item => item.PaymentId).IsUnique();
+            entity.HasIndex(item => new { item.Status, item.BookedAt });
+            entity.HasIndex(item => item.OrderId);
+            entity.HasOne<BankAccount>().WithMany().HasForeignKey(item => item.BankAccountId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<BankStatementImport>().WithMany().HasForeignKey(item => item.ImportId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Order>().WithMany().HasForeignKey(item => item.OrderId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Payment>().WithMany().HasForeignKey(item => item.PaymentId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

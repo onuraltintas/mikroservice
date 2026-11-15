@@ -5,8 +5,8 @@ subscriptions, seats, invoices and notices. Plan and stages: project docs `billi
 `billing-service-design.md`, `billing-service-progress.md`.
 
 ## Status
-Stage 2: catalog and settings; orders by bank transfer with a payment code, manual review, subscriptions and
-entitlement grants. Billing goes live in one release at the end of its build (decision 14.11.2026).
+Stage 3: catalog and settings; orders by bank transfer with a payment code, review by hand or by bank statement
+(exact match, per product), subscriptions and entitlement grants. Billing goes live in one release at the end of its build (decision 14.11.2026).
 Until then no environment runs it unless its overlay is used, and the gateway answers 404 on `/api/billing`.
 
 ## Run locally

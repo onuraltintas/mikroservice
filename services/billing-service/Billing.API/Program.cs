@@ -30,7 +30,9 @@ if (migrationOnly)
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IBillingCatalog, BillingCatalog>();
-builder.Services.AddScoped<IBillingOrders, BillingOrders>();
+builder.Services.AddScoped<BillingOrders>();
+builder.Services.AddScoped<IBillingOrders>(services => services.GetRequiredService<BillingOrders>());
+builder.Services.AddScoped<IBillingBankStatements, BillingBankStatements>();
 builder.Services.AddScoped<IBillingEvents, MassTransitBillingEvents>();
 // Product services ask for entitlements with the shared service key; there is no fallback value.
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
@@ -100,6 +102,7 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => fa
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 app.MapBillingCatalogEndpoints();
 app.MapBillingOrderEndpoints();
+app.MapBillingBankStatementEndpoints();
 app.Run();
 
 public partial class Program { }

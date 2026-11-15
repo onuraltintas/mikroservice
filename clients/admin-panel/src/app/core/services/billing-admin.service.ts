@@ -161,6 +161,55 @@ export const ORDER_STATUS_LABELS: Record<BillingOrderStatus, string> = {
   Pending: 'Ödeme bekliyor', Paid: 'Onaylandı', Rejected: 'Reddedildi', Expired: 'Süresi doldu', Withdrawn: 'Geri çekildi', Cancelled: 'Onay geri alındı'
 };
 
+export type BankTransactionStatus = 'Unmatched' | 'Matched' | 'Approved' | 'Ignored';
+
+export interface StatementMapping {
+  headerRow: number;
+  dateColumn: number;
+  descriptionColumn: number;
+  amountColumn: number;
+  senderColumn: number | null;
+  referenceColumn: number | null;
+  directionColumn: number | null;
+  incomingValue: string | null;
+}
+
+export interface StatementPreview { rows: string[][]; totalRows: number; suggested: StatementMapping | null; }
+
+export interface BankTransaction {
+  id: string;
+  bankAccountId: string;
+  bankName: string;
+  bookedAt: string;
+  amount: number;
+  description: string;
+  sender: string | null;
+  paymentCode: string | null;
+  status: BankTransactionStatus;
+  orderId: string | null;
+  orderSummary: string | null;
+  note: string | null;
+}
+
+export interface StatementImport {
+  id: string;
+  bankAccountId: string;
+  bankName: string;
+  fileName: string;
+  uploadedAt: string;
+  rowCount: number;
+  addedCount: number;
+  duplicateCount: number;
+  matchedCount: number;
+  autoApprovedCount: number;
+}
+
+export interface StatementImportResult { import: StatementImport; transactions: BankTransaction[]; }
+
+export const BANK_TRANSACTION_STATUS_LABELS: Record<BankTransactionStatus, string> = {
+  Unmatched: 'Eşleşmedi', Matched: 'Eşleşti, onay bekliyor', Approved: 'Ödeme onaylandı', Ignored: 'Yok sayıldı'
+};
+
 export const BUYER_TYPE_LABELS: Record<BuyerType, string> = { Individual: 'Bireysel', Teacher: 'Öğretmen', Institution: 'Kurum' };
 
 /** The server explains a refused change in the admin's language; anything else gets the fallback. */
@@ -206,6 +255,28 @@ export class BillingAdminService {
   getSubscriptions(productCode: string): Observable<BillingAdminSubscription[]> {
     return this.http.get<BillingAdminSubscription[]>(`${this.url}/subscriptions`, { params: productCode ? new HttpParams().set('product', productCode) : undefined });
   }
+
+  previewStatement(file: File): Observable<StatementPreview> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<StatementPreview>(`${this.url}/bank-statements/preview`, form);
+  }
+  importStatement(file: File, bankAccountId: string, mapping: StatementMapping): Observable<StatementImportResult> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('bankAccountId', bankAccountId);
+    for (const [key, value] of Object.entries(mapping)) if (value !== null && value !== '') form.append(key, String(value));
+    return this.http.post<StatementImportResult>(`${this.url}/bank-statements`, form);
+  }
+  getStatementImports(): Observable<StatementImport[]> { return this.http.get<StatementImport[]>(`${this.url}/bank-statements`); }
+  getBankTransactions(status: BankTransactionStatus | ''): Observable<BankTransaction[]> {
+    return this.http.get<BankTransaction[]>(`${this.url}/bank-transactions`, { params: status ? new HttpParams().set('status', status) : undefined });
+  }
+  approveBankTransaction(id: string, orderId: string): Observable<BankTransaction> {
+    return this.http.post<BankTransaction>(`${this.url}/bank-transactions/${id}/approve`, { orderId });
+  }
+  ignoreBankTransaction(id: string): Observable<BankTransaction> { return this.http.post<BankTransaction>(`${this.url}/bank-transactions/${id}/ignore`, {}); }
+  restoreBankTransaction(id: string): Observable<BankTransaction> { return this.http.post<BankTransaction>(`${this.url}/bank-transactions/${id}/restore`, {}); }
 
   getSeller(): Observable<BillingSeller> { return this.http.get<BillingSeller>(`${this.url}/seller`); }
   updateSeller(request: BillingSellerRequest): Observable<BillingSeller> { return this.http.put<BillingSeller>(`${this.url}/seller`, request); }

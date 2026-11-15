@@ -11,6 +11,12 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('../billing/billing-orders').then(m => m.BillingOrdersComponent)
     },
     {
+        path: 'billing/statements',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin' },
+        loadComponent: () => import('../billing/billing-statements').then(m => m.BillingStatementsComponent)
+    },
+    {
         path: 'billing/subscriptions',
         canActivate: [permissionGuard],
         data: { role: 'SystemAdmin' },
