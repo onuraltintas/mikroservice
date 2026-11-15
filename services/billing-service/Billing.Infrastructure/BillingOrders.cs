@@ -125,6 +125,8 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         if (order is null || order.OrderedByUserId != userId) return null;
         var now = Now;
         EnsurePending(order, now);
+        if (order.PaidDeclaredAt is null)
+            await NoticeAsync(BillingNoticeKinds.PaymentDeclared, order, null, $"{await AccountNameAsync(order.AccountId, cancellationToken)} · {order.PaymentCode}", cancellationToken);
         order.PaidDeclaredAt ??= now;
         order.PayerNote = string.IsNullOrEmpty(payerNote) ? order.PayerNote : payerNote;
         order.UpdatedAt = now;
@@ -241,6 +243,19 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                 throw new BusinessRuleException("Billing.AmountMismatch", "Banka hareketinin tutarı sipariş tutarıyla aynı değil.");
         }
 
+        // Every refusal comes before the first change: a refused approval leaves nothing half done behind.
+        // Nothing is approved for an account that was erased: the money goes back by bank and the order is refused.
+        if (await db.ErasureReceipts.AnyAsync(item => item.UserId == order.OrderedByUserId || item.UserId == order.BeneficiaryUserId, cancellationToken))
+            throw new BusinessRuleException("Billing.UserErased", "Bu kullanıcının hesabı silindi; ödeme onaylanamaz. Ödemeyi bankadan iade edin ve siparişi reddedin.");
+        Subscription? seatSubscription = null;
+        if (order.Kind == OrderKind.ExtraSeats)
+        {
+            seatSubscription = (await db.Subscriptions.FromSqlInterpolated($"SELECT * FROM billing.subscriptions WHERE \"Id\" = {order.SubscriptionId} FOR UPDATE")
+                .ToListAsync(cancellationToken)).Single();
+            if (seatSubscription.Status != SubscriptionStatus.Active || seatSubscription.EndsAt <= now)
+                throw new BusinessRuleException("Billing.SubscriptionEnded", "Abonelik sona erdi; ek koltuk eklenemez. Siparişi reddedin.");
+        }
+
         var payment = new Payment
         {
             Id = Guid.NewGuid(), OrderId = order.Id, Method = PaymentMethod.BankTransfer, Status = PaymentStatus.Approved,
@@ -263,10 +278,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         if (order.Kind == OrderKind.ExtraSeats)
         {
             // Extra seats join the running subscription; they open no period of their own.
-            subscription = (await db.Subscriptions.FromSqlInterpolated($"SELECT * FROM billing.subscriptions WHERE \"Id\" = {order.SubscriptionId} FOR UPDATE")
-                .ToListAsync(cancellationToken)).Single();
-            if (subscription.Status != SubscriptionStatus.Active || subscription.EndsAt <= now)
-                throw new BusinessRuleException("Billing.SubscriptionEnded", "Abonelik sona erdi; ek koltuk eklenemez. Siparişi reddedin.");
+            subscription = seatSubscription!;
             var lasting = subscription.ExtraSeats > 0 && subscription.ExtraSeatsUntil is { } until && until > now;
             subscription.ExtraSeats = (lasting ? subscription.ExtraSeats : 0) + order.ExtraSeats.GetValueOrDefault();
             if (!lasting) subscription.ExtraSeatsUntil = subscription.EndsAt;
@@ -302,6 +314,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         order.ReviewedAt = now;
         order.ReviewNote = reviewNote;
         order.UpdatedAt = now;
+        await NoticeAsync(BillingNoticeKinds.OrderApproved, order, subscription.EndsAt, null, cancellationToken);
 
         await RebuildGrantsAsync(subscription, now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
@@ -323,6 +336,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         order.ReviewedAt = now;
         order.ReviewNote = reviewNote;
         order.UpdatedAt = now;
+        await NoticeAsync(BillingNoticeKinds.OrderRejected, order, null, reviewNote, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return (await AdminViewsAsync([order], cancellationToken))[0];
@@ -363,6 +377,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
 
         // A withdrawal (cayma) request waiting for this payment is settled by the same reversal.
         var withdrawal = await db.Withdrawals.SingleOrDefaultAsync(item => item.OrderId == order.Id && item.Status == WithdrawalStatus.Requested, cancellationToken);
+        await NoticeAsync(withdrawal is null ? BillingNoticeKinds.ApprovalReversed : BillingNoticeKinds.WithdrawalApproved, order, null, note, cancellationToken);
         if (withdrawal is not null)
         {
             withdrawal.Status = WithdrawalStatus.Approved;
@@ -411,6 +426,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         {
             order.Status = OrderStatus.Expired;
             order.UpdatedAt = now;
+            await NoticeAsync(BillingNoticeKinds.OrderExpired, order, null, null, cancellationToken);
         }
         if (expired.Count == 0) return 0;
         var ids = expired.Select(item => item.Id).ToArray();
@@ -448,6 +464,32 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         return new Offer(seller,
             rows.Select(row => new OrderEntitlement(row.entitlement.Id, row.entitlement.Key, row.product.Code, row.link.Holder, row.link.LimitValue)).ToArray(),
             rows.Select(row => row.product.Name).Distinct().ToArray());
+    }
+
+    private async Task<string> AccountNameAsync(Guid accountId, CancellationToken cancellationToken) =>
+        await db.Accounts.AsNoTracking().Where(item => item.Id == accountId).Select(item => item.DisplayName).SingleAsync(cancellationToken);
+
+    /// <summary>
+    /// Tells the buyer (or, for the seller's kinds, the seller's alert address) about an order, with the transaction that
+    /// causes it. Nothing is sent when there is no address to send to.
+    /// </summary>
+    internal async Task NoticeAsync(string kind, Order order, DateTime? endsAt, string? detail, CancellationToken cancellationToken)
+    {
+        string? email;
+        Guid? recipient = null;
+        if (BillingNoticeKinds.IsForSeller(kind))
+            email = await db.Sellers.AsNoTracking().Where(item => item.Id == Seller.SingleId).Select(item => item.AlertEmail).SingleOrDefaultAsync(cancellationToken);
+        else
+        {
+            var account = db.Accounts.Local.FirstOrDefault(item => item.Id == order.AccountId)
+                ?? await db.Accounts.AsNoTracking().SingleAsync(item => item.Id == order.AccountId, cancellationToken);
+            email = account.Email;
+            // The person who ordered is told; for an organization that is the admin who placed the order.
+            recipient = order.OrderedByUserId;
+        }
+        if (string.IsNullOrWhiteSpace(email)) return;
+        await events.PublishAsync(new BillingNoticeV1(Guid.NewGuid(), recipient, email.Trim(), kind, ProductCodes(order.EntitlementsJson), order.PlanName,
+            endsAt, detail, order.PaymentCode, order.Amount, order.Currency, Now), cancellationToken);
     }
 
     /// <summary>

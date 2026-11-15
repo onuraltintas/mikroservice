@@ -35,6 +35,7 @@ builder.Services.AddScoped<IBillingOrders>(services => services.GetRequiredServi
 builder.Services.AddScoped<IBillingBankStatements, BillingBankStatements>();
 builder.Services.AddScoped<IBillingSeats, BillingSeats>();
 builder.Services.AddScoped<IBillingExtras, BillingExtras>();
+builder.Services.AddScoped<IBillingLifecycle, BillingLifecycle>();
 builder.Services.AddHttpClient<IdentityBillingInstitutions>(client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddScoped<IBillingInstitutions>(services => services.GetRequiredService<IdentityBillingInstitutions>());
 builder.Services.AddScoped<IBillingEvents, MassTransitBillingEvents>();

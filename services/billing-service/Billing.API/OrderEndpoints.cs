@@ -95,7 +95,7 @@ public static class OrderEndpoints
         file is null ? Results.NotFound() : Results.File(file.Content, file.ContentType, file.FileName);
 }
 
-/// <summary>Drops pending orders whose waiting time is over (hourly).</summary>
+/// <summary>Hourly: drops pending orders whose waiting time is over, sends the reminders that are due, redacts what outlived its retention.</summary>
 public sealed class PendingOrderExpiryWorker(IServiceScopeFactory scopes, ILogger<PendingOrderExpiryWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -108,6 +108,11 @@ public sealed class PendingOrderExpiryWorker(IServiceScopeFactory scopes, ILogge
                 await using var scope = scopes.CreateAsyncScope();
                 var expired = await scope.ServiceProvider.GetRequiredService<IBillingOrders>().ExpirePendingOrdersAsync(stoppingToken);
                 if (expired > 0) logger.LogInformation("Billing: {Count} pending orders expired.", expired);
+                var lifecycle = scope.ServiceProvider.GetRequiredService<IBillingLifecycle>();
+                var reminders = await lifecycle.SendRemindersAsync(stoppingToken);
+                if (reminders > 0) logger.LogInformation("Billing: {Count} subscription reminders sent.", reminders);
+                var redacted = await lifecycle.RedactExpiredAsync(stoppingToken);
+                if (redacted > 0) logger.LogInformation("Billing: records of {Count} erased accounts were redacted after their retention time.", redacted);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {

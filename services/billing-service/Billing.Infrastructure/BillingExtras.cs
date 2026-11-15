@@ -141,6 +141,8 @@ public sealed class BillingExtras(BillingDbContext db, BillingOrders orders, Tim
             throw new BusinessRuleException("Billing.WithdrawalExists", "Bu ödeme için cayma talebiniz zaten var.");
         db.Withdrawals.Add(new Withdrawal { Id = Guid.NewGuid(), OrderId = order.Id, Status = WithdrawalStatus.Requested,
             Reason = string.IsNullOrEmpty(text) ? null : text, RequestedBy = userId, RequestedAt = now });
+        await orders.NoticeAsync(EduPlatform.Shared.Contracts.Events.Billing.BillingNoticeKinds.WithdrawalRequested, order, null,
+            $"{(await db.Accounts.AsNoTracking().SingleAsync(item => item.Id == order.AccountId, cancellationToken)).DisplayName} · {order.PaymentCode}", cancellationToken);
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -181,6 +183,8 @@ public sealed class BillingExtras(BillingDbContext db, BillingOrders orders, Tim
             withdrawal.ReviewNote = note;
             withdrawal.ReviewedBy = actorId;
             withdrawal.ReviewedAt = Now;
+            var refused = await db.Orders.AsNoTracking().SingleAsync(item => item.Id == withdrawal.OrderId, cancellationToken);
+            await orders.NoticeAsync(EduPlatform.Shared.Contracts.Events.Billing.BillingNoticeKinds.WithdrawalRejected, refused, null, note, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
         }
         return (await ViewsAsync([withdrawal], cancellationToken))[0];
@@ -220,6 +224,7 @@ public sealed class BillingExtras(BillingDbContext db, BillingOrders orders, Tim
             throw new BusinessRuleException("Billing.InvoiceExists", "Bu fatura numarası başka bir ödemede kullanıldı.");
         db.Invoices.Add(new Invoice { Id = Guid.NewGuid(), PaymentId = payment.Id, OrderId = order.Id, Number = number, IssuedOn = upload.IssuedOn,
             FileName = SafeName(upload.FileName, number), Content = upload.Content, Size = upload.Content.Length, UploadedBy = actorId, UploadedAt = Now });
+        await orders.NoticeAsync(EduPlatform.Shared.Contracts.Events.Billing.BillingNoticeKinds.InvoiceReady, order, null, number, cancellationToken);
         try
         {
             await db.SaveChangesAsync(cancellationToken);
