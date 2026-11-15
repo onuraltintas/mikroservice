@@ -13,6 +13,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { CoachingNotificationPanelComponent, groupNotificationsByDay } from './coaching-notification-panel.component';
 import { CoachingWhatsNewCardComponent } from './coaching-whats-new-card.component';
 import { CoachingWhatsNewService } from './coaching-whats-new.service';
+import { CoachingPlanningPermissionService } from '../../../core/services/coaching-planning-permission.service';
 import { StudentHubComponent } from './student-hub.component';
 import { STUDENT_HUBS } from './student-hubs';
 import { StudentThemeSettingComponent } from './student-theme-setting.component';
@@ -171,6 +172,25 @@ describe('StudentHubComponent', () => {
       TestBed.resetTestingModule();
       expect(labels(hub('growth', { loaded: () => true, showFees: () => true }))).toContain('Ücretlerim');
     } finally { STUDENT_HUBS.growth.tabs = tabs; }
+  });
+
+  // User decision 15.11.2026: with a teacher and without her permission the student sees the plan but does not edit it.
+  it('closes plan editing and says why when the teacher makes the plan', () => {
+    const permission = (studentMayPlan: boolean) => ({ provide: CoachingPlanningPermissionService,
+      useValue: { own: () => of({ hasTeacher: true, allowedByTeacher: studentMayPlan, studentMayPlan }) } });
+    TestBed.overrideProvider(CoachingPlanningPermissionService, permission(false));
+    const locked = hub('plan');
+    expect([...locked.nativeElement.querySelectorAll('nav a')].map((a: Element) => a.textContent?.trim())).not.toContain('Planı düzenle');
+    const notice = locked.nativeElement.querySelector('[data-testid="teacher-plans-notice"]') as HTMLElement;
+    expect(notice.textContent).toContain('Çalışma planını öğretmenin hazırlıyor');
+    expect(notice.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan/hours');
+    expect(locked.nativeElement.querySelector('app-student-plan-edit-steps')).toBeNull();
+
+    TestBed.resetTestingModule();
+    TestBed.overrideProvider(CoachingPlanningPermissionService, permission(true));
+    const open = hub('plan');
+    expect(open.nativeElement.querySelector('[data-testid="teacher-plans-notice"]')).toBeNull();
+    expect([...open.nativeElement.querySelectorAll('nav a')].map((a: Element) => a.textContent?.trim())).toContain('Planı düzenle');
   });
 
   it('shows no tab strip for a hub that is one page (Ödemeler)', () => {

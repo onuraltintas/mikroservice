@@ -8,6 +8,7 @@ import { StudentStudyPlanAssistantComponent } from '../../../../../../src/app/fe
 import { StudentStudyPlansComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-plans.component';
 import { StudentStudyReportComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-report.component';
 import { PracticeProgressComponent } from '../../../../../../src/app/features/coaching-portal/pages/practice-progress.component';
+import { CoachingPlanningPermissionService, PlanningPermission } from '../../../../../../src/app/core/services/coaching-planning-permission.service';
 
 @Component({
   selector: 'staff-coaching-study', standalone: true,
@@ -20,6 +21,22 @@ import { PracticeProgressComponent } from '../../../../../../src/app/features/co
         [staffStudentId]="studentId" [readOnly]="readOnly" (planChanged)="refreshPlan()">
       <div developmentPlan>
       @if (!briefOnly) {
+      @if (planning(); as permission) {
+        <div data-testid="planning-permission">
+          <h3>Planı kim yapar</h3>
+          @if (!permission.hasTeacher) { <p>Öğrencinin atanmış öğretmeni yok; planını kendisi yapar.</p> }
+          @else {
+            <label>
+              <input type="checkbox" [checked]="permission.allowedByTeacher" [disabled]="readOnly || planningSaving()" (change)="setPlanning($any($event.target).checked)">
+              Öğrenci kendi planını yapabilsin
+            </label>
+            <p>{{ permission.allowedByTeacher
+              ? 'Öğrenci planını ve haftalık düzenini kendisi değiştirebilir.'
+              : 'Planı ve haftalık düzeni yalnız öğretmeni değiştirir; öğrenci çalışmalarını işaretler. Değişiklik öğrenciye bildirilir.' }}</p>
+          }
+          @if (planningError()) { <p role="alert">{{ planningError() }}</p> }
+        </div>
+      }
       <h3>Haftalık çalışma saatleri</h3>
       @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="loadAvailability()">Tekrar dene</button> }
@@ -69,7 +86,27 @@ export class CoachingStaffStudyComponent implements OnChanges {
   readonly error = signal<string | null>(null);
   private readonly feedback = coachingFeedback(undefined, this.error);
 
-  ngOnChanges(): void { this.loadAvailability(); }
+  /** User decision 15.11.2026: the teacher decides whether the student makes her own plan (off by default). */
+  private readonly permissions = inject(CoachingPlanningPermissionService);
+  readonly planning = signal<PlanningPermission | null>(null);
+  readonly planningSaving = signal(false);
+  readonly planningError = signal<string | null>(null);
+  private planningRequest?: Subscription;
+  loadPlanning(): void {
+    this.planningRequest?.unsubscribe(); this.planning.set(null); this.planningError.set(null);
+    if (this.briefOnly || !this.studentId) return;
+    this.planningRequest = this.permissions.forStudent(this.studentId).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: state => this.planning.set(state), error: () => undefined });
+  }
+  setPlanning(allowed: boolean): void {
+    if (this.readOnly || this.planningSaving()) return;
+    this.planningSaving.set(true); this.planningError.set(null);
+    this.permissions.set(this.studentId, allowed).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.planningSaving.set(false)))
+      .subscribe({ next: state => this.planning.set(state),
+        error: () => { this.planningError.set('Ayar kaydedilemedi. Yetkiyi ve bağlantıyı kontrol edin.'); this.planning.update(state => state ? { ...state } : state); } });
+  }
+
+  ngOnChanges(): void { this.loadAvailability(); this.loadPlanning(); }
   loadAvailability(): void {
     this.request?.unsubscribe(); this.availability.set(null); this.error.set(null);
     if (this.briefOnly || !this.studentId) { this.loading.set(false); return; }

@@ -23,9 +23,12 @@ public sealed class CoachingWeeklyStudyDraftService(CoachingDbContext db,ICoachi
         var lessons=(await setup.GetCatalogForStudentAsync(student,null,1,ct)).Lessons;
         return new(draft is null?null:View(draft),lessons){MaxDayMinutes=await DayLimit(student,ct)};
     }
-    public Task<WeeklyDraftView> SaveAsync(WeeklyDraftInput r,CancellationToken ct)
+    public async Task<WeeklyDraftView> SaveAsync(WeeklyDraftInput r,CancellationToken ct)
     {
-        return SaveForStudent(Require(),r,false,ct);
+        var student=Require();
+        // The weekly schedule is what the plan is built from: with a teacher it is the student's only when allowed.
+        await StudentPlanningPermission.RequireStudentMayPlanAsync(db,student,ct);
+        return await SaveForStudent(student,r,false,ct);
     }
     public async Task<WeeklyDraftView> SaveForStudentAsync(Guid student,WeeklyDraftInput r,CancellationToken ct)
     {

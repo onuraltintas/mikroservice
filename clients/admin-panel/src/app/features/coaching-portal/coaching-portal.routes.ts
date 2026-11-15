@@ -3,6 +3,8 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { coachingRoleGuard } from '../../core/auth/auth.guard';
 import { AuthService, hasRole } from '../../core/auth/auth.service';
+import { catchError, map, of } from 'rxjs';
+import { CoachingPlanningPermissionService } from '../../core/services/coaching-planning-permission.service';
 
 /** A parent who is not also a student starts on the parent panel. */
 const parentHomeRedirect: CanActivateFn = () => {
@@ -14,6 +16,13 @@ import type { StudentStudyRoutineComponent } from './pages/student-study-routine
 import type { StudentStudyPlanAssistantComponent } from './pages/student-study-plan-assistant.component';
 
 const student = { coachingRoles: ['Student'] };
+/** User decision 15.11.2026: the plan-making pages are closed to a student whose teacher makes the plan. */
+const studentMayPlan: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(CoachingPlanningPermissionService).own().pipe(
+    map(state => state.studentMayPlan ? true : router.createUrlTree(['/coaching-portal/plan'])),
+    catchError(() => of(true)));
+};
 const hub = (name: string) => () => import('./layout/student-hub.component').then(m => m.StudentHubComponent);
 
 /**
@@ -65,7 +74,7 @@ export const COACHING_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./pages/student-study-plans.component').then(m => m.StudentStudyPlansComponent)
       },
       {
-        path: 'weekly', canDeactivate: [async (component: StudentStudyRoutineComponent) => await component.canLeavePage()],
+        path: 'weekly', canActivate: [studentMayPlan], canDeactivate: [async (component: StudentStudyRoutineComponent) => await component.canLeavePage()],
         loadComponent: () => import('./pages/student-study-routine.component').then(m => m.StudentStudyRoutineComponent)
       },
       {
@@ -74,7 +83,7 @@ export const COACHING_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./pages/student-study-routine.component').then(m => m.StudentStudyRoutineComponent)
       },
       {
-        path: 'wizard', canDeactivate: [async (component: StudentStudyPlanAssistantComponent) => await component.canLeavePage()],
+        path: 'wizard', canActivate: [studentMayPlan], canDeactivate: [async (component: StudentStudyPlanAssistantComponent) => await component.canLeavePage()],
         loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
       },
       // Paket H4: the yearly preview is the wizard's Özet step now; the old address (and its links) lead there.

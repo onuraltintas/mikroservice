@@ -45,6 +45,8 @@ public sealed class StudentOnboardingMigrationPostgresTests
 
         // Down refuses while wizard answers exist (they live only in the new columns), and changes nothing.
         var refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
+        // Later migrations were rolled back before the refusal; bring them back before reading with the current model.
+        await f.Db.Database.MigrateAsync();
         Assert.Contains("StudentOnboarding down refused: 1 student profile(s)", refused.ToString());
         Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
         Assert.Equal("Ankara", (await f.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == noContext)).HomeCity);
@@ -55,6 +57,8 @@ public sealed class StudentOnboardingMigrationPostgresTests
         f.Db.Add(goal); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
         Assert.Equal(2, (await f.Db.AcademicGoals.AsNoTracking().SingleAsync()).ScoreTargets.Count);
         refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
+        // Later migrations were rolled back before the refusal; bring them back before reading with the current model.
+        await f.Db.Database.MigrateAsync();
         Assert.Contains("0 student profile(s) with first-login wizard answers and 1 goal(s)", refused.ToString());
         // The goal page's catalog target clears the wizard's target scores, so they no longer block the rollback.
         var school = Coaching.Domain.Entities.TargetSchool.Create("meb", "pc-1", "Ankara Fen Lisesi", "ANKARA", "ÇANKAYA", 480, 2025);

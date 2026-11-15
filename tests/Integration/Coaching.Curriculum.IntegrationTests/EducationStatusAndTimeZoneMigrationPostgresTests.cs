@@ -52,6 +52,8 @@ public sealed class EducationStatusAndTimeZoneMigrationPostgresTests
 
         // Down refuses while a university status exists (the old model has no place for it) and changes nothing.
         var refused = await Assert.ThrowsAnyAsync<Exception>(() => f.Db.GetService<IMigrator>().MigrateAsync(Previous));
+        // Later migrations were rolled back before the refusal; bring them back before reading with the current model.
+        await f.Db.Database.MigrateAsync();
         Assert.Contains("EducationStatusesAndIstanbulTime down refused: 2 student profile(s)", refused.ToString());
         Assert.Contains(Current, await f.Db.Database.GetAppliedMigrationsAsync());
         Assert.Equal(CoachingEducationStatus.UniversityStudent, (await f.Db.CoachingStudentProfiles.AsNoTracking().SingleAsync(x => x.UserId == unknown)).EducationStatus);

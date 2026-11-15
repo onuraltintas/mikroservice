@@ -94,6 +94,7 @@ public sealed class PlanHistoryAndCompletedCreditTests
         var before=await reports.GetAsync(task.PlannedDate,task.PlannedDate);var weeklyBefore=(await reviews.GetAsync(null,task.PlannedDate,1,default)).Summary;
         var evidence=await Evidence(f);var plan=StudyPlanRevision.Create(old.StudentId,Guid.NewGuid(),1,"Next");pg.Db.Add(plan);pg.Db.Add(StudyPlanTask.Create(plan,Input.StartDate,"New",30));await pg.Db.SaveChangesAsync();
         var manual=new CoachingManualStudyPlanService(pg.Db,access,new CoachingAutomaticStudyPlanPreviewService(pg.Db,access),new CurriculumManagementTests.NoopPublisher());
+        await StudentPlanningTestSupport.AllowOwnPlanningAsync(pg.Db,old.StudentId);
         await manual.PublishAsync(plan.Id,plan.Version);pg.Db.ChangeTracker.Clear();
         var after=await reports.GetAsync(task.PlannedDate,task.PlannedDate);Assert.Equal(before.ScheduledTasks,after.ScheduledTasks);Assert.Equal(10,after.ScheduledTasks);Assert.Equal(10m,after.CompletionPercentage);
         Assert.Equal(weeklyBefore,(await reviews.GetAsync(null,task.PlannedDate,1,default)).Summary);Assert.Equal(evidence,await Evidence(f,plan.Id));

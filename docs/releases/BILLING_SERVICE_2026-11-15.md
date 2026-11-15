@@ -19,6 +19,10 @@ sayı döndürür. İmajlar sunucuda derlenmez; `pull-release-images.sh` ile çe
 | Veli | Çocuk adına ödeme formu | Yalnız çocuğun abonelik durumunu görür; abonelik öğrencinin hesabından alınır |
 | Kurum lisansı (Identity) | Lisans türü, öğrenci/öğretmen sınırı, tarih | Okunmuyor ve değiştirilemiyor; sütunlar duruyor |
 | Eski abonelik tabloları (Koçluk, Hızlı Okuma) | Kullanılıyor | Kullanılmıyor; **bu yayında silinmiyor** |
+| Koçluk'ta planı kim yapar (karar 15.11.2026) | Öğretmene bağlı öğrenci de kendi planını yapar | Etkin öğretmeni olan öğrenci, öğretmeni izin verene kadar planını ve haftalık düzenini değiştiremez (varsayılan kapalı); öğretmeni olmayan öğrenci serbest. Öğretmen haftalık düzeni kaydedince ve ayarı değiştirince öğrenciye bildirim gider |
+
+**Dikkat (plan ayarı):** yayından sonra etkin öğretmeni olan her öğrencide plan yapma kapalı başlar; öğretmen açana
+kadar bu öğrenciler planlarını değiştiremez (kullanıcı kararı: mevcut bağlı öğrenciler test hesaplarıdır).
 
 **Kimse erişim kaybetmez:** yeni serviste iki ürün de "abonelik isteme" ayarıyla açılır (hazır veri). Eski abonelik,
 talep ve ödeme kayıtları yeni servise taşınmaz (kullanıcı kararı, 14.11.2026). "Abonelik iste" ayarını yönetici, planlar
@@ -29,7 +33,8 @@ ve banka hesabı girildikten sonra kendisi açar.
 |---|---|
 | billing-service | 7 migration, boş veritabanına: `InitialBillingCatalog` … `ManualPeriods` |
 | speed-reading-service | 1: `20261114190000_SalesDocumentsAndWithdrawal` (91 → 92). Eklediği alanları artık kullanan kod yok; eski tablolarla birlikte sonra silinecek |
-| identity, coaching, notification | Yok |
+| coaching-service | 1: `20261124090000_StudentCanPlanOwnStudy` (103 → 104): öğrenci profiline `CanPlanOwnStudy` sütunu, varsayılan kapalı |
+| identity, notification | Yok |
 
 ## P. Prova (canlıdan önce, yedekten kurulmuş kopyada)
 1. Son yedeklerden (identity, coaching, speed-reading) ayrı bir Compose projesinde kopya kurulur; canlı container'lara,
@@ -42,6 +47,9 @@ ve banka hesabı girildikten sonra kendisi açar.
    - `billing-service` durdurulur: az önce erişimi olan öğrenci çalışmaya devam eder. Yeniden başlatılır.
    - Öğretmen planı ve bir koltuk; kurum planı ve bir koltuk (personel portalı).
    - Hesap silme talebi: billing'in yanıtı beklenir ve akış tamamlanır.
+   - Plan ayarı: öğretmene bağlı test öğrencisi "Planım"da uyarıyı görür, "Planı düzenle" sekmesi yoktur ve haftalık düzeni
+     kaydedemez. Öğretmen personel portalında "Öğrenci kendi planını yapabilsin"i açar; öğrenci bildirim alır ve plan
+     yapabilir. Öğretmen haftalık düzeni kaydeder; öğrenci bildirim alır.
 4. Sonuç ve süreler rapora yazılır. Kopya, kullanıcı onayından sonra kaldırılır.
 
 ## A. Hazırlık ve denetimler (salt okunur)
@@ -67,7 +75,7 @@ ve banka hesabı girildikten sonra kendisi açar.
    1. `identity-service`
    2. `notification-service` (yeni `billing-notice` kuyruğunu dinler)
    3. `billing-migrations` (bir kez çalışır, 7 migration), ardından `billing-service`
-   4. `coaching-service`
+   4. `coaching-migrations` (1 migration), ardından `coaching-service`
    5. `speed-reading-migrations`, ardından `speed-reading-service`
    6. `api-gateway`
    7. `admin-panel`, `staff-portal`, `speed-reading-frontend`

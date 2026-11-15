@@ -27,6 +27,11 @@ public sealed class CoachingStudentProfile : AggregateRoot
     public string? Bio { get; private set; }
     public string? AvatarUrl { get; private set; }
     public bool ShareProgressWithTeachers { get; private set; } = true;
+    /// <summary>
+    /// User decision 15.11.2026: with an active teacher, the student makes or changes her own study plan only when the
+    /// teacher switched this on. Without a teacher it is not looked at.
+    /// </summary>
+    public bool CanPlanOwnStudy { get; private set; }
     public bool IsActive { get; private set; } = true;
     /// <summary>Paket C (#3): where the student lives, from the shared Identity location directory (ids and names).</summary>
     public string? HomeProvinceId { get; private set; }
@@ -142,6 +147,12 @@ public sealed class CoachingStudentProfile : AggregateRoot
             throw new ArgumentException("Profil görseli geçerli bir HTTPS adresi olmalıdır.");
         BirthDate = birthDate; Bio = biography; AvatarUrl = avatar; ShareProgressWithTeachers = shareProgressWithTeachers;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetCanPlanOwnStudy(bool allowed, Guid actorUserId)
+    {
+        ProfileValue.RequireId(actorUserId);
+        CanPlanOwnStudy = allowed; UpdatedBy = actorUserId.ToString(); UpdatedAt = DateTime.UtcNow;
     }
 
     public void SetActive(bool active, Guid actorUserId)

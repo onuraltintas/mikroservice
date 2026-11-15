@@ -251,6 +251,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         => LockedAsync(async student =>
         {
             ArgumentNullException.ThrowIfNull(request);
+            await StudentPlanningPermission.RequireStudentMayPlanAsync(db, student, cancellationToken);
             var revision = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, request.Title);
             var preview = await previews.PreviewAsync(request.Preview, cancellationToken);
             if (request.ExpectedActiveRevisionId != preview.ActiveRevisionId
@@ -435,7 +436,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             var before=task.RealizationHistoryJson;task.DeclareRemainingScope(request.RemainingMinutes,request.RemainingQuestions,access.CurrentUserId!.Value);
             if(before!=task.RealizationHistoryJson){plan.RecordRealizationChange();await db.SaveChangesAsync(ct);}
             return await ViewAsync(plan,ct);
-        },ct,targetStudent,true);
+        // How much of a task is left is a report of what was studied, not a change of the plan.
+        },ct,targetStudent,true,changesPlan:false);
 
     public Task<ManualStudyPlanView> RecordRealizationAsync(Guid id, Guid taskId, StudyRealizationInput request, bool correction, CancellationToken ct = default)
         => LockedAsync(async student => {
@@ -602,7 +604,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     }
 
     private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken,
-        Guid? targetStudent = null, bool teacherWrite = false)
+        Guid? targetStudent = null, bool teacherWrite = false, bool changesPlan = true)
     {
         var student = targetStudent ?? access.CurrentUserId ?? Guid.Empty;
         if (targetStudent.HasValue)
@@ -613,6 +615,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         }
         else if (student == Guid.Empty || !access.IsCurrentStudent(student))
             throw new BusinessRuleException("Authorization.Forbidden", "Bu işlem yalnız öğrencinin kendi hesabıyla kullanılabilir.");
+        // What a teacher needs write access for is a change of the plan: a student with a teacher makes it only when allowed.
+        else if (teacherWrite && changesPlan) await StudentPlanningPermission.RequireStudentMayPlanAsync(db, student, cancellationToken);
         T completedResult = default!;
         var resultReady = false;
         return await db.Database.CreateExecutionStrategy().ExecuteAsync<object?, T>(null, async (_, _, token) =>

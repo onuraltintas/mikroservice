@@ -18,7 +18,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("coaching")
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -710,6 +710,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("CouponCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -718,8 +722,16 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
                     b.Property<int?>("DurationDays")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("ListPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
 
                     b.Property<string>("Note")
                         .HasMaxLength(1000)
@@ -746,6 +758,16 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.Property<Guid?>("ReviewedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SalesContractAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SalesContractVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("SalesDocumentsJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -778,28 +800,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
-                    b.Property<string>("CouponCode")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<decimal>("DiscountAmount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
-
-                    b.Property<decimal?>("ListPrice")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
-
-                    b.Property<DateTime?>("SalesContractAcceptedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("SalesContractVersion")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("SalesDocumentsJson")
-                        .HasColumnType("jsonb");
-
                     b.Property<string>("WithdrawalReason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -827,14 +827,14 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("Status", "CreatedAt");
 
+                    b.HasIndex("UserId", "CouponCode")
+                        .HasFilter("\"CouponCode\" IS NOT NULL");
+
                     b.HasIndex("UserId", "PaymentReference")
                         .IsUnique()
                         .HasFilter("\"Status\" IN ('Pending', 'Approved')");
 
                     b.HasIndex("UserId", "Status");
-
-                    b.HasIndex("UserId", "CouponCode")
-                        .HasFilter("\"CouponCode\" IS NOT NULL");
 
                     b.HasIndex("WithdrawalStatus", "WithdrawalRequestedAt")
                         .HasFilter("\"WithdrawalStatus\" IS NOT NULL");
@@ -883,70 +883,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("calendar_feeds", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_coaching_calendar_feed_role", "\"Role\" IN ('Teacher', 'Student')");
-                        });
-                });
-
-            modelBuilder.Entity("Coaching.Domain.Entities.CoachingCoupon", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<int?>("MaxUses")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("PlanIdsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("UsedCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("ValidFrom")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ValidUntil")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Value")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("coupons", "coaching", t =>
-                        {
-                            t.HasCheckConstraint("ck_coaching_coupon_kind", "(\"Kind\" = 'Percent' AND \"Value\" > 0 AND \"Value\" <= 100) OR (\"Kind\" = 'Amount' AND \"Value\" > 0)");
-
-                            t.HasCheckConstraint("ck_coaching_coupon_uses", "\"UsedCount\" >= 0 AND (\"MaxUses\" IS NULL OR \"MaxUses\" > 0)");
                         });
                 });
 
@@ -1231,17 +1167,17 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CounterpartReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CounterpartUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
-
-                    b.Property<Guid>("CounterpartUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("CounterpartReadAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("InstitutionId")
                         .HasColumnType("uuid");
@@ -1334,6 +1270,70 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("ConversationId", "AccessedAt");
 
                     b.ToTable("coaching_conversation_accesses", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingCoupon", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int?>("MaxUses")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PlanIdsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ValidFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("coupons", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_coupon_kind", "(\"Kind\" = 'Percent' AND \"Value\" > 0 AND \"Value\" <= 100) OR (\"Kind\" = 'Amount' AND \"Value\" > 0)");
+
+                            t.HasCheckConstraint("ck_coaching_coupon_uses", "\"UsedCount\" >= 0 AND (\"MaxUses\" IS NULL OR \"MaxUses\" > 0)");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingErasureAssessment", b =>
@@ -2260,13 +2260,13 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<Guid?>("PaymentRecordId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PaymentReference")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
-
-                    b.Property<Guid?>("PaymentRecordId")
-                        .HasColumnType("uuid");
 
                     b.Property<int>("RemainingDays")
                         .HasColumnType("integer");
@@ -2409,15 +2409,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("ScheduledDate")
                         .HasDatabaseName("ix_coaching_sessions_scheduled_date");
 
-                    b.HasIndex("SeriesId", "ScheduledDate")
-                        .HasDatabaseName("ix_coaching_sessions_series_scheduled")
-                        .HasFilter("series_id IS NOT NULL");
-
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_coaching_sessions_status");
 
                     b.HasIndex("TeacherId")
                         .HasDatabaseName("ix_coaching_sessions_teacher_id");
+
+                    b.HasIndex("SeriesId", "ScheduledDate")
+                        .HasDatabaseName("ix_coaching_sessions_series_scheduled")
+                        .HasFilter("series_id IS NOT NULL");
 
                     b.ToTable("coaching_sessions", "coaching");
                 });
@@ -2633,14 +2633,14 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TrialDays")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("TrialDays")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -2694,43 +2694,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("subscription_seats", "coaching");
                 });
 
-            modelBuilder.Entity("Coaching.Domain.Entities.CoachingSubscriptionTrial", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Audience")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime>("EndsAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("PlanId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("SubscriptionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "Audience")
-                        .IsUnique();
-
-                    b.ToTable("subscription_trials", "coaching", t =>
-                        {
-                            t.HasCheckConstraint("ck_coaching_subscription_trial_audience", "\"Audience\" IN ('Individual', 'Teacher')");
-                        });
-                });
-
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSubscriptionSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -2766,12 +2729,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<bool>("RequireActiveSubscription")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("SellerAddress")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -2800,9 +2757,52 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.ToTable("subscription_settings", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingSubscriptionTrial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Audience")
+                        .IsUnique();
+
+                    b.ToTable("subscription_trials", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_subscription_trial_audience", "\"Audience\" IN ('Individual', 'Teacher')");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CurriculumVersion", b =>
@@ -4040,6 +4040,56 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyPlanPreferences", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExamFocus")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("SpacedReviewDays")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Tempo")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique();
+
+                    b.ToTable("study_plan_preferences", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_study_plan_preferences_exam_focus", "\"ExamFocus\" IS NULL OR \"ExamFocus\" IN ('Tyt', 'Balanced', 'Ayt')");
+
+                            t.HasCheckConstraint("ck_study_plan_preferences_tempo", "\"Tempo\" IS NULL OR \"Tempo\" IN ('Relaxed', 'Balanced', 'Intense')");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyPlanRevision", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4169,9 +4219,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<Guid?>("OriginalTaskId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("PlannedDate")
-                        .HasColumnType("date");
-
                     b.Property<string>("PlanKind")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -4179,6 +4226,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<string>("PlanReason")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
+
+                    b.Property<DateOnly>("PlannedDate")
+                        .HasColumnType("date");
 
                     b.Property<int>("PlannedMinutes")
                         .HasColumnType("integer");
@@ -4307,56 +4357,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("study_plan_task_outcomes", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_task_outcome_minutes", "\"AllocatedMinutes\" BETWEEN 1 AND 1440 AND \"Origin\" IN ('Catalog','StudentOverride')");
-                        });
-                });
-
-            modelBuilder.Entity("Coaching.Domain.Entities.StudyPlanPreferences", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ExamFocus")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<string>("SpacedReviewDays")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Tempo")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StudentId")
-                        .IsUnique();
-
-                    b.ToTable("study_plan_preferences", "coaching", t =>
-                        {
-                            t.HasCheckConstraint("ck_study_plan_preferences_exam_focus", "\"ExamFocus\" IS NULL OR \"ExamFocus\" IN ('Tyt', 'Balanced', 'Ayt')");
-
-                            t.HasCheckConstraint("ck_study_plan_preferences_tempo", "\"Tempo\" IS NULL OR \"Tempo\" IN ('Relaxed', 'Balanced', 'Intense')");
                         });
                 });
 
@@ -4965,6 +4965,9 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("CanPlanOwnStudy")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ClassBranch")
                         .HasMaxLength(30)
