@@ -308,3 +308,11 @@ test('an institution licence is no longer set or shown through Identity', () => 
   const settings = 'clients/admin-panel/projects/staff-portal/src/app/features/speed-reading/speed-reading-institution-settings';
   assert.doesNotMatch(read(settings + '.service.ts') + read(settings + '.component.html'), /institution-access|maxStudents|subscriptionEndDate/);
 });
+
+test('the migration history table is named with its schema, in the one place the provider is set up', () => {
+  const context = read('services/billing-service/Billing.Infrastructure/BillingDbContext.cs');
+  assert.match(context, /npgsql\.MigrationsHistoryTable\(HistoryTable, Schema\)/);
+  assert.equal(context.match(/\.UseNpgsql\(/g)?.length, 1);
+  assert.match(read('services/billing-service/Billing.API/Program.cs'), /options\.UseBillingDatabase\(connectionString\)/);
+  assert.doesNotMatch(read('services/billing-service/Billing.API/Program.cs'), /UseNpgsql/);
+});

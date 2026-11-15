@@ -152,9 +152,13 @@ Her biri `-v publish_day='<gün Ay yıl>'` ile çalıştırılır; çıktıdaki 
 - Hesap silme talebi ve onayı 500 veriyordu (istek kayıtlarındaki doğrulama öznitelikleri yanlış yerdeydi); Hızlı Okuma
   davetlerinde de aynı kalıp vardı. Bu yayından gelmiyordu; düzeltildi. Canlıda da büyük olasılıkla kırıktı.
 - Billing her SQL komutunu logluyordu (günde yaklaşık 650 bin satır); EF logları uyarı düzeyine alındı.
-- Billing'in migration geçmişi `public."__EFMigrationsHistory"` tablosunda (kendi veritabanında); bilerek değiştirilmedi.
+- Billing migration işi ikinci çalışmada çöküyordu ("relation already exists"): geçmiş tablosunun şeması belirtilmemişti
+  ve rol adı şemayla aynı (`billing`) olduğu için ilk çalışmadan sonra boş bir geçmiş tablosu bulunuyordu. Geçmiş tablosu
+  artık açıkça `billing."__EFMigrationsHistory"`. Düzeltilmeseydi ilk yayın geçer, sonraki her yayında ve sunucu yeniden
+  açıldığında billing başlamazdı.
 - Canlı yapılandırmada bütün `security.mfa.*` kategorileri kapalı; silme, rol atama ve kurum koltuğu MFA istemeden çalışıyor.
   Bu yayının konusu değil; kullanıcıya bildirildi.
+- Kopyada bu düzeltmeden önce kurulan billing veritabanı boşaltılıp baştan kurulur (canlıdaki ilk kuruluma en yakın yol).
 - İlk beş deneme (yönetici kurulumu, satın alma, onay ve geri alma, billing kesintisi, öğretmen ve kurum koltukları) geçti.
 
 ## Denenmemiş olanlar
