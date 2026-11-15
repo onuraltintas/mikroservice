@@ -69,11 +69,15 @@ internal static class CoachingStudyContinuation
         }
         return placed.Skip(existing?.Count ?? 0).ToArray();
     }
-    internal static StudyPlanTask Copy(StudyPlanRevision plan, Placement placement)
+    /// <param name="carry">
+    /// False for a waiting task that only keeps its place when a plan is continued ("Gelecek haftayı ekle"): it is not a
+    /// continuation of started work, so a later plan may leave it out or plan its topic afresh (rehearsal 15.11.2026).
+    /// </param>
+    internal static StudyPlanTask Copy(StudyPlanRevision plan, Placement placement, bool carry = true)
     {
         var prior=placement.Source;
         var copy=StudyPlanTask.Create(plan,placement.Date,prior.Title,placement.Minutes,prior.TopicId,prior.IsPinned,prior.SourceName,prior.RemainingMinutes.HasValue?prior.RemainingQuestions:prior.PlannedQuestions);
-        copy.CarryFrom(prior);
+        if(carry)copy.CarryFrom(prior);
         if(prior.PlanKind is {} kind)copy.SetPlanDecision(kind,prior.PlanReason);
         if(placement.Start is {} at)
         {
