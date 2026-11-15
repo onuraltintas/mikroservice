@@ -38,6 +38,7 @@ jobs:
           - { name: coaching-service, context: ., dockerfile: services/coaching-service/Dockerfile }
           - { name: speed-reading-service, context: ., dockerfile: services/speed-reading-service/Dockerfile }
           - { name: notification-service, context: ., dockerfile: services/notification-service/Dockerfile }
+          - { name: billing-service, context: ., dockerfile: services/billing-service/Dockerfile }
           - { name: api-gateway, context: ., dockerfile: services/api-gateway/Dockerfile }
           - { name: speed-reading-frontend, context: ./clients, dockerfile: speed-reading/Dockerfile }
           - { name: admin-panel, context: ./clients, dockerfile: admin-panel/Dockerfile }

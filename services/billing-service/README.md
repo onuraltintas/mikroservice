@@ -5,9 +5,11 @@ subscriptions, seats, invoices and notices. Plan and stages: project docs `billi
 `billing-service-design.md`, `billing-service-progress.md`.
 
 ## Status
-Stage 3: catalog and settings; orders by bank transfer with a payment code, review by hand or by bank statement
-(exact match, per product), subscriptions and entitlement grants. Billing goes live in one release at the end of its build (decision 14.11.2026).
-Until then no environment runs it unless its overlay is used, and the gateway answers 404 on `/api/billing`.
+Complete (stages 1–10a): catalog and settings; orders by bank transfer with a payment code, reviewed by hand or by bank
+statement; subscriptions, seats and organisations; coupons, trials, withdrawals, invoices, notices; retention and account
+erasure. Koçluk, Hızlı Okuma and Kurs Yönetimi ask it who has access. It goes live in one release
+(`docs/releases/BILLING_SERVICE_2026-11-15.md`); until then production runs without its overlay and the gateway answers
+404 on `/api/billing`.
 
 ## Run locally
 ```
@@ -18,10 +20,10 @@ The overlay starts a dedicated PostgreSQL (`billing-db`), runs the migrations (`
 gateway on (`Billing__Enabled=true`). The service listens on `127.0.0.1:5006`; through the gateway it is `/api/billing`.
 
 ## Production (at the release)
-1. Create a dedicated database and a least-privilege role; put `BILLING_CONNECTION_STRING` in `.env`.
-2. Add `-f docker-compose.billing.production.yml` to the compose command.
-3. Add `billing-service` to `.github/workflows/production-images.yml` and `infrastructure/scripts/pull-release-images.sh`
-   (the contract test `tests/E2E/billing-service-wiring.contract.test.mjs` keeps them out until then).
+Steps, order and checks: `docs/releases/BILLING_SERVICE_2026-11-15.md`. In short: a dedicated database and
+least-privilege role, `BILLING_CONNECTION_STRING` in `.env`, and the overlay `docker-compose.billing.production.yml`,
+which the systemd unit and `infrastructure/scripts/pull-release-images.sh` already use. The image is built with the
+others by `.github/workflows/production-images.yml`.
 
 ## Endpoints
 | Path | Who |

@@ -41,9 +41,14 @@ test('the service keeps the admin section for the system admin and opens only he
 
 test('billing runs only through its own compose overlays', () => {
   for (const file of ['docker-compose.yml', 'docker-compose.production.yml', 'docker-compose.staging.yml'])
-    assert.doesNotMatch(read(file), /billing/i, `${file} must not mention Billing before its release.`);
-  assert.doesNotMatch(read('.github/workflows/production-images.yml'), /billing/i);
-  assert.doesNotMatch(read('infrastructure/scripts/pull-release-images.sh'), /billing/i);
+    assert.doesNotMatch(read(file), /billing/i, `${file}: Billing stays in its own overlay.`);
+  // Release preparation (15.11.2026): the image is built with the others and the production stack runs with the overlay.
+  assert.match(read('.github/workflows/production-images.yml'), /name: billing-service, context: \., dockerfile: services\/billing-service\/Dockerfile/);
+  const pull = read('infrastructure/scripts/pull-release-images.sh');
+  assert.match(pull, /services="[^"]*\bbilling-service\b/);
+  assert.match(pull, /-f docker-compose\.billing\.production\.yml pull/);
+  const unit = read('infrastructure/systemd/eduivme-production.service');
+  assert.equal(unit.match(/-f \/opt\/eduivme\/docker-compose\.billing\.production\.yml /g)?.length, 3, 'config, up and stop all use the overlay');
 
   for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml']) {
     const overlay = read(file);
