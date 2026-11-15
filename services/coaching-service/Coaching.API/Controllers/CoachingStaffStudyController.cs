@@ -18,7 +18,7 @@ namespace Coaching.API.Controllers;
 public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService plans,
     CoachingStudentStudyReportService reports, CoachingStudyPlanAccess access, CoachingDbContext db,
     CoachingGoalTargetService goalTargets, IWeeklyStudyDraftService weeklyDrafts,
-    ILearningSetupService learningSetup, IWeeklyOutcomePlanService outcomePlans) : ControllerBase
+    ILearningSetupService learningSetup, IWeeklyOutcomePlanService outcomePlans, StudentPlanningPermissionService? planning = null) : ControllerBase
 {
     [HttpGet("weekly-draft")]
     public Task<IActionResult> WeeklyDraft(Guid studentId,CancellationToken ct)=>Respond(async()=>
@@ -32,9 +32,26 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> SaveWeeklyDraft(Guid studentId,WeeklyDraftInput request,CancellationToken ct)=>Respond(async()=>
     {
         // Paket H1 (K5): the teacher sees which day is over the daily limit; any other invalid input keeps the generic message.
-        try{return Ok(new{success=true,data=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct)});}
+        try
+        {
+            var saved=await weeklyDrafts.SaveForStudentAsync(studentId,request,ct);
+            // User decision 15.11.2026: the student hears that her teacher changed the weekly schedule.
+            if(planning is not null)await planning.WeeklyScheduleSavedByTeacherAsync(studentId,ct);
+            return Ok(new{success=true,data=saved});
+        }
         catch(StudyPlanValidationException e){return BadRequest(new{success=false,message=e.Message});}
     });
+
+    /// <summary>Whether the student may make her own plan (user decision 15.11.2026); only her teacher changes it.</summary>
+    [HttpGet("planning-permission")]
+    public Task<IActionResult> PlanningPermission(Guid studentId,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=PlanningView(await planning!.GetForStudentAsync(studentId,ct))}));
+
+    [HttpPut("planning-permission"),Authorize(Roles="Teacher"),RequestSizeLimit(1024),EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> SetPlanningPermission(Guid studentId,StudentPlanningPermissionInput request,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=PlanningView(await planning!.SetForStudentAsync(studentId,request.StudentMayPlan,ct))}));
+
+    internal static object PlanningView(StudentPlanningState state)=>new{hasTeacher=state.HasTeacher,allowedByTeacher=state.AllowedByTeacher,studentMayPlan=state.StudentMayPlan};
 
     /// <summary>Paket H2: the student's weekly proposal, as she sees it (read access, like the weekly draft).</summary>
     /// <remarks>Paket H2 review: a student without saved study times can get a proposal from the teacher's answers (windows), never saved.</remarks>
@@ -193,3 +210,5 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         { return BadRequest(new { success = false, message = "Öğrenci, tarih, plan ve süre alanlarını kontrol edin." }); }
     }
 }
+
+public sealed record StudentPlanningPermissionInput([property: System.Text.Json.Serialization.JsonRequired] bool StudentMayPlan);

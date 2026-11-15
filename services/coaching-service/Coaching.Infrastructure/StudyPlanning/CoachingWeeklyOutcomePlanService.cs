@@ -319,9 +319,11 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         }
     }
 
-    public Task<WeeklyOutcomePlanCreated> CreateAsync(WeeklyOutcomePlanSave request,CancellationToken ct)
+    public async Task<WeeklyOutcomePlanCreated> CreateAsync(WeeklyOutcomePlanSave request,CancellationToken ct)
     {
-        return Create(Student(),request,ct);
+        var student=Student();
+        await StudentPlanningPermission.RequireStudentMayPlanAsync(db,student,ct);
+        return await Create(student,request,ct);
     }
     public async Task<WeeklyOutcomePlanCreated> CreateForStudentAsync(Guid student,WeeklyOutcomePlanSave request,CancellationToken ct)
     {if(staffAccess is null)throw Forbidden();await staffAccess.RequireTeacherWriteAsync(student,ct);return await Create(student,request,ct);}

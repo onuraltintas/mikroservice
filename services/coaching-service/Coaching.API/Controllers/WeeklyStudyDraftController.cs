@@ -13,6 +13,10 @@ public sealed class WeeklyStudyDraftController(IWeeklyStudyDraftService drafts):
 {
     [HttpGet]
     public Task<IActionResult> Get(CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await drafts.GetAsync(ct)}));
+    /// <summary>User decision 15.11.2026: whether this student makes her own plan, or her teacher does.</summary>
+    [HttpGet("~/api/coaching/study-planning/permission")]
+    public Task<IActionResult> Permission([FromServices] Coaching.Infrastructure.StudyPlanning.StudentPlanningPermissionService planning,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=CoachingStaffStudyController.PlanningView(await planning.GetOwnAsync(ct))}));
     [HttpPut,RequestSizeLimit(128*1024),EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Save(WeeklyDraftInput r,CancellationToken ct)=>Respond(async()=>Ok(new{success=true,data=await drafts.SaveAsync(r,ct)}));
     /// <summary>Paket H2: a need-based weekly proposal from the saved availability; nothing is saved.</summary>
