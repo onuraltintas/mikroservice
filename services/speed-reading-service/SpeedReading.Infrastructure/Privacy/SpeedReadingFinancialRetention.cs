@@ -18,8 +18,8 @@ internal static class SpeedReadingFinancialRetention
 {
     public const string AnonymizedName = "Silinmiş kullanıcı";
 
-    private static readonly string Paid = SpeedReadingPaymentRules.SuccessStatus.ToLowerInvariant();
-    private static readonly string Approved = BankTransferPaymentRules.ApprovedStatus.ToLowerInvariant();
+    private const string Paid = "success";
+    private const string Approved = "approved";
 
     /// <summary>
     /// Decision 28.10.2026 (same as coaching): only money that actually moved is kept after erasure — successful

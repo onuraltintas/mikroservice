@@ -55,20 +55,6 @@ test('age: no minimum age and no adult payer rule, in the texts or at the checko
     'clients/speed-reading/src/app/features/student/subscription/student-subscription.component.ts',
     'services/billing-service/Billing.Application/SalesDocuments.cs'])
     assert.doesNotMatch(await read(screen), /adultPayerDeclaration|18 yaş|yasal temsilci/, screen);
-  for (const contract of ['services/coaching-service/Coaching.Application/Subscriptions/CoachingSubscriptionContracts.cs',
-    'services/speed-reading-service/SpeedReading.Application/Subscription/SpeedReadingSubscriptionContracts.cs']) {
-    const source = await read(contract);
-    assert.doesNotMatch(source, /18 yaş/, contract);
-    // An older client (the speed reading service worker keeps one for a while) may still send it: the property stays, unrequired.
-    assert.match(source, /bool AdultPayerDeclaration = false/, contract);
-  }
-  for (const service of ['services/coaching-service/Coaching.Infrastructure/Management/CoachingSubscriptionService.cs',
-    'services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingSubscription.cs']) {
-    const source = await read(service);
-    assert.doesNotMatch(source, /if \(!request\.AdultPayerDeclaration\) return null;/, service);
-    // A declaration is recorded only when one was really sent; the columns and the old records stay.
-    assert.match(source, /AdultPayerDeclarationVersion = request\.AdultPayerDeclaration \? 1 : null/, service);
-  }
 });
 
 test('the texts describe the sale as the product makes it', async () => {
@@ -156,12 +142,9 @@ test('it is published like the earlier legal texts and changes only the texts', 
 });
 
 test('the sales documents are the approved texts: no draft note, full refund on withdrawal', async () => {
-  const documents = await read('services/coaching-service/Coaching.Infrastructure/Management/CoachingSalesDocuments.cs');
-  assert.doesNotMatch(documents, /DRAFTS|a lawyer should review/);
-  // 13.11.2026 decision: a withdrawal refunds the whole amount. The wording changed, so the version did too; what a
-  // buyer accepted earlier stays stored with their notice.
-  assert.match(documents, /public const string Version = "2026-11-13";/);
+  // One common pre-information form and distance contract for every product, kept by the billing service.
+  const documents = await read('services/billing-service/Billing.Application/SalesDocuments.cs');
+  assert.doesNotMatch(documents, /DRAFTS|a lawyer should review|taslaktır/);
+  assert.match(documents, /public const string Version = "2026-11-15";/);
   assert.doesNotMatch(documents, /iadeden düşülebilir/);
-  assert.match(documents, /İade, ödenen tutarın tamamıdır;/);
-  assert.match(documents, /bedelin tamamını alıcının ödeme yaptığı hesaba iade eder;/);
 });

@@ -77,8 +77,9 @@ test('Hızlı Okuma terms describe the purchase as the service now runs it', asy
   const terms = fixed.get('speed-reading-terms').content;
   assert.match(terms, /ön bilgilendirme formu ve mesafeli satış sözleşmesi sunulur ve alıcının onayı alınır\./);
   assert.match(terms, /Cayma ve iade, mesafeli satış sözleşmesindeki koşullarla ve kanuni haklar saklı kalarak uygulanır\./);
-  const subscription = await read('services/speed-reading-service/SpeedReading.Infrastructure/Legacy/LegacySpeedReadingSubscription.cs');
-  assert.match(subscription, /"Sales\.DocumentsNotAccepted"/);
+  // The purchase is made in the billing service, which refuses an order without the accepted documents.
+  const orders = await read('services/billing-service/Billing.Infrastructure/BillingOrders.cs');
+  assert.match(orders, /"Billing\.DocumentsNotAccepted"/);
 });
 
 test('the script keeps a revision, raises the version and needs the publish day', () => {

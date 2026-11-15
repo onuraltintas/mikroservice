@@ -94,11 +94,14 @@ public sealed class BillingAccessClient(
 
 public sealed class BillingAnswerException(string message) : Exception(message);
 
-/// <summary>Billing decides when this deployment runs it; otherwise the product's own subscription records do.</summary>
-public sealed class SpeedReadingAccess(ISpeedReadingBillingAccess billing, ISpeedReadingSubscription subscriptions) : ISpeedReadingAccess
+/// <summary>
+/// Billing decides where this deployment runs it. Without billing the product asks for no subscription: everybody with
+/// an account trains (the product keeps no subscription records of its own any more).
+/// </summary>
+public sealed class SpeedReadingAccess(ISpeedReadingBillingAccess billing) : ISpeedReadingAccess
 {
     public async Task<UserAccessSummary> GetAsync(Guid userId, CancellationToken cancellationToken = default) =>
-        billing.Enabled
-            ? SpeedReadingBillingRules.Summary(await billing.GetAsync(userId, cancellationToken))
-            : await subscriptions.GetMyAccessAsync(userId, cancellationToken);
+        SpeedReadingBillingRules.Summary(billing.Enabled
+            ? await billing.GetAsync(userId, cancellationToken)
+            : new BillingAccessDecision(true, false, null, true));
 }

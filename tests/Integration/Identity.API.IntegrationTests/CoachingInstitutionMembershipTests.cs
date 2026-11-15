@@ -124,19 +124,34 @@ public sealed class CoachingInstitutionMembershipTests
         await f.Store.ProvisionAsync(coach, "Teacher", default); await f.Store.ProvisionAsync(other, "Student", default);
         f.Db.Add(CoachingTeacherStudentAssignment.Create(coach, other, null, null, coach));
         await f.Store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, true, default);
-        var institutionLicense = new CoachingSubscription { PlanId = Guid.NewGuid(), InstitutionId = inst, StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(30) };
-        var coachLicense = new CoachingSubscription { PlanId = Guid.NewGuid(), UserId = coach, StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(30) };
-        f.Db.AddRange(institutionLicense, coachLicense,
-            new CoachingSubscriptionSeat { SubscriptionId = institutionLicense.Id, StudentId = student },
-            new CoachingSubscriptionSeat { SubscriptionId = coachLicense.Id, StudentId = other });
         await f.Db.SaveChangesAsync();
+        // Seats are kept by the billing service: leaving tells it whose seat in whose pool is free again.
+        var seats = new RecordingSeats();
+        var store = new CoachingProfileStore(f.Db, f.Accounts, billingSeats: seats);
 
-        await f.Store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, false, default);
-        await f.Store.EndAssignmentAsync(other, coach, other, true, default);
+        await store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, false, default);
+        await store.EndAssignmentAsync(other, coach, other, true, default);
 
-        var seats = await f.Db.CoachingSubscriptionSeats.ToListAsync();
-        Assert.All(seats, seat => Assert.True(seat.IsSuspended));
-        Assert.All(seats, seat => Assert.False(string.IsNullOrWhiteSpace(seat.SuspensionReason)));
+        Assert.Equal([(Coaching.Application.Subscriptions.CoachingSeatOwner.Institution(inst), student), (Coaching.Application.Subscriptions.CoachingSeatOwner.Teacher(coach), other)],
+            seats.Released.Select(item => (item.Owner, item.Student)));
+        Assert.All(seats.Released, item => Assert.False(string.IsNullOrWhiteSpace(item.Reason)));
+    }
+
+    private sealed class RecordingSeats : Coaching.Application.Subscriptions.ICoachingBillingSeats
+    {
+        public List<(Coaching.Application.Subscriptions.CoachingSeatOwner Owner, Guid Student, string Reason)> Released { get; } = [];
+        public bool Enabled => true;
+        public Task<EduPlatform.Shared.Contracts.Billing.BillingSeatPoolResponse?> GetPoolAsync(Coaching.Application.Subscriptions.CoachingSeatOwner owner,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Contracts.Billing.BillingSeatChangeResponse> AssignAsync(Coaching.Application.Subscriptions.CoachingSeatOwner owner, Guid studentId,
+            Guid actorId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<EduPlatform.Shared.Contracts.Billing.BillingSeatChangeResponse> ReleaseAsync(Coaching.Application.Subscriptions.CoachingSeatOwner owner, Guid studentId,
+            Guid actorId, string? reason, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task ReleaseWhenLeavingAsync(Coaching.Application.Subscriptions.CoachingSeatOwner owner, Guid studentId, string reason, CancellationToken cancellationToken = default)
+        {
+            Released.Add((owner, studentId, reason));
+            return Task.CompletedTask;
+        }
     }
 
     private static (Guid Admin, Guid Institution) Institution(CoachingOwnedProfilePersistenceTests.Fixture f)

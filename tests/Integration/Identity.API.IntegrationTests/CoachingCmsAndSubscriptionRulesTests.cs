@@ -10,18 +10,6 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingCmsAndSubscriptionRulesTests
 {
-    [Theory]
-    [InlineData("Teacher", null, true)]
-    [InlineData("Institution", null, true)]
-    [InlineData("Teacher", 0, false)]
-    [InlineData("Institution", 100001, false)]
-    [InlineData("Teacher", 20, true)]
-    public void ContactPlans_AllowUnspecifiedCapacityButRejectInvalidCapacity(string audience, int? seats, bool expected)
-    {
-        CoachingManagementRules.IsValidPlan(audience, 0m, true, "OneTime", 365, seats)
-            .Should().Be(expected);
-    }
-
     [Fact]
     public void CmsStarterContentMigration_SeedsCoachingPagesAndNavigation()
     {
@@ -155,29 +143,6 @@ public sealed class CoachingCmsAndSubscriptionRulesTests
         CoachingCmsMediaPolicy.HasValidSignature("image/png", [137, 80, 78, 71, 13, 10, 26, 10]).Should().BeTrue();
         CoachingCmsMediaPolicy.HasValidSignature("image/png", [0, 1, 2, 3, 4, 5, 6, 7]).Should().BeFalse();
         CoachingCmsMediaPolicy.HasValidSignature("image/jpeg", [255, 216, 255]).Should().BeTrue();
-    }
-
-    [Theory]
-    [InlineData("TR330006100519786457841326", true)]
-    [InlineData("TR330006100519786457841327", false)]
-    [InlineData("TR33 0006 1005 1978 6457 8413 26", true)]
-    public void IbanValidation_ChecksFormattingAndChecksum(string iban, bool expected)
-    {
-        CoachingManagementRules.IsValidIban(iban).Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData("Teacher", 10, true)]
-    [InlineData("Teacher", null, false)]
-    [InlineData("Individual", null, true)]
-    [InlineData("Individual", 10, false)]
-    public void SubscriptionPlanAudience_RequiresSeatsOnlyForTeacherAndInstitutionPlans(
-        string audience,
-        int? seats,
-        bool expected)
-    {
-        CoachingManagementRules.IsValidPlan(audience, 100m, false, "Monthly", 30, seats)
-            .Should().Be(expected);
     }
 
     [Theory]

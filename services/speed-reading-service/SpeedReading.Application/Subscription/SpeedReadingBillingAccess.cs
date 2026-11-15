@@ -13,7 +13,7 @@ public sealed record BillingAccessDecision(bool Allowed, bool RequireSubscriptio
 /// <summary>Asks the billing service about a user's access to Hızlı Okuma and remembers the answer for a short time.</summary>
 public interface ISpeedReadingBillingAccess
 {
-    /// <summary>False: this deployment runs without the billing service and the product's own records decide.</summary>
+    /// <summary>False: this deployment runs without the billing service and the product asks for no subscription.</summary>
     bool Enabled { get; }
     Task<BillingAccessDecision> GetAsync(Guid userId, CancellationToken cancellationToken = default);
     /// <summary>The user's entitlements changed: the next question goes to billing again.</summary>
@@ -21,6 +21,9 @@ public interface ISpeedReadingBillingAccess
     /// <summary>The product's "subscription required" switch changed: everything remembered is dropped.</summary>
     void ForgetAll();
 }
+
+/// <summary>What the client is told the user may use. <paramref name="HasCoaching"/> stays false: Koçluk answers for itself.</summary>
+public sealed record UserAccessSummary(IReadOnlyList<string> Products, bool HasSpeedReading, bool HasCoaching);
 
 /// <summary>The one answer the access middleware and the client's access question use.</summary>
 public interface ISpeedReadingAccess
