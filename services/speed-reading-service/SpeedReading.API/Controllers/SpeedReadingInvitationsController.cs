@@ -313,9 +313,9 @@ public sealed class SpeedReadingInvitationsController(
 }
 
 public sealed record InviteSpeedReadingStudentRequest(
-    [property: Required, EmailAddress, MaxLength(320)] string Email);
+    [Required, EmailAddress, MaxLength(320)] string Email);
 
 public sealed record InviteSpeedReadingInstitutionMemberRequest(
-    [property: Required, EmailAddress, MaxLength(320)] string Email,
+    [Required, EmailAddress, MaxLength(320)] string Email,
     SpeedReadingInstitutionMemberRole Role,
     Guid? TeacherUserId = null);

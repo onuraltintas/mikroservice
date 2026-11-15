@@ -134,10 +134,12 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
     }
 }
 
+// Rehearsal 15.11.2026: validation attributes of a record used as a request body belong on the constructor parameter.
+// On the property ([property: …]) ASP.NET Core refuses the whole request with a 500 ("validation metadata … will be ignored").
 public sealed record SubmitErasureRequest(
     PersonalDataScope Scope,
-    [property: Required, MaxLength(2_000)] string Reason);
+    [Required, MaxLength(2_000)] string Reason);
 
 public sealed record DataSubjectRequestDecisionRequest(
     bool Approve,
-    [property: Required, MaxLength(2_000)] string Reason);
+    [Required, MaxLength(2_000)] string Reason);
