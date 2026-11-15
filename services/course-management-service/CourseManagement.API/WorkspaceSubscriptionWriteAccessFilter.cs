@@ -8,7 +8,7 @@ namespace CourseManagement.API;
 
 internal sealed class ReadOnlyWorkspaceOperationMetadata { }
 
-public sealed class WorkspaceSubscriptionWriteAccessFilter(CourseManagementDbContext db) : IEndpointFilter
+public sealed class WorkspaceSubscriptionWriteAccessFilter(CourseManagementDbContext db, WorkspaceBillingPlans billing) : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
@@ -38,6 +38,15 @@ public sealed class WorkspaceSubscriptionWriteAccessFilter(CourseManagementDbCon
             .GetMetadata<ReadOnlyWorkspaceOperationMetadata>() is not null;
         if (!allowReadOnlyOperation && workspace.IsErasureReadOnly)
             return Results.Conflict(new { code = "Workspace.ErasureReadOnly" });
+
+        if (billing.Enabled)
+        {
+            // The plan is the owner's in the billing service; the subscription table is not read.
+            if (!allowReadOnlyOperation
+                && !(await billing.GetAsync(workspace.OwnerUserId, httpContext.RequestAborted)).CanWriteAt(DateTimeOffset.UtcNow))
+                return Results.Conflict(new { code = "Subscription.ReadOnly" });
+            return await next(context);
+        }
 
         var subscription = await db.WorkspaceSubscriptions.AsNoTracking()
             .SingleOrDefaultAsync(item => item.WorkspaceId == target.Value.WorkspaceId, httpContext.RequestAborted);

@@ -36,7 +36,7 @@ public static class LearningEndpoints
                 .Select(student => new { student.Id, student.UserId, student.DisplayName, student.Email, student.PhoneNumber, student.IsActive }).ToListAsync(ct));
         });
 
-        api.MapPost("/workspaces/{workspaceId:guid}/students", async (Guid workspaceId, CreateStudentRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        api.MapPost("/workspaces/{workspaceId:guid}/students", async (Guid workspaceId, CreateStudentRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             if (!await IsOwner(db, workspaceId, UserId(user), ct)) return Results.NotFound();
             if (request.Id == Guid.Empty || string.IsNullOrWhiteSpace(request.DisplayName)
@@ -44,7 +44,7 @@ public static class LearningEndpoints
                 return Results.BadRequest(new { code = "Student.InvalidInput" });
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
             await WorkspaceStudentCapacity.LockWorkspaceAsync(db, workspaceId, ct);
-            if (!await WorkspaceStudentCapacity.CanAddAsync(db, workspaceId, 1, ct))
+            if (!await WorkspaceStudentCapacity.CanAddAsync(db, billing, workspaceId, 1, ct))
                 return Results.Conflict(new { code = "Student.ActiveLimitReached" });
             var student = StudentRecord.Create(request.Id, workspaceId, request.DisplayName, request.Email, request.PhoneNumber, DateTimeOffset.UtcNow);
             db.Students.Add(student);
@@ -68,7 +68,7 @@ public static class LearningEndpoints
             }
         }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
 
-        api.MapPost("/workspaces/{workspaceId:guid}/imports/students", async (Guid workspaceId, CommitStudentCsvRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        api.MapPost("/workspaces/{workspaceId:guid}/imports/students", async (Guid workspaceId, CommitStudentCsvRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             var userId = UserId(user);
             if (!await IsOwner(db, workspaceId, userId, ct)) return Results.NotFound();
@@ -98,7 +98,7 @@ public static class LearningEndpoints
                 return Results.Conflict(new { code = "StudentImport.PreviewChanged" });
             if (currentPreview.InvalidCount > 0 || currentPreview.DuplicateCount > 0)
                 return Results.BadRequest(new { code = "StudentImport.ResolveRows", preview = currentPreview });
-            if (!await WorkspaceStudentCapacity.CanAddAsync(db, workspaceId, currentPreview.ReadyCount, ct))
+            if (!await WorkspaceStudentCapacity.CanAddAsync(db, billing, workspaceId, currentPreview.ReadyCount, ct))
                 return Results.Conflict(new { code = "Student.ActiveLimitReached" });
 
             foreach (var row in currentPreview.Rows.Where(row => row.Status == "Ready"))
@@ -125,7 +125,7 @@ public static class LearningEndpoints
         }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
 
         api.MapPost("/workspaces/{workspaceId:guid}/imports/legacy-students", async (Guid workspaceId,
-            LegacyStudentImportRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            LegacyStudentImportRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             var userId = UserId(user);
             if (!await IsOwner(db, workspaceId, userId, ct)) return Results.NotFound();
@@ -149,7 +149,7 @@ public static class LearningEndpoints
                 return Results.BadRequest(new { code = "LegacyStudentImport.ResolveRows", preview = currentPreview });
 
             var activeReadyCount = currentPreview.Rows.Count(row => row.Status == "Ready" && row.IsActive);
-            if (!await WorkspaceStudentCapacity.CanAddAsync(db, workspaceId, activeReadyCount, ct))
+            if (!await WorkspaceStudentCapacity.CanAddAsync(db, billing, workspaceId, activeReadyCount, ct))
                 return Results.Conflict(new { code = "Student.ActiveLimitReached" });
 
             var selectedFields = string.Join(',', import!.SelectedFields);
@@ -169,7 +169,7 @@ public static class LearningEndpoints
                 currentPreview.ReadyCount, currentPreview.ImportedCount));
         });
 
-        api.MapPut("/workspaces/{workspaceId:guid}/students/{studentId:guid}", async (Guid workspaceId, Guid studentId, UpdateStudentRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        api.MapPut("/workspaces/{workspaceId:guid}/students/{studentId:guid}", async (Guid workspaceId, Guid studentId, UpdateStudentRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>
         {
             var userId = UserId(user);
             if (!await IsOwner(db, workspaceId, userId, ct)) return Results.NotFound();
@@ -190,7 +190,7 @@ public static class LearningEndpoints
             {
                 await WorkspaceStudentCapacity.LockWorkspaceAsync(db, workspaceId, ct);
                 await db.Entry(student).ReloadAsync(ct);
-                if (!student.IsActive && !await WorkspaceStudentCapacity.CanAddAsync(db, workspaceId, 1, ct))
+                if (!student.IsActive && !await WorkspaceStudentCapacity.CanAddAsync(db, billing, workspaceId, 1, ct))
                     return Results.Conflict(new { code = "Student.ActiveLimitReached" });
             }
 

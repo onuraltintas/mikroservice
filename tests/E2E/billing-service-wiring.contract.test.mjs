@@ -279,3 +279,16 @@ test('billing takes part in an account erasure, and Identity waits for it only w
   for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
     assert.match(read(file), /identity-service:\s*\n\s+environment:\s*\n\s+-? ?Billing__Enabled[:=]\s*"?true/, file);
 });
+
+test('Kurs Yönetimi reads a workspace plan and its student limit from billing where billing runs', () => {
+  const api = 'services/course-management-service/CourseManagement.API/';
+  const plans = read(api + 'WorkspaceBillingPlans.cs');
+  assert.match(plans, /internal\/billing\/v1\/entitlements\?userId=\{ownerUserId:D\}&product=\{BillingProductCodes\.CourseManagement\}/);
+  assert.match(plans, /WorkspaceEntitlement = "course-management\.workspace"/);
+  assert.match(read(api + 'Program.cs'), /AddHttpClient<WorkspaceBillingPlans>/);
+  assert.match(read(api + 'WorkspaceSubscriptionWriteAccessFilter.cs'), /if \(billing\.Enabled\)[\s\S]*?Subscription\.ReadOnly[\s\S]*?db\.WorkspaceSubscriptions/);
+  assert.match(read(api + 'WorkspaceStudentCapacity.cs'), /if \(billing\.Enabled\)[\s\S]*?plan\.CanHold\(active \+ additionalStudents\)/);
+  assert.match(read(api + 'CourseManagementAdminEndpoints.cs'), /Subscription\.ManagedByBilling/);
+  for (const file of ['docker-compose.course-management.yml', 'docker-compose.course-management.production.yml'])
+    assert.match(read(file), /Billing__Enabled: \$\{BILLING_ENABLED:-false\}\s*\n\s+Services__BillingService: http:\/\/billing-service:8080/, file);
+});

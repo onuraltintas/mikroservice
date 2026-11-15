@@ -35,6 +35,9 @@ builder.Services.AddScoped<ICourseManagementStore, CourseManagementStore>();
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.CourseManagement");
 builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(CourseManagementOperationMetrics.MeterName));
 builder.Services.AddScoped<WorkspaceSubscriptionWriteAccessFilter>();
+// Billing service ("Abonelik ve Ödeme"): where the deployment runs it (Billing:Enabled), a workspace's plan is asked there.
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<WorkspaceBillingPlans>(client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddScoped<CourseManagementAccountErasureService>();
 builder.Services.AddScoped<ICourseManagementAccountErasureService>(services =>
     services.GetRequiredService<CourseManagementAccountErasureService>());
