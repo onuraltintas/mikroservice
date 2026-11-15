@@ -27,6 +27,9 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
     public DbSet<SubscriptionPeriod> SubscriptionPeriods => Set<SubscriptionPeriod>();
     public DbSet<EntitlementGrant> EntitlementGrants => Set<EntitlementGrant>();
     public DbSet<Seat> Seats => Set<Seat>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Withdrawal> Withdrawals => Set<Withdrawal>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<BankStatementImport> BankStatementImports => Set<BankStatementImport>();
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
 
@@ -139,6 +142,8 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.Property(item => item.Currency).HasMaxLength(3).IsRequired();
             entity.Property(item => item.EntitlementsJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.PaymentCode).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.CouponCode).HasMaxLength(30);
+            entity.HasIndex(item => item.CouponCode);
             entity.Property(item => item.DocumentsVersion).HasMaxLength(20).IsRequired();
             entity.Property(item => item.DocumentsJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.PayerNote).HasMaxLength(500);
@@ -221,6 +226,43 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.HasIndex(item => new { item.SubscriptionId, item.UserId }).IsUnique();
             entity.HasIndex(item => item.UserId);
             entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Coupon>(entity =>
+        {
+            entity.ToTable("coupons");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Code).HasMaxLength(30).IsRequired();
+            entity.Property(item => item.Kind).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Value).HasPrecision(12, 2);
+            entity.Property(item => item.PlanIdsJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(item => item.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<Withdrawal>(entity =>
+        {
+            entity.ToTable("withdrawals");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Reason).HasMaxLength(1_000);
+            entity.Property(item => item.ReviewNote).HasMaxLength(1_000);
+            entity.HasIndex(item => new { item.Status, item.RequestedAt });
+            // An order has at most one request that is open or was accepted; a refused one may be followed by another.
+            entity.HasIndex(item => item.OrderId).IsUnique().HasFilter("\"Status\" <> 'Rejected'").HasDatabaseName("IX_withdrawals_one_live_per_order");
+            entity.HasOne<Order>().WithMany().HasForeignKey(item => item.OrderId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.ToTable("invoices");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Number).HasMaxLength(40).IsRequired();
+            entity.Property(item => item.FileName).HasMaxLength(200).IsRequired();
+            entity.HasIndex(item => item.Number).IsUnique();
+            entity.HasIndex(item => item.PaymentId).IsUnique();
+            entity.HasIndex(item => item.OrderId);
+            entity.HasOne<Payment>().WithMany().HasForeignKey(item => item.PaymentId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Order>().WithMany().HasForeignKey(item => item.OrderId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<BankStatementImport>(entity =>

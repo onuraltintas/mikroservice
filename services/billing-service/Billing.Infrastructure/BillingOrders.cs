@@ -20,13 +20,16 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
 
     // ---- Buyer --------------------------------------------------------------------------------------------------------
 
-    public async Task<SalesDocuments?> PreviewDocumentsAsync(BillingUser user, Guid planId, string? buyerName, CancellationToken cancellationToken = default)
+    public async Task<SalesDocuments?> PreviewDocumentsAsync(BillingUser user, Guid planId, string? buyerName, string? couponCode = null,
+        CancellationToken cancellationToken = default)
     {
         var plan = await db.Plans.AsNoTracking().SingleOrDefaultAsync(item => item.Id == planId, cancellationToken);
         if (plan is null) return null;
         var offer = await OfferAsync(plan, user, cancellationToken);
         // An institution plan is previewed with the buyer's name; the institution's name is added when the order is given.
-        return SalesDocumentTexts.Render(Terms(offer, plan, BuyerName(buyerName), user.Email, plan.Price, Now));
+        var accountId = await db.Accounts.AsNoTracking().Where(item => item.UserId == user.Id).Select(item => (Guid?)item.Id).SingleOrDefaultAsync(cancellationToken);
+        var (discount, _) = await CouponAsync(couponCode, plan, accountId, Now, false, cancellationToken);
+        return SalesDocumentTexts.Render(Terms(offer, plan, BuyerName(buyerName), user.Email, plan.Price - discount, Now));
     }
 
     public async Task<OrderView> CreateOrderAsync(BillingUser user, CreateOrderRequest request, CancellationToken cancellationToken = default)
@@ -40,6 +43,8 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                 "Devam etmek için ön bilgilendirme formunu ve mesafeli satış sözleşmesini onaylayın.");
 
         var now = Now;
+        // A coupon is counted and taken in one step: its row stays locked until the order is stored.
+        await using var transaction = string.IsNullOrWhiteSpace(request.CouponCode) ? null : await db.Database.BeginTransactionAsync(cancellationToken);
         // An institution plan is bought for an institution the buyer administers; every other plan for the buyer.
         var institution = plan.BuyerType == BuyerType.Institution ? await AdministeredAsync(user, request.OrganizationId, cancellationToken) : null;
         if (institution is null && request.OrganizationId is not null)
@@ -51,8 +56,10 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             throw new BusinessRuleException("Billing.OrderPending", "Bu plan için ödeme bekleyen bir siparişiniz var.");
         }
 
+        var (discount, couponCode) = await CouponAsync(request.CouponCode, plan, account.Id, now, true, cancellationToken);
+        var amount = plan.Price - discount;
         var contractName = institution is null ? buyerName : $"{institution.Name} (yetkili: {buyerName})";
-        var documents = SalesDocumentTexts.Render(Terms(offer, plan, contractName, user.Email, plan.Price, now));
+        var documents = SalesDocumentTexts.Render(Terms(offer, plan, contractName, user.Email, amount, now));
         var order = new Order
         {
             Id = Guid.NewGuid(),
@@ -64,8 +71,9 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             PlanName = plan.Name,
             BuyerType = plan.BuyerType,
             ListPrice = plan.Price,
-            Discount = 0,
-            Amount = plan.Price,
+            CouponCode = couponCode,
+            Discount = discount,
+            Amount = amount,
             Currency = plan.Currency,
             DurationDays = plan.DurationDays,
             SeatCount = plan.SeatCount,
@@ -88,6 +96,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             // The same buyer sent the request twice at once: one account, one waiting order per plan.
             throw new BusinessRuleException("Billing.OrderPending", "Bu plan için ödeme bekleyen bir siparişiniz var.");
         }
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return View(order, false);
     }
 
@@ -352,6 +361,16 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             await RebuildGrantsAsync(subscription, now, cancellationToken);
         }
 
+        // A withdrawal (cayma) request waiting for this payment is settled by the same reversal.
+        var withdrawal = await db.Withdrawals.SingleOrDefaultAsync(item => item.OrderId == order.Id && item.Status == WithdrawalStatus.Requested, cancellationToken);
+        if (withdrawal is not null)
+        {
+            withdrawal.Status = WithdrawalStatus.Approved;
+            withdrawal.ReviewNote = note.Length > 1_000 ? note[..1_000] : note;
+            withdrawal.ReviewedBy = actorId;
+            withdrawal.ReviewedAt = now;
+        }
+
         order.Status = OrderStatus.Cancelled;
         var line = $"Onay geri alındı ({now:yyyy-MM-dd HH:mm} UTC): {note}";
         order.ReviewNote = string.IsNullOrWhiteSpace(order.ReviewNote) ? line : $"{order.ReviewNote}\n{line}";
@@ -431,6 +450,35 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             rows.Select(row => row.product.Name).Distinct().ToArray());
     }
 
+    /// <summary>
+    /// The discount a code gives on a plan for an account, and the code as stored; (0, null) without a code. Throws why
+    /// when the code cannot be used. Waiting and paid orders count as uses; an account uses a code once.
+    /// </summary>
+    internal async Task<(decimal Discount, string? Code)> CouponAsync(string? code, Plan plan, Guid? accountId, DateTime now, bool lockRow,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return (0, null);
+        var normalized = ExtrasRules.NormalizeCouponCode(code) ?? throw Invalid();
+        var coupon = lockRow
+            ? (await db.Coupons.FromSqlInterpolated($"SELECT * FROM billing.coupons WHERE \"Code\" = {normalized} FOR UPDATE").AsNoTracking().ToListAsync(cancellationToken)).SingleOrDefault()
+            : await db.Coupons.AsNoTracking().SingleOrDefaultAsync(item => item.Code == normalized, cancellationToken);
+        if (coupon is not { IsActive: true } || coupon.StartsAt > now || coupon.EndsAt <= now) throw Invalid();
+        var planIds = JsonSerializer.Deserialize<Guid[]>(coupon.PlanIdsJson, Json) ?? [];
+        if (planIds.Length > 0 && !planIds.Contains(plan.Id))
+            throw new BusinessRuleException("Billing.CouponInvalid", "Bu kupon seçtiğiniz planda geçerli değil.");
+        var live = db.Orders.AsNoTracking().Where(item => item.CouponCode == normalized && (item.Status == OrderStatus.Pending || item.Status == OrderStatus.Paid));
+        if (coupon.MaxUses is { } limit && await live.CountAsync(cancellationToken) >= limit)
+            throw new BusinessRuleException("Billing.CouponInvalid", "Bu kuponun kullanım sınırı doldu.");
+        if (accountId is { } account && await live.AnyAsync(item => item.AccountId == account, cancellationToken))
+            throw new BusinessRuleException("Billing.CouponInvalid", "Bu kuponu daha önce kullandınız.");
+        var discount = ExtrasRules.Discount(coupon.Kind, coupon.Value, plan.Price);
+        if (plan.Price - discount <= 0)
+            throw new BusinessRuleException("Billing.CouponInvalid", "Bu kupon seçtiğiniz planın tamamını karşılıyor; bu planda kullanılamaz.");
+        return (discount, normalized);
+
+        static BusinessRuleException Invalid() => new("Billing.CouponInvalid", "Kupon kodu geçersiz ya da süresi dolmuş.");
+    }
+
     /// <summary>The institution an institution plan is bought for. Identity says whether the buyer administers it.</summary>
     private async Task<Institution> AdministeredAsync(BillingUser user, Guid? organizationId, CancellationToken cancellationToken)
     {
@@ -477,6 +525,23 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
     internal Task<string> PaymentCodeAsync(CancellationToken cancellationToken) => NewPaymentCodeAsync(cancellationToken);
 
     internal static OrderView ViewOf(Order order) => View(order, false);
+
+    internal async Task<OrderView> ViewAsync(Order order, CancellationToken cancellationToken) => (await ViewsAsync([order], cancellationToken))[0];
+
+    internal async Task<AdminOrderView> AdminViewAsync(Order order, CancellationToken cancellationToken) => (await AdminViewsAsync([order], cancellationToken))[0];
+
+    /// <summary>The plan's entitlements and product names when it can be started or bought in its products; null otherwise.</summary>
+    internal async Task<(OrderEntitlement[] Entitlements, bool OnSale)> PlanEntitlementsAsync(Guid planId, CancellationToken cancellationToken)
+    {
+        var rows = await (from link in db.PlanEntitlements.AsNoTracking()
+                          join entitlement in db.Entitlements.AsNoTracking() on link.EntitlementId equals entitlement.Id
+                          join product in db.Products.AsNoTracking() on entitlement.ProductId equals product.Id
+                          where link.PlanId == planId
+                          orderby product.SortOrder, entitlement.Key, link.Holder
+                          select new { link, entitlement, product }).ToListAsync(cancellationToken);
+        return (rows.Select(row => new OrderEntitlement(row.entitlement.Id, row.entitlement.Key, row.product.Code, row.link.Holder, row.link.LimitValue)).ToArray(),
+            rows.Count > 0 && rows.All(row => row.product.IsActive) && rows.Any(row => row.product.RequireSubscription));
+    }
 
     internal static string RequireBuyerName(string? value) => BuyerName(value);
 
@@ -645,10 +710,15 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
     private static string[] ProductCodes(string entitlementsJson) =>
         (JsonSerializer.Deserialize<OrderEntitlement[]>(entitlementsJson, Json) ?? []).Select(item => item.ProductCode).Distinct().ToArray();
 
-    private static OrderView View(Order order, bool hasReceipt) =>
+    private static OrderView View(Order order, bool hasReceipt, WithdrawalStatus? withdrawal = null, bool hasInvoice = false, DateTime? now = null) =>
         new(order.Id, order.PlanId, order.PlanName, ProductCodes(order.EntitlementsJson), order.BuyerType, order.Amount, order.Currency,
             order.DurationDays, order.PaymentCode, order.Status, order.CreatedAt, order.ExpiresAt, order.PaidDeclaredAt, order.PayerNote,
-            hasReceipt, order.ReviewedAt, order.ReviewNote, order.DocumentsVersion, order.Kind, order.ExtraSeats);
+            hasReceipt, order.ReviewedAt, order.ReviewNote, order.DocumentsVersion, order.Kind, order.ExtraSeats, order.ListPrice, order.Discount,
+            order.CouponCode, withdrawal,
+            // Withdrawal is open for a paid order until 14 days after its approval, unless one is already waiting or accepted.
+            order is { Status: OrderStatus.Paid, ReviewedAt: { } approvedAt } && withdrawal is null or WithdrawalStatus.Rejected
+                && ExtrasRules.WithdrawalDeadline(approvedAt) is var deadline && (now is null || deadline > now) ? deadline : null,
+            hasInvoice);
 
     private static SubscriptionView View(Subscription subscription, DateTime now) =>
         new(subscription.Id, subscription.PlanId, subscription.PlanName, ProductCodes(subscription.EntitlementsJson), subscription.Status,
@@ -660,7 +730,15 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         var ids = orders.Select(item => item.Id).ToArray();
         var withReceipt = (await db.OrderReceipts.AsNoTracking().Where(item => ids.Contains(item.OrderId)).Select(item => item.OrderId)
             .ToListAsync(cancellationToken)).ToHashSet();
-        return orders.Select(order => View(order, withReceipt.Contains(order.Id))).ToArray();
+        var withInvoice = (await db.Invoices.AsNoTracking().Where(item => ids.Contains(item.OrderId)).Select(item => item.OrderId)
+            .ToListAsync(cancellationToken)).ToHashSet();
+        // The latest request of an order is the one that tells its state.
+        var withdrawals = (await db.Withdrawals.AsNoTracking().Where(item => ids.Contains(item.OrderId)).OrderBy(item => item.RequestedAt)
+            .Select(item => new { item.OrderId, item.Status }).ToListAsync(cancellationToken))
+            .GroupBy(item => item.OrderId).ToDictionary(group => group.Key, group => group.Last().Status);
+        var now = Now;
+        return orders.Select(order => View(order, withReceipt.Contains(order.Id),
+            withdrawals.TryGetValue(order.Id, out var withdrawal) ? withdrawal : null, withInvoice.Contains(order.Id), now)).ToArray();
     }
 
     private async Task<IReadOnlyList<AdminOrderView>> AdminViewsAsync(IReadOnlyList<Order> orders, CancellationToken cancellationToken)

@@ -17,6 +17,18 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('../billing/billing-statements').then(m => m.BillingStatementsComponent)
     },
     {
+        path: 'billing/withdrawals',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin' },
+        loadComponent: () => import('../billing/billing-withdrawals').then(m => m.BillingWithdrawalsComponent)
+    },
+    {
+        path: 'billing/coupons',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin' },
+        loadComponent: () => import('../billing/billing-coupons').then(m => m.BillingCouponsComponent)
+    },
+    {
         path: 'billing/subscriptions',
         canActivate: [permissionGuard],
         data: { role: 'SystemAdmin' },

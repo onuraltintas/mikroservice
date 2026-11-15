@@ -127,6 +127,14 @@ export interface BillingOrder {
   reviewedAt: string | null;
   reviewNote: string | null;
   documentsVersion: string;
+  kind?: 'Subscription' | 'ExtraSeats';
+  extraSeats?: number | null;
+  listPrice?: number;
+  discount?: number;
+  couponCode?: string | null;
+  withdrawal?: WithdrawalStatus | null;
+  withdrawUntil?: string | null;
+  hasInvoice?: boolean;
 }
 
 export interface BillingAdminOrder {
@@ -224,6 +232,51 @@ export interface BillingSeatPool {
   seats: BillingSeat[];
 }
 
+export type CouponKind = 'Percent' | 'Amount';
+export type WithdrawalStatus = 'Requested' | 'Approved' | 'Rejected';
+
+export interface BillingCoupon {
+  id: string;
+  code: string;
+  kind: CouponKind;
+  value: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  maxUses: number | null;
+  usedCount: number;
+  planIds: string[];
+  isActive: boolean;
+}
+
+export interface BillingCouponRequest {
+  code: string;
+  kind: CouponKind;
+  value: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  maxUses: number | null;
+  planIds: string[];
+  isActive: boolean;
+}
+
+export interface BillingWithdrawal {
+  id: string;
+  orderId: string;
+  status: WithdrawalStatus;
+  reason: string | null;
+  requestedAt: string;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  accountName: string;
+  accountEmail: string | null;
+  planName: string;
+  paymentCode: string;
+  amount: number;
+  currency: string;
+}
+
+export const WITHDRAWAL_STATUS_LABELS: Record<WithdrawalStatus, string> = { Requested: 'Bekliyor', Approved: 'Kabul edildi', Rejected: 'Reddedildi' };
+
 export const BUYER_TYPE_LABELS: Record<BuyerType, string> = { Individual: 'Bireysel', Teacher: 'Öğretmen', Institution: 'Kurum' };
 
 /** The server explains a refused change in the admin's language; anything else gets the fallback. */
@@ -269,6 +322,27 @@ export class BillingAdminService {
   getSubscriptions(productCode: string): Observable<BillingAdminSubscription[]> {
     return this.http.get<BillingAdminSubscription[]>(`${this.url}/subscriptions`, { params: productCode ? new HttpParams().set('product', productCode) : undefined });
   }
+
+  getCoupons(): Observable<BillingCoupon[]> { return this.http.get<BillingCoupon[]>(`${this.url}/coupons`); }
+  createCoupon(request: BillingCouponRequest): Observable<BillingCoupon> { return this.http.post<BillingCoupon>(`${this.url}/coupons`, request); }
+  updateCoupon(id: string, request: BillingCouponRequest): Observable<BillingCoupon> { return this.http.put<BillingCoupon>(`${this.url}/coupons/${id}`, request); }
+
+  getWithdrawals(status: WithdrawalStatus | ''): Observable<BillingWithdrawal[]> {
+    return this.http.get<BillingWithdrawal[]>(`${this.url}/withdrawals`, { params: status ? new HttpParams().set('status', status) : undefined });
+  }
+  reviewWithdrawal(id: string, approve: boolean, note: string): Observable<BillingWithdrawal> {
+    return this.http.post<BillingWithdrawal>(`${this.url}/withdrawals/${id}/review`, { approve, note: note || null });
+  }
+
+  attachInvoice(orderId: string, number: string, issuedOn: string, file: File): Observable<BillingAdminOrder> {
+    const form = new FormData();
+    form.append('number', number);
+    form.append('issuedOn', issuedOn);
+    form.append('file', file);
+    return this.http.post<BillingAdminOrder>(`${this.url}/orders/${orderId}/invoice`, form);
+  }
+  getInvoice(orderId: string): Observable<Blob> { return this.http.get(`${this.url}/orders/${orderId}/invoice`, { responseType: 'blob' }); }
+  removeInvoice(orderId: string): Observable<void> { return this.http.delete<void>(`${this.url}/orders/${orderId}/invoice`); }
 
   getSeats(subscriptionId: string): Observable<BillingSeatPool> { return this.http.get<BillingSeatPool>(`${this.url}/subscriptions/${subscriptionId}/seats`); }
   releaseSeat(subscriptionId: string, userId: string): Observable<BillingSeatPool> {

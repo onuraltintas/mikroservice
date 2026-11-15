@@ -13,7 +13,7 @@ import {
 import { ToasterService } from '../../core/services/toaster.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
-type ReviewKind = 'approve' | 'reject' | 'reverse';
+type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice';
 
 /**
  * "Abonelik ve Ödeme › Siparişler ve ödemeler": the bank-transfer queue of every product. Orders the buyer says are
@@ -58,7 +58,8 @@ type ReviewKind = 'approve' | 'reject' | 'reverse';
                 <tr [attr.data-testid]="'order-' + row.order.paymentCode">
                   <td><strong>{{ row.accountName }}</strong><div class="muted">{{ row.accountEmail || '—' }}</div></td>
                   <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }} · {{ row.order.durationDays }} gün</div></td>
-                  <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency }}</td>
+                  <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency }}
+                    @if (row.order.couponCode) { <div class="muted">Kupon {{ row.order.couponCode }}: −{{ row.order.discount | number:'1.2-2' }}</div> }</td>
                   <td class="font-mono code">{{ row.order.paymentCode }}</td>
                   <td>{{ row.order.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (row.order.status === 'Pending') { <div class="muted">Son gün {{ row.order.expiresAt | date:'dd.MM.yyyy' }}</div> }</td>
                   <td>
@@ -67,6 +68,8 @@ type ReviewKind = 'approve' | 'reject' | 'reverse';
                     @if (row.order.hasReceipt) { <div><button type="button" class="link" (click)="openReceipt(row)">Dekontu aç</button></div> }
                   </td>
                   <td><span class="badge" [class.on]="row.order.status === 'Paid'" [class.off]="row.order.status !== 'Paid' && row.order.status !== 'Pending'">{{ statusLabel(row.order.status) }}</span>
+                    @if (row.order.withdrawal === 'Requested') { <div><span class="badge warn">Cayma talebi var</span></div> }
+                    @if (row.order.hasInvoice) { <div><button type="button" class="link" (click)="openInvoice(row)">Faturayı aç</button></div> }
                     @if (row.order.reviewNote) { <div class="muted note">{{ row.order.reviewNote }}</div> }</td>
                   <td class="actions">
                     @if (review()?.id === row.order.id) {
@@ -75,6 +78,11 @@ type ReviewKind = 'approve' | 'reject' | 'reverse';
                       <button type="button" class="approve" (click)="start(row, 'approve')">Onayla</button>
                       <button type="button" class="danger" (click)="start(row, 'reject')">Reddet</button>
                     } @else if (row.order.status === 'Paid') {
+                      @if (row.order.hasInvoice) {
+                        <button type="button" (click)="start(row, 'removeInvoice')">Faturayı kaldır</button>
+                      } @else {
+                        <button type="button" (click)="start(row, 'invoice')">Fatura ekle</button>
+                      }
                       <button type="button" class="danger" (click)="start(row, 'reverse')">Onayı geri al</button>
                     }
                   </td>
@@ -90,6 +98,16 @@ type ReviewKind = 'approve' | 'reject' | 'reverse';
                           @case ('reject') {
                             <label>Ret gerekçesi (alıcı görür)<textarea [(ngModel)]="current.note" name="reviewNote" required minlength="5" maxlength="1000"></textarea></label>
                           }
+                          @case ('invoice') {
+                            <div class="invoice-grid">
+                              <label>Fatura numarası<input [(ngModel)]="current.number" name="invoiceNumber" required minlength="3" maxlength="40" /></label>
+                              <label>Fatura tarihi<input type="date" [(ngModel)]="current.issuedOn" name="invoiceDate" required /></label>
+                              <label>Fatura (PDF, en çok 10 MB)<input type="file" accept="application/pdf,.pdf" (change)="chooseInvoice($event)" data-testid="invoice-file" /></label>
+                            </div>
+                          }
+                          @case ('removeInvoice') {
+                            <p>{{ row.accountName }} için yüklenen fatura kaldırılsın mı? Alıcı faturayı artık indiremez; yenisini ekleyebilirsiniz.</p>
+                          }
                           @case ('reverse') {
                             <p>Onay geri alınırsa bu ödemenin kullanılmamış günleri abonelikten düşer; ödeme kaydı "geri alındı" olarak kalır.</p>
                             <label>Gerekçe (alıcı görür)<textarea [(ngModel)]="current.note" name="reviewNote" required minlength="5" maxlength="1000"></textarea></label>
@@ -97,7 +115,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse';
                         }
                         <div class="form-actions">
                           <button type="button" class="secondary" (click)="review.set(null)">Vazgeç</button>
-                          <button type="submit" class="primary" [disabled]="saving() || (current.kind !== 'approve' && current.note.trim().length < 5)">{{ confirmLabel(current.kind) }}</button>
+                          <button type="submit" class="primary" [disabled]="saving() || !canConfirm()">{{ confirmLabel(current.kind) }}</button>
                         </div>
                       </form>
                     </td></tr>
@@ -120,6 +138,9 @@ type ReviewKind = 'approve' | 'reject' | 'reverse';
     .review-row td { background: color-mix(in srgb, var(--ui-brand) 6%, transparent); }
     .review { display: grid; gap: .75rem; max-width: 46rem; margin-left: auto; font-size: .875rem; color: var(--ui-text); }
     .review label { display: flex; flex-direction: column; gap: .25rem; }
+    .invoice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+    .badge.warn { border-color: #b45309; color: #b45309; }
+    @media (max-width: 640px) { .invoice-grid { grid-template-columns: 1fr; } }
   `]
 })
 export class BillingOrdersComponent implements OnInit {
@@ -131,7 +152,8 @@ export class BillingOrdersComponent implements OnInit {
   readonly products = signal<BillingProduct[]>([]);
   readonly status = signal<BillingOrderStatus | ''>('Pending');
   readonly product = signal('');
-  readonly review = signal<{ id: string; kind: ReviewKind; note: string } | null>(null);
+  readonly review = signal<{ id: string; kind: ReviewKind; note: string; number: string; issuedOn: string } | null>(null);
+  private invoiceFile: File | null = null;
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
@@ -163,25 +185,59 @@ export class BillingOrdersComponent implements OnInit {
   }
 
   confirmLabel(kind: ReviewKind): string {
-    return kind === 'approve' ? 'Evet, ödemeyi onayla' : kind === 'reject' ? 'Siparişi reddet' : 'Onayı geri al';
+    return { approve: 'Evet, ödemeyi onayla', reject: 'Siparişi reddet', reverse: 'Onayı geri al', invoice: 'Faturayı yükle', removeInvoice: 'Evet, faturayı kaldır' }[kind];
+  }
+
+  /** A refusal and a reversal need a reason; an invoice needs its number, date and file. */
+  canConfirm(): boolean {
+    const current = this.review();
+    if (!current) return false;
+    if (current.kind === 'reject' || current.kind === 'reverse') return current.note.trim().length >= 5;
+    if (current.kind === 'invoice') return current.number.trim().length >= 3 && !!current.issuedOn && !!this.invoiceFile;
+    return true;
   }
 
   start(row: BillingAdminOrder, kind: ReviewKind): void {
     this.error.set('');
-    this.review.set({ id: row.order.id, kind, note: '' });
+    this.invoiceFile = null;
+    const today = new Date();
+    this.review.set({ id: row.order.id, kind, note: '', number: '',
+      issuedOn: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}` });
+  }
+
+  chooseInvoice(event: Event): void {
+    this.invoiceFile = (event.target as HTMLInputElement).files?.[0] ?? null;
+    // The button's state depends on the file, which is not a signal.
+    this.review.update(current => current ? { ...current } : current);
+  }
+
+  openInvoice(row: BillingAdminOrder): void {
+    this.billing.getInvoice(row.order.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => this.error.set('Fatura açılamadı.')
+    });
   }
 
   confirm(): void {
     const current = this.review();
     if (!current) return;
     const note = current.note.trim();
-    const request: Observable<BillingAdminOrder> = current.kind === 'approve' ? this.billing.approveOrder(current.id)
-      : current.kind === 'reject' ? this.billing.rejectOrder(current.id, note) : this.billing.reverseApproval(current.id, note);
+    if (!this.canConfirm()) return;
+    const request: Observable<unknown> = current.kind === 'approve' ? this.billing.approveOrder(current.id)
+      : current.kind === 'reject' ? this.billing.rejectOrder(current.id, note)
+      : current.kind === 'reverse' ? this.billing.reverseApproval(current.id, note)
+      : current.kind === 'invoice' ? this.billing.attachInvoice(current.id, current.number.trim(), current.issuedOn, this.invoiceFile!)
+      : this.billing.removeInvoice(current.id);
     this.saving.set(true);
     this.error.set('');
     request.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
-        this.toaster.success(current.kind === 'approve' ? 'Ödeme onaylandı; abonelik açıldı.' : current.kind === 'reject' ? 'Sipariş reddedildi.' : 'Onay geri alındı.');
+        this.toaster.success({ approve: 'Ödeme onaylandı; abonelik açıldı.', reject: 'Sipariş reddedildi.', reverse: 'Onay geri alındı.',
+          invoice: 'Fatura yüklendi.', removeInvoice: 'Fatura kaldırıldı.' }[current.kind]);
         this.load();
       },
       error: error => {

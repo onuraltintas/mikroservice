@@ -34,6 +34,7 @@ builder.Services.AddScoped<BillingOrders>();
 builder.Services.AddScoped<IBillingOrders>(services => services.GetRequiredService<BillingOrders>());
 builder.Services.AddScoped<IBillingBankStatements, BillingBankStatements>();
 builder.Services.AddScoped<IBillingSeats, BillingSeats>();
+builder.Services.AddScoped<IBillingExtras, BillingExtras>();
 builder.Services.AddHttpClient<IdentityBillingInstitutions>(client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddScoped<IBillingInstitutions>(services => services.GetRequiredService<IdentityBillingInstitutions>());
 builder.Services.AddScoped<IBillingEvents, MassTransitBillingEvents>();
@@ -107,6 +108,7 @@ app.MapBillingCatalogEndpoints();
 app.MapBillingOrderEndpoints();
 app.MapBillingBankStatementEndpoints();
 app.MapBillingSeatEndpoints();
+app.MapBillingExtrasEndpoints();
 app.Run();
 
 public partial class Program { }
