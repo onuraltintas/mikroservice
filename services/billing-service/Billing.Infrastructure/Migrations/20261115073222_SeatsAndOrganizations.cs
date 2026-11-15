@@ -45,7 +45,8 @@ namespace Billing.Infrastructure.Migrations
                 type: "character varying(20)",
                 maxLength: 20,
                 nullable: false,
-                defaultValue: "");
+                // Orders given before extra seats existed are all subscription orders.
+                defaultValue: "Subscription");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "SubscriptionId",
