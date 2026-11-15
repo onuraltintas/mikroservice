@@ -207,6 +207,9 @@ builder.Services.AddMassTransit(configurator =>
 {
     configurator.AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>();
     configurator.AddConsumer<SpeedReadingErasureExecutionRequestedConsumer>();
+    // Billing service: a change of entitlements or of the "subscription required" switch drops the remembered answers.
+    configurator.AddConsumer<SpeedReading.Application.Subscription.SpeedReadingBillingEntitlementsChangedConsumer>();
+    configurator.AddConsumer<SpeedReading.Application.Subscription.SpeedReadingBillingSettingsChangedConsumer>();
     configurator.AddEntityFrameworkOutbox<OwnedSpeedReadingDbContext>(outbox =>
     {
         outbox.UsePostgres();

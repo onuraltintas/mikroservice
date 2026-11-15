@@ -183,3 +183,21 @@ test('Aboneliğim is one shared page, wrapped by each client application, and th
   for (const route of ['/overview', '/subscriptions"', '/subscriptions/{id:guid}/extend', '/subscriptions/{id:guid}/cancel'])
     assert.ok(endpoints.includes(route), route);
 });
+
+test('Hızlı Okuma asks billing who may train only where billing runs', () => {
+  const client = read('services/speed-reading-service/SpeedReading.Infrastructure/ExternalServices/BillingAccessClient.cs');
+  assert.match(client, /GetValue\("Billing:Enabled", false\)/, 'Without the overlay the product decides by its own records.');
+  assert.match(client, /\/internal\/billing\/v1\/entitlements\?userId=/);
+  assert.match(client, /InternalServiceAuthentication\.HeaderName/);
+  const middleware = read('services/speed-reading-service/SpeedReading.API/Security/SpeedReadingSubscriptionAccessMiddleware.cs');
+  assert.match(middleware, /ISpeedReadingAccess accessDecisions/);
+  assert.doesNotMatch(middleware, /ISpeedReadingSubscription/);
+  for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml']) {
+    const overlay = read(file);
+    assert.match(overlay, /speed-reading-service:\s*\n\s+environment:[\s\S]*?Billing__Enabled[:=]\s*"?true/, file);
+    assert.match(overlay, /Services__BillingService[:=]\s*http:\/\/billing-service:8080/, file);
+  }
+  const program = read('services/speed-reading-service/SpeedReading.API/Program.cs');
+  assert.match(program, /AddConsumer<SpeedReading\.Application\.Subscription\.SpeedReadingBillingEntitlementsChangedConsumer>/);
+  assert.match(program, /AddConsumer<SpeedReading\.Application\.Subscription\.SpeedReadingBillingSettingsChangedConsumer>/);
+});

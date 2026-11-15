@@ -83,6 +83,12 @@ export const studentRoutes: Routes = [
         loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent)
       },
       {
+        // Open without a subscription: this is where one is bought.
+        path: 'subscription',
+        canActivate: [authGuard],
+        loadComponent: () => import('./subscription/student-subscription.component').then(m => m.StudentSubscriptionComponent)
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent)

@@ -18,7 +18,7 @@ import { AuthService } from '../../core/services/auth.service';
           Abonelik planlarını inceleyerek hemen başlayabilirsiniz.
         </p>
         <div class="ns-actions">
-          <a routerLink="/odeme" class="ns-btn ns-btn--primary">
+          <a routerLink="/student/subscription" class="ns-btn ns-btn--primary">
             <span class="material-icons">shopping_cart</span>
             Abonelik Planlarını Gör
           </a>
