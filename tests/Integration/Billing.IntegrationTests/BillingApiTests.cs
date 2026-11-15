@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Billing.Infrastructure;
+using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,35 @@ public sealed class BillingApiTests : IAsyncLifetime
     {
         await _factory.DisposeAsync();
         await _postgres.DisposeAsync();
+    }
+
+    // Rehearsal 15.11.2026: the erasure consumer runs inside the outbox's transaction; the erasure itself must join it.
+    // The real host, bus and consumer: the request arrives as a message and the completion goes out.
+    [Fact]
+    public async Task An_erasure_request_delivered_as_a_message_erases_the_user_and_answers()
+    {
+        _ = _factory.CreateClient();
+        var user = Guid.NewGuid(); var request = Guid.NewGuid();
+        var bus = _factory.Services.GetRequiredService<MassTransit.IBus>();
+        var completed = new TaskCompletionSource<EduPlatform.Shared.Contracts.Events.Privacy.PersonalDataErasureExecutionCompletedV1>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var handle = bus.ConnectReceiveEndpoint("billing-erasure-test-observer", endpoint =>
+            endpoint.Handler<EduPlatform.Shared.Contracts.Events.Privacy.PersonalDataErasureExecutionCompletedV1>(context =>
+            {
+                if (context.Message.RequestId == request) completed.TrySetResult(context.Message);
+                return Task.CompletedTask;
+            }));
+        await handle.Ready;
+        try
+        {
+            await bus.Publish(new EduPlatform.Shared.Contracts.Events.Privacy.PersonalDataErasureExecutionRequestedV1(
+                Guid.NewGuid(), request, user, DateTime.UtcNow, EduPlatform.Shared.Contracts.Events.Privacy.PersonalDataScope.Account));
+
+            var answer = await completed.Task.WaitAsync(TimeSpan.FromSeconds(45));
+            Assert.Equal(("Billing", request), (answer.ServiceName, answer.RequestId));
+            await using var db = new BillingDbContext(new DbContextOptionsBuilder<BillingDbContext>().UseBillingDatabase(_postgres.ConnectionString).Options);
+            Assert.Equal(1, await db.ErasureReceipts.CountAsync(item => item.UserId == user));
+        }
+        finally { await handle.StopAsync(); }
     }
 
     private HttpClient Client(string? role, Guid? userId = null)

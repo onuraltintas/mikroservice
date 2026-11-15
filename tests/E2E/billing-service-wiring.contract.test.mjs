@@ -321,3 +321,9 @@ test('the migration history table is named with its schema, in the one place the
   assert.match(read('services/billing-service/Billing.API/Program.cs'), /options\.UseBillingDatabase\(connectionString\)/);
   assert.doesNotMatch(read('services/billing-service/Billing.API/Program.cs'), /UseNpgsql/);
 });
+
+test('the erasure joins the transaction its consumer already runs in (rehearsal 15.11.2026)', () => {
+  const lifecycle = read('services/billing-service/Billing.Infrastructure/BillingLifecycle.cs');
+  assert.match(lifecycle, /db\.Database\.CurrentTransaction is null \? await db\.Database\.BeginTransactionAsync\(cancellationToken\) : null;/);
+  assert.match(lifecycle, /if \(transaction is not null\) await transaction\.CommitAsync\(cancellationToken\);\s*\n\s*return changed;/);
+});
