@@ -279,7 +279,12 @@ test('billing takes part in an account erasure, and Identity waits for it only w
   assert.match(program, /AddConsumer<BillingErasureAssessmentRequestedConsumer>/);
   assert.match(program, /AddConsumer<BillingErasureExecutionRequestedConsumer>/);
   const policy = read('services/identity-service/Identity.Application/DataSubjectRequests/DataSubjectRequestUseCases.cs');
-  assert.match(policy, /billingEnabled\s*\n?\s*\? \["Coaching", "Notification", "SpeedReading", "CourseManagement", "Billing"\]/);
+  assert.match(policy, /\.Concat\(billingEnabled \? \["Billing"\] : Array\.Empty<string>\(\)\)/);
+  // Rehearsal 15.11.2026: Kurs Yönetimi is waited for only where it is installed.
+  assert.match(policy, /\.Concat\(courseManagementEnabled \? \["CourseManagement"\] : Array\.Empty<string>\(\)\)/);
+  assert.match(read('services/identity-service/Identity.API/Program.cs'), /CourseManagementEnabled = builder\.Configuration\.GetValue\("CourseManagement:Enabled", false\)/);
+  for (const file of ['docker-compose.course-management.yml', 'docker-compose.course-management.production.yml'])
+    assert.match(read(file), /identity-service:\s*\n\s+environment:\s*\n\s+-? ?CourseManagement__Enabled[:=]\s*"?true/, file);
   assert.match(read('services/identity-service/Identity.API/Program.cs'), /BillingEnabled = builder\.Configuration\.GetValue\("Billing:Enabled", false\)/);
   for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
     assert.match(read(file), /identity-service:\s*\n\s+environment:\s*\n\s+-? ?Billing__Enabled[:=]\s*"?true/, file);

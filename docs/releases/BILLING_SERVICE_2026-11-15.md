@@ -158,6 +158,8 @@ Her biri `-v publish_day='<gün Ay yıl>'` ile çalıştırılır; çıktıdaki 
   açıldığında billing başlamazdı.
 - Canlı yapılandırmada bütün `security.mfa.*` kategorileri kapalı; silme, rol atama ve kurum koltuğu MFA istemeden çalışıyor.
   Bu yayının konusu değil; kullanıcıya bildirildi.
+- Hesap silme hiç tamamlanamıyordu: Identity, kurulu olmayan Kurs Yönetimi'nin yanıtını da bekliyordu (bu yayından önce
+  de böyleydi, canlıda da öyle). Identity artık Kurs Yönetimi'ni yalnız kurulu olduğu yerde bekler (`CourseManagement:Enabled`).
 - Kopyada bu düzeltmeden önce kurulan billing veritabanı boşaltılıp baştan kurulur (canlıdaki ilk kuruluma en yakın yol).
 - İlk beş deneme (yönetici kurulumu, satın alma, onay ve geri alma, billing kesintisi, öğretmen ve kurum koltukları) geçti.
 
