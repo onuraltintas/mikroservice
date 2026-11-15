@@ -190,6 +190,10 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(3);
         }).AddCorrelationIdPropagation();
         services.AddScoped<ISpeedReadingAccess, SpeedReadingAccess>();
+        services.AddHttpClient<ISpeedReadingBillingSeats, BillingSeatsClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
         services.AddHttpClient<ISpeedReadingUserDirectory, IdentityUserDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);

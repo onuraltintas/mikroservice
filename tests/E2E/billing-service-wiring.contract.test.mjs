@@ -201,3 +201,14 @@ test('Hızlı Okuma asks billing who may train only where billing runs', () => {
   assert.match(program, /AddConsumer<SpeedReading\.Application\.Subscription\.SpeedReadingBillingEntitlementsChangedConsumer>/);
   assert.match(program, /AddConsumer<SpeedReading\.Application\.Subscription\.SpeedReadingBillingSettingsChangedConsumer>/);
 });
+
+test('an institution gives the seats of its Hızlı Okuma plan through the product, which checks who may sit', () => {
+  const controller = read('services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInstitutionSeatsController.cs');
+  assert.match(controller, /\[Route\("api\/speed-reading\/institutions\/\{institutionId:guid\}\/seats"\)\]/);
+  assert.match(controller, /\[Authorize\(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner"\)\]/);
+  assert.match(controller, /role: SpeedReadingInstitutionMemberRole\.Student, isActive: true, memberUserId: studentId/);
+  const client = read('services/speed-reading-service/SpeedReading.Infrastructure/ExternalServices/BillingSeatsClient.cs');
+  assert.match(client, /\/internal\/billing\/v1\/seats/);
+  const wrapper = read('clients/admin-panel/projects/staff-portal/src/app/shared/billing/my-subscription.component.ts');
+  assert.match(wrapper, /template: MY_SUBSCRIPTION_TEMPLATE/);
+});
