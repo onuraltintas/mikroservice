@@ -175,7 +175,7 @@ public static partial class StatementRules
                 amount = Math.Abs(amount.Value);
             }
             if (amount <= 0) continue;
-            lines.Add(new StatementLine(date.Value, amount.Value, Limit(Cell(mapping.DescriptionColumn) ?? string.Empty, 1_000),
+            lines.Add(new StatementLine(date.Value, amount.Value, Limit(Cell(mapping.DescriptionColumn), 1_000) ?? string.Empty,
                 Empty(Limit(Cell(mapping.SenderColumn), 200)), Empty(Limit(Cell(mapping.ReferenceColumn), 100))));
         }
         return lines;

@@ -96,3 +96,21 @@ test('an approval is single-shot and a payment is never deleted', () => {
   assert.match(context, /HasIndex\(item => item\.OrderId\)\.IsUnique\(\);/, 'An order is paid once.');
   assert.match(context, /HasDatabaseName\("IX_orders_one_pending_per_plan"\)/);
 });
+
+test('only an exact match is approved without a person, and a statement line is stored and used once', () => {
+  const statements = read('services/billing-service/Billing.Infrastructure/BillingBankStatements.cs');
+  // Code known, order still waiting, amount equal: each failing check leaves the line for the admin with a reason.
+  assert.match(statements, /if \(line\.PaymentCode is null\)[\s\S]*?return;[\s\S]*?if \(order is null\)[\s\S]*?return;[\s\S]*?order\.Status != OrderStatus\.Pending \|\| order\.ExpiresAt <= now[\s\S]*?return;[\s\S]*?order\.Amount != line\.Amount[\s\S]*?return;[\s\S]*?line\.Status = BankTransactionStatus\.Matched;\s*if \(!await IsAutomaticAsync\(order, cancellationToken\)\) return;/);
+  assert.match(statements, /modes\.All\(mode => mode == BankTransferApproval\.Automatic\)/, 'A bundle follows its strictest product.');
+  assert.match(statements, /StatementRules\.StatementIban\(rows, mapping\.HeaderRow\) is \{ \} iban && iban != account\.Iban/);
+  const orders = read('services/billing-service/Billing.Infrastructure/BillingOrders.cs');
+  assert.match(orders, /line\.Status == BankTransactionStatus\.Approved \|\| line\.PaymentId is not null[\s\S]*?Billing\.BankTransactionUsed/);
+  assert.match(orders, /line\.Amount != order\.Amount[\s\S]*?Billing\.AmountMismatch/);
+  const context = read('services/billing-service/Billing.Infrastructure/BillingDbContext.cs');
+  assert.match(context, /HasIndex\(item => item\.Fingerprint\)\.IsUnique\(\);/);
+  const endpoints = read('services/billing-service/Billing.API/BankStatementEndpoints.cs');
+  assert.match(endpoints, /MapGroup\("\/api\/billing\/v1\/admin"\)\.RequireAuthorization\(BillingPolicies\.Admin\)/);
+  assert.doesNotMatch(endpoints, /\bapp\.Map(Get|Post|Put|Delete)\(|AllowAnonymous/, 'Statements are the admin\'s alone.');
+  // The real statement the layout was learned from holds names, IBANs and amounts: it never enters the repository.
+  assert.doesNotMatch(read('tests/Integration/Billing.IntegrationTests/BankStatementTests.cs'), /HESAPEKSTRE_\d/);
+});

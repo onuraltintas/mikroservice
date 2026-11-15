@@ -91,7 +91,8 @@ public sealed class StatementRulesTests
         var rows = StatementRules.ReadCsv(StatementRules.DecodeText(content));
 
         var mapping = StatementRules.SuggestMapping(rows);
-        Assert.Equal(new StatementMapping(7, 0, 5, 2, null, 1, 3, "A"), mapping);
+        // Empty rows are dropped when the file is read, so the header is the seventh row that has something in it.
+        Assert.Equal(new StatementMapping(6, 0, 5, 2, null, 1, 3, "A"), mapping);
         Assert.Equal(HalkbankSample.Iban, StatementRules.StatementIban(rows, mapping!.HeaderRow));
 
         var lines = StatementRules.ReadLines(rows, mapping);
