@@ -438,6 +438,14 @@ namespace Billing.Infrastructure.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("ExtraSeats")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<decimal>("ListPrice")
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
@@ -483,6 +491,9 @@ namespace Billing.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<Guid?>("SubscriptionId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -495,9 +506,11 @@ namespace Billing.Infrastructure.Migrations
 
                     b.HasIndex("PlanId");
 
+                    b.HasIndex("SubscriptionId");
+
                     b.HasIndex("Status", "ExpiresAt");
 
-                    b.HasIndex("AccountId", "PlanId", "BeneficiaryUserId")
+                    b.HasIndex("AccountId", "PlanId", "BeneficiaryUserId", "Kind")
                         .IsUnique()
                         .HasDatabaseName("IX_orders_one_pending_per_plan")
                         .HasFilter("\"Status\" = 'Pending'");
@@ -780,6 +793,44 @@ namespace Billing.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Billing.Domain.Seat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AssignedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsSuspended")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SuspensionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SubscriptionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("seats", "billing");
+                });
+
             modelBuilder.Entity("Billing.Domain.Seller", b =>
                 {
                     b.Property<int>("Id")
@@ -849,6 +900,12 @@ namespace Billing.Infrastructure.Migrations
                     b.Property<string>("EntitlementsJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
+
+                    b.Property<int>("ExtraSeats")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ExtraSeatsUntil")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uuid");
@@ -1167,6 +1224,11 @@ namespace Billing.Infrastructure.Migrations
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Billing.Domain.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Billing.Domain.OrderReceipt", b =>
@@ -1198,6 +1260,15 @@ namespace Billing.Infrastructure.Migrations
                     b.HasOne("Billing.Domain.Plan", null)
                         .WithMany()
                         .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Billing.Domain.Seat", b =>
+                {
+                    b.HasOne("Billing.Domain.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

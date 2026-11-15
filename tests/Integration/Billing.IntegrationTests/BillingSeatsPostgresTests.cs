@@ -85,6 +85,8 @@ public sealed class BillingSeatsPostgresTests : IAsyncLifetime
 
     private async Task<SeatChangeResult> AssignAsync(Guid user, Guid? ownerUser = null, Guid? organization = null, string product = "coaching")
     {
+        // Seats line up by the moment they were given; no two are given at the same instant here.
+        _clock.Now = _clock.Now.AddSeconds(1);
         await using var db = Db();
         return await Seats(db).AssignAsync(new SeatChangeRequest(product, ownerUser, organization, user, Admin, null));
     }

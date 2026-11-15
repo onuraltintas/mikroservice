@@ -114,3 +114,25 @@ test('only an exact match is approved without a person, and a statement line is 
   // The real statement the layout was learned from holds names, IBANs and amounts: it never enters the repository.
   assert.doesNotMatch(read('tests/Integration/Billing.IntegrationTests/BankStatementTests.cs'), /HESAPEKSTRE_\d/);
 });
+
+test('seats are given by product services inside the network, and buying for an institution asks Identity', () => {
+  const endpoints = read('services/billing-service/Billing.API/SeatEndpoints.cs');
+  assert.match(endpoints, /MapGroup\("\/internal\/billing\/v1\/seats"\)\.AllowAnonymous\(\)\.AddEndpointFilter\([\s\S]*?InternalServiceAuthentication\.IsValid\([\s\S]*?Results\.Unauthorized\(\)/);
+  assert.match(endpoints, /service\.MapPost\("\/assign"/);
+  assert.match(endpoints, /service\.MapPost\("\/release"/);
+  // No signed-in user gives a seat directly: only the product knows who may sit in a pool.
+  assert.doesNotMatch(endpoints, /user\.Map(Post|Put|Delete)\("\/subscriptions\/\{id:guid\}\/seats/);
+  assert.doesNotMatch(endpoints, /\bapp\.Map(Get|Post|Put|Delete)\(/);
+  const orders = read('services/billing-service/Billing.Infrastructure/BillingOrders.cs');
+  assert.match(orders, /institutions is null \? \[\] : await institutions\.GetAdministeredAsync\(user\.Id, cancellationToken\)/);
+  assert.match(orders, /Billing\.OrganizationNotAdministered/);
+  const seats = read('services/billing-service/Billing.Infrastructure/BillingSeats.cs');
+  assert.match(seats, /FROM billing\.subscriptions WHERE \\"Id\\" = \{candidate\.Id\} FOR UPDATE/, 'Counting and taking a seat is one locked step.');
+  const identity = read('services/identity-service/Identity.API/Controllers/InternalBillingController.cs');
+  assert.match(identity, /\[Route\("api\/internal\/billing"\)\]/);
+  assert.match(identity, /\[HttpGet\("administered-institutions"\)\]\s*\[AllowAnonymous\]\s*\[InternalServiceKey\]/);
+  const client = read('services/billing-service/Billing.API/IdentityBillingInstitutions.cs');
+  assert.match(client, /Billing\.IdentityUnavailable/, 'While Identity cannot be reached nobody is taken for an admin.');
+  for (const file of ['docker-compose.billing.yml', 'docker-compose.billing.production.yml'])
+    assert.match(read(file), /Services__IdentityService: http:\/\/identity-service:8080/, file);
+});

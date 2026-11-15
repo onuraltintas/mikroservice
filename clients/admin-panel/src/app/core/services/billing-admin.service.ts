@@ -210,6 +210,20 @@ export const BANK_TRANSACTION_STATUS_LABELS: Record<BankTransactionStatus, strin
   Unmatched: 'Eşleşmedi', Matched: 'Eşleşti, onay bekliyor', Approved: 'Ödeme onaylandı', Ignored: 'Yok sayıldı'
 };
 
+export interface BillingSeat { userId: string; isSuspended: boolean; assignedAt: string; isCovered: boolean; }
+
+export interface BillingSeatPool {
+  subscriptionId: string;
+  planName: string;
+  endsAt: string;
+  capacity: number;
+  used: number;
+  extraSeats: number;
+  extraSeatsUntil: string | null;
+  extraSeatPrice: number | null;
+  seats: BillingSeat[];
+}
+
 export const BUYER_TYPE_LABELS: Record<BuyerType, string> = { Individual: 'Bireysel', Teacher: 'Öğretmen', Institution: 'Kurum' };
 
 /** The server explains a refused change in the admin's language; anything else gets the fallback. */
@@ -254,6 +268,11 @@ export class BillingAdminService {
   getReceipt(id: string): Observable<Blob> { return this.http.get(`${this.url}/orders/${id}/receipt`, { responseType: 'blob' }); }
   getSubscriptions(productCode: string): Observable<BillingAdminSubscription[]> {
     return this.http.get<BillingAdminSubscription[]>(`${this.url}/subscriptions`, { params: productCode ? new HttpParams().set('product', productCode) : undefined });
+  }
+
+  getSeats(subscriptionId: string): Observable<BillingSeatPool> { return this.http.get<BillingSeatPool>(`${this.url}/subscriptions/${subscriptionId}/seats`); }
+  releaseSeat(subscriptionId: string, userId: string): Observable<BillingSeatPool> {
+    return this.http.post<BillingSeatPool>(`${this.url}/subscriptions/${subscriptionId}/seats/${userId}/release`, {});
   }
 
   previewStatement(file: File): Observable<StatementPreview> {

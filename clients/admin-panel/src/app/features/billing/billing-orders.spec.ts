@@ -23,6 +23,10 @@ const subscription: BillingAdminSubscription = {
   accountName: 'Deneme Öğrenci', accountEmail: null, beneficiaryUserId: 'u1'
 };
 
+const pool = { subscriptionId: 's2', planName: 'TEST Öğretmen', endsAt: '2026-12-15T09:00:00Z', capacity: 1, used: 2, extraSeats: 0, extraSeatsUntil: null, extraSeatPrice: null,
+  seats: [{ userId: 'user-1', isSuspended: false, assignedAt: '2026-11-15T09:00:00Z', isCovered: true }, { userId: 'user-2', isSuspended: false, assignedAt: '2026-11-15T10:00:00Z', isCovered: false }] };
+const seated: BillingAdminSubscription = { ...subscription, subscription: { ...subscription.subscription, id: 's2', planName: 'TEST Öğretmen', seatCount: 1 } };
+
 function setup<T>(component: new () => T, overrides: Record<string, unknown> = {}) {
   const billing = {
     getProducts: vi.fn(() => of([product])),
@@ -32,6 +36,8 @@ function setup<T>(component: new () => T, overrides: Record<string, unknown> = {
     reverseApproval: vi.fn(() => of(paid)),
     getReceipt: vi.fn(() => of(new Blob(['%PDF']))),
     getSubscriptions: vi.fn(() => of([subscription])),
+    getSeats: vi.fn(() => of(pool)),
+    releaseSeat: vi.fn(() => of({ ...pool, used: 1, seats: [{ ...pool.seats[0], isSuspended: true, isCovered: false }, pool.seats[1]] })),
     ...overrides
   };
   const toaster = { success: vi.fn() };
@@ -125,5 +131,26 @@ describe('Abonelik ve Ödeme: orders and subscriptions', () => {
     component.product.set('speed-reading');
     component.load();
     expect(billing.getSubscriptions).toHaveBeenLastCalledWith('speed-reading');
+  });
+
+  it('subscriptions with seats show the pool, who is beyond the capacity, and take a seat back after asking', () => {
+    const { component, billing, element, fixture } = setup(BillingSubscriptionsComponent, { getSubscriptions: vi.fn(() => of([subscription, seated])) });
+    expect(element.querySelectorAll('tbody tr .actions button').length).toBe(1);
+    component.toggleSeats(seated);
+    fixture.detectChanges();
+    expect(billing.getSeats).toHaveBeenCalledWith('s2');
+    const shown = element.querySelector('[data-testid="seat-pool"]')!.textContent!;
+    expect(shown).toContain('2 / 1');
+    expect(shown).toContain('1 koltuk kapasite dışında');
+    expect(shown).toContain('Kapasite dışı');
+    expect(billing.releaseSeat).not.toHaveBeenCalled();
+    component.releasing.set('user-1');
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Koltuk geri alınsın mı?');
+    component.release('s2', 'user-1');
+    expect(billing.releaseSeat).toHaveBeenCalledWith('s2', 'user-1');
+    expect(component.pool()?.used).toBe(1);
+    component.toggleSeats(seated);
+    expect(component.pool()).toBeNull();
   });
 });
