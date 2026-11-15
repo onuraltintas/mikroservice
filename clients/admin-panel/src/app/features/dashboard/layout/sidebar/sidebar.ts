@@ -234,19 +234,6 @@ export class SidebarComponent {
             role: 'SystemAdmin',
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" /></svg>'
           },
-          {
-            label: 'Abonelik ve ödemeler',
-            route: '/dashboard/coaching/subscriptions',
-            permission: ADMIN_PERMISSIONS.coachingSubscriptionManage,
-            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5m-18 0 1.5 12h13.5l1.5-12M6.75 5.25h10.5m-9-3h7.5" /></svg>'
-            },
-            {
-              label: 'Satış araçları',
-              route: '/dashboard/coaching/sales',
-              permission: ADMIN_PERMISSIONS.coachingSubscriptionManage,
-              role: 'SystemAdmin',
-              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a2.25 2.25 0 0 0 3.182 0l4.318-4.318a2.25 2.25 0 0 0 0-3.182L11.16 3.66A2.25 2.25 0 0 0 9.568 3ZM6 6h.008v.008H6V6Z" /></svg>'
-            },
             {
               label: 'Ücret ve tahsilat denetimi', route: '/dashboard/coaching/finance',
               permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin',
@@ -283,12 +270,6 @@ export class SidebarComponent {
               route: '/dashboard/speed-reading/progress',
               permission: ADMIN_PERMISSIONS.speedReadingProgressView,
               icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5h15m-12-3v-6m4.5 6V6m4.5 10.5V3" /></svg>'
-            },
-            {
-              label: 'Ürün ve abonelikler',
-              route: '/dashboard/speed-reading/subscriptions',
-              permission: ADMIN_PERMISSIONS.speedReadingSubscriptionManage,
-              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M3 6h18a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 21 18H3a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 3 6Z" /></svg>'
             },
             {
               label: 'Program ilerleme',
@@ -471,13 +452,10 @@ export class SidebarComponent {
       '/dashboard/coaching/score-models': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/outcome-approvals': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/curriculum': ADMIN_PERMISSIONS.coachingContentManage,
-      '/dashboard/coaching/subscriptions': ADMIN_PERMISSIONS.coachingSubscriptionManage,
-      '/dashboard/coaching/sales': ADMIN_PERMISSIONS.coachingSubscriptionManage,
       '/dashboard/coaching/finance': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/speed-reading': ADMIN_PERMISSIONS.speedReadingView,
       '/dashboard/speed-reading/analytics': ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
       '/dashboard/speed-reading/progress': ADMIN_PERMISSIONS.speedReadingProgressView,
-      '/dashboard/speed-reading/subscriptions': ADMIN_PERMISSIONS.speedReadingSubscriptionManage,
       '/dashboard/speed-reading/content-configuration': ADMIN_PERMISSIONS.speedReadingSettingsManage,
       '/dashboard/speed-reading/program-progression': ADMIN_PERMISSIONS.speedReadingSettingsManage,
       '/dashboard/speed-reading/visualization-scenes': ADMIN_PERMISSIONS.speedReadingContentManage,

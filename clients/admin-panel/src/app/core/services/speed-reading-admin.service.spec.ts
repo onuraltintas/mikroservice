@@ -16,17 +16,6 @@ describe('SpeedReadingAdminService', () => {
   });
 
   afterEach(() => http.verify());
-  it('loads and saves subscription enforcement independently of bank settings', () => {
-    service.getSubscriptionRequirementSettings().subscribe(value => expect(value.requireActiveSubscription).toBe(true));
-    http.expectOne('/api/speed-reading/subscriptions/settings').flush({ success: true, data: { requireActiveSubscription: true, updatedAt: null } });
-    service.updateSubscriptionRequirementSettings(false).subscribe(value => expect(value.requireActiveSubscription).toBe(false));
-    const request = http.expectOne('/api/speed-reading/subscriptions/settings');
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ requireActiveSubscription: false });
-    expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
-    request.flush({ success: true, data: { requireActiveSubscription: false, updatedAt: null } });
-  });
-
   it('loads capabilities through the Gateway speed-reading route', () => {
     const response = {
       mode: 'Standalone',
@@ -40,14 +29,6 @@ describe('SpeedReadingAdminService', () => {
     const request = http.expectOne('/api/speed-reading/capabilities');
     expect(request.request.method).toBe('GET');
     request.flush(response);
-  });
-
-  it('permanently deletes a bank transfer request', () => {
-    service.deleteBankTransferRequest('request-1').subscribe();
-
-    const request = http.expectOne('/api/speed-reading/bank-transfer/requests/request-1');
-    expect(request.request.method).toBe('DELETE');
-    request.flush(null);
   });
 
   it('previews reading-text quality before content is saved', () => {
@@ -116,60 +97,6 @@ describe('SpeedReadingAdminService', () => {
     const resetRequest = http.expectOne('/api/speed-reading/student-progress/progress-1/reset');
     expect(resetRequest.request.method).toBe('POST');
     resetRequest.flush(null);
-  });
-
-  it('loads subscription products, plans, subscriptions and payment history', () => {
-    service.getSubscriptionProducts().subscribe(value => expect(value).toEqual([]));
-    const productsRequest = http.expectOne('/api/speed-reading/products/all');
-    expect(productsRequest.request.method).toBe('GET');
-    productsRequest.flush({ success: true, data: [] });
-
-    service.getSubscriptionPlans().subscribe(value => expect(value).toEqual([]));
-    const plansRequest = http.expectOne('/api/speed-reading/subscription-plans/all');
-    expect(plansRequest.request.method).toBe('GET');
-    plansRequest.flush({ success: true, data: [] });
-
-    service.getUserSubscriptions(2, 25, 'active', 'Ada').subscribe(value => expect(value.totalCount).toBe(0));
-    const subscriptionsRequest = http.expectOne('/api/speed-reading/subscriptions?page=2&pageSize=25&status=active&search=Ada');
-    expect(subscriptionsRequest.request.method).toBe('GET');
-    subscriptionsRequest.flush({ success: true, data: { items: [], totalCount: 0, page: 2, pageSize: 25 } });
-
-    service.getPaymentHistory(2, 25, 'success', 'Ada').subscribe(value => expect(value.totalCount).toBe(0));
-    const paymentsRequest = http.expectOne('/api/speed-reading/payment?page=2&pageSize=25&status=success&search=Ada');
-    expect(paymentsRequest.request.method).toBe('GET');
-    paymentsRequest.flush({ items: [], total: 0, pageNumber: 2, pageSize: 25 });
-  });
-
-  it('writes product and subscription plan changes through ContentManage routes', () => {
-    service.createSubscriptionProduct({
-      slug: 'hizliokuma', name: 'Hızlı Okuma', description: 'Ürün',
-      includedProductSlugs: [], isActive: true, isPublic: true, sortOrder: 1
-    }).subscribe();
-    const productCreate = http.expectOne('/api/speed-reading/products');
-    expect(productCreate.request.method).toBe('POST');
-    productCreate.flush({ success: true, data: {} });
-
-    service.updateSubscriptionPlan('plan-1', { isActive: false }).subscribe();
-    const planUpdate = http.expectOne('/api/speed-reading/subscription-plans/plan-1');
-    expect(planUpdate.request.method).toBe('PUT');
-    planUpdate.flush({ success: true, data: {} });
-  });
-
-  it('updates a manual subscription through the ContentManage route', () => {
-    service.updateUserSubscription('subscription-1', {
-      status: 'Cancelled',
-      endDate: '2026-09-30',
-      notes: 'Kullanıcı talebi'
-    }).subscribe();
-
-    const request = http.expectOne('/api/speed-reading/subscriptions/subscription-1');
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({
-      status: 'Cancelled',
-      endDate: '2026-09-30',
-      notes: 'Kullanıcı talebi'
-    });
-    request.flush({ success: true, data: {} });
   });
 
   it('loads and manages age-group configurations through SettingsManage routes', () => {

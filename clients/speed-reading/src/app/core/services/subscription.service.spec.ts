@@ -1,45 +1,36 @@
-import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
 import { SubscriptionService } from './subscription.service';
 
-describe('SubscriptionService bank transfer payments', () => {
+describe('SubscriptionService', () => {
   let service: SubscriptionService;
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [SubscriptionService, provideHttpClient(), provideHttpClientTesting()]
-    });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(SubscriptionService);
     http = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => http.verify());
 
-  it('reads only the public bank-transfer configuration', () => {
-    service.getPublicBankTransferSettings().subscribe();
-
-    const request = http.expectOne('/api/speed-reading/bank-transfer');
-    expect(request.request.method).toBe('GET');
-    request.flush({ success: true, data: null });
+  it('reads the plans a visitor can buy from the billing catalog and marks bundles', () => {
+    let plans: unknown;
+    service.getPublicPlans().subscribe(value => plans = value);
+    const plan = (id: string, buyerType: string, productCodes: string[]) => ({ id, name: 'TEST ' + id, description: '', buyerType, price: 200, currency: 'TRY',
+      durationDays: 30, isContactOnly: false, features: ['TEST özellik'], productCodes });
+    http.expectOne('/api/billing/v1/catalog/speed-reading').flush({ plans: [
+      plan('a', 'Individual', ['speed-reading']), plan('b', 'Institution', ['speed-reading']), plan('c', 'Individual', ['coaching', 'speed-reading'])] });
+    expect(plans).toEqual([
+      { id: 'a', name: 'TEST a', description: '', price: 200, currency: 'TRY', durationDays: 30, isContactOnly: false, features: ['TEST özellik'], isBundle: false },
+      { id: 'c', name: 'TEST c', description: '', price: 200, currency: 'TRY', durationDays: 30, isContactOnly: false, features: ['TEST özellik'], isBundle: true }]);
   });
 
-  it('submits the chosen plan and payment reference with an idempotency key', () => {
-    service.createBankTransferPaymentRequest({
-      planId: 'plan-1',
-      paymentReference: 'EFT-2026-000123',
-      payerName: 'Örnek Öğrenci',
-      note: 'Açıklama',
-      salesDocumentsVersion: '2026-11-14'
-    }, 'bank-transfer-request-key').subscribe();
-
-    const request = http.expectOne('/api/speed-reading/bank-transfer/requests');
-    expect(request.request.method).toBe('POST');
-    expect(request.request.headers.get('Idempotency-Key')).toBe('bank-transfer-request-key');
-    expect(request.request.body.planId).toBe('plan-1');
-    expect('adultPayerDeclaration' in request.request.body).toBe(false);
-    expect(request.request.body.salesDocumentsVersion).toBe('2026-11-14');
-    request.flush({ success: true, data: { id: 'request-1', status: 'Pending' } });
+  it('asks the Hızlı Okuma service what the student may use', () => {
+    let modules: unknown;
+    service.getMyModules().subscribe(value => modules = value);
+    http.expectOne(request => request.url.endsWith('/subscriptions/my-modules')).flush({ success: true, data: { modules: ['SpeedReading'], hasSpeedReading: true, hasCoaching: false } });
+    expect(modules).toEqual({ modules: ['SpeedReading'], hasSpeedReading: true, hasCoaching: false });
   });
 });

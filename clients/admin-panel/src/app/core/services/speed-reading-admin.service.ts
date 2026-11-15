@@ -273,27 +273,6 @@ export interface AdminStudentProgressDetails {
   };
 }
 
-export interface SpeedReadingProduct {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  includedProductSlugs: string[];
-  isActive: boolean;
-  isPublic: boolean;
-  sortOrder: number;
-}
-
-export interface SpeedReadingProductRequest {
-  slug: string;
-  name: string;
-  description: string;
-  includedProductSlugs?: string[];
-  isActive: boolean;
-  isPublic: boolean;
-  sortOrder: number;
-}
-
 export interface SpeedReadingPlan {
   id: string;
   name: string;
@@ -340,87 +319,6 @@ export interface SpeedReadingPlanUpdateRequest {
   isPublic?: boolean;
   sortOrder?: number;
   features?: string[];
-}
-
-export interface SpeedReadingSubscription {
-  id: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string | null;
-  plan: SpeedReadingPlan;
-  productSlug: string;
-  productName: string;
-  status: string;
-  startDate: string;
-  endDate: string | null;
-  notes: string | null;
-  createdAt: string;
-  isActive: boolean;
-}
-
-export interface SpeedReadingManualSubscriptionRequest {
-  userId: string;
-  userName?: string | null;
-  userEmail?: string | null;
-  planId: string;
-  startDate: string;
-  endDate?: string | null;
-  notes?: string | null;
-}
-
-export interface SpeedReadingSubscriptionUpdateRequest {
-  status: string;
-  endDate?: string | null;
-  notes?: string | null;
-}
-
-export interface SpeedReadingInstitutionAccessRecipient {
-  userId: string;
-  userName?: string | null;
-  userEmail?: string | null;
-}
-
-export interface SpeedReadingInstitutionAccessRequest {
-  institutionId: string;
-  planId: string;
-  startDate: string;
-  recipients: SpeedReadingInstitutionAccessRecipient[];
-  paymentReference?: string | null;
-  notes?: string | null;
-}
-
-export interface SpeedReadingInstitutionAccessApproval {
-  createdCount: number;
-  existingCount: number;
-  license?: SpeedReadingInstitutionAccessLicense | null;
-}
-
-export interface SpeedReadingInstitutionAccessLicense {
-  id: string;
-  institutionId: string;
-  status: string;
-  seatCount: number;
-  usedSeatCount: number;
-  startDate: string;
-  endDate: string;
-  paymentReference: string | null;
-  notes: string | null;
-}
-
-export interface SpeedReadingPayment {
-  id: string;
-  userId: string;
-  userEmail: string;
-  userName: string;
-  planName: string;
-  amount: number;
-  currency: string;
-  status: string;
-  provider: string;
-  providerPaymentId: string | null;
-  errorMessage: string | null;
-  subscriptionId: string | null;
-  createdAt: string;
 }
 
 export interface SpeedReadingAgeGroup {
@@ -1583,19 +1481,6 @@ export interface SpeedReadingBankTransferSettings {
   updatedAt: string | null;
 }
 
-export interface SpeedReadingSubscriptionRequirementSettings {
-  requireActiveSubscription: boolean;
-  updatedAt: string | null;
-}
-
-export interface SpeedReadingBankTransferSettingsRequest {
-  accountHolder: string;
-  bankName: string;
-  iban: string;
-  instructions: string | null;
-  isEnabled: boolean;
-}
-
 /** The seller block of the Hızlı Okuma sales documents; a sale needs all but MERSİS. */
 export interface SpeedReadingSellerInfo {
   title: string | null;
@@ -1605,40 +1490,6 @@ export interface SpeedReadingSellerInfo {
   mersisNumber: string | null;
   email: string | null;
   phone: string | null;
-}
-
-export interface SpeedReadingBankTransferRequest {
-  salesDocumentsVersion?: string | null;
-  salesDocumentsAcceptedAt?: string | null;
-  withdrawalStatus?: 'Requested' | 'Approved' | 'Rejected' | null;
-  withdrawalReason?: string | null;
-  withdrawalRequestedAt?: string | null;
-  withdrawalReviewNote?: string | null;
-  withdrawalReviewedAt?: string | null;
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  planId: string;
-  planName: string;
-  amount: number;
-  currency: string;
-  paymentReference: string;
-  payerName: string | null;
-  note: string | null;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  subscriptionId: string | null;
-  createdAt: string;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  reviewNote: string | null;
-}
-
-export interface SpeedReadingBankTransferRequestPage {
-  items: SpeedReadingBankTransferRequest[];
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
 }
 
 export interface SpeedReadingBulkNotificationResult {
@@ -1670,138 +1521,9 @@ export class SpeedReadingAdminService {
     return this.http.put<{ mode: 'inherit' | 'allow' | 'deny'; allowEarlyAdvance: boolean; defaultAllowEarlyAdvance: boolean }>(`${this.url}/program-progression/users/${userId}`, { mode });
   }
 
-  getSubscriptionProducts() {
-    return this.http.get<{ success: boolean; data: SpeedReadingProduct[] }>(`${this.url}/products/all`)
-      .pipe(map(response => response.data ?? []));
-  }
-
-  createSubscriptionProduct(request: SpeedReadingProductRequest) {
-    return this.http.post<{ success: boolean; data: SpeedReadingProduct }>(`${this.url}/products`, request)
-      .pipe(map(response => response.data));
-  }
-
-  updateSubscriptionProduct(id: string, request: Partial<SpeedReadingProductRequest>) {
-    return this.http.put<{ success: boolean; data: SpeedReadingProduct }>(`${this.url}/products/${id}`, request)
-      .pipe(map(response => response.data));
-  }
-
-  deactivateSubscriptionProduct(id: string) {
-    return this.http.delete(`${this.url}/products/${id}`);
-  }
-
-  getSubscriptionPlans() {
-    return this.http.get<{ success: boolean; data: SpeedReadingPlan[] }>(`${this.url}/subscription-plans/all`)
-      .pipe(map(response => response.data ?? []));
-  }
-
-  createSubscriptionPlan(request: SpeedReadingPlanRequest) {
-    return this.http.post<{ success: boolean; data: { id: string } }>(`${this.url}/subscription-plans`, request)
-      .pipe(map(response => response.data));
-  }
-
-  updateSubscriptionPlan(id: string, request: SpeedReadingPlanUpdateRequest) {
-    return this.http.put<{ success: boolean; data: SpeedReadingPlan }>(`${this.url}/subscription-plans/${id}`, request)
-      .pipe(map(response => response.data));
-  }
-
-  deactivateSubscriptionPlan(id: string) {
-    return this.http.delete(`${this.url}/subscription-plans/${id}`);
-  }
-
-  getUserSubscriptions(page = 1, pageSize = 25, status?: string, search?: string) {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (status) params = params.set('status', status);
-    if (search?.trim()) params = params.set('search', search.trim());
-    return this.http.get<{ success: boolean; data: { items: SpeedReadingSubscription[]; totalCount: number; page: number; pageSize: number } }>(
-      `${this.url}/subscriptions`, { params }
-    ).pipe(map(response => ({
-      items: response.data?.items ?? [],
-      totalCount: response.data?.totalCount ?? 0,
-      pageNumber: response.data?.page ?? page,
-      pageSize: response.data?.pageSize ?? pageSize
-    })));
-  }
-
-  createManualSubscription(request: SpeedReadingManualSubscriptionRequest) {
-    return this.http.post<{ success: boolean; data: SpeedReadingSubscription }>(`${this.url}/subscriptions`, request)
-      .pipe(map(response => response.data));
-  }
-
-  createInstitutionAccess(request: SpeedReadingInstitutionAccessRequest) {
-    return this.http.post<{ success: boolean; data: SpeedReadingInstitutionAccessApproval }>(
-      `${this.url}/subscriptions/institution-access`,
-      request,
-      { headers: this.idempotencyHeaders() }
-    ).pipe(map(response => response.data));
-  }
-
-  updateUserSubscription(id: string, request: SpeedReadingSubscriptionUpdateRequest) {
-    return this.http.put<{ success: boolean; data: SpeedReadingSubscription }>(`${this.url}/subscriptions/${id}`, request)
-      .pipe(map(response => response.data));
-  }
-
-  deleteUserSubscription(id: string) {
-    return this.http.delete(`${this.url}/subscriptions/${id}`);
-  }
-
-  getPaymentHistory(page = 1, pageSize = 25, status?: string, search?: string) {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (status) params = params.set('status', status);
-    if (search?.trim()) params = params.set('search', search.trim());
-    return this.http.get<{ items: SpeedReadingPayment[]; total: number; pageNumber: number; pageSize: number }>(
-      `${this.url}/payment`, { params }
-    ).pipe(map(response => ({
-      items: response.items ?? [],
-      totalCount: response.total ?? 0,
-      pageNumber: response.pageNumber ?? page,
-      pageSize: response.pageSize ?? pageSize
-    })));
-  }
-
   getBankTransferSettings() {
     return this.http.get<{ success: boolean; data: SpeedReadingBankTransferSettings | null }>(`${this.url}/bank-transfer/settings`)
       .pipe(map(response => response.data ?? null));
-  }
-
-  getSubscriptionRequirementSettings() {
-    return this.http.get<{ success: boolean; data: SpeedReadingSubscriptionRequirementSettings }>(`${this.url}/subscriptions/settings`)
-      .pipe(map(response => response.data));
-  }
-
-  updateSubscriptionRequirementSettings(requireActiveSubscription: boolean) {
-    return this.http.put<{ success: boolean; data: SpeedReadingSubscriptionRequirementSettings }>(
-      `${this.url}/subscriptions/settings`, { requireActiveSubscription }, { headers: this.idempotencyHeaders() }
-    ).pipe(map(response => response.data));
-  }
-
-  updateBankTransferSettings(request: SpeedReadingBankTransferSettingsRequest, idempotencyKey?: string) {
-    return this.http.put<{ success: boolean; data: SpeedReadingBankTransferSettings }>(
-      `${this.url}/bank-transfer/settings`,
-      request,
-      { headers: this.idempotencyHeaders(idempotencyKey) }
-    ).pipe(map(response => response.data));
-  }
-
-  getBankTransferRequests(page = 1, pageSize = 25, status?: string, search?: string) {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (status) params = params.set('status', status);
-    if (search?.trim()) params = params.set('search', search.trim());
-    return this.http.get<{ success: boolean; data: { items: SpeedReadingBankTransferRequest[]; totalCount: number; page: number; pageSize: number } }>(
-      `${this.url}/bank-transfer/requests`, { params }
-    ).pipe(map(response => ({
-      items: response.data?.items ?? [],
-      totalCount: response.data?.totalCount ?? 0,
-      pageNumber: response.data?.page ?? page,
-      pageSize: response.data?.pageSize ?? pageSize
-    } as SpeedReadingBankTransferRequestPage)));
-  }
-
-  reviewBankTransferRequest(id: string, status: 'Approved' | 'Rejected', reviewNote: string | null, idempotencyKey?: string) {
-    return this.http.put<{ success: boolean; data: SpeedReadingBankTransferRequest }>(
-      `${this.url}/bank-transfer/requests/${id}/review`,
-      { status, reviewNote },
-      { headers: this.idempotencyHeaders(idempotencyKey) }
-    ).pipe(map(response => response.data));
   }
 
   getSeller() {
@@ -1810,17 +1532,6 @@ export class SpeedReadingAdminService {
 
   updateSeller(seller: SpeedReadingSellerInfo) {
     return this.http.put<{ success: boolean; data: SpeedReadingSellerInfo }>(`${this.url}/bank-transfer/seller`, seller).pipe(map(response => response.data));
-  }
-
-  /** Approving ends the access the payment gave (the refund is made by bank); rejecting needs a reason. */
-  reviewBankTransferWithdrawal(id: string, approve: boolean, note: string | null) {
-    return this.http.put<{ success: boolean; data: SpeedReadingBankTransferRequest }>(
-      `${this.url}/bank-transfer/requests/${id}/withdrawal/review`, { approve, note }
-    ).pipe(map(response => response.data));
-  }
-
-  deleteBankTransferRequest(id: string) {
-    return this.http.delete<void>(`${this.url}/bank-transfer/requests/${id}`);
   }
 
   getAgeGroups(activeOnly = false) {

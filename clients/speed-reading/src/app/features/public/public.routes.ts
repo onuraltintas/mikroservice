@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '../../core/guards/auth.guard';
 
 export const publicRoutes: Routes = [
   {
@@ -18,20 +17,10 @@ export const publicRoutes: Routes = [
     path: 'fiyatlandirma',
     loadComponent: () => import('./pricing/pricing-page.component').then(m => m.PricingPageComponent)
   },
-  {
-    path: 'odeme',
-    canActivate: [authGuard],
-    loadComponent: () => import('./payment/payment.component').then(m => m.PaymentComponent)
-  },
-  {
-    path: 'odeme-sonuc',
-    loadComponent: () => import('./payment-success/payment-success.component').then(m => m.PaymentSuccessComponent)
-  },
-  {
-    path: 'payment/success',
-    redirectTo: 'odeme-sonuc',
-    pathMatch: 'full'
-  },
+  // The old payment pages: a subscription is bought in "Aboneliğim" (billing service).
+  { path: 'odeme', redirectTo: '/student/subscription', pathMatch: 'full' },
+  { path: 'odeme-sonuc', redirectTo: '/student/subscription', pathMatch: 'full' },
+  { path: 'payment/success', redirectTo: '/student/subscription', pathMatch: 'full' },
   {
     path: 'blog',
     children: [

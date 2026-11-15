@@ -28,43 +28,11 @@ describe('auth reCAPTCHA interceptor', () => {
     expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/users', {}))).toBeNull();
   });
 
-  // A subscription is bought in the student's own account; there is no parent notice for a child any more.
-  it('knows no payment notice under children', () => {
+  // Orders are given to the billing service by a signed-in user; the old bank-transfer notices are gone.
+  it('protects no payment request', () => {
     expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/coaching/subscriptions/children/child-1/bank-transfer-requests', {}))).toBeNull();
-  });
-
-  it('protects student EFT with the Coaching CAPTCHA configuration and fresh tokens', async () => {
-    const createToken = vi.fn().mockResolvedValueOnce('first-token').mockResolvedValueOnce('second-token');
-    const next = vi.fn((request: HttpRequest<unknown>) => of(new HttpResponse({ status: 200, body: request })));
-    TestBed.configureTestingModule({ providers: [{ provide: AuthRecaptchaService, useValue: { createToken } }] });
-    const request = new HttpRequest('POST', '/api/coaching/subscriptions/bank-transfer-requests', {});
-    expect(getAuthRecaptchaAction(request)).toBe('coaching_eft_submit');
-
-    for (const token of ['first-token', 'second-token']) {
-      const response = await lastValueFrom(TestBed.runInInjectionContext(() => authRecaptchaInterceptor(request, next)));
-      expect((response as HttpResponse<HttpRequest<unknown>>).body?.headers.get('X-Auth-Recaptcha-Token')).toBe(token);
-    }
-    expect(createToken).toHaveBeenCalledWith('coaching_eft_submit', '/api/coaching/subscriptions/recaptcha');
-  });
-
-  it('blocks EFT when CAPTCHA is disabled and no token is returned', async () => {
-    const createToken = vi.fn().mockResolvedValue(null);
-    const next = vi.fn(() => of(new HttpResponse({ status: 200 })));
-    TestBed.configureTestingModule({ providers: [{ provide: AuthRecaptchaService, useValue: { createToken } }] });
-    const request = new HttpRequest('POST', '/api/coaching/subscriptions/bank-transfer-requests', {});
-    await expect(lastValueFrom(TestBed.runInInjectionContext(() => authRecaptchaInterceptor(request, next))))
-      .rejects.toMatchObject({ status: 403, error: { code: 'Coaching.CaptchaFailed' } });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('blocks EFT when token generation fails', async () => {
-    const createToken = vi.fn().mockRejectedValue(new Error('captcha unavailable'));
-    const next = vi.fn(() => of(new HttpResponse({ status: 200 })));
-    TestBed.configureTestingModule({ providers: [{ provide: AuthRecaptchaService, useValue: { createToken } }] });
-    const request = new HttpRequest('POST', '/api/coaching/subscriptions/bank-transfer-requests', {});
-    await expect(lastValueFrom(TestBed.runInInjectionContext(() => authRecaptchaInterceptor(request, next))))
-      .rejects.toMatchObject({ status: 403, error: { code: 'Coaching.CaptchaFailed' } });
-    expect(next).not.toHaveBeenCalled();
+    expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/coaching/subscriptions/bank-transfer-requests', {}))).toBeNull();
+    expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/billing/v1/orders', {}))).toBeNull();
   });
 
   it('adds a fresh token to protected auth requests', async () => {

@@ -1,177 +1,66 @@
-import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
-import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { of } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherSubscriptionComponent } from './coaching-teacher-subscription.component';
-import { CoachingTeacherSubscriptionService } from './coaching-teacher-subscription.service';
+import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from './coaching-teacher-subscription.service';
 
-describe('CoachingTeacherSubscriptionComponent', () => {
-  it('shows only the teacher seat summary and assigns a currently linked student', async () => {
-    const seats = {
-      subscriptionId: 'subscription-1', planName: 'Öğretmen 10', accessUntil: '2027-01-01T00:00:00Z',
-      includedStudentSeats: 10, usedStudentSeats: 0, students: []
-    };
-    const subscriptionService = {
-      getTeacherPlans: vi.fn(() => of([{
-        id: 'teacher-plan', name: 'Öğretmen 10', description: 'Bağımsız öğretmen planı', audience: 'Teacher' as const,
-        price: 1000, isContactOnly: false, billingPeriod: 'Annual', durationDays: 365,
-        includedStudentSeats: 10, features: [], isActive: true, isPublic: true
-      }])),
-      getBankTransferSettings: vi.fn(() => of({
-        currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Örnek Banka', iban: 'TR330006100519786457841326',
-        paymentInstructions: null, bankTransferEnabled: true, isPubliclyAvailable: true
-      })),
-      getMyBankTransferRequests: vi.fn(() => of([])),
-      getMySeatSummary: vi.fn(() => of(seats)),
-      assignStudent: vi.fn(() => of(void 0)),
-      removeStudent: vi.fn(() => of(void 0)),
-      createBankTransferRequest: vi.fn(() => of({ id: 'request-1' }))
-    };
-    const teacherStudents = {
-      getMyStudents: vi.fn(() => of({
-        items: [{ userId: 'student-1', firstName: 'Ada', lastName: 'Yılmaz', fullName: 'Ada Yılmaz', assignmentStartDate: '2026-09-01' }],
-        pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1
-      }))
-    };
-    await TestBed.configureTestingModule({
-      imports: [CoachingTeacherSubscriptionComponent],
-      providers: [
-        provideHttpClient(), provideHttpClientTesting(),
-        { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
-        { provide: CoachingTeacherStudentsService, useValue: teacherStudents }
-      ]
-    }).compileComponents();
+const summary = (seated: string[], capacity = 2): CoachingTeacherSeatSummary => ({
+  subscriptionId: 's1', planName: 'TEST Öğretmen', accessUntil: '2026-12-15T09:00:00Z', includedStudentSeats: capacity, usedStudentSeats: seated.length,
+  students: seated.map(studentId => ({ studentId, isSuspended: false, suspensionReason: null, assignedAt: '2026-11-15T09:00:00Z' }))
+} as CoachingTeacherSeatSummary);
+const student = (userId: string, fullName: string) => ({ userId, fullName, gradeLevel: 8 });
 
-    const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+function setup(seats: CoachingTeacherSeatSummary | null, overrides: Record<string, unknown> = {}) {
+  const subscriptions = {
+    getMySeatSummary: vi.fn(() => of(seats)), assignStudent: vi.fn(() => of(undefined)), removeStudent: vi.fn(() => of(undefined)), ...overrides
+  };
+  const students = { getMyStudents: vi.fn(() => of({ items: [student('u1', 'Ada Öğrenci'), student('u2', 'Bora Öğrenci')], totalCount: 2, pageSize: 25 })) };
+  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(),
+    { provide: CoachingTeacherSubscriptionService, useValue: subscriptions }, { provide: CoachingTeacherStudentsService, useValue: students }] });
+  const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent);
+  fixture.detectChanges();
+  // The shared Aboneliğim page asks the billing service on its own; these tests are about the seats.
+  TestBed.inject(HttpTestingController).match(request => request.url.startsWith('/api/billing/')).forEach(request => request.flush([], { status: 503, statusText: 'x' }));
+  fixture.detectChanges();
+  return { fixture, subscriptions, page: fixture.componentInstance, text: () => (fixture.nativeElement as HTMLElement).textContent ?? '' };
+}
 
-    expect(fixture.nativeElement.textContent).toContain('0 / 10');
-    expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
-    (fixture.nativeElement.querySelector('[data-testid="teacher-seat-student-1"]') as HTMLButtonElement).click();
-    await fixture.whenStable();
-
-    expect(subscriptionService.assignStudent).toHaveBeenCalledWith('student-1');
-    expect(subscriptionService.getMySeatSummary).toHaveBeenCalledTimes(2);
+describe('Koçluk öğretmen planı: Aboneliğim ve koltuklar', () => {
+  it('shows the shared subscription page for teachers and the seats of the teacher\'s own students', () => {
+    const { fixture, text } = setup(summary(['u1']));
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="teacher-billing"] staff-my-subscription')).not.toBeNull();
+    expect(text()).toContain('1 / 2');
+    expect(text()).toContain('Ada Öğrenci');
+    // Buying, paying and the old transfer notices are no longer on this page.
+    expect((fixture.nativeElement as HTMLElement).querySelector('form')).toBeNull();
+    expect(text()).not.toContain('Ödeme referansı');
   });
 
-  it('lets the teacher correct or withdraw a pending notice and only offers larger plans while one runs', async () => {
-    const plan = (id: string, seats: number) => ({ id, name: `Öğretmen ${seats}`, description: '', audience: 'Teacher' as const, price: seats * 100,
-      isContactOnly: false, billingPeriod: 'Annual', durationDays: 365, includedStudentSeats: seats, features: [], isActive: true, isPublic: true });
-    const pending = { id: 'request-1', plan: plan('teacher-10', 10), amount: 1000, currency: 'TRY', paymentReference: 'EFT-TYPO', status: 'Pending', reviewNote: null, createdAt: '2026-10-01T00:00:00Z' };
-    const subscriptionService = {
-      getTeacherPlans: vi.fn(() => of([plan('teacher-3', 3), plan('teacher-5', 5), plan('teacher-10', 10)])),
-      getBankTransferSettings: vi.fn(() => of({ currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Örnek Banka', iban: 'TR330006100519786457841326', paymentInstructions: null, bankTransferEnabled: true, isPubliclyAvailable: true })),
-      getMyBankTransferRequests: vi.fn(() => of([pending])),
-      getMySeatSummary: vi.fn(() => of({ subscriptionId: 'subscription-1', planName: 'Öğretmen 5', accessUntil: '2027-01-01T00:00:00Z', includedStudentSeats: 5, usedStudentSeats: 2, students: [] })),
-      assignStudent: vi.fn(() => of(void 0)), removeStudent: vi.fn(() => of(void 0)), createBankTransferRequest: vi.fn(() => of({ id: 'request-2' })),
-      updateBankTransferRequest: vi.fn((id: string, body: object) => of({ ...pending, ...body, id })),
-      withdrawBankTransferRequest: vi.fn((id: string) => of({ ...pending, id, status: 'Withdrawn' }))
-    };
-    await TestBed.configureTestingModule({
-      imports: [CoachingTeacherSubscriptionComponent],
-      providers: [
-        provideHttpClient(), provideHttpClientTesting(),
-        { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
-        { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
-      ]
-    }).compileComponents();
-    const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent); const component = fixture.componentInstance;
-    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
-
-    expect(component.isSmallerPlan(plan('teacher-3', 3))).toBe(true);
-    expect(component.isSmallerPlan(plan('teacher-10', 10))).toBe(false);
-    expect((fixture.nativeElement.querySelector('[data-testid="teacher-plan-teacher-3"]') as HTMLInputElement).disabled).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Yükseltme');
-
-    component.startEdit(component.requests()[0]); component.editReference = ' EFT-FIXED '; component.editPayerName = ''; component.editNote = '';
-    await component.saveEdit();
-    expect(subscriptionService.updateBankTransferRequest).toHaveBeenCalledWith('request-1', { paymentReference: 'EFT-FIXED', payerName: null, note: null });
-    await component.withdraw(component.requests()[0]);
-    expect(subscriptionService.withdrawBankTransferRequest).toHaveBeenCalledWith('request-1');
-    expect(component.statusLabel('Withdrawn')).toBe('Geri çekildi'); expect(component.statusLabel('Expired')).toBe('Süresi doldu');
+  it('gives a seat while there is room and takes one back, then reads the pool again', async () => {
+    const { subscriptions, page } = setup(summary(['u1']));
+    await page.assignStudent(student('u2', 'Bora Öğrenci') as never);
+    expect(subscriptions.assignStudent).toHaveBeenCalledWith('u2');
+    expect(subscriptions.getMySeatSummary).toHaveBeenCalledTimes(2);
+    await page.removeStudent(student('u1', 'Ada Öğrenci') as never);
+    expect(subscriptions.removeStudent).toHaveBeenCalledWith('u1');
+    expect(page.success()).toContain('kaldırıldı');
   });
 
-  it('submits the selected teacher plan and payment reference through the teacher endpoint', async () => {
-    const subscriptionService = {
-      getTeacherPlans: vi.fn(() => of([{
-        id: 'teacher-plan', name: 'Öğretmen planı', description: '', audience: 'Teacher' as const, price: 500,
-        isContactOnly: false, billingPeriod: 'Monthly', durationDays: 30, includedStudentSeats: 5,
-        features: [], isActive: true, isPublic: true
-      }])),
-      getBankTransferSettings: vi.fn(() => of({
-        currency: 'TRY', accountHolder: 'Edu İvme', bankName: 'Örnek Banka', iban: 'TR330006100519786457841326',
-        paymentInstructions: null, bankTransferEnabled: true, isPubliclyAvailable: true
-      })),
-      getMyBankTransferRequests: vi.fn(() => of([])),
-      getMySeatSummary: vi.fn(() => of(null)),
-      assignStudent: vi.fn(() => of(void 0)),
-      removeStudent: vi.fn(() => of(void 0)),
-      createBankTransferRequest: vi.fn(() => of({ id: 'request-1' }))
-    };
-    await TestBed.configureTestingModule({
-      imports: [CoachingTeacherSubscriptionComponent],
-      providers: [
-        provideHttpClient(), provideHttpClientTesting(),
-        { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
-        { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
-      ]
-    }).compileComponents();
-
-    const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.componentInstance.paymentReference = ' EFT-77 ';
-    fixture.componentInstance.payerName = ' Ada Teacher ';
-    // 13.11.2026: no adult payer declaration is asked or sent any more.
-    expect(fixture.nativeElement.querySelector('input[name="adultPayerDeclaration"]')).toBeNull();
-    await fixture.componentInstance.submitRequest();
-    expect(subscriptionService.createBankTransferRequest).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.error()).toContain('mesafeli satış sözleşmesini');
-
-    fixture.componentInstance.checkout = { couponCode: 'OGRETMEN-10', acceptSalesContract: true };
-    await fixture.componentInstance.submitRequest();
-
-    expect(subscriptionService.createBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: '',
-      couponCode: 'OGRETMEN-10', acceptSalesContract: true
-    });
-    expect(fixture.componentInstance.success()).toContain('Ödeme bildiriminiz alındı');
+  it('does not ask for a seat when the pool is full and shows the service sentence when refused', async () => {
+    const full = setup(summary(['u1', 'u2']));
+    await full.page.assignStudent(student('u3', 'Can Öğrenci') as never);
+    expect(full.subscriptions.assignStudent).not.toHaveBeenCalled();
+    TestBed.resetTestingModule();
+    const refused = setup(summary(['u1']), { assignStudent: vi.fn(() => throwError(() => new HttpErrorResponse({ status: 400, error: { message: 'Öğrenci size atanmış değil.' } }))) });
+    await refused.page.assignStudent(student('u2', 'Bora Öğrenci') as never);
+    expect(refused.page.error()).toBe('Öğrenci size atanmış değil.');
   });
 
-  it('starts a teacher trial when the plan offers one and no plan runs (O10)', async () => {
-    const subscriptionService = {
-      getTeacherPlans: vi.fn(() => of([{ id: 'teacher-plan', name: 'Öğretmen planı', description: '', audience: 'Teacher' as const, price: 500,
-        isContactOnly: false, billingPeriod: 'Monthly', durationDays: 30, includedStudentSeats: 5, features: [], isActive: true, isPublic: true, trialDays: 14 }])),
-      getBankTransferSettings: vi.fn(() => of(null)), getMyBankTransferRequests: vi.fn(() => of([])), getMySeatSummary: vi.fn(() => of(null)),
-      assignStudent: vi.fn(), removeStudent: vi.fn(), createBankTransferRequest: vi.fn()
-    };
-    await TestBed.configureTestingModule({
-      imports: [CoachingTeacherSubscriptionComponent],
-      providers: [
-        provideHttpClient(), provideHttpClientTesting(),
-        { provide: CoachingTeacherSubscriptionService, useValue: subscriptionService },
-        { provide: CoachingTeacherStudentsService, useValue: { getMyStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })) } }
-      ]
-    }).compileComponents();
-    const fixture = TestBed.createComponent(CoachingTeacherSubscriptionComponent);
-    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
-    const http = TestBed.inject(HttpTestingController);
-    http.expectOne('/api/coaching/subscriptions/my-payments').flush({ data: [] });
-    expect(fixture.nativeElement.querySelector('[data-testid="teacher-trial-teacher-plan"]').textContent).toContain('14 gün ücretsiz');
-
-    const starting = fixture.componentInstance.startTrial(fixture.componentInstance.plans()[0]);
-    const request = http.expectOne('/api/coaching/subscriptions/trials');
-    expect(request.request.body).toEqual({ planId: 'teacher-plan', audience: 'Teacher' });
-    request.flush({ data: { subscriptionId: 's1', planId: 'teacher-plan', planName: 'Öğretmen planı', startDate: '2026-10-28T00:00:00Z', endDate: '2026-11-11T00:00:00Z' } });
-    await starting;
-    expect(fixture.componentInstance.success()).toContain('14 günlük ücretsiz denemeniz başladı');
-    expect(subscriptionService.getMySeatSummary).toHaveBeenCalledTimes(2);
+  it('points to Aboneliğim when the teacher has no running plan', () => {
+    const { text } = setup(null);
+    expect(text()).toContain('Aboneliğim bölümünden bir öğretmen planı alın');
   });
 });
-
-beforeEach(() => { TestBed.overrideProvider(ToasterService, {useValue:{confirm:vi.fn().mockResolvedValue(true),success:vi.fn(),error:vi.fn(),info:vi.fn(),warning:vi.fn()}}); });

@@ -7,10 +7,6 @@ import { AuthRecaptchaService } from './auth-recaptcha.service';
 export const AUTH_RECAPTCHA_TOKEN_HEADER = 'X-Auth-Recaptcha-Token';
 
 export function getAuthRecaptchaAction(request: HttpRequest<unknown>): string | null {
-  if (request.method === 'POST'
-      && request.url === `${environment.apiUrl}/coaching/subscriptions/bank-transfer-requests`) {
-    return 'coaching_eft_submit';
-  }
   // Anonymous support form: Notification has Identity check the token (same site key).
   if (request.method === 'POST' && request.url === `${environment.apiUrl}/support/submit`) {
     return 'support_submit';
@@ -51,20 +47,13 @@ export const authRecaptchaInterceptor: HttpInterceptorFn = (request, next) => {
   if (!action) return next(request);
 
   const service = inject(AuthRecaptchaService);
-  const isPayment = action === 'coaching_eft_submit';
-  const tokenPromise = isPayment
-    ? service.createToken(action, `${environment.apiUrl}/coaching/subscriptions/recaptcha`)
-    : service.createToken(action);
-  return from(tokenPromise.then(token => {
-    if (isPayment && !token) throw new Error('EFT CAPTCHA token is required.');
-    return token;
-  })).pipe(
+  return from(service.createToken(action)).pipe(
     catchError(() => throwError(() => new HttpErrorResponse({
       status: 403,
       url: request.url,
       error: {
         success: false,
-        code: isPayment ? 'Coaching.CaptchaFailed' : 'Auth.CaptchaFailed',
+        code: 'Auth.CaptchaFailed',
         message: 'Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.'
       }
     }))),

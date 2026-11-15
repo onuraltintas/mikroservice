@@ -576,7 +576,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             <button type="button" class="bill-btn" [disabled]="c.busy || !c.couponInput.trim()" (click)="c.applyCoupon()">Kuponu uygula</button>
           }
         </div>
-        <p class="bill-muted">Sözleşmeyi onaylayan kişi 18 yaşından büyük olmalı. Öğrenci 18 yaşından küçükse bu adımı velisi yapar ve kendi adını yazar. Havaleyi kim yaparsa yapsın, açıklamaya ödeme kodunun yazılması yeterlidir.</p>
+        <p class="bill-muted">Havaleyi kim yaparsa yapsın, açıklamaya ödeme kodunun yazılması yeterlidir.</p>
         @if (c.documents; as documents) {
           <button type="button" class="bill-link" (click)="c.show('pre')">Ön bilgilendirme formu</button>
           <button type="button" class="bill-link" (click)="c.show('sales')">Mesafeli satış sözleşmesi</button>

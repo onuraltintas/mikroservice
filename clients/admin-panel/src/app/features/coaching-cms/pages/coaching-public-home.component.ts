@@ -230,7 +230,7 @@ export class CoachingPublicHomeComponent implements OnInit {
     this.service.getPublicCmsBlocks('HomeFaq').subscribe({ next: blocks => this.faq.set(blocks), error: () => this.faq.set([]) });
     this.service.getPublicCmsBlocks('HomeTestimonials').subscribe({ next: blocks => this.testimonials.set(blocks), error: () => this.testimonials.set([]) });
     this.loadPlans();
-    this.service.getPublicBankTransferSettings().subscribe({ next: settings => this.currency.set(settings.currency), error: () => this.currency.set(null) });
+    this.service.getPublicPlanCurrency().subscribe({ next: currency => this.currency.set(currency), error: () => this.currency.set(null) });
     this.service.getPublicCmsBlog(1, 3).subscribe({ next: page => this.blog.set(page), error: () => this.blog.set({ items: [], pageNumber: 1, pageSize: 3, totalCount: 0 }) });
   }
 
