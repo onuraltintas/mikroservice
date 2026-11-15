@@ -147,6 +147,20 @@ Her biri `-v publish_day='<gün Ay yıl>'` ile çalıştırılır; çıktıdaki 
   gerekmez. Billing veritabanı yerinde bırakılır. Yasal metinler bir önceki revizyona yönetici panelinden döndürülür.
 - Veritabanı yedeğine dönmek yalnız veri bozulmasında ve kullanıcı onayıyla.
 
+## Hata kuyruğuna düşen ileti (provada denendi)
+Bir tüketici bir iletiyi beş denemede işleyemezse ileti `<kuyruk>_error` kuyruğuna taşınır ve orada bekler; kendiliğinden
+yeniden denenmez. Hesap silmede bu, talebin "Processing"de kalması demektir. Neden giderildikten sonra ileti ana kuyruğa
+geri taşınır (RabbitMQ container'ında; önce ve sonra `rabbitmqctl list_queues name messages` ile bakılır):
+```
+rabbitmq-plugins enable rabbitmq_shovel rabbitmq_shovel_management
+rabbitmqctl set_parameter -p / shovel move-error \
+  '{"src-protocol":"amqp091","src-uri":"amqp://","src-queue":"<kuyruk>_error","src-delete-after":"queue-length",
+    "dest-protocol":"amqp091","dest-uri":"amqp://","dest-queue":"<kuyruk>","ack-mode":"on-confirm",
+    "dest-add-forward-headers":false}'
+```
+Shovel o anda kuyrukta olan iletileri taşır ve kendini siler. Canlıda eklentiyi açmak ve ileti taşımak kullanıcıya
+sorularak yapılır.
+
 ## Provada bulunanlar (15.11.2026)
 - İmaj çekme betiği canlı klasörde çalışıyor; klasör önce yayın commit'ine alınmalı (B.4 eklendi).
 - Hesap silme talebi ve onayı 500 veriyordu (istek kayıtlarındaki doğrulama öznitelikleri yanlış yerdeydi); Hızlı Okuma
@@ -161,10 +175,14 @@ Her biri `-v publish_day='<gün Ay yıl>'` ile çalıştırılır; çıktıdaki 
 - Hesap silme hiç tamamlanamıyordu: Identity, kurulu olmayan Kurs Yönetimi'nin yanıtını da bekliyordu (bu yayından önce
   de böyleydi, canlıda da öyle). Identity artık Kurs Yönetimi'ni yalnız kurulu olduğu yerde bekler (`CourseManagement:Enabled`).
 - Kopyada bu düzeltmeden önce kurulan billing veritabanı boşaltılıp baştan kurulur (canlıdaki ilk kuruluma en yakın yol).
-- İlk beş deneme (yönetici kurulumu, satın alma, onay ve geri alma, billing kesintisi, öğretmen ve kurum koltukları) geçti.
+- Billing hesap silme iletisini işleyemiyordu ("connection is already in a transaction"): silme kendi veritabanı
+  işlemini açıyordu, tüketici ise zaten bir işlemin içinde çalışır. Silme artık açık işleme katılır.
+- Bütün denemeler geçti (`020e9d3`): yönetici kurulumu, satın alma, onay ve geri alma, billing kesintisi, öğretmen ve
+  kurum koltukları, plan izni, plan süresi ve "Gelecek haftayı ekle", plan hatırlatması, migration işinin yeniden
+  çalışması, hesap silme (hata kuyruğundan geri taşınan iletiyle ve yeni bir test öğrencisiyle baştan sona).
 
 ## Denenmemiş olanlar
-- Yeni servis ile arayüzler şimdiye kadar birlikte çalıştırılmadı; ilk kez provada çalışacak.
+- Provadaki denemeler API üzerinden yapıldı; sayfalara tarayıcıda bakılmadı.
 - Halkbank döküm okuyucusu gerçek dosyayla kodda çalıştırılmadı; düzeni kullanıcının verdiği örnekten öğrenildi.
 - Provada (15.11.2026) kopyadan e-posta çıkmadı ama içerikleri de görülemedi (sahte SMTP kimlik doğrulamayı
   desteklemiyor): yeni servisin e-posta metinleri ilk kez canlıda görülecek.
