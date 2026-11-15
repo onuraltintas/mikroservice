@@ -11,7 +11,7 @@ const pages = 'clients/admin-panel/src/app/features/coaching-portal/pages/';
 test('a plan for part of the way can be created although the lessons do not finish, and remembers it', () => {
   const contract = read(coaching + 'Coaching.Application/StudyPlanning/IWeeklyOutcomePlanService.cs');
   assert.match(contract, /JsonIgnoreCondition\.WhenWritingDefault\)\] bool Partial=false,/);
-  assert.match(contract, /JsonIgnoreCondition\.WhenWritingDefault\)\] bool LeaveUnfinished=false\);/);
+  assert.match(contract, /JsonIgnoreCondition\.WhenWritingDefault\)\] bool LeaveUnfinished=false,/);
   const service = read(coaching + 'Coaching.Infrastructure/StudyPlanning/CoachingWeeklyOutcomePlanService.cs');
   assert.match(service, /v2&&request\.PrioritizeWhenShort\|\|request\.Partial;/);
   assert.match(service, /draft\.TimeZoneId,request\.Partial\)/);
