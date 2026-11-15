@@ -156,3 +156,16 @@ test('coupons are counted from live orders, withdrawal follows the legal time, a
   const context = read('services/billing-service/Billing.Infrastructure/BillingDbContext.cs');
   assert.match(context, /HasDatabaseName\("IX_withdrawals_one_live_per_order"\)/);
 });
+
+test('billing notices reach the notification service on their own queue, and retention has its migration', () => {
+  const endpoints = read('services/notification-service/Notification.API/Messaging/NotificationReceiveEndpoints.cs');
+  assert.match(endpoints, /new\("billing-notice", typeof\(BillingNoticeConsumer\)\)/);
+  const events = read('shared/EduPlatform.Shared.Contracts/Events/Billing/BillingEvents.cs');
+  assert.match(events, /record BillingNoticeV1\(/);
+  const consumer = read('services/notification-service/Notification.Application/Consumers/BillingNoticeConsumer.cs');
+  for (const kind of [...events.matchAll(/public const string (\w+) = "/g)].map((m) => m[1]))
+    assert.match(consumer, new RegExp(`BillingNoticeKinds\\.${kind}\\b`), `${kind} needs a text.`);
+  const program = read('services/billing-service/Billing.API/Program.cs');
+  assert.match(program, /IBillingLifecycle/);
+  assert.match(read('services/billing-service/Billing.Domain/Extras.cs'), /AddYears\(10\)|RetentionYears = 10/);
+});

@@ -439,6 +439,27 @@ namespace Billing.Infrastructure.Migrations
                     b.ToTable("entitlement_grants", "billing");
                 });
 
+            modelBuilder.Entity("Billing.Domain.ErasureReceipt", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ErasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RedactAfter")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RedactedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("RedactedAt", "RedactAfter");
+
+                    b.ToTable("erasure_receipts", "billing");
+                });
+
             modelBuilder.Entity("Billing.Domain.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -488,6 +509,34 @@ namespace Billing.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("invoices", "billing");
+                });
+
+            modelBuilder.Entity("Billing.Domain.NoticeReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId", "Kind", "PeriodEnd")
+                        .IsUnique();
+
+                    b.ToTable("notice_receipts", "billing");
                 });
 
             modelBuilder.Entity("Billing.Domain.Order", b =>
@@ -1382,6 +1431,15 @@ namespace Billing.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Billing.Domain.NoticeReceipt", b =>
+                {
+                    b.HasOne("Billing.Domain.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
