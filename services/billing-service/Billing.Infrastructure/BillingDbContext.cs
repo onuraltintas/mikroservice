@@ -26,6 +26,7 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<SubscriptionPeriod> SubscriptionPeriods => Set<SubscriptionPeriod>();
     public DbSet<EntitlementGrant> EntitlementGrants => Set<EntitlementGrant>();
+    public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<BankStatementImport> BankStatementImports => Set<BankStatementImport>();
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
 
@@ -130,6 +131,8 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.Property(item => item.PlanName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.BuyerType).HasConversion<string>().HasMaxLength(20);
             entity.Property(item => item.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(item => item.Kind).HasConversion<string>().HasMaxLength(20);
+            entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Restrict);
             entity.Property(item => item.ListPrice).HasPrecision(12, 2);
             entity.Property(item => item.Discount).HasPrecision(12, 2);
             entity.Property(item => item.Amount).HasPrecision(12, 2);
@@ -142,7 +145,7 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.Property(item => item.ReviewNote).HasMaxLength(2_000);
             entity.HasIndex(item => item.PaymentCode).IsUnique();
             // An account waits for one payment per plan at a time.
-            entity.HasIndex(item => new { item.AccountId, item.PlanId, item.BeneficiaryUserId }).IsUnique()
+            entity.HasIndex(item => new { item.AccountId, item.PlanId, item.BeneficiaryUserId, item.Kind }).IsUnique()
                 .HasFilter("\"Status\" = 'Pending'").HasDatabaseName("IX_orders_one_pending_per_plan");
             entity.HasIndex(item => new { item.Status, item.ExpiresAt });
             entity.HasIndex(item => item.OrderedByUserId);
@@ -207,6 +210,17 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.HasIndex(item => item.SubscriptionId);
             entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<Entitlement>().WithMany().HasForeignKey(item => item.EntitlementId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Seat>(entity =>
+        {
+            entity.ToTable("seats");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.SuspensionReason).HasMaxLength(500);
+            // A user holds one seat of a subscription.
+            entity.HasIndex(item => new { item.SubscriptionId, item.UserId }).IsUnique();
+            entity.HasIndex(item => item.UserId);
+            entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<BankStatementImport>(entity =>

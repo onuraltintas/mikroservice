@@ -21,6 +21,14 @@ public enum OrderStatus
     Cancelled = 5
 }
 
+public enum OrderKind
+{
+    /// <summary>A plan for a period.</summary>
+    Subscription = 0,
+    /// <summary>Extra seats for the rest of a running institution subscription.</summary>
+    ExtraSeats = 1
+}
+
 public enum PaymentMethod
 {
     BankTransfer = 0
@@ -73,8 +81,15 @@ public sealed class Order
     public Guid Id { get; set; }
     public Guid AccountId { get; set; }
     public Guid PlanId { get; set; }
+    public OrderKind Kind { get; set; }
+    /// <summary>For extra seats: the subscription they are added to and how many.</summary>
+    public Guid? SubscriptionId { get; set; }
+    public int? ExtraSeats { get; set; }
     public Guid OrderedByUserId { get; set; }
-    /// <summary>Whose access the order pays for; the buyer, or the child a parent pays for.</summary>
+    /// <summary>
+    /// Whose access the order pays for: the buyer, the child a parent pays for, or, for an organization account, the
+    /// organization itself (its Identity institution id).
+    /// </summary>
     public Guid BeneficiaryUserId { get; set; }
     public string PlanName { get; set; } = string.Empty;
     public BuyerType BuyerType { get; set; }
@@ -148,6 +163,12 @@ public sealed class Subscription
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public int? SeatCount { get; set; }
+    /// <summary>
+    /// Seats bought on top of the plan's. They were priced for the days left when they were bought, so they last until
+    /// <see cref="ExtraSeatsUntil"/> (the end of the subscription at that time) and are not carried into a renewal.
+    /// </summary>
+    public int ExtraSeats { get; set; }
+    public DateTime? ExtraSeatsUntil { get; set; }
     /// <summary>The entitlements of the latest approved order; what the grants are built from.</summary>
     public string EntitlementsJson { get; set; } = "[]";
     public DateTime CreatedAt { get; set; }
@@ -179,4 +200,20 @@ public sealed class EntitlementGrant
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public Guid SubscriptionId { get; set; }
+}
+
+/// <summary>
+/// A seat of a subscription given to a user. A seat taken back is suspended, not removed: who had it and who took it
+/// back stays on record, and giving it again reuses the row.
+/// </summary>
+public sealed class Seat
+{
+    public Guid Id { get; set; }
+    public Guid SubscriptionId { get; set; }
+    public Guid UserId { get; set; }
+    public bool IsSuspended { get; set; }
+    public string? SuspensionReason { get; set; }
+    public Guid AssignedBy { get; set; }
+    public DateTime AssignedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

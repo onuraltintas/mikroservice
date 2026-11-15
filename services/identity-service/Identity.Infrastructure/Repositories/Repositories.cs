@@ -898,6 +898,17 @@ public class InstitutionRepository : IInstitutionRepository
             cancellationToken);
     }
 
+    public async Task<IReadOnlyList<EduPlatform.Shared.Contracts.Billing.BillingInstitution>> GetAdministeredInstitutionsAsync(
+        Guid userId, CancellationToken cancellationToken) =>
+        await _context.InstitutionAdmins
+            .AsNoTracking()
+            .Where(admin => admin.UserId == userId && admin.IsActive && admin.User.IsActive && admin.Institution.IsActive)
+            .Select(admin => new { admin.InstitutionId, admin.Institution.Name })
+            .Distinct()
+            .OrderBy(item => item.Name)
+            .Select(item => new EduPlatform.Shared.Contracts.Billing.BillingInstitution(item.InstitutionId, item.Name))
+            .ToListAsync(cancellationToken);
+
     public async Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, PlatformProduct product, CancellationToken cancellationToken)
     {
         var admin = await _context.InstitutionAdmins

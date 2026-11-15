@@ -50,6 +50,22 @@ public static partial class BillingRules
         return null;
     }
 
+    public const int MaxExtraSeatsPerOrder = 1_000;
+
+    /// <summary>How many seats a subscription has now: the plan's, plus the extra ones while they last.</summary>
+    public static int SeatCapacity(int? seatCount, int extraSeats, DateTime? extraSeatsUntil, DateTime now) =>
+        (seatCount ?? 0) + (extraSeats > 0 && extraSeatsUntil is { } until && until > now ? extraSeats : 0);
+
+    /// <summary>
+    /// The price of extra seats for the days left of the running period (carried over from Koçluk): the plan's extra
+    /// seat price is for a whole period; a started day counts.
+    /// </summary>
+    public static decimal ExtraSeatsPrice(decimal extraSeatPrice, int seats, int durationDays, DateTime now, DateTime endsAt)
+    {
+        var daysLeft = Math.Clamp((int)Math.Ceiling((endsAt - now).TotalDays), 0, durationDays);
+        return Math.Round(extraSeatPrice * seats * daysLeft / durationDays, 2, MidpointRounding.AwayFromZero);
+    }
+
     /// <summary>A pending order waits this long for its payment, then drops (carried over from Koçluk).</summary>
     public const int PendingOrderDays = 14;
     public const int MaxReceiptBytes = 5 * 1024 * 1024;

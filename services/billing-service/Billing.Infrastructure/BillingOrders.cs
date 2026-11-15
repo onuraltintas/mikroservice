@@ -12,7 +12,7 @@ namespace Billing.Infrastructure;
 /// Buying by bank transfer: an order with its payment code and accepted documents, "I have paid", the admin's approval
 /// or refusal, the subscription and periods an approval opens, and the entitlement grants the products ask for.
 /// </summary>
-public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, TimeProvider clock) : IBillingOrders
+public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, TimeProvider clock, IBillingInstitutions? institutions = null) : IBillingOrders
 {
     public const int MaxListedOrders = 500;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -25,6 +25,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         var plan = await db.Plans.AsNoTracking().SingleOrDefaultAsync(item => item.Id == planId, cancellationToken);
         if (plan is null) return null;
         var offer = await OfferAsync(plan, user, cancellationToken);
+        // An institution plan is previewed with the buyer's name; the institution's name is added when the order is given.
         return SalesDocumentTexts.Render(Terms(offer, plan, BuyerName(buyerName), user.Email, plan.Price, Now));
     }
 
@@ -39,32 +40,27 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                 "Devam etmek için ön bilgilendirme formunu ve mesafeli satış sözleşmesini onaylayın.");
 
         var now = Now;
-        var account = await db.Accounts.SingleOrDefaultAsync(item => item.UserId == user.Id, cancellationToken);
-        if (account is null)
-        {
-            account = new Account { Id = Guid.NewGuid(), Type = AccountType.User, UserId = user.Id, CreatedAt = now };
-            db.Accounts.Add(account);
-        }
-        else if (await db.Orders.AnyAsync(item => item.AccountId == account.Id && item.PlanId == plan.Id
-            && item.BeneficiaryUserId == user.Id && item.Status == OrderStatus.Pending, cancellationToken))
+        // An institution plan is bought for an institution the buyer administers; every other plan for the buyer.
+        var institution = plan.BuyerType == BuyerType.Institution ? await AdministeredAsync(user, request.OrganizationId, cancellationToken) : null;
+        if (institution is null && request.OrganizationId is not null)
+            throw new BusinessRuleException("Billing.PlanNotForBuyer", "Bu plan kurum adına satın alınamaz.");
+        var (account, beneficiary) = await AccountAsync(user, institution, buyerName, now, cancellationToken);
+        if (await db.Orders.AnyAsync(item => item.AccountId == account.Id && item.PlanId == plan.Id && item.Kind == OrderKind.Subscription
+            && item.BeneficiaryUserId == beneficiary && item.Status == OrderStatus.Pending, cancellationToken))
         {
             throw new BusinessRuleException("Billing.OrderPending", "Bu plan için ödeme bekleyen bir siparişiniz var.");
         }
-        if (account.DisplayName != buyerName || account.Email != user.Email)
-        {
-            account.DisplayName = buyerName;
-            account.Email = user.Email;
-            account.UpdatedAt = now;
-        }
 
-        var documents = SalesDocumentTexts.Render(Terms(offer, plan, buyerName, user.Email, plan.Price, now));
+        var contractName = institution is null ? buyerName : $"{institution.Name} (yetkili: {buyerName})";
+        var documents = SalesDocumentTexts.Render(Terms(offer, plan, contractName, user.Email, plan.Price, now));
         var order = new Order
         {
             Id = Guid.NewGuid(),
             AccountId = account.Id,
             PlanId = plan.Id,
+            Kind = OrderKind.Subscription,
             OrderedByUserId = user.Id,
-            BeneficiaryUserId = user.Id,
+            BeneficiaryUserId = beneficiary,
             PlanName = plan.Name,
             BuyerType = plan.BuyerType,
             ListPrice = plan.Price,
@@ -254,26 +250,43 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             line.Note = null;
         }
 
-        var subscription = (await db.Subscriptions.FromSqlInterpolated(
-                $"SELECT * FROM billing.subscriptions WHERE \"AccountId\" = {order.AccountId} AND \"PlanId\" = {order.PlanId} AND \"BeneficiaryUserId\" = {order.BeneficiaryUserId} FOR UPDATE")
-            .ToListAsync(cancellationToken)).SingleOrDefault();
-        var running = subscription is { Status: SubscriptionStatus.Active } && subscription.EndsAt > now;
-        var (startsAt, endsAt) = BillingRules.NextPeriod(now, running ? subscription!.EndsAt : null, order.DurationDays);
-        if (subscription is null)
+        Subscription subscription;
+        if (order.Kind == OrderKind.ExtraSeats)
         {
-            subscription = new Subscription { Id = Guid.NewGuid(), AccountId = order.AccountId, PlanId = order.PlanId,
-                BeneficiaryUserId = order.BeneficiaryUserId, CreatedAt = now };
-            db.Subscriptions.Add(subscription);
+            // Extra seats join the running subscription; they open no period of their own.
+            subscription = (await db.Subscriptions.FromSqlInterpolated($"SELECT * FROM billing.subscriptions WHERE \"Id\" = {order.SubscriptionId} FOR UPDATE")
+                .ToListAsync(cancellationToken)).Single();
+            if (subscription.Status != SubscriptionStatus.Active || subscription.EndsAt <= now)
+                throw new BusinessRuleException("Billing.SubscriptionEnded", "Abonelik sona erdi; ek koltuk eklenemez. Siparişi reddedin.");
+            var lasting = subscription.ExtraSeats > 0 && subscription.ExtraSeatsUntil is { } until && until > now;
+            subscription.ExtraSeats = (lasting ? subscription.ExtraSeats : 0) + order.ExtraSeats.GetValueOrDefault();
+            if (!lasting) subscription.ExtraSeatsUntil = subscription.EndsAt;
+            subscription.UpdatedAt = now;
         }
-        if (!running) subscription.StartsAt = startsAt;
-        subscription.Status = SubscriptionStatus.Active;
-        subscription.EndsAt = endsAt;
-        subscription.PlanName = order.PlanName;
-        subscription.SeatCount = order.SeatCount;
-        subscription.EntitlementsJson = order.EntitlementsJson;
-        subscription.UpdatedAt = now;
-        db.SubscriptionPeriods.Add(new SubscriptionPeriod { Id = Guid.NewGuid(), SubscriptionId = subscription.Id, Source = PeriodSource.Payment,
-            PaymentId = payment.Id, Status = PeriodStatus.Active, StartsAt = startsAt, EndsAt = endsAt, CreatedAt = now });
+        else
+        {
+            var existing = (await db.Subscriptions.FromSqlInterpolated(
+                    $"SELECT * FROM billing.subscriptions WHERE \"AccountId\" = {order.AccountId} AND \"PlanId\" = {order.PlanId} AND \"BeneficiaryUserId\" = {order.BeneficiaryUserId} FOR UPDATE")
+                .ToListAsync(cancellationToken)).SingleOrDefault();
+            var running = existing is { Status: SubscriptionStatus.Active } && existing.EndsAt > now;
+            var (startsAt, endsAt) = BillingRules.NextPeriod(now, running ? existing!.EndsAt : null, order.DurationDays);
+            if (existing is null)
+            {
+                existing = new Subscription { Id = Guid.NewGuid(), AccountId = order.AccountId, PlanId = order.PlanId,
+                    BeneficiaryUserId = order.BeneficiaryUserId, CreatedAt = now };
+                db.Subscriptions.Add(existing);
+            }
+            subscription = existing;
+            if (!running) subscription.StartsAt = startsAt;
+            subscription.Status = SubscriptionStatus.Active;
+            subscription.EndsAt = endsAt;
+            subscription.PlanName = order.PlanName;
+            subscription.SeatCount = order.SeatCount;
+            subscription.EntitlementsJson = order.EntitlementsJson;
+            subscription.UpdatedAt = now;
+            db.SubscriptionPeriods.Add(new SubscriptionPeriod { Id = Guid.NewGuid(), SubscriptionId = subscription.Id, Source = PeriodSource.Payment,
+                PaymentId = payment.Id, Status = PeriodStatus.Active, StartsAt = startsAt, EndsAt = endsAt, CreatedAt = now });
+        }
 
         order.Status = OrderStatus.Paid;
         order.ReviewedBy = actorId;
@@ -327,6 +340,15 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             var subscription = (await db.Subscriptions.FromSqlInterpolated($"SELECT * FROM billing.subscriptions WHERE \"Id\" = {period.SubscriptionId} FOR UPDATE")
                 .ToListAsync(cancellationToken)).Single();
             await CancelPeriodAsync(subscription, period, now, cancellationToken);
+            await RebuildGrantsAsync(subscription, now, cancellationToken);
+        }
+        else if (order is { Kind: OrderKind.ExtraSeats, SubscriptionId: { } seatSubscriptionId })
+        {
+            // The seats this payment added leave the pool; who sits beyond the capacity loses access, the seat row stays.
+            var subscription = (await db.Subscriptions.FromSqlInterpolated($"SELECT * FROM billing.subscriptions WHERE \"Id\" = {seatSubscriptionId} FOR UPDATE")
+                .ToListAsync(cancellationToken)).Single();
+            subscription.ExtraSeats = Math.Max(0, subscription.ExtraSeats - order.ExtraSeats.GetValueOrDefault());
+            subscription.UpdatedAt = now;
             await RebuildGrantsAsync(subscription, now, cancellationToken);
         }
 
@@ -387,8 +409,6 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
     {
         if (!plan.IsActive || !BillingRules.CanBeOrdered(plan.Price, plan.IsContactOnly))
             throw new BusinessRuleException("Billing.PlanNotOnSale", "Bu plan satın alınamıyor.");
-        if (plan.BuyerType == BuyerType.Institution)
-            throw new BusinessRuleException("Billing.PlanNotOnSale", "Kurum planları için bizimle iletişime geçin.");
         if (plan.BuyerType == BuyerType.Teacher && !user.Roles.Contains("Teacher"))
             throw new BusinessRuleException("Billing.PlanNotForBuyer", "Bu planı yalnız öğretmenler satın alabilir.");
 
@@ -410,6 +430,55 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             rows.Select(row => new OrderEntitlement(row.entitlement.Id, row.entitlement.Key, row.product.Code, row.link.Holder, row.link.LimitValue)).ToArray(),
             rows.Select(row => row.product.Name).Distinct().ToArray());
     }
+
+    /// <summary>The institution an institution plan is bought for. Identity says whether the buyer administers it.</summary>
+    private async Task<Institution> AdministeredAsync(BillingUser user, Guid? organizationId, CancellationToken cancellationToken)
+    {
+        if (organizationId is not { } id || id == Guid.Empty)
+            throw new BusinessRuleException("Billing.OrganizationRequired", "Kurum planı için kurumunuzu seçin.");
+        var administered = institutions is null ? [] : await institutions.GetAdministeredAsync(user.Id, cancellationToken);
+        return administered.SingleOrDefault(item => item.Id == id)
+            ?? throw new BusinessRuleException("Billing.OrganizationNotAdministered", "Bu kurum adına satın alma yetkiniz yok.");
+    }
+
+    /// <summary>One account per user and one per institution, whatever the product; opened with the first order.</summary>
+    internal async Task<(Account Account, Guid Beneficiary)> AccountAsync(BillingUser user, Institution? institution, string buyerName, DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var account = institution is null
+            ? await db.Accounts.SingleOrDefaultAsync(item => item.UserId == user.Id, cancellationToken)
+            : await db.Accounts.SingleOrDefaultAsync(item => item.OrganizationId == institution.Id, cancellationToken);
+        if (account is null)
+        {
+            account = institution is null
+                ? new Account { Id = Guid.NewGuid(), Type = AccountType.User, UserId = user.Id, CreatedAt = now }
+                : new Account { Id = Guid.NewGuid(), Type = AccountType.Organization, OrganizationId = institution.Id, CreatedAt = now };
+            db.Accounts.Add(account);
+        }
+        var name = institution?.Name ?? buyerName;
+        if (account.DisplayName != name || account.Email != user.Email)
+        {
+            account.DisplayName = name.Length > 200 ? name[..200] : name;
+            account.Email = user.Email;
+            account.UpdatedAt = now;
+        }
+        return (account, institution?.Id ?? user.Id);
+    }
+
+    internal async Task EnsureSalesOpenAsync(CancellationToken cancellationToken)
+    {
+        if (!await SalesOpenAsync(cancellationToken))
+            throw new BusinessRuleException("Billing.SalesClosed", "Satın alma şu anda kapalı. Lütfen daha sonra tekrar deneyin.");
+    }
+
+    internal Task<Seller> SellerAsync(CancellationToken cancellationToken) =>
+        db.Sellers.AsNoTracking().SingleAsync(item => item.Id == Seller.SingleId, cancellationToken);
+
+    internal Task<string> PaymentCodeAsync(CancellationToken cancellationToken) => NewPaymentCodeAsync(cancellationToken);
+
+    internal static OrderView ViewOf(Order order) => View(order, false);
+
+    internal static string RequireBuyerName(string? value) => BuyerName(value);
 
     private async Task<bool> SalesOpenAsync(CancellationToken cancellationToken) =>
         await db.Sellers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == Seller.SingleId, cancellationToken) is { IsComplete: true }
@@ -472,28 +541,61 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
     }
 
     /// <summary>
-    /// The grants of a subscription are rebuilt whenever it changes: the buyer-side entitlements of its latest order, for
-    /// its beneficiary, until it ends. Seat holders get theirs when seats are given out (stage 4).
+    /// The grants of a subscription are rebuilt whenever it changes. Buyer-side entitlements go to its beneficiary (the
+    /// user, or the organization of an organization account) until it ends. Seat-side entitlements go to the users
+    /// holding its seats, oldest seat first: seats within the plan's count until the subscription ends, seats that
+    /// stand on extra seats until those lapse, seats beyond the capacity not at all.
     /// </summary>
-    private async Task RebuildGrantsAsync(Subscription subscription, DateTime now, CancellationToken cancellationToken)
+    internal async Task RebuildGrantsAsync(Subscription subscription, DateTime now, CancellationToken cancellationToken)
     {
         var entitlements = JsonSerializer.Deserialize<OrderEntitlement[]>(subscription.EntitlementsJson, Json) ?? [];
-        db.EntitlementGrants.RemoveRange(await db.EntitlementGrants.Where(item => item.SubscriptionId == subscription.Id).ToListAsync(cancellationToken));
+        var old = await db.EntitlementGrants.Where(item => item.SubscriptionId == subscription.Id).ToListAsync(cancellationToken);
+        db.EntitlementGrants.RemoveRange(old);
+        var affected = old.Select(item => item.UserId).ToHashSet();
         if (subscription.Status == SubscriptionStatus.Active && subscription.EndsAt > now)
         {
             var ids = entitlements.Select(item => item.EntitlementId).Distinct().ToArray();
             var productIds = await db.Entitlements.AsNoTracking().Where(item => ids.Contains(item.Id))
                 .ToDictionaryAsync(item => item.Id, item => item.ProductId, cancellationToken);
-            foreach (var entitlement in entitlements.Where(item => item.Holder == EntitlementHolder.Buyer && productIds.ContainsKey(item.EntitlementId)))
+            void Grant(Guid holder, OrderEntitlement entitlement, DateTime endsAt)
             {
-                db.EntitlementGrants.Add(new EntitlementGrant { Id = Guid.NewGuid(), UserId = subscription.BeneficiaryUserId,
-                    EntitlementId = entitlement.EntitlementId, ProductId = productIds[entitlement.EntitlementId], Key = entitlement.Key,
-                    LimitValue = entitlement.LimitValue, StartsAt = subscription.StartsAt, EndsAt = subscription.EndsAt, SubscriptionId = subscription.Id });
+                if (!productIds.TryGetValue(entitlement.EntitlementId, out var productId) || endsAt <= now) return;
+                db.EntitlementGrants.Add(new EntitlementGrant { Id = Guid.NewGuid(), UserId = holder, EntitlementId = entitlement.EntitlementId,
+                    ProductId = productId, Key = entitlement.Key, LimitValue = entitlement.LimitValue, StartsAt = subscription.StartsAt, EndsAt = endsAt,
+                    SubscriptionId = subscription.Id });
+                affected.Add(holder);
+            }
+            foreach (var entitlement in entitlements.Where(item => item.Holder == EntitlementHolder.Buyer))
+                Grant(subscription.BeneficiaryUserId, entitlement, subscription.EndsAt);
+
+            var seatSide = entitlements.Where(item => item.Holder == EntitlementHolder.SeatHolder).ToArray();
+            if (seatSide.Length > 0)
+            {
+                var seats = await db.Seats.AsNoTracking().Where(item => item.SubscriptionId == subscription.Id && !item.IsSuspended)
+                    .OrderBy(item => item.AssignedAt).ThenBy(item => item.Id).ToListAsync(cancellationToken);
+                // Seats changed in this unit of work but not saved yet count as they will be.
+                foreach (var entry in db.ChangeTracker.Entries<Seat>().Where(entry => entry.Entity.SubscriptionId == subscription.Id).ToArray())
+                {
+                    seats.RemoveAll(item => item.Id == entry.Entity.Id);
+                    if (entry.State != EntityState.Deleted && !entry.Entity.IsSuspended) seats.Add(entry.Entity);
+                }
+                seats = seats.OrderBy(item => item.AssignedAt).ThenBy(item => item.Id).ToList();
+                var included = subscription.SeatCount ?? 0;
+                var extraUntil = subscription.ExtraSeats > 0 && subscription.ExtraSeatsUntil is { } until && until > now
+                    ? (until < subscription.EndsAt ? until : subscription.EndsAt) : (DateTime?)null;
+                for (var index = 0; index < seats.Count; index++)
+                {
+                    var endsAt = index < included ? subscription.EndsAt
+                        : extraUntil is { } lasting && index < included + subscription.ExtraSeats ? lasting : (DateTime?)null;
+                    if (endsAt is null) continue;
+                    foreach (var entitlement in seatSide) Grant(seats[index].UserId, entitlement, endsAt.Value);
+                }
             }
         }
         var productCodes = entitlements.Select(item => item.ProductCode).Distinct().ToArray();
-        if (productCodes.Length > 0)
-            await events.PublishAsync(new BillingEntitlementsChangedV1(subscription.BeneficiaryUserId, productCodes, now), cancellationToken);
+        if (productCodes.Length == 0) return;
+        foreach (var holder in affected)
+            await events.PublishAsync(new BillingEntitlementsChangedV1(holder, productCodes, now), cancellationToken);
     }
 
     private async Task<IReadOnlyList<GrantedEntitlement>> GrantsAsync(Guid userId, Guid productId, DateTime now, CancellationToken cancellationToken)
@@ -546,7 +648,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
     private static OrderView View(Order order, bool hasReceipt) =>
         new(order.Id, order.PlanId, order.PlanName, ProductCodes(order.EntitlementsJson), order.BuyerType, order.Amount, order.Currency,
             order.DurationDays, order.PaymentCode, order.Status, order.CreatedAt, order.ExpiresAt, order.PaidDeclaredAt, order.PayerNote,
-            hasReceipt, order.ReviewedAt, order.ReviewNote, order.DocumentsVersion);
+            hasReceipt, order.ReviewedAt, order.ReviewNote, order.DocumentsVersion, order.Kind, order.ExtraSeats);
 
     private static SubscriptionView View(Subscription subscription, DateTime now) =>
         new(subscription.Id, subscription.PlanId, subscription.PlanName, ProductCodes(subscription.EntitlementsJson), subscription.Status,
