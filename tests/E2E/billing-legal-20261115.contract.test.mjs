@@ -27,6 +27,7 @@ test('only the bank statement sentences are added', () => {
       / Havale\/EFT ödemelerinin siparişle eşleştirilmesi için şirketin banka hesap dökümü sisteme yüklenir; dökümdeki hareketin tarihi, tutarı, açıklaması ve gönderenin adı işlenir\. Ödemeyi abone dışında biri \(örneğin velisi\) yaptıysa onun adı da yalnız bu amaçla işlenir; bu bilgi kişinin kendisinden değil, bankanın şirkete verdiği hesap dökümünden elde edilir\./,
       / Banka dökümündeki gönderen adı, ödemenin doğru siparişle eşleştirilmesi için m\.5\/2\(c\), mali kayıt yükümlülüğü için m\.5\/2\(ç\) kapsamında; ödemeyi abone dışında biri yaptıysa ödemenin doğru kişiye işlenmesindeki meşru menfaat kapsamında m\.5\/2\(f\) ile işlenir\./,
       /; siparişle eşleşen banka hareketindeki gönderen adı ve açıklama da aynı sürenin sonunda silinir/,
+      / Hiçbir siparişle eşleşmeyen banka hareketlerindeki gönderen adı ve açıklama, hareket tarihinden 1 yıl sonra silinir\./,
     ],
     privacy: [
       / Havale\/EFT ödemelerini siparişle eşleştirmek için şirketin banka hesap dökümündeki hareketin tarihi, tutarı, açıklaması ve gönderenin adı da işlenir; ödemeyi abone dışında biri yaptıysa onun adı yalnız bu amaçla işlenir\./,
@@ -49,4 +50,7 @@ test('the texts keep the decisions of 13.11.2026: no minimum age and no adult pa
 test('what the notice says about clearing matches the code', async () => {
   const lifecycle = await read('services/billing-service/Billing.Infrastructure/BillingLifecycle.cs');
   assert.match(lifecycle, /BankTransactions\.Where\(item => item\.OrderId != null[\s\S]*?SetProperty\(item => item\.Sender, \(string\?\)null\)/);
+  assert.match(lifecycle, /item\.OrderId == null && item\.BookedAt <= before[\s\S]*?SetProperty\(item => item\.Sender, \(string\?\)null\)/);
+  assert.match(await read('services/billing-service/Billing.Domain/Extras.cs'), /UnmatchedBankLineYears = 1;/);
+  assert.match(await read('services/billing-service/Billing.API/OrderEndpoints.cs'), /ClearUnmatchedBankLinesAsync\(stoppingToken\)/);
 });

@@ -303,6 +303,8 @@ public interface IBillingLifecycle
     Task<int> EraseUserAsync(Guid userId, CancellationToken cancellationToken = default);
     /// <summary>Removes what names the person from records whose retention time is over; returns how many accounts.</summary>
     Task<int> RedactExpiredAsync(CancellationToken cancellationToken = default);
+    /// <summary>Clears the sender's name, description and note of bank lines tied to no order, a year after the movement.</summary>
+    Task<int> ClearUnmatchedBankLinesAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>What the admin sees first: what waits for a decision, what ends soon, what was approved this month.</summary>

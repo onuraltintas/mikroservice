@@ -280,4 +280,46 @@ public sealed class BillingLifecyclePostgresTests : IAsyncLifetime
         Assert.Equal(0, await check.Payments.CountAsync());
         Assert.Equal(0, await check.Subscriptions.CountAsync());
     }
+
+    [Fact]
+    public async Task A_bank_line_tied_to_no_order_loses_its_sender_a_year_after_the_movement()
+    {
+        var now = _clock.Now.UtcDateTime;
+        Guid old, recent, ignored;
+        await using (var db = Db())
+        {
+            var account = new BankAccount { Id = Guid.NewGuid(), BankName = "Test Bankası", AccountHolder = "TEST Satıcı Ltd.", Iban = "TR610003200013900000326785",
+                IsActive = false, SortOrder = 9, CreatedBy = Admin, CreatedAt = now };
+            var import = new BankStatementImport { Id = Guid.NewGuid(), BankAccountId = account.Id, FileName = "test.csv", UploadedBy = Admin, UploadedAt = now, RowCount = 3, AddedCount = 3 };
+            BankTransaction Line(DateTime bookedAt, BankTransactionStatus status, string fingerprint) => new()
+            {
+                Id = Guid.NewGuid(), BankAccountId = account.Id, ImportId = import.Id, BookedAt = bookedAt, Amount = 150m, Description = "TEST ilgisiz havale",
+                Sender = "Deneme Gönderen", Fingerprint = fingerprint, Status = status, Note = "Ödeme kodu yok", CreatedAt = now
+            };
+            var lines = new[] { Line(now.AddYears(-1).AddDays(-1), BankTransactionStatus.Unmatched, "test-old"),
+                Line(now.AddDays(-300), BankTransactionStatus.Unmatched, "test-recent"), Line(now.AddYears(-2), BankTransactionStatus.Ignored, "test-ignored") };
+            (old, recent, ignored) = (lines[0].Id, lines[1].Id, lines[2].Id);
+            db.AddRange(account, import);
+            db.AddRange(lines);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = Db())
+        {
+            Assert.Equal(2, await Lifecycle(db).ClearUnmatchedBankLinesAsync());
+            Assert.Equal(0, await Lifecycle(db).ClearUnmatchedBankLinesAsync());
+        }
+
+        await using var check = Db();
+        foreach (var id in new[] { old, ignored })
+        {
+            var line = await check.BankTransactions.SingleAsync(item => item.Id == id);
+            Assert.Equal((null, RetentionRules.RedactedText, null), (line.Sender, line.Description, line.Note));
+            // The bookkeeping facts and the duplicate check remain.
+            Assert.Equal(150m, line.Amount);
+            Assert.StartsWith("test-", line.Fingerprint);
+        }
+        var kept = await check.BankTransactions.SingleAsync(item => item.Id == recent);
+        Assert.Equal(("Deneme Gönderen", "TEST ilgisiz havale"), (kept.Sender, kept.Description));
+    }
 }

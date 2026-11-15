@@ -24,6 +24,7 @@ public sealed class BillingErasureConsumersTests
             return Task.FromResult(Erased.Count == 1 ? 4 : 0);
         }
         public Task<int> RedactExpiredAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<int> ClearUnmatchedBankLinesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private static async Task<(ServiceProvider Provider, ITestHarness Harness, Lifecycle Lifecycle)> StartAsync()

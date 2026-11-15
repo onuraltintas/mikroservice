@@ -6,8 +6,9 @@
 --            from the person; legal basis m.5/2(c), (ç) and, for a payer who is not the subscriber, (f); the sender name and
 --            description of a movement matched to an order are cleared with the payment records after the 10 years.
 --   privacy  the same statement sentence, short.
--- Everything else stays word for word. Movements that match no order are not covered by the retention sentence (see the
--- progress note: they have no clearing rule yet).
+--            a movement tied to no order loses its sender name and description one year after the movement (user decision
+--            15.11.2026; RetentionRules.UnmatchedBankLineYears).
+-- Everything else stays word for word.
 -- Run AFTER publish-legal-fixes-20261114.sql, on the identity database:
 --   psql -v ON_ERROR_STOP=1 -v publish_day='<gün Ay yıl>' -f publish-billing-legal-20261115.sql
 -- Safe to run twice. A page that differs from the 14.11.2026 text (edited on the server) stops the script; nothing changes.
@@ -45,7 +46,7 @@ Hesabı ve hizmeti sunmak, aboneliği ve ödemeyi yürütmek, öğretmen, kurum 
 
 Veriler gerekli kapsamda bağlandığınız öğretmen, kurum ve veli kullanıcıları, barındırma/e-posta/güvenlik/kimlik doğrulama tedarikçileri ve kanunen yetkili mercilerle paylaşılabilir. Hostinger VPS ve aynı sunucudaki yedekler işletmeci beyanıyla Litvanya'dadır; Hostinger SMTP ve Google giriş/reCAPTCHA kullanılır. Koçluk tanıtım, giriş, kayıt ve yasal metin sayfalarında, çerez bandında "Kabul et" seçilirse ziyaret ölçümü için Google Analytics kullanılır. Bu hizmetler nedeniyle veriler yurt dışında işlenir.
 
-Veriler amaç ve yasal gereklilikle sınırlı olarak saklanır. Abonelik iptali hesap silme değildir. Hesap silindiğinde abonelik, ödeme bildirimi, onaylanan sözleşme ve fatura kayıtları 10 yıl daha saklanır; süre dolunca abonelik ve ödeme kayıtlarındaki ad, e-posta ve notlar silinir, tutar, tarih ve ödeme referansı muhasebe kaydı olarak kalır; siparişle eşleşen banka hareketindeki gönderen adı ve açıklama da aynı sürenin sonunda silinir. Hesap silme talebi ve zorunlu mali/uyuşmazlık kayıtları ayrı değerlendirilir; otomatik sınırsız saklama veya bütün kayıtların anında silinmesi taahhüt edilmez.
+Veriler amaç ve yasal gereklilikle sınırlı olarak saklanır. Abonelik iptali hesap silme değildir. Hesap silindiğinde abonelik, ödeme bildirimi, onaylanan sözleşme ve fatura kayıtları 10 yıl daha saklanır; süre dolunca abonelik ve ödeme kayıtlarındaki ad, e-posta ve notlar silinir, tutar, tarih ve ödeme referansı muhasebe kaydı olarak kalır; siparişle eşleşen banka hareketindeki gönderen adı ve açıklama da aynı sürenin sonunda silinir. Hiçbir siparişle eşleşmeyen banka hareketlerindeki gönderen adı ve açıklama, hareket tarihinden 1 yıl sonra silinir. Hesap silme talebi ve zorunlu mali/uyuşmazlık kayıtları ayrı değerlendirilir; otomatik sınırsız saklama veya bütün kayıtların anında silinmesi taahhüt edilmez.
 
 KVKK m.11 kapsamında işleme olup olmadığını öğrenme, bilgi isteme, amacı ve amaca uygunluğu öğrenme, yurt içi/yurt dışı alıcıları öğrenme, düzeltme, şartları oluştuğunda silme/yok etme ve alıcılara bildirme, yalnız otomatik analizle aleyhe sonuçlara itiraz ve hukuka aykırı işleme nedeniyle zararın giderilmesini isteme hakları saklıdır. Şirket adresine yazılı veya Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ'deki geçerli yöntemlerle başvuru yapılabilir. Önceden şirkete bildirilmiş ve sistemde kayıtlı e-posta adresinden info@onalotomasyon.com adresine başvuru yapılabilir. Gerekli kimlik teyidi ölçülü yürütülür. Başvuru en kısa sürede, en geç 30 gün içinde sonuçlandırılır; ücret yalnız mevzuatın izin verdiği durumlarda uygulanır.$legal$, '__YAYIN_GÜNÜ__', :'publish_day'),'58104e0a9b47f720abbfe2fb80199684');
 
