@@ -119,6 +119,16 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                 credits.Add((groups[i].Key,placement.Date,minutes));}
         }
         var work=curriculum.Work;
+        if(request.LeaveUnfinished&&active is not null)
+        {
+            // Untouched tasks of the active plan that were due before this plan starts: their topics are not planned this time.
+            var carried=protectedTasks.Select(x=>x.Id).ToHashSet();
+            var missed=await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&!x.IsCompleted&&x.PlannedDate<request.StartDate)
+                .Select(x=>x.Id).ToArrayAsync(ct);
+            var missedIds=missed.Where(x=>!carried.Contains(x)).ToArray();
+            var left=(await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(missedIds,x.TaskId)).Select(x=>x.OutcomeId).Distinct().ToArrayAsync(ct)).ToHashSet();
+            if(left.Count>0)work=work.Select(lesson=>lesson with {Outcomes=lesson.Outcomes.Where(x=>!left.Contains(x.OutcomeId)).ToArray()}).ToList();
+        }
         var blocked=placements.Select(x=>new WeeklyBlockedTime(x.Date,x.Start,x.Minutes))
             .Concat(completed.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes))).ToArray();
         var rules=v2?WeeklyPlanEngine.RulesFor(await CoachingStudyPlanPreferencesService.SpacedDaysAsync(db,student,ct)):null;
@@ -154,10 +164,11 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             .Where(x=>choices.ContainsKey(x)&&!lessonIds.Contains(x)).Select(x=>new WeeklyUnscheduledLesson(x,choices[x].Name))
             .OrderBy(x=>x.LessonName,StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"),false)).ThenBy(x=>x.LessonId).ToArray();
         // Roadmap O7: with PrioritizeWhenShort a plan that does not fit may be saved; the left-out topics are listed.
-        var fits=schedule.Lessons.All(x=>x.RemainingMinutes==0)||v2&&request.PrioritizeWhenShort;
+        // A partial plan covers only part of the way to the exam: what does not fit is planned later, not left out.
+        var fits=schedule.Lessons.All(x=>x.RemainingMinutes==0)||v2&&request.PrioritizeWhenShort||request.Partial;
         var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&fits&&schedule.Tasks.Count+pending.Count<=10000;
         return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,placements.Select(x=>new WeeklyProtectedTask(x.Date,x.Start,x.Source.Title,x.Minutes)).ToArray(),leftOut,unscheduled),
-            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks,pinnedLinks,placements);
+            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId,request.Partial),protectedTasks,pinnedLinks,placements);
     }
 
     /// <summary>

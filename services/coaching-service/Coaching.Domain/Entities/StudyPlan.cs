@@ -362,7 +362,9 @@ public sealed class StudyPlanTask : AggregateRoot
 }
 
 public sealed record WeeklyPlanSource(int DraftVersion,int? LearningContextVersion,DateOnly StartDate,DateOnly EndDate,bool ReuseFreedSlots,
-    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion,string TimeZoneId=CoachingTime.ZoneId);
+    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion,string TimeZoneId=CoachingTime.ZoneId,
+    // User decision 15.11.2026: the plan covers only part of the way to the exam; more is added week by week.
+    bool Partial=false);
 public sealed record AutomaticOutcomeEvidence(Guid[] OutcomeIds,string Fingerprint);
 
 public sealed record StudyRealizationChange(DateTime At, Guid ActorUserId, string Action,

@@ -28,7 +28,7 @@ public static class NotificationCategories
         new("Connections", "Davet ve öğretmen bağlantıları", true, ["InvitationAccepted", "TeacherLinkEnded"]),
         new("Exams", "Deneme ve sınav sonuçları", false, ["ExamResultAdded", "ExamResultUpdated", "ExamUpdated"]),
         new("Goals", "Akademik hedefler", false, ["GoalCreated", "GoalUpdated"]),
-        new("StudyPlan", "Çalışma planı hatırlatmaları", false, ["StudyPlanReminder", "StudyPlanOverdueReminder"]),
+        new("StudyPlan", "Çalışma planı hatırlatmaları", false, ["StudyPlanReminder", "StudyPlanOverdueReminder", "StudyPlanEndingReminder"]),
         new("ParentSummary", "Haftalık veli özeti", true, ["ParentWeeklySummary"], OwnEmail: true, TextTypes: ["ParentWeeklySummary"]),
         new("Subscription", "Abonelik bitiş hatırlatmaları (e-posta her zaman gönderilir)", true, ["SubscriptionExpiring", "SubscriptionExpired"],
             OwnEmail: true, EmailEditable: false, TextTypes: ["SubscriptionExpiring", "SubscriptionExpired"]),

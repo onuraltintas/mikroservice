@@ -19,10 +19,12 @@ class Harness extends CoachingStaffStudyComponent {}
 
 describe('CoachingStaffStudyComponent planning permission', () => {
   const state = (allowedByTeacher: boolean): PlanningPermission => ({ hasTeacher: true, allowedByTeacher, studentMayPlan: allowedByTeacher });
-  function mount(permissions: object, readOnly = false) {
+  async function mount(permissions: object, readOnly = false) {
     TestBed.configureTestingModule({ imports: [Harness], providers: [
       { provide: CoachingPlanningPermissionService, useValue: permissions },
       { provide: CoachingStudyPlanningService, useValue: { getAvailability: () => of(null) } }] });
+    // The harness inherits from a component whose children have external templates: compile before creating it.
+    await TestBed.compileComponents();
     const fixture = TestBed.createComponent(Harness);
     fixture.componentInstance.studentId = 'student-1'; fixture.componentInstance.readOnly = readOnly;
     fixture.componentInstance.ngOnChanges(); fixture.detectChanges();
@@ -30,25 +32,25 @@ describe('CoachingStaffStudyComponent planning permission', () => {
   }
   const box = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.querySelector('input[type=checkbox]') as HTMLInputElement;
 
-  it('starts closed and saves the teacher\'s choice', () => {
+  it('starts closed and saves the teacher\'s choice', async () => {
     const set = vi.fn(() => of(state(true)));
-    const fixture = mount({ forStudent: () => of(state(false)), set });
+    const fixture = await mount({ forStudent: () => of(state(false)), set });
     expect(box(fixture).checked).toBe(false);
     box(fixture).checked = true; box(fixture).dispatchEvent(new Event('change')); fixture.detectChanges();
     expect(set).toHaveBeenCalledWith('student-1', true);
     expect(fixture.componentInstance.planning()?.allowedByTeacher).toBe(true);
   });
 
-  it('is read-only for an institution viewer', () => {
+  it('is read-only for an institution viewer', async () => {
     const set = vi.fn();
-    const fixture = mount({ forStudent: () => of(state(false)), set }, true);
+    const fixture = await mount({ forStudent: () => of(state(false)), set }, true);
     expect(box(fixture).disabled).toBe(true);
     fixture.componentInstance.setPlanning(true);
     expect(set).not.toHaveBeenCalled();
   });
 
-  it('keeps the saved state and says so when saving fails', () => {
-    const fixture = mount({ forStudent: () => of(state(false)), set: () => throwError(() => new Error('x')) });
+  it('keeps the saved state and says so when saving fails', async () => {
+    const fixture = await mount({ forStudent: () => of(state(false)), set: () => throwError(() => new Error('x')) });
     fixture.componentInstance.setPlanning(true); fixture.detectChanges();
     expect(fixture.componentInstance.planning()?.allowedByTeacher).toBe(false);
     expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent).toContain('Ayar kaydedilemedi');

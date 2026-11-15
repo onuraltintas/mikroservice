@@ -6,7 +6,18 @@ import {environment} from '../../../environments/environment';
 /** Roadmap O7: engineVersion 2 applies the rule-based plan engine; prioritizeWhenShort saves a plan that does not fit, important topics first. */
 export interface WeeklyOutcomeRequest {startDate:string;endDate:string;expectedWeeklyDraftVersion:number;reuseFreedSlots:boolean;engineVersion?:number;prioritizeWhenShort?:boolean;
   /** Paket H4 (K3): up to 50 topics of the weekly lessons that go first within their lesson. */
-  focusTopicIds?:string[]}
+  focusTopicIds?:string[];
+  /** User decision 15.11.2026: the plan covers only part of the way to the exam (this week, or up to a chosen date). */
+  partial?:boolean;
+  /** The topics of the active plan's untouched tasks dated before startDate are not planned this time. */
+  leaveUnfinished?:boolean}
+/** How much of the way to the exam a new plan covers. */
+export type PlanSpan='exam'|'week'|'custom';
+/** "This week": through the coming Sunday; started on a Saturday or Sunday, through the Sunday after. */
+export function weekSpanEnd(startDate:string){
+  const [y,m,d]=startDate.split('-').map(Number);const date=new Date(Date.UTC(y,m-1,d));const day=date.getUTCDay();
+  date.setUTCDate(date.getUTCDate()+(day===0?7:day===6?8:7-day));return date.toISOString().slice(0,10);
+}
 export type WeeklyPlanKind='Learn'|'Review'|'Refresh'|'Spaced';
 export const weeklyPlanKindLabels:Record<string,string>={Learn:'Yeni konu',Review:'Tekrar',Refresh:'Kısa tekrar',Spaced:'Aralıklı tekrar'};
 export function weeklyPlanKindLabel(kind?:string|null){return (kind&&weeklyPlanKindLabels[kind])||'Çalışma';}

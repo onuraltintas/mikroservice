@@ -22,10 +22,11 @@ const WEEKDAYS=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
 const isoDay=(date:Date)=>date.toISOString().slice(0,10);
 const shiftDays=(iso:string,days:number)=>{const d=new Date(`${iso}T12:00:00Z`);d.setUTCDate(d.getUTCDate()+days);return isoDay(d);};
 
+import { PlanExtendComponent } from './plan-extend.component';
 @Component({
   selector: 'app-student-study-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule, StudyPlanCalendarComponent, PlanTaskRowComponent, CsBottomSheetComponent, CsSegmentedTabsComponent],
+  imports: [CommonModule, FormsModule, StudyPlanCalendarComponent, PlanTaskRowComponent, CsBottomSheetComponent, CsSegmentedTabsComponent, PlanExtendComponent],
   templateUrl: './student-study-plans.component.html',
   styleUrl: './student-study-plans.component.scss'
 })

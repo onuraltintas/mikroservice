@@ -160,6 +160,7 @@
           <button type="button" class="secondary" (click)="open(plan.id)" [disabled]="busy()">Planı yenile</button></div>
         @if(plan.weeklySource;as source){
           <p class="muted">Haftalık takvimden üretilen plan · {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saat ve kazanım bağlantıları korunur; yeni bir dağıtım için taslağı arşivleyip yeniden önizle.</p>
+          <app-plan-extend [source]="source" [active]="plan.status==='Active'" [readOnly]="readOnly" [staffStudentId]="staffStudentId ?? null" (extended)="refreshAfterExternalChange()" />
           @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>Planını yayımla</h3><p>Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">Planımı kontrol ettim, yayımlamayı onaylıyorum.</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; planın takvimi korunur. Kayıtlı gerçekleşmeler gerekçeyle düzeltilebilir.</p>
@@ -204,6 +205,7 @@
     </div>
         @if(plan.weeklySource;as source){
           <p class="muted">Haftalık takvimden üretilen plan · {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saat ve kazanım bağlantıları korunur; yeni bir dağıtım için taslağı arşivleyip yeniden önizle.</p>
+          <app-plan-extend [source]="source" [active]="plan.status==='Active'" [readOnly]="readOnly" [staffStudentId]="staffStudentId ?? null" (extended)="refreshAfterExternalChange()" />
           @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>Planını yayımla</h3><p>Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">Planımı kontrol ettim, yayımlamayı onaylıyorum.</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; planın takvimi korunur. Kayıtlı gerçekleşmeler gerekçeyle düzeltilebilir.</p>

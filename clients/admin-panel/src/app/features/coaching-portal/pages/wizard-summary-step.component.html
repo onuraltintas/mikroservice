@@ -86,7 +86,18 @@
     }
   }
 
-  @if (previewing()) { <p role="status" class="muted">Yıllık plan hesaplanıyor…</p> }
+  @if (preview() || previewing() || previewError()) {
+    <fieldset class="plan-span" data-testid="plan-span" [disabled]="busy()">
+      <legend>Plan ne kadarını kapsasın?</legend>
+      <label><input type="radio" name="plan-span" [checked]="span() === 'exam'" (change)="setSpan('exam')"> Sınava kadar</label>
+      <label><input type="radio" name="plan-span" [checked]="span() === 'week'" (change)="setSpan('week')"> Yalnız bu hafta@if (weekEnd(); as end) { ({{ dayMonth(end) }} tarihine kadar) }</label>
+      <label><input type="radio" name="plan-span" [checked]="span() === 'custom'" (change)="setSpan('custom')"> Tarih seç
+        @if (span() === 'custom') {
+          <input type="date" aria-label="Planın biteceği tarih" [value]="customEnd()" [min]="options()?.startDate ?? null" [max]="options()?.endDate ?? null" (change)="setCustomEnd($any($event.target).value)">
+        }</label>
+    </fieldset>
+  }
+  @if (previewing()) { <p role="status" class="muted">{{ span() === 'exam' ? 'Yıllık plan hesaplanıyor…' : 'Plan hesaplanıyor…' }}</p> }
   @if (previewError()) {
     <p class="notice error" role="alert" data-testid="preview-error">{{ previewError() }}
       @if (notChosen().length) {
@@ -103,10 +114,11 @@
         @for (lesson of lessons(); track lesson.lessonId) {
           <li [class.late]="late(lesson)">
             <strong>{{ lesson.lessonName }}</strong>
-            <span>Bitiş: @if (lesson.finishDate && lesson.remainingMinutes === 0) { {{ dayMonth(lesson.finishDate) }} } @else { <strong>yetişmiyor</strong> }</span>
+            @if (partial()) { <span>Bu dönemde {{ hours(lesson.scheduledMinutes) }} saat</span> }
+            @else { <span>Bitiş: @if (lesson.finishDate && lesson.remainingMinutes === 0) { {{ dayMonth(lesson.finishDate) }} } @else { <strong>yetişmiyor</strong> }</span> }
             <span>Haftada {{ hours(lesson.weeklyMinutes) }} saat</span>
             @if (spacedCount(lesson.lessonId)) { <span>{{ spacedCount(lesson.lessonId) }} aralıklı tekrar</span> }
-            @if (leftOut(lesson.lessonId); as topics) {
+            @if (!partial() && leftOut(lesson.lessonId); as topics) {
               @if (topics.length) { <span class="left-out" data-testid="left-out">Dışarıda kalan konular: {{ topics.length }} ({{ leftOutNames(lesson.lessonId) }})</span> }
             }
             @if (late(lesson)) {
@@ -124,6 +136,10 @@
           </li>
         }
       </ul>
+      @if (partial()) {
+        <p class="notice" role="status" data-testid="partial-note">Bu plan yalnız {{ dayMonth(p.request.endDate) }} tarihine kadar olan çalışmaları içerir; kalan konular sonraki haftalara kalır.
+          Devamını {{ staffStudentId ? 'öğrencinin plan ekranındaki' : 'Planım\'daki' }} “Gelecek haftayı ekle” ile eklersin; plan bitmeden bir hatırlatma gelir.</p>
+      }
       <p class="muted" data-testid="review-note">{{ reviewNote() }}</p>
       @if (anyLate() && reviewWeeklyMinutes() >= 15) {
         <p class="notice" data-testid="review-cost">Aralıklı tekrarlar haftada yaklaşık {{ hours(reviewWeeklyMinutes()) }} saat tutuyor; azaltırsan bu süre konulara kalır.
