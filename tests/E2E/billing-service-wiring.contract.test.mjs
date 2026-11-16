@@ -327,3 +327,18 @@ test('the erasure joins the transaction its consumer already runs in (rehearsal 
   assert.match(lifecycle, /db\.Database\.CurrentTransaction is null \? await db\.Database\.BeginTransactionAsync\(cancellationToken\) : null;/);
   assert.match(lifecycle, /if \(transaction is not null\) await transaction\.CommitAsync\(cancellationToken\);\s*\n\s*return changed;/);
 });
+
+test('the Hızlı Okuma edge forwards the billing user API and keeps its administration closed', () => {
+  // Found at the release of 16.11.2026: the rehearsal bypassed the edges, and "Aboneliğim" on
+  // masterhizliokuma.com answered 404 because this allowlist had no billing route.
+  const edge = readFileSync(
+    new URL('../../infrastructure/caddy/Caddyfile.speed-reading.litespeed', import.meta.url),
+    'utf8',
+  );
+  const admin = edge.indexOf('handle @billingAdmin');
+  const api = edge.indexOf('handle @billingApi');
+  assert.ok(admin > 0 && api > admin, 'the admin block must come before the forwarding block');
+  assert.match(edge, /@billingAdmin path \/api\/billing\/v1\/admin \/api\/billing\/v1\/admin\/\*\s+handle @billingAdmin \{\s+respond "Not Found" 404/);
+  assert.match(edge, /@billingApi path \/api\/billing\/v1\/\*\s+handle @billingApi \{\s+reverse_proxy api-gateway:8080/);
+  assert.ok(api < edge.indexOf('@blockedApi path /api/*'));
+});
