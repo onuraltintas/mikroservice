@@ -66,3 +66,8 @@ test('#2: the sign-in page loads the security check early and prepares the token
   assert.match(page, /name="password" \(focus\)="prepareSignIn\(\)" \(input\)="prepareSignIn\(\)"/);
   assert.match(read('clients/admin-panel/src/app/features/auth/login/login.component.ts'), /this\.recaptcha\.warmUp\(\);/);
 });
+
+test('#50: Hızlı Okuma hands every answer to the application inside the zone, first in the chain', () => {
+  assert.match(read('clients/speed-reading/src/app/app.config.ts'), /withInterceptors\(\[zoneReentryInterceptor, apiResponseInterceptor,/);
+  assert.match(read('clients/speed-reading/src/app/core/interceptors/zone-reentry.interceptor.ts'), /zone\.run\(\(\) => observer\.next\(event\)\)/);
+});
