@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { exerciseTypeLabel } from '../../../shared/utils/exercise-type-label';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExerciseProgramService, DailyExercise, StudentProgressSummary, ProgramDayAdvanceState } from '../../../core/services/exercise-program.service';
 import { BaseComponent } from '../../../core/components/base.component';
@@ -21,6 +22,7 @@ import { canUseStaffTraining } from '../../../core/guards/staff-training.guard';
   styleUrls: ['./daily-exercises.component.scss']
 })
 export class DailyExercisesComponent extends BaseComponent implements OnInit {
+  readonly typeLabel = exerciseTypeLabel;
   private readonly exerciseService = inject(ExerciseProgramService);
   private readonly exerciseTypeService = inject(ExerciseTypeService);
   // toaster inherited from BaseComponent

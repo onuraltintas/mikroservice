@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, effect, untracked } from '@angular/core';
+import { exerciseTitleLabel, exerciseTypeLabel } from '../../../shared/utils/exercise-type-label';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -242,9 +243,11 @@ export class AssessmentComponent implements OnInit, OnDestroy {
       case 'VisualExpansion': return 'Görsel Genişleme';
       case 'Fixation': return 'Göz Sabitleme';
       case 'Focus': return 'Odaklanma';
-      default: return typeName;
+      default: return exerciseTypeLabel(typeName);
     }
   }
+
+  readonly displayTitle = exerciseTitleLabel;
 
   getPhaseLabel(): string {
     switch (this.assessmentPhase()) {
