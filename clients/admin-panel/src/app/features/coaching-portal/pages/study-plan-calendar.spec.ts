@@ -56,6 +56,7 @@ describe('dated study plan calendar',()=>{
     expect(taskSourceBadge({...base,planKind:'Learn',topicId:'t',predecessorTaskId:'p'})).toBe('Yarım kalanın devamı');
     expect(taskSourceBadge({...base,topicId:'t'})).toBeNull();expect(taskSourceBadge({...base,sourceName:'DenemeTekrar:x'})).toBeNull();
     expect(taskSourceBadge({...base,weeklyLessonId:null})).toBeNull();expect(taskSourceBadge({...base,planKind:'Other'})).toBeNull();
-    expect(taskSourceBadge({...base,predecessorTaskId:'p'})).toBeNull();
+    // Live test 16.11.2026 (#35): carried work is named as a continuation, whatever it was before.
+    expect(taskSourceBadge({...base,predecessorTaskId:'p'})).toBe('Yarım kalanın devamı');
   });
 });
