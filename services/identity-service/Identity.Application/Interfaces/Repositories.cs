@@ -40,6 +40,10 @@ public interface IUserRepository
     void Delete(User user);
       Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null);
       Task<UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null);
+
+    /// <summary>Erased accounts, newest first. The ordinary list and the summary leave them out.</summary>
+    Task<PagedList<UserProfileDto>> GetErasedAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     Task<bool> RevokeRefreshTokenAsync(
         string refreshToken,

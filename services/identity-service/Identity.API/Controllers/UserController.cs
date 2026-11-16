@@ -96,7 +96,8 @@ public class UserController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] string? role = null,
         [FromQuery] bool? isActive = null,
-        [FromQuery] string? product = null)
+        [FromQuery] string? product = null,
+        [FromQuery] bool erased = false)
     {
         PlatformProduct? requestedProduct = null;
         if (!string.IsNullOrWhiteSpace(product))
@@ -123,7 +124,8 @@ public class UserController : ControllerBase
             search,
             role,
             isActive,
-            requestedProduct ?? claimedProduct);
+            requestedProduct ?? claimedProduct,
+            erased);
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)

@@ -207,6 +207,35 @@ public sealed class ProductAccessDomainTests
     }
 
     [Fact]
+    public async Task An_erased_account_leaves_the_user_list_and_the_counts_and_is_listed_separately()
+    {
+        var options = new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var kept = CreateUserWithAccess("kept@example.test", PlatformProduct.Coaching);
+        var erased = CreateUserWithAccess("gone@example.test", PlatformProduct.Coaching);
+        erased.AnonymizeForErasure();
+
+        await using var context = new IdentityDbContext(options);
+        context.Users.AddRange(kept, erased);
+        await context.SaveChangesAsync();
+        var repository = new UserRepository(context);
+
+        var users = await repository.GetAllAsync(1, 10, null, null, null, null, CancellationToken.None);
+        var inactive = await repository.GetAllAsync(1, 10, null, null, false, null, CancellationToken.None);
+        var summary = await repository.GetSummaryAsync(null, CancellationToken.None);
+        var erasedAccounts = await repository.GetErasedAsync(1, 10, CancellationToken.None);
+
+        Assert.Equal(kept.Id, Assert.Single(users.Items).UserId);
+        Assert.Empty(inactive.Items);
+        Assert.Equal(1, summary.TotalUsers);
+        var listed = Assert.Single(erasedAccounts.Items);
+        Assert.Equal(erased.Id, listed.UserId);
+        Assert.EndsWith(User.ErasedEmailDomain, listed.Email);
+        Assert.Equal(1, erasedAccounts.TotalCount);
+    }
+
+    [Fact]
     public async Task UserDirectory_ShouldReturnRoleAssignmentsWithTheirProductScope()
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()

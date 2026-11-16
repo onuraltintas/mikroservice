@@ -441,9 +441,12 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>The address domain every erased account carries; such an account is not a user any more.</summary>
+    public const string ErasedEmailDomain = "@deleted.invalid";
+
     public void AnonymizeForErasure()
     {
-        Email = $"erased-{Id:N}@deleted.invalid";
+        Email = $"erased-{Id:N}{ErasedEmailDomain}";
         FirstName = string.Empty;
         LastName = string.Empty;
         PhoneNumber = null;

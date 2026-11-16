@@ -521,9 +521,10 @@ public class UserRepository : IUserRepository
             throw new ArgumentOutOfRangeException(nameof(pageSize));
         }
 
+        // 16.11.2026: an erased account keeps its row (requests, audit and payment records point at it) but is not a user.
         var query = _context.Users
             .AsNoTracking()
-            .AsQueryable();
+            .Where(user => !user.Email.EndsWith(User.ErasedEmailDomain));
 
         if (product is { } scopedProduct)
         {
@@ -623,12 +624,40 @@ public class UserRepository : IUserRepository
         return new PagedList<UserProfileDto>(dtos, totalCount, page, pageSize);
     }
 
+    public async Task<PagedList<UserProfileDto>> GetErasedAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        if (page is < 1 or > GetAllUsersQuery.MaxPageNumber) throw new ArgumentOutOfRangeException(nameof(page));
+        if (pageSize is < 1 or > GetAllUsersQuery.MaxPageSize) throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+        var query = _context.Users.AsNoTracking().Where(user => user.Email.EndsWith(User.ErasedEmailDomain));
+        var totalCount = await query.CountAsync(cancellationToken);
+        var erased = await query
+            .OrderByDescending(user => user.UpdatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(user => new { user.Id, user.Email, user.CreatedAt })
+            .ToListAsync(cancellationToken);
+
+        return new PagedList<UserProfileDto>(
+            erased.Select(user => new UserProfileDto
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Role = "-",
+                FullName = "-",
+                IsActive = false,
+                CreatedAt = user.CreatedAt
+            }).ToList(),
+            totalCount, page, pageSize);
+    }
+
     public async Task<UserSummaryDto> GetSummaryAsync(
         Guid? institutionId,
         CancellationToken cancellationToken,
         PlatformProduct? product = null)
     {
-        var query = _context.Users.AsNoTracking().AsQueryable();
+        var query = _context.Users.AsNoTracking()
+            .Where(user => !user.Email.EndsWith(User.ErasedEmailDomain));
         if (product is { } scopedProduct)
         {
             query = query.Where(user => user.ProductAccesses.Any(access =>
