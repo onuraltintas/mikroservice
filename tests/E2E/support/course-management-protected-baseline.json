@@ -1156,7 +1156,7 @@
     "services/coaching-service/Coaching.Infrastructure/Catalogs/OutcomeImportPackage.cs": "0dd265dd78a997a17aa32972561dc50b7f58c4c5081183841053f2c3000457b2",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/TargetCatalogImporter.cs": "285c80968e724d58a1405464d06885736a87a16b4945353d40b9e27e8c21ebca",
     "services/coaching-service/Coaching.Infrastructure/Catalogs/TurkishSearch.cs": "aa60611f04f7cafe7fa751f25ce67f2a5c0500da6cb150848f0ed33aae094e2c",
-    "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "92d80bb685e0dd190804d6bd396ce6b37298e84695f9c681003bd15add2df756",
+    "services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj": "85f38a2eac9f92e231bee3cc6f9bd32e9efc3d696906ab045159b31e5693398f",
     "services/coaching-service/Coaching.Infrastructure/CoachingPublicUrl.cs": "45e7df3bc9ab04ef03613d5ede53e6859b4ad8724204b940a5d37430dcf20d6b",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AcademicGoalConfiguration.cs": "2e557f74b4774b2c6e1e009a252d4c02a9e074bc9b085d7ce2cf04e4895577df",
     "services/coaching-service/Coaching.Infrastructure/Configurations/AssignmentConfiguration.cs": "a7f5eae869cea39c29d8a9cd797be48f21160f1becac14a3d3d6c9ef18bdd395",
