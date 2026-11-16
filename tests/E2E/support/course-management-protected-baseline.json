@@ -857,7 +857,7 @@
     "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionExamsController.cs": "036d1af42fd1d7084346d4ccdad7cd32e7512a1c6244870750d1d2084f3d1dd1",
     "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionReportsController.cs": "f578a43f2210811de77b37f7edc03bafe97eac285eb4323e2dff0db48d6cc4f3",
     "services/coaching-service/Coaching.API/Controllers/CoachingInstitutionSubscriptionsController.cs": "0b9a12985ce04a9f4ede035ab752f5e7786a314c26b94c7b0d488661a8ba0907",
-    "services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs": "437157edd628d38a0653ec538a6f3841fbf59ae9332d7d9e0857ad1bb4cbd0e3",
+    "services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs": "5165f9f3d5f6aa9d3fd6704278d3119a50b5b32735a0ff910d529bf70b304782",
     "services/coaching-service/Coaching.API/Controllers/CoachingMembershipsController.cs": "b8083f48e4cb006122c7e9ea512ffad7ef143b54db336dfe50efd9eea9aa632e",
     "services/coaching-service/Coaching.API/Controllers/CoachingMessagesController.cs": "9fb73383520e358b80cf71058e31cfabb0a922530298103298288b94b53b8a82",
     "services/coaching-service/Coaching.API/Controllers/CoachingMotivationController.cs": "69b0510156552902878c8b7fc71ac926774a62b1b169f7711367a4a45676d803",

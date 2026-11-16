@@ -38,3 +38,13 @@ test('#16: a token rotated a moment ago is refused without ending the session; t
   assert.match(panel, /locks\.request\('eduivme-session-refresh', work\) as Promise<T>/);
   for (const source of [panel, read('clients/speed-reading/src/app/core/services/auth.service.ts')]) assert.match(source, /Auth\.InvalidToken/);
 });
+
+test('#41/#44: an institution invitation says what it ends before the student accepts', () => {
+  const controller = read('services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs');
+  assert.match(controller, /ends = x\.Type == "StudentToInstitution" \? ends : null/);
+  assert.match(controller, /x\.InstitutionId == null && x\.IsActive\)\.Select\(x => x\.TeacherUserId\)/);
+  const profile = read('clients/admin-panel/shared/coaching-profile.component.ts');
+  assert.match(profile, /invite\.ends \? 'Kuruma katıl' : 'Kabul et'/);
+  assert.match(profile, /invite\.ends \? 'Kendi öğretmenimle kal' : 'Reddet'/);
+  assert.match(read('clients/admin-panel/src/app/features/coaching-portal/onboarding/student-onboarding.component.html'), /data-testid="invitation-ends"/);
+});

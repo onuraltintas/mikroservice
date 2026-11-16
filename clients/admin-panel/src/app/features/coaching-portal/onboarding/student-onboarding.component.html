@@ -98,7 +98,8 @@
                   @for (invitation of list; track invitation.id) {
                     <div class="ob-card">
                       <p><strong>{{ invitation.inviterName || invitation.inviterEmail || (invitation.type === 'StudentToInstitution' ? 'Bir kurum' : 'Bir öğretmen') }}</strong>@if (invitation.inviterName && invitation.inviterEmail) { <small> ({{ invitation.inviterEmail }})</small> } seni {{ invitation.type === 'StudentToInstitution' ? 'kurumuna' : 'öğrencisi olmaya' }} davet etti.@if (invitation.message) { <br><small>{{ invitation.message }}</small> }</p>
-                      <button type="button" class="ob-primary" [disabled]="busy()" (click)="acceptInvitation(invitation)">Kabul et</button>
+                      @if (invitation.ends; as ends) { <p class="ob-note" role="note" data-testid="invitation-ends">{{ endsText(ends) }}</p> }
+                      <button type="button" class="ob-primary" [disabled]="busy()" (click)="acceptInvitation(invitation)">{{ invitation.ends ? 'Kuruma katıl' : 'Kabul et' }}</button>
                     </div>
                   } @empty { <p class="ob-note">Şu an bekleyen davetin yok. Öğretmenin seni e-posta adresinle davet edince burada görünür; sonra Profil ve ayarlar'dan da kabul edebilirsin.</p> }
                   <button type="button" class="ob-chip" [disabled]="busy()" (click)="passInvite(question, list.length)">{{ acceptedNow().length ? 'Devam' : list.length ? 'Sonra bakarım' : 'Davetim yok, devam' }}</button>

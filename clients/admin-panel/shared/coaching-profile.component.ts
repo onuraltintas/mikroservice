@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../src/app/features/coaching-portal/coaching-feedback';
+import { InvitationEnds, invitationEndsText } from './invitation-ends';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, Input, OnInit, computed, inject, signal, output } from '@angular/core';
@@ -30,7 +31,7 @@ interface TeacherProfile { version: number; isActive: boolean; title?: string | 
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
   /** Paket D review (L2): the student's exam asks the YKS diploma grade (missing on an older API: asked). */
   examAsksDiploma?: boolean }
-interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; }
+interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; ends?: InvitationEnds | null; }
 /** E4 #23: what saving a new education would remove or leave not fitting (asked from the server before saving). */
 interface EducationImpact { examNoLongerFits: boolean; exam: string | null; diplomaGradeRemoved: number | null; target: string | null }
 type FieldName = 'educationStage' | 'gradeLevel' | 'graduationYear' | 'birthDate' | 'homeDistrict' | 'diplomaGrade' | 'experience';
@@ -183,8 +184,9 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
             <p class="history-notice">{{ invite.type === 'StudentToInstitution' ? 'Kabul edersen bu kurumun yöneticileri ve öğretmenleri' : 'Kabul edersen bu öğretmen' }} önceki öğretmen ve kurumlarındaki çalışma geçmişini (ödevler, denemeler, seanslar, hedefler) görebilir.</p>
           }
           <p>Son tarih: {{ invite.expiresAt | date:'dd.MM.yyyy' }}</p>
-          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'accept')">Kabul et</button>
-          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">Reddet</button>
+          @if (invite.ends; as ends) { <p class="history-notice" role="note" data-testid="invitation-ends">{{ endsText(ends) }}</p> }
+          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'accept')">{{ invite.ends ? 'Kuruma katıl' : 'Kabul et' }}</button>
+          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">{{ invite.ends ? 'Kendi öğretmenimle kal' : 'Reddet' }}</button>
         </article>
       }
     </section> }`,
@@ -517,6 +519,7 @@ export class CoachingProfileComponent implements OnInit {
     this.http.get<{ data: { purposeNotForEducation?: boolean } }>(`${this.base}/study-planning/setup`).pipe(takeUntilDestroyed(this.destroy))
       .subscribe({ next: r => this.gradeNotice.set(!!r.data?.purposeNotForEducation), error: () => this.gradeNotice.set(false) });
   }
+  readonly endsText = invitationEndsText;
   loadInvitations() {
     this.invitationLoading.set(true); this.invitationError.set(null);
     this.http.get<Invitation[]>(`${this.base}/invitations/my-invitations`).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.invitationLoading.set(false)))
