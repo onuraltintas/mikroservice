@@ -126,7 +126,7 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     googleConsentIntro: 'Google hesabın doğrulandı. Hesabını oluşturmak için aşağıdaki metinleri inceleyip onayla.',
     googleConsentBusy: 'Hesabın oluşturuluyor…',
     googleConsentTimeLimit: 'Bu işlemi 5 dakika içinde tamamlaman gerekiyor. Vazgeçersen hesap oluşturulmaz.',
-    legalNote: 'Onayladığın metinlerin hangi sürüm olduğu kaydınla birlikte saklanır.'
+    legalNote: 'Onayladığın metinler kaydınla birlikte saklanır.'
   },
   siz: {
     welcome: 'Hoş Geldiniz 👋',
@@ -176,7 +176,7 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     googleConsentIntro: 'Google hesabınız doğrulandı. Hesabınızı oluşturmak için aşağıdaki metinleri inceleyip onaylayın.',
     googleConsentBusy: 'Hesabınız oluşturuluyor…',
     googleConsentTimeLimit: 'Bu işlem 5 dakika içinde tamamlanmalıdır. Vazgeçerseniz hesap oluşturulmaz.',
-    legalNote: 'Onayladığınız metinlerin hangi sürüm olduğu kaydınızla birlikte saklanır.'
+    legalNote: 'Onayladığınız metinler kaydınızla birlikte saklanır.'
   }
 };
 

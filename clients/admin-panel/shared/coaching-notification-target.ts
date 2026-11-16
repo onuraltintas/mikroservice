@@ -47,6 +47,9 @@ export function coachingNotificationTarget(notification: CoachingNotificationRef
   // V1/V4: parent-link notices (the link id is the reference) open the student's parent link under Profilim.
   if (role === 'student' && typeof notification.type === 'string' && ['ParentLinkRequested','ParentLinkApproved','ParentLinkRevoked'].includes(notification.type))
     return { kind: 'profile', id: validCoachingId(id) ? id : '', label: 'Veli bağlantısını aç' };
+  // Live test 16.11.2026 (#23): an invitation notice opens the place where it is answered (Profilim › Koçluk davetlerim).
+  if (role === 'student' && notification.type === 'Invitation')
+    return { kind: 'profile', id: validCoachingId(id) ? id : '', label: 'Daveti aç' };
   if (!validCoachingId(id)) return null;
   // Roadmap O3: a new message opens its conversation.
   if (notification.type === 'CoachingMessage') return { kind: 'message', id, label: 'Mesajı aç' };
@@ -57,5 +60,17 @@ export function coachingNotificationTarget(notification: CoachingNotificationRef
     case 'StudyPlanReminder': case 'StudyPlanOverdueReminder': case 'StudyPlanEndingReminder': case 'StudyPlanPublished': case 'StudyPlanUpdated': return {kind:'plan', id, label:'Planı aç'};
     case 'AssignmentCreated': case 'AssignmentUpdated': case 'AssignmentGraded': return {kind:'assignment', id, label:'Ödevi aç'};
     default: return null;
+  }
+}
+
+/** The router link of a student's notification target (the Bildirimler page and the bell panel use the same one). */
+export function coachingStudentNotificationLink(target: CoachingNotificationTarget): { path: string; query: Record<string, string | null> | null; fragment?: string } {
+  switch (target.kind) {
+    case 'weekly': return { path: '/coaching-portal/growth/week', query: { week: target.weekStart, decision: target.decisionId } };
+    case 'plan': return { path: '/coaching-portal/plan', query: { plan: target.id } };
+    case 'message': return { path: '/coaching-portal/messages/' + target.id, query: null };
+    case 'profile': return { path: '/coaching-portal/account/settings/profile', query: null,
+      fragment: target.label === 'Daveti aç' ? 'coaching-invitations-title' : undefined };
+    default: return { path: '/coaching-portal/assignments/' + target.id, query: null };
   }
 }

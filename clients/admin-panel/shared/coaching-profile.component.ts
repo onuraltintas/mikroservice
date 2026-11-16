@@ -524,7 +524,12 @@ export class CoachingProfileComponent implements OnInit {
   loadInvitations() {
     this.invitationLoading.set(true); this.invitationError.set(null);
     this.http.get<Invitation[]>(`${this.base}/invitations/my-invitations`).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.invitationLoading.set(false)))
-      .subscribe({ next: rows => this.invitations.set(rows), error: e => this.invitationError.set(this.message(e, 'Davetler yüklenemedi.')) });
+      .subscribe({ next: rows => { this.invitations.set(rows); this.showInvitationsWhenAsked(); }, error: e => this.invitationError.set(this.message(e, 'Davetler yüklenemedi.')) });
+  }
+  /** Live test 16.11.2026 (#23): an invitation notice opens this page at the invitations, which stand at its end. */
+  private showInvitationsWhenAsked() {
+    if (typeof location === 'undefined' || location.hash !== '#coaching-invitations-title') return;
+    setTimeout(() => document.getElementById('coaching-invitations-title')?.scrollIntoView({ block: 'start' }));
   }
   respond(id: string, action: 'accept' | 'reject') {
     if (this.working()) return;

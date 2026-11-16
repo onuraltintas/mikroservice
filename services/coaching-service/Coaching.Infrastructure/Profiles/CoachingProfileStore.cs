@@ -461,7 +461,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                 foreach (var student in session.Attendances.Select(x => x.StudentId)) removedFor[student] = removedFor.GetValueOrDefault(student) + 1;
                 if (events is not null)
                     await events.PublishAsync(new SessionCancelledEvent(session.Id, session.TeacherId, session.InstitutionId,
-                        session.Attendances.Select(x => x.StudentId).ToArray(), session.ScheduledDate), ct);
+                        session.Attendances.Select(x => x.StudentId).ToArray(), session.ScheduledDate) { Reason = SessionCancelReasons.TeacherLinkEnded }, ct);
             }
             // K2: each student hears that the link ended; the institution hears what was closed.
             if (replacementTeacherUserId is null && events is not null)
@@ -538,7 +538,7 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
             if (others.Length == 0) session.Cancel();
             else session.SetParticipants(others, now);
             if (events is not null)
-                await events.PublishAsync(new SessionCancelledEvent(session.Id, teacherUserId, institutionId, [studentUserId], session.ScheduledDate), ct);
+                await events.PublishAsync(new SessionCancelledEvent(session.Id, teacherUserId, institutionId, [studentUserId], session.ScheduledDate) { Reason = SessionCancelReasons.TeacherLinkEnded }, ct);
         }
         var assignments = await db.Assignments.Include(x => x.AssignedStudents).ThenInclude(x => x.SubmissionAttachments)
             .Where(x => x.TeacherId == teacherUserId && x.InstitutionId == institutionId && x.Status == Coaching.Domain.Enums.AssignmentStatus.Active

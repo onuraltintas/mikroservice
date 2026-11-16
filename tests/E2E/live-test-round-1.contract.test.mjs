@@ -71,3 +71,30 @@ test('#50: Hızlı Okuma hands every answer to the application inside the zone, 
   assert.match(read('clients/speed-reading/src/app/app.config.ts'), /withInterceptors\(\[zoneReentryInterceptor, apiResponseInterceptor,/);
   assert.match(read('clients/speed-reading/src/app/core/interceptors/zone-reentry.interceptor.ts'), /zone\.run\(\(\) => observer\.next\(event\)\)/);
 });
+
+test('#1: sign-up and the legal page do not show the text version or date', () => {
+  for (const path of ['clients/admin-panel/src/app/features/auth/registration-legal-consent.component.ts', 'clients/speed-reading/src/app/features/auth/registration-legal-consent.component.ts']) {
+    const source = read(path);
+    assert.doesNotMatch(source, /sürüm \{\{ page\.version \}\}/);
+    assert.match(source, /version: item\.version/, 'the accepted version is still sent with the registration');
+  }
+  for (const path of ['clients/admin-panel/src/app/features/public/legal-page.component.ts', 'clients/speed-reading/src/app/features/legal/platform-legal-page.component.ts'])
+    assert.doesNotMatch(read(path), /Son güncelleme|Sürüm \{\{/);
+  for (const path of ['clients/admin-panel/src/app/features/coaching-cms/components/coaching-newsletter-signup.component.ts',
+    'clients/speed-reading/src/app/shared/components/newsletter-widget/newsletter-widget.component.html',
+    'clients/speed-reading/src/app/features/public/home/sections/newsletter-section/newsletter-section.html'])
+    assert.doesNotMatch(read(path), /onay metni sürüm/);
+});
+
+test('#23: an invitation notice and the bell panel lead to where the notice is answered', () => {
+  const target = read('clients/admin-panel/shared/coaching-notification-target.ts');
+  assert.match(target, /notification\.type === 'Invitation'\)\s*return \{ kind: 'profile'/);
+  const panel = read('clients/admin-panel/src/app/features/coaching-portal/layout/coaching-notification-panel.component.ts');
+  assert.match(panel, /<a class="text open" \[routerLink\]="link\.path"/);
+});
+
+test('#44: a session cancelled with the teacher link says why', () => {
+  assert.match(read('shared/EduPlatform.Shared.Contracts/Events/Coaching/CoachingEvents.cs'), /public string\? Reason \{ get; init; \}/);
+  assert.match(read('services/notification-service/Notification.Application/Consumers/CoachingNotificationConsumers.cs'), /Neden: bu öğretmenle bağlantın sona erdi\./);
+  assert.equal(read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs').split('Reason = SessionCancelReasons.TeacherLinkEnded').length - 1, 2);
+});
