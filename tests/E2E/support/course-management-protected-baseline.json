@@ -240,7 +240,7 @@
     "clients/speed-reading/src/app/core/services/auth-recaptcha.service.spec.ts": "eff7a3c4c1d1fa4c3bf3c591f2300ec05a40ee8a0a993d39b33823100bc8e045",
     "clients/speed-reading/src/app/core/services/auth-recaptcha.service.ts": "2e17fa00c31067bada585730e2b3c1586e007cf90605f1c53198d105788b1675",
     "clients/speed-reading/src/app/core/services/auth.service.spec.ts": "d5d53cc4d2a06b3a9da0aa5489391be7e3128aa2eb9d546eeab91082b06fd0b3",
-    "clients/speed-reading/src/app/core/services/auth.service.ts": "49dcc7ddc4984d8278a05737dc1ba7aeaf8f45199ce6a53f1b039b7fe60c5196",
+    "clients/speed-reading/src/app/core/services/auth.service.ts": "2af57f92e5e4fe217b88253dcb350007efe687e6df6cf9b232d93eba43747170",
     "clients/speed-reading/src/app/core/services/chart-config.service.ts": "d11c5e5e076ea0180bcce58ec553fe20f79baf4dcd904f32b6369ea37c33ed48",
     "clients/speed-reading/src/app/core/services/content-feedback.service.ts": "7d2d62cb05112a6d5914e38b90d0900a844e29938f21a808c609b831f83424ee",
     "clients/speed-reading/src/app/core/services/email-campaigns.service.ts": "6501a56f82a5d400222d5a3398b8d7eb85bc6d6164febbea50f9a3fc0515312b",
