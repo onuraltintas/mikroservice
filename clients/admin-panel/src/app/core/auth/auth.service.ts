@@ -146,9 +146,8 @@ const NOTICE_REFRESH_CODES: readonly string[] = [NO_ROLE_FOR_PRODUCT_CODE, 'Auth
 
 /** One renewal at a time across the tabs of this browser (Web Locks); without the API the renewal runs at once. */
 export function refreshInTurn<T>(work: () => Promise<T>): Promise<T> {
-    const locks = typeof navigator === 'undefined' ? undefined
-        : (navigator as Navigator & { locks?: { request?: (name: string, callback: () => Promise<T>) => Promise<T> } }).locks;
-    return typeof locks?.request === 'function' ? locks.request('eduivme-session-refresh', work) : work();
+    const locks = (globalThis as { navigator?: { locks?: { request?: (name: string, callback: () => Promise<unknown>) => Promise<unknown> } } }).navigator?.locks;
+    return typeof locks?.request === 'function' ? locks.request('eduivme-session-refresh', work) as Promise<T> : work();
 }
 
 @Injectable({ providedIn: 'root' })

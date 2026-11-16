@@ -36,7 +36,7 @@ test('#16: a token rotated a moment ago is refused without ending the session; t
   assert.match(repository, /now - rotatedAt <= RefreshToken\.ReuseGrace\)\s*\{\s*return false;/);
   for (const client of ['clients/admin-panel/src/app/core/auth/auth.service.ts', 'clients/speed-reading/src/app/core/services/auth.service.ts']) {
     const source = read(client);
-    assert.match(source, /locks\.request\('eduivme-session-refresh', work\)/);
+    assert.match(source, /locks\.request\('eduivme-session-refresh', work\) as Promise<T>/);
     assert.match(source, /Auth\.InvalidToken/);
   }
 });
