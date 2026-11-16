@@ -12,6 +12,11 @@ public class RefreshToken : Entity
 {
     /// <summary>Revocation reason written when a token is exchanged for its successor.</summary>
     public const string RotatedReason = "Refreshed";
+    /// <summary>
+    /// Live test 16.11.2026 (#16, decided by the owner): a rotated token that comes again within this time is refused
+    /// without ending the session. Two tabs of one browser that open together both send the same cookie.
+    /// </summary>
+    public static readonly TimeSpan ReuseGrace = TimeSpan.FromSeconds(30);
 
     public Guid UserId { get; private set; }
 

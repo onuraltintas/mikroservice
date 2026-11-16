@@ -112,7 +112,11 @@ public sealed class RefreshTokenStoragePostgresTests : IAsyncLifetime
         {
             var repository = new UserRepository(context);
             (await repository.RevokeRefreshTokenFamilyOnReuseAsync("unknown-value", CancellationToken.None)).Should().BeFalse();
-            (await repository.RevokeRefreshTokenFamilyOnReuseAsync("family-first", CancellationToken.None)).Should().BeTrue();
+            // Live test 16.11.2026 (#16): within the grace time the session stays; the repeated token is only refused.
+            (await repository.RevokeRefreshTokenFamilyOnReuseAsync("family-first", CancellationToken.None)).Should().BeFalse();
+            (await context.RefreshTokens.AsNoTracking().CountAsync(row => row.FamilyId == first.FamilyId && row.RevokedAt == null)).Should().Be(1);
+            (await repository.RevokeRefreshTokenFamilyOnReuseAsync("family-first", CancellationToken.None,
+                DateTime.UtcNow.Add(RefreshToken.ReuseGrace).AddSeconds(1))).Should().BeTrue();
         }
 
         await using (var context = CreateContext())

@@ -144,6 +144,13 @@ export function landingFailureError(user: Pick<UserProfile, 'roles'> | null): Si
 /** Refresh refusals that end a session for a reason the login page should explain (F4, re-review L-b). */
 const NOTICE_REFRESH_CODES: readonly string[] = [NO_ROLE_FOR_PRODUCT_CODE, 'Auth.ProductAccessDenied'];
 
+/** One renewal at a time across the tabs of this browser (Web Locks); without the API the renewal runs at once. */
+export function refreshInTurn<T>(work: () => Promise<T>): Promise<T> {
+    const locks = typeof navigator === 'undefined' ? undefined
+        : (navigator as Navigator & { locks?: { request?: (name: string, callback: () => Promise<T>) => Promise<T> } }).locks;
+    return typeof locks?.request === 'function' ? locks.request('eduivme-session-refresh', work) : work();
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService implements OnDestroy {
     private oauthService = inject(OAuthService);
@@ -314,10 +321,20 @@ export class AuthService implements OnDestroy {
 
     private async performRefresh(): Promise<boolean> {
         try {
-            const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+            // Live test 16.11.2026 (#16): tabs of one browser share the session cookie. They renew it one at a time, and a
+            // tab whose cookie was renewed by another a moment ago asks once more with the new one.
+            const request = () => refreshInTurn(() => firstValueFrom(this.httpClient.post<AuthSessionResponse>(
                 `${environment.apiUrl}/auth/refresh-token`,
                 {},
-                { withCredentials: true }));
+                { withCredentials: true })));
+            let response: AuthSessionResponse;
+            try {
+                response = await request();
+            } catch (error: unknown) {
+                if (getApiErrorCode(error) !== 'Auth.InvalidToken') throw error;
+                await new Promise(resolve => setTimeout(resolve, 400));
+                response = await request();
+            }
             if (!response?.accessToken) {
                 this.clearSession();
                 return false;

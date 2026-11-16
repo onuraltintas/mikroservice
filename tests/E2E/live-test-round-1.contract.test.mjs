@@ -28,3 +28,15 @@ test('#35: the rest of a started work is labelled as a continuation', () => {
   const calendar = read('clients/admin-panel/src/app/features/coaching-portal/pages/study-plan-calendar.ts');
   assert.match(calendar, /if\(task\.predecessorTaskId\)return 'Yarım kalanın devamı';/);
 });
+
+test('#16: a token rotated a moment ago is refused without ending the session; tabs renew in turn', () => {
+  const token = read('services/identity-service/Identity.Domain/Entities/RefreshToken.cs');
+  assert.match(token, /ReuseGrace = TimeSpan\.FromSeconds\(30\)/);
+  const repository = read('services/identity-service/Identity.Infrastructure/Repositories/Repositories.cs');
+  assert.match(repository, /now - rotatedAt <= RefreshToken\.ReuseGrace\)\s*\{\s*return false;/);
+  for (const client of ['clients/admin-panel/src/app/core/auth/auth.service.ts', 'clients/speed-reading/src/app/core/services/auth.service.ts']) {
+    const source = read(client);
+    assert.match(source, /locks\.request\('eduivme-session-refresh', work\)/);
+    assert.match(source, /Auth\.InvalidToken/);
+  }
+});
