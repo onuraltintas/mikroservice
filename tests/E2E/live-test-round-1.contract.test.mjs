@@ -56,3 +56,13 @@ test('#40: a teacher with independent students cannot join an institution; the s
   assert.match(profile, /data-testid="invitation-blocked"/);
   assert.match(profile, /\[disabled\]="working\(\) \|\| !!invite\.independentStudents"/);
 });
+
+test('#2: the sign-in page loads the security check early and prepares the token while the password is typed', () => {
+  const service = read('clients/admin-panel/src/app/core/auth/auth-recaptcha.service.ts');
+  assert.match(service, /warmUp\(/);
+  assert.match(service, /prepareToken\(action: string/);
+  assert.match(service, /this\.prepared = undefined;/);
+  const page = read('clients/admin-panel/src/app/features/auth/login/login.component.html');
+  assert.match(page, /name="password" \(focus\)="prepareSignIn\(\)" \(input\)="prepareSignIn\(\)"/);
+  assert.match(read('clients/admin-panel/src/app/features/auth/login/login.component.ts'), /this\.recaptcha\.warmUp\(\);/);
+});

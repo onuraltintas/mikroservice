@@ -16,6 +16,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
 import { RegistrationLegalAcceptance } from '../../../core/services/identity.service';
 import { injectAuthCopy } from '../auth-voice';
+import { AuthRecaptchaService } from '../../../core/auth/auth-recaptcha.service';
 
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 
@@ -42,6 +43,7 @@ export class LoginComponent {
     private toaster = inject(ToasterService);
     private socialAuthService = inject(SocialAuthService);
     private destroyRef = inject(DestroyRef);
+    private recaptcha = inject(AuthRecaptchaService);
     /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */
     private readonly authCopy = injectAuthCopy();
     readonly voice = this.authCopy.voice;
@@ -70,7 +72,11 @@ export class LoginComponent {
     rememberMe = false; // Yeni özellik
     hidePassword = signal(true);
 
+    /** Live test 16.11.2026 (#2): the security token is made while the password is typed, not after the button is pressed. */
+    prepareSignIn() { this.recaptcha.prepareToken('auth_login'); }
+
     constructor() {
+        this.recaptcha.warmUp();
         // F4: a route guard or a refused refresh ended a session without any role in this product; say why here,
         // also when that happens after this page opened (the startup refresh).
         effect(() => {
