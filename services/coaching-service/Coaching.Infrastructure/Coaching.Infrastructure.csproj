@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Coaching.Curriculum.IntegrationTests" />
+    <InternalsVisibleTo Include="Identity.API.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>
