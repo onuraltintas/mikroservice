@@ -51,9 +51,11 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         {
             var days=periodEnd.DayNumber-Today.DayNumber+1;
             var occurrences=WeeklyProposalEngine.Occurrences(Today,periodEnd);
-            // Live test 16.11.2026 (#4): the plan no longer uses the hours of today that have passed, so a today whose study
-            // time has begun is not counted as a full day; what is left of it is extra room.
-            if(ElapsedToday>0&&Windows.Any(x=>x.Day==Today.DayOfWeek&&x.StartMinute<ElapsedToday)&&occurrences[Today.DayOfWeek]>0)
+            // Live test 16.11.2026 (#4): the plan no longer uses the hours of today that have passed. A today with less than
+            // half of its study time left is not counted as a day of the period; what is left of it is extra room.
+            var todayTotal=Windows.Where(x=>x.Day==Today.DayOfWeek).Sum(x=>x.EndMinute-x.StartMinute);
+            var todayLeft=Windows.Where(x=>x.Day==Today.DayOfWeek).Sum(x=>Math.Max(0,x.EndMinute-Math.Max(x.StartMinute,ElapsedToday)));
+            if(todayTotal>0&&todayLeft*2<todayTotal&&occurrences[Today.DayOfWeek]>0)
                 occurrences=occurrences.ToDictionary(x=>x.Key,x=>x.Key==Today.DayOfWeek?x.Value-1:x.Value);
             var times=Windows.Where(x=>Budgets is null||Budgets.GetValueOrDefault(x.Day)>0).Select(x=>occurrences[x.Day]).Where(x=>x>0).DefaultIfEmpty(1).Min();
             return new(Windows,Existing,Chosen.Select(x=>new WeeklyProposalLesson(x.LessonId,Choices[x.LessonId].Name,Choices[x.LessonId].ExamCode,

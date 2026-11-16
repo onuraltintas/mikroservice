@@ -282,7 +282,8 @@ public sealed class WeeklyProposalServiceTests
     public async Task AWeekWithoutShortageFitsTheAnnualPreview(int daysLater)
     {
         await using var f = new CurriculumManagementTests.Fixture(); await Seed(f);
-        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows(WeeklyProposalEngine.Week.Select(day => new StudyAvailabilityWindow(day, 480, 1320)));
+        // The clock stands at 09:00 in Turkey: the study hours start then, so none of today's hours has passed (live test 16.11.2026, #4).
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows(WeeklyProposalEngine.Week.Select(day => new StudyAvailabilityWindow(day, 540, 1320)));
         await f.Db.SaveChangesAsync();
         var now = Now.AddDays(daysLater); var today = DateOnly.FromDateTime(now.UtcDateTime);
         var proposal = await Proposals(f, now: now).ProposeAsync(new(WeeklyProposalMode.Replace), default);
@@ -293,6 +294,23 @@ public sealed class WeeklyProposalServiceTests
         var preview = await Plans(f, now).PreviewAsync(new(today, proposal.EndDate, version, true, WeeklyPlanEngine.CurrentVersion), default);
         Assert.True(preview.CanCreate);
         Assert.All(preview.Schedule.Lessons, x => Assert.Equal(0, x.RemainingMinutes));
+    }
+
+    // Live test 16.11.2026 (#4): in the evening today is no longer a day of the period, so the weekly need is not spread over it.
+    [Fact]
+    public async Task InTheEveningTodayIsNotCountedAsAStudyDay()
+    {
+        await using var f = new CurriculumManagementTests.Fixture(); await Seed(f);
+        (await f.Db.StudyAvailability.SingleAsync()).ReplaceWindows(WeeklyProposalEngine.Week.Select(day => new StudyAvailabilityWindow(day, 540, 1320)));
+        await f.Db.SaveChangesAsync();
+        var morning = await Proposals(f, now: Now).ProposeAsync(new(WeeklyProposalMode.Replace), default);
+        var evening = await Proposals(f, now: Now.AddHours(12)).ProposeAsync(new(WeeklyProposalMode.Replace), default); // 21:00 in Turkey
+        Assert.True(evening.NeededMinutes >= morning.NeededMinutes);
+        await Apply(f, evening);
+        var version = (await f.Db.Set<WeeklyStudyDraft>().AsNoTracking().SingleAsync()).Version;
+        var today = DateOnly.FromDateTime(Now.UtcDateTime);
+        var preview = await Plans(f, Now.AddHours(12)).PreviewAsync(new(today, evening.EndDate, version, true, WeeklyPlanEngine.CurrentVersion), default);
+        Assert.DoesNotContain(preview.Schedule.Tasks, x => x.Date == today && x.StartMinute < 1260);
     }
 
     // Review of PR #130 (3): a day before the exam the need is the remaining work, not seven times it.
