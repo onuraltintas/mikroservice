@@ -50,6 +50,8 @@ export class UserListComponent {
   searchTerm = signal('');
   selectedRole = signal<string>('');
   selectedStatus = signal<boolean | null>(null);
+  /** Erased accounts keep an empty row; the list shows them only when asked. */
+  showErased = signal(false);
 
   showCreateModal = signal(false);
   showEditModal = signal(false);
@@ -74,10 +76,11 @@ export class UserListComponent {
 
 
 
-  statuses = [
+  statuses: { value: boolean | null | 'erased'; label: string }[] = [
     { value: null, label: 'Durum: Tümü' },
     { value: true, label: 'Aktif' },
-    { value: false, label: 'Pasif' }
+    { value: false, label: 'Pasif' },
+    { value: 'erased', label: 'Silinmiş hesaplar' }
   ];
 
   // Filter Options
@@ -128,7 +131,9 @@ export class UserListComponent {
       this.pageSize(),
       this.searchTerm(),
       this.selectedRole() || undefined,
-      this.selectedStatus() ?? undefined
+      this.selectedStatus() ?? undefined,
+      undefined,
+      this.showErased()
     ).subscribe({
       next: (res) => {
         this.users.set(res.items);
@@ -154,7 +159,8 @@ export class UserListComponent {
 
   onStatusChange(event: any) {
     const val = event.target.value;
-    const boolVal = val === 'null' ? null : val === 'true';
+    this.showErased.set(val === 'erased');
+    const boolVal = val === 'null' || val === 'erased' ? null : val === 'true';
     this.selectedStatus.set(boolVal);
     this.currentPage.set(1);
   }

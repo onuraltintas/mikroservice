@@ -42,6 +42,14 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result<
             return Result.Failure<PagedList<UserProfileDto>>(scope.Error);
         }
 
+        if (request.Erased)
+        {
+            // Erased accounts carry no institution any more; only the platform administrator sees them.
+            return scope.Value.InstitutionId is null
+                ? Result.Success(await _userRepository.GetErasedAsync(request.PageNumber, request.PageSize, cancellationToken))
+                : Result.Success(new PagedList<UserProfileDto>([], 0, request.PageNumber, request.PageSize));
+        }
+
         var pagedDtos = await _userRepository.GetAllAsync(
             request.PageNumber,
             request.PageSize,

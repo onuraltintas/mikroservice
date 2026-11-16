@@ -35,3 +35,19 @@ test('an erasure opened by the administrator is refused for the administrator, a
   assert.match(handler, /HasActiveAsync/);
   assert.match(handler, /PublishAssessmentRequestedAsync/);
 });
+
+// 16.11.2026: after an erasure the emptied row stayed in the user list like any other user.
+test('an erased account is left out of the user list and shown only through its own filter', () => {
+  const repository = read('services/identity-service/Identity.Infrastructure/Repositories/Repositories.cs');
+  assert.equal(repository.match(/!user\.Email\.EndsWith\(User\.ErasedEmailDomain\)/g)?.length, 2, 'the list and the summary');
+  assert.match(repository, /GetErasedAsync[\s\S]*?user\.Email\.EndsWith\(User\.ErasedEmailDomain\)/);
+  assert.match(read('services/identity-service/Identity.Domain/Entities/User.cs'), /Email = \$"erased-\{Id:N\}\{ErasedEmailDomain\}"/);
+
+  const handler = read('services/identity-service/Identity.Application/Queries/GetAllUsers/GetAllUsersQueryHandler.cs');
+  assert.match(handler, /request\.Erased[\s\S]*?scope\.Value\.InstitutionId is null/);
+
+  const page = read('clients/admin-panel/src/app/features/identity/pages/user-list/user-list.ts');
+  const html = read('clients/admin-panel/src/app/features/identity/pages/user-list/user-list.html');
+  assert.match(page, /value: 'erased', label: 'Silinmiş hesaplar'/);
+  assert.match(html, /\[class\.hidden\]="showErased\(\)"/);
+});

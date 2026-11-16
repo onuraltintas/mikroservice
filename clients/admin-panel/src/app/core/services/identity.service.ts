@@ -327,7 +327,7 @@ export class IdentityService {
             {});
     }
 
-    getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean, product?: number) {
+    getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean, product?: number, erased = false) {
         let params = new HttpParams()
             .set('page', page)
             .set('pageSize', pageSize);
@@ -336,6 +336,8 @@ export class IdentityService {
         if (role) params = params.set('role', role);
         if (isActive !== undefined && isActive !== null) params = params.set('isActive', isActive);
         if (product !== undefined) params = params.set('product', product);
+        // Erased accounts are left out of the list; this asks for them alone.
+        if (erased) params = params.set('erased', true);
 
         return this.http.get<PagedResult<UserDto>>(this.baseUrl, { params });
     }

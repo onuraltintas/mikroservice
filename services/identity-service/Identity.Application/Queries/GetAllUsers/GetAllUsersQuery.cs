@@ -11,7 +11,8 @@ public record GetAllUsersQuery(
     string? SearchTerm = null,
     string? Role = null,
     bool? IsActive = null,
-    PlatformProduct? Product = null) : IRequest<Result<PagedList<UserProfileDto>>>
+    PlatformProduct? Product = null,
+    bool Erased = false) : IRequest<Result<PagedList<UserProfileDto>>>
 {
     public const int MaxPageNumber = 1_000;
     public const int MaxPageSize = 100;

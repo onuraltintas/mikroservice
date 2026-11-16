@@ -15,6 +15,6 @@ public sealed class ErasureSubjectDirectory(IdentityDbContext context) : IErasur
             .Where(user => user.Id == userId)
             .Select(user => new ErasureSubject(
                 user.Roles.Any(role => role.Role != null && role.Role.Name == SystemAdministrator),
-                user.Email.EndsWith("@deleted.invalid")))
+                user.Email.EndsWith(Identity.Domain.Entities.User.ErasedEmailDomain)))
             .SingleOrDefaultAsync(cancellationToken);
 }
