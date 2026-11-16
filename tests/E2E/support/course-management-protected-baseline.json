@@ -703,7 +703,7 @@
     "clients/speed-reading/src/app/features/student/reviews/review-exercises.component.scss": "f6c03c081eefa00a26ac2cb6bf114c599a6562a821ed180cf8a2fd2c9bef7512",
     "clients/speed-reading/src/app/features/student/reviews/review-exercises.component.spec.ts": "159c9ef251f7f3f65a288ccd54fc7020f6ed9e58844430fb296ae52568e4d317",
     "clients/speed-reading/src/app/features/student/reviews/review-exercises.component.ts": "cea20a7d3af3bc7605b046ffb2df9b6ab24ea1c29a39e0d4634a12f49a4f3456",
-    "clients/speed-reading/src/app/features/student/settings/settings.component.html": "798e9866fa4e15bd5f17b2978a2b851fef170d8efe1593311978176fc5007b2b",
+    "clients/speed-reading/src/app/features/student/settings/settings.component.html": "0b7439ac6e4878e7a18416a5748055f0a879c4a29bccfe4ffefc61820176f304",
     "clients/speed-reading/src/app/features/student/settings/settings.component.scss": "2c59f6375827ebc5f70eef11d8daf88d36f4d559bc928f26f82dd01cface9faf",
     "clients/speed-reading/src/app/features/student/settings/settings.component.ts": "be8c142db6acdeba508199a485c46b076921e88e0042d4d9c9943464842dc8d9",
     "clients/speed-reading/src/app/features/student/shell/staff-training-menu.spec.ts": "3f8224ec9a26d30b05b7a5b13b3316cecfa97ea71ee3b9d4107defaa14973941",
