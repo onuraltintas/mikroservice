@@ -35,7 +35,7 @@
             <div class="stat-card info">
                 <span class="material-icons">trending_up</span>
                 <div class="stat-info">
-                    <span class="stat-value">{{ statistics()!.averageReviewScore.toFixed(1) }}%</span>
+                    <span class="stat-value">%{{ statistics()!.averageReviewScore | number:'1.0-1' }}</span>
                     <span class="stat-label">Ortalama Başarı</span>
                 </div>
             </div>
@@ -121,7 +121,7 @@
                             </div>
                             <div class="stat-item">
                                 <span class="material-icons">star</span>
-                                <span>{{ review.averageReviewScore.toFixed(1) }}% ortalama</span>
+                                <span>%{{ review.averageReviewScore | number:'1.0-1' }} ortalama</span>
                             </div>
                         </div>
 
@@ -214,7 +214,7 @@
                         <div class="sp-card-title">Ortalama Başarı</div>
                     </div>
                     <div class="sp-card-content">
-                        <div class="big-number">{{ statistics()!.averageReviewScore.toFixed(1) }}%</div>
+                        <div class="big-number">%{{ statistics()!.averageReviewScore | number:'1.0-1' }}</div>
                         <div class="sp-bar">
                             <div class="sp-bar-fill sp-bar-fill--accent" [style.width.%]="statistics()!.averageReviewScore"></div>
                         </div>

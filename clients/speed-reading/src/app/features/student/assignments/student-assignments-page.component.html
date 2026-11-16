@@ -90,11 +90,12 @@
             </div>
 
             <div class="empty-state" *ngIf="!loading && activeAssignments.length === 0">
-                <img src="assets/images/illustrations/completed.svg" alt="No Assignments"
+                <img src="assets/images/illustrations/completed.svg" alt=""
                     onerror="this.style.display='none'">
                 <span class="material-icons">task_alt</span>
                 <h3>Bekleyen Ödevin Yok!</h3>
-                <p>Harikasın! Tüm ödevlerini tamamladın.</p>
+                <!-- Live test 16.11.2026 (#57): with no assignment ever given there is nothing to praise. -->
+                <p>{{ completedAssignments.length ? 'Harikasın! Tüm ödevlerini tamamladın.' : 'Öğretmenin ödev verdiğinde burada göreceksin.' }}</p>
             </div>
         }
 

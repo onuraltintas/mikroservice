@@ -112,7 +112,7 @@ export class CoachingMessageListComponent {
                 @if (item.unreadCount) { <span class="badge" [attr.aria-label]="item.unreadCount + ' okunmamış mesaj'">{{ item.unreadCount }}</span> }
               </button>
             </li>
-          } @empty { @if (!loading()) { <li class="empty">Henüz yazışman yok. Yeni mesajla başla.</li> } }
+          } @empty { @if (!loading()) { <li class="empty">{{ contacts().length ? 'Henüz yazışman yok. Yeni mesajla başla.' : 'Henüz yazışman yok.' }}</li> } }
         </ul>
       </div>
 

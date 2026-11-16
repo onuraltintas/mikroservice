@@ -11,7 +11,7 @@
         </div>
         <div class="rp-card__body">
           <div class="chart-container">
-            <app-gauge-chart [value]="report()!.currentWPM" [min]="0" [max]="1000" units="WPM"></app-gauge-chart>
+            <app-gauge-chart [value]="report()!.currentWPM" [min]="0" [max]="1000" units="kelime/dk"></app-gauge-chart>
           </div>
         </div>
       </div>
@@ -33,7 +33,7 @@
         </div>
         <div class="rp-card__body">
           <div class="chart-container">
-            <app-line-chart [data]="report()!.wpmTrendChart.data" xAxisLabel="Tarih" yAxisLabel="WPM"></app-line-chart>
+            <app-line-chart [data]="report()!.wpmTrendChart.data" xAxisLabel="Tarih" yAxisLabel="Kelime/dk"></app-line-chart>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@
         </div>
         <div class="rp-card__body">
           <div class="chart-container">
-            <app-bar-chart [data]="report()!.categoryWPMChart.data" xAxisLabel="Kategori" yAxisLabel="WPM"></app-bar-chart>
+            <app-bar-chart [data]="report()!.categoryWPMChart.data" xAxisLabel="Kategori" yAxisLabel="Kelime/dk"></app-bar-chart>
           </div>
         </div>
       </div>
