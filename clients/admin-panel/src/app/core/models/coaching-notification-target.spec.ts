@@ -1,4 +1,4 @@
-import { coachingNotificationLabel, coachingNotificationTarget } from '../../../../shared/coaching-notification-target';
+import { coachingNotificationLabel, coachingNotificationTarget,coachingStudentNotificationLink } from '../../../../shared/coaching-notification-target';
 
 describe('Coaching notification references',()=>{
   const id='a4cea155-5485-4db6-9f52-1ec4df8080c3';
@@ -52,4 +52,13 @@ it('opens the parent link settings from a parent-link notice for a student',()=>
     expect(coachingNotificationTarget({type,relatedEntityId:id},'teacher')).toBeNull();
     expect(coachingNotificationLabel(type)).not.toBe(type);
   }
+});
+
+// Live test 16.11.2026 (#23): an invitation notice leads to the place where it is answered.
+it('opens the invitations on Profilim from an invitation notice for a student, and nothing for a teacher',()=>{
+  const target=coachingNotificationTarget({type:'Invitation',relatedEntityId:null},'student');
+  expect(target).toEqual({kind:'profile',id:'',label:'Daveti aç'});
+  expect(coachingStudentNotificationLink(target!)).toEqual({path:'/coaching-portal/account/settings/profile',query:null,fragment:'coaching-invitations-title'});
+  expect(coachingNotificationTarget({type:'Invitation',relatedEntityId:null},'teacher')).toBeNull();
+  expect(coachingStudentNotificationLink({kind:'plan',id:'p',label:'Planı aç'})).toEqual({path:'/coaching-portal/plan',query:{plan:'p'}});
 });

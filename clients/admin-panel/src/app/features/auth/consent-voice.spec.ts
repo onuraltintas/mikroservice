@@ -30,9 +30,9 @@ describe('consent copy voice', () => {
 
   it('the legal consent note follows the host voice', () => {
     expect(render(RegistrationLegalConsentComponent, 'sen').querySelector('[data-testid="legal-consent-note"]')?.textContent)
-      .toContain('Onayladığın metinlerin');
+      .toContain('Onayladığın metinler ');
     TestBed.resetTestingModule();
     expect(render(RegistrationLegalConsentComponent, 'siz').querySelector('[data-testid="legal-consent-note"]')?.textContent)
-      .toContain('Onayladığınız metinlerin');
+      .toContain('Onayladığınız metinler ');
   });
 });

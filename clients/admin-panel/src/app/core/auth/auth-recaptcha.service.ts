@@ -24,9 +24,54 @@ export class AuthRecaptchaService {
   private readonly configurationPromises = new Map<string, Promise<AuthRecaptchaConfiguration>>();
   private scriptPromise?: Promise<void>;
 
+  /** A token made ahead of the request it is for (single use, valid for two minutes at Google; kept for 90 seconds). */
+  private prepared?: { action: string; configurationUrl: string; token: Promise<string | null>; at: number };
+
+  /**
+   * Live test 16.11.2026 (#2): the sign-in button waited about 1.5 seconds for the configuration, Google's script and the token.
+   * The sign-in page loads the first two when it opens. A failure here is silent; the request itself reports it.
+   */
+  warmUp(configurationUrl = `${environment.apiUrl}/auth/captcha-config`): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    void this.siteKey(configurationUrl).then(siteKey => siteKey ? this.loadScript(siteKey) : undefined).catch(() => undefined);
+  }
+
+  /** Makes the token while the person is still typing, so the request leaves as soon as the button is pressed. */
+  prepareToken(action: string, configurationUrl = `${environment.apiUrl}/auth/captcha-config`): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.prepared && this.prepared.action === action && this.prepared.configurationUrl === configurationUrl
+      && Date.now() - this.prepared.at < AuthRecaptchaService.preparedTokenLifetimeMs) return;
+    const token = this.newToken(action, configurationUrl);
+    token.catch(() => { if (this.prepared?.token === token) this.prepared = undefined; });
+    this.prepared = { action, configurationUrl, token, at: Date.now() };
+  }
+
+  private static readonly preparedTokenLifetimeMs = 90_000;
+
   async createToken(action: string, configurationUrl = `${environment.apiUrl}/auth/captcha-config`): Promise<string | null> {
     if (!isPlatformBrowser(this.platformId)) return null;
+    const prepared = this.prepared;
+    if (prepared && prepared.action === action && prepared.configurationUrl === configurationUrl) {
+      // A token is used once: whatever happens, the next request makes its own.
+      this.prepared = undefined;
+      if (Date.now() - prepared.at < AuthRecaptchaService.preparedTokenLifetimeMs) {
+        try { return await prepared.token; } catch { /* the token is made again below */ }
+      }
+    }
+    return this.newToken(action, configurationUrl);
+  }
 
+  private async newToken(action: string, configurationUrl: string): Promise<string | null> {
+    const siteKey = await this.siteKey(configurationUrl);
+    if (!siteKey) return null;
+    await this.loadScript(siteKey);
+    const token = await (window as GoogleRecaptchaWindow).grecaptcha?.execute(siteKey, { action });
+    if (!token) throw new Error('Güvenlik doğrulaması tamamlanamadı.');
+    return token;
+  }
+
+  /** The site key, or null when the check is turned off. */
+  private async siteKey(configurationUrl: string): Promise<string | null> {
     let configuration: AuthRecaptchaConfiguration;
     try {
       let pending = this.configurationPromises.get(configurationUrl);
@@ -44,14 +89,7 @@ export class AuthRecaptchaService {
     if (!configuration.siteKey) {
       throw new Error('Güvenlik doğrulaması yapılandırması eksik.');
     }
-
-    await this.loadScript(configuration.siteKey);
-    const token = await (window as GoogleRecaptchaWindow).grecaptcha?.execute(
-      configuration.siteKey,
-      { action }
-    );
-    if (!token) throw new Error('Güvenlik doğrulaması tamamlanamadı.');
-    return token;
+    return configuration.siteKey;
   }
 
   private loadConfiguration(configurationUrl: string): Promise<AuthRecaptchaConfiguration> {

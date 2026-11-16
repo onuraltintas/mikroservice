@@ -204,3 +204,6 @@
 @media (prefers-reduced-motion: reduce) {
   .rp-page { animation: none; }
 }
+
+// Live test 16.11.2026 (#59): on a phone the program picker was wider than the page.
+label > select { max-width: 100%; }

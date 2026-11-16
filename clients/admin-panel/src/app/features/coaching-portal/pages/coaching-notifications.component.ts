@@ -4,7 +4,7 @@ import { Component, DestroyRef, computed, effect, inject, signal } from '@angula
 import { catchError, finalize, from, map, mergeMap, of, toArray } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { coachingNotificationLabel, coachingNotificationTarget } from '../../../../../shared/coaching-notification-target';
+import { coachingNotificationLabel, coachingNotificationTarget, coachingStudentNotificationLink } from '../../../../../shared/coaching-notification-target';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
@@ -18,6 +18,7 @@ export class CoachingNotificationsComponent {
   /** A type without a Turkish name is shown as "Bildirim", never as its code. */
   readonly typeLabel = (type: string) => { const label = coachingNotificationLabel(type); return label === type ? 'Bildirim' : label; };
   readonly target = (notification: Parameters<typeof coachingNotificationTarget>[0]) => coachingNotificationTarget(notification, 'student');
+  readonly link = coachingStudentNotificationLink;
   private readonly notificationService = inject(NotificationService);
 
   readonly notifications = this.notificationService.notifications;

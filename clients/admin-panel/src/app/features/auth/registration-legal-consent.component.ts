@@ -28,7 +28,7 @@ const REQUIRED_SLUGS: Record<RegistrationProduct, string[]> = {
         @for (page of pages(); track page.slug) {
           <label class="flex items-start gap-3 text-sm leading-6 text-slate-700 dark:text-slate-200">
             <input class="mt-1" type="checkbox" [checked]="isSelected(page.slug)" (change)="setSelected(page, $any($event.target).checked)" />
-            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">{{ page.title }} · sürüm {{ page.version }}</a>
+            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">{{ page.title }}</a>
               {{ isTerms(page.slug) ? 'koşullarını kabul ediyorum.' : 'metnini okudum ve bilgilendirildim.' }}</span>
           </label>
         }

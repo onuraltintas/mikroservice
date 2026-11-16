@@ -22,7 +22,6 @@ import { catchError, map, of, switchMap } from 'rxjs';
       } @else if (page()) {
         <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-9">
           <h1 id="legal-page-title" class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{{ page()?.title }}</h1>
-          <p class="mt-3 text-xs text-slate-500">Son güncelleme: {{ page()?.updatedAt || page()?.createdAt | date:'dd.MM.yyyy' }} · Sürüm {{ page()?.version }}</p>
           <pre class="mt-8 whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-700 dark:text-slate-200">{{ page()?.content }}</pre>
         </article>
       } @else if (notFound()) {

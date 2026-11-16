@@ -1,4 +1,5 @@
 import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, isDevMode, LOCALE_ID } from '@angular/core';
+import { zoneReentryInterceptor } from './core/interceptors/zone-reentry.interceptor';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -28,7 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAppInitializer(() => inject(AuthService).initializeSession()),
     provideHttpClient(
-      withInterceptors([apiResponseInterceptor, authInterceptor, errorInterceptor, authRecaptchaInterceptor]),
+      withInterceptors([zoneReentryInterceptor, apiResponseInterceptor, authInterceptor, errorInterceptor, authRecaptchaInterceptor]),
       withFetch()
     ),
     provideAnimationsAsync(),

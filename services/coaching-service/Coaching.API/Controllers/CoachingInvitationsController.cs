@@ -37,9 +37,46 @@ public sealed class CoachingInvitationsController(CoachingDbContext db, Coaching
         var senders = (await accounts.GetAccountsAsync(rows.Select(x => x.InviterUserId).Distinct().ToArray(), ct)).ToDictionary(x => x.UserId);
         // Live test 13.11.2026: the student saw only the sender's e-mail address; the name says who is inviting.
         static string? FullName(EduPlatform.Shared.Contracts.Coaching.CoachingAccount? account) => account is null ? null : $"{account.FirstName} {account.LastName}".Trim() is { Length: > 0 } name ? name : null;
+        int? independentStudents = rows.Any(x => x.Type == "TeacherToInstitution")
+            ? await db.CoachingTeacherStudentAssignments.AsNoTracking().Where(x => x.TeacherUserId == user.UserId && x.InstitutionId == null && x.IsActive)
+                .Select(x => x.StudentUserId).Distinct().CountAsync(ct) : null;
+        var ends = rows.Any(x => x.Type == "StudentToInstitution") ? await IndependentCoachingAsync(user.UserId, now, ct) : null;
+        // Live test 16.11.2026 (#39): an institution invitation names the institution, not only the person who sent it.
+        var institutionNames = new Dictionary<Guid, string?>();
+        foreach (var id in rows.Where(x => x.InstitutionId.HasValue).Select(x => x.InstitutionId!.Value).Distinct())
+        {
+            // A name that cannot be read is left out; the invitation is still shown.
+            try { institutionNames[id] = await accounts.InstitutionNameAsync(id, ct); }
+            catch (Exception e) when (e is HttpRequestException or InvalidOperationException) { institutionNames[id] = null; }
+        }
         return Ok(rows.Select(x => new { x.Id, inviterEmail = senders.GetValueOrDefault(x.InviterUserId)?.Email,
             inviterName = FullName(senders.GetValueOrDefault(x.InviterUserId)),
-            type = x.Type, status = x.Status.ToString(), x.Message, x.CreatedAt, x.ExpiresAt }));
+            institutionName = x.InstitutionId is { } institution ? institutionNames.GetValueOrDefault(institution) : null,
+            type = x.Type, status = x.Status.ToString(), x.Message, x.CreatedAt, x.ExpiresAt,
+            // Live test 16.11.2026 (#41, #44): what joining the institution ends, said before the student accepts.
+            ends = x.Type == "StudentToInstitution" ? ends : null,
+            // #40: a teacher with independent students cannot join yet; the screen says why and how many.
+            independentStudents = x.Type == "TeacherToInstitution" ? independentStudents : null }));
+    }
+
+    /// <summary>
+    /// A student has one teacher at a time (decided 16.11.2026): joining an institution ends the link with an independent teacher,
+    /// removes the student from that teacher's coming sessions and closes the open assignments. Null when there is no such teacher.
+    /// </summary>
+    private async Task<object?> IndependentCoachingAsync(Guid student, DateTime now, CancellationToken ct)
+    {
+        var teachers = await db.CoachingTeacherStudentAssignments.AsNoTracking().Where(x => x.StudentUserId == student
+            && x.InstitutionId == null && x.IsActive).Select(x => x.TeacherUserId).Distinct().ToArrayAsync(ct);
+        if (teachers.Length == 0) return null;
+        var names = (await accounts.GetAccountsAsync(teachers, ct)).Select(x => $"{x.FirstName} {x.LastName}".Trim())
+            .Where(x => x.Length > 0).OrderBy(x => x, StringComparer.Create(new System.Globalization.CultureInfo("tr-TR"), false)).ToArray();
+        var sessions = await db.CoachingSessions.AsNoTracking().CountAsync(x => Enumerable.Contains(teachers, x.TeacherId) && x.InstitutionId == null
+            && x.Status == Coaching.Domain.Enums.SessionStatus.Scheduled && x.ScheduledDate > now && x.Attendances.Any(a => a.StudentId == student), ct);
+        var assignments = await db.AssignmentStudents.AsNoTracking().CountAsync(x => x.StudentId == student
+            && Enumerable.Contains(teachers, x.Assignment.TeacherId) && x.Assignment.InstitutionId == null
+            && x.Assignment.Status == Coaching.Domain.Enums.AssignmentStatus.Active
+            && (x.Status == Coaching.Domain.Enums.StudentAssignmentStatus.Assigned || x.Status == Coaching.Domain.Enums.StudentAssignmentStatus.InProgress), ct);
+        return new { teachers = names, sessions, assignments };
     }
 
     [HttpPost("{id:guid}/accept")]

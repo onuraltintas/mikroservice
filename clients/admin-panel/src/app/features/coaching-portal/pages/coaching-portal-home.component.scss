@@ -14,8 +14,9 @@
 .fact {
   display: flex; align-items: center; gap: var(--coaching-space-2); min-height: 48px; color: var(--ui-text);
   & + & { padding-left: var(--coaching-space-5); border-left: 1px solid var(--ui-border); }
-  > strong { font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-  > span { display: grid; font-size: var(--coaching-text-sm); font-weight: 650; line-height: 1.25; }
+  // Live test 16.11.2026 (#17): on a phone the number was squeezed and its digits stood one under the other.
+  > strong { flex-shrink: 0; white-space: nowrap; font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  > span { display: grid; min-width: 0; font-size: var(--coaching-text-sm); font-weight: 650; line-height: 1.25; }
   small { font-size: 12px; font-weight: 500; color: var(--ui-text-muted); }
   &.streak.is-on > strong { color: var(--ui-accent-text); }
   cs-progress-ring { --cs-ring-size: 52px; }

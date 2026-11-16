@@ -323,7 +323,9 @@ public sealed class SessionCancelledConsumer : IConsumer<SessionCancelledEvent>
             MessageIds.Require(context),
             message.StudentIds,
             "Koçluk seansı iptal edildi",
-            $"Koçluk seansın iptal edildi: {TurkeyTime.Format(message.ScheduledDate)}",
+            $"Koçluk seansın iptal edildi: {TurkeyTime.Format(message.ScheduledDate)}"
+                // Live test 16.11.2026 (#44): a session closed with the teacher link says so.
+                + (message.Reason == SessionCancelReasons.TeacherLinkEnded ? ". Neden: bu öğretmenle bağlantın sona erdi." : ""),
             "SessionCancelled",
             message.SessionId.ToString(),
             context.CancellationToken);

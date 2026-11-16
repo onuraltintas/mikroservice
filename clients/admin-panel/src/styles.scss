@@ -35,7 +35,9 @@ body {
     height: 100%;
     width: 100%;
     margin: 0;
-    overflow-x: hidden;
+    // Live test 16.11.2026 (#45): "hidden" made the body a second scroll box inside the page (two scrollbars, and the page
+    // scrolled on into empty space). "clip" cuts the sideways overflow without making a scroll box; the page itself scrolls.
+    overflow-x: clip;
 
     // Default to Light Scheme
     color-scheme: light;

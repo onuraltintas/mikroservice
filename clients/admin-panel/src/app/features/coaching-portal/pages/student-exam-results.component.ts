@@ -67,18 +67,23 @@ export class StudentExamResultsComponent {
   private suggestScope(){
     if(this.selected || this.dirty || this.practiceExam)return;
     const code=contextExamCodes(this.learningContext())[0];const profile=this.profiles().find(x=>x.code===code);if(!profile)return;
-    this.examType=examTypeForProfile(code);
+    this.examType=examTypeForProfile(code);this.useCentralExamScale();
     this.practiceExam={examCode:code,sections:profile.sections.map(x=>({sectionCode:x.code,correct:0,wrong:0,empty:x.questionCount}))};
     if(!this.title.trim()){this.autoTitle=`${practiceExamName(code)} denemesi`;this.title=this.autoTitle;}
     if(!this.examDate)this.examDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   }
 
+  /** Live test 16.11.2026 (#13): LGS and YKS are scored out of 500; the scale stood at 100 for them. A scale the student typed stays. */
+  private useCentralExamScale() {
+    if (this.maxScore === 100 && this.score === null && (this.examType === 'LGS' || this.examType === 'YKS')) this.maxScore = 500;
+  }
   async practiceChanged(value: PracticeExamInput | null) {
     if (this.busy()) return;
     if (value && this.lessons.length && !await this.toaster.confirm('Deneme kapsamına geçmek mevcut serbest ders/konu satırlarını kaldıracak. Devam edilsin mi?')) return;
     this.practiceExam = value;
     if (value) {
       this.lessons = []; this.examType = examTypeForProfile(value.examCode);
+      this.useCentralExamScale();
       // Roadmap O1: a new result is named after its scope and dated today until the student changes them.
       if (!this.title.trim() || this.title === this.autoTitle) { this.autoTitle = `${practiceExamName(value.examCode)} denemesi`; this.title = this.autoTitle; }
       if (!this.examDate) this.examDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());

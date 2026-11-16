@@ -91,7 +91,7 @@ public sealed class CoachingMotivationService(CoachingDbContext db, ICoachingIde
         badges.Add(new("ten-submissions", "10 teslim", "On ödev teslim ettin.", submissions.Length >= 10 ? submissions[9] : null, Math.Min(submissions.Length, 10), 10));
         badges.Add(new("five-exams", "5 deneme", "Beş deneme çözdün.", exams.Count >= ExamBadgeTarget ? Day(exams[ExamBadgeTarget - 1]) : null,
             exams.Count, ExamBadgeTarget));
-        badges.Add(new("goal-reached", "Hedefe ulaştın", "Bir hedefini tamamladın.", firstGoal is null ? null : Day(firstGoal.CompletedAt), Math.Min(goals.Count, 1)));
+        badges.Add(new("goal-reached", "Hedefe ulaşma", "Bir hedefini tamamladın.", firstGoal is null ? null : Day(firstGoal.CompletedAt), Math.Min(goals.Count, 1)));
 
         var recent = goals.Where(x => x.CompletedAt > now.AddDays(-CelebrationDays) && x.CompletedAt <= now)
             .OrderByDescending(x => x.CompletedAt).FirstOrDefault();

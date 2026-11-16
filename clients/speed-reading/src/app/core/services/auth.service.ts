@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap, timeout } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap, throwError, timeout, timer } from 'rxjs';
 import { Router } from '@angular/router';
 import {
   AuthResponse,
@@ -38,6 +38,11 @@ interface MfaSessionResponse {
  * - Service receives clean typed data (AuthResponse, etc.)
  * - Access tokens stay in memory; the refresh token is an HttpOnly cookie
  */
+function isStaleSessionToken(error: unknown): boolean {
+  const body = (error as { error?: { code?: string; Code?: string; error?: { code?: string } } } | null)?.error;
+  return (body?.code ?? body?.Code ?? body?.error?.code) === 'Auth.InvalidToken';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -223,10 +228,14 @@ export class AuthService {
       return this.refreshInFlight$;
     }
 
-    this.refreshInFlight$ = this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, {
+    // Live test 16.11.2026 (#16): tabs of one browser share the session cookie. A tab whose cookie was renewed by another a
+    // moment ago is refused by the server without losing the session; it asks once more with the new cookie.
+    const renew = () => this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, {
       withCredentials: true,
       headers: { 'X-Skip-Error-Toast': 'true' }
-    }).pipe(
+    });
+    this.refreshInFlight$ = renew().pipe(
+      catchError(error => isStaleSessionToken(error) ? timer(400).pipe(switchMap(() => renew())) : throwError(() => error)),
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => {
         this.setUser(response);

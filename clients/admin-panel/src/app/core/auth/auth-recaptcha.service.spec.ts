@@ -41,6 +41,34 @@ describe('AuthRecaptchaService', () => {
     expect(execute).toHaveBeenCalledWith('public-key', { action: 'auth_login' });
   });
 
+  // Live test 16.11.2026 (#2): the token is made while the password is typed and used once.
+  it('uses a token prepared ahead once, then makes a new one', async () => {
+    backend.body = { enabled: true, siteKey: 'public-key' };
+    const execute = vi.fn().mockResolvedValueOnce('prepared-token').mockResolvedValueOnce('second-token');
+    (window as GoogleRecaptchaWindow).grecaptcha = { ready: callback => callback(), execute };
+    const service = TestBed.inject(AuthRecaptchaService);
+
+    service.warmUp();
+    service.prepareToken('auth_login');
+    service.prepareToken('auth_login');
+    await expect(service.createToken('auth_login')).resolves.toBe('prepared-token');
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(backend.requests.length).toBe(1);
+    await expect(service.createToken('auth_login')).resolves.toBe('second-token');
+    expect(execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not use a prepared token for another action, and makes a new one when preparing failed', async () => {
+    backend.body = { enabled: true, siteKey: 'public-key' };
+    const execute = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue('fresh-token');
+    (window as GoogleRecaptchaWindow).grecaptcha = { ready: callback => callback(), execute };
+    const service = TestBed.inject(AuthRecaptchaService);
+
+    service.prepareToken('auth_login');
+    await expect(service.createToken('auth_register')).resolves.toBe('fresh-token');
+    await expect(service.createToken('auth_login')).resolves.toBe('fresh-token');
+  });
+
   it('does not request a token when CAPTCHA is disabled outside production', async () => {
     backend.body = { enabled: false, siteKey: null };
     const execute = vi.fn();

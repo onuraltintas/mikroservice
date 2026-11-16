@@ -95,7 +95,20 @@ public sealed record SessionCancelledEvent(
     Guid TeacherId,
     Guid? InstitutionId,
     Guid[] StudentIds,
-    DateTime ScheduledDate);
+    DateTime ScheduledDate)
+{
+    /// <summary>
+    /// Live test 16.11.2026 (#44): why the session was cancelled, when it was not the teacher's own choice
+    /// (<see cref="SessionCancelReasons"/>). Missing on older messages.
+    /// </summary>
+    public string? Reason { get; init; }
+}
+
+public static class SessionCancelReasons
+{
+    /// <summary>The link between the teacher and the student ended (the student joined or left an institution, or the link was closed).</summary>
+    public const string TeacherLinkEnded = "TeacherLinkEnded";
+}
 
 public sealed record GoalCreatedEvent(
     Guid GoalId,

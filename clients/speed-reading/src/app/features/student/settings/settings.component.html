@@ -47,6 +47,8 @@
                                 Font Ailesi
                             </label>
                             <select id="font-family" class="sp-select full-width" [(ngModel)]="settings.fontFamily" (ngModelChange)="previewSettings()" aria-label="Font ailesi">
+                                <!-- Live test 16.11.2026 (#56): the saved default is Arial; without its option the box stood empty. -->
+                                <option value="Arial">Standart (Arial)</option>
                                 <option value="Inter, sans-serif">Modern (Inter)</option>
                                 <option value="Georgia, serif">Klasik (Georgia)</option>
                                 <option value="'Courier New', monospace">Daktilo (Courier)</option>

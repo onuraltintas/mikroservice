@@ -38,7 +38,7 @@
                 <div class="exercise-icon-large">
                     <span class="material-icons">{{ getExerciseIcon() }}</span>
                 </div>
-                <h1>{{ exercise?.title }}</h1>
+                <h1>{{ displayTitle(exercise?.title) }}</h1>
                 <span class="exercise-subtitle">{{ getEngineDisplayName() }}</span>
             </div>
 
@@ -153,7 +153,7 @@
                     <!-- WPM (if available) or DurationMs -->
                     <div class="detail-item" *ngIf="parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
                         <span class="label">Hız:</span>
-                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} WPM</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} kelime/dk</span>
                     </div>
                     <div class="detail-item" *ngIf="!parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
                         <span class="label">Gösterme:</span>
@@ -595,7 +595,7 @@
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'adaptive_fluency'">
             <span class="material-icons">track_changes</span>
             <span><strong>{{ getAdaptiveStageLabel() }}:</strong> {{ getAdaptivePurpose() }}</span>
-            <span *ngIf="engineState.targetWPM">Hedef: {{ engineState.targetWPM }} WPM</span>
+            <span *ngIf="engineState.targetWPM">Hedef: {{ engineState.targetWPM }} kelime/dk</span>
         </div>
 
         <!-- Text Reading Area -->
@@ -613,7 +613,7 @@
             <div class="reading-stats">
                 <div class="stat-item" *ngIf="getCurrentReadingWpm() > 0">
                     <span class="material-icons">speed</span>
-                    <span>~{{ getCurrentReadingWpm() }} WPM</span>
+                    <span>~{{ getCurrentReadingWpm() }} kelime/dk</span>
                 </div>
                 <div class="stat-item" *ngIf="getReadingScrollProgress() > 0">
                     <span class="material-icons">vertical_align_bottom</span>
@@ -1046,7 +1046,7 @@
             </div>
             <div class="wpm-badge" *ngIf="engine?.engineType !== 'exam_simulation' && !isPacedReadingEngine() && readingWpm > 0">
                 <span class="material-icons">speed</span>
-                {{ readingWpm }} WPM
+                {{ readingWpm }} kelime/dk
             </div>
         </div>
 
@@ -1911,11 +1911,11 @@
                 </ng-container>
                 <ng-template #otherUnmeasuredExercise>
                 <ng-container *ngIf="engine?.engineType === 'motion_path' && !isFixationMode(); else otherUnmeasuredMessage">
-                    Takip oturumu tamamlandı. Göz hareketleri ölçülmedi; takip doğruluğu ve okuma hızı (WPM) hesaplanmaz.
+                    Takip oturumu tamamlandı. Göz hareketleri ölçülmedi; takip doğruluğu ve okuma hızı (kelime/dk) hesaplanmaz.
                 </ng-container>
                 <ng-template #otherUnmeasuredMessage>
                 Egzersiz tamamlandı. Bu egzersizdeki harf yanıtları sunucuda doğrulanmadığı için
-                seviye tespit puanına dahil edilmez; WPM ölçülmez.
+                seviye tespit puanına dahil edilmez; okuma hızı ölçülmez.
                 </ng-template>
                 </ng-template>
             </div>
@@ -1928,7 +1928,7 @@
 
             <!-- XP and Level Row -->
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'skimming'">
-                Ana fikir başarısı sorularla ölçülür; metne göz gezdirme süresi normal okuma hızı (WPM) değildir.
+                Ana fikir başarısı sorularla ölçülür; metne göz gezdirme süresi normal okuma hızı (kelime/dk) değildir.
                 <div *ngIf="result?.details?.inspectionTimeMs != null">İnceleme süresi: {{ formatTime(result?.details?.inspectionTimeMs) }}</div>
                 <div *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: {{ result?.details?.comprehensionScore }}%</div>
             </div>
@@ -1983,11 +1983,11 @@
                 </div>
             </div>
 
-            <!-- Free Reading Results (WPM) -->
+            <!-- Free Reading Results (kelime/dk) -->
             <div class="speed-reading-results" *ngIf="engine?.engineType === 'free_reading' && result?.details?.wpm !== null && result?.details?.wpm !== undefined">
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
-                    <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} WPM</div>
+                    <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} kelime/dk</div>
                     <div class="result-label">Okuma temposu (kelime/dakika)</div>
                     <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğiniz beyanına dayanır.</p>
                 </div>
@@ -2003,7 +2003,7 @@
                 <div class="stat-card"><div class="stat-value">{{ formatTime(getFreeReadingResultTimeMs()) }}</div><div class="stat-label">Aktif okuma süresi</div></div>
             </div>
 
-            <!-- Speed Reading / RSVP Results (WPM) -->
+            <!-- Speed Reading / RSVP Results (kelime/dk) -->
             <div class="speed-reading-results" *ngIf="isTachistoscopeMode() && result?.details">
                 <div class="result-box">
                     <div class="result-value">{{ result?.details?.avgResponseTime == null ? '—' : result?.details?.avgResponseTime + ' ms' }}</div>
@@ -2017,12 +2017,12 @@
             <div class="speed-reading-results" *ngIf="engine?.engineType === 'adaptive_fluency' && result?.details">
                 <div class="result-box wpm-box">
                     <span class="material-icons">flag</span>
-                    <div class="result-value">{{ result?.details?.baselineWpm }} WPM</div>
+                    <div class="result-value">{{ result?.details?.baselineWpm }} kelime/dk</div>
                     <div class="result-label">Başlangıç</div>
                 </div>
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
-                    <div class="result-value">{{ result?.details?.wpm }} WPM</div>
+                    <div class="result-value">{{ result?.details?.wpm }} kelime/dk</div>
                     <div class="result-label">Yeni metin</div>
                 </div>
                 <div class="result-box comprehension-box">
@@ -2040,8 +2040,8 @@
                 <!-- WPM Box -->
                 <div class="result-box wpm-box" *ngIf="result?.details?.wpm">
                     <span class="material-icons">speed</span>
-                    <div class="result-value">{{ result?.details?.wpm }}</div>
-                    <div class="result-label">Okuma Hızı (WPM)</div>
+                    <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }}</div>
+                    <div class="result-label">Okuma Hızı (kelime/dk)</div>
                 </div>
 
                 <!-- Word Count Box (New for RSVP) -->

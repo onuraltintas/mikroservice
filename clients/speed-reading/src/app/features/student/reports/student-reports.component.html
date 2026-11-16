@@ -90,11 +90,11 @@
           @for (attempt of comparison.attempts; track trackAttempt($index, attempt)) {
           <tr>
             <th scope="row">{{ phaseLabel(attempt.phase) }}</th>
-            <td>{{ metric(attempt.averageWpm, ' WPM') }}</td>
+            <td>{{ metric(attempt.averageWpm, ' kelime/dk') }}</td>
             <td>{{ metric(attempt.averageComprehension, '%') }}</td>
             <td>
               <span [class]="'rp-delta ' + deltaClass(attempt.wpmDeltaFromBaseline)">
-                {{ delta(attempt.wpmDeltaFromBaseline, ' WPM') }}
+                {{ delta(attempt.wpmDeltaFromBaseline, ' kelime/dk') }}
               </span>
               <span [class]="'rp-delta ' + deltaClass(attempt.comprehensionDeltaFromBaseline)">
                 {{ delta(attempt.comprehensionDeltaFromBaseline, ' puan') }}

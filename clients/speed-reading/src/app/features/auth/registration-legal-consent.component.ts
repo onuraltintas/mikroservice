@@ -21,11 +21,11 @@ import { RegistrationLegalAcceptance } from '../../core/models/user.model';
         @for (page of pages(); track page.slug) {
           <label class="legal-consent-row">
             <input type="checkbox" [checked]="isSelected(page.slug)" (change)="setSelected(page, $any($event.target).checked)" />
-            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer">{{ page.title }} · sürüm {{ page.version }}</a>
+            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer">{{ page.title }}</a>
               {{ isTerms(page.slug) ? 'koşullarını kabul ediyorum.' : 'metnini okudum ve bilgilendirildim.' }}</span>
           </label>
         }
-        <p class="consent-hint">Onaylanan metin sürümleri güvenli şekilde kayıt altına alınır.</p>
+        <p class="consent-hint">Onayladığınız metinler kaydınızla birlikte saklanır.</p>
       }
     </section>
   `,

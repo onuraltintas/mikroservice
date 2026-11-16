@@ -23,7 +23,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Şifre</mat-label>
             <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
-              placeholder="Şifreniz" autocomplete="current-password">
+              placeholder="Şifreniz" autocomplete="current-password" (focus)="prepareSignIn()" (input)="prepareSignIn()">
             <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword"
               [attr.aria-label]="'Şifreyi ' + (hidePassword ? 'göster' : 'gizle')">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>

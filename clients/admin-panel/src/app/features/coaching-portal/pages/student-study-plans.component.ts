@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
+import { CoachingPlanningPermissionService } from '../../../core/services/coaching-planning-permission.service';
 import { weeklyPlanKindLabel } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectorRef, DestroyRef, ElementRef, Injector, Input, OnChanges, OnInit, ViewChild, afterNextRender, inject, signal } from '@angular/core';
@@ -215,7 +216,17 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   setDraftTime(task:StudyTaskInput,value:string){task.plannedStartMinute=value?Number(value.slice(0,2))*60+Number(value.slice(3)):null;this.dirty=true;}
   targetDates: Record<string, string> = {};
 
-  ngOnInit() { this.initialized = true; if (this.staffStudentId) this.filter = ''; this.loadList(); }
+  /**
+   * Live test 16.11.2026 (#24): true for a student who has a teacher and no permission to plan (decision 15.11.2026). The
+   * server refuses these actions anyway; the screen no longer offers them. Unknown (request failed) counts as open.
+   */
+  readonly planningClosed = signal(false);
+  private readonly planningPermission = inject(CoachingPlanningPermissionService);
+  ngOnInit() {
+    this.initialized = true; if (this.staffStudentId) this.filter = ''; this.loadList();
+    if (!this.staffStudentId) this.planningPermission.own().pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: state => this.planningClosed.set(!state.studentMayPlan), error: () => this.planningClosed.set(false) });
+  }
   ngOnChanges() {
     if (!this.initialized) return;
     this.scopeChanged.next();this.calendarForm=null;this.correction=null;

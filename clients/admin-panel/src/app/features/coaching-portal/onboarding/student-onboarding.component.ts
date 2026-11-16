@@ -10,6 +10,7 @@ import { OABT_FIELDS } from '../../../core/models/practice-exam';
 import { coachingDate } from '../coaching-labels';
 import { CoachingParentService, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
 import { NotificationPreference, NotificationPreferencesApi } from '../../../../../shared/notification-preferences.component';
+import { InvitationEnds, invitationEndsText } from '../../../../../shared/invitation-ends';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import { ScoreTypeFound, ScoreTypeFinderComponent } from './score-type-finder.component';
 import {
@@ -24,7 +25,7 @@ import { CoachingStudentNavigationService } from '../../../core/services/coachin
 
 /** The reminder e-mails the wizard offers (roadmap O8 categories); the defaults are the student's current settings. */
 export const ONBOARDING_EMAIL_CATEGORIES = ['StudyPlan', 'AssignmentReminders', 'Sessions'];
-interface Invitation { id: string; inviterEmail: string | null; inviterName?: string | null; message: string | null; type?: string }
+interface Invitation { id: string; inviterEmail: string | null; inviterName?: string | null; message: string | null; type?: string; ends?: InvitationEnds | null }
 const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 
 /**
@@ -251,6 +252,7 @@ export class StudentOnboardingComponent implements OnInit {
   /** Steps 4–6 are passed after their own action (accepting an invitation, a parent code, e-mail choices). */
   pass(question: Question, label: string) { this.answer(question, { value: 'passed', label }); }
 
+  readonly endsText = invitationEndsText;
   async acceptInvitation(invitation: Invitation) {
     await this.run(async () => {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/coaching/invitations/${encodeURIComponent(invitation.id)}/accept`, {}));

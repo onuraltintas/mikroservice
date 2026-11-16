@@ -113,6 +113,47 @@ public sealed class WeeklyOutcomePlanTests
         Assert.Contains("sınav",examDay.Message);
         Assert.True((await service.PreviewAsync(fromToday with {EndDate=new(2027,5,31)},default)).CanCreate);
     }
+    // Live test 16.11.2026 (#4, #31): a plan made in the evening does not put work in the hours of today that have passed.
+    [Fact]
+    public async Task APlanStartingTodayUsesOnlyTheHoursStillAhead()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await Seed(f);
+        CoachingWeeklyOutcomePlanService At(int utcHour,int minute)=>new(f.Db,new CoachingAccessPolicy(f.User),new WeeklyStudyDraftTests.Catalog(f.Db),
+            new FixedClock(new(2027,5,24,utcHour,minute,0,TimeSpan.Zero)));
+        // The only weekly lesson is Monday 18:00–18:30 (Europe/Istanbul); 24.05.2027 is a Monday.
+        var noon=await At(9,0).PreviewAsync(Input,default);
+        Assert.Contains(noon.Schedule.Tasks,x=>x.Date==new DateOnly(2027,5,24)&&x.StartMinute==1080);
+        var evening=await At(16,30).PreviewAsync(Input,default);
+        Assert.NotEmpty(evening.Schedule.Tasks);
+        Assert.DoesNotContain(evening.Schedule.Tasks,x=>x.Date==new DateOnly(2027,5,24));
+        Assert.All(evening.Schedule.Tasks,x=>Assert.True(x.Date>=new DateOnly(2027,5,31)));
+        // In the middle of the lesson hour only the quarter still ahead is used.
+        var during=await At(15,5).PreviewAsync(Input,default);
+        Assert.All(during.Schedule.Tasks.Where(x=>x.Date==new DateOnly(2027,5,24)),x=>Assert.True(x.StartMinute>=1095));
+    }
+    // Live test 16.11.2026 (#28): after the weekly layout changed, started work still finds a place in the next plan.
+    [Fact]
+    public async Task StartedWorkFindsAnotherHourWhenItsLessonHourIsGoneOrTooShort()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await Seed(f);
+        var active=await f.Db.StudyPlanRevisions.SingleAsync();var topic=await f.Db.StudyCatalogTopics.SingleAsync();var lesson=Guid.NewGuid();var other=Guid.NewGuid();
+        var source=StudyPlanTask.Create(active,new(2027,5,17),"Yarım kalan çalışma",90,topic.Id,plannedQuestions:30);
+        source.SetWeeklyPlacement(lesson,"Matematik",1080);
+        source.RecordRealization(34,8,false,active.StudentId,remainingMinutes:56,remainingQuestions:12);
+        DateOnly start=new(2027,5,24),end=new(2027,5,30);
+        // The lesson's own hour is 30 minutes now; another lesson has a long enough hour on Tuesday.
+        var moved=Assert.Single(CoachingStudyContinuation.Place([source],start,end,[(DayOfWeek.Monday,1080,1110,(Guid?)lesson),(DayOfWeek.Tuesday,600,700,(Guid?)other)]));
+        Assert.Equal((new DateOnly(2027,5,25),(int?)600,56),(moved.Date,moved.Start,moved.Minutes));
+        // Its own lesson's hour is preferred when it fits.
+        var own=Assert.Single(CoachingStudyContinuation.Place([source],start,end,[(DayOfWeek.Tuesday,600,700,(Guid?)other),(DayOfWeek.Wednesday,900,960,(Guid?)lesson)]));
+        Assert.Equal((new DateOnly(2027,5,26),(int?)900),(own.Date,own.Start));
+        // No hour is long enough: the work starts in its lesson's hour and runs over it.
+        var over=Assert.Single(CoachingStudyContinuation.Place([source],start,end,[(DayOfWeek.Monday,1080,1110,(Guid?)lesson),(DayOfWeek.Tuesday,600,640,(Guid?)other)]));
+        Assert.Equal((new DateOnly(2027,5,24),(int?)1080,56),(over.Date,over.Start,over.Minutes));
+        // Only a period without any study hour is refused, and the message names the period.
+        var none=Assert.Throws<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(()=>CoachingStudyContinuation.Place([source],start,end,[]));
+        Assert.Contains("24.05.2027",none.Message);Assert.Contains("boş çalışma saati yok",none.Message);
+    }
     private sealed class FixedClock(DateTimeOffset now):TimeProvider{public override DateTimeOffset GetUtcNow()=>now;}
     private static readonly WeeklyOutcomePlanRequest Input=new(new(2027,5,24),new(2027,6,1),0,false);
     internal static async Task<CoachingWeeklyOutcomePlanService> Seed(CurriculumManagementTests.Fixture f)

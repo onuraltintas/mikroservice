@@ -71,11 +71,14 @@ const sourceLabels:Record<string,string>={Learn:'Yeni konu',Review:'Tekrar',Refr
  * (the student or a teacher) is not stored, so the label does not claim it.
  */
 export function taskSourceBadge(task:StudyTask):string|null{
+  // Live test 16.11.2026 (#35): the rest of a started work is not "Yeni konu" again; it stands next to the topic's other part.
+  if(task.predecessorTaskId)return 'Yarım kalanın devamı';
   if(task.planKind)return sourceLabels[task.planKind]??null;
   const manual=!!task.weeklyLessonId&&!task.topicId&&!task.outcomes?.length&&!task.sourceName&&!task.predecessorTaskId;
   return manual?'Elle eklenen':null;
 }
 /** Paket H5: the badge colour, in the coaching status chip tones. */
 export function taskSourceTone(task:StudyTask):'brand'|'accent'|'info'|'neutral'{
+  if(task.predecessorTaskId)return 'accent';
   return task.planKind==='Learn'?'brand':task.planKind==='Review'||task.planKind==='Refresh'?'accent':task.planKind==='Spaced'?'info':'neutral';
 }

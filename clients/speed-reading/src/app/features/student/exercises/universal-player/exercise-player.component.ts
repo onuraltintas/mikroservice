@@ -6,6 +6,7 @@
  */
 
 import { awaitsServerResult, examCorrectAnswer, focusSummary, resultPerformanceLevel, scanningResultMessage, serverErrorCount } from './result-display';
+import { exerciseTitleLabel } from '../../../../shared/utils/exercise-type-label';
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -97,6 +98,7 @@ interface ParsedConfig {
   styleUrls: ['./exercise-player.component.scss']
 })
 export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChecked {
+  readonly displayTitle = exerciseTitleLabel;
   private destroy$ = new Subject<void>();
 
   // INJECTED SERVICES
@@ -3243,7 +3245,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       const wpm = engineConfig?.['pacer']?.['speedWpm'];
       const chunkSize = engineConfig?.['pacer']?.['chunkSize'] || engineConfig?.['content']?.['chunkSize'];
       if (chunkSize > 1) return `${chunkSize}'li Kelime Grupları`;
-      if (wpm) return `${wpm} WPM Hedef Hız`;
+      if (wpm) return `${wpm} kelime/dk hedef hız`;
       return 'Hızlı Okuma';
     }
 

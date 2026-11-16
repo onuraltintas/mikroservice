@@ -97,7 +97,7 @@
                         <label class="block text-base font-medium text-gray-700 dark:text-gray-300">Şifre</label>
                     </div>
                     <div class="relative">
-                        <input [type]="hidePassword() ? 'password' : 'text'" [(ngModel)]="password" name="password"
+                        <input [type]="hidePassword() ? 'password' : 'text'" [(ngModel)]="password" name="password" (focus)="prepareSignIn()" (input)="prepareSignIn()"
                             class="w-full px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all pl-12 pr-12 text-lg text-gray-900 dark:text-white font-medium"
                             placeholder="••••••••" required>
                         <mat-icon

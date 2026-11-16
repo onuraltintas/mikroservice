@@ -14,7 +14,7 @@
     </div>
     <a [routerLink]="staffTraining ? '/student/training-programs' : '/student/dashboard'" class="de-back-btn">
       <span class="material-icons">dashboard</span>
-      {{ staffTraining ? 'Eğitim Programları' : 'Dashboard' }}
+      {{ staffTraining ? 'Eğitim Programları' : 'Ana Sayfa' }}
     </a>
   </div>
 
@@ -38,7 +38,7 @@
       <div class="de-stat de-stat--blue">
         <span class="material-icons de-stat__icon">speed</span>
         <div>
-          <span class="de-stat__value">Lv. {{ progress()!.currentDifficultyLevel }}</span>
+          <span class="de-stat__value">Seviye {{ progress()!.currentDifficultyLevel }}</span>
           <span class="de-stat__label">Zorluk</span>
         </div>
       </div>
@@ -135,12 +135,12 @@
 
                 <!-- Body -->
                 <div class="de-card__body">
-                  <span class="de-card__type">{{ exercise.exerciseTypeName }}</span>
+                  <span class="de-card__type">{{ typeLabel(exercise.exerciseTypeName) }}</span>
                   <h3 class="de-card__title">{{ exercise.title }}</h3>
                   <div class="de-card__tags">
                     <span class="de-card__tag">
                       <span class="material-icons">speed</span>
-                      Level {{ exercise.difficultyLevel }}
+                      Seviye {{ exercise.difficultyLevel }}
                     </span>
                     <span class="de-card__tag">
                       <span class="material-icons">schedule</span>
@@ -196,7 +196,7 @@
             }
             <a routerLink="/student/dashboard" class="de-card__btn de-card__btn--primary">
               <span class="material-icons">dashboard</span>
-              Dashboard'a Dön
+              Ana Sayfaya Dön
             </a>
           </div>
         }
@@ -241,12 +241,12 @@
                 <span class="de-card__order">#{{ i + 1 }}</span>
               </div>
               <div class="de-card__body">
-                <span class="de-card__type">{{ exercise.exerciseTypeName }}</span>
+                <span class="de-card__type">{{ typeLabel(exercise.exerciseTypeName) }}</span>
                 <h3 class="de-card__title">{{ exercise.title }}</h3>
                 <div class="de-card__tags">
                   <span class="de-card__tag">
                     <span class="material-icons">speed</span>
-                    Level {{ exercise.difficultyLevel }}
+                    Seviye {{ exercise.difficultyLevel }}
                   </span>
                   <span class="de-card__tag">
                     <span class="material-icons">schedule</span>

@@ -402,7 +402,8 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> RevokeRefreshTokenFamilyOnReuseAsync(
         string presentedToken,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        DateTime? utcNow = null)
     {
         // A token that was already exchanged for a successor is being presented again:
         // either the client or a thief holds a stale copy. Neither can be told apart, so
@@ -413,14 +414,20 @@ public class UserRepository : IUserRepository
             .Where(token => token.Token == digest
                 && token.RevokedAt != null
                 && token.ReasonRevoked == RefreshToken.RotatedReason)
-            .Select(token => new { token.FamilyId })
+            .Select(token => new { token.FamilyId, token.RevokedAt })
             .FirstOrDefaultAsync(cancellationToken);
         if (reused is null)
         {
             return false;
         }
 
-        var now = DateTime.UtcNow;
+        var now = utcNow ?? DateTime.UtcNow;
+        // Two tabs that open together present the same token; the later one is refused, the session stays.
+        if (reused.RevokedAt is { } rotatedAt && now - rotatedAt <= RefreshToken.ReuseGrace)
+        {
+            return false;
+        }
+
         await _context.RefreshTokens
             .Where(token => token.FamilyId == reused.FamilyId && token.RevokedAt == null)
             .ExecuteUpdateAsync(setters => setters

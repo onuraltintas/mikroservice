@@ -1,7 +1,7 @@
 <div class="learning-path-container sp-page-enter">
   <!-- Header -->
   <div class="path-header">
-    <button type="button" class="sp-btn sp-btn--icon back-button" aria-label="Dashboard'a dön" (click)="goToDashboard()">
+    <button type="button" class="sp-btn sp-btn--icon back-button" aria-label="Ana sayfaya dön" (click)="goToDashboard()">
       <span class="material-icons" aria-hidden="true">arrow_back</span>
     </button>
     <h1 class="path-title">{{ pathProgress?.templateName || 'Öğrenme Yolum' }}</h1>
@@ -21,7 +21,7 @@
     <span class="material-icons error-icon" aria-hidden="true">error_outline</span>
     <p>{{ error }}</p>
     <button type="button" class="sp-btn" (click)="goToDashboard()">
-      Dashboard'a Dön
+      Ana Sayfaya Dön
     </button>
   </div>
 

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
@@ -35,6 +36,7 @@ interface TodaysPlan {
   styleUrl: './daily-plan-widget.component.scss'
 })
 export class DailyPlanWidgetComponent implements OnInit {
+  readonly typeLabel = exerciseTypeLabel;
   private http = inject(HttpClient);
   private router = inject(Router);
   private apiUrl = `${environment.speedReadingApiUrl}/daily-progress`;

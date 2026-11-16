@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../src/app/features/coaching-portal/coaching-feedback';
+import { InvitationEnds, invitationEndsText } from './invitation-ends';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, Input, OnInit, computed, inject, signal, output } from '@angular/core';
@@ -30,7 +31,7 @@ interface TeacherProfile { version: number; isActive: boolean; title?: string | 
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
   /** Paket D review (L2): the student's exam asks the YKS diploma grade (missing on an older API: asked). */
   examAsksDiploma?: boolean }
-interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; }
+interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; ends?: InvitationEnds | null; independentStudents?: number | null; institutionName?: string | null; }
 /** E4 #23: what saving a new education would remove or leave not fitting (asked from the server before saving). */
 interface EducationImpact { examNoLongerFits: boolean; exam: string | null; diplomaGradeRemoved: number | null; target: string | null }
 type FieldName = 'educationStage' | 'gradeLevel' | 'graduationYear' | 'birthDate' | 'homeDistrict' | 'diplomaGrade' | 'experience';
@@ -177,14 +178,16 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @else if (!invitations().length && !invitationError()) { <p>{{ t('Bekleyen koçluk davetiniz yok.', 'Bekleyen koçluk davetin yok.') }}</p> }
       @if (invitationNotice(); as notice) { <p role="status" data-testid="invitation-notice">{{ notice }}</p> }
       @for (invite of invitations(); track invite.id) {
-        <article><strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
+        <article>@if (invite.institutionName) { <strong data-testid="invitation-institution">{{ invite.institutionName }}</strong><small> · daveti gönderen: </small> }<strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
           @if (invite.message) { <p>{{ invite.message }}</p> }
           @if (role === 'Student' && invite.type !== 'TeacherToInstitution') {
             <p class="history-notice">{{ invite.type === 'StudentToInstitution' ? 'Kabul edersen bu kurumun yöneticileri ve öğretmenleri' : 'Kabul edersen bu öğretmen' }} önceki öğretmen ve kurumlarındaki çalışma geçmişini (ödevler, denemeler, seanslar, hedefler) görebilir.</p>
           }
           <p>Son tarih: {{ invite.expiresAt | date:'dd.MM.yyyy' }}</p>
-          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'accept')">Kabul et</button>
-          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">Reddet</button>
+          @if (invite.ends; as ends) { <p class="history-notice" role="note" data-testid="invitation-ends">{{ endsText(ends) }}</p> }
+          @if (invite.independentStudents) { <p class="history-notice" role="note" data-testid="invitation-blocked">Şu an {{ invite.independentStudents }} bağımsız öğrenciniz var. Bir öğretmen aynı anda hem bağımsız hem bir kurumda çalışamaz. Kuruma katılmak için önce Öğrenciler sayfasından bu öğrencilerle bağınızı sonlandırın.</p> }
+          <button type="button" [disabled]="working() || !!invite.independentStudents" (click)="respond(invite.id, 'accept')">{{ invite.ends ? 'Kuruma katıl' : 'Kabul et' }}</button>
+          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">{{ invite.ends ? 'Kendi öğretmenimle kal' : 'Reddet' }}</button>
         </article>
       }
     </section> }`,
@@ -517,10 +520,16 @@ export class CoachingProfileComponent implements OnInit {
     this.http.get<{ data: { purposeNotForEducation?: boolean } }>(`${this.base}/study-planning/setup`).pipe(takeUntilDestroyed(this.destroy))
       .subscribe({ next: r => this.gradeNotice.set(!!r.data?.purposeNotForEducation), error: () => this.gradeNotice.set(false) });
   }
+  readonly endsText = invitationEndsText;
   loadInvitations() {
     this.invitationLoading.set(true); this.invitationError.set(null);
     this.http.get<Invitation[]>(`${this.base}/invitations/my-invitations`).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.invitationLoading.set(false)))
-      .subscribe({ next: rows => this.invitations.set(rows), error: e => this.invitationError.set(this.message(e, 'Davetler yüklenemedi.')) });
+      .subscribe({ next: rows => { this.invitations.set(rows); this.showInvitationsWhenAsked(); }, error: e => this.invitationError.set(this.message(e, 'Davetler yüklenemedi.')) });
+  }
+  /** Live test 16.11.2026 (#23): an invitation notice opens this page at the invitations, which stand at its end. */
+  private showInvitationsWhenAsked() {
+    if (typeof location === 'undefined' || location.hash !== '#coaching-invitations-title') return;
+    setTimeout(() => document.getElementById('coaching-invitations-title')?.scrollIntoView({ block: 'start' }));
   }
   respond(id: string, action: 'accept' | 'reject') {
     if (this.working()) return;

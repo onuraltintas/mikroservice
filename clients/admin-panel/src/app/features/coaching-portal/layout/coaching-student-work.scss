@@ -99,6 +99,8 @@
 
 // Account pages (Profil ve ayarlar, Ödemeler, Kişisel verilerim): the same narrow column and section rhythm.
 .coaching-shell .coaching-body .coaching-content .cs-account {
+  // Live test 16.11.2026 (#18): one column that may shrink; a wide child (the plan preview) no longer widens the whole page on a phone.
+  grid-template-columns: minmax(0, 1fr);
   display: grid; gap: var(--coaching-space-5); max-width: 820px;
   > header { h1 { margin: 0; font-size: var(--coaching-text-xl); font-weight: 800; letter-spacing: -.5px; color: var(--ui-text); }
     p { margin: var(--coaching-space-1) 0 0; max-width: 60ch; color: var(--ui-text-muted); font-size: var(--coaching-text-body); } }

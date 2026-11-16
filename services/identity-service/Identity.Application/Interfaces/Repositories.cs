@@ -66,9 +66,10 @@ public interface IUserRepository
 
     /// <summary>
     /// When <paramref name="presentedToken"/> was already rotated, revokes every token of
-    /// its family and returns <c>true</c>.
+    /// its family and returns <c>true</c>. A token rotated less than <see cref="Identity.Domain.Entities.RefreshToken.ReuseGrace"/>
+    /// ago is only refused: two tabs that open together present the same token (live test 16.11.2026, #16).
     /// </summary>
-    Task<bool> RevokeRefreshTokenFamilyOnReuseAsync(string presentedToken, CancellationToken cancellationToken) =>
+    Task<bool> RevokeRefreshTokenFamilyOnReuseAsync(string presentedToken, CancellationToken cancellationToken, DateTime? utcNow = null) =>
         Task.FromResult(false);
 
     /// <summary>Deletes one batch of tokens that expired or were revoked before the cutoff.</summary>

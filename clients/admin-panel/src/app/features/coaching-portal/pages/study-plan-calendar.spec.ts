@@ -53,8 +53,10 @@ describe('dated study plan calendar',()=>{
     expect(['Learn','Review','Refresh','Spaced'].map(planKind=>taskSourceBadge({...base,planKind,topicId:'t'}))).toEqual(['Yeni konu','Tekrar','Kısa tekrar','Aralıklı tekrar']);
     // Paket H5 review: who added a task is not stored, so the label is neutral for everyone.
     expect(taskSourceBadge(base)).toBe('Elle eklenen');
+    expect(taskSourceBadge({...base,planKind:'Learn',topicId:'t',predecessorTaskId:'p'})).toBe('Yarım kalanın devamı');
     expect(taskSourceBadge({...base,topicId:'t'})).toBeNull();expect(taskSourceBadge({...base,sourceName:'DenemeTekrar:x'})).toBeNull();
     expect(taskSourceBadge({...base,weeklyLessonId:null})).toBeNull();expect(taskSourceBadge({...base,planKind:'Other'})).toBeNull();
-    expect(taskSourceBadge({...base,predecessorTaskId:'p'})).toBeNull();
+    // Live test 16.11.2026 (#35): carried work is named as a continuation, whatever it was before.
+    expect(taskSourceBadge({...base,predecessorTaskId:'p'})).toBe('Yarım kalanın devamı');
   });
 });

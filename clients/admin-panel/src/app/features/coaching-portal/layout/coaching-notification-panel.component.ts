@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Notification, NotificationService } from '../../../core/services/notification.service';
-import { coachingNotificationLabel } from '../../../../../shared/coaching-notification-target';
-import { parentNotificationLabel } from '../parent/parent-model';
+import { coachingNotificationLabel, coachingNotificationTarget, coachingStudentNotificationLink } from '../../../../../shared/coaching-notification-target';
+import { parentNotificationLabel, parentNotificationTarget } from '../parent/parent-model';
 
 export interface NotificationDay { label: string; items: Notification[] }
 
@@ -47,7 +47,12 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
           @for (item of group.items; track item.id) {
             <li [class.unread]="!item.isRead">
               <span class="dot" aria-hidden="true"></span>
-              <span class="text"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }} · {{ item.createdAt | date:'HH:mm' }}</small></span>
+              <!-- Live test 16.11.2026 (#23): a notice that leads somewhere is a link; pressing it opens that place. -->
+              @if (linkFor(item); as link) {
+                <a class="text open" [routerLink]="link.path" [queryParams]="link.query" [fragment]="link.fragment" (click)="closed.emit()"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }} · {{ item.createdAt | date:'HH:mm' }} · {{ link.label }} ›</small></a>
+              } @else {
+                <span class="text"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }} · {{ item.createdAt | date:'HH:mm' }}</small></span>
+              }
               @if (!item.isRead) { <span class="sr-only">Okunmadı</span> }
             </li>
           }
@@ -69,6 +74,7 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
     .dot{width:8px;height:8px;margin-top:8px;flex-shrink:0;border-radius:50%;background:transparent}
     li.unread .dot{background:var(--ui-accent)}
     .text{display:grid;min-width:0}
+    a.open{color:inherit;text-decoration:none;border-radius:var(--coaching-radius-control)}a.open:hover strong,a.open:focus-visible strong{text-decoration:underline}
     strong{font-size:var(--coaching-text-body);font-weight:650;overflow-wrap:anywhere}
     small{color:var(--ui-text-muted);font-size:var(--coaching-text-sm)}
     .empty{margin:var(--coaching-space-4) 0;color:var(--ui-text-muted)}
@@ -84,6 +90,15 @@ export class CoachingNotificationPanelComponent {
   readonly allLink = input('/coaching-portal/notifications');
   /** Unknown types (e.g. parent link notices) read "Bildirim" or their parent label, never the raw code. */
   readonly typeLabel = (type: string) => { const label = coachingNotificationLabel(type); return label === type ? parentNotificationLabel(type) : label; };
+  /** Where pressing a notice leads: the parent's own targets on the parent panel, the student's elsewhere; null when nowhere. */
+  linkFor(item: Notification): { path: string; query: Record<string, string | null> | null; fragment?: string; label: string } | null {
+    if (this.allLink().includes('/parent/')) {
+      const target = parentNotificationTarget(item);
+      return target ? { path: target.path, query: null, label: target.label } : null;
+    }
+    const target = coachingNotificationTarget(item, 'student');
+    return target ? { ...coachingStudentNotificationLink(target), label: target.label } : null;
+  }
   readonly groups = computed(() => groupNotificationsByDay([...this.notifications.notifications()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10)));
 
   constructor() {
