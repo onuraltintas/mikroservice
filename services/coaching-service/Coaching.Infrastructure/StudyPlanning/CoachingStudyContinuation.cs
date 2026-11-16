@@ -36,7 +36,8 @@ internal static class CoachingStudyContinuation
         if(selected.GroupBy(x=>x.OriginalTaskId ?? x.Id).Any(x=>x.Count()>1)) throw Conflict("Aynı çalışmanın birden fazla aktif devamı var; bağlantıları inceleyin.");
         return selected.OrderByDescending(x=>x.IsPinned).ThenBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id).ToArray();
     }
-    internal static Placement[] Place(StudyPlanTask[] sources, DateOnly start, DateOnly end, IReadOnlyList<(DayOfWeek Day,int Start,int End,Guid? Lesson)> windows, IReadOnlyList<Placement>? existing = null)
+    internal static Placement[] Place(StudyPlanTask[] sources, DateOnly start, DateOnly end, IReadOnlyList<(DayOfWeek Day,int Start,int End,Guid? Lesson)> windows, IReadOnlyList<Placement>? existing = null,
+        (DateOnly Date,int Minute)? notBefore = null)
     {
         var merged=new List<(DayOfWeek Day,int Start,int End,Guid? Lesson)>();
         foreach(var group in windows.GroupBy(x=>(x.Day,x.Lesson)))
@@ -59,7 +60,8 @@ internal static class CoachingStudyContinuation
             for(var day=start;day<=end && found is null;day=day.AddDays(1))
                 foreach(var window in windows.Where(w=>w.Day==day.DayOfWeek&&(source.WeeklyLessonId is null||w.Lesson is null||w.Lesson==source.WeeklyLessonId)).OrderBy(w=>w.Start))
                 {
-                    var at=window.Start;
+                    // A work moved to another hour of the plan's first day goes to an hour that has not passed yet.
+                    var at=notBefore is {} limit&&limit.Date==day?Math.Max(window.Start,limit.Minute):window.Start;
                     foreach(var occupied in placed.Where(p=>p.Date==day&&p.Start.HasValue).OrderBy(p=>p.Start))
                         if(occupied.Start<at+minutes && occupied.Start+occupied.Minutes>at)at=occupied.Start.Value+occupied.Minutes;
                     if(at+minutes<=window.End&&Free(day,at)){found=new(source,day,at,minutes);break;}

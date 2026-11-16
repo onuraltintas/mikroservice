@@ -50,6 +50,13 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         return new(end,examDate,source,catalog?.Date,catalog?.Source=="Estimated");
     }
     internal DateOnly TodayInTurkey()=>Today(Coaching.Domain.CoachingTime.ZoneId);
+    /// <summary>The minutes of the plan's first day that have already passed (rounded up to a quarter), when that day is the student's today.</summary>
+    private int? ElapsedToday(DateOnly start,string zoneId)
+    {
+        var now=TimeZoneInfo.ConvertTime(clock.GetUtcNow(),TimeZoneInfo.FindSystemTimeZoneById(zoneId)).DateTime;
+        if(DateOnly.FromDateTime(now)!=start)return null;
+        return Math.Min(1440,(int)Math.Ceiling((now.Hour*60+now.Minute)/15d)*15);
+    }
     private DateOnly Today(string zoneId)=>DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(),TimeZoneInfo.FindSystemTimeZoneById(zoneId)).DateTime);
 
     public async Task<WeeklyOutcomePlanOptions> SetExamDateAsync(WeeklyExamDateRequest request,CancellationToken ct)
@@ -114,8 +121,12 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         }
         var completed=active is null?[]:await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&x.IsCompleted).ToArrayAsync(ct);
         var protectedTasks=sources.Concat(completed).OrderBy(x=>x.Id).ToArray();
+        // Live test 16.11.2026 (#4, #31): a plan that starts today uses only the hours still ahead; a plan made at 22:00
+        // no longer puts work at 16:00 of the same day, where it would be shown as late at once.
+        var elapsedToday=ElapsedToday(request.StartDate,draft.TimeZoneId);
         var placements=CoachingStudyContinuation.Place(sources,request.StartDate,request.EndDate,
-            draft.Slots.Select(x=>(x.Day,x.StartMinute,x.StartMinute+x.DurationMinutes,(Guid?)x.LessonId)).ToArray());
+            draft.Slots.Select(x=>(x.Day,x.StartMinute,x.StartMinute+x.DurationMinutes,(Guid?)x.LessonId)).ToArray(),
+            notBefore:elapsedToday is {} passed?(request.StartDate,passed):null);
         var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
         var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
         var focusTopics=await FocusTopicsAsync(request.FocusTopicIds,context,lessonIds,staffView,ct);
@@ -148,6 +159,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             // Nothing new is planned in the days that are kept: their lesson hours count as taken.
             .Concat(request.KeepUntil is {} keptUntil?Enumerable.Range(0,Math.Max(0,Math.Min(keptUntil.DayNumber,request.EndDate.DayNumber)-request.StartDate.DayNumber+1))
                 .Select(request.StartDate.AddDays).SelectMany(day=>draft.Slots.Where(x=>x.Day==day.DayOfWeek).Select(x=>new WeeklyBlockedTime(day,x.StartMinute,x.DurationMinutes))):[])
+            .Concat(elapsedToday is {} gone&&gone>0?[new WeeklyBlockedTime(request.StartDate,0,gone)]:[])
             .ToArray();
         var rules=v2?WeeklyPlanEngine.RulesFor(await CoachingStudyPlanPreferencesService.SpacedDaysAsync(db,student,ct)):null;
         var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,blocked,rules);
