@@ -105,5 +105,5 @@ test('second group: teacher-facing plan texts, institution name on invitations, 
   assert.match(plans, /@if \(!planningClosed\(\)\) \{\s*<button type="button" class="secondary" \(click\)="planMenu\.open = false; openWizard\(\)"/);
   assert.equal(plans.split('[readOnly]="readOnly || planningClosed()"').length - 1, 2);
   assert.match(read('services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs'), /institutionName = x\.InstitutionId is \{ \} institution/);
-  assert.doesNotMatch(read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-subscription.component.ts'), /platform yöneticisiyle iletişime geçin/);
+  assert.doesNotMatch(read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-subscription.component.ts'), /Etkin kurum aboneliği bulunamadı/);
 });
