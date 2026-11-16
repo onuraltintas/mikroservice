@@ -1456,7 +1456,7 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudentTodayService.cs": "74901af8cc5906d17a6527c220cbb6e1b33123da76fe21b86f062738711be371",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudentZone.cs": "652e95bc06eb597ef96740dacab962cc4dabbc9cc3dcb5983b6fdb94be176c86",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyAvailabilityService.cs": "540ea300a48c37d3f7f8d072bf3a87ab1ae05b9be60c234872f089d3d9c87f22",
-    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyContinuation.cs": "550e9c8cda09e2dc0c0fc29fa977b863d5d5e8a8faedbfbd61f56c0b6d83921c",
+    "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyContinuation.cs": "3bac84fb7b3a127b631e95526e4d4f1e10db2e61688315fdec93fd7006aa95dc",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyPlanPreferencesService.cs": "052de774ad326a1e9339c6ef7f7a3beca379b1d01890343727785d2e41cdd91b",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyProgressReconciliation.cs": "470d6efab1dc52ca5f0d1a11727c1e526f2443997d1058d4ee466d7b9641015d",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudyRoutineService.cs": "6d196b0c6f16cd84fd624d8469628101839d846974e0a02bda647f557f9a6faa",

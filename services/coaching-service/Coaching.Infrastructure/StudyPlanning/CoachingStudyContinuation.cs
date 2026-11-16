@@ -56,17 +56,24 @@ internal static class CoachingStudyContinuation
             if(source.PlannedDate>=start&&source.PlannedDate<=end&&own.HasValue&&Free(source.PlannedDate,own.Value)
                 && (source.IsPinned || windows.Any(w=>w.Day==source.PlannedDate.DayOfWeek&&(source.WeeklyLessonId is null||w.Lesson is null||w.Lesson==source.WeeklyLessonId)&&w.Start<=own&&w.End>=own+minutes)))
             {placed.Add(new(source,source.PlannedDate,own,minutes));continue;}
-            Placement? found=null;
-            for(var day=start;day<=end && found is null;day=day.AddDays(1))
-                foreach(var window in windows.Where(w=>w.Day==day.DayOfWeek&&(source.WeeklyLessonId is null||w.Lesson is null||w.Lesson==source.WeeklyLessonId)).OrderBy(w=>w.Start))
-                {
-                    // A work moved to another hour of the plan's first day goes to an hour that has not passed yet.
-                    var at=notBefore is {} limit&&limit.Date==day?Math.Max(window.Start,limit.Minute):window.Start;
-                    foreach(var occupied in placed.Where(p=>p.Date==day&&p.Start.HasValue).OrderBy(p=>p.Start))
-                        if(occupied.Start<at+minutes && occupied.Start+occupied.Minutes>at)at=occupied.Start.Value+occupied.Minutes;
-                    if(at+minutes<=window.End&&Free(day,at)){found=new(source,day,at,minutes);break;}
-                }
-            if(found is null)throw Conflict($"{source.Title}: kalan {minutes} dakikalık devam çalışması seçilen saatlere sığmıyor. Çalışma saatlerini veya yeni plan dönemini genişletin.");
+            // Live test 16.11.2026 (#28): the weekly layout may have changed since the work was planned. The work first looks for
+            // its own lesson's hour, then for any study hour, and at last starts in an hour it does not fully fit; started work is
+            // never refused only because no single lesson hour is long enough.
+            Placement? Find(bool ownLesson,bool whole)
+            {
+                for(var day=start;day<=end;day=day.AddDays(1))
+                    foreach(var window in windows.Where(w=>w.Day==day.DayOfWeek&&(!ownLesson||source.WeeklyLessonId is null||w.Lesson is null||w.Lesson==source.WeeklyLessonId)).OrderBy(w=>w.Start))
+                    {
+                        // A work moved to another hour of the plan's first day goes to an hour that has not passed yet.
+                        var at=notBefore is {} limit&&limit.Date==day?Math.Max(window.Start,limit.Minute):window.Start;
+                        foreach(var occupied in placed.Where(p=>p.Date==day&&p.Start.HasValue).OrderBy(p=>p.Start))
+                            if(occupied.Start<at+minutes && occupied.Start+occupied.Minutes>at)at=occupied.Start.Value+occupied.Minutes;
+                        if((whole?at+minutes<=window.End:at<window.End)&&Free(day,at))return new(source,day,at,minutes);
+                    }
+                return null;
+            }
+            var found=Find(true,true)??Find(false,true)??Find(true,false)??Find(false,false);
+            if(found is null)throw Conflict($"{source.Title}: kalan {minutes} dakikalık devam çalışması için {start:dd.MM.yyyy}–{end:dd.MM.yyyy} arasında boş çalışma saati yok. Haftalık düzene saat ekleyin veya plan dönemini uzatın.");
             placed.Add(found);
         }
         return placed.Skip(existing?.Count ?? 0).ToArray();
