@@ -39,6 +39,8 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
     {
         /// <summary>Paket I5: the review days the student chose (none while she has not).</summary>
         public IReadOnlyList<int> SpacedDays{get;init;}=[];
+        /// <summary>The minutes of today that have passed (a quarter up), in the student's zone.</summary>
+        public int ElapsedToday{get;init;}
         /// <summary>Re-review of PR #132: the plan end per exam list, read once per request (it depends only on student, exams and today).</summary>
         public Dictionary<string,CoachingWeeklyOutcomePlanService.PlanEnd> Ends{get;}=new(StringComparer.Ordinal);
         /// <summary>
@@ -49,6 +51,10 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         {
             var days=periodEnd.DayNumber-Today.DayNumber+1;
             var occurrences=WeeklyProposalEngine.Occurrences(Today,periodEnd);
+            // Live test 16.11.2026 (#4): the plan no longer uses the hours of today that have passed, so a today whose study
+            // time has begun is not counted as a full day; what is left of it is extra room.
+            if(ElapsedToday>0&&Windows.Any(x=>x.Day==Today.DayOfWeek&&x.StartMinute<ElapsedToday)&&occurrences[Today.DayOfWeek]>0)
+                occurrences=occurrences.ToDictionary(x=>x.Key,x=>x.Key==Today.DayOfWeek?x.Value-1:x.Value);
             var times=Windows.Where(x=>Budgets is null||Budgets.GetValueOrDefault(x.Day)>0).Select(x=>occurrences[x.Day]).Where(x=>x>0).DefaultIfEmpty(1).Min();
             return new(Windows,Existing,Chosen.Select(x=>new WeeklyProposalLesson(x.LessonId,Choices[x.LessonId].Name,Choices[x.LessonId].ExamCode,
                     WeeklyProposalEngine.WeeklyNeed(Work[x.LessonId].Work,Work[x.LessonId].Topics,days,times,SpacedDays),x.Priority,x.SelfReportedDifficulty>=4)).ToArray(),
@@ -96,7 +102,7 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
         var middle=context?.Purpose==LearningPurpose.Lgs||profile is {EducationStatus:CoachingEducationStatus.Student,GradeLevel:<=8};
         if(context?.Purpose!=LearningPurpose.Yks)focus=null;
         return new(windows,draft,draft?.Slots??[],choices,chosen,plans.TodayInTurkey(),work,middle,focus,WeeklyDayLimit.For(profile?.EducationStatus),budgets)
-            {SpacedDays=await CoachingStudyPlanPreferencesService.SpacedDaysAsync(db,student,ct)};
+            {SpacedDays=await CoachingStudyPlanPreferencesService.SpacedDaysAsync(db,student,ct),ElapsedToday=plans.ElapsedTodayInTurkey()};
     }
 
     /// <summary>

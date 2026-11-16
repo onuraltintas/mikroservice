@@ -50,6 +50,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         return new(end,examDate,source,catalog?.Date,catalog?.Source=="Estimated");
     }
     internal DateOnly TodayInTurkey()=>Today(Coaching.Domain.CoachingTime.ZoneId);
+    internal int ElapsedTodayInTurkey()=>ElapsedToday(TodayInTurkey(),Coaching.Domain.CoachingTime.ZoneId)??0;
     /// <summary>The minutes of the plan's first day that have already passed (rounded up to a quarter), when that day is the student's today.</summary>
     private int? ElapsedToday(DateOnly start,string zoneId)
     {
