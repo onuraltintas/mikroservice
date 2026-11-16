@@ -24,6 +24,7 @@ import { GoogleRegistrationConsentComponent } from '../google-registration-conse
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationShellComponent } from '../registration-shell.component';
 import { ParentPanelEntryComponent } from '../parent-panel-entry.component';
+import { AuthRecaptchaService } from '../../../core/services/auth-recaptcha.service';
 
 /** Paket F F4: the identity service's code for product access without any role in the product. */
 const NO_ROLE_FOR_PRODUCT_CODE = 'Auth.NoRoleForProduct';
@@ -61,6 +62,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toaster = inject(ToasterService);
   private readonly googleIdentity = inject(GoogleIdentityService);
+  private readonly recaptcha = inject(AuthRecaptchaService);
   private readonly googleCallback: GoogleIdentityCallback = (response: GoogleIdentityResponse) =>
     this.handleGoogleResponse(response);
 
@@ -86,7 +88,11 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
     return resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
   }
 
+  /** Live test 16.11.2026 (#2): the security token is made while the password is typed, not after the button is pressed. */
+  prepareSignIn(): void { this.recaptcha.prepareToken('auth_login'); }
+
   constructor() {
+    this.recaptcha.warmUp();
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
