@@ -29,6 +29,21 @@
         }
     }
 
+    # "Aboneliğim" on this domain talks to the shared billing service through
+    # the Gateway. The billing administration lives on the admin panel domain
+    # and stays closed here.
+    @billingAdmin path /api/billing/v1/admin /api/billing/v1/admin/*
+    handle @billingAdmin {
+        respond "Not Found" 404
+    }
+
+    @billingApi path /api/billing/v1/*
+    handle @billingApi {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # Registration and legal pages read shared, public legal documents from Identity.
     @sharedLegalPages {
         method GET
