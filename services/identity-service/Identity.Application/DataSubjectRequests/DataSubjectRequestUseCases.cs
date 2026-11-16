@@ -42,6 +42,23 @@ public interface IDataSubjectRequestErasureExecutionPublisher
         CancellationToken cancellationToken);
 }
 
+/// <summary>What the administrator's erasure needs to know about the account it is about to erase.</summary>
+public sealed record ErasureSubject(bool IsSystemAdministrator, bool AlreadyErased);
+
+public interface IErasureSubjectDirectory
+{
+    Task<ErasureSubject?> FindAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// 16.11.2026: the administrator's "delete permanently" used to remove the Identity row only, leaving the user's
+/// records in every other service behind (and failing outright for linked parents and students). It now opens an
+/// erasure request for that user. The administrator's own decision stands in for identity verification and approval;
+/// the assessment and the execution stay the same as for a request the user files.
+/// </summary>
+public sealed record OpenErasureRequestForUserCommand(Guid UserId, string Reason)
+    : IRequest<DataSubjectRequestDto>;
+
 public sealed record SubmitDataSubjectRequestCommand(
     DataSubjectRequestType RequestType,
     PersonalDataScope Scope,
@@ -384,6 +401,58 @@ public sealed class StartDataSubjectRequestErasureCommandHandler(
                 request.Scope),
             cancellationToken);
         await requestRepository.SaveChangesAsync(cancellationToken);
+        return DataSubjectRequestDto.From(request);
+    }
+}
+
+public sealed class OpenErasureRequestForUserCommandHandler(
+    IDataSubjectRequestRepository repository,
+    IErasureSubjectDirectory subjects,
+    ICurrentUserService currentUser,
+    TimeProvider timeProvider,
+    IDataSubjectRequestEventPublisher eventPublisher)
+    : IRequestHandler<OpenErasureRequestForUserCommand, DataSubjectRequestDto>
+{
+    public async Task<DataSubjectRequestDto> Handle(
+        OpenErasureRequestForUserCommand command,
+        CancellationToken cancellationToken)
+    {
+        var administratorId = GetDataSubjectRequestsForReviewQueryHandler
+            .RequireSystemAdministrator(currentUser);
+        if (command.UserId == administratorId)
+            throw new InvalidOperationException("Kendi hesabınızı buradan silemezsiniz.");
+
+        var subject = await subjects.FindAsync(command.UserId, cancellationToken)
+            ?? throw new NotFoundException(nameof(User), command.UserId);
+        if (subject.AlreadyErased)
+            throw new InvalidOperationException("Bu hesap daha önce silinmiş.");
+        if (subject.IsSystemAdministrator)
+            throw new InvalidOperationException(
+                "SystemAdmin hesabı buradan silinemez; önce SystemAdmin rolünü kaldırın.");
+        if (await repository.HasActiveAsync(
+                command.UserId, DataSubjectRequestType.Erasure, PersonalDataScope.Account, cancellationToken))
+            throw new InvalidOperationException("Bu kullanıcı için süren bir silme talebi zaten var.");
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var reason = command.Reason.Trim();
+        var request = DataSubjectRequest.Create(
+            command.UserId,
+            DataSubjectRequestType.Erasure,
+            PersonalDataScope.Account,
+            $"Yönetici tarafından açıldı: {reason}",
+            now);
+        request.VerifyIdentity(now);
+        request.Approve(administratorId, reason, now);
+        await eventPublisher.PublishAssessmentRequestedAsync(
+            new PersonalDataErasureAssessmentRequestedV1(
+                request.Id,
+                request.Id,
+                request.RequesterUserId,
+                now,
+                DryRun: true,
+                Scope: request.Scope),
+            cancellationToken);
+        await repository.AddAsync(request, cancellationToken);
         return DataSubjectRequestDto.From(request);
     }
 }

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal, effect, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { IdentityService, UserDto, UserProfileDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { CreateUserModalComponent } from '../../components/create-user-modal/create-user-modal';
@@ -27,11 +28,13 @@ export class UserListComponent {
   private toaster = inject(ToasterService);
   private platformId = inject(PLATFORM_ID);
   private authService = inject(AuthService);
+  private router = inject(Router);
   private can = (permission: string) => computed(() =>
     hasRequiredAccess(this.authService.userProfile(), permission, 'SystemAdmin'));
   canCreate = this.can(ADMIN_PERMISSIONS.usersCreate);
   canEdit = this.can(ADMIN_PERMISSIONS.usersEdit);
   canDelete = this.can(ADMIN_PERMISSIONS.usersDelete);
+  canErase = this.can(ADMIN_PERMISSIONS.privacyManage);
   canChangePassword = this.can(ADMIN_PERMISSIONS.usersChangePassword);
   canActivate = this.can(ADMIN_PERMISSIONS.usersActivate);
   canConfirmEmail = this.can(ADMIN_PERMISSIONS.usersConfirmEmail);
@@ -237,7 +240,7 @@ export class UserListComponent {
     );
 
     if (confirmed) {
-      this.identityService.deleteUser(userId, false).subscribe({
+      this.identityService.deactivateUser(userId).subscribe({
         next: () => {
           this.users.update(users => users.map(u =>
             u.userId === userId ? { ...u, isActive: false } : u
@@ -299,25 +302,37 @@ export class UserListComponent {
     }
   }
 
-  async permanentDeleteUser(userId: string) {
-    const confirmed = await this.toaster.confirm(
-      'Kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-      { title: 'DİKKAT! Kalıcı Silme', confirmText: 'Evet, kalıcı olarak sil' }
+  /**
+   * 16.11.2026: "Kalıcı Sil" removed the account row only and left the user's records in every other service behind.
+   * It now opens an erasure request; the erasure itself is started on the "Veri talepleri" page once every service
+   * has reported what it holds.
+   */
+  async eraseUser(user: UserDto) {
+    this.openMenuId.set(null);
+    const reason = await this.toaster.prompt(
+      `${user.fullName || user.email} hesabı ve bu kullanıcıya ait veriler (çalışma planları, sınavlar, okuma kayıtları, `
+      + 'bildirimler, bağlantılar) bütün ürünlerden silinir. Onaylanmış ödeme kayıtları yasal süre boyunca saklanır. '
+      + 'Bu işlem geri alınamaz. Gerekçeyi yazın:',
+      '',
+      { title: 'Hesabı ve verilerini sil', confirmText: 'Silme talebini aç', placeholder: 'Gerekçe', multiline: true }
     );
-
-    if (confirmed) {
-      this.identityService.deleteUser(userId, true).subscribe({
-        next: () => {
-          this.loadUsers();
-          this.openMenuId.set(null);
-          this.toaster.success('Kullanıcı başarıyla silindi');
-        },
-        error: (err) => {
-          console.error('Permanent delete failed', err);
-          this.toaster.error(getAdminErrorMessage(err, 'Silme işlemi başarısız oldu', true));
-        }
-      });
+    const trimmed = reason?.trim() ?? '';
+    if (reason === null) return;
+    if (trimmed.length < 3) {
+      this.toaster.error('Gerekçe yazılmadan silme talebi açılamaz.');
+      return;
     }
+
+    this.identityService.openErasureForUser(user.userId, trimmed).subscribe({
+      next: () => {
+        this.toaster.success(
+          'Silme talebi açıldı. Servislerin değerlendirmesi bitince "Veri talepleri" sayfasından silmeyi başlatın.',
+          { duration: 10000 }
+        );
+        void this.router.navigate(['/dashboard/identity/privacy-requests']);
+      },
+      error: (err) => this.toaster.error(getAdminErrorMessage(err, 'Silme talebi açılamadı', true))
+    });
   }
 
   editUser(user: UserDto) {
