@@ -41,8 +41,17 @@ public sealed class CoachingInvitationsController(CoachingDbContext db, Coaching
             ? await db.CoachingTeacherStudentAssignments.AsNoTracking().Where(x => x.TeacherUserId == user.UserId && x.InstitutionId == null && x.IsActive)
                 .Select(x => x.StudentUserId).Distinct().CountAsync(ct) : null;
         var ends = rows.Any(x => x.Type == "StudentToInstitution") ? await IndependentCoachingAsync(user.UserId, now, ct) : null;
+        // Live test 16.11.2026 (#39): an institution invitation names the institution, not only the person who sent it.
+        var institutionNames = new Dictionary<Guid, string?>();
+        foreach (var id in rows.Where(x => x.InstitutionId.HasValue).Select(x => x.InstitutionId!.Value).Distinct())
+        {
+            // A name that cannot be read is left out; the invitation is still shown.
+            try { institutionNames[id] = await accounts.InstitutionNameAsync(id, ct); }
+            catch (Exception e) when (e is HttpRequestException or InvalidOperationException) { institutionNames[id] = null; }
+        }
         return Ok(rows.Select(x => new { x.Id, inviterEmail = senders.GetValueOrDefault(x.InviterUserId)?.Email,
             inviterName = FullName(senders.GetValueOrDefault(x.InviterUserId)),
+            institutionName = x.InstitutionId is { } institution ? institutionNames.GetValueOrDefault(institution) : null,
             type = x.Type, status = x.Status.ToString(), x.Message, x.CreatedAt, x.ExpiresAt,
             // Live test 16.11.2026 (#41, #44): what joining the institution ends, said before the student accepts.
             ends = x.Type == "StudentToInstitution" ? ends : null,

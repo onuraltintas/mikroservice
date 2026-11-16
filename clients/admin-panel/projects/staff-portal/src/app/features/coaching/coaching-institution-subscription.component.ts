@@ -45,7 +45,7 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
               <button type="button" [disabled]="saving()" (click)="setSeat(seat.studentId, true)">Kontenjanı serbest bırak</button></div>
           }
         }
-      } @else if (!error()) { <p>Etkin kurum aboneliği bulunamadı. Lisans ve kontenjan için platform yöneticisiyle iletişime geçin.</p> }
+      } @else if (!error()) { <p>Kurumunuzun etkin bir planı olduğunda öğrenci kontenjanı burada görünür.</p> }
     </section>`,
   styles: [`
     .institution-plan { padding:1rem; border:1px solid #e0e5db; border-radius:.8rem; background:#fffefa; color:#243b36; }

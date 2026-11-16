@@ -31,7 +31,7 @@ interface TeacherProfile { version: number; isActive: boolean; title?: string | 
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
   /** Paket D review (L2): the student's exam asks the YKS diploma grade (missing on an older API: asked). */
   examAsksDiploma?: boolean }
-interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; ends?: InvitationEnds | null; independentStudents?: number | null; }
+interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; ends?: InvitationEnds | null; independentStudents?: number | null; institutionName?: string | null; }
 /** E4 #23: what saving a new education would remove or leave not fitting (asked from the server before saving). */
 interface EducationImpact { examNoLongerFits: boolean; exam: string | null; diplomaGradeRemoved: number | null; target: string | null }
 type FieldName = 'educationStage' | 'gradeLevel' | 'graduationYear' | 'birthDate' | 'homeDistrict' | 'diplomaGrade' | 'experience';
@@ -178,7 +178,7 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @else if (!invitations().length && !invitationError()) { <p>{{ t('Bekleyen koçluk davetiniz yok.', 'Bekleyen koçluk davetin yok.') }}</p> }
       @if (invitationNotice(); as notice) { <p role="status" data-testid="invitation-notice">{{ notice }}</p> }
       @for (invite of invitations(); track invite.id) {
-        <article><strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
+        <article>@if (invite.institutionName) { <strong data-testid="invitation-institution">{{ invite.institutionName }}</strong><small> · daveti gönderen: </small> }<strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
           @if (invite.message) { <p>{{ invite.message }}</p> }
           @if (role === 'Student' && invite.type !== 'TeacherToInstitution') {
             <p class="history-notice">{{ invite.type === 'StudentToInstitution' ? 'Kabul edersen bu kurumun yöneticileri ve öğretmenleri' : 'Kabul edersen bu öğretmen' }} önceki öğretmen ve kurumlarındaki çalışma geçmişini (ödevler, denemeler, seanslar, hedefler) görebilir.</p>

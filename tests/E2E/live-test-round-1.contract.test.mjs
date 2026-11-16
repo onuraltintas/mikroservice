@@ -98,3 +98,12 @@ test('#44: a session cancelled with the teacher link says why', () => {
   assert.match(read('services/notification-service/Notification.Application/Consumers/CoachingNotificationConsumers.cs'), /Neden: bu öğretmenle bağlantın sona erdi\./);
   assert.equal(read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs').split('Reason = SessionCancelReasons.TeacherLinkEnded').length - 1, 2);
 });
+
+test('second group: teacher-facing plan texts, institution name on invitations, no plan actions for a student without permission', () => {
+  const plans = read('clients/admin-panel/src/app/features/coaching-portal/pages/student-study-plans.component.html');
+  assert.equal(plans.split("staffStudentId?'Planı yayımla':'Planını yayımla'").length - 1, 3);
+  assert.match(plans, /@if \(!planningClosed\(\)\) \{\s*<button type="button" class="secondary" \(click\)="planMenu\.open = false; openWizard\(\)"/);
+  assert.equal(plans.split('[readOnly]="readOnly || planningClosed()"').length - 1, 2);
+  assert.match(read('services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs'), /institutionName = x\.InstitutionId is \{ \} institution/);
+  assert.doesNotMatch(read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-subscription.component.ts'), /platform yöneticisiyle iletişime geçin/);
+});
