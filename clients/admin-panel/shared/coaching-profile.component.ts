@@ -31,7 +31,7 @@ interface TeacherProfile { version: number; isActive: boolean; title?: string | 
 interface OwnProfile { student: StudentProfile | null; teacher: TeacherProfile | null;
   /** Paket D review (L2): the student's exam asks the YKS diploma grade (missing on an older API: asked). */
   examAsksDiploma?: boolean }
-interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; ends?: InvitationEnds | null; }
+interface Invitation { id: string; inviterEmail: string; inviterName?: string | null; type: string; message?: string; expiresAt: string; ends?: InvitationEnds | null; independentStudents?: number | null; }
 /** E4 #23: what saving a new education would remove or leave not fitting (asked from the server before saving). */
 interface EducationImpact { examNoLongerFits: boolean; exam: string | null; diplomaGradeRemoved: number | null; target: string | null }
 type FieldName = 'educationStage' | 'gradeLevel' | 'graduationYear' | 'birthDate' | 'homeDistrict' | 'diplomaGrade' | 'experience';
@@ -185,7 +185,8 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
           }
           <p>Son tarih: {{ invite.expiresAt | date:'dd.MM.yyyy' }}</p>
           @if (invite.ends; as ends) { <p class="history-notice" role="note" data-testid="invitation-ends">{{ endsText(ends) }}</p> }
-          <button type="button" [disabled]="working()" (click)="respond(invite.id, 'accept')">{{ invite.ends ? 'Kuruma katıl' : 'Kabul et' }}</button>
+          @if (invite.independentStudents) { <p class="history-notice" role="note" data-testid="invitation-blocked">Şu an {{ invite.independentStudents }} bağımsız öğrenciniz var. Bir öğretmen aynı anda hem bağımsız hem bir kurumda çalışamaz. Kuruma katılmak için önce Öğrenciler sayfasından bu öğrencilerle bağınızı sonlandırın.</p> }
+          <button type="button" [disabled]="working() || !!invite.independentStudents" (click)="respond(invite.id, 'accept')">{{ invite.ends ? 'Kuruma katıl' : 'Kabul et' }}</button>
           <button type="button" [disabled]="working()" (click)="respond(invite.id, 'reject')">{{ invite.ends ? 'Kendi öğretmenimle kal' : 'Reddet' }}</button>
         </article>
       }

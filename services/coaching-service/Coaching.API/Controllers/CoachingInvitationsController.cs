@@ -37,12 +37,17 @@ public sealed class CoachingInvitationsController(CoachingDbContext db, Coaching
         var senders = (await accounts.GetAccountsAsync(rows.Select(x => x.InviterUserId).Distinct().ToArray(), ct)).ToDictionary(x => x.UserId);
         // Live test 13.11.2026: the student saw only the sender's e-mail address; the name says who is inviting.
         static string? FullName(EduPlatform.Shared.Contracts.Coaching.CoachingAccount? account) => account is null ? null : $"{account.FirstName} {account.LastName}".Trim() is { Length: > 0 } name ? name : null;
+        int? independentStudents = rows.Any(x => x.Type == "TeacherToInstitution")
+            ? await db.CoachingTeacherStudentAssignments.AsNoTracking().Where(x => x.TeacherUserId == user.UserId && x.InstitutionId == null && x.IsActive)
+                .Select(x => x.StudentUserId).Distinct().CountAsync(ct) : null;
         var ends = rows.Any(x => x.Type == "StudentToInstitution") ? await IndependentCoachingAsync(user.UserId, now, ct) : null;
         return Ok(rows.Select(x => new { x.Id, inviterEmail = senders.GetValueOrDefault(x.InviterUserId)?.Email,
             inviterName = FullName(senders.GetValueOrDefault(x.InviterUserId)),
             type = x.Type, status = x.Status.ToString(), x.Message, x.CreatedAt, x.ExpiresAt,
             // Live test 16.11.2026 (#41, #44): what joining the institution ends, said before the student accepts.
-            ends = x.Type == "StudentToInstitution" ? ends : null }));
+            ends = x.Type == "StudentToInstitution" ? ends : null,
+            // #40: a teacher with independent students cannot join yet; the screen says why and how many.
+            independentStudents = x.Type == "TeacherToInstitution" ? independentStudents : null }));
     }
 
     /// <summary>

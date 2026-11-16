@@ -210,6 +210,10 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
                 other.SetActive(false, actorUserId);
             }
             var joining = membership is not { IsActive: true };
+            // Live test 16.11.2026 (#40, decided 17.11.2026): a teacher works either independently or in an institution. Joining
+            // with independent students left them linked to a teacher who could no longer see them, so the links are ended first.
+            if (joining && role == CoachingMemberRole.Teacher && await IndependentStudentCountAsync(userId, ct) is > 0 and var independent)
+                throw Conflict(TeacherHasIndependentStudents(independent));
             if (membership is null) db.CoachingInstitutionMemberships.Add(CoachingInstitutionMembership.Create(institutionId, userId, role, actorUserId));
             else if (!membership.IsActive) membership.SetActive(true, actorUserId);
             if (joining && role == CoachingMemberRole.Student) await EndIndependentCoachingAsync(userId, actorUserId, ct);
@@ -236,6 +240,13 @@ public sealed partial class CoachingProfileStore(CoachingDbContext db, ICoaching
         }
         await db.SaveChangesAsync(ct);
     }
+
+    /// <summary>The active students a teacher coaches outside any institution.</summary>
+    public Task<int> IndependentStudentCountAsync(Guid teacherUserId, CancellationToken ct) =>
+        db.CoachingTeacherStudentAssignments.AsNoTracking().Where(x => x.TeacherUserId == teacherUserId && x.InstitutionId == null && x.IsActive)
+            .Select(x => x.StudentUserId).Distinct().CountAsync(ct);
+    public static string TeacherHasIndependentStudents(int count) =>
+        $"Kuruma katılmadan önce {count} bağımsız öğrencinizle bağınızı sonlandırın. Bir öğretmen aynı anda hem bağımsız hem bir kurumda çalışamaz; kuruma katıldığınızda bu öğrencileri göremezdiniz.";
 
     public async Task SetAssignmentAsync(Guid actorUserId, Guid teacherUserId, Guid studentUserId,
         Guid institutionId, string? subject, bool active, CancellationToken ct)

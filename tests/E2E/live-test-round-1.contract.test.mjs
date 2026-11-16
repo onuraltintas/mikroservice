@@ -48,3 +48,11 @@ test('#41/#44: an institution invitation says what it ends before the student ac
   assert.match(profile, /invite\.ends \? 'Kendi öğretmenimle kal' : 'Reddet'/);
   assert.match(read('clients/admin-panel/src/app/features/coaching-portal/onboarding/student-onboarding.component.html'), /data-testid="invitation-ends"/);
 });
+
+test('#40: a teacher with independent students cannot join an institution; the screen says why', () => {
+  const store = read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingProfileStore.cs');
+  assert.match(store, /joining && role == CoachingMemberRole\.Teacher && await IndependentStudentCountAsync\(userId, ct\) is > 0/);
+  const profile = read('clients/admin-panel/shared/coaching-profile.component.ts');
+  assert.match(profile, /data-testid="invitation-blocked"/);
+  assert.match(profile, /\[disabled\]="working\(\) \|\| !!invite\.independentStudents"/);
+});

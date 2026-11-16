@@ -62,6 +62,27 @@ public sealed class CoachingInstitutionMembershipTests
         Assert.Equal("Test Student", ended.StudentName);
     }
 
+    // Live test 16.11.2026 (#40, decided 17.11.2026): a coach with independent students ends those links before joining.
+    [Fact]
+    public async Task ACoachWithIndependentStudentsCannotJoinAnInstitutionUntilTheLinksEnd()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture(); var (admin, inst) = Institution(f);
+        var coach = f.AddAccount("Teacher"); var student = f.AddAccount("Student");
+        await f.Store.ProvisionAsync(coach, "Teacher", default); await f.Store.ProvisionAsync(student, "Student", default);
+        var link = CoachingTeacherStudentAssignment.Create(coach, student, null, null, coach); f.Db.Add(link); await f.Db.SaveChangesAsync();
+        Assert.Equal(1, await f.Store.IndependentStudentCountAsync(coach, default));
+
+        var refused = await Assert.ThrowsAsync<BusinessRuleException>(() => f.Store.SetMembershipAsync(admin, inst, coach, CoachingMemberRole.Teacher, true, default));
+        Assert.Contains("1 bağımsız öğrencinizle", refused.Message);
+        f.Db.ChangeTracker.Clear();
+        Assert.False(await f.Db.CoachingInstitutionMemberships.AnyAsync(x => x.UserId == coach && x.IsActive));
+        Assert.True((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).IsActive);
+
+        (await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).SetActive(false, coach); await f.Db.SaveChangesAsync();
+        await f.Store.SetMembershipAsync(admin, inst, coach, CoachingMemberRole.Teacher, true, default);
+        Assert.True(await f.Db.CoachingInstitutionMemberships.AnyAsync(x => x.UserId == coach && x.IsActive));
+    }
+
     [Fact]
     public async Task AStudentLeavingTheirCoachTellsTheCoach()
     {
