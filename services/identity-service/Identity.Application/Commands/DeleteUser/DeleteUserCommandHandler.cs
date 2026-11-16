@@ -16,8 +16,15 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Resul
 
     public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        return request.Permanent
-            ? await _identityService.DeleteUserAsync(request.UserId, cancellationToken)
-            : await _identityService.DeactivateUserAsync(request.UserId, cancellationToken);
+        // 16.11.2026: removing the Identity row alone left the user's records in every other service behind.
+        // An account is erased through the erasure request flow (POST data-subject-requests/admin/erasure).
+        if (request.Permanent)
+        {
+            return Result.Failure(new Error(
+                "Identity.PermanentDeleteRetired",
+                "Kalıcı silme bu yoldan yapılmıyor; hesabı ve verilerini silmek için silme talebi açın."));
+        }
+
+        return await _identityService.DeactivateUserAsync(request.UserId, cancellationToken);
     }
 }

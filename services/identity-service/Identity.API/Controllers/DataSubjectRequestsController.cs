@@ -72,6 +72,30 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
             new GetDataSubjectRequestReviewDetailQuery(id),
             cancellationToken));
 
+    /// <summary>Opens an approved erasure request for the given user (the administrator's "delete account and data").</summary>
+    [HttpPost("admin/erasure")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Privacy.Manage)]
+    [ProducesResponseType(typeof(DataSubjectRequestDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<DataSubjectRequestDto>> OpenErasureForUser(
+        [FromBody] OpenErasureForUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await mediator.Send(
+                new OpenErasureRequestForUserCommand(request.UserId, request.Reason),
+                cancellationToken);
+            return StatusCode(StatusCodes.Status201Created, result);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { error = exception.Message });
+        }
+    }
+
     [HttpPost("{id:guid}/verify-identity")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
@@ -139,6 +163,10 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
 public sealed record SubmitErasureRequest(
     PersonalDataScope Scope,
     [Required, MaxLength(2_000)] string Reason);
+
+public sealed record OpenErasureForUserRequest(
+    Guid UserId,
+    [Required, MinLength(3), MaxLength(1_900)] string Reason);
 
 public sealed record DataSubjectRequestDecisionRequest(
     bool Approve,

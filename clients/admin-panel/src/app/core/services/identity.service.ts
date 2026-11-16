@@ -316,6 +316,11 @@ export class IdentityService {
             `${this.dataSubjectRequestsUrl}/admin/${encodeURIComponent(requestId)}`);
     }
 
+    /** Opens an approved erasure request for the user: the account and its records in every service are erased. */
+    openErasureForUser(userId: string, reason: string) {
+        return this.http.post<DataSubjectRequestDto>(`${this.dataSubjectRequestsUrl}/admin/erasure`, { userId, reason });
+    }
+
     executeDataSubjectRequestErasure(requestId: string) {
         return this.http.post<DataSubjectRequestDto>(
             `${this.dataSubjectRequestsUrl}/${encodeURIComponent(requestId)}/execute-erasure`,
@@ -372,8 +377,8 @@ export class IdentityService {
         return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/${product}/role`, request);
     }
 
-    deleteUser(userId: string, permanent: boolean = false) {
-        return this.http.delete(`${this.baseUrl}/${userId}?permanent=${permanent}`);
+    deactivateUser(userId: string) {
+        return this.http.delete(`${this.baseUrl}/${userId}?permanent=false`);
     }
 
     activateUser(userId: string) {

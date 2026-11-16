@@ -84,6 +84,7 @@ public sealed class DataSubjectRequestReviewTests
     [InlineData(nameof(DataSubjectRequestsController.VerifyIdentity), PlatformPermissions.Privacy.Manage)]
     [InlineData(nameof(DataSubjectRequestsController.Decide), PlatformPermissions.Privacy.Manage)]
     [InlineData(nameof(DataSubjectRequestsController.ExecuteErasure), PlatformPermissions.Privacy.Manage)]
+    [InlineData(nameof(DataSubjectRequestsController.OpenErasureForUser), PlatformPermissions.Privacy.Manage)]
     public void ReviewEndpoints_ShouldRequireSystemAdminMfaAndPrivacyPermission(
         string actionName,
         string expectedPermission)
@@ -100,6 +101,82 @@ public sealed class DataSubjectRequestReviewTests
             .Cast<HasPermissionAttribute>()
             .Should()
             .Contain(attribute => attribute.Policy == expectedPermission);
+    }
+
+    [Fact]
+    public async Task An_administrator_opens_an_approved_erasure_request_for_a_user_and_the_assessment_starts()
+    {
+        var administratorId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var repository = new RecordingRepository();
+        var publisher = new StubPrivacyRequestPublisher();
+        var handler = new OpenErasureRequestForUserCommandHandler(
+            repository,
+            new StubSubjects(new ErasureSubject(IsSystemAdministrator: false, AlreadyErased: false)),
+            new StubCurrentUser(administratorId, ["SystemAdmin"]),
+            new FixedTimeProvider(new DateTimeOffset(Utc(12))),
+            publisher);
+
+        var result = await handler.Handle(
+            new OpenErasureRequestForUserCommand(userId, "  Test hesabı kapatılıyor.  "), CancellationToken.None);
+
+        result.Status.Should().Be(DataSubjectRequestStatus.Approved);
+        var request = repository.Added.Should().ContainSingle().Subject;
+        request.RequesterUserId.Should().Be(userId);
+        request.Scope.Should().Be(PersonalDataScope.Account);
+        request.Reason.Should().Be("Yönetici tarafından açıldı: Test hesabı kapatılıyor.");
+        request.IdentityVerifiedAt.Should().Be(Utc(12));
+        request.DecidedByUserId.Should().Be(administratorId);
+        request.DecisionReason.Should().Be("Test hesabı kapatılıyor.");
+        publisher.Published.Should().ContainSingle(message =>
+            message.RequestId == request.Id && message.SubjectUserId == userId && message.DryRun);
+    }
+
+    [Theory]
+    [InlineData("self")]
+    [InlineData("administrator")]
+    [InlineData("erased")]
+    [InlineData("active")]
+    public async Task An_administrator_cannot_open_an_erasure_for_these_accounts(string scenario)
+    {
+        var administratorId = Guid.NewGuid();
+        var repository = new RecordingRepository { HasActive = scenario == "active" };
+        var publisher = new StubPrivacyRequestPublisher();
+        var handler = new OpenErasureRequestForUserCommandHandler(
+            repository,
+            new StubSubjects(new ErasureSubject(
+                IsSystemAdministrator: scenario == "administrator", AlreadyErased: scenario == "erased")),
+            new StubCurrentUser(administratorId, ["SystemAdmin"]),
+            new FixedTimeProvider(new DateTimeOffset(Utc(12))),
+            publisher);
+
+        var action = () => handler.Handle(
+            new OpenErasureRequestForUserCommand(
+                scenario == "self" ? administratorId : Guid.NewGuid(), "Gerekçe"),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<InvalidOperationException>();
+        repository.Added.Should().BeEmpty();
+        publisher.Published.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Opening_an_erasure_for_a_user_needs_a_system_administrator_and_an_existing_account()
+    {
+        OpenErasureRequestForUserCommandHandler Handler(string role, ErasureSubject? subject) => new(
+            new RecordingRepository(),
+            new StubSubjects(subject),
+            new StubCurrentUser(Guid.NewGuid(), [role]),
+            new FixedTimeProvider(new DateTimeOffset(Utc(12))),
+            new StubPrivacyRequestPublisher());
+        var command = new OpenErasureRequestForUserCommand(Guid.NewGuid(), "Gerekçe");
+
+        var asInstitution = () => Handler("InstitutionAdmin", new ErasureSubject(false, false))
+            .Handle(command, CancellationToken.None);
+        var unknownUser = () => Handler("SystemAdmin", null).Handle(command, CancellationToken.None);
+
+        await asInstitution.Should().ThrowAsync<UnauthorizedAccessException>();
+        await unknownUser.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.NotFoundException>();
     }
 
     private static DateTime Utc(int hour) =>
@@ -119,6 +196,27 @@ public sealed class DataSubjectRequestReviewTests
         public Task AddAsync(DataSubjectRequest value, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<DataSubjectRequest>> GetByRequesterAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<DataSubjectRequest>>([]);
         public Task<(IReadOnlyList<DataSubjectRequest> Items, int TotalCount)> GetForReviewAsync(DataSubjectRequestStatus? status, int pageNumber, int pageSize, CancellationToken cancellationToken) => Task.FromResult<(IReadOnlyList<DataSubjectRequest>, int)>(([request], 1));
+    }
+
+    private sealed class RecordingRepository : IDataSubjectRequestRepository
+    {
+        public bool HasActive { get; init; }
+        public List<DataSubjectRequest> Added { get; } = [];
+        public Task<bool> HasActiveAsync(Guid userId, DataSubjectRequestType requestType, PersonalDataScope scope, CancellationToken cancellationToken) => Task.FromResult(HasActive);
+        public Task AddAsync(DataSubjectRequest value, CancellationToken cancellationToken)
+        {
+            Added.Add(value);
+            return Task.CompletedTask;
+        }
+        public Task<DataSubjectRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<DataSubjectRequest?>(null);
+        public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task<IReadOnlyList<DataSubjectRequest>> GetByRequesterAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<DataSubjectRequest>>([]);
+        public Task<(IReadOnlyList<DataSubjectRequest> Items, int TotalCount)> GetForReviewAsync(DataSubjectRequestStatus? status, int pageNumber, int pageSize, CancellationToken cancellationToken) => Task.FromResult<(IReadOnlyList<DataSubjectRequest>, int)>(([], 0));
+    }
+
+    private sealed class StubSubjects(ErasureSubject? subject) : IErasureSubjectDirectory
+    {
+        public Task<ErasureSubject?> FindAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(subject);
     }
 
     private sealed class StubCurrentUser(Guid userId, string[] roles) : ICurrentUserService
