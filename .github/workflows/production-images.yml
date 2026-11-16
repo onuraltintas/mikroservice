@@ -3,7 +3,14 @@ name: Production images
 # Decision 30.10.2026: production images are built here instead of on the 2-core server, whose admin-panel build
 # reached 87% memory. Images are pushed to GHCR only for green CI runs on main and tagged with the 7-character commit
 # id the server already uses as RELEASE_TAG. The server pulls them with infrastructure/scripts/pull-release-images.sh.
+#
+# Decision 16.11.2026: a merged pull request does not wait for the second CI run on main. The same checks already
+# ran on the pull request; when the merge commit holds exactly the files that run checked (same tree as the pull
+# request's head) the images are built right after the merge. Anything else (a direct push, a pull request that was
+# behind main, a pull request without a green run) still waits for the CI run on main, as before.
 on:
+  push:
+    branches: [main]
   workflow_run:
     workflows: ["EduPlatform CI"]
     types: [completed]
@@ -17,17 +24,58 @@ on:
 permissions:
   contents: read
   packages: write
+  actions: read
 
 concurrency:
   group: production-images-${{ github.event.workflow_run.head_sha || inputs.ref || github.sha }}
   cancel-in-progress: false
 
 jobs:
+  gate:
+    name: Decide whether to build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+    steps:
+      - name: Decide
+        id: decide
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+        run: |
+          # "checked" = the commit is a merge whose files are exactly those of a pull request head with a green CI run.
+          checked=false
+          sha="${RUN_SHA:-$GITHUB_SHA}"
+          if [ "$EVENT" != "workflow_dispatch" ]; then
+            head=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha" --jq '.parents[1].sha // empty' || true)
+            if [ -n "$head" ]; then
+              merged_tree=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha" --jq '.commit.tree.sha' || true)
+              head_tree=$(gh api "repos/$GITHUB_REPOSITORY/commits/$head" --jq '.commit.tree.sha' || true)
+              green=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$head&event=pull_request&status=success&per_page=50" \
+                --jq '[.workflow_runs[] | select(.name == "EduPlatform CI")] | length' || echo 0)
+              if [ -n "$merged_tree" ] && [ "$merged_tree" = "$head_tree" ] && [ "${green:-0}" -ge 1 ]; then checked=true; fi
+            fi
+          fi
+          case "$EVENT" in
+            workflow_dispatch) build=true ;;
+            push) build=$checked ;;
+            workflow_run)
+              # The run after the merge already built a checked merge; build here only what it left out.
+              if [ "$RUN_CONCLUSION" = "success" ] && [ "$RUN_EVENT" = "push" ] && [ "$checked" = "false" ]; then build=true; else build=false; fi ;;
+            *) build=false ;;
+          esac
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "event=$EVENT commit=$sha checked=$checked build=$build" >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Build ${{ matrix.name }}
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    needs: gate
+    if: needs.gate.outputs.build == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:

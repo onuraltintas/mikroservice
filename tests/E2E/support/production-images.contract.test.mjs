@@ -40,14 +40,28 @@ test('the image workflow builds every production image from the compose Dockerfi
   }
 });
 
-test('images are built only for green CI runs on main and tagged with the 7-character commit id', () => {
+test('images are built only for checked commits on main and tagged with the 7-character commit id', () => {
   assert.match(workflow, /workflow_run:\s*\n\s*workflows:\s*\[\s*"EduPlatform CI"\s*\]/);
   assert.match(workflow, /branches:\s*\[\s*main\s*\]/);
-  assert.match(workflow, /conclusion == 'success'/);
+  assert.match(workflow, /"\$RUN_CONCLUSION" = "success" \] && \[ "\$RUN_EVENT" = "push" \]/);
+  assert.match(workflow, /needs: gate\s*\n\s*if: needs\.gate\.outputs\.build == 'true'/);
   assert.match(workflow, /packages:\s*write/);
   assert.match(workflow, /ghcr\.io/);
   assert.match(workflow, /cut -c1-7|::7\}|substring\(.*7\)/);
   assert.match(workflow, /RELEASE_TAG=/, 'the speed reading frontend needs its RELEASE_TAG build argument');
+});
+
+// Decision 16.11.2026: a merged pull request does not wait for the second CI run on main.
+test('a merge is built right away only when it holds exactly the files a green pull request run checked', () => {
+  assert.match(workflow, /\n  push:\s*\n\s*branches:\s*\[\s*main\s*\]/);
+  const gate = workflow.slice(workflow.indexOf('\n  gate:\n'), workflow.indexOf('\n  build:\n'));
+  assert.match(gate, /\.parents\[1\]\.sha/, 'the pull request head is the second parent of the merge');
+  assert.match(gate, /"\$merged_tree" = "\$head_tree"/, 'same files as the checked head');
+  assert.match(gate, /event=pull_request&status=success/);
+  assert.match(gate, /select\(\.name == "EduPlatform CI"\)/);
+  assert.match(gate, /push\) build=\$checked ;;/);
+  assert.match(gate, /\[ "\$checked" = "false" \]; then build=true/, 'the run after CI on main builds only what the merge run left out');
+  assert.match(workflow, /actions:\s*read/);
 });
 
 test('the server pull script fetches the same images, never builds and refuses an incomplete set', () => {
