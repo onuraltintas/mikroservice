@@ -448,7 +448,8 @@ public sealed class WeeklyProposalEngineTests
             Assert.True(day.Sum(x => x.DurationMinutes) <= Math.Min(limit, budgets.GetValueOrDefault(day.Key)));
         }
         var days = result.Slots.Select(x => x.Day).Distinct().ToArray();
-        foreach (var lesson in result.Slots.GroupBy(x => x.LessonId))
+        // A 30-minute card (17.11.2026) goes on with the lesson next to it, so only the hours are spread over the days.
+        foreach (var lesson in result.Slots.Where(x => x.DurationMinutes == WeeklyProposalEngine.SessionMinutes).GroupBy(x => x.LessonId))
             if (lesson.GroupBy(x => x.Day).Any(x => x.Count() > 1))
                 Assert.True(days.All(day => lesson.Any(x => x.Day == day)), "a lesson came twice on a day while another study day was free of it");
     }

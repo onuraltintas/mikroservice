@@ -496,10 +496,9 @@ public sealed class WeeklyProposalServiceTests
             new(Guid.NewGuid(), Guid.NewGuid(), "Fizik", "LGS", DayOfWeek.Thursday, 1020, 30)]);                                 // no longer chosen
         await f.Db.SaveChangesAsync();
         var view = await Proposals(f).TempoOptionsAsync(new(), default);
-        // No free hour is left (Thursday's half hour after Fizik is too short); the 180 saved Matematik minutes count, the Monday hour outside
-        // the study times included, Fizik's 30 do not (counting the saved minutes inside the study times would give 60 + 60 + 30 = 150);
-        // Türkçe gets no time, so nothing fits.
-        Assert.All(view.Options, x => Assert.Equal((180, false), (x.CapacityWeeklyMinutes, x.Fits)));
+        // No free hour is left; Thursday's half hour after Fizik becomes a 30-minute Türkçe card (17.11.2026). The 180 saved Matematik
+        // minutes count, the Monday hour outside the study times included, Fizik's 30 do not: 180 + 30, and Türkçe has time, so it fits.
+        Assert.All(view.Options, x => Assert.Equal((210, true), (x.CapacityWeeklyMinutes, x.Fits)));
         Assert.All(view.Options, x => Assert.True(x.NeededWeeklyMinutes <= x.CapacityWeeklyMinutes));
         await AssertTheProposalAgrees(view, r => Proposals(f).ProposeAsync(r, default));
         // Replace mode starts from an empty week: three free hours, both lessons get time.
@@ -622,7 +621,7 @@ public sealed class WeeklyProposalServiceTests
         // The free hours were edited by hand after the routine: the budgets no longer apply.
         f.Db.Entry(routine).Property(x => x.AvailabilityVersion).CurrentValue = hours.Version + 1; await f.Db.SaveChangesAsync();
         var free = await Proposals(f, staff).ProposeForStudentAsync(world.Student, new(WeeklyProposalMode.Replace), default);
-        Assert.Equal(10 * 60, free.FreeMinutes);
+        Assert.Equal(15 * 60, free.FreeMinutes); // 17:00–20:00 on weekdays, no break (17.11.2026)
         Assert.Contains(free.Slots, x => x.Day == DayOfWeek.Wednesday);
     }
 
