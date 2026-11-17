@@ -100,7 +100,8 @@ export class StudyPlanCalendarComponent implements OnChanges {
   title(){const a=this.anchor();return this.view()==='month'?a.toLocaleDateString('tr-TR',{month:'long',year:'numeric'}):this.view()==='day'?this.dayTitle(a):`${this.days()[0].toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${this.days()[6].toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'})}`;}
   dayTitle(day:Date){return day.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'});}
   shortDay(day:Date){return day.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',weekday:'short'});}
-  columns(){return `44px repeat(${this.days().length},minmax(${this.view()==='week'?150:240}px,1fr))`;}
+  // Live test #34: at 150 px a day the week needed 1094 px and Sunday was cut in the teacher's panel (1012 px); 128 px fits it.
+  columns(){return `44px repeat(${this.days().length},minmax(${this.view()==='week'?128:240}px,1fr))`;}
   done(block:PlanCalendarBlock){return block.tasks.filter(t=>t.isCompleted).length;}
   status(block:PlanCalendarBlock){const done=this.done(block);if(done===block.tasks.length)return 'Tamamlandı';const overdue=block.tasks.some(task=>calendarTaskOverdue(task,this.zone));if(done)return `Kısmen tamamlandı · ${done}/${block.tasks.length}${overdue?' · gecikti':''}`;const minutes=block.tasks.reduce((sum,t)=>sum+(t.actualMinutes??0),0);if(minutes)return `Kısmi çalışma · ${minutes} dk${overdue?' · gecikti':''}`;return overdue?'Gecikti · tamamlanmadı':'Bekliyor';}
   statusClass(block:PlanCalendarBlock){const done=this.done(block);return done===block.tasks.length?'ui-status--success':done?'ui-status--info':block.tasks.some(task=>calendarTaskOverdue(task,this.zone))?'ui-status--danger':'ui-status--warning';}

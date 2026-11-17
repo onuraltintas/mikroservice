@@ -51,7 +51,8 @@ body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content {
   :is(.student-option, label.check) { min-height: 44px; }
   :is(button, a) { touch-action: manipulation; }
   button { height: auto; }
-  button:where(:not([class])) { padding: 10px 14px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-text); background: var(--ui-surface); cursor: pointer; }
+  // Live test #22: a [class.x] binding leaves an empty class attribute when x turns off; such a button is still a plain one.
+  button:where(:not([class]), [class='']) { padding: 10px 14px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-text); background: var(--ui-surface); cursor: pointer; }
   :is(input, textarea)::placeholder { opacity: 1; color: var(--ui-text-muted); }
   :is(.note, small, .muted, .filter-note, .section-loading) { color: var(--ui-text-muted); opacity: 1; font-size: 13px; }
   :is(.teacher-workspace, .tracking, .study-overview, .roster, .assignments, .teacher-goals, .teacher-plan, .profile-panel) { color: var(--ui-text); }

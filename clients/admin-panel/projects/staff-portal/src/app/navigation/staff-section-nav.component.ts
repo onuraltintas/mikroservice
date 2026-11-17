@@ -41,8 +41,10 @@ export interface StaffSectionGroup { label: string; items: StaffSectionItem[] }
     .section-group { display: flex; flex-direction: column; gap: 4px; }
     .section-group-label { padding: 2px 8px 0; color: var(--ui-text-muted, #5b6b66); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     .section-group-items { display: flex; flex-wrap: wrap; gap: 4px; }
-    button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 8px; color: var(--ui-text, #1d372f); background: transparent; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
-    button.active { background: var(--ui-brand-soft, #e9f1e6); box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
+    /* Live test 16.11.2026 (#22): the portal framed only buttons without a class attribute; a tab that had been
+       active kept an empty class attribute and lost its frame. The tabs' look is set here, the same for every tab. */
+    button { min-height: 38px; padding: 10px 14px; border: 1px solid var(--ui-border, #d6dfe2); border-radius: 10px; color: var(--ui-text, #1d372f); background: var(--ui-surface, #fff); font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
+    button.active { border-color: transparent; background: var(--ui-brand-soft, #e9f1e6); box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
     button:focus-visible, select:focus-visible { outline: 2px solid #779372; outline-offset: 2px; }
     .section-select { display: none; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 750; color: var(--ui-text, #1d372f); }
     select { min-height: 44px; padding: 0 10px; border: 1px solid var(--ui-border, #d6dfe2); border-radius: 10px; color: inherit; background: var(--ui-surface, #fff); font: inherit; font-size: 15px; }

@@ -104,7 +104,7 @@
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-tracking.service.spec.ts": "e29c701fe726aec84210ef76e613806a306a3eae84db2f4026a6b588cd8818c8",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-tracking.service.ts": "76572adf0febbb0fb53fa740fe7df89bad1245176c03e2aab7eaa738b500ab6b",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.html": "fda84e553f9f399b947db09e6a3dfbbc571158b04369e92b4b87b3a766777368",
-    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.scss": "e855b7fcb63758b66e54f0b3b68b102f79277780dfa86960f57d005c08042ed5",
+    "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.scss": "271c7be247b0ae19cb271fba58538d21ee804a3a2276749194e3b71f1572b1ef",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.spec.ts": "44688bfab287ab7cd391d72fee4328c368fa9ba84048b8efc771da3a73e44514",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-workspace.component.ts": "787a2fbff1bad1c085c83c9a9a31bfbc9415a547afdb0618f0176fce5a260e49",
     "clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-weekly-review.spec.ts": "172c45ce278bc55988263ef8f59987702469c7a3c75c84cb7d1627457fecf677",
