@@ -150,9 +150,8 @@
             </section>
           }
           <div class="actions"><button type="button" class="secondary" [disabled]="topicPage <= 1" (click)="loadCatalog(topicPage - 1)">Önceki konular</button><button type="button" class="secondary" [disabled]="topicPage * 50 >= (catalog()?.topics?.totalCount ?? 0)" (click)="loadCatalog(topicPage + 1)">Sonraki konular</button></div>
-          <a routerLink="/coaching-portal/growth/exams">Deneme sonucumu ekle (isteğe bağlı)</a>
-          <!-- F2 #28: no "gözden geçirdim" box; saving this step is the confirmation. -->
-          <button type="button" (click)="finishStarting()">Kaydet ve önizlemeye geç</button>
+          <!-- F2 #28: no "gözden geçirdim" box; saving this step is the confirmation. Live test #9: the link and the button on one spaced row. -->
+          <div class="actions"><button type="button" (click)="finishStarting()">Kaydet ve önizlemeye geç</button><a routerLink="/coaching-portal/growth/exams">Deneme sonucumu ekle (isteğe bağlı)</a></div>
         </fieldset>
       }
     </section>

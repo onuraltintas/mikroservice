@@ -55,10 +55,10 @@ it('opens the parent link settings from a parent-link notice for a student',()=>
 });
 
 // Live test 16.11.2026 (#23): an invitation notice leads to the place where it is answered.
-it('opens the invitations on Profilim from an invitation notice for a student, and nothing for a teacher',()=>{
+it('opens the invitations from an invitation notice, for a student (Profilim) and a teacher (Koçluk profilim ve davetlerim)',()=>{
   const target=coachingNotificationTarget({type:'Invitation',relatedEntityId:null},'student');
   expect(target).toEqual({kind:'profile',id:'',label:'Daveti aç'});
   expect(coachingStudentNotificationLink(target!)).toEqual({path:'/coaching-portal/account/settings/profile',query:null,fragment:'coaching-invitations-title'});
-  expect(coachingNotificationTarget({type:'Invitation',relatedEntityId:null},'teacher')).toBeNull();
+  expect(coachingNotificationTarget({type:'Invitation',relatedEntityId:null},'teacher')).toEqual({kind:'profile',id:'',label:'Daveti aç'});
   expect(coachingStudentNotificationLink({kind:'plan',id:'p',label:'Planı aç'})).toEqual({path:'/coaching-portal/plan',query:{plan:'p'}});
 });

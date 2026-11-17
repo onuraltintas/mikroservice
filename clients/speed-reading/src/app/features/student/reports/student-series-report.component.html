@@ -43,7 +43,7 @@
             <li class="rp-list__item">
               <div class="series-info">
                 <div class="series-name">{{ series.seriesName }}</div>
-                <div class="series-stats">{{ series.daysCompleted }}/{{ series.totalDays }} gün - Ort.: {{ series.averageScore }}%</div>
+                <div class="series-stats">{{ series.daysCompleted }}/{{ series.totalDays }} gün - Ort.: %{{ series.averageScore }}</div>
                 <div class="rp-progress-bar">
                   <div class="rp-progress-bar__fill" [style.width.%]="series.progress"></div>
                 </div>

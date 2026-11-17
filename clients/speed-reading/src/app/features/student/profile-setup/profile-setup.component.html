@@ -159,7 +159,7 @@
             <input class="ps-input" type="number" formControlName="targetComprehension" min="60" max="100">
             <div class="ps-rec">
               <span class="material-icons ps-rec__icon">lightbulb</span>
-              Önerilen: <strong>{{ recommendedComprehension }}%</strong>
+              Önerilen: <strong>%{{ recommendedComprehension }}</strong>
             </div>
           </div>
 
@@ -231,7 +231,7 @@
             </div>
             <div class="ps-summary-row">
               <span>Anlama Oranı</span>
-              <span class="ps-summary-row__hl">{{ goalsForm.value.targetComprehension }}%</span>
+              <span class="ps-summary-row__hl">%{{ goalsForm.value.targetComprehension }}</span>
             </div>
             <div class="ps-summary-row">
               <span>Günlük Hedef</span>

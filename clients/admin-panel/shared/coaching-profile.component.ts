@@ -198,6 +198,13 @@ export class CoachingProfileComponent implements OnInit {
   @Input({ required: true }) apiUrl = '';
   @Input() role: 'Student' | 'Teacher' = 'Student';
   @Input() setupMode = false;
+  /** The teacher's invitation notice: open at the invitations (the staff portal keeps no address fragment). */
+  private invitationsAsked = false;
+  @Input() set showInvitations(value: boolean) {
+    this.invitationsAsked = value;
+    // Already loaded (the section was open): scroll now; otherwise the load scrolls when the invitations arrive.
+    if (value && this.invitations().length) this.showInvitationsWhenAsked();
+  }
   readonly saved = output<void>();
   private readonly http = inject(HttpClient);
   private readonly destroy = inject(DestroyRef);
@@ -528,7 +535,7 @@ export class CoachingProfileComponent implements OnInit {
   }
   /** Live test 16.11.2026 (#23): an invitation notice opens this page at the invitations, which stand at its end. */
   private showInvitationsWhenAsked() {
-    if (typeof location === 'undefined' || location.hash !== '#coaching-invitations-title') return;
+    if (!this.invitationsAsked && (typeof location === 'undefined' || location.hash !== '#coaching-invitations-title')) return;
     setTimeout(() => document.getElementById('coaching-invitations-title')?.scrollIntoView({ block: 'start' }));
   }
   respond(id: string, action: 'accept' | 'reject') {

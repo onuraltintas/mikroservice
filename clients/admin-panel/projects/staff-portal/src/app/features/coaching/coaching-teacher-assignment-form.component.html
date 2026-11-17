@@ -28,7 +28,7 @@
       </div>
 
       <div class="editor-grid two-columns">
-        <label for="assignment-title">Başlık <span aria-hidden="true">*</span>
+        <label for="assignment-title"><span class="label-line">Başlık <span aria-hidden="true">*</span></span>
           <input id="assignment-title" name="title" [(ngModel)]="form.title" required maxlength="200" autocomplete="off">
         </label>
         <label for="assignment-subject">Ders
@@ -54,7 +54,7 @@
             <option value="Mixed">Karma</option>
           </select>
         </label>
-        <label for="assignment-due-date">Son tarih <span aria-hidden="true">*</span>
+        <label for="assignment-due-date"><span class="label-line">Son tarih <span aria-hidden="true">*</span></span>
           <input id="assignment-due-date" name="dueDate" type="datetime-local" [(ngModel)]="form.dueDate" required>
         </label>
         <label for="assignment-grade">Sınıf seviyesi
@@ -69,7 +69,7 @@
             <p>Kitap ve sayfa aralığı zorunludur. Soru aralığı isteğe bağlıdır.</p>
           </div>
           <div class="editor-grid two-columns">
-            <label for="book-title">Kitap adı <span aria-hidden="true">*</span>
+            <label for="book-title"><span class="label-line">Kitap adı <span aria-hidden="true">*</span></span>
               <input id="book-title" name="bookTitle" [(ngModel)]="form.bookTitle" maxlength="200">
             </label>
             <label for="book-isbn">ISBN
@@ -83,10 +83,10 @@
             </label>
           </div>
           <div class="editor-grid four-columns">
-            <label for="book-start-page">İlk sayfa <span aria-hidden="true">*</span>
+            <label for="book-start-page"><span class="label-line">İlk sayfa <span aria-hidden="true">*</span></span>
               <input id="book-start-page" name="bookStartPage" type="number" min="1" [(ngModel)]="form.bookStartPage">
             </label>
-            <label for="book-end-page">Son sayfa <span aria-hidden="true">*</span>
+            <label for="book-end-page"><span class="label-line">Son sayfa <span aria-hidden="true">*</span></span>
               <input id="book-end-page" name="bookEndPage" type="number" min="1" [(ngModel)]="form.bookEndPage">
             </label>
             <label for="book-start-question">İlk soru

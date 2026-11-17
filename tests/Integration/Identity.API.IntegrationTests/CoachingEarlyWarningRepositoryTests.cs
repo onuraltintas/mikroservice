@@ -100,6 +100,31 @@ public sealed class CoachingEarlyWarningRepositoryTests
             .AssignmentCount.Should().Be(0);
     }
 
+    [Fact]
+    public async Task CompletedStudyWorkAndHandedInWorkCountAsTheStudentsLastActivity()
+    {
+        // Live test 16.11.2026 (#42): a student who completed planned work that day was shown "Son etkinlik eski".
+        await using var context = CreateContext();
+        var institutionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var idleStudentId = Guid.NewGuid();
+        var fromDate = DateTime.UtcNow.AddDays(-30);
+        var toDate = DateTime.UtcNow.AddDays(1);
+
+        var revision = StudyPlanRevision.Create(studentId, Guid.NewGuid(), 1, "Plan");
+        var task = StudyPlanTask.Create(revision, DateOnly.FromDateTime(DateTime.UtcNow), "Çalışma", 30);
+        task.Complete(30);
+        context.AddRange(revision, task);
+        await context.SaveChangesAsync();
+
+        var result = await new CoachingEarlyWarningRepository(context)
+            .GetStudentMetricsAsync(institutionId, new[] { studentId, idleStudentId }, null, fromDate, toDate, CancellationToken.None);
+
+        result.Single(item => item.StudentId == studentId).LastActivityAt.Should().NotBeNull()
+            .And.BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(5));
+        result.Single(item => item.StudentId == idleStudentId).LastActivityAt.Should().BeNull();
+    }
+
     private static CoachingDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<CoachingDbContext>()

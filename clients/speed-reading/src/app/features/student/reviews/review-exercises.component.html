@@ -54,7 +54,7 @@
                 <tbody>
                     <tr *ngFor="let item of history()">
                         <td>{{ item.reviewedAt | date:'dd.MM.yyyy HH:mm' }}</td>
-                        <td>{{ item.score }}%</td>
+                        <td>%{{ item.score }}</td>
                         <td>{{ item.intervalDays }} gün</td>
                     </tr>
                 </tbody>
@@ -178,7 +178,7 @@
                         <div class="sp-card-title">{{ review.exerciseTitle }}</div>
                     </div>
                     <div class="sp-card-content">
-                        <p>Son puan: {{ review.lastReviewScore }}%</p>
+                        <p>Son puan: %{{ review.lastReviewScore }}</p>
                         <p>Son tekrar: {{ review.lastReviewedAt ? (review.lastReviewedAt | date:'dd.MM.yyyy HH:mm') : 'Henüz yok' }}</p>
                     </div>
                     <div class="sp-card-actions">

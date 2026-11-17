@@ -104,7 +104,7 @@
                 <div *ngIf="parsedConfig?.engineType === 'word_highlight'" class="exercise-details">
                     <div class="detail-item" *ngIf="parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
                         <span class="label">{{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'Gösterim temposu:' : 'Hedef Hız:' }}</span>
-                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} {{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'kelime/dk' : 'WPM' }}</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} kelime/dk</span>
                     </div>
                     <div class="detail-item"
                         *ngIf="parsedConfig?.engineConfig?.['pacer']?.['chunkSize'] || parsedConfig?.engineConfig?.['content']?.['chunkSize']">
@@ -219,11 +219,11 @@
         <div class="game-stats">
             <div class="stat">
                 <span class="label">Skor</span>
-                <span class="value">{{ engineState.score }}%</span>
+                <span class="value">%{{ engineState.score }}</span>
             </div>
             <div class="stat">
                 <span class="label">Doğruluk</span>
-                <span class="value">{{ engineState.accuracy }}%</span>
+                <span class="value">%{{ engineState.accuracy }}</span>
             </div>
             <div class="stat">
                 <span class="label">Hatalar</span>
@@ -256,7 +256,8 @@
                     </span>
                 </ng-container>
                 <ng-template #normalProgress>
-                    <span>{{ engineState.currentStep }} / {{ engineState.totalSteps }} {{ isFixationMode() ? 'Tur' : 'Nokta' }}</span>
+                    @if (isTimedTracking()) { <span>{{ engineState.remainingSeconds ?? 0 }} sn kaldı</span> }
+                    @else { <span>{{ engineState.currentStep }} / {{ engineState.totalSteps }} {{ isFixationMode() ? 'Tur' : 'Nokta' }}</span> }
                     <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
                 </ng-template>
             </div>
@@ -497,7 +498,7 @@
             </div>
             <div class="stat">
                 <span class="label">İlerleme</span>
-                <span class="value">{{ getProgressPercent() | number:'1.0-0' }}%</span>
+                <span class="value">%{{ getProgressPercent() | number:'1.0-0' }}</span>
             </div>
             <div class="stat">
                 <span class="label">Süre</span>
@@ -549,7 +550,7 @@
             </div>
             <div class="stat">
                 <span class="label">İlerleme</span>
-                <span class="value">{{ getProgressPercent() | number:'1.0-0' }}%</span>
+                <span class="value">%{{ getProgressPercent() | number:'1.0-0' }}</span>
             </div>
         </div>
     </div>
@@ -617,7 +618,7 @@
                 </div>
                 <div class="stat-item" *ngIf="getReadingScrollProgress() > 0">
                     <span class="material-icons">vertical_align_bottom</span>
-                    <span>{{ getReadingScrollProgress() | number:'1.0-0' }}% kaydırıldı</span>
+                    <span>%{{ getReadingScrollProgress() | number:'1.0-0' }} kaydırıldı</span>
                 </div>
             </div>
 
@@ -704,7 +705,7 @@
         <div class="game-stats">
             <div class="stat">
                 <span class="label">Göreli uzaklık</span>
-                <span class="value">{{ getExpansionRelativeDistance() | number:'1.0-1' }}%</span>
+                <span class="value">%{{ getExpansionRelativeDistance() | number:'1.0-1' }}</span>
             </div>
             <div class="stat correct-stat">
                 <span class="label">Doğru</span>
@@ -1046,7 +1047,7 @@
             </div>
             <div class="wpm-badge" *ngIf="engine?.engineType !== 'exam_simulation' && !isPacedReadingEngine() && readingWpm > 0">
                 <span class="material-icons">speed</span>
-                {{ readingWpm }} kelime/dk
+                {{ readingWpm | number:'1.0-0' }} kelime/dk
             </div>
         </div>
 
@@ -1124,7 +1125,7 @@
             <!-- WPM Real-time -->
             <div class="wpm-badge">
                 <span class="material-icons">speed</span>
-                <span>Tempo: {{ getSubvocCurrentWpm() }} kelime/dakika</span>
+                <span>Tempo: {{ getSubvocCurrentWpm() }} kelime/dk</span>
             </div>
 
             <div *ngIf="isSubvocMetronomeBeat()" class="visual-metronome-indicator">
@@ -1163,7 +1164,7 @@
             </div>
             <div class="target-info">
                 <span class="material-icons">trending_up</span>
-                <span>Gösterim temposu: {{ getSubvocTargetWpm() }} kelime/dakika</span>
+                <span>Gösterim temposu: {{ getSubvocTargetWpm() }} kelime/dk</span>
             </div>
             <div class="tip-info">
                 <span class="material-icons">campaign</span>
@@ -1198,7 +1199,7 @@
             <div class="header-right">
                 <div class="wpm-badge wpm-badge--compact">
                     <span class="material-icons">speed</span>
-                    <span>Gösterim temposu: {{ getSubvocCurrentWpm() }} kelime/dakika</span>
+                    <span>Gösterim temposu: {{ getSubvocCurrentWpm() }} kelime/dk</span>
                 </div>
             </div>
         </div>
@@ -1707,7 +1708,7 @@
                         </div>
                         <div class="schulte-summary__stat-grid">
                             <div><strong>{{ result?.score }}</strong><span>Skor</span></div>
-                            <div><strong>{{ result?.accuracy | number:'1.0-0' }}%</strong><span>Doğruluk</span></div>
+                            <div><strong>%{{ result?.accuracy | number:'1.0-0' }}</strong><span>Doğruluk</span></div>
                             <div><strong>{{ result?.errors }}</strong><span>Hata</span></div>
                         </div>
                         <div class="schulte-summary__rewards" *ngIf="sessionResult?.xpGained || sessionResult?.leveledUp">
@@ -1795,7 +1796,7 @@
                     <div class="stat-label">Skor</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{{ result?.accuracy | number:'1.0-0' }}%</div>
+                    <div class="stat-value">%{{ result?.accuracy | number:'1.0-0' }}</div>
                     <div class="stat-label">Doğruluk</div>
                 </div>
                 <div class="stat-card">
@@ -1818,7 +1819,7 @@
                     <div class="stat-label">Metindeki grup sayısı</div>
                 </div>
                 <div class="stat-card" *ngIf="result?.details?.completionPercent != null">
-                    <div class="stat-value">{{ result?.details?.completionPercent | number:'1.0-0' }}%</div>
+                    <div class="stat-value">%{{ result?.details?.completionPercent | number:'1.0-0' }}</div>
                     <div class="stat-label">Tamamlanan gösterim</div>
                 </div>
                 <div class="stat-card" *ngIf="result?.details?.rsvpPresentedWords != null">
@@ -1830,7 +1831,7 @@
                     <div class="stat-label">Gösterim temposu (kelime/dk)</div>
                 </div>
                 <div class="stat-card" *ngIf="result?.details?.comprehensionScore != null">
-                    <div class="stat-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="stat-value">%{{ result?.details?.comprehensionScore }}</div>
                     <div class="stat-label">Anlama</div>
                 </div>
             </div>
@@ -1868,14 +1869,14 @@
                 Kayıtlı cevap süresine ağ gecikmesi etki edebilir; duraklama süresi hariç tutulur.
             </div>
             <div class="stats-row" *ngIf="engine?.engineType === 'visual_expansion'">
-                <div class="stat-card"><div class="stat-value">{{ getExpansionDistancePercent(result?.details?.maxDegreesReached) | number:'1.0-1' }}%</div><div class="stat-label">En büyük göreli uzaklık</div></div>
+                <div class="stat-card"><div class="stat-value">%{{ getExpansionDistancePercent(result?.details?.maxDegreesReached) | number:'1.0-1' }}</div><div class="stat-label">En büyük göreli uzaklık</div></div>
                 <div class="stat-card"><div class="stat-value">{{ (result?.details?.averageResponseTimeMs || 0) / 1000 | number:'1.2-2' }} sn</div><div class="stat-label">Ortalama cevap süresi</div></div>
                 <div class="stat-card"><div class="stat-value">{{ result?.details?.roundResults?.length }} / {{ result?.totalSteps }}</div><div class="stat-label">Tamamlanan / planlanan tur</div></div>
             </div>
             <ng-container *ngIf="engine?.engineType === 'visual_expansion' && result?.details?.targetSummary as target">
                 <div class="measurement-not-available">{{ target.targetReached ? 'Hedefe ulaşıldı' : 'Hedefe ulaşılmadı' }}</div>
                 <div class="stats-row">
-                    <div class="stat-card"><div class="stat-value">{{ getExpansionDistancePercent(target.targetDistance) | number:'1.0-1' }}%</div><div class="stat-label">Hedef uzaklık</div></div>
+                    <div class="stat-card"><div class="stat-value">%{{ getExpansionDistancePercent(target.targetDistance) | number:'1.0-1' }}</div><div class="stat-label">Hedef uzaklık</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.targetRounds }}</div><div class="stat-label">Hedefteki tur</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.targetCorrectRounds }}</div><div class="stat-label">Hedefteki doğru tur</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.targetAccuracy == null ? 'Ölçülmedi' : target.targetAccuracy + '%' }}</div><div class="stat-label">Hedefteki doğruluk</div></div>
@@ -1930,7 +1931,7 @@
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'skimming'">
                 Ana fikir başarısı sorularla ölçülür; metne göz gezdirme süresi normal okuma hızı (kelime/dk) değildir.
                 <div *ngIf="result?.details?.inspectionTimeMs != null">İnceleme süresi: {{ formatTime(result?.details?.inspectionTimeMs) }}</div>
-                <div *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: {{ result?.details?.comprehensionScore }}%</div>
+                <div *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: %{{ result?.details?.comprehensionScore }}</div>
             </div>
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'scan_find' && result?.details?.measurementStatus === 'Measured'">
                 {{ scanningResultMessage() }}
@@ -1955,7 +1956,7 @@
                 <!-- Comprehension Box -->
                 <div class="result-box comprehension-box">
                     <span class="material-icons">psychology</span>
-                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
                     <div class="result-label">Anlama Oranı</div>
                 </div>
                 <!-- Correct Answers -->
@@ -1988,13 +1989,13 @@
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
                     <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} kelime/dk</div>
-                    <div class="result-label">Okuma temposu (kelime/dakika)</div>
+                    <div class="result-label">Okuma temposu (kelime/dk)</div>
                     <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğiniz beyanına dayanır.</p>
                 </div>
                 <!-- H21: free reading with questions also shows its comprehension. -->
                 <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null && result?.details?.measurementStatus === 'Measured'">
                     <span class="material-icons">psychology</span>
-                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
                     <div class="result-label">Anlama Oranı</div>
                 </div>
             </div>
@@ -2017,17 +2018,17 @@
             <div class="speed-reading-results" *ngIf="engine?.engineType === 'adaptive_fluency' && result?.details">
                 <div class="result-box wpm-box">
                     <span class="material-icons">flag</span>
-                    <div class="result-value">{{ result?.details?.baselineWpm }} kelime/dk</div>
+                    <div class="result-value">{{ result?.details?.baselineWpm | number:'1.0-0' }} kelime/dk</div>
                     <div class="result-label">Başlangıç</div>
                 </div>
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
-                    <div class="result-value">{{ result?.details?.wpm }} kelime/dk</div>
+                    <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} kelime/dk</div>
                     <div class="result-label">Yeni metin</div>
                 </div>
                 <div class="result-box comprehension-box">
                     <span class="material-icons">psychology</span>
-                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
                     <div class="result-label">Transfer anlama</div>
                 </div>
                 <div class="result-box questions-box">
@@ -2056,7 +2057,7 @@
                 <!-- Comprehension Box (Only if available) -->
                 <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null">
                     <span class="material-icons">psychology</span>
-                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
                     <div class="result-label">Anlama Oranı</div>
                 </div>
 

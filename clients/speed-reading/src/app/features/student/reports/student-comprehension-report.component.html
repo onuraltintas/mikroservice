@@ -81,7 +81,7 @@
                         @for (item of report()!.categoryBreakdown; track item.categoryName) {
                         <tr>
                             <td>{{ item.categoryName }}</td>
-                            <td>{{ item.comprehensionRate }}%</td>
+                            <td>%{{ item.comprehensionRate }}</td>
                             <td>{{ item.correctAnswers }}/{{ item.questionsAnswered }}</td>
                         </tr>
                         }

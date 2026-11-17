@@ -11,6 +11,12 @@ describe('StaffNotificationCenterComponent', () => {
     const button=Array.from(fixture.nativeElement.querySelectorAll('button')).find((button:any)=>button.textContent.includes('Haftalık değerlendirmeyi aç'))as HTMLButtonElement;button.click();
     expect(emit).toHaveBeenCalledWith(expect.objectContaining({studentId:student,weekStart:'2026-10-12',decisionId:null}));expect(assignment).not.toHaveBeenCalled();
   });
+  it('opens the teacher\'s invitations from an invitation notice (17.11.2026, #23)',()=>{
+    const{fixture,component}=createComponent({getNotifications:vi.fn(()=>of([{id:'inv',title:'Yeni bir davetin var',message:'Kurum',isRead:false,type:'Invitation'}]))});
+    fixture.componentRef.setInput('canOpenCoachingAssignments',true);fixture.detectChanges();const emit=vi.spyOn(component.openCoachingInvitations,'emit');
+    const button=Array.from(fixture.nativeElement.querySelectorAll('button')).find((button:any)=>button.textContent.includes('Daveti aç'))as HTMLButtonElement;button.click();
+    expect(emit).toHaveBeenCalledTimes(1);
+  });
   it('emits the exact submitted assignment only for the Coaching teacher workspace',()=>{
     const id='c260e5c4-facd-42cd-af3a-69aa0b9cc67f';
     const {component,fixture}=createComponent({getNotifications:vi.fn(()=>of([

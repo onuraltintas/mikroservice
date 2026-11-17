@@ -19,6 +19,8 @@
 .three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .editor-form label { display: grid; min-width: 0; gap: 6px; color: var(--ui-text-muted); font-size: 13px; font-weight: 700; }
 .editor-form label > span { color: var(--ui-text-muted); }
+// Live test #27: the required mark stays on the label's line, so fields side by side line up.
+.editor-form label > .label-line { display: inline; }
 .editor-form input:not([type='checkbox']), .editor-form select, .editor-form textarea { width: 100%; min-height: 39px; box-sizing: border-box; padding: 9px 10px; border: 1px solid var(--ui-border); border-radius: 8px; outline: none; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; }
 .editor-form textarea { resize: vertical; }
 .editor-form input:focus, .editor-form select:focus, .editor-form textarea:focus { border-color: var(--ui-border); box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }

@@ -12,6 +12,8 @@ interface DailyPlanItem {
   completed: boolean;
   difficultyLevel?: number;
   ageGroup?: string;
+  /** Live test #55: the exercise's own estimate ("~5 dk" was written for every one). */
+  estimatedDurationMinutes?: number;
 }
 
 interface TodaysPlan {
@@ -99,7 +101,8 @@ export class DailyPlanWidgetComponent implements OnInit {
                 exerciseType: ex.exerciseTypeName,
                 completed: ex.isCompleted,
                 difficultyLevel: ex.difficultyLevel || 1,
-                ageGroup: ex.ageGroupName || ''
+                ageGroup: ex.ageGroupName || '',
+                estimatedDurationMinutes: typeof ex.estimatedDurationMinutes === 'number' ? ex.estimatedDurationMinutes : undefined
               }));
 
               this.todaysPlan.set({

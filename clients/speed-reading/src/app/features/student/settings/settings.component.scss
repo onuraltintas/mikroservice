@@ -252,13 +252,16 @@ $transition: all var(--sp-transition-normal);
         justify-content: space-between;
         align-items: center;
 
-        span {
+        // Live test #51: the icon kept out; letter spacing broke its ligature and "VISIBILITY" showed as text.
+        span:not(.material-icons) {
             font-weight: 600;
             opacity: 0.6;
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
+        .material-icons { opacity: 0.6; font-size: 1.1rem; }
     }
 
     p {

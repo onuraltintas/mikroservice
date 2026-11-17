@@ -571,7 +571,8 @@ export class WizardSummaryStepComponent implements OnInit {
   /** What publishing does to the plan in force, with the numbers the preview knows. */
   publishConfirmText(p: WeeklyOutcomePreview) {
     const carried = p.protectedTaskCount > 0 ? ` Başladığın ya da sabitlediğin ${p.protectedTaskCount} çalışma yeni plana taşınır.` : '';
-    const span = p.request.partial ? ` Bu plan ${dayMonth(p.request.endDate)} tarihine kadar olan ${p.schedule.tasks.length} çalışmayı içerir; sonrasını Planım'dan eklersin.` : '';
+    // Live test #6: schedule.tasks are pieces; publishing joins the pieces of one topic, so their count is not the plan's.
+    const span = p.request.partial ? ` Bu plan ${dayMonth(p.request.endDate)} tarihine kadar olan çalışmaları içerir; sonrasını Planım'dan eklersin.` : '';
     return `Yayımlarsan bu plan, yayındaki planın yerini alır: bugünden sonraki bekleyen çalışmaların bu plana göre yeniden dağıtılır. Tamamladığın çalışmalar korunur.${carried}${span}`;
   }
   private publishCreated(plan: { id: string; version: number }) {

@@ -850,6 +850,8 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
             }
 
             accumulator.RecordActivity(row.CreatedAt);
+            // Live test #42: handing work in is the student's activity too.
+            if (row.SubmittedAt.HasValue) accumulator.RecordActivity(row.SubmittedAt.Value);
         }
 
         var examRows = await context.ExamResults
@@ -938,6 +940,26 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
             accumulator.CompletedGoalCount += row.IsCompleted ? 1 : 0;
             accumulator.GoalProgressTotal += row.CurrentProgress;
             accumulator.RecordActivity(row.CreatedAt);
+        }
+
+        // Live test #42: a student who completed planned work that day was shown "Son etkinlik eski"; completed study work counts as activity.
+        // Only the date of the latest completion is read; nothing of the work itself.
+        var studyRows = await context.StudyPlanTasks
+            .AsNoTracking()
+            .Where(item => studentIdList.Contains(item.StudentId)
+                && item.IsCompleted
+                && item.CompletedAt >= fromDate
+                && item.CompletedAt <= toDate)
+            .GroupBy(item => item.StudentId)
+            .Select(group => new { StudentId = group.Key, LastCompletedAt = group.Max(item => item.CompletedAt) })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in studyRows)
+        {
+            if (row.LastCompletedAt.HasValue && accumulators.TryGetValue(row.StudentId, out var accumulator))
+            {
+                accumulator.RecordActivity(row.LastCompletedAt.Value);
+            }
         }
 
         return accumulators.Select(item => item.Value.ToMetrics(item.Key)).ToArray();

@@ -32,6 +32,10 @@
   } @else if (errorMessage()) {
     <div class="error" role="alert"><p>{{ errorMessage() }}</p>@if (isStudent()) { <button type="button" (click)="load()">Tekrar dene</button> }</div>
   } @else if (view(); as v) {
+    @if (pendingInvitations() > 0) {
+      <p class="invitation-pending" role="status" data-testid="pending-invitation">{{ pendingInvitations() === 1 ? 'Yanıt bekleyen bir koçluk davetin var.' : 'Yanıt bekleyen ' + pendingInvitations() + ' koçluk davetin var.' }}
+        <a routerLink="/coaching-portal/account/settings/profile" fragment="coaching-invitations-title">Daveti aç</a></p>
+    }
     <div class="today-grid">
       <div class="today-main">
         @if (v.nextStep; as next) {
