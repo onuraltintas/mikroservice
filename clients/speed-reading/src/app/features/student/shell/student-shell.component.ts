@@ -1,6 +1,6 @@
 import {
   Component, OnInit, OnDestroy, inject, signal, computed,
-  HostListener, ChangeDetectionStrategy
+  HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
@@ -16,8 +16,9 @@ import { canUseStaffTraining } from '../../../core/guards/staff-training.guard';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './student-shell.component.html',
-  styleUrls: ['./student-shell.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./student-shell.component.scss']
+  // Live test 17.11.2026 (#50): no OnPush here. The pages inside this shell keep their data in plain fields; with an
+  // OnPush shell a page opened by its address was not drawn again when its data arrived, only after the next click.
 })
 export class StudentShellComponent implements OnInit, OnDestroy {
   private readonly authService  = inject(AuthService);
