@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
+import { CoachingPlanningPermissionService } from '../../../core/services/coaching-planning-permission.service';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -85,7 +86,14 @@ export class StudentLearningSetupComponent implements OnInit {
   readonly topicOutcomeLoading = signal<string | null>(null);
   readonly topicOutcomeErrors = signal<Record<string, boolean>>({});
   selectedLesson = ''; topicPage = 1; dirty = false;
-  async ngOnInit() { await this.load(); }
+  /** Live test 16.11.2026 (#25): the teacher plans for this student; the last step explains that and offers no draft. Unknown counts as open. */
+  readonly planningClosed = signal(false);
+  private readonly planningPermission = inject(CoachingPlanningPermissionService);
+  async ngOnInit() {
+    this.planningPermission.own().pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: state => this.planningClosed.set(!state.studentMayPlan), error: () => this.planningClosed.set(false) });
+    await this.load();
+  }
   /** E6 #29: the saved courses (Derslerim) the plan preview uses. */
   readonly courseIds = computed(() => (this.state()?.context?.coursePreferences ?? []).map(x => x.lessonId));
   async load() {
