@@ -5,6 +5,7 @@ import { ViewportScroller } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LanguageService } from '../../../core/services/language.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NavigationItemDto, PublicCmsService } from '../../../core/services/public-cms.service';
 
 interface PublicNavLink {
@@ -28,6 +29,13 @@ export class NavbarComponent implements OnInit {
   mobileMenuOpen = false;
 
   private languageService = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+  /** Live test #58 (user decision 17.11.2026): a signed-in visitor is offered their panel instead of "Giriş Yap". */
+  get panelLink(): string | null {
+    if (!this.auth.isAuthenticated) return null;
+    if (this.auth.hasRole('Student')) return '/student/dashboard';
+    return ['Teacher', 'InstitutionAdmin', 'InstitutionOwner'].some(role => this.auth.hasRole(role)) ? '/teacher/dashboard' : null;
+  }
   private cmsService = inject(PublicCmsService);
   currentLanguage = this.languageService.currentLanguage;
 

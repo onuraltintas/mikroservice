@@ -139,10 +139,10 @@ export class LearningPathReadingComponent implements OnInit {
         if (!pathItemId) { this.saving = false; this.stage = 'done'; return; }
         this.learningPath.completePersonalizedPathItem(pathItemId, this.reading!.sessionId).subscribe({
           next: () => { this.saving = false; this.stage = 'done'; },
-          error: () => { this.saving = false; this.error = 'Öğrenme yolu ilerlemesi kaydedilemedi. Tekrar deneyin.'; }
+          error: () => { this.saving = false; this.error = 'Öğrenme yolu ilerlemesi kaydedilemedi. Tekrar dene.'; }
         });
       },
-      error: () => { this.saving = false; this.error = 'Okuma sonucu kaydedilemedi. Tekrar deneyin.'; }
+      error: () => { this.saving = false; this.error = 'Okuma sonucu kaydedilemedi. Tekrar dene.'; }
     });
   }
 

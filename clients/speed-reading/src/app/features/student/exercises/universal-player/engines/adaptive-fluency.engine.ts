@@ -24,7 +24,7 @@ export class AdaptiveFluencyEngine implements BaseEngine {
   private stage = 0;
   private targetWpm?: number;
   private previewTargetWpm?: number;
-  private purpose = 'Başlangıç düzeyinizi ölçün.';
+  private purpose = 'Başlangıç düzeyini ölç.';
 
   initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
     const root = recordOrEmpty(config);

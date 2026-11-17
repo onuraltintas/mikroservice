@@ -10,13 +10,14 @@ public sealed record WeeklyProposalWindow(DayOfWeek Day, int StartMinute, int En
 /// <summary>NeedMinutes: the lesson's weekly need (its curriculum work and spaced reviews spread over the weeks until the plan ends).</summary>
 public sealed record WeeklyProposalLesson(Guid LessonId, string Name, string? ExamCode, int NeedMinutes, int Priority = 3, bool Hard = false);
 /// <summary>
-/// SessionsBeforeBreak: 1 for middle school (a break after every session), 3 for everyone else (K1, Paket I2). DayOccurrences: how many times each
+/// User decision 17.11.2026 (live test #3): no break is placed for the student; the study time fills the free hours and the student takes
+/// breaks as they like. DayOccurrences: how many times each
 /// weekday comes before the plan ends; a weekday that does not come gets no session (null: every weekday comes).
 /// DayBudgets (Paket H4a): the day budgets of a routine profile that still matches the free hours; a day then holds at most
 /// min(budget, MaxDayMinutes), and a day without a budget gets no session (null: only MaxDayMinutes).
 /// </summary>
 public sealed record WeeklyProposalInput(IReadOnlyList<WeeklyProposalWindow> Windows, IReadOnlyList<WeeklyDraftSlot> Existing,
-    IReadOnlyList<WeeklyProposalLesson> Lessons, int SessionsBeforeBreak, int MaxDayMinutes, string? ExamFocus, WeeklyProposalMode Mode,
+    IReadOnlyList<WeeklyProposalLesson> Lessons, int MaxDayMinutes, string? ExamFocus, WeeklyProposalMode Mode,
     IReadOnlyDictionary<DayOfWeek, int>? DayOccurrences = null, IReadOnlyDictionary<DayOfWeek, int>? DayBudgets = null);
 public sealed record WeeklyProposedSlot(Guid LessonId, DayOfWeek Day, int StartMinute, int DurationMinutes);
 /// <summary>NeededMinutes: the unweighted weekly need rounded up to 30 minutes. NoTime: neither a saved nor a proposed card.</summary>
@@ -27,22 +28,20 @@ public sealed record WeeklyProposalResult(IReadOnlyList<WeeklyProposedSlot> Slot
 
 /// <summary>
 /// Paket H2: the need-based weekly proposal. Hours go to the chosen lessons by their weekly need (weighted by priority and, for YKS,
-/// the exam focus), in 60-minute sessions on the half hour with 30-minute breaks (K1), never above the daily limit (K5).
+/// the exam focus), in 60-minute sessions on the half hour, never above the daily limit (K5). A free half hour that an hour does not fill
+/// becomes a 30-minute card of a lesson that still needs time (user decision 17.11.2026: no gaps).
 /// Pure and deterministic: no clock, no database, no random ids.
 /// </summary>
 public static class WeeklyProposalEngine
 {
     public const int SessionMinutes = 60;
-    public const int BreakMinutes = 30;
+    public const int HalfSessionMinutes = 30;
     /// <summary>The week as the student sees it: Monday first.</summary>
     public static readonly IReadOnlyList<DayOfWeek> Week =
         [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
     private static readonly Regex ExamSuffix = new(@"^(.*\S)\s*\([^()]*\)\s*$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
-    // Paket I2 (user decision 13.11.2026): outside middle school three sessions may follow each other, so a three-hour
-    // window holds three (it held two and an unused hour); the short breaks are inside the sessions.
-    public static int SessionsBeforeBreak(bool middleSchool) => middleSchool ? 1 : 3;
 
     /// <summary>The spaced reviews (one per interval of <see cref="WeeklyPlanEngine.SpacedIntervalDays"/>) that fall inside a plan of this many days.</summary>
     public static int ReviewsWithin(int days) => ReviewsWithin(days, WeeklyPlanEngine.SpacedIntervalDays);
@@ -106,17 +105,17 @@ public static class WeeklyProposalEngine
     public static WeeklyProposalResult Propose(WeeklyProposalInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        if (input.Windows is null || input.Existing is null || input.Lessons is null || input.SessionsBeforeBreak < 1)
+        if (input.Windows is null || input.Existing is null || input.Lessons is null)
             throw new ArgumentException("Haftalık öneri bilgilerini kontrol edin.");
         var fill = input.Mode == WeeklyProposalMode.Fill;
         var existing = fill ? input.Existing.Where(x => x is not null).ToArray() : [];
         var lessons = input.Lessons.Where(x => x is not null).DistinctBy(x => x.LessonId).ToArray();
-        var sessions = FreeSessions(Studied(input), existing, input.SessionsBeforeBreak, day => DayCap(input, day));
+        var (sessions, halves) = FreeTime(Studied(input), existing, day => DayCap(input, day));
         // A saved card on a weekday that no longer comes before the plan ends gives the lesson no time (it still occupies its hour).
         var counted = existing.Where(x => input.DayOccurrences?.GetValueOrDefault(x.Day) != 0).ToArray();
         var plans = lessons.Select(lesson => Plan.For(lesson, counted.Where(x => x.LessonId == lesson.LessonId).Sum(x => x.DurationMinutes), input.ExamFocus)).ToArray();
         var counts = Allocate(plans, sessions.Count);
-        var placed = Place(sessions, plans, counts, existing);
+        var placed = Fill(Place(sessions, plans, counts, existing), halves, plans, existing);
         var results = plans.Select(plan =>
         {
             var proposed = placed.Where(x => x.LessonId == plan.Lesson.LessonId).Sum(x => x.DurationMinutes);
@@ -124,7 +123,7 @@ public static class WeeklyProposalEngine
         }).ToArray();
         var needed = results.Sum(x => x.NeededMinutes);
         var covered = results.Sum(x => Math.Min(x.NeededMinutes, x.ExistingMinutes + x.ProposedMinutes));
-        return new(placed, results, sessions.Count * SessionMinutes, needed, needed - covered, covered);
+        return new(placed, results, sessions.Count * SessionMinutes + halves.Count * HalfSessionMinutes, needed, needed - covered, covered);
     }
 
     /// <summary>
@@ -242,15 +241,13 @@ public static class WeeklyProposalEngine
     private static int DayIndex(DayOfWeek day) => ((int)day + 6) % 7;
 
     /// <summary>
-    /// Every 60-minute session that fits: on :00/:30 inside the availability windows, clear of saved cards, never making a run of
-    /// study (saved or proposed, back to back) longer than <paramref name="sessionsBeforeBreak"/> hours, and within the day's cap.
-    /// A piece of free time shorter than an hour stays empty.
+    /// Every 60-minute session that fits on :00/:30 inside the availability windows, clear of saved cards and within the day's cap; then,
+    /// user decision 17.11.2026 (live test #3), the free half hours an hour does not fill. No break is kept between sessions.
     /// </summary>
-    private static List<(DayOfWeek Day, int Start)> FreeSessions(IReadOnlyList<WeeklyProposalWindow> windows, IReadOnlyList<WeeklyDraftSlot> existing,
-        int sessionsBeforeBreak, Func<DayOfWeek, int> dayCap)
+    private static (List<(DayOfWeek Day, int Start)> Hours, List<(DayOfWeek Day, int Start)> Halves) FreeTime(
+        IReadOnlyList<WeeklyProposalWindow> windows, IReadOnlyList<WeeklyDraftSlot> existing, Func<DayOfWeek, int> dayCap)
     {
-        var result = new List<(DayOfWeek, int)>();
-        var longestRun = sessionsBeforeBreak * SessionMinutes;
+        var hours = new List<(DayOfWeek, int)>(); var halves = new List<(DayOfWeek, int)>();
         foreach (var day in Week)
         {
             var busy = existing.Where(x => x.Day == day).Select(x => (From: x.StartMinute, To: x.StartMinute + x.DurationMinutes)).ToList();
@@ -262,23 +259,41 @@ public static class WeeklyProposalEngine
             foreach (var span in spans)
                 if (merged.Count > 0 && span.From <= merged[^1].To) merged[^1] = (merged[^1].From, Math.Max(merged[^1].To, span.To));
                 else merged.Add(span);
+            bool Free(int start, int end) => !busy.Any(x => start < x.To && end > x.From);
             foreach (var span in merged)
                 for (var start = (span.From + 29) / 30 * 30; start + SessionMinutes <= span.To && used + SessionMinutes <= maxDayMinutes;)
                 {
-                    var end = start + SessionMinutes;
-                    if (busy.Any(x => start < x.To && end > x.From) || Run(busy, start, end) > longestRun) { start += 30; continue; }
-                    busy.Add((start, end)); used += SessionMinutes; result.Add((day, start)); start = end;
+                    if (!Free(start, start + SessionMinutes)) { start += 30; continue; }
+                    busy.Add((start, start + SessionMinutes)); used += SessionMinutes; hours.Add((day, start)); start += SessionMinutes;
                 }
+            foreach (var span in merged)
+                for (var start = (span.From + 29) / 30 * 30; start + HalfSessionMinutes <= span.To && used + HalfSessionMinutes <= maxDayMinutes; start += 30)
+                    if (Free(start, start + HalfSessionMinutes)) { busy.Add((start, start + HalfSessionMinutes)); used += HalfSessionMinutes; halves.Add((day, start)); }
         }
-        return result;
+        return (hours, halves);
     }
 
-    /// <summary>The length of the back-to-back study block a new session would belong to.</summary>
-    private static int Run(List<(int From, int To)> busy, int start, int end)
+    /// <summary>
+    /// User decision 17.11.2026 (live test #3): a free half hour that an hour does not fill is used too, as a 30-minute card (weekly
+    /// draft cards are 30 or 60 minutes). Like the hours it goes only to a chosen lesson whose need is not yet covered: the lesson right
+    /// before it, else right after it, else the one furthest from its need. A half hour no lesson needs stays free.
+    /// </summary>
+    private static List<WeeklyProposedSlot> Fill(List<WeeklyProposedSlot> placed, IReadOnlyList<(DayOfWeek Day, int Start)> halves,
+        IReadOnlyList<Plan> plans, IReadOnlyList<WeeklyDraftSlot> existing)
     {
-        for (var i = busy.FindIndex(x => x.To == start); i >= 0; i = busy.FindIndex(x => x.To == start)) start = busy[i].From;
-        for (var i = busy.FindIndex(x => x.From == end); i >= 0; i = busy.FindIndex(x => x.From == end)) end = busy[i].To;
-        return end - start;
+        var slots = placed.ToList();
+        int Left(Plan plan) => plan.Needed - plan.Existing - slots.Where(s => s.LessonId == plan.Lesson.LessonId).Sum(s => s.DurationMinutes);
+        foreach (var (day, start) in halves.OrderBy(x => DayIndex(x.Day)).ThenBy(x => x.Start))
+        {
+            var cards = slots.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes))
+                .Concat(existing.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes))).Where(x => x.Day == day).ToList();
+            var needing = plans.Where(x => Left(x) > 0).ToArray();
+            var pick = needing.FirstOrDefault(x => cards.Any(c => c.To == start && c.LessonId == x.Lesson.LessonId))
+                ?? needing.FirstOrDefault(x => cards.Any(c => c.From == start + HalfSessionMinutes && c.LessonId == x.Lesson.LessonId))
+                ?? needing.OrderByDescending(Left).ThenBy(x => x.Lesson.LessonId).FirstOrDefault();
+            if (pick is not null) slots.Add(new(pick.Lesson.LessonId, day, start, HalfSessionMinutes));
+        }
+        return slots.OrderBy(x => DayIndex(x.Day)).ThenBy(x => x.StartMinute).ToList();
     }
 
     /// <summary>

@@ -332,7 +332,7 @@ export class GridInteractionEngine implements BaseEngine {
         if (!limit || !Number.isFinite(limit) || limit <= 0 || this.state.timeElapsed < limit * 1000) return false;
         this.state.timeElapsed = limit * 1000;
         this.stop();
-        this.callbacks.onError('Süre doldu. Tablo tamamlanmadığı için eğitim ilerlemesine eklenmedi. Yeniden deneyebilirsiniz.');
+        this.callbacks.onError('Süre doldu. Tablo tamamlanmadığı için eğitim ilerlemesine eklenmedi. Yeniden deneyebilirsin.');
         return true;
     }
 

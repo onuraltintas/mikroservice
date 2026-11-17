@@ -39,7 +39,7 @@
         <span class="material-icons de-stat__icon">speed</span>
         <div>
           <span class="de-stat__value">Seviye {{ progress()!.currentDifficultyLevel }}</span>
-          <span class="de-stat__label">Zorluk</span>
+          <span class="de-stat__label">Program seviyesi</span>
         </div>
       </div>
       <div class="de-stat de-stat--green">
@@ -140,11 +140,11 @@
                   <div class="de-card__tags">
                     <span class="de-card__tag">
                       <span class="material-icons">speed</span>
-                      Seviye {{ exercise.difficultyLevel }}
+                      Zorluk: {{ difficulty(exercise.difficultyLevel) }}
                     </span>
                     <span class="de-card__tag">
                       <span class="material-icons">schedule</span>
-                      {{ exercise.estimatedDurationMinutes > 0 ? '~' + exercise.estimatedDurationMinutes + ' dk (cevaplar hariç)' : 'Yanıt sürenize bağlı' }}
+                      {{ exercise.estimatedDurationMinutes > 0 ? '~' + exercise.estimatedDurationMinutes + ' dk (cevaplar hariç)' : 'Yanıt süresine bağlı' }}
                     </span>
                   </div>
                   @if (exercise.description) {
@@ -192,7 +192,7 @@
               <p class="de-empty__desc">Bugün için planlanmış program görünmüyor. Kendine biraz zaman ayır!</p>
             } @else {
               <h3 class="de-empty__title">Henüz Aktif Program Yok</h3>
-              <p class="de-empty__desc">Seviye değerlendirmesini tamamladığınızda profilinize uygun program otomatik olarak burada görünecek.</p>
+              <p class="de-empty__desc">Seviye değerlendirmesini tamamladığında profiline uygun program otomatik olarak burada görünecek.</p>
             }
             <a routerLink="/student/dashboard" class="de-card__btn de-card__btn--primary">
               <span class="material-icons">dashboard</span>
@@ -246,11 +246,11 @@
                 <div class="de-card__tags">
                   <span class="de-card__tag">
                     <span class="material-icons">speed</span>
-                    Seviye {{ exercise.difficultyLevel }}
+                    Zorluk: {{ difficulty(exercise.difficultyLevel) }}
                   </span>
                   <span class="de-card__tag">
                     <span class="material-icons">schedule</span>
-                    {{ exercise.estimatedDurationMinutes > 0 ? '~' + exercise.estimatedDurationMinutes + ' dk (cevaplar hariç)' : 'Yanıt sürenize bağlı' }}
+                    {{ exercise.estimatedDurationMinutes > 0 ? '~' + exercise.estimatedDurationMinutes + ' dk (cevaplar hariç)' : 'Yanıt süresine bağlı' }}
                   </span>
                 </div>
               </div>
@@ -268,7 +268,7 @@
         <div class="de-empty">
           <span class="material-icons de-empty__icon">history_toggle_off</span>
           <h3 class="de-empty__title">Henüz Geçmiş Yok</h3>
-          <p class="de-empty__desc">İlerledikçe geçmiş günleriniz burada birikecek.</p>
+          <p class="de-empty__desc">İlerledikçe geçmiş günlerin burada birikecek.</p>
         </div>
       }
     </div>

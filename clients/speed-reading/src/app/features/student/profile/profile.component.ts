@@ -24,12 +24,15 @@ import localeTr from '@angular/common/locales/tr';
 import { registerLocaleData } from '@angular/common';
 registerLocaleData(localeTr);
 
+import { AccountSecurityComponent } from './account-security.component';
+
 @Component({
     selector: 'app-profile',
     standalone: true,
     imports: [
         CommonModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        AccountSecurityComponent
     ],
     templateUrl: './profile.component.html',
     styleUrls: ['./profile.component.scss']

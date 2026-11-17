@@ -381,7 +381,7 @@ export class ScanFindEngine implements BaseEngine {
         this.awaitingServer = false;
         if (!response.isValid || !response.feedbackData) {
             this.stop();
-            this.callbacks.onError(response.message || 'Tarama doğrulanamadı. Lütfen egzersizi yeniden açın.');
+            this.callbacks.onError(response.message || 'Tarama doğrulanamadı. Lütfen egzersizi yeniden aç.');
             return;
         }
         const feedback = response.feedbackData;

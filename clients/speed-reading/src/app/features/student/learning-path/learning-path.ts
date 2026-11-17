@@ -64,7 +64,7 @@ export class LearningPath implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error loading path progress:', err);
-          this.error = 'Öğrenme yolu yüklenirken hata oluştu. Lütfen bir öğrenme yoluna başlayın.';
+          this.error = 'Öğrenme yolu yüklenirken hata oluştu. Lütfen bir öğrenme yoluna başla.';
           this.isLoading = false;
         }
       });

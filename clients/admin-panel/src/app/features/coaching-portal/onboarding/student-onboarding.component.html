@@ -143,6 +143,7 @@
                       <label class="ob-check"><input type="checkbox" [checked]="pref.email" (change)="toggleEmail(pref.category, $event)" [attr.data-testid]="'ob-email-' + pref.category"> {{ pref.label }}</label>
                     } @empty { <p class="ob-note">Seçilecek e-posta yok.</p> }
                   </fieldset>
+                  <p class="ob-note" data-testid="ob-email-how-to-change">İstemediğin e-postanın işaretini kaldırabilirsin. Sonra da Profil ve ayarlar › Bildirimler'den istediğin zaman açıp kapatabilirsin.</p>
                   <button type="button" class="ob-primary" [disabled]="busy()" (click)="saveEmails(question)">Kaydet ve devam et</button>
                 } @else { <p role="status">Tercihlerin yükleniyor…</p> }
               }

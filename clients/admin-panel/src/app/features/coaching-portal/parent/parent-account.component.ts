@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { AccountErasureNoteComponent } from '../layout/account-erasure-note.component';
 import { StudentDataExportComponent } from '../pages/student-data-export.component';
 import { CoachingParentService, ParentWeeklyEmail } from './coaching-parent.service';
 
@@ -60,7 +61,7 @@ export class ParentNotificationSettingsComponent implements OnInit {
 @Component({
   selector: 'app-parent-personal-data',
   standalone: true,
-  imports: [StudentDataExportComponent],
+  imports: [StudentDataExportComponent, AccountErasureNoteComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<div class="cs-account" aria-labelledby="parent-data-title">
     <header>
@@ -68,6 +69,7 @@ export class ParentNotificationSettingsComponent implements OnInit {
       <p>Veli hesabınla oluşturduğun bilgilerin bir kopyasını istediğin zaman indirebilirsin.</p>
     </header>
     <section aria-label="Verilerimi indir"><app-student-data-export audience="parent" /></section>
+    <app-account-erasure-note />
   </div>`
 })
 export class ParentPersonalDataComponent {}

@@ -149,9 +149,21 @@ public sealed class CoachingAdminController : ControllerBase
             return BadRequest();
         }
 
-        return Ok(await repository.GetStudentHistoryAsync(
+        var history = await repository.GetStudentHistoryAsync(
             studentId, type, pageNumber, pageSize, cancellationToken,
-            new CoachingStudentHistoryFilter(CoachingTime.RangeStart(fromDate), CoachingTime.RangeEnd(toDate), status, search)));
+            new CoachingStudentHistoryFilter(CoachingTime.RangeStart(fromDate), CoachingTime.RangeEnd(toDate), status, search));
+        return Ok(scope.InstitutionId is { } institutionId ? LabelBeforeInstitution(history, institutionId, type) : history);
+    }
+
+    /// <summary>Live test #43: a teacher's record made outside this institution is from before the student joined it.</summary>
+    public static PagedRepositoryResult<CoachingAdminStudentHistoryItemDto> LabelBeforeInstitution(
+        PagedRepositoryResult<CoachingAdminStudentHistoryItemDto> history, Guid institutionId, CoachingStudentHistoryType type)
+    {
+        if (type == CoachingStudentHistoryType.Goals) return history;
+        return history with { Items = history.Items.Select(item =>
+            type == CoachingStudentHistoryType.Exams && item.Source == "StudentReported"
+                ? item
+                : item with { BeforeInstitution = item.RecordInstitutionId != institutionId }).ToArray() };
     }
 
     [HttpGet("institutions/{institutionId:guid}/students")]

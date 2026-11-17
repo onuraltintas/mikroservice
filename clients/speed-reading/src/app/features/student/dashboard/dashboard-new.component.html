@@ -92,16 +92,16 @@
         }
         @if (nextProgramRecommendation(); as recommendation) {
           <h3>Önerilen program: {{ recommendation.templateName }}</h3>
-          <p>{{ recommendation.totalDays }} günlük eğitim. Öneri, tamamladığınız programın eğitim sonrası ölçümüne dayanır.</p>
+          <p>{{ recommendation.totalDays }} günlük eğitim. Öneri, tamamladığın programın eğitim sonrası ölçümüne dayanır.</p>
           <p>{{ recommendation.reason }}</p>
           <p>Son ölçüm: {{ recommendation.averageWpm | number:'1.0-0' }} kelime/dk · %{{ recommendation.comprehension | number:'1.0-1' }} anlama.
             Eğitim başarısı: %{{ recommendation.trainingSuccessRate | number:'1.0-1' }}.</p>
           @if (recommendation.wpmDelta != null) { <p>Başlangıca göre hız değişimi: {{ recommendation.wpmDelta | number:'1.0-1' }} kelime/dk;
             anlama değişimi: {{ recommendation.comprehensionDelta | number:'1.0-1' }} puan.</p> }
           @if (recommendation.requiresStaffApproval) {
-            <p>Bu programı başlatmak için öğretmeninizin veya kurum yöneticinizin onayı gerekiyor.</p>
+            <p>Bu programı başlatmak için öğretmeninin veya kurum yöneticinin onayı gerekiyor.</p>
             <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting()" (click)="requestNextProgram()">Önerilen program için onay iste</button>
-            @if (recommendation.requestedAt) { <p role="status">Seçiminiz {{ recommendation.requestedAt | date:'dd.MM.yyyy HH:mm' }} tarihinde onaya gönderildi.
+            @if (recommendation.requestedAt) { <p role="status">Seçimin {{ recommendation.requestedAt | date:'dd.MM.yyyy HH:mm' }} tarihinde onaya gönderildi.
               {{ recommendation.requestedTemplateId === recommendation.higherOption?.templateId ? 'Bir üst seviye' : 'Önerilen program' }} için onay bekleniyor.</p> }
           } @else {
             <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting()" (click)="confirmNextProgram()">
@@ -111,7 +111,7 @@
           @if (recommendation.higherOption; as higher) {
             <div class="db-program-choice">
               <h3>Alternatif: {{ higher.templateName }}</h3>
-              <p>Bu program ölçümünüze göre önerilenden bir seviye daha zordur. Seçiminiz ölçülen seviyenizi yükseltmez.</p>
+              <p>Bu program ölçümüne göre önerilenden bir seviye daha zordur. Seçimin ölçülen seviyeni yükseltmez.</p>
               <label><input type="checkbox" [(ngModel)]="overrideAcknowledged" />Uyarıyı okudum; bir üst seviyeyi seçmek istiyorum.</label>
               <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting() || !overrideAcknowledged"
                 (click)="recommendation.requiresStaffApproval ? requestNextProgram(true) : confirmNextProgram(true)">
@@ -134,7 +134,7 @@
     @if (followUps().length) {
       <section class="db-onboarding__card" aria-label="Bekleyen takip ölçümleri">
         <h2>Bekleyen takip ölçümleri</h2>
-        <p>Yeni eğitiminiz sürerken önceki programınızın ölçümlerine devam edebilirsiniz.</p>
+        <p>Yeni eğitimin sürerken önceki programının ölçümlerine devam edebilirsin.</p>
         @for (item of followUps(); track item.programProgressId) {
           <article class="db-followup">
             <h3>{{ item.programName }}</h3><p>Tamamlanma: {{ item.completedAt | date:'dd.MM.yyyy' }}</p>
@@ -201,7 +201,7 @@
             <div class="db-quick-stat db-quick-stat--text">
               <span class="db-quick-stat__big" [appCountUp]="currentLevel()"></span>
               <span class="db-quick-stat__unit material-icons" aria-hidden="true">star</span>
-              <span class="db-quick-stat__label">Seviye</span>
+              <span class="db-quick-stat__label">XP seviyesi</span>
             </div>
           </div>
         }
@@ -234,10 +234,10 @@
         <div class="db-no-program__icon">
           <span class="material-icons">pending_actions</span>
         </div>
-        <h2 class="db-no-program__title">Programınız Hazırlanıyor</h2>
+        <h2 class="db-no-program__title">Programın Hazırlanıyor</h2>
         <p class="db-no-program__desc">
-          Seviye tespit sonucunuza ve profilinize uygun aktif program şablonu
-          bulunduğunda günlük planınız otomatik olarak atanır.
+          Seviye tespit sonucuna ve profiline uygun aktif program şablonu
+          bulunduğunda günlük planın otomatik olarak atanır.
         </p>
         <div class="db-no-program__note">
           <span class="material-icons">check_circle</span>

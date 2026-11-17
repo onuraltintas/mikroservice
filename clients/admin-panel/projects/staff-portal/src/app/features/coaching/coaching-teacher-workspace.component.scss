@@ -7,3 +7,8 @@
 .workspace-tabs button.active { color: var(--ui-text); background: var(--ui-surface); box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
 .workspace-tabs button:focus-visible { outline: 2px solid #779372; outline-offset: 2px; }
 .section-loading { margin: 0; padding: 1rem; color: var(--ui-text); font-size: .85rem; }
+
+// Live test 16.11.2026 (#30): the space under the section tabs was 0 px in five sections (the heading stood against the frame)
+// and 16–28 px in the others. The panel gives the same space to every section; the section's own top margin is dropped.
+#teacher-section-panel { margin-top: 20px; }
+#teacher-section-panel > ::ng-deep * > :first-child { margin-top: 0; }

@@ -1107,7 +1107,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                             ? "Cancelled"
                             : item.Status.ToString(),
                         item.Score,
-                        item.Assignment.MaxScore))
+                        item.Assignment.MaxScore) { RecordInstitutionId = item.Assignment.InstitutionId })
                     .ToListAsync(cancellationToken);
                 break;
             }
@@ -1136,7 +1136,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                         item.DeclaredScore,
                         item.Exam.MaxScore,
                         null, null, item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded") {
-                            NetSummary = item.GetPracticeExam() is { } practice ? PracticeExamRules.Summarize(practice) : null
+                            NetSummary = item.GetPracticeExam() is { } practice ? PracticeExamRules.Summarize(practice) : null,
+                            RecordInstitutionId = item.Exam.StudentOwnerId.HasValue ? null : item.Exam.InstitutionId
                         })
                     .ToArray();
                 break;
@@ -1169,7 +1170,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                         item.Session.ScheduledDate,
                         item.Session.Status == Domain.Enums.SessionStatus.Cancelled
                             ? "Cancelled"
-                            : item.AttendanceStatus.ToString()))
+                            : item.AttendanceStatus.ToString()) { RecordInstitutionId = item.Session.InstitutionId })
                     .ToListAsync(cancellationToken);
                 break;
             }

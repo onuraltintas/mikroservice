@@ -60,7 +60,7 @@ public sealed class CoachingWeeklyProposalService(CoachingDbContext db,ICoaching
             var times=Windows.Where(x=>Budgets is null||Budgets.GetValueOrDefault(x.Day)>0).Select(x=>occurrences[x.Day]).Where(x=>x>0).DefaultIfEmpty(1).Min();
             return new(Windows,Existing,Chosen.Select(x=>new WeeklyProposalLesson(x.LessonId,Choices[x.LessonId].Name,Choices[x.LessonId].ExamCode,
                     WeeklyProposalEngine.WeeklyNeed(Work[x.LessonId].Work,Work[x.LessonId].Topics,days,times,SpacedDays),x.Priority,x.SelfReportedDifficulty>=4)).ToArray(),
-                WeeklyProposalEngine.SessionsBeforeBreak(Middle),Limit,Focus,mode,occurrences,Budgets);
+                Limit,Focus,mode,occurrences,Budgets);
         }
         /// <summary>
         /// Paket H2 review: the plan ends where the annual preview will end it once the proposal is applied: the exams of the weekly

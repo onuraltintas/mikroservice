@@ -269,7 +269,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
     this.nextProgramError.set(null);
     this.studentProgramService.getNextRecommendation().pipe(takeUntil(this.destroy$)).subscribe({
       next: recommendation => this.nextProgramRecommendation.set(recommendation),
-      error: () => this.nextProgramError.set('Program önerisi yüklenemedi. Lütfen yeniden deneyin.')
+      error: () => this.nextProgramError.set('Program önerisi yüklenemedi. Lütfen yeniden dene.')
     });
   }
 

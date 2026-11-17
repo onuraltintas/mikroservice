@@ -2,8 +2,8 @@
 
   <!-- ── Başlık ────────────────────────────────────────────────────────── -->
   <div class="ps-header">
-    <h1 class="ps-header__title">Profilinizi Oluşturun</h1>
-    <p class="ps-header__sub">Size özel öğrenme deneyimi için birkaç basit adım</p>
+    <h1 class="ps-header__title">Profilini Oluştur</h1>
+    <p class="ps-header__sub">Sana özel öğrenme deneyimi için birkaç basit adım</p>
   </div>
 
   <!-- ── Adım Göstergesi ───────────────────────────────────────────────── -->
@@ -50,7 +50,7 @@
         <div class="ps-step-head">
           <span class="material-icons ps-step-head__icon">person</span>
           <div>
-            <h2 class="ps-step-head__title">Sizi Tanıyalım</h2>
+            <h2 class="ps-step-head__title">Seni Tanıyalım</h2>
           </div>
         </div>
 
@@ -58,7 +58,7 @@
         <div class="ps-field">
           <label class="ps-label" for="dob">
             <span class="material-icons">cake</span>
-            Doğum Tarihiniz
+            Doğum Tarihin
           </label>
           <input
             id="dob"
@@ -85,34 +85,7 @@
           }
         </div>
 
-        <!-- Öğrenme Stili -->
-        <div class="ps-field">
-          <label class="ps-label">
-            <span class="material-icons">psychology</span>
-            Öğrenme Stiliniz
-          </label>
-          <div class="ps-style-grid">
-            <button type="button" class="ps-style-card"
-              [class.ps-style-card--selected]="basicInfoForm.value.learningStyle === 'visual'"
-              (click)="basicInfoForm.patchValue({learningStyle: 'visual'})">
-              <span class="material-icons ps-style-card__icon">visibility</span>
-              <span class="ps-style-card__label">Görsel</span>
-            </button>
-            <button type="button" class="ps-style-card"
-              [class.ps-style-card--selected]="basicInfoForm.value.learningStyle === 'auditory'"
-              (click)="basicInfoForm.patchValue({learningStyle: 'auditory'})">
-              <span class="material-icons ps-style-card__icon">hearing</span>
-              <span class="ps-style-card__label">İşitsel</span>
-            </button>
-            <button type="button" class="ps-style-card"
-              [class.ps-style-card--selected]="basicInfoForm.value.learningStyle === 'kinesthetic'"
-              (click)="basicInfoForm.patchValue({learningStyle: 'kinesthetic'})">
-              <span class="material-icons ps-style-card__icon">touch_app</span>
-              <span class="ps-style-card__label">Kinestetik</span>
-            </button>
-          </div>
-        </div>
-
+        <!-- Live test #57 (user decision 17.11.2026): no learning style question. -->
         <div class="ps-actions ps-actions--right">
           <button type="button" class="ps-btn ps-btn--primary" (click)="nextStep()">
             İleri
@@ -129,24 +102,19 @@
         <div class="ps-step-head">
           <span class="material-icons ps-step-head__icon">flag</span>
           <div>
-            <h2 class="ps-step-head__title">Hedeflerinizi Belirleyin</h2>
+            <h2 class="ps-step-head__title">Hedeflerini Belirle</h2>
           </div>
         </div>
 
         <div class="ps-goals-grid">
 
-          <!-- Okuma Hızı -->
+          <!-- Okuma Hızı — live test #53 (user decision 17.11.2026): not asked; the level test measures it and sets the target. -->
           <div class="ps-goal-card">
             <div class="ps-goal-card__icon-wrap">
               <span class="material-icons">speed</span>
             </div>
             <h3 class="ps-goal-card__title">Okuma Hızı</h3>
-            <label class="ps-label-sm">Kelime/Dakika</label>
-            <input class="ps-input" type="number" formControlName="targetWPM" min="100" max="1000">
-            <div class="ps-rec">
-              <span class="material-icons ps-rec__icon">lightbulb</span>
-              Önerilen: <strong>{{ recommendedWPM }}</strong>
-            </div>
+            <p class="ps-label-sm">Hedef hızın, seviye belirlemede ölçülen hızına göre belirlenir.</p>
           </div>
 
           <!-- Anlama Oranı -->
@@ -214,20 +182,16 @@
               <span>Yaş Grubu</span>
               <span>{{ getAgeGroupText(calculatedAgeGroup) }}</span>
             </div>
-            <div class="ps-summary-row">
-              <span>Öğrenme Stili</span>
-              <span>{{ getLearningStyleText(basicInfoForm.value.learningStyle) }}</span>
-            </div>
           </div>
 
           <div class="ps-summary-card">
             <div class="ps-summary-card__header">
               <span class="material-icons">flag</span>
-              <h3>Hedefleriniz</h3>
+              <h3>Hedeflerin</h3>
             </div>
             <div class="ps-summary-row">
               <span>Okuma Hızı</span>
-              <span class="ps-summary-row__hl">{{ goalsForm.value.targetWPM }} kelime/dk</span>
+              <span>Seviye belirlemeden sonra</span>
             </div>
             <div class="ps-summary-row">
               <span>Anlama Oranı</span>
@@ -243,7 +207,7 @@
 
         <div class="ps-final-note">
           <span class="material-icons">celebration</span>
-          <p>Profiliniz hazır! Seviye belirleme testine yönlendirileceksiniz.</p>
+          <p>Profilin hazır! Şimdi seviye belirleme testine geçiyorsun.</p>
         </div>
 
         <div class="ps-actions">

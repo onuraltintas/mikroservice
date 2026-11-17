@@ -59,7 +59,7 @@ export class CustomPreviewDialogComponent {
     const duration = Number(this.values['displayDurationMs']);
     const gap = Number(this.values['intervalMs']);
     if (!Number.isFinite(duration) || !Number.isFinite(gap) || duration < 50 || duration > 5000 || gap < 0 || gap > 10000)
-      return 'Süre ayarlarını kontrol edin.';
+      return 'Süre ayarlarını kontrol et.';
     const settings = recordOrEmpty(caseInsensitiveField(this.configuration, 'engineConfig'));
     const content = mergeCaseInsensitiveRecords(this.configuration, settings, 'content');
     const visuals = mergeCaseInsensitiveRecords(this.configuration, settings, 'visuals');
@@ -83,6 +83,6 @@ export class CustomPreviewDialogComponent {
       const values = { ...this.values };
       applyCustomPreviewSettings(this.configuration, values, { roles: ['Teacher'], preview: true });
       this.dialog.close(values);
-    } catch (error) { this.error = error instanceof Error ? error.message : 'Ayarları kontrol edin.'; }
+    } catch (error) { this.error = error instanceof Error ? error.message : 'Ayarları kontrol et.'; }
   }
 }

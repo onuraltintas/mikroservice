@@ -45,12 +45,12 @@
             <div class="card-body-content">
                 <p class="description">{{ exercise?.description }}</p>
                 <p class="description" *ngIf="getTrackingTarget()">
-                    Noktayı gözlerinizle takip edin; tıklamanız veya cevap yazmanız gerekmez.
+                    Noktayı gözlerinle takip et; tıklaman veya cevap yazman gerekmez.
                     Süre tamamlandığında çalışma biter; duraklatılan süre sayılmaz.
                     Göz hareketleri veya okuma hızı ölçülmez. Rahatsızlık hissederseniz durdurun.
                 </p>
                 <p class="description" *ngIf="engine.engineType === 'skimming'">
-                    Başlık, giriş ve sonuç cümlelerinden metnin ana fikrini belirleyin; her kelimeyi okumak zorunda değilsiniz.
+                    Başlık, giriş ve sonuç cümlelerinden metnin ana fikrini belirle; her kelimeyi okumak zorunda değilsin.
                     İnceleme sınırı {{ $any(engine).getMaximumMs() / 1000 }} saniyedir.
                     Süre dolarsa sorulara geçilir; çalışma eksik sayılır ve kayıtlı oturumda program/ödev ilerlemesi verilmez.
                     Soruları cevaplama süresi inceleme sınırına dahil değildir. Okuma hızı ölçülmez.
@@ -78,15 +78,15 @@
                 </ng-container>
                 <p class="description" *ngIf="canPracticeFocus">
                     <span *ngIf="!asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki
-                        {{ asFocusEngine?.isWordMode ? 'kelime' : 'konum' }} aynıysa eşleşme düğmesine basın; farklıysa bekleyin.</span>
+                        {{ asFocusEngine?.isWordMode ? 'kelime' : 'konum' }} aynıysa eşleşme düğmesine bas; farklıysa bekle.</span>
                     <span *ngIf="asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki konum ve kelimeyi
-                        ayrı ayrı karşılaştırın; eşleşen kanalın düğmesine basın.</span>
+                        ayrı ayrı karşılaştır; eşleşen kanalın düğmesine bas.</span>
                     N düzeyi çalışma boyunca değişmez.
-                    <span *ngIf="focusPracticeCompleted">Alıştırma tamamlandı. Hazırsanız asıl egzersize başlayın.</span>
+                    <span *ngIf="focusPracticeCompleted">Alıştırma tamamlandı. Hazırsan asıl egzersize başla.</span>
                 </p>
                 <p class="description" *ngIf="engine.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
-                    Metni okurken hafif sesle bir–iki–üç–dört sayın; her ritim işaretinde bir sayı söyleyin.
-                    Sayma ritmi okuma temposundan bağımsızdır. Anlama sorularına geçince saymayı bırakın.
+                    Metni okurken hafif sesle bir–iki–üç–dört say; her ritim işaretinde bir sayı söyle.
+                    Sayma ritmi okuma temposundan bağımsızdır. Anlama sorularına geçince saymayı bırak.
                     Zorlanırsanız duraklatın. Sayı sayma anlamayı zorlaştırabilir; kalıcı iç ses azalması ölçülmez.
                 </p>
 
@@ -289,7 +289,7 @@
             <div class="tracking-instruction">
                 <span class="material-icons">{{ isFixationMode() ? 'center_focus_strong' : (isSaccadeMode() ? 'ads_click' : 'visibility')
                     }}</span>
-                <span>{{ isFixationMode() ? 'Bakışınızı noktada tutun; çevresindeki harfleri fark edin' : (isSaccadeMode() ? 'Hedefleri gözlerinizle takip edin; tıklamanız veya cevap yazmanız gerekmez' : 'Gözlerinizle noktayı takip edin') }}</span>
+                <span>{{ isFixationMode() ? 'Bakışını noktada tut; çevresindeki harfleri fark et' : (isSaccadeMode() ? 'Hedefleri gözlerinle takip et; tıklaman veya cevap yazman gerekmez' : 'Gözlerinle noktayı takip et') }}</span>
             </div>
             <div class="tracking-canvas">
                 <!-- Peripheral Characters (Only in Fixation Mode) -->
@@ -330,14 +330,14 @@
                     <div class="peripheral-input-card">
                         <div class="input-header">
                             <span class="material-icons">visibility</span>
-                            <span>Çevrede ne gördünüz?</span>
+                            <span>Çevrede ne gördün?</span>
                         </div>
                         <div class="input-hint">
                             Harfleri gördükten sonra tamamını yazın; sıra önemli değildir.
                         </div>
                         <input #peripheralInput type="text" class="peripheral-input" [(ngModel)]="peripheralInputValue"
                             (input)="onPeripheralInputChange($event)" (keydown.enter)="submitPeripheralInput()"
-                            aria-label="Gördüğünüz harfler" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters"
+                            aria-label="Gördüğün harfler" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters"
                             spellcheck="false" />
                         <button class="ep-btn ep-btn--primary" (click)="submitPeripheralInput()">
                             <span class="material-icons">check</span> Gönder
@@ -581,7 +581,7 @@
         </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency' && engine.engineType !== 'skimming'">
             <span class="material-icons">menu_book</span>
-            <span>Metni kendi hızınızda okuyun. Okuma bitince "{{ isFreeReadingPractice() ? 'Okumayı Bitir' : 'Okudum' }}" butonuna basın.</span>
+            <span>Metni kendi hızında oku. Okuma bitince "{{ isFreeReadingPractice() ? 'Okumayı Bitir' : 'Okudum' }}" düğmesine bas.</span>
         </div>
         <div class="reading-instruction free-reading-guidance" *ngIf="isFreeReadingPractice() && !engineState.isPaused">
             <span class="material-icons">info</span>
@@ -591,7 +591,7 @@
         </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'skimming'">
             <span class="material-icons">article</span>
-            <span>Başlık, giriş ve sonuç cümlelerine göz gezdirerek metnin ana fikrini belirleyin. Her kelimeyi okumak zorunda değilsiniz. İncelemeyi bitirince ana fikir sorularına geçin.</span>
+            <span>Başlık, giriş ve sonuç cümlelerine göz gezdirerek metnin ana fikrini belirle. Her kelimeyi okumak zorunda değilsin. İncelemeyi bitirince ana fikir sorularına geç.</span>
         </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'adaptive_fluency'">
             <span class="material-icons">track_changes</span>
@@ -634,7 +634,7 @@
         class="game-container visual-expansion-container">
         <div class="measurement-not-available" *ngIf="!isAssessmentMode && engineState.currentStep > 0
             && engineState.currentStep % 15 === 0 && engineState.currentStep < engineState.totalSteps">
-            İsterseniz kısa bir mola verebilirsiniz. İlerlemeniz korunur.
+            İstersen kısa bir mola verebilirsin. İlerlemen korunur.
             <button class="ep-btn" *ngIf="!engineState.isPaused" (click)="togglePause()">Kısa mola ver</button>
         </div>
         <div class="game-header">
@@ -683,7 +683,7 @@
 
             <!-- Cevap Giriş Alanı -->
             <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()">
-                <div class="answer-prompt">Gördüğünüz uyaranları konumlarına göre yazın:</div>
+                <div class="answer-prompt">Gördüğün uyaranları konumlarına göre yaz:</div>
                 <div class="answer-inputs">
                     <input *ngFor="let index of getExpansionAnswerSlots(); trackBy: trackByIdx" type="text"
                         class="char-input" [value]="expansionAnswers[index] || ''"
@@ -779,7 +779,7 @@
     <!-- Exercise Running - Target Hunt (Hedef Avı) -->
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'target_hunt' && asTargetHunt as hunt"
         class="game-container target-hunt-container">
-        <p *ngIf="hunt.hasFailedAction()" role="alert">Dokunuşunuz kaydedilemedi.
+        <p *ngIf="hunt.hasFailedAction()" role="alert">Dokunuşun kaydedilemedi.
             <button type="button" class="ep-btn ep-btn--ghost" (click)="retryTargetHuntAction()"
                 [disabled]="engineState.isPaused || hunt.isAwaitingServer()">Tekrar gönder</button>
         </p>
@@ -840,7 +840,7 @@
     <!-- Exercise Running - Error Analysis (Hata Analizi / Proofreading) -->
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'error_analysis' && getErrorAnalysisPhase() === 'active'"
         class="game-container error-analysis-container">
-        <p *ngIf="hasErrorAnalysisFailure()" role="alert">Seçiminiz kaydedilemedi.
+        <p *ngIf="hasErrorAnalysisFailure()" role="alert">Seçimin kaydedilemedi.
             <button type="button" class="ep-btn ep-btn--ghost" (click)="retryErrorAnalysisAction()"
                 [disabled]="engineState.isPaused || isErrorAnalysisPending()">Seçimi tekrar gönder</button>
         </p>
@@ -866,7 +866,7 @@
         <div class="error-instruction">
             <span class="material-icons">touch_app</span>
             <span>Metindeki <strong>{{ getErrorAnalysisErrorCount() }} hata</strong>yı bulun. Hatalı olduğunu
-                düşündüğünüz kelimelere tıklayın.</span>
+                düşündüğün kelimelere tıkla.</span>
         </div>
 
         <!-- Text Area with Clickable Words -->
@@ -1092,7 +1092,7 @@
                     <p>{{ questionFeedback.explanation }}</p>
                 </div>
                 <p *ngIf="(engine?.engineType === 'exam_simulation' || engine?.engineType === 'reading_comprehension' && !isComprehensionLearning()) && questionFeedback" role="status">
-                    Cevabınız kaydedildi. Doğru cevaplar değerlendirme sonunda gösterilecek.
+                    Cevabın kaydedildi. Doğru cevaplar değerlendirme sonunda gösterilecek.
                 </p>
             </div>
         </div>
@@ -1177,7 +1177,7 @@
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'subvocalization_reduction' && getSubvocPhase() === 'answering'"
         class="game-container question-container visualization-question-container">
 
-        <p *ngIf="isSubvocMetronomeEnabled()">Sayı saymayı bırakın; şimdi yalnız anlama sorularını yanıtlayın.</p>
+        <p *ngIf="isSubvocMetronomeEnabled()">Sayı saymayı bırak; şimdi yalnız anlama sorularını yanıtla.</p>
         <!-- Reusing modern-header style from visualization -->
         <div class="game-header modern-header">
             <div class="header-left">
@@ -1236,7 +1236,7 @@
             <!-- Feedback Phase -->
             <div class="feedback-options" *ngIf="isSubvocShowingFeedback()">
                 <p *ngIf="sessionId === 'preview-mode'">Önizleme: cevap değerlendirilmedi.</p>
-                <p *ngIf="isAssessmentMode">Cevabınız kaydedildi.</p>
+                <p *ngIf="isAssessmentMode">Cevabın kaydedildi.</p>
                 <div *ngFor="let option of ['A', 'B', 'C', 'D']" class="feedback-option"
                     [class.selected]="option === getSubvocLastAnswer()"
                     [class.correct]="option === getSubvocCorrectAnswer()"
@@ -1410,7 +1410,7 @@
             </button>
 
             <p role="status" *ngIf="isVisualizationShowingFeedback() && !isVisualizationAnswerEvaluated()">
-                {{ isVisualizationAnswerPending() ? 'Cevabınız doğrulanıyor…' : sessionId === 'preview-mode' ? 'Önizleme: cevap değerlendirilmedi.' : 'Cevabınız kaydedildi.' }}
+                {{ isVisualizationAnswerPending() ? 'Cevabın doğrulanıyor…' : sessionId === 'preview-mode' ? 'Önizleme: cevap değerlendirilmedi.' : 'Cevabın kaydedildi.' }}
             </p>
 
             <!-- Hint -->
@@ -1531,10 +1531,10 @@
             <!-- Instructions based on mode -->
             <div class="instruction-hint">
                 <ng-container *ngIf="asFocusEngine?.mode === 'position'">
-                    Grid'de nokta <strong>{{ asFocusEngine?.nLevel }} adım önceki</strong> konumla aynıysa basın!
+                    Grid'de nokta <strong>{{ asFocusEngine?.nLevel }} adım önceki</strong> konumla aynıysa bas!
                 </ng-container>
                 <ng-container *ngIf="asFocusEngine?.mode === 'word'">
-                    Kelime <strong>{{ asFocusEngine?.nLevel }} adım öncekiyle</strong> aynıysa basın!
+                    Kelime <strong>{{ asFocusEngine?.nLevel }} adım öncekiyle</strong> aynıysa bas!
                 </ng-container>
                 <ng-container *ngIf="asFocusEngine?.mode === 'dual'">
                     <strong>Konum (Q)</strong> ve <strong>Kelime (P)</strong> için ayrı ayrı {{ asFocusEngine?.nLevel }}
@@ -1575,7 +1575,7 @@
         </div>
 
         <p *ngIf="isVocabLearnThenQuiz()" role="status">
-            {{ getVocabMode() === 'learning' ? 'Önce kartları inceleyin; ardından aynı kelimelerin testi açılır. Biliyorum/Bilmiyorum seçimi puan değildir.' : 'Kartlar tamamlandı. Şimdi aynı kelimelerin testini yanıtlayın; puan ve tekrar ilerlemesi bu cevaplardan oluşur.' }}
+            {{ getVocabMode() === 'learning' ? 'Önce kartları incele; ardından aynı kelimelerin testi açılır. Biliyorum/Bilmiyorum seçimi puan değildir.' : 'Kartlar tamamlandı. Şimdi aynı kelimelerin testini yanıtla; puan ve tekrar ilerlemesi bu cevaplardan oluşur.' }}
         </p>
         <!-- LEARNING MODE UI -->
         <div class="vocabulary-learning-area" [class.blurred]="engineState.isPaused"
@@ -1656,7 +1656,7 @@
                 </div>
 
                 <!-- Quiz Feedback -->
-                <p role="status" *ngIf="isVocabAwaitingPersistence()">Yanıtınız kaydediliyor…</p>
+                <p role="status" *ngIf="isVocabAwaitingPersistence()">Yanıtın kaydediliyor…</p>
                 <div class="quiz-feedback" *ngIf="isVocabShowingFeedback() && !isVocabAwaitingPersistence()">
                     <div class="feedback-banner" [class.correct]="isVocabAnswerCorrect()"
                         [class.incorrect]="!isVocabAnswerCorrect()">
@@ -1685,7 +1685,7 @@
             <button type="button" class="ep-btn ep-btn--primary" (click)="retryDailyProgress()">İlerlemeyi tekrar kaydet</button>
         </div>
         <div *ngIf="comprehensionResultPending()" role="status" class="grid-save-status">
-            {{ resultSaveStatus === 'failed' ? 'Sonuçlar alınamadı. Lütfen yeniden deneyin.' : 'Sunucudan doğrulanmış sonuçlar alınıyor…' }}
+            {{ resultSaveStatus === 'failed' ? 'Sonuçlar alınamadı. Lütfen yeniden dene.' : 'Sunucudan doğrulanmış sonuçlar alınıyor…' }}
             <button *ngIf="resultSaveStatus === 'failed'" type="button" class="ep-btn ep-btn--primary" (click)="retrySaveResult()">Tekrar dene</button>
         </div>
         <div *ngIf="!comprehensionResultPending()" class="result-card-new" [class.result-card-new--schulte]="engine?.engineType === 'grid_interaction'">
@@ -1694,7 +1694,7 @@
                     <div>
                         <span class="schulte-summary__eyebrow">SCHULTE TABLOSU · {{ result?.details?.gridSize || 5 }}×{{ result?.details?.gridSize || 5 }}</span>
                         <h2>Tablo tamamlandı</h2>
-                        <p>Bakış ritminiz ve sayı bulma süreleriniz</p>
+                        <p>Bakış ritmin ve sayı bulma sürelerin</p>
                     </div>
                     <span class="schulte-summary__level">{{ result?.details?.performanceLevel || 'Tamamlandı' }}</span>
                 </div>
@@ -1783,8 +1783,7 @@
                 </div>
                 <div class="info-tag level-tag">
                     <span class="material-icons">hotel_class</span>
-                    <span>Seviye {{ exercise?.difficultyLevel }} ({{ getDifficultyLabel(exercise?.difficultyLevel || 1)
-                        }})</span>
+                    <span>Zorluk: {{ getDifficultyLabel(exercise?.difficultyLevel || 1) }}</span>
                 </div>
             </div>
 
@@ -1942,11 +1941,11 @@
             <div class="rewards-row" *ngIf="engine?.engineType !== 'grid_interaction' && (sessionResult?.xpGained || sessionResult?.leveledUp)">
                 <div class="xp-earned" *ngIf="sessionResult?.xpGained">
                     <span class="material-icons">bolt</span>
-                    <span>+{{ sessionResult?.xpGained }} XP Kazandınız!</span>
+                    <span>+{{ sessionResult?.xpGained }} XP kazandın!</span>
                 </div>
                 <div class="level-up" *ngIf="sessionResult?.leveledUp">
                     <span class="material-icons">stars</span>
-                    <span>Seviye {{ sessionResult?.newLevel }} oldunuz!</span>
+                    <span>Seviye {{ sessionResult?.newLevel }} oldun!</span>
                 </div>
             </div>
 
@@ -1990,7 +1989,7 @@
                     <span class="material-icons">speed</span>
                     <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} kelime/dk</div>
                     <div class="result-label">Okuma temposu (kelime/dk)</div>
-                    <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğiniz beyanına dayanır.</p>
+                    <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğin beyanına dayanır.</p>
                 </div>
                 <!-- H21: free reading with questions also shows its comprehension. -->
                 <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null && result?.details?.measurementStatus === 'Measured'">
@@ -2115,7 +2114,7 @@
                         <div class="question-num">S{{ i + 1 }}</div>
                         <div class="answer-info">
                             <span class="your-answer">
-                                <span class="label">Cevabınız:</span>
+                                <span class="label">Cevabın:</span>
                                 <span class="value" [class.timeout]="!answer.selectedAnswer">
                                     {{ answer.selectedAnswer || 'Süre doldu' }}
                                 </span>
@@ -2176,7 +2175,7 @@
                             <div class="answer-question">{{ i + 1 }}. {{ answer.questionText }}</div>
                             <div class="answer-details">
                                 <span class="user-answer" [class.wrong]="!answer.isCorrect">
-                                    Cevabınız: {{ answer.selectedAnswer || answer.userAnswer || 'Yanıt verilmedi' }}
+                                    Cevabın: {{ answer.selectedAnswer || answer.userAnswer || 'Yanıt verilmedi' }}
                                 </span>
                                 <span class="correct-answer" *ngIf="!answer.isCorrect">
                                     Doğru: {{ answer.correctAnswer }}
@@ -2206,8 +2205,8 @@
     <div class="exit-confirm-overlay" *ngIf="showExitConfirm">
         <div class="exit-confirm-card">
             <span class="material-icons exit-icon">warning</span>
-            <h3>Egzersizden Çıkmak İstiyor musunuz?</h3>
-            <p>Yarım kalan deneme silinir; tekrar açtığınızda egzersiz baştan başlar. Tamamlanmış sonuçlarınız etkilenmez.</p>
+            <h3>Egzersizden çıkmak istiyor musun?</h3>
+            <p>Yarım kalan deneme silinir; tekrar açtığında egzersiz baştan başlar. Tamamlanmış sonuçların etkilenmez.</p>
             <div class="exit-actions">
                 <button class="btn-continue" (click)="cancelExit()">
                     <span class="material-icons">play_arrow</span>
@@ -2229,8 +2228,8 @@
                 <div class="trophy-icon-wrapper">
                     <span class="material-icons" class="trophy-icon">emoji_events</span>
                 </div>
-                <h2>Tebrikler Mezun Oldunuz! 🎓</h2>
-                <p>Mevcut programınızı başarıyla tamamladınız.</p>
+                <h2>Tebrikler, mezun oldun! 🎓</h2>
+                <p>Mevcut programını başarıyla tamamladın.</p>
             </div>
 
             <div class="stats-grid" *ngIf="programCompletionData.completionStats as stats">
@@ -2274,8 +2273,8 @@
                             <span class="material-icons">military_tech</span>
                         </div>
                         <div class="prog-info">
-                            <h4>Programınız tamamlandı</h4>
-                            <p>{{ staffTrainingMode ? 'İlerlemeniz kaydedildi. Eğitim programları sekmesinden istediğiniz programı seçip devam edebilirsiniz.' : 'Gelişiminizi değerlendirmek için eğitim sonrası ölçümü tamamlayın. Bu sonuç, sonraki çalışma planınıza rehberlik eder.' }}</p>
+                            <h4>Programın tamamlandı</h4>
+                            <p>{{ staffTrainingMode ? 'İlerlemeniz kaydedildi. Eğitim programları sekmesinden istediğiniz programı seçip devam edebilirsiniz.' : 'Gelişimini değerlendirmek için eğitim sonrası ölçümü tamamla. Bu sonuç, sonraki çalışma planına rehberlik eder.' }}</p>
                             <span class="reason-badge gold">
                                 <span class="material-icons">star</span>
                                 {{ staffTrainingMode ? 'Sıradaki adım: program seçimi' : 'Sıradaki adım: ölçüm' }}

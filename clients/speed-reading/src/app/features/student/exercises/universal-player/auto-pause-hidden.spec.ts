@@ -158,7 +158,7 @@ describe('auto-pause when the page is hidden', () => {
     expect(value.engineState.isPaused).toBeTrue();
     expect(value.engine.resume).not.toHaveBeenCalled();
     expect(value.sessionService.resumeSession).not.toHaveBeenCalled();
-    expect(value.showToast).toHaveBeenCalledOnceWith('Ekrandan ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+    expect(value.showToast).toHaveBeenCalledOnceWith('Ekrandan ayrıldığın için egzersiz duraklatıldı.', 'info', 6000);
 
     value.onVisibilityChange();
     expect(value.showToast).toHaveBeenCalledTimes(1);
@@ -268,7 +268,7 @@ describe('auto-pause when the page is hidden', () => {
 
     expect(value.isPauseTransitionPending).toBeFalse();
     expect(value.engineState.isPaused).toBeTrue();
-    expect(value.showToast).toHaveBeenCalledOnceWith('Ekrandan ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+    expect(value.showToast).toHaveBeenCalledOnceWith('Ekrandan ayrıldığın için egzersiz duraklatıldı.', 'info', 6000);
 
     // The abandoned request must not disturb a later transition, and the toast is not repeated.
     value.isPauseTransitionPending = true;

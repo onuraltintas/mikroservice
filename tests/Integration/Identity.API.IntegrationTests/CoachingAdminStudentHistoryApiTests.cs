@@ -9,6 +9,24 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAdminStudentHistoryApiTests
 {
     [Fact]
+    public void AnInstitutionsReportLabelsTheTeachersRecordsFromBeforeTheStudentJoined()
+    {
+        // Live test 16.11.2026 (#43), user decision 17.11.2026: "Kurum öncesi" on records made outside this institution.
+        var institutionId = Guid.NewGuid();
+        var page = new PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>([
+            new(Guid.NewGuid(), "Assignments", "Kurum ödevi", DateTime.UtcNow, "Graded") { RecordInstitutionId = institutionId },
+            new(Guid.NewGuid(), "Assignments", "Bağımsız dönem ödevi", DateTime.UtcNow, "Graded") { RecordInstitutionId = null }], 2);
+
+        var labelled = CoachingAdminController.LabelBeforeInstitution(page, institutionId, CoachingStudentHistoryType.Assignments);
+
+        labelled.Items.Select(x => x.BeforeInstitution).Should().Equal(false, true);
+        var ownExam = new PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>([
+            new(Guid.NewGuid(), "Exams", "Kendi denemem", DateTime.UtcNow, "Result", Source: "StudentReported")], 1);
+        CoachingAdminController.LabelBeforeInstitution(ownExam, institutionId, CoachingStudentHistoryType.Exams)
+            .Items.Single().BeforeInstitution.Should().BeNull();
+    }
+
+    [Fact]
     public async Task StudentHistory_ReturnsNotFoundForStudentOutsideTenantScope()
     {
         var studentId = Guid.NewGuid();

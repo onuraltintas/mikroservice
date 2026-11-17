@@ -24,9 +24,10 @@ test('one 10-minute review a week after a topic, and the plan asks for 75 % of a
   }
 });
 
-test('three sessions may follow each other outside middle school', async () => {
+test('the weekly proposal places no break; free half hours become 30-minute cards (user decision 17.11.2026)', async () => {
   const engine = await read('services/coaching-service/Coaching.Application/StudyPlanning/WeeklyProposalEngine.cs');
-  assert.match(engine, /SessionsBeforeBreak\(bool middleSchool\) => middleSchool \? 1 : 3;/);
+  assert.doesNotMatch(engine, /SessionsBeforeBreak/);
+  assert.match(engine, /public const int HalfSessionMinutes = 30;/);
 });
 
 test('a disabled publish button says why', async () => {

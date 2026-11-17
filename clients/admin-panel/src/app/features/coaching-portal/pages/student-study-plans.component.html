@@ -66,25 +66,27 @@
             @if(isOverdue(task)){<p class="notice error">Gecikmiş çalışma</p>}
             @if(task.plannedStartMinute!=null){<p>{{ task.lessonName }} · {{ clock(task.plannedStartMinute) }}–{{ clock(task.plannedStartMinute+task.plannedMinutes) }}</p>}
             @for (outcome of task.outcomes || []; track outcome.outcomeId) {
-              <p>{{ outcome.code }} — {{ outcome.name }} · {{ outcome.allocatedMinutes }} dk · süre sürümü {{ outcome.estimateNumber }} @if (outcome.origin === 'StudentOverride') { · Öğrencinin süre seçimi }</p>
+              <!-- Live test #11 (user decision 17.11.2026): the outcome code and the estimate number are for the teacher only. -->
+              @if (staffStudentId) { <p>{{ outcome.code }} — {{ outcome.name }} · {{ outcome.allocatedMinutes }} dk · süre sürümü {{ outcome.estimateNumber }} @if (outcome.origin === 'StudentOverride') { · Öğrencinin süre seçimi }</p> }
+              @else { <p>{{ outcome.name }} · {{ outcome.allocatedMinutes }} dk</p> }
             }
             @if (task.sourceName) { <p>Kaynak: {{ task.sourceName.startsWith('DenemeTekrar:') ? 'Deneme analizine göre konu tekrarı' : task.sourceName }}</p> }
-            @if(task.predecessorTaskId){<p>Devam çalışması: önceki gerçekleşmeler kaynak görevde korunur. Buraya yalnız bu devam görevindeki yeni çalışma toplamını gir. Konuların süre payları kaynak çalışmayla birlikte korunur.</p>}
-            @if(task.remainingMinutes!=null){<p>Kalan iş: {{task.remainingMinutes}} dk · {{task.remainingQuestions ?? 'Belirtilmedi'}} soru</p>}
-            @if(task.completionSourceTaskId){<p>Tamamlanma aynı çalışma zincirindeki kayıtla doğrulandı. Fiili süre ve sorular yapıldıkları kayıtta korunur.</p>}
-            @for(day of task.workDays ?? [];track day.workedOn){<p>{{day.workedOn | date:'dd.MM.yyyy'}} · {{day.minutes}} dk · {{day.questions ?? 'Belirtilmedi'}} soru @if(day.isLegacyDate){ · Eski kaydın plan tarihi; fiili tarih bilinmiyor }</p>}
+            @if(task.predecessorTaskId){<p>{{ staffStudentId ? 'Devam çalışması: önceki gerçekleşmeler kaynak görevde korunur. Buraya yalnız bu devam görevindeki yeni çalışma toplamını gir. Konuların süre payları kaynak çalışmayla birlikte korunur.' : 'Yarım kalan çalışmanın devamı. Buraya yalnız bu kısımda yaptığın çalışmayı gir.' }}</p>}
+            @if(task.remainingMinutes!=null){<p>Kalan iş: {{task.remainingMinutes}} dk@if(task.remainingQuestions!=null){ · {{task.remainingQuestions}} soru}</p>}
+            @if(task.completionSourceTaskId && staffStudentId){<p>Tamamlanma aynı çalışma zincirindeki kayıtla doğrulandı. Fiili süre ve sorular yapıldıkları kayıtta korunur.</p>}
+            @for(day of task.workDays ?? [];track day.workedOn){<p>{{day.workedOn | date:'dd.MM.yyyy'}} · {{day.minutes}} dk@if(day.questions!=null){ · {{day.questions}} soru} @if(day.isLegacyDate && staffStudentId){ · Eski kaydın plan tarihi; fiili tarih bilinmiyor }</p>}
             @if (task.planReason) { <p class="plan-reason" data-testid="plan-reason">{{ planKindLabel(task.planKind) }} · {{ task.planReason }}</p> }
-            <p>Planlanan soru: {{ task.plannedQuestions ?? 'Kayıt yok' }}</p>
-            @if (!task.isCompleted && task.actualMinutes != null) { <p>Kısmi çalışma · {{task.actualMinutes}} dk · {{task.actualQuestions ?? 'Belirtilmedi'}} soru</p> }
+            @if (task.plannedQuestions != null || staffStudentId) { <p>Planlanan soru: {{ task.plannedQuestions ?? 'Kayıt yok' }}</p> }
+            @if (!task.isCompleted && task.actualMinutes != null) { <p>Kısmi çalışma · {{task.actualMinutes}} dk@if(task.actualQuestions!=null){ · {{task.actualQuestions}} soru}</p> }
             @if (task.isCompleted) {
               <p class="completion">Tamamlandı · {{ task.actualMinutes }} dk · {{ task.completedAt | date:'dd.MM.yyyy HH:mm' }}</p>
-              <p>Kaydedilen soru: {{ task.actualQuestions ?? 'Kayıt yok' }}</p>
+              @if (task.actualQuestions != null) { <p>Kaydedilen soru: {{ task.actualQuestions }}</p> }
             } @else if (plan.status === 'Active' && !readOnly) {
               @if(staffStudentId){<div class="fields"><label>Çalışma başlığını düzelt<input [(ngModel)]="taskTitles[task.id]" maxlength="200" [disabled]="busy()"></label><button type="button" (click)="correctTitle(task)" [disabled]="busy()">Başlığı kaydet</button><label>Kalan çalışma süresi (dk)<input type="number" [(ngModel)]="remainingMinutes[task.id]" min="1" max="1440" [disabled]="busy()"></label><label>Kalan soru<input type="number" [(ngModel)]="remainingQuestions[task.id]" min="0" max="100000" [disabled]="busy()"></label><button type="button" (click)="saveRemainingScope(task)" [disabled]="busy()">{{ remainingLabel }}</button></div>}
               @if (!staffStudentId) {
-              <p class="muted">Biriken toplam süreyi ve soru sayısını gir. Önceki toplama eklenen miktar seçtiğin fiili çalışma gününe yazılır; planın tarihini değiştirmek bu günü değiştirmez.</p>
+              <p class="muted">Bu çalışmaya bugüne kadar verdiğin toplam süreyi ve çözdüğün soru sayısını gir; yeni eklenen kısım seçtiğin güne yazılır.</p>
               <div class="fields">
-                <label>Fiili çalışma günü<input type="date" [ngModel]="workDates[task.id] ?? today" (ngModelChange)="workDates[task.id]=$event" [max]="today" [disabled]="busy()"></label><label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" (ngModelChange)="completionError.set(null)" min="1" max="1440" step="1" [disabled]="busy()" [attr.aria-invalid]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'true' : null" [attr.aria-describedby]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'completion-error-' + task.id : null"></label>
+                <label>Çalıştığın gün<input type="date" [ngModel]="workDates[task.id] ?? today" (ngModelChange)="workDates[task.id]=$event" [max]="today" [disabled]="busy()"></label><label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" (ngModelChange)="completionError.set(null)" min="1" max="1440" step="1" [disabled]="busy()" [attr.aria-invalid]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'true' : null" [attr.aria-describedby]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'completion-error-' + task.id : null"></label>
                 <label>Gerçek soru (isteğe bağlı)<input type="number" [(ngModel)]="actualQuestions[task.id]" (ngModelChange)="completionError.set(null)" min="0" max="100000" step="1" [disabled]="busy()" [attr.aria-invalid]="completionError()?.taskId === task.id && completionError()?.field === 'questions' ? 'true' : null" [attr.aria-describedby]="completionError()?.taskId === task.id && completionError()?.field === 'questions' ? 'completion-error-' + task.id : null"></label>
                 <label>Kalan çalışma süresi (dk)<input type="number" [(ngModel)]="remainingMinutes[task.id]" min="1" max="1440" [disabled]="busy()"></label><label>Kalan soru (isteğe bağlı)<input type="number" [(ngModel)]="remainingQuestions[task.id]" min="0" max="100000" [disabled]="busy()"></label>
                 <button type="button" class="secondary" (click)="saveRemainingScope(task)" [disabled]="busy()">{{ remainingLabel }}</button>

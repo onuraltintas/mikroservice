@@ -23,16 +23,23 @@ export function coachingToaster(): Pick<ToasterService,'confirm'|'success'|'erro
  * Roadmap O1: a message is shown once, in the page next to what it is about (role="alert" / role="status").
  * On a phone that place can be off screen, so the newest message is brought into view instead of being
  * repeated as a pop-up.
+ * Live test 16.11.2026 (#29): on a wide screen a success message is not scrolled to — after a move or an addition in the
+ * plan calendar the page jumped to its top. Errors are still brought into view on every screen.
  */
 export function coachingFeedback(success?: Signal<string | null>, error?: Signal<string | null>): void {
   const host=inject(ElementRef) as ElementRef<HTMLElement>, injector=inject(Injector);
   for(const [source,role] of [[success,'status'],[error,'alert']] as const) if(source) effect(()=>{
     const message=source();
     if(!message) return;
+    if(role==='status'&&wideScreen()) return;
     afterNextRender(()=>{
       const nodes=[...host.nativeElement.querySelectorAll<HTMLElement>(`[role="${role}"]`)];
       const node=nodes.find(item=>item.textContent?.includes(message))??nodes[0];
       node?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
     },{injector});
   });
+}
+
+function wideScreen(): boolean {
+  return typeof matchMedia === 'function' && !matchMedia('(max-width: 720px)').matches;
 }

@@ -12,8 +12,8 @@
           <span class="material-icons" aria-hidden="true">verified</span>
           {{ getPhaseLabel() }} tamamlandı
         </span>
-        <h1 id="result-title">Okuma profiliniz hazır</h1>
-        <p>Hızınız, kavrama düzeyiniz ve görsel becerileriniz birlikte değerlendirildi.</p>
+        <h1 id="result-title">Okuma profilin hazır</h1>
+        <p>Hızın, kavrama düzeyin ve görsel becerilerin birlikte değerlendirildi.</p>
       </div>
       <div class="level-badge" aria-label="Önerilen okuma seviyesi">
         <span class="level-badge__label">Okuma seviyeniz</span>
@@ -43,7 +43,7 @@
         <article class="primary-metric primary-metric--speed">
           <div class="metric-icon"><span class="material-icons" aria-hidden="true">speed</span></div>
           <div>
-            <span>Okuma hızınız</span>
+            <span>Okuma hızın</span>
             <strong>{{ result()?.averageWPM | number:'1.0-0' }}</strong>
             <small>kelime / dakika</small>
           </div>
@@ -54,7 +54,7 @@
         <article class="primary-metric">
           <div class="metric-icon"><span class="material-icons" aria-hidden="true">psychology_alt</span></div>
           <div>
-            <span>Kavrama oranınız</span>
+            <span>Kavrama oranın</span>
             <strong>%{{ result()?.averageComprehension | number:'1.0-0' }}</strong>
             <small>okuduğunu anlama</small>
           </div>
@@ -69,7 +69,7 @@
       <div class="section-heading">
         <div>
           <span class="section-kicker">Beceri analizi</span>
-          <h2 id="skills-title">Performans dağılımınız</h2>
+          <h2 id="skills-title">Performans dağılımın</h2>
         </div>
         <span class="section-note">Her alan 100 üzerinden değerlendirilir</span>
       </div>
@@ -99,10 +99,10 @@
         <span class="section-kicker">Sonraki adım</span>
         @if (result()?.recommendedSeriesId && result()?.recommendedProgressId) {
         <h2 id="next-step-title">{{ result()?.recommendedSeriesName }}</h2>
-        <p>Size uygun program atandı. Günlük çalışmalarınız bu ölçüm sonuçlarına göre başlayacak.</p>
+        <p>Sana uygun program atandı. Günlük çalışmaların bu ölçüm sonuçlarına göre başlayacak.</p>
         } @else {
-        <h2 id="next-step-title">Programınız hazırlanıyor</h2>
-        <p>Uygun program şablonu bulunduğunda günlük planınız otomatik olarak açılacak.</p>
+        <h2 id="next-step-title">Programın hazırlanıyor</h2>
+        <p>Uygun program şablonu bulunduğunda günlük planın otomatik olarak açılacak.</p>
         }
       </div>
       <button type="button" class="sp-btn result-cta" (click)="goToDashboard()">
@@ -163,7 +163,7 @@
             </span>
             <span class="meta-badge level">
               <span class="material-icons">signal_cellular_alt</span>
-              Seviye {{ exercise.difficultyLevel }}
+              Zorluk: {{ difficulty(exercise.difficultyLevel) }}
             </span>
           </div>
         </div>

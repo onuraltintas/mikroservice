@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, effect, untracked } from '@angular/core';
 import { exerciseTitleLabel, exerciseTypeLabel } from '../../../shared/utils/exercise-type-label';
+import { difficultyLabel } from '../../../shared/utils/difficulty-label';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -207,7 +208,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
 
         // Check if it's because exercises not completed
         if (error.status === 400) {
-          this.toaster.error('Lütfen önce tüm egzersizleri tamamlayın', 3000);
+          this.toaster.error('Lütfen önce tüm egzersizleri tamamla', 3000);
         } else {
           this.toaster.error('Seviye hesaplanırken hata oluştu', 3000);
         }
@@ -248,6 +249,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   }
 
   readonly displayTitle = exerciseTitleLabel;
+  readonly difficulty = difficultyLabel;
 
   getPhaseLabel(): string {
     switch (this.assessmentPhase()) {

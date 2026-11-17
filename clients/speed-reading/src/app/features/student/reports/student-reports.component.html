@@ -13,7 +13,7 @@
       }
     </select>
   </label>
-  @if (programHistoryError()) { <p role="alert">Program geçmişi yüklenemedi. Sayfayı yeniden deneyin.</p> }
+  @if (programHistoryError()) { <p role="alert">Program geçmişi yüklenemedi. Sayfayı yeniden dene.</p> }
   @if (selectedProgram(); as program) {
     @if (program.selectionPolicyVersion) {
       <p>Bu eğitim seçildiğinde ölçülen seviye: {{ program.measuredLevel }} · Önerilen eğitim seviyesi: {{ program.recommendedTrainingLevel }}
@@ -45,9 +45,9 @@
           @if (phase.availableAt) { {{ phase.availableAt | date:'dd.MM.yyyy HH:mm' }} }
         </p>
         } @else if (phase.status === 2) {
-        <p>Bu ölçüm için hazırsınız.</p>
+        <p>Bu ölçüm için hazırsın.</p>
         } @else if (phase.status === 3) {
-        <p>Yarım kalan ölçümünüz devam ediyor.</p>
+        <p>Yarım kalan ölçümün devam ediyor.</p>
         } @else if (phase.completedAt) {
         <p>{{ phase.completedAt | date:'dd.MM.yyyy' }} tarihinde tamamlandı.</p>
         }

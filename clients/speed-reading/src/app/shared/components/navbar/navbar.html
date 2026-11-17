@@ -25,7 +25,8 @@
                 <span>|</span>
                 <button (click)="switchLanguage('en')" [class.active]="currentLanguage() === 'en'">EN</button>
             </div>
-            <a routerLink="/auth/login" [class.scrolled]="isScrolled">Giriş Yap</a>
+            @if (panelLink; as panel) { <a [routerLink]="panel" [class.scrolled]="isScrolled">Panelime git</a> }
+            @else { <a routerLink="/auth/login" [class.scrolled]="isScrolled">Giriş Yap</a> }
             <button mat-raised-button [class.primary]="!isScrolled" [class.white]="isScrolled"
                 routerLink="/auth/register">
                 Başlangıç yap
@@ -55,7 +56,8 @@
                     {{ link.label }}
                 </a>
             </ng-container>
-            <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş Yap</a>
+            @if (panelLink; as panel) { <a [routerLink]="panel" (click)="closeMobileMenu()">Panelime git</a> }
+            @else { <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş Yap</a> }
             <button mat-raised-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()">
                 Başlangıç yap
             </button>

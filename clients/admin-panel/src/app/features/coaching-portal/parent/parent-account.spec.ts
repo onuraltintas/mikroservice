@@ -89,5 +89,9 @@ describe('ParentPersonalDataComponent', () => {
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Kişisel verilerim');
     const section = fixture.nativeElement.querySelector('app-student-data-export') as HTMLElement;
     expect(section.textContent).toContain('kendi');
+    // Live test #48 (user decision 17.11.2026): where to ask for the account's erasure.
+    const erasure = fixture.nativeElement.querySelector('[data-testid="account-erasure-note"]') as HTMLElement;
+    expect(erasure.textContent).toContain('veri sorumlusu iletişim adresine');
+    expect(erasure.querySelector('a')!.getAttribute('href')).toBe('/legal/kvkk');
   });
 });

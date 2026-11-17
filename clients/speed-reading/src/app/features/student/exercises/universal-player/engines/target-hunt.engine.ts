@@ -88,7 +88,7 @@ export class TargetHuntEngine implements BaseEngine {
         if (!this.target || !this.items.length || this.items.some(item => !item) || targets === 0
             || !Number.isInteger(this.columns) || this.columns < 1 || this.targetCount < 1
             || (!this.serverAuthoritative && targets !== this.targetCount)) {
-            this.callbacks?.onError?.('Hedef avı içeriği eksik veya tutarsız. Lütfen egzersizi yeniden açın.');
+            this.callbacks?.onError?.('Hedef avı içeriği eksik veya tutarsız. Lütfen egzersizi yeniden aç.');
             return;
         }
         this.state.isRunning = true;
@@ -170,7 +170,7 @@ export class TargetHuntEngine implements BaseEngine {
         this.pendingAction = null;
         if (!response?.isValid || !response.feedbackData) {
             this.failedAction = action;
-            this.callbacks?.onError?.(response?.message || 'Dokunuşunuz kaydedilemedi. Lütfen tekrar deneyin.');
+            this.callbacks?.onError?.(response?.message || 'Dokunuşun kaydedilemedi. Lütfen tekrar dene.');
             return;
         }
         this.failedAction = null;

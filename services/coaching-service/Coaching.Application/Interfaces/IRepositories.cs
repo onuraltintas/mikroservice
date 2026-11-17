@@ -289,6 +289,13 @@ public sealed record CoachingAdminStudentHistoryItemDto(
     string? Source = null)
 {
     public Coaching.Domain.Entities.PracticeExamSummary? NetSummary { get; init; }
+    /// <summary>The institution the teacher's record was made in (assignments, sessions, teacher-recorded exams); not sent.</summary>
+    [System.Text.Json.Serialization.JsonIgnore] public Guid? RecordInstitutionId { get; init; }
+    /// <summary>
+    /// Live test #43 (user decision 17.11.2026): in an institution's report, a teacher's record from before the student joined
+    /// (made outside this institution) is labelled "Kurum öncesi". Null where it is not known (goals, the student's own exams).
+    /// </summary>
+    public bool? BeforeInstitution { get; init; }
 }
 
 public sealed record TeacherCoachingAnalyticsDto(

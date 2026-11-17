@@ -112,6 +112,8 @@ export interface CoachingInstitutionStudentHistoryItem {
   maxScore?: number | null;
   progress?: number | null;
   category?: string | null;
+  /** Live test #43: a teacher's record from before the student joined this institution. */
+  beforeInstitution?: boolean | null;
 }
 
 export interface CoachingInstitutionStudentHistoryPage {

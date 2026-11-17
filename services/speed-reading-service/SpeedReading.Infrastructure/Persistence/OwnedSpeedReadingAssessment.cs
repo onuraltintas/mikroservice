@@ -1158,6 +1158,24 @@ internal sealed class OwnedSpeedReadingAssessment(
             userId,
             assignedAt);
         db.StudentProgramProgresses.Add(progress);
+        // Live test 16.11.2026 (#60), user decision 17.11.2026: one in-app notice when the first program is assigned.
+        ((ISpeedReadingDataContext)db).Notifications.Add(new Legacy.LegacyUserNotification
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = "Programın hazır",
+            Message = $"{template.Name} programın hazır. Bugünkü egzersizlerine Ana Sayfa'dan başlayabilirsin.",
+            Type = 9,
+            Priority = 2,
+            Channel = 3,
+            Status = 2,
+            ActionUrl = "/student/dashboard",
+            RelatedEntityId = progress.Id,
+            RelatedEntityType = "StudentProgramProgress",
+            SentAt = assignedAt,
+            CreatedAt = assignedAt,
+            CreatedBy = userId
+        });
         return new BaselineProgramAssignment(progress.Id, template.Id, template.Name);
     }
 

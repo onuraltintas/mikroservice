@@ -290,7 +290,11 @@ export class StudentOnboardingComponent implements OnInit {
   }
   loadEmails() {
     this.prefsError.set(false); this.emailPrefs.set(null);
-    this.notifications.list().subscribe({ next: list => this.emailPrefs.set(list.filter(x => ONBOARDING_EMAIL_CATEGORIES.includes(x.category) && x.emailEditable !== false)),
+    // User decision 17.11.2026: on the first answer the study plan reminders come checked (the student can uncheck them here
+    // or later in Ayarlar › Bildirimler). Answering the step again shows the saved choice.
+    const first = !('notifications' in this.answers());
+    this.notifications.list().subscribe({ next: list => this.emailPrefs.set(list.filter(x => ONBOARDING_EMAIL_CATEGORIES.includes(x.category) && x.emailEditable !== false)
+      .map(x => first && x.category === 'StudyPlan' ? { ...x, email: true } : x)),
       error: () => this.prefsError.set(true) });
   }
   async logout() { this.api.reset(); await this.auth.logout(); }

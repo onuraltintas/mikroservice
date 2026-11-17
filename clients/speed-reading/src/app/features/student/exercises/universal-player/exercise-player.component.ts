@@ -504,12 +504,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     this.studentProgramService.startProgram(templateId).subscribe({
       next: () => {
-        this.showToast('Yeni programınız başarıyla başlatıldı!', 'info', 3000);
+        this.showToast('Yeni programın başlatıldı!', 'info', 3000);
         this.router.navigate(['/student/dashboard']);
       },
       error: (err) => {
         console.error('Failed to start next program:', err);
-        this.showToast('Program başlatılamadı. Lütfen daha sonra tekrar deneyin.', 'error', 3000);
+        this.showToast('Program başlatılamadı. Lütfen daha sonra tekrar dene.', 'error', 3000);
         this.startingNextProgram = false;
       }
     });
@@ -720,7 +720,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         error: (err) => {
           console.error('Session start failed:', err);
           this.error = err?.error?.detail || err?.error?.message
-            || 'Oturum başlatılamadı. Lütfen internet bağlantınızı kontrol edin.';
+            || 'Oturum başlatılamadı. Lütfen internet bağlantını kontrol et.';
           this.finishLoading();
         }
       });
@@ -981,7 +981,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private failPreviewReadingText(): void {
-    this.error = 'Bu egzersize uygun yayımlanmış metin yüklenemedi. Metin ve gerekiyorsa sorularını kontrol edin.';
+    this.error = 'Bu egzersize uygun yayımlanmış metin yüklenemedi. Metin ve gerekiyorsa sorularını kontrol et.';
     this.finishLoading();
   }
 
@@ -1303,7 +1303,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private handleInitializationError(error: unknown): void {
     console.error('[ExercisePlayer] Engine initialization failed:', error);
     this.engine = null;
-    this.error = 'Egzersiz hazırlanırken bir hata oluştu. Lütfen tekrar deneyin.';
+    this.error = 'Egzersiz hazırlanırken bir hata oluştu. Lütfen tekrar dene.';
   }
 
   private applyCustomPreview(state: unknown): void {
@@ -1321,7 +1321,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.customPreviewActive = changed !== this.parsedConfig;
       this.parsedConfig = changed;
     } catch {
-      this.error = 'Özel ayarlar geçersiz. Kataloğa dönüp ayarları kontrol edin.';
+      this.error = 'Özel ayarlar geçersiz. Kataloğa dönüp ayarları kontrol et.';
     }
   }
 
@@ -1801,7 +1801,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.pendingReadingCompletion = undefined;
     this.engine?.stop();
     this.stopTimer();
-    this.error = 'Okuma süresi doğrulanamadı. Lütfen bağlantınızı kontrol edip egzersizi yeniden açın.';
+    this.error = 'Okuma süresi doğrulanamadı. Lütfen bağlantını kontrol edip egzersizi yeniden aç.';
     this.cdr.detectChanges();
   }
 
@@ -1883,7 +1883,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   /** The Turkish ProblemDetails `detail` (not its English `title`); server errors get the fallback. */
   private getActionValidationErrorMessage(error: unknown): string {
-    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantınızı kontrol edip tekrar deneyin.', { voice: 'siz' });
+    return getErrorMessage(error, 'Egzersiz doğrulaması alınamadı. Bağlantını kontrol edip tekrar dene.', { voice: 'siz' });
   }
 
   private waitForPendingActions(onFinished: () => void): void {
@@ -2143,7 +2143,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (!this.autoPausedWhileHidden) return;
     this.autoPausedWhileHidden = false;
     if (this.engineState?.isPaused && !this.hasEngineFinished()) {
-      this.showToast('Ekrandan ayrıldığınız için egzersiz duraklatıldı.', 'info', 6000);
+      this.showToast('Ekrandan ayrıldığın için egzersiz duraklatıldı.', 'info', 6000);
       this.cdr.detectChanges();
     }
   }
@@ -2363,7 +2363,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.showExitConfirm = false;
       this.navigateBack();
     } catch {
-      this.showToast('Yarım kalan egzersiz silinemedi. Lütfen tekrar deneyin.', 'error', 5000);
+      this.showToast('Yarım kalan egzersiz silinemedi. Lütfen tekrar dene.', 'error', 5000);
     } finally {
       this.isDiscardingSession = false;
       this.cdr.detectChanges();
@@ -2517,7 +2517,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         isCorrect: this.defersComprehensionFeedback() ? null : response.isCorrect ?? false,
         correctAnswer: this.defersComprehensionFeedback() ? undefined : response.correctAnswer,
         explanation: this.defersComprehensionFeedback()
-          ? (isTimeout ? 'Süre doldu; cevap kaydedildi.' : 'Cevabınız kaydedildi.')
+          ? (isTimeout ? 'Süre doldu; cevap kaydedildi.' : 'Cevabın kaydedildi.')
           : (response.explanation || response.message)
       };
       if (!this.questionAnswers.some(item => item.questionId === questionId)) {
@@ -2559,7 +2559,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.questionSubmissionPending = false;
       this.selectedAnswer = null;
       this.showToast(
-        error?.message || 'Cevap sunucuya kaydedilemedi; lütfen tekrar deneyin.',
+        error?.message || 'Cevap sunucuya kaydedilemedi; lütfen tekrar dene.',
         'error');
       this.cdr.detectChanges();
     });
@@ -2978,7 +2978,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.cdr.detectChanges();
     }, this.engine?.engineType !== 'subvocalization_reduction').catch(error => {
       this.questionSubmissionPending = false;
-      this.showToast(error?.message || 'Cevap kaydedilemedi; lütfen yeniden deneyin.', 'error');
+      this.showToast(error?.message || 'Cevap kaydedilemedi; lütfen yeniden dene.', 'error');
       this.cdr.detectChanges();
     });
     this.cdr.detectChanges();
@@ -4096,7 +4096,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             .subscribe({
               error: (error) => {
                 console.error('Learning path completion failed:', error);
-                this.showToast('Öğrenme yolu ilerlemesi kaydedilemedi. Lütfen tekrar deneyin.', 'error', 5000);
+                this.showToast('Öğrenme yolu ilerlemesi kaydedilemedi. Lütfen tekrar dene.', 'error', 5000);
               }
             });
         } else if (!incomplete && !isAssessmentMode && !isPracticeMode && !this.reviewItemId && this.exercise?.id
@@ -4107,7 +4107,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       error: (err) => {
         this.resultSaveStatus = 'failed';
         console.error('Session completion failed:', err);
-        this.showToast('Sonuç kaydedilemedi. Sonuç ekranından tekrar deneyebilirsiniz.', 'error', 5000);
+        this.showToast('Sonuç kaydedilemedi. Sonuç ekranından tekrar deneyebilirsin.', 'error', 5000);
         this.cdr.detectChanges();
       }
     });
@@ -4139,7 +4139,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       error: (error) => {
         console.error('Review submission failed:', error);
         this.reviewSaveStatus = 'failed';
-        this.showToast('Egzersiz kaydedildi fakat tekrar planı güncellenemedi. Tekrar deneyin.', 'error', 5000);
+        this.showToast('Egzersiz kaydedildi fakat tekrar planı güncellenemedi. Tekrar dene.', 'error', 5000);
         this.cdr.detectChanges();
       }
     });
@@ -4198,7 +4198,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
         if (response.dayCompleted) {
           setTimeout(() => {
-            this.showToast('Bugünün tüm egzersizlerini tamamladınız!', 'info', 5000);
+            this.showToast('Bugünün tüm egzersizlerini tamamladın!', 'info', 5000);
           }, 2000);
         }
 
@@ -4215,7 +4215,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       error: (err) => {
         console.error('[ExercisePlayer] Daily progress update failed:', err);
         this.dailyProgressSaveStatus = 'failed';
-        this.showToast('Sonuç kaydedildi ancak günlük ilerleme güncellenemedi. Tekrar deneyin.', 'error', 5000);
+        this.showToast('Sonuç kaydedildi ancak günlük ilerleme güncellenemedi. Tekrar dene.', 'error', 5000);
         this.cdr.detectChanges();
       }
     });
