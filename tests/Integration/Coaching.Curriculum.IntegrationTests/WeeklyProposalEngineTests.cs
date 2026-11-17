@@ -49,7 +49,7 @@ public sealed class WeeklyProposalEngineTests
         Assert.Equal(0, result.ShortageMinutes);
         Assert.Equal(new[] { 120, 60, 60 }, result.Lessons.Select(x => x.ProposedMinutes));
         Assert.Equal(new[] { 120, 60, 0 }, result.Lessons.Select(x => x.NeededMinutes));
-        Assert.Equal(21 * 60, result.FreeMinutes);
+        Assert.Equal(28 * 60, result.FreeMinutes); // 17:00–21:00 every day, no break (17.11.2026)
     }
 
     [Fact]
@@ -65,13 +65,15 @@ public sealed class WeeklyProposalEngineTests
     }
 
     [Fact]
-    public void AFreeHalfHourLengthensTheLessonBeforeIt()
+    public void AFreeHalfHourGoesToTheLessonBeforeIt()
     {
-        // User decision 17.11.2026: no gaps. 17:00–18:30 is an hour and the half hour after it, one 90-minute card.
+        // User decision 17.11.2026: no gaps. 17:00–18:30 is an hour and a 30-minute card of the same lesson after it
+        // (weekly draft cards are 30 or 60 minutes).
         var result = Propose([Window(DayOfWeek.Monday, 1020, 1110)], [Lesson(1, 600)]);
-        var card = Assert.Single(result.Slots);
-        Assert.Equal((1020, 90), (card.StartMinute, card.DurationMinutes));
+        Assert.Equal(new[] { (Id(1), 1020, 60), (Id(1), 1080, 30) }, result.Slots.Select(x => (x.LessonId, x.StartMinute, x.DurationMinutes)));
         Assert.Equal(90, result.FreeMinutes);
+        // A half hour no lesson needs stays free, like an hour.
+        Assert.Equal(60, Propose([Window(DayOfWeek.Monday, 1020, 1110)], [Lesson(1, 60)]).Slots.Sum(x => x.DurationMinutes));
         // A half hour after a saved card goes to that card's lesson.
         var saved = new[] { Card(2, DayOfWeek.Tuesday, 1020) };
         var after = Propose([Window(DayOfWeek.Tuesday, 1080, 1110)], [Lesson(1, 600), Lesson(2, 600)], existing: saved);
@@ -85,9 +87,9 @@ public sealed class WeeklyProposalEngineTests
         var day = new[] { Window(DayOfWeek.Saturday, 0, 1440) };
         Assert.Equal(WeeklyDayLimit.SchoolMinutes, Propose(day, lessons).Slots.Sum(x => x.DurationMinutes));
         Assert.Equal(WeeklyDayLimit.GraduateMinutes, Propose(day, lessons, limit: WeeklyDayLimit.GraduateMinutes).Slots.Sum(x => x.DurationMinutes));
-        // Saved cards (90 minutes) count toward the limit in Fill mode: six more hours fit, a seventh would pass 8 hours.
+        // Saved cards (90 minutes) count toward the limit in Fill mode: six more hours and a half hour fill the 8 hours.
         var saved = new[] { Card(20, DayOfWeek.Saturday, 60), Card(20, DayOfWeek.Saturday, 120, 30) };
-        Assert.Equal(360, Propose(day, lessons, existing: saved).Slots.Sum(x => x.DurationMinutes));
+        Assert.Equal(390, Propose(day, lessons, existing: saved).Slots.Sum(x => x.DurationMinutes));
     }
 
     [Fact]
@@ -96,7 +98,7 @@ public sealed class WeeklyProposalEngineTests
         // User decision 17.11.2026: half hours are used too; only what is shorter than 30 minutes on the half-hour grid stays empty.
         var lessons = new[] { Lesson(1, 600), Lesson(2, 600) };
         var result = Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Tuesday, 1035, 1125), Window(DayOfWeek.Wednesday, 1020, 1050)], lessons);
-        Assert.Equal(new[] { (1020, 90) }, result.Slots.Where(x => x.Day == DayOfWeek.Monday).Select(x => (x.StartMinute, x.DurationMinutes)));
+        Assert.Equal(new[] { (1020, 60), (1080, 30) }, result.Slots.Where(x => x.Day == DayOfWeek.Monday).Select(x => (x.StartMinute, x.DurationMinutes)));
         Assert.Equal(new[] { (1050, 60) }, result.Slots.Where(x => x.Day == DayOfWeek.Tuesday).Select(x => (x.StartMinute, x.DurationMinutes)));
         Assert.Equal(new[] { (1020, 30) }, result.Slots.Where(x => x.Day == DayOfWeek.Wednesday).Select(x => (x.StartMinute, x.DurationMinutes)));
         Assert.Equal(180, result.FreeMinutes);
@@ -392,10 +394,10 @@ public sealed class WeeklyProposalEngineTests
         var budgets = new Dictionary<DayOfWeek, int> { [DayOfWeek.Monday] = 60, [DayOfWeek.Tuesday] = 150, [DayOfWeek.Saturday] = 600 };
         var result = WeeklyProposalEngine.Propose(new(week, [], lessons, 240, null, WeeklyProposalMode.Replace, null, budgets));
         int Minutes(DayOfWeek day) => result.Slots.Where(x => x.Day == day).Sum(x => x.DurationMinutes);
-        // Monday 60; Tuesday 150 leaves two hours (a 30-minute rest stays empty); Saturday min(600, 240); no other day.
-        Assert.Equal((60, 120, 240), (Minutes(DayOfWeek.Monday), Minutes(DayOfWeek.Tuesday), Minutes(DayOfWeek.Saturday)));
+        // Monday 60; Tuesday 150 (two hours and a half hour, 17.11.2026); Saturday min(600, 240); no other day.
+        Assert.Equal((60, 150, 240), (Minutes(DayOfWeek.Monday), Minutes(DayOfWeek.Tuesday), Minutes(DayOfWeek.Saturday)));
         Assert.Equal(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Saturday }, result.Slots.Select(x => x.Day).Distinct());
-        Assert.Equal(420, result.FreeMinutes);
+        Assert.Equal(450, result.FreeMinutes);
         // A saved card counts toward its day's budget.
         var fill = WeeklyProposalEngine.Propose(new(week, [Card(1, DayOfWeek.Tuesday, 900, 90)], lessons, 240, null, WeeklyProposalMode.Fill, null, budgets));
         Assert.Equal(60, fill.Slots.Where(x => x.Day == DayOfWeek.Tuesday).Sum(x => x.DurationMinutes));

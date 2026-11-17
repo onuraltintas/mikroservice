@@ -29,7 +29,7 @@ public sealed record WeeklyProposalResult(IReadOnlyList<WeeklyProposedSlot> Slot
 /// <summary>
 /// Paket H2: the need-based weekly proposal. Hours go to the chosen lessons by their weekly need (weighted by priority and, for YKS,
 /// the exam focus), in 60-minute sessions on the half hour, never above the daily limit (K5). A free half hour that an hour does not fill
-/// lengthens the lesson next to it (user decision 17.11.2026: no gaps).
+/// becomes a 30-minute card of a lesson that still needs time (user decision 17.11.2026: no gaps).
 /// Pure and deterministic: no clock, no database, no random ids.
 /// </summary>
 public static class WeeklyProposalEngine
@@ -274,28 +274,24 @@ public static class WeeklyProposalEngine
     }
 
     /// <summary>
-    /// User decision 17.11.2026 (live test #3): a free half hour goes to the lesson right before it (or else right after it), saved or
-    /// proposed, so that lesson's time runs on; a half hour with no lesson next to it goes to the lesson furthest from its need. A proposed
-    /// hour and the half hour of the same lesson are one card.
+    /// User decision 17.11.2026 (live test #3): a free half hour that an hour does not fill is used too, as a 30-minute card (weekly
+    /// draft cards are 30 or 60 minutes). Like the hours it goes only to a chosen lesson whose need is not yet covered: the lesson right
+    /// before it, else right after it, else the one furthest from its need. A half hour no lesson needs stays free.
     /// </summary>
     private static List<WeeklyProposedSlot> Fill(List<WeeklyProposedSlot> placed, IReadOnlyList<(DayOfWeek Day, int Start)> halves,
         IReadOnlyList<Plan> plans, IReadOnlyList<WeeklyDraftSlot> existing)
     {
         var slots = placed.ToList();
+        int Left(Plan plan) => plan.Needed - plan.Existing - slots.Where(s => s.LessonId == plan.Lesson.LessonId).Sum(s => s.DurationMinutes);
         foreach (var (day, start) in halves.OrderBy(x => DayIndex(x.Day)).ThenBy(x => x.Start))
         {
             var cards = slots.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes))
                 .Concat(existing.Select(x => (x.LessonId, x.Day, From: x.StartMinute, To: x.StartMinute + x.DurationMinutes))).Where(x => x.Day == day).ToList();
-            Guid? lesson = cards.Where(x => x.To == start).Select(x => (Guid?)x.LessonId).FirstOrDefault()
-                ?? cards.Where(x => x.From == start + HalfSessionMinutes).Select(x => (Guid?)x.LessonId).FirstOrDefault()
-                ?? plans.Select(x => (x.Lesson.LessonId, Left: x.Needed - x.Existing - slots.Where(s => s.LessonId == x.Lesson.LessonId).Sum(s => s.DurationMinutes)))
-                    .Where(x => x.Left > 0).OrderByDescending(x => x.Left).ThenBy(x => x.LessonId).Select(x => (Guid?)x.LessonId).FirstOrDefault();
-            if (lesson is not { } id) continue;
-            var before = slots.FindIndex(x => x.LessonId == id && x.Day == day && x.StartMinute + x.DurationMinutes == start);
-            var after = slots.FindIndex(x => x.LessonId == id && x.Day == day && x.StartMinute == start + HalfSessionMinutes);
-            if (before >= 0) slots[before] = slots[before] with { DurationMinutes = slots[before].DurationMinutes + HalfSessionMinutes };
-            else if (after >= 0) slots[after] = slots[after] with { StartMinute = start, DurationMinutes = slots[after].DurationMinutes + HalfSessionMinutes };
-            else slots.Add(new(id, day, start, HalfSessionMinutes));
+            var needing = plans.Where(x => Left(x) > 0).ToArray();
+            var pick = needing.FirstOrDefault(x => cards.Any(c => c.To == start && c.LessonId == x.Lesson.LessonId))
+                ?? needing.FirstOrDefault(x => cards.Any(c => c.From == start + HalfSessionMinutes && c.LessonId == x.Lesson.LessonId))
+                ?? needing.OrderByDescending(Left).ThenBy(x => x.Lesson.LessonId).FirstOrDefault();
+            if (pick is not null) slots.Add(new(pick.Lesson.LessonId, day, start, HalfSessionMinutes));
         }
         return slots.OrderBy(x => DayIndex(x.Day)).ThenBy(x => x.StartMinute).ToList();
     }

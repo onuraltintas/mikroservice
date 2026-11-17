@@ -147,8 +147,8 @@ public sealed class WeeklyProposalServiceTests
         var hours = StudyAvailability.Create(f.User.UserId!.Value); hours.ReplaceWindows([new(DayOfWeek.Saturday, 600, 780)]); f.Db.Add(hours);
         f.Db.Remove(await f.Db.Set<WeeklyStudyDraft>().SingleAsync()); await f.Db.SaveChangesAsync();
         var proposal = await Proposals(f).ProposeAsync(new(), default);
-        // No break (user decision 17.11.2026): 10:00 and 11:00; both chosen lessons get an hour.
-        Assert.Equal(new[] { 600, 660 }, proposal.Slots.Select(x => x.StartMinute));
+        // No break (user decision 17.11.2026): 10:00, 11:00 and 12:00 are free; both chosen lessons get time.
+        Assert.Equal(new[] { 600, 660, 720 }, proposal.Slots.Select(x => x.StartMinute));
         Assert.All(proposal.Lessons, x => Assert.Equal(0, x.ExistingMinutes));
         Assert.IsType<OkObjectResult>(await api.Proposal(new(WeeklyProposalMode.Replace), Proposals(f), default));
         await Assert.ThrowsAsync<StudyPlanValidationException>(() => Proposals(f).ProposeAsync(new(ExamFocus: "lgs"), default));
@@ -606,12 +606,13 @@ public sealed class WeeklyProposalServiceTests
         Assert.Equal(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Friday }, capped.Slots.Select(x => x.Day));
         Assert.Equal(240, capped.FreeMinutes);
         Assert.True(capped.ShortageMinutes > 0);
-        // Fill: Monday's saved 30 minutes leave no room for an hour within its 60.
+        // Fill: Monday's saved 30 minutes leave a half hour within its 60 (17.11.2026: a 30-minute card, no hour).
         var fill = await Proposals(f).ProposeAsync(new(), default);
-        Assert.DoesNotContain(fill.Slots, x => x.Day is DayOfWeek.Monday or DayOfWeek.Wednesday);
-        // The tempo options count the same: Tuesday, Thursday and Friday an hour each + Monday's saved 30 minutes.
+        Assert.DoesNotContain(fill.Slots, x => x.Day == DayOfWeek.Wednesday);
+        Assert.All(fill.Slots.Where(x => x.Day == DayOfWeek.Monday), x => Assert.Equal(30, x.DurationMinutes));
+        // The tempo options count the same: Tuesday, Thursday and Friday an hour each, Monday's half hour + its saved 30 minutes.
         var budgeted = await Proposals(f).TempoOptionsAsync(new(), default);
-        Assert.All(budgeted.Options, x => Assert.Equal(210, x.CapacityWeeklyMinutes));
+        Assert.All(budgeted.Options, x => Assert.Equal(240, x.CapacityWeeklyMinutes));
         await AssertTheProposalAgrees(budgeted, r => Proposals(f).ProposeAsync(r, default));
         // The teacher sees the same proposal.
         var staff = await BecomeTeacher(f, world);
