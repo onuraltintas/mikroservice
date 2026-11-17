@@ -51,7 +51,8 @@ public sealed class StudyPlanUpdatedNotificationTests
   try {var student=Guid.NewGuid();var teacher=Guid.NewGuid();
    await harness.Bus.Publish(new StudyPlanPublishedEvent(Guid.NewGuid(),student){PublishedBy=student});
    await harness.Bus.Publish(new StudyPlanPublishedEvent(Guid.NewGuid(),student){PublishedBy=teacher});
-   await TestHarnessTimeouts.UntilAsync(()=>harness.Consumed.Select<StudyPlanPublishedEvent>().Count()==2);
+   Assert.True(await harness.Consumed.Any<StudyPlanPublishedEvent>(x=>x.Context.Message.PublishedBy==student));
+   Assert.True(await harness.Consumed.Any<StudyPlanPublishedEvent>(x=>x.Context.Message.PublishedBy==teacher));
    await TestHarnessTimeouts.UntilAsync(()=>!recording.Calls.IsEmpty);
    var call=Assert.Single(recording.Calls);Assert.Equal("Çalışma planın hazır",call.Title);
   }finally{await harness.Stop();}
