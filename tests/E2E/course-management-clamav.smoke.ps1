@@ -5,7 +5,7 @@ $previousPort = $env:COURSE_MANAGEMENT_TEST_CLAMAV_PORT
 $smokeScript = Join-Path $PSScriptRoot 'course-management-migration.smoke.ps1'
 
 try {
-    docker run -d --name $containerName --memory 1536m --cpus '1.0' --pids-limit 128 `
+    docker run -d --name $containerName --memory 3g --cpus '1.0' --pids-limit 128 `
         -p '127.0.0.1::3310' `
         -e CLAMD_CONF_MaxScanSize=10M `
         -e CLAMD_CONF_MaxFileSize=10M `
@@ -19,13 +19,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Pinned Course Management ClamAV container failed to start.' }
 
     $ready = $false
-    for ($attempt = 0; $attempt -lt 240; $attempt++) {
+    # 17.11.2026: the signature set grew; with 1.5 GB and 4 minutes clamd did not come up twice in one day.
+    for ($attempt = 0; $attempt -lt 480; $attempt++) {
         docker exec $containerName clamdscan --ping 3 *> $null
         if ($LASTEXITCODE -eq 0) { $ready = $true; break }
         Start-Sleep -Seconds 1
     }
     if (-not $ready) {
         docker logs $containerName
+        docker inspect --format 'OOMKilled={{.State.OOMKilled}} Status={{.State.Status}}' $containerName
         throw 'Pinned Course Management ClamAV container did not become ready.'
     }
 
