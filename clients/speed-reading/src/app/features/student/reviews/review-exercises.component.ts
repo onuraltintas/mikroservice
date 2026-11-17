@@ -35,7 +35,7 @@ export class ReviewExercisesComponent implements OnInit {
     this.loading.set(true);
     this.reviewService.getAllReviews().subscribe({
       next: items => this.allReviews.set(items),
-      error: () => this.toaster.error('Tekrar geçmişi yüklenemedi. Lütfen yeniden deneyin.', 3000)
+      error: () => this.toaster.error('Tekrar geçmişi yüklenemedi. Lütfen yeniden dene.', 3000)
     });
     this.reviewService.getDueReviews().subscribe({
       next: () => {

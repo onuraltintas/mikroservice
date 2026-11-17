@@ -43,8 +43,7 @@ export class ProfileSetupComponent {
 
   constructor() {
     this.basicInfoForm = this.fb.group({
-      dateOfBirth: ['', Validators.required],  // 'YYYY-MM-DD' string saklar
-      learningStyle: ['visual', Validators.required]
+      dateOfBirth: ['', Validators.required]  // 'YYYY-MM-DD' string saklar
     });
 
     this.goalsForm = this.fb.group({
@@ -140,15 +139,6 @@ export class ProfileSetupComponent {
     return this.calculatedAgeGroupText || '';
   }
 
-  getLearningStyleText(style: string): string {
-    switch (style) {
-      case 'visual': return 'Görsel';
-      case 'auditory': return 'İşitsel';
-      case 'kinesthetic': return 'Kinestetik';
-      default: return style;
-    }
-  }
-
   saveProfile(): void {
 
 
@@ -160,7 +150,7 @@ export class ProfileSetupComponent {
 
     // Check if date of birth is set
     if (!this.basicInfoForm.value.dateOfBirth) {
-      this.toaster.error('Lütfen doğum tarihinizi giriniz', 3000);
+      this.toaster.error('Lütfen doğum tarihini gir', 3000);
       return;
     }
 
@@ -169,7 +159,7 @@ export class ProfileSetupComponent {
       this.calculateAgeGroup(this.basicInfoForm.value.dateOfBirth);
 
       if (this.calculatedAgeGroup === null) {
-        this.toaster.error('Yaş grubu hesaplanamadı. Lütfen geçerli bir doğum tarihi giriniz.', 3000);
+        this.toaster.error('Yaş grubu hesaplanamadı. Lütfen geçerli bir doğum tarihi gir.', 3000);
         return;
       }
     }
@@ -186,7 +176,7 @@ export class ProfileSetupComponent {
       dailyGoalMinutes: this.goalsForm.value.dailyGoalMinutes,
       ageGroupConfigurationId: this.calculatedAgeGroup,
       dateOfBirth: birthDate,
-      learningStyle: this.basicInfoForm.value.learningStyle
+      learningStyle: null
     };
 
     this.http.put(`${environment.apiUrl}/speed-reading/adaptive-learning/profile`, speedReadingProfile).subscribe({
@@ -196,7 +186,7 @@ export class ProfileSetupComponent {
         // Update currentUser with dateOfBirth and ageGroup for assessment
         this.authService.updateUser({
           dateOfBirth: birthDate,
-          learningStyle: this.basicInfoForm.value.learningStyle,
+          learningStyle: undefined,
           ageGroupId: this.calculatedAgeGroup,
           ageGroupName: this.calculatedAgeGroupText,
           hasCompletedProfile: true,
@@ -207,7 +197,7 @@ export class ProfileSetupComponent {
         });
 
 
-        this.toaster.success('Profiliniz başarıyla oluşturuldu!', 3000);
+        this.toaster.success('Profilin oluşturuldu!', 3000);
 
         // Use setTimeout to ensure toaster is shown before navigation
         setTimeout(() => {

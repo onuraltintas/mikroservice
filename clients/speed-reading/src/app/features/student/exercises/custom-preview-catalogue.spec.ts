@@ -23,7 +23,7 @@ describe('Custom preview catalogue navigation', () => {
     ExercisesListComponent.prototype.openCustomPreview.call(context, { id: 'exercise',
       configurationJson: JSON.stringify({ engineType: 'visualization' }) } as any);
     expect(open).not.toHaveBeenCalled();
-    expect(error).toHaveBeenCalledWith('Görselleştirme sahneleri yüklenemedi. Lütfen yeniden deneyin.');
+    expect(error).toHaveBeenCalledWith('Görselleştirme sahneleri yüklenemedi. Lütfen yeniden dene.');
   });
   it('does not open an empty form for an unsupported default exercise', () => {
     const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });

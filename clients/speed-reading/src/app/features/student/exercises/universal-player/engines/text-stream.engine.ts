@@ -458,7 +458,7 @@ export class TextStreamEngine implements BaseEngine {
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
         if (this.isRsvpMode() && this.stimuli.length === 0) {
-            this.callbacks.onError('RSVP için uygun metin bulunamadı. Lütfen yeniden deneyin.');
+            this.callbacks.onError('RSVP için uygun metin bulunamadı. Lütfen yeniden dene.');
             return;
         }
         this.state.isRunning = true;

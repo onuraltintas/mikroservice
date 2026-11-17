@@ -36,10 +36,10 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
     this.downloadingData = true;
     try {
       await this.personalData.downloadMyData();
-      this.toaster.success('Kişisel verileriniz indirildi', 3000);
+      this.toaster.success('Kişisel verilerin indirildi', 3000);
     } catch (error) {
       console.error('Personal data export failed:', error);
-      this.toaster.error('Kişisel veriler indirilemedi, lütfen tekrar deneyin', 3000);
+      this.toaster.error('Kişisel veriler indirilemedi, lütfen tekrar dene', 3000);
     } finally {
       this.downloadingData = false;
     }

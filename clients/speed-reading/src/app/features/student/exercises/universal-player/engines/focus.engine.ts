@@ -159,7 +159,7 @@ export class FocusEngine implements BaseEngine {
             || this.sequenceLength <= nLevel || this.sequenceLength > 500
             || (!assessmentMode && (usesWords && (wordSequence.length !== this.sequenceLength || wordSequence.some(word => typeof word !== 'string' || !word.trim()))
                 || usesPositions && (positionSequence.length !== this.sequenceLength || positionSequence.some(position => !Number.isInteger(position) || position < 1 || position > this.config.GridSize ** 2))))) {
-            this.configurationError = 'Odaklanma ayarları veya uyaran dizisi geçersiz. Lütfen ayarları kontrol edin.';
+            this.configurationError = 'Odaklanma ayarları veya uyaran dizisi geçersiz. Lütfen ayarları kontrol et.';
         }
 
         this.state.totalSteps = this.sequenceLength;
@@ -188,7 +188,7 @@ export class FocusEngine implements BaseEngine {
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
         if (this.configurationError || this.sequenceLength <= 0) {
-            this.callbacks.onError(this.configurationError || 'N-back uyaran dizisi alınamadı. Egzersiz yapılandırmasını kontrol edin.');
+            this.callbacks.onError(this.configurationError || 'N-back uyaran dizisi alınamadı. Egzersiz yapılandırmasını kontrol et.');
             return;
         }
 

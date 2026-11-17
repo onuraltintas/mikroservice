@@ -44,7 +44,7 @@ describe('regression result answer template', () => {
     const fixture = render();
     const labels = Array.from(fixture.nativeElement.querySelectorAll('.answers-summary .user-answer'))
       .map((element: any) => element.textContent.trim());
-    expect(labels).toEqual(['Cevabınız: A', 'Cevabınız: B', 'Cevabınız: Yanıt verilmedi', 'Cevabınız: Yanıt verilmedi']);
+    expect(labels).toEqual(['Cevabın: A', 'Cevabın: B', 'Cevabın: Yanıt verilmedi', 'Cevabın: Yanıt verilmedi']);
     expect(fixture.nativeElement.textContent).not.toContain('Cüre Doldu');
   });
 

@@ -374,7 +374,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.pendingAction = null;
         if (!response?.isValid || !response.feedbackData) {
             this.failedAction = action;
-            this.callbacks?.onError?.(response?.message || 'Seçiminiz kaydedilemedi. Lütfen tekrar deneyin.'); return;
+            this.callbacks?.onError?.(response?.message || 'Seçimin kaydedilemedi. Lütfen tekrar dene.'); return;
         }
         this.failedAction = null;
         const data = response.feedbackData;

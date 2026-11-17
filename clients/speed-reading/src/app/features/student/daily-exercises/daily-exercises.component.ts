@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { exerciseTypeLabel } from '../../../shared/utils/exercise-type-label';
+import { difficultyLabel } from '../../../shared/utils/difficulty-label';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExerciseProgramService, DailyExercise, StudentProgressSummary, ProgramDayAdvanceState } from '../../../core/services/exercise-program.service';
 import { BaseComponent } from '../../../core/components/base.component';
@@ -23,6 +24,7 @@ import { canUseStaffTraining } from '../../../core/guards/staff-training.guard';
 })
 export class DailyExercisesComponent extends BaseComponent implements OnInit {
   readonly typeLabel = exerciseTypeLabel;
+  readonly difficulty = difficultyLabel;
   private readonly exerciseService = inject(ExerciseProgramService);
   private readonly exerciseTypeService = inject(ExerciseTypeService);
   // toaster inherited from BaseComponent
@@ -122,7 +124,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
       error: error => {
         this.advancing.set(false);
         this.advanceState.set(null);
-        this.toaster.error(error?.error?.detail || error?.error?.message || 'Sonraki gün açılamadı. Sayfayı yenileyip tekrar deneyin.');
+        this.toaster.error(error?.error?.detail || error?.error?.message || 'Sonraki gün açılamadı. Sayfayı yenileyip tekrar dene.');
       }
     });
   }
@@ -173,7 +175,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
         },
         error: (err) => {
           console.error('Egzersizler yüklenirken hata:', err);
-          this.error.set('Egzersizler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+          this.error.set('Egzersizler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar dene.');
           this.loading.set(false);
         }
       });

@@ -126,9 +126,9 @@
                                 Hızlı okuma, metinleri daha kısa sürede, ancak anlam kaybı yaşamadan okuma
                                 becerisidir.
                                 Kelimeleri hızlı tanıma, öbekler hâlinde okuma ve bol okuma pratiğiyle geliştirilir.
-                                Bu önizleme alanı, seçtiğiniz ayarların egzersizlerde nasıl görüneceğini size
+                                Bu önizleme alanı, seçtiğin ayarların egzersizlerde nasıl görüneceğini sana
                                 gösterir.
-                                Rahat bir okuma deneyimi için kendinize en uygun ayarları seçebilirsiniz.
+                                Rahat bir okuma için sana en uygun ayarları seçebilirsin.
                             </p>
                         </div>
                     </div>
@@ -146,7 +146,7 @@
                             <div class="icon-box"><span class="material-icons">schedule</span></div>
                             <div class="text">
                                 <h4>Günlük Hatırlatma</h4>
-                                <p>Çalışma alışkanlığınızı korumak için hatırlatma alın.</p>
+                                <p>Çalışma alışkanlığını korumak için hatırlatma al.</p>
                             </div>
                         </div>
                         <input id="daily-reminder" type="checkbox" [(ngModel)]="settings.dailyReminder" (ngModelChange)="previewSettings()" aria-label="Günlük hatırlatmayı aç">
@@ -168,7 +168,7 @@
                             <div class="icon-box"><span class="material-icons">mail_outline</span></div>
                             <div class="text">
                                 <h4>E-posta Bildirimleri</h4>
-                                <p>Önemli güncellemeler ve duyuruları e-posta ile alın.</p>
+                                <p>Önemli güncellemeleri ve duyuruları e-postayla al.</p>
                             </div>
                         </div>
                         <input id="email-notifications" type="checkbox" [(ngModel)]="settings.emailNotifications" (ngModelChange)="previewSettings()" aria-label="E-posta bildirimlerini aç">
@@ -179,7 +179,7 @@
                             <div class="icon-box"><span class="material-icons">emoji_events</span></div>
                             <div class="text">
                                 <h4>Başarı Bildirimleri</h4>
-                                <p>Yeni bir rozet veya seviye kazandığınızda haberdar olun.</p>
+                                <p>Yeni bir rozet veya seviye kazandığında haberdar ol.</p>
                             </div>
                         </div>
                         <input id="achievement-notifications" type="checkbox" [(ngModel)]="settings.achievementNotifications" (ngModelChange)="previewSettings()" aria-label="Başarı bildirimlerini aç">
@@ -220,13 +220,15 @@
                             <div class="icon-box"><span class="material-icons">download</span></div>
                             <div class="text">
                                 <h4>Kişisel verilerim</h4>
-                                <p>Hızlı Okuma'da sizinle ilgili tutulan tüm kayıtları (çalışmalar, sonuçlar, abonelik ve ödemeler) JSON dosyası olarak indirin.</p>
+                                <p>Hızlı Okuma'da seninle ilgili tutulan tüm kayıtları (çalışmalar, sonuçlar, abonelik ve ödemeler) JSON dosyası olarak indir.</p>
                             </div>
                         </div>
                         <button type="button" class="sp-btn sp-btn-primary" [disabled]="downloadingData" (click)="downloadMyData()">
                             {{ downloadingData ? 'Hazırlanıyor…' : 'İndir' }}
                         </button>
                     </div>
+                    <!-- Live test #56 (user decision 17.11.2026): where to ask for the account's erasure. -->
+                    <p class="erasure-note" data-testid="account-erasure-note">Hesabının ve bilgilerinin silinmesini istersen, <a href="/legal/kvkk">KVKK aydınlatma metnindeki</a> veri sorumlusu iletişim adresine yazabilirsin.</p>
 
                 </div>
             </div>

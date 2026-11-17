@@ -7,7 +7,7 @@
                 </div>
                 <div class="header-text">
                     <div class="sp-card-title">Profilim</div>
-                    <div class="sp-card-subtitle">Kişisel bilgilerinizi düzenleyin</div>
+                    <div class="sp-card-subtitle">Kişisel bilgilerini düzenle</div>
                 </div>
             </div>
         </div>
@@ -23,7 +23,7 @@
                 <div class="form-row">
                     <div class="sp-field">
                         <label for="profile-first-name">Ad</label>
-                        <input id="profile-first-name" type="text" formControlName="firstName" placeholder="Adınız" autocomplete="given-name">
+                        <input id="profile-first-name" type="text" formControlName="firstName" placeholder="Adın" autocomplete="given-name">
                         <div class="sp-error" *ngIf="profileForm.get('firstName')?.hasError('required')">
                             Ad zorunludur
                         </div>
@@ -31,7 +31,7 @@
 
                     <div class="sp-field">
                         <label for="profile-last-name">Soyad</label>
-                        <input id="profile-last-name" type="text" formControlName="lastName" placeholder="Soyadınız" autocomplete="family-name">
+                        <input id="profile-last-name" type="text" formControlName="lastName" placeholder="Soyadın" autocomplete="family-name">
                         <div class="sp-error" *ngIf="profileForm.get('lastName')?.hasError('required')">
                             Soyad zorunludur
                         </div>
@@ -41,7 +41,7 @@
                 <div class="sp-field full-width">
                     <label for="profile-email">E-posta</label>
                     <input id="profile-email" type="email" formControlName="email" placeholder="ornek@email.com" autocomplete="email">
-                    <div class="sp-hint">E-posta adresi değiştirilemez</div>
+                    <div class="sp-hint">E-posta adresini aşağıdaki "E-posta adresi" bölümünden değiştirebilirsin.</div>
                 </div>
 
                 <div class="form-row">
@@ -71,4 +71,5 @@
             }
         </div>
     </div>
+    <app-account-security />
 </div>

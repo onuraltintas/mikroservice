@@ -105,7 +105,7 @@ export class TrainingProgramsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
         next: result => { this.templates.set(result.templates); this.history.set(result.history);
           this.active.set(result.history.find(item => item.isActive) ?? null); },
-        error: error => this.error.set(error?.error?.message || 'Programlar yüklenemedi. Lütfen yeniden deneyin.')
+        error: error => this.error.set(error?.error?.message || 'Programlar yüklenemedi. Lütfen yeniden dene.')
       });
   }
   start(templateId: string): void {
@@ -114,7 +114,7 @@ export class TrainingProgramsComponent implements OnInit {
     this.http.post(`${environment.speedReadingApiUrl}/staff-training/start`, { templateId })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
         next: () => this.router.navigate(['/student/daily-exercises']),
-        error: error => this.error.set(error?.error?.message || 'Program başlatılamadı. Lütfen yeniden deneyin.')
+        error: error => this.error.set(error?.error?.message || 'Program başlatılamadı. Lütfen yeniden dene.')
       });
   }
 }

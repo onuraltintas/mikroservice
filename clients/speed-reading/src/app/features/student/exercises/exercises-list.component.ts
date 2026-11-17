@@ -193,7 +193,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     catch { this.toaster.error('Bu egzersizin ayarları okunamadı.'); return; }
     const openDialog = (settings: Record<string, unknown>) => {
       if (!getCustomPreviewControls(settings).length) {
-        this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
+        this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsin.');
         return;
       }
       this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: settings })
@@ -210,7 +210,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       && (!Array.isArray(engineConfig?.['scenes']) || !engineConfig['scenes'].length)) {
       this.exerciseService.getPreviewVisualizationScenes(exercise.id).pipe(takeUntil(this.destroy$)).subscribe({
         next: scenes => openDialog({ ...configuration, engineConfig: { ...engineConfig, scenes } }),
-        error: () => this.toaster.error('Görselleştirme sahneleri yüklenemedi. Lütfen yeniden deneyin.')
+        error: () => this.toaster.error('Görselleştirme sahneleri yüklenemedi. Lütfen yeniden dene.')
       });
       return;
     }
