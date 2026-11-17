@@ -12,9 +12,9 @@ public sealed class WeeklyProposalEngineTests
         new(Id(n), name ?? $"Ders {n}", exam, need, priority, hard);
     private static WeeklyProposalWindow Window(DayOfWeek day, int from, int to) => new(day, from, to);
     private static WeeklyProposalResult Propose(IEnumerable<WeeklyProposalWindow> windows, IEnumerable<WeeklyProposalLesson> lessons,
-        bool middle = false, int limit = WeeklyDayLimit.SchoolMinutes, string? focus = null, WeeklyProposalMode mode = WeeklyProposalMode.Fill,
+        int limit = WeeklyDayLimit.SchoolMinutes, string? focus = null, WeeklyProposalMode mode = WeeklyProposalMode.Fill,
         IEnumerable<WeeklyDraftSlot>? existing = null) =>
-        WeeklyProposalEngine.Propose(new([.. windows], [.. existing ?? []], [.. lessons], WeeklyProposalEngine.SessionsBeforeBreak(middle), limit, focus, mode));
+        WeeklyProposalEngine.Propose(new([.. windows], [.. existing ?? []], [.. lessons], limit, focus, mode));
     private static WeeklyDraftSlot Card(int lesson, DayOfWeek day, int start, int minutes = 60, string? name = null) =>
         new(Guid.NewGuid(), Id(lesson), name ?? $"Ders {lesson}", null, day, start, minutes);
     private static int[] Starts(WeeklyProposalResult result, DayOfWeek day) => result.Slots.Where(x => x.Day == day).Select(x => x.StartMinute).ToArray();
@@ -53,17 +53,29 @@ public sealed class WeeklyProposalEngineTests
     }
 
     [Fact]
-    public void BreakAfterEverySessionInMiddleSchool_AndAfterThreeSessionsOtherwise()
+    public void NoBreakIsPlaced_TheFreeHoursAreFilledInEveryGrade()
     {
+        // User decision 17.11.2026 (live test #3): the student takes breaks as they like, in every grade.
         var lessons = Enumerable.Range(1, 6).Select(n => Lesson(n, 600)).ToArray();
         var evening = new[] { Window(DayOfWeek.Monday, 1020, 1260) }; // 17:00–21:00
-        Assert.Equal(new[] { 1020, 1080, 1140 }, Starts(Propose(evening, lessons), DayOfWeek.Monday)); // Paket I2: three in a row
-        Assert.Equal(new[] { 1020, 1110, 1200 }, Starts(Propose(evening, lessons, middle: true), DayOfWeek.Monday));
+        Assert.Equal(new[] { 1020, 1080, 1140, 1200 }, Starts(Propose(evening, lessons), DayOfWeek.Monday));
+        // The live case: 17:00–19:00 on weekdays gave one hour a day in middle school; now both hours.
+        var week = Weekdays.Select(day => Window(day, 1020, 1140)).ToArray();
+        Assert.Equal(600, Propose(week, lessons).Slots.Sum(x => x.DurationMinutes));
+    }
 
-        // A saved card right before the window counts toward the run of study.
-        var saved = new[] { Card(9, DayOfWeek.Monday, 960) };
-        Assert.Equal(new[] { 1020, 1080, 1170 }, Starts(Propose(evening, lessons, existing: saved), DayOfWeek.Monday));
-        Assert.Equal(new[] { 1050, 1140 }, Starts(Propose(evening, lessons, middle: true, existing: saved), DayOfWeek.Monday));
+    [Fact]
+    public void AFreeHalfHourLengthensTheLessonBeforeIt()
+    {
+        // User decision 17.11.2026: no gaps. 17:00–18:30 is an hour and the half hour after it, one 90-minute card.
+        var result = Propose([Window(DayOfWeek.Monday, 1020, 1110)], [Lesson(1, 600)]);
+        var card = Assert.Single(result.Slots);
+        Assert.Equal((1020, 90), (card.StartMinute, card.DurationMinutes));
+        Assert.Equal(90, result.FreeMinutes);
+        // A half hour after a saved card goes to that card's lesson.
+        var saved = new[] { Card(2, DayOfWeek.Tuesday, 1020) };
+        var after = Propose([Window(DayOfWeek.Tuesday, 1080, 1110)], [Lesson(1, 600), Lesson(2, 600)], existing: saved);
+        Assert.Equal((Id(2), 1080, 30), (Assert.Single(after.Slots).LessonId, after.Slots[0].StartMinute, after.Slots[0].DurationMinutes));
     }
 
     [Fact]
@@ -79,15 +91,15 @@ public sealed class WeeklyProposalEngineTests
     }
 
     [Fact]
-    public void AFreePieceShorterThanAnHourStaysEmpty()
+    public void OnlyAPieceShorterThanHalfAnHourStaysEmpty()
     {
+        // User decision 17.11.2026: half hours are used too; only what is shorter than 30 minutes on the half-hour grid stays empty.
         var lessons = new[] { Lesson(1, 600), Lesson(2, 600) };
         var result = Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Tuesday, 1035, 1125), Window(DayOfWeek.Wednesday, 1020, 1050)], lessons);
-        Assert.All(result.Slots, x => Assert.Equal(60, x.DurationMinutes));
-        Assert.Equal(new[] { 1020 }, Starts(result, DayOfWeek.Monday));
-        Assert.Equal(new[] { 1050 }, Starts(result, DayOfWeek.Tuesday));
-        Assert.Empty(Starts(result, DayOfWeek.Wednesday));
-        Assert.Equal(120, result.FreeMinutes);
+        Assert.Equal(new[] { (1020, 90) }, result.Slots.Where(x => x.Day == DayOfWeek.Monday).Select(x => (x.StartMinute, x.DurationMinutes)));
+        Assert.Equal(new[] { (1050, 60) }, result.Slots.Where(x => x.Day == DayOfWeek.Tuesday).Select(x => (x.StartMinute, x.DurationMinutes)));
+        Assert.Equal(new[] { (1020, 30) }, result.Slots.Where(x => x.Day == DayOfWeek.Wednesday).Select(x => (x.StartMinute, x.DurationMinutes)));
+        Assert.Equal(180, result.FreeMinutes);
     }
 
     [Fact]
@@ -120,7 +132,7 @@ public sealed class WeeklyProposalEngineTests
         var fill = Propose([Window(DayOfWeek.Monday, 1020, 1200)], [lessons[1], Lesson(4, 60)], existing: saved);
         Assert.Equal(2, fill.Slots.Count);
         Assert.Equal(Id(4), fill.Slots.Single(x => x.StartMinute == 1020).LessonId);
-        Assert.Equal(Id(2), fill.Slots.Single(x => x.StartMinute == 1080).LessonId); // Paket I2: the third hour in a row, after another lesson
+        Assert.Equal(Id(2), fill.Slots.Single(x => x.StartMinute == 1080).LessonId); // the next hour, after another lesson
     }
 
     [Fact]
@@ -272,7 +284,7 @@ public sealed class WeeklyProposalEngineTests
         Assert.Equal((2, 2, 1, 1), (occurrences[DayOfWeek.Monday], occurrences[DayOfWeek.Tuesday], occurrences[DayOfWeek.Wednesday], occurrences[DayOfWeek.Sunday]));
         // A weekday that does not come before the end gets no session.
         var lessons = new[] { Lesson(1, 600) };
-        var shortWeek = WeeklyProposalEngine.Propose(new([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Friday, 1020, 1080)], [], lessons, 2,
+        var shortWeek = WeeklyProposalEngine.Propose(new([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Friday, 1020, 1080)], [], lessons,
             WeeklyDayLimit.SchoolMinutes, null, WeeklyProposalMode.Fill, WeeklyProposalEngine.Occurrences(new DateOnly(2027, 5, 24), new DateOnly(2027, 5, 26))));
         Assert.Equal(DayOfWeek.Monday, Assert.Single(shortWeek.Slots).Day);
     }
@@ -283,21 +295,19 @@ public sealed class WeeklyProposalEngineTests
         var late = Propose([Window(DayOfWeek.Monday, 1380, 1440)], [Lesson(1, 60)]);
         Assert.Equal(1380, Assert.Single(late.Slots).StartMinute);
         var lessons = Enumerable.Range(1, 4).Select(n => Lesson(n, 600)).ToArray();
-        // Three touching windows are one three-hour stretch: three hours in a row (Paket I2).
+        // Three touching windows are one three-hour stretch.
         var touching = Propose([Window(DayOfWeek.Monday, 1020, 1080), Window(DayOfWeek.Monday, 1080, 1140), Window(DayOfWeek.Monday, 1140, 1200)], lessons);
         Assert.Equal(new[] { 1020, 1080, 1140 }, Starts(touching, DayOfWeek.Monday));
-        var overlapping = Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Monday, 1050, 1140)], lessons, middle: true);
-        Assert.Equal(new[] { 1020 }, Starts(overlapping, DayOfWeek.Monday));
         Assert.Equal(new[] { 1020, 1080 }, Starts(Propose([Window(DayOfWeek.Monday, 1020, 1110), Window(DayOfWeek.Monday, 1050, 1140)], lessons), DayOfWeek.Monday));
     }
 
     [Fact]
-    public void ASavedCardOutsideTheWindowsStillCountsTowardTheRun()
+    public void ASavedCardRightAfterTheWindowsDoesNotShortenThem()
     {
-        // 15:00–18:00 free, a saved card 18:00–19:00 outside any window: 17:00 would make four hours in a row (Paket I2: three may).
+        // User decision 17.11.2026: no break rule, so 15:00–18:00 is filled even with a saved card at 18:00.
         var saved = new[] { Card(9, DayOfWeek.Monday, 1080) };
         var result = Propose([Window(DayOfWeek.Monday, 900, 1080)], Enumerable.Range(1, 4).Select(n => Lesson(n, 600)), existing: saved);
-        Assert.Equal(new[] { 900, 960 }, Starts(result, DayOfWeek.Monday));
+        Assert.Equal(new[] { 900, 960, 1020 }, Starts(result, DayOfWeek.Monday));
     }
 
     // Merge of Paket H1: the daily limit counts saved cards; a day already at or over the limit gets nothing (a draft saved above the
@@ -332,9 +342,9 @@ public sealed class WeeklyProposalEngineTests
             var windows = Enumerable.Range(0, random.Next(0, 5)).Select(_ => { var start = random.Next(0, 44) * 30; return Window(WeeklyProposalEngine.Week[random.Next(7)], start, Math.Min(1440, start + random.Next(1, 8) * 30)); }).ToArray();
             var saved = Enumerable.Range(0, random.Next(0, 3)).Select(i => Card(random.Next(1, 7), WeeklyProposalEngine.Week[random.Next(7)], 60 * (8 + i * 3))).ToArray();
             var mode = random.Next(2) == 0 ? WeeklyProposalMode.Fill : WeeklyProposalMode.Replace;
-            var result = WeeklyProposalEngine.Propose(new(windows, saved, lessons, random.Next(1, 3), random.Next(2) == 0 ? 480 : 600,
+            var result = WeeklyProposalEngine.Propose(new(windows, saved, lessons, random.Next(2) == 0 ? 480 : 600,
                 new[] { null, "tyt", "balanced", "ayt" }[random.Next(4)], mode));
-            Assert.All(result.Slots, x => Assert.True(x.DurationMinutes == 60 && x.StartMinute % 30 == 0 && x.StartMinute + 60 <= 1440));
+            Assert.All(result.Slots, x => Assert.True(x.DurationMinutes % 30 == 0 && x.DurationMinutes > 0 && x.StartMinute % 30 == 0 && x.StartMinute + x.DurationMinutes <= 1440));
             Assert.Equal(result.NeededMinutes - result.CoveredMinutes, result.ShortageMinutes);
             Assert.True(result.ShortageMinutes >= 0);
         }
@@ -355,7 +365,7 @@ public sealed class WeeklyProposalEngineTests
     {
         var saved = new[] { Card(1, DayOfWeek.Friday, 1020) };
         var monToWed = WeeklyProposalEngine.Occurrences(new DateOnly(2027, 5, 24), new DateOnly(2027, 5, 26));
-        var result = WeeklyProposalEngine.Propose(new([Window(DayOfWeek.Monday, 1020, 1080)], saved, [Lesson(1, 60)], 2, 480, null, WeeklyProposalMode.Fill, monToWed));
+        var result = WeeklyProposalEngine.Propose(new([Window(DayOfWeek.Monday, 1020, 1080)], saved, [Lesson(1, 60)], 480, null, WeeklyProposalMode.Fill, monToWed));
         Assert.Equal((0, 60, 60, 0), (result.Lessons[0].ExistingMinutes, result.Lessons[0].ProposedMinutes, result.CoveredMinutes, result.ShortageMinutes));
         Assert.Equal(DayOfWeek.Monday, Assert.Single(result.Slots).Day);
     }
@@ -380,17 +390,17 @@ public sealed class WeeklyProposalEngineTests
         var week = WeeklyProposalEngine.Week.Select(day => Window(day, 900, 1380)).ToArray();
         var lessons = Enumerable.Range(1, 6).Select(n => Lesson(n, 900)).ToArray();
         var budgets = new Dictionary<DayOfWeek, int> { [DayOfWeek.Monday] = 60, [DayOfWeek.Tuesday] = 150, [DayOfWeek.Saturday] = 600 };
-        var result = WeeklyProposalEngine.Propose(new(week, [], lessons, 2, 240, null, WeeklyProposalMode.Replace, null, budgets));
+        var result = WeeklyProposalEngine.Propose(new(week, [], lessons, 240, null, WeeklyProposalMode.Replace, null, budgets));
         int Minutes(DayOfWeek day) => result.Slots.Where(x => x.Day == day).Sum(x => x.DurationMinutes);
         // Monday 60; Tuesday 150 leaves two hours (a 30-minute rest stays empty); Saturday min(600, 240); no other day.
         Assert.Equal((60, 120, 240), (Minutes(DayOfWeek.Monday), Minutes(DayOfWeek.Tuesday), Minutes(DayOfWeek.Saturday)));
         Assert.Equal(new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Saturday }, result.Slots.Select(x => x.Day).Distinct());
         Assert.Equal(420, result.FreeMinutes);
         // A saved card counts toward its day's budget.
-        var fill = WeeklyProposalEngine.Propose(new(week, [Card(1, DayOfWeek.Tuesday, 900, 90)], lessons, 2, 240, null, WeeklyProposalMode.Fill, null, budgets));
+        var fill = WeeklyProposalEngine.Propose(new(week, [Card(1, DayOfWeek.Tuesday, 900, 90)], lessons, 240, null, WeeklyProposalMode.Fill, null, budgets));
         Assert.Equal(60, fill.Slots.Where(x => x.Day == DayOfWeek.Tuesday).Sum(x => x.DurationMinutes));
         // Without budgets nothing changes.
-        Assert.Equal(7 * 240, WeeklyProposalEngine.Propose(new(week, [], lessons, 2, 240, null, WeeklyProposalMode.Replace)).FreeMinutes);
+        Assert.Equal(7 * 240, WeeklyProposalEngine.Propose(new(week, [], lessons, 240, null, WeeklyProposalMode.Replace)).FreeMinutes);
         // The guarantees still hold under budgets: a lesson once a day while another day is free, breaks, and the limits.
         AssertWeekRules(result, budgets, 240);
     }
@@ -434,8 +444,6 @@ public sealed class WeeklyProposalEngineTests
         foreach (var day in result.Slots.GroupBy(x => x.Day))
         {
             Assert.True(day.Sum(x => x.DurationMinutes) <= Math.Min(limit, budgets.GetValueOrDefault(day.Key)));
-            var starts = day.Select(x => x.StartMinute).Order().ToArray();
-            for (var i = 2; i < starts.Length; i++) Assert.False(starts[i] - starts[i - 2] == 120, "three hours in a row");
         }
         var days = result.Slots.Select(x => x.Day).Distinct().ToArray();
         foreach (var lesson in result.Slots.GroupBy(x => x.LessonId))
