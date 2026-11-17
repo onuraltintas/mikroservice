@@ -94,7 +94,9 @@ app.use((req, res, next) => {
   angularApp
     .handle(req)
     .then(async (response) => {
-      if (!response) return next();
+      // Live test 16.11.2026 (#46): an address no route was prepared for answered "Cannot GET …" on a white page. The
+      // application's own shell is sent instead (status 404); in the browser its router shows the "sayfa bulunamadı" page.
+      if (!response) return res.status(404).sendFile(join(browserDistFolder, 'index.csr.html'), { headers: { 'Cache-Control': 'no-store' } }, error => { if (error) next(); });
       if (!(response.headers.get('content-type') ?? '').includes('text/html') || (!gaMeasurementId && !cmsPreviewTarget(req.path))) {
         return writeResponseToNodeResponse(response, res);
       }

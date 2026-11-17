@@ -120,3 +120,9 @@ test('#8: after "Gelecek haftayı ekle" the new plan is opened', () => {
   const plans = read('clients/admin-panel/src/app/features/coaching-portal/pages/student-study-plans.component.html');
   assert.equal(plans.split('(extended)="openExtended($event)"').length - 1, 2);
 });
+
+test('#26 and #46: the planning switch stands next to the plan; an unknown address gets the application shell', () => {
+  assert.match(read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.html'),
+    /<staff-coaching-planning-permission \[studentId\]="selected\.student\.studentId" \/>/);
+  assert.match(read('clients/admin-panel/src/server.ts'), /res\.status\(404\)\.sendFile\(join\(browserDistFolder, 'index\.csr\.html'\)/);
+});
