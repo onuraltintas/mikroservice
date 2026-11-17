@@ -1,4 +1,6 @@
 import { ToasterService } from '../../../../../../src/app/core/services/toaster.service';
+import {EMPTY} from 'rxjs';
+import {CoachingPlanningPermissionService} from '../../../../../../src/app/core/services/coaching-planning-permission.service';
 import {TestBed,DeferBlockState,DeferBlockBehavior} from '@angular/core/testing';
 import {provideHttpClient} from '@angular/common/http';
 import {provideHttpClientTesting,HttpTestingController} from '@angular/common/http/testing';
@@ -7,16 +9,18 @@ import {By} from '@angular/platform-browser';
 import {CoachingTeacherStudyOverviewComponent} from './coaching-teacher-study-overview.component';
 import {StudentStudyPlanAssistantComponent} from '../../../../../../src/app/features/coaching-portal/pages/student-study-plan-assistant.component';
 
+// Live test 16.11.2026 (#26): the planning switch next to the plan has its own spec; here it stays silent.
+const planningSwitch={provide:CoachingPlanningPermissionService,useValue:{forStudent:()=>EMPTY,set:()=>EMPTY}};
 describe('teacher study overview',()=>{
   it('filters combined work by state and opens the original revision even for archived work',async ()=>{
-    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[provideHttpClient(),provideHttpClientTesting()]}).compileComponents();
+    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[planningSwitch,provideHttpClient(),provideHttpClientTesting()]}).compileComponents();
     const c=TestBed.createComponent(CoachingTeacherStudyOverviewComponent).componentInstance;
     const base={plannedDate:'2027-01-04',plannedStartMinute:null,plannedMinutes:30,actualMinutes:null};
     c.data.set({items:[{studentId:'s',fullName:'Test',hasActivePlan:true,hasDraft:false,completedTasks:1,pendingTasks:2,overdueTasks:1,actualMinutes:12,tasks:[{...base,taskId:'a',planId:'active',title:'Geciken',isCompleted:false,isOverdue:true},{...base,taskId:'b',planId:'active',title:'Bekleyen',isCompleted:false,isOverdue:false},{...base,taskId:'c',planId:'archived',title:'Tamamlanan',isCompleted:true,isOverdue:false,actualMinutes:12}]}],totalCount:1,pageNumber:1,pageSize:25});
     expect(c.workItems()).toHaveLength(3);c.display='pending';expect(c.workItems()).toHaveLength(2);c.display='overdue';expect(c.workItems()).toHaveLength(1);c.display='completed';expect(c.workItems()[0].task.actualMinutes).toBe(12);(await c.openWork(c.workItems()[0]));expect(c.detail()?.planId).toBe('archived');expect(c.detail()?.filter).toBe('completed');
   });
   it('validates dates, preserves a dirty plan on back, and refreshes after leaving',async()=>{
-    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[provideHttpClient(),provideHttpClientTesting()]}).compileComponents();
+    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[planningSwitch,provideHttpClient(),provideHttpClientTesting()]}).compileComponents();
     const f=TestBed.createComponent(CoachingTeacherStudyOverviewComponent),http=TestBed.inject(HttpTestingController);f.detectChanges();
     const data={items:[{studentId:'s',fullName:'Öğrenci Test',hasActivePlan:false,hasDraft:false,completedTasks:0,pendingTasks:1,overdueTasks:1,actualMinutes:0,tasks:[{taskId:'task',planId:'old-plan',title:'Geciken konu',plannedDate:'2026-10-01',plannedStartMinute:null,plannedMinutes:30,isCompleted:false,isOverdue:true,actualMinutes:null}]}],totalCount:1,pageNumber:1,pageSize:25};
     http.expectOne(r=>r.url.endsWith('/study-overview')).flush(data);f.detectChanges();
@@ -26,7 +30,7 @@ describe('teacher study overview',()=>{
     http.expectOne(r=>r.url.endsWith('/study-overview')).flush(data);confirm.mockRestore();c.fromDate='2030-01-02';c.toDate='2030-01-01';(await c.load());expect(c.error()).toContain('tarih');http.verify();
   });
   it('shows scoped bulk totals, exposes student plan management and recovers on retry',async()=>{
-    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[provideHttpClient(),provideHttpClientTesting()]}).compileComponents();
+    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[planningSwitch,provideHttpClient(),provideHttpClientTesting()]}).compileComponents();
     const f=TestBed.createComponent(CoachingTeacherStudyOverviewComponent),http=TestBed.inject(HttpTestingController);f.detectChanges();
     http.expectOne(r=>r.url.endsWith('/coaching/teachers/me/study-overview')).flush({items:[{studentId:'student',fullName:'Öğrenci Test',hasActivePlan:true,hasDraft:false,completedTasks:2,pendingTasks:3,overdueTasks:1,actualMinutes:45}],totalCount:1,pageNumber:1,pageSize:25});
     f.detectChanges();expect(f.nativeElement.textContent).toContain('Öğrenci Test');expect(f.nativeElement.textContent).toContain('Geciken');expect(f.nativeElement.textContent).toContain('45');
@@ -34,7 +38,7 @@ describe('teacher study overview',()=>{
     f.componentInstance.load();http.expectOne(r=>r.url.endsWith('/coaching/teachers/me/study-overview')).flush({items:[],totalCount:0,pageNumber:1,pageSize:25});f.detectChanges();expect(f.nativeElement.textContent).toContain('öğrenci bulunamadı');http.verify();
   });
   it('opens the automatic wizard for the selected student and loads that student scoped setup',async ()=>{
-    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[provideHttpClient(),provideHttpClientTesting(),provideRouter([])]}).compileComponents();
+    await TestBed.configureTestingModule({deferBlockBehavior:DeferBlockBehavior.Manual,imports:[CoachingTeacherStudyOverviewComponent],providers:[planningSwitch,provideHttpClient(),provideHttpClientTesting(),provideRouter([])]}).compileComponents();
     const f=TestBed.createComponent(CoachingTeacherStudyOverviewComponent),http=TestBed.inject(HttpTestingController),c=f.componentInstance;
     c.detail.set({student:{studentId:'student-42',fullName:'Seçili Öğrenci',hasActivePlan:false,hasDraft:false,completedTasks:0,pendingTasks:0,overdueTasks:0,actualMinutes:0},filter:'all'});
     (await c.createWithWizard());f.detectChanges();http.expectOne(r=>r.url.endsWith('/coaching/teachers/me/study-overview')).flush({items:[],totalCount:0,pageNumber:1,pageSize:25});
