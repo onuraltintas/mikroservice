@@ -1,7 +1,7 @@
 // Live test 16.11.2026: source checks for the first round of fixes.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const read = path => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 
@@ -67,9 +67,10 @@ test('#2: the sign-in page loads the security check early and prepares the token
   assert.match(read('clients/admin-panel/src/app/features/auth/login/login.component.ts'), /this\.recaptcha\.warmUp\(\);/);
 });
 
-test('#50: Hızlı Okuma hands every answer to the application inside the zone, first in the chain', () => {
-  assert.match(read('clients/speed-reading/src/app/app.config.ts'), /withInterceptors\(\[zoneReentryInterceptor, apiResponseInterceptor,/);
-  assert.match(read('clients/speed-reading/src/app/core/interceptors/zone-reentry.interceptor.ts'), /zone\.run\(\(\) => observer\.next\(event\)\)/);
+test('#50: the Hızlı Okuma student shell does not hold back the redraw of the page opened inside it', () => {
+  // Live 17.11.2026: an OnPush shell kept a page opened by its address empty until the next click.
+  assert.doesNotMatch(read('clients/speed-reading/src/app/features/student/shell/student-shell.component.ts'), /ChangeDetectionStrategy\.OnPush/);
+  assert.equal(existsSync(new URL('../../clients/speed-reading/src/app/core/interceptors/zone-reentry.interceptor.ts', import.meta.url)), false, 'the zone guess of round 1 is gone');
 });
 
 test('#1: sign-up and the legal page do not show the text version or date', () => {
