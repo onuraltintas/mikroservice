@@ -119,7 +119,7 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Fail on vulnerable npm packages
-        run: npm audit --audit-level=high
+        run: node ../../tools/ci/npm-audit.mjs
 
       - name: Run frontend unit tests
         shell: bash
@@ -149,7 +149,7 @@ jobs:
       - name: Build the separate Course Management student application
         run: |
           npm ci --prefix ../course-management
-          npm audit --prefix ../course-management --audit-level=high
+          node ../../tools/ci/npm-audit.mjs --prefix ../course-management
           npm run build --prefix ../course-management -- --configuration production
 
       - name: Install Course Management browser-smoke dependencies
@@ -260,7 +260,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Fail on vulnerable npm packages
-        run: npm audit --audit-level=high
+        run: node ../../tools/ci/npm-audit.mjs
 
       - name: Run frontend unit tests
         # Karma: CI has no display, so the browser runs headless.
