@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { StudentDataExportComponent } from '../pages/student-data-export.component';
+import { AccountErasureNoteComponent } from './account-erasure-note.component';
 
 /** T2 (31.10.2026): Kişisel verilerim, opened from the account menu (moved out of Ayarlar). */
 @Component({
   selector: 'app-student-personal-data',
   standalone: true,
-  imports: [StudentDataExportComponent],
+  imports: [StudentDataExportComponent, AccountErasureNoteComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<div class="cs-account" aria-labelledby="personal-data-title">
     <header>
@@ -13,6 +14,7 @@ import { StudentDataExportComponent } from '../pages/student-data-export.compone
       <p>Hakkında tuttuğumuz bilgilerin bir kopyasını istediğin zaman indirebilirsin.</p>
     </header>
     <section aria-label="Verilerimi indir"><app-student-data-export /></section>
+    <app-account-erasure-note />
   </div>`
 })
 export class StudentPersonalDataComponent {}

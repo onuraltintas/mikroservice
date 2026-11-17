@@ -377,7 +377,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 await db.SaveChangesAsync(cancellationToken);
             }
             revision.Activate();
-            await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student), cancellationToken);
+            await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student) { PublishedBy = access.CurrentUserId }, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
@@ -397,7 +397,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             foreach(var decision in await CoachingStudyContinuation.RebindAsync(db,revision,access.CurrentUserId!.Value,ct))
                 await events.PublishAsync(new WeeklyDecisionChangedEvent(decision.Id,student,decision.ResponsibleTeacherId,decision.ReviewWeekStart,false),ct);
             if(active is not null){active.Archive();await db.SaveChangesAsync(ct);}
-            revision.RestoreArchived();await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id,student),ct);
+            revision.RestoreArchived();await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id,student){PublishedBy=access.CurrentUserId},ct);
             await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
         },ct,targetStudent,true);
 

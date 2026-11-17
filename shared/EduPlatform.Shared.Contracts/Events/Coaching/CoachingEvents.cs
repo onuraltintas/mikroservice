@@ -1,6 +1,10 @@
 namespace EduPlatform.Shared.Contracts.Events.Coaching;
 
-public sealed record StudyPlanPublishedEvent(Guid RevisionId, Guid StudentId);
+public sealed record StudyPlanPublishedEvent(Guid RevisionId, Guid StudentId)
+{
+    /// <summary>Who published it (additive; null in older messages). Live test #12: the student is not told about their own.</summary>
+    public Guid? PublishedBy { get; init; }
+}
 public sealed record StudyPlanUpdatedEvent(Guid RevisionId, Guid StudentId, string ChangeDescription);
 public sealed record WeeklyReflectionSavedEvent(Guid ReflectionId, Guid StudentId, DateOnly WeekStart, Guid[] TeacherIds);
 public sealed record WeeklyDecisionChangedEvent(Guid DecisionId, Guid StudentId, Guid TeacherId, DateOnly WeekStart, bool Created, bool ResponsibilityTransferred = false);

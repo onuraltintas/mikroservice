@@ -265,12 +265,15 @@ describe('StudentStudyPlansComponent', () => {
     const{component,service,fixture}=await setup();service.get.mockReturnValue(of({...active,status:'Draft',weeklySource:{startDate:'2027-05-24',endDate:'2027-06-01'},tasks:[{...active.tasks[0],plannedStartMinute:1080,lessonName:'Matematik'}]} as any));
     await component.open('plan');fixture.detectChanges(); await fixture.whenStable();expect(component.editing).toBe(false);expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();
   });
-  it('shows the saved outcome and estimate version to students and staff', async () => {
+  it('shows the student the outcome by name, without its code, estimate version or empty fields (live test #11)', async () => {
     const { component, service, fixture } = await setup();
-    service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], outcomes: [{ outcomeId: 'o', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e', estimateNumber: 2, allocatedMinutes: 30, origin: 'Catalog' }] }] } as any));
+    service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], plannedQuestions: null, outcomes: [{ outcomeId: 'o', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e', estimateNumber: 2, allocatedMinutes: 30, origin: 'Catalog' }] }] } as any));
     await component.open('plan'); component.openTask(active.tasks[0].id); fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('M.8.1.1.1');
-    expect(fixture.nativeElement.textContent).toContain('süre sürümü 2');
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Çarpanları bulur · 30 dk');
+    expect(text).not.toContain('M.8.1.1.1');
+    expect(text).not.toContain('süre sürümü');
+    expect(text).not.toContain('Planlanan soru: Kayıt yok');
   });
   it('keeps the address aligned with the opened and newly saved plan', async () => {
     const { component, service, router } = await setup('old-plan');

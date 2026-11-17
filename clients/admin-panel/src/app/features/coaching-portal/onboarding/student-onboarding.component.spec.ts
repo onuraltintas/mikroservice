@@ -119,7 +119,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       { category: 'AssignmentReminders', label: 'Ödev teslim hatırlatması', inApp: true, email: true }] });
     await t.settle();
     expect(t.el.querySelector('[data-testid="ob-email-Messages"]')).toBeNull();
-    (t.el.querySelector('[data-testid="ob-email-StudyPlan"]') as HTMLInputElement).click(); await t.settle();
+    // User decision 17.11.2026: on the first answer the study plan reminders come checked, with where to turn them off.
+    expect((t.el.querySelector('[data-testid="ob-email-StudyPlan"]') as HTMLInputElement).checked).toBe(true);
+    expect(t.el.querySelector('[data-testid="ob-email-how-to-change"]')!.textContent).toContain('Profil ve ayarlar › Bildirimler');
     await t.click('Kaydet ve devam et');
     const prefs = t.http.expectOne('/api/notifications/preferences');
     expect(prefs.request.method).toBe('PUT');
