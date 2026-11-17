@@ -101,6 +101,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const tasks=plan.tasks.filter(t=>action.taskIds.includes(t.id)&&(action.kind==='split'?canSplitTask(t):!t.isCompleted)),task=tasks[0];
     if(action.kind!=='add'&&!task)return;
     this.calendarForm={kind:action.kind,taskId:task?.id??null,taskIds:tasks.map(t=>t.id),date:action.date,time:clock(action.startMinute),title:'',minutes:30,lessonId:null,actualMinutes:30,actualQuestions:null};
+    // The dialog is a plain field: Angular is told that it opened. Without this the change was sometimes seen only by the
+    // test runner's later check (NG0100 in CI on 17.11.2026); in the browser the click that opens it already redraws.
+    this.changeDetector.markForCheck();
     this.error.set(null);if(task)this.chooseCalendarTask(task.id);
     afterNextRender(()=>this.taskDialogElement?.nativeElement.querySelector<HTMLElement>('input,select,button')?.focus(),{injector:this.injector});
     if(action.kind==='add'){
@@ -129,7 +132,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   readonly sourceTone=taskSourceTone;
   calendarTaskOptions(){return this.selected()?.tasks.filter(t=>this.calendarForm?.taskIds.includes(t.id))??[];}
   calendarDurationLocked(){const task=this.selected()?.tasks.find(t=>t.id===this.calendarForm?.taskId);return !!task?.outcomes?.length;}
-  closeCalendarForm(){if(this.busy())return;this.calendarForm=null;}
+  closeCalendarForm(){if(this.busy())return;this.calendarForm=null;this.changeDetector.markForCheck();}
   calendarDialogKey(event:KeyboardEvent){
     if(event.key==='Escape'){event.preventDefault();this.closeCalendarForm();return;}
     if(event.key!=='Tab')return;
