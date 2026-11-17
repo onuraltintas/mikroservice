@@ -142,6 +142,9 @@ export class MotionPathEngine implements BaseEngine {
 
     // Time-based mode
     private isTimeBased = false;
+    /** Live test #55: a timed run ends by its clock, so the player shows the time left rather than a point count. */
+    isTimed(): boolean { return this.isTimeBased; }
+    getDurationSeconds(): number { return this.durationSeconds; }
     private durationSeconds = 0;
 
     // Feedback State

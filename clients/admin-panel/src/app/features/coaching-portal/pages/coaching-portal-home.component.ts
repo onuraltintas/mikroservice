@@ -40,6 +40,8 @@ export class CoachingPortalHomeComponent implements OnInit {
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly view = signal<StudentTodayView | null>(null);
+  /** Live test 16.11.2026 (#23): a pending coaching invitation is shown on Bugün, with the way to answer it. */
+  readonly pendingInvitations = signal(0);
   readonly setupReady = signal(true);
   /** Paket D (#8): the exam in the study settings no longer fits the grade on the profile. */
   readonly gradeChanged = signal(false);
@@ -75,6 +77,8 @@ export class CoachingPortalHomeComponent implements OnInit {
     this.load();
     this.injector.get(CoachingLearningSetupService).get().pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: setup => { this.setupReady.set(setup.isReady); this.gradeChanged.set(!!setup.purposeNotForEducation); }, error: () => this.setupReady.set(true) });
+    this.injector.get(CoachingStudentTodayService).pendingInvitations().pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: rows => this.pendingInvitations.set(Array.isArray(rows) ? rows.length : 0), error: () => this.pendingInvitations.set(0) });
     this.injector.get(CoachingScoreEstimateService).estimate(null, null).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: estimate => this.estimate.set(estimate), error: () => this.estimate.set(null) });
   }

@@ -122,7 +122,7 @@
         @if (notificationsVisible) {
           @defer (on immediate) {
             <staff-notification-center [product]="auth.activeProduct() === 'speed-reading' ? 'speed-reading' : auth.activeProduct() === 'course-management' ? 'course-management' : 'coaching'"
-              [canOpenCoachingAssignments]="isTeacherWorkspaceSelected" (openCoachingAssignment)="openCoachingAssignment($event)" (openCoachingWeekly)="openCoachingWeekly($event)" (openCoachingMessage)="openCoachingMessage($event)" />
+              [canOpenCoachingAssignments]="isTeacherWorkspaceSelected" (openCoachingAssignment)="openCoachingAssignment($event)" (openCoachingWeekly)="openCoachingWeekly($event)" (openCoachingMessage)="openCoachingMessage($event)" (openCoachingInvitations)="openCoachingInvitations()" />
           } @placeholder { <p role="status">Bildirimler hazırlanıyor…</p> }
         }
 

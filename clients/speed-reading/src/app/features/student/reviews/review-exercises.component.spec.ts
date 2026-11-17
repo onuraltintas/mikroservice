@@ -49,6 +49,6 @@ describe('ReviewExercisesComponent', () => {
     fixture.componentInstance.viewHistory({ exerciseId: 'exercise-1' } as never);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('82%');
+    expect(fixture.nativeElement.textContent).toContain('%82');
   });
 });

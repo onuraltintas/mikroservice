@@ -69,6 +69,17 @@ export class CoachingTeacherWorkspaceComponent {
     this.remember({ section: 'messages', id });
     return true;
   }
+  /** 17.11.2026 (#23): an invitation notice opens "Koçluk profilim ve davetlerim" at the invitations. */
+  readonly showInvitations = signal(false);
+  async openInvitationsFromNotification(): Promise<boolean> {
+    if (this.activeSection() !== 'profile' && !await this.canLeavePage()) return false;
+    this.notificationAssignmentId.set(null); this.notificationWeeklyTarget.set(null);
+    this.showInvitations.set(false); this.activeSection.set('profile');
+    this.remember({ section: 'profile' });
+    // A new value each time, so a second notice scrolls again.
+    setTimeout(() => this.showInvitations.set(true));
+    return true;
+  }
   /** The open conversation is kept in the address. */
   rememberConversation(id: string | null): void {
     if (this.activeSection() !== 'messages' || id === this.notificationAssignmentId()) return;

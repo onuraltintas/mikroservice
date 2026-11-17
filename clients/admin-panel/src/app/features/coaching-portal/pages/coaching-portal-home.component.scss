@@ -129,3 +129,7 @@
   .row { grid-template-columns: 48px minmax(0, 1fr) auto; min-height: 56px; }
 }
 @media (prefers-reduced-motion: reduce) { .upcoming summary::after { transition: none; } }
+
+// Live test #23: a pending invitation on Bugün.
+.invitation-pending { margin: 0 0 1rem; padding: .75rem 1rem; border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-brand-soft, var(--ui-surface));
+  a { margin-left: .5rem; font-weight: 600; } }

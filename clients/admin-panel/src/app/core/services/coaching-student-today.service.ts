@@ -23,4 +23,6 @@ export interface StudentTodayView {
 export class CoachingStudentTodayService {
   private readonly http = inject(HttpClient);
   get() { return this.http.get<StudentTodayView>(`${environment.apiUrl}/coaching/students/me/today`); }
+  /** Live test #23: the invitations waiting for the student's answer (Bugün shows how many). */
+  pendingInvitations() { return this.http.get<unknown[]>(`${environment.apiUrl}/coaching/invitations/my-invitations`); }
 }

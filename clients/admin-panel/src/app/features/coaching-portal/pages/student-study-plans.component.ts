@@ -359,7 +359,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || !plan.tasks.length || !this.publishConfirmed || this.dirty || this.busy()) return;
-    this.mutate(this.service.publish(plan.id, plan.version, ...this.studentArgument), 'Plan yayımlandı. Önceki planın geçmişi korundu.');
+    // Live test #9: the first plan has no earlier plan to speak of.
+    const earlier = this.page().items.some(item => item.id !== plan.id) || this.page().totalCount > 1;
+    this.mutate(this.service.publish(plan.id, plan.version, ...this.studentArgument), earlier ? 'Plan yayımlandı. Önceki planın geçmişi korundu.' : 'Plan yayımlandı.');
   }
   async archiveDraft() {
     if (this.readOnly) return;

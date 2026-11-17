@@ -48,7 +48,8 @@ export function coachingNotificationTarget(notification: CoachingNotificationRef
   if (role === 'student' && typeof notification.type === 'string' && ['ParentLinkRequested','ParentLinkApproved','ParentLinkRevoked'].includes(notification.type))
     return { kind: 'profile', id: validCoachingId(id) ? id : '', label: 'Veli bağlantısını aç' };
   // Live test 16.11.2026 (#23): an invitation notice opens the place where it is answered (Profilim › Koçluk davetlerim).
-  if (role === 'student' && notification.type === 'Invitation')
+  // 17.11.2026: the teacher's invitation notice opens "Koçluk profilim ve davetlerim" the same way.
+  if (notification.type === 'Invitation')
     return { kind: 'profile', id: validCoachingId(id) ? id : '', label: 'Daveti aç' };
   if (!validCoachingId(id)) return null;
   // Roadmap O3: a new message opens its conversation.

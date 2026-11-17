@@ -59,7 +59,7 @@
       <div class="progress-bar-container">
         <div class="progress-label">
           <span>Genel İlerleme</span>
-          <span class="progress-percentage">{{ pathProgress.completionPercentage | number:'1.0-0' }}%</span>
+          <span class="progress-percentage">%{{ pathProgress.completionPercentage | number:'1.0-0' }}</span>
         </div>
         <div class="sp-bar path-progress-bar">
           <div class="sp-bar-fill" [style.width.%]="pathProgress.completionPercentage"></div>
@@ -191,7 +191,7 @@
                   font-size="12"
                   fill="#666"
                   class="node-percentage">
-                  {{ node.completionPercentage | number:'1.0-0' }}%
+                  %{{ node.completionPercentage | number:'1.0-0' }}
                 </text>
               </g>
             </ng-container>

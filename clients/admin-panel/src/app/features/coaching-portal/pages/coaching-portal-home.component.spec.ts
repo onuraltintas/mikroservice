@@ -34,9 +34,9 @@ describe('CoachingPortalHomeComponent', () => {
   });
 
   const noTarget: ScoreEstimate = { estimates: [], target: null, notice: null };
-  async function render(today: StudentTodayView, setupReady = true, estimate: ScoreEstimate = noTarget, purposeNotForEducation = false) {
+  async function render(today: StudentTodayView, setupReady = true, estimate: ScoreEstimate = noTarget, purposeNotForEducation = false, invitations: unknown[] = []) {
     const profile = signal<UserProfile | null>({ id: 'user-1', email: 'a@test', firstName: 'Elif', lastName: 'Test', username: 'a@test', roles: ['Student'], role: 'Student', permissions: [], product: 'coaching' });
-    const api = { get: vi.fn(() => of(today)) };
+    const api = { get: vi.fn(() => of(today)), pendingInvitations: vi.fn(() => of(invitations)) };
     TestBed.configureTestingModule({ imports: [CoachingPortalHomeComponent], providers: [
       provideRouter([]),
       { provide: AuthService, useValue: { userProfile: profile } },
@@ -52,6 +52,16 @@ describe('CoachingPortalHomeComponent', () => {
     fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     return { fixture, api, el: fixture.nativeElement as HTMLElement };
   }
+
+  it('shows a pending coaching invitation with the way to answer it (live test #23)', async () => {
+    const none = await render(view());
+    expect(none.el.querySelector('[data-testid="pending-invitation"]')).toBeNull();
+    TestBed.resetTestingModule();
+    const { el } = await render(view(), true, noTarget, false, [{ id: 'i-1' }]);
+    const notice = el.querySelector('[data-testid="pending-invitation"]')!;
+    expect(notice.textContent).toContain('Yanıt bekleyen bir koçluk davetin var.');
+    expect(notice.querySelector('a')!.getAttribute('href')).toBe('/coaching-portal/account/settings/profile#coaching-invitations-title');
+  });
 
   it('opens with the next step: one summary call, the overdue assignment first with a single action', async () => {
     const { api, el } = await render(view());

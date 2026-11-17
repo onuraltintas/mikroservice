@@ -45,7 +45,7 @@
         <div class="dp-widget__progress-fill"
           [style.width.%]="todaysPlan()!.progressPercentage"></div>
       </div>
-      <span class="dp-widget__progress-pct">{{ todaysPlan()!.progressPercentage | number:'1.0-0' }}%</span>
+      <span class="dp-widget__progress-pct">%{{ todaysPlan()!.progressPercentage | number:'1.0-0' }}</span>
     </div>
 
     <!-- Timeline -->
@@ -74,7 +74,7 @@
           <div class="dp-timeline__card">
             <div class="dp-timeline__card-top">
               <span class="dp-timeline__type">{{ typeLabel(exercise.exerciseType) }}</span>
-              <span class="dp-timeline__duration">~5 dk</span>
+              @if (exercise.estimatedDurationMinutes && exercise.estimatedDurationMinutes > 0) { <span class="dp-timeline__duration">~{{ exercise.estimatedDurationMinutes }} dk</span> }
             </div>
             <h4 class="dp-timeline__name">{{ exercise.name }}</h4>
             <div class="dp-timeline__meta">

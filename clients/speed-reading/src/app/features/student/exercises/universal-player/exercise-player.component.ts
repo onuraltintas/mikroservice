@@ -2811,6 +2811,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getProgressPercent(): number {
+    if (this.isTimedTracking()) {
+      const total = (this.engine as MotionPathEngine).getDurationSeconds() * 1000;
+      return total > 0 ? Math.min(100, this.engineState.timeElapsed / total * 100) : 0;
+    }
     if (this.engineState.totalSteps === 0) return 0;
     return (this.engineState.currentStep / this.engineState.totalSteps) * 100;
   }
@@ -3368,6 +3372,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return this.engine?.engineType === 'motion_path'
       ? (this.engine as MotionPathEngine).getMode() === 'fixation'
       : false;
+  }
+
+  /** Live test 16.11.2026 (#55): timed eye tracking ("x / 120 Nokta" reached ~42 in two minutes) counts its time, not points. */
+  isTimedTracking(): boolean {
+    return this.engine instanceof MotionPathEngine && this.engine.getMode() === 'tracking' && this.engine.isTimed();
   }
 
   isSaccadeMode(): boolean {
