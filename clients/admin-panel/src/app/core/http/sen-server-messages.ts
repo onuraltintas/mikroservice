@@ -1,5 +1,5 @@
 /**
- * Paket F L8 (user decision 07.11.2026): on onuraltintas.net the identity messages are shown with "sen" too. The
+ * Paket F L8 (user decision 07.11.2026): on the Coaching sites the identity messages are shown with "sen" too. The
  * identity service keeps its "siz" texts (the eduivme.com management panel and the staff portal use them), so the
  * Coaching pages rewrite the ones that reach them here: first by error code, then by the exact server text (the
  * FluentValidation messages have no stable code), then a few texts with a variable part. Anything else passes through

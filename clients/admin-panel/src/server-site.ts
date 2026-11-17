@@ -9,7 +9,8 @@ export interface SocialPreview { title: string; description: string | null; url:
 const GA_ID_PATTERN = /^G-[A-Z0-9]{4,15}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const STATIC_PATHS = ['/coaching', '/coaching/faq', '/coaching/blog', '/coaching/newsletter'];
-export const DEFAULT_PUBLIC_ORIGIN = 'https://eduivme.com';
+// Alan adı planı (18.11.2026): the public Coaching pages live on maxkoc.com.
+export const DEFAULT_PUBLIC_ORIGIN = 'https://maxkoc.com';
 
 /** https origin of a request host the server accepts; anything else falls back to the main site. */
 export function publicOrigin(host: string | undefined, allowedHosts: readonly string[]): string {

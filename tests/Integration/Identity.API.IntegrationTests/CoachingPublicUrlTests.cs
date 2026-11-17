@@ -21,7 +21,7 @@ public sealed class CoachingPublicUrlTests
     [Fact]
     public void NewsletterAndInvitationsShareTheAddressAndDevelopmentHasADefault()
     {
-        Assert.Equal("https://eduivme.com", CoachingPublicUrl.Get(Config()));
+        Assert.Equal("https://maxkoc.com", CoachingPublicUrl.Get(Config()));
         Assert.Equal("http://localhost:4200", CoachingPublicUrl.Get(Config(("Coaching:PublicBaseUrl", "http://localhost:4200"))));
         // The older newsletter key still works when the shared one is missing.
         Assert.Equal("https://ornek.test", CoachingPublicUrl.Get(Config(("CoachingNewsletter:PublicBaseUrl", "https://ornek.test"))));

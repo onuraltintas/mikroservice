@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-legacy-staff-redirect',
@@ -8,7 +9,7 @@ import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 })
 export class LegacyStaffRedirectComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
-  readonly destination = 'https://onuraltintas.net/staff/?product=speed-reading';
+  readonly destination = environment.teacherPortalUrl + '?product=speed-reading';
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) window.location.replace(this.destination);

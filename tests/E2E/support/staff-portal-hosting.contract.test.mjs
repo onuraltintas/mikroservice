@@ -31,12 +31,14 @@ test('old Coaching and Speed Reading staff URLs hand off to the unified portal',
     read('infrastructure/caddy/Caddyfile.speed-reading.litespeed')
   ]);
 
+  // Alan adı planı (18.11.2026): the old teacher addresses open the teacher portal on ogretmen.eduivme.com.
   assert.equal(
-    [...coachingEdge.matchAll(/redir @legacyCoachingStaff https:\/\/onuraltintas\.net\/staff\/\?product=coaching 302/g)].length,
-    2
+    [...coachingEdge.matchAll(/redir @legacyCoachingStaff https:\/\/ogretmen\.eduivme\.com\/staff\/\?product=coaching 302/g)].length,
+    3
   );
-  assert.match(speedReadingEdge, /onuraltintas\.net\/staff\/\?product=speed-reading/);
+  assert.match(speedReadingEdge, /ogretmen\.eduivme\.com\/staff\/\?product=speed-reading/);
   // Live since the 2026-10-13 Coaching completion release; previously only added by its deploy script.
-  assert.match(speedReadingEdge, /redir @legacyCoachingStudent https:\/\/eduivme\.com\/coaching-portal 302/);
-  assert.match(speedReadingEdge, /redir @legacyCoachingStaff https:\/\/onuraltintas\.net\/staff\/\?product=coaching 302/);
+  assert.match(speedReadingEdge, /redir @legacyCoachingStudent https:\/\/maxkoc\.com\/coaching-portal 302/);
+  assert.match(speedReadingEdge, /redir @legacyCoachingStaff https:\/\/ogretmen\.eduivme\.com\/staff\/\?product=coaching 302/);
+  assert.doesNotMatch(coachingEdge + speedReadingEdge, /onuraltintas\.net/);
 });

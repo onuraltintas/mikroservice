@@ -1,7 +1,8 @@
 import { inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformServer } from '@angular/common';
+import { DOCUMENT, isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService, hasManagementRole, hasRequiredRole, hasRole } from './auth.service';
+import { EduivmeSite, siteForHost } from '../../../../shared/eduivme-sites';
 
 // Parents have a read-only panel of their linked children (roadmap Y7).
 export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
@@ -15,6 +16,35 @@ export function hasRequiredCoachingRole(
     requiredRoles: readonly string[]
 ): boolean {
     return user?.product === 'coaching' && requiredRoles.some(role => user.roles.includes(role));
+}
+
+/**
+ * Alan adı planı (18.11.2026): the addresses an account signs in on. Each group has its own host, so the sessions of
+ * different accounts stay apart in one browser.
+ */
+export function accountSites(user: { roles: string[]; product?: string } | null): EduivmeSite[] {
+    const roles = user?.roles ?? [];
+    const sites: EduivmeSite[] = [];
+    if (user?.product === 'coaching') {
+        if (roles.includes('Student')) sites.push('student');
+        if (roles.includes('Parent')) sites.push('parent');
+        if (roles.includes('Teacher')) sites.push('teacher');
+        if (roles.includes('InstitutionAdmin') || roles.includes('InstitutionOwner')) sites.push('institution');
+    }
+    if (hasManagementRole(user)) sites.push('admin');
+    return sites;
+}
+
+/** The site of the page's host; null on any other host (localhost, a test host), where every account may stay. */
+export function currentSite(): EduivmeSite | null {
+    return siteForHost(inject(DOCUMENT).defaultView?.location?.hostname);
+}
+
+/** True when the account belongs on this host; otherwise the "other address" page opens. */
+async function staysOnThisSite(authService: AuthService, router: Router, site: EduivmeSite | null): Promise<boolean> {
+    if (site === null || accountSites(authService.userProfile()).includes(site)) return true;
+    await router.navigate(['/other-site']);
+    return false;
 }
 
 export const authGuard: CanActivateFn = async (_route, state) => {
@@ -50,6 +80,7 @@ export const managementShellGuard: CanActivateFn = async () => {
     const authService = inject(AuthService);
     const router = inject(Router);
     const platformId = inject(PLATFORM_ID);
+    const site = currentSite();
 
     if (isPlatformServer(platformId)) {
         return true;
@@ -60,13 +91,13 @@ export const managementShellGuard: CanActivateFn = async () => {
     }
 
     if (hasManagementRole(authService.userProfile())) {
-        return true;
+        return staysOnThisSite(authService, router, site);
     }
 
     // Only a Koçluk-scoped portal role may be sent on; anything else would bounce back here.
     const landing = authService.getLandingRoute();
     if (landing && hasCoachingPortalRole(authService.userProfile())) {
-        return router.parseUrl(landing);
+        return site === 'admin' ? router.parseUrl('/other-site') : router.parseUrl(landing);
     }
 
     await authService.endRoleLessSession();
@@ -116,6 +147,7 @@ export const coachingPortalGuard: CanActivateFn = async (_route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
     const platformId = inject(PLATFORM_ID);
+    const site = currentSite();
 
     if (isPlatformServer(platformId)) {
         return true;
@@ -127,7 +159,12 @@ export const coachingPortalGuard: CanActivateFn = async (_route, state) => {
     }
 
     if (hasCoachingPortalRole(authService.userProfile())) {
-        return true;
+        return staysOnThisSite(authService, router, site);
+    }
+
+    if (site !== null && accountSites(authService.userProfile()).length) {
+        await router.navigate(['/other-site']);
+        return false;
     }
 
     await router.navigate(['/dashboard'], { queryParams: { forbidden: 'true' } });

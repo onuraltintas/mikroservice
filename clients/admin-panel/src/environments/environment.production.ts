@@ -1,7 +1,9 @@
 export const environment = {
     production: true,
-    // Roadmap O2: where teachers and institutions sign in (the separate staff portal).
-    staffPortalUrl: 'https://onuraltintas.net/staff/',
+    // Roadmap O2: where teachers sign in (the separate staff portal).
+    staffPortalUrl: 'https://ogretmen.eduivme.com/staff/',
+    // Alan adı planı (18.11.2026): institution managers sign in on their own address.
+    institutionPortalUrl: 'https://kurum.eduivme.com/staff/',
     apiUrl: '/api',
     // This is a public identifier. Restrict its authorized origins in Google
     // Cloud Console; provision a dedicated production client before go-live.

@@ -9,7 +9,7 @@ namespace Coaching.Infrastructure;
 /// </summary>
 public static class CoachingPublicUrl
 {
-    public const string Default = "https://eduivme.com";
+    public const string Default = "https://maxkoc.com";
 
     public static string Get(IConfiguration configuration) => Configured(configuration) ?? Default;
 
@@ -18,7 +18,7 @@ public static class CoachingPublicUrl
         var value = Configured(configuration);
         if (value is null)
         {
-            if (requireConfigured) throw new InvalidOperationException("Coaching:PublicBaseUrl must be set (for example https://onuraltintas.net).");
+            if (requireConfigured) throw new InvalidOperationException("Coaching:PublicBaseUrl must be set (for example https://maxkoc.com).");
             return Default;
         }
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")
@@ -28,8 +28,9 @@ public static class CoachingPublicUrl
     }
 
     /// <summary>
-    /// Coaching audit K3: the coaching staff portal for teachers and institutions. It is served on its own origin
-    /// (onuraltintas.net/staff), so it has its own setting; without it the portal is assumed under the public address.
+    /// Coaching audit K3: the coaching staff portal of teachers. It is served on its own origin
+    /// (ogretmen.eduivme.com/staff, alan adı planı 18.11.2026), so it has its own setting; without it the portal is
+    /// assumed under the public address.
     /// </summary>
     public static string StaffPortal(IConfiguration configuration)
     {

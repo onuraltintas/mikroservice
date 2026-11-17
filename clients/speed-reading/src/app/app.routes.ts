@@ -53,7 +53,7 @@ export const routes: Routes = [
       { path: '**', loadComponent: () => import('./features/coaching/coaching-redirect.component').then(m => m.CoachingRedirectComponent) }
     ]
   },
-  // Veli paneli eduivme.com üzerindeki portalda çalışır; speed-reading alanında
+  // Veli paneli veli.maxkoc.com üzerindeki portalda çalışır; speed-reading alanında
   // CMS catch-all'a düşüp gereksiz bir 404 API isteği üretmemelidir.
   {
     path: 'parent/dashboard',

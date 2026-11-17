@@ -2,12 +2,12 @@ import { DOCUMENT } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { AUTH_COPY, AUTH_VOICE, authVoiceForHost } from './auth-voice';
 
-// Paket F #12 (07.11.2026): "sen" on onuraltintas.net, "siz" on the eduivme.com management panel.
+// Paket F #12 (07.11.2026): "sen" on the Coaching sites, "siz" on the management panel (alan adı planı 18.11.2026).
 describe('authentication page voice', () => {
   it('uses siz only on the management hosts', () => {
-    for (const host of ['eduivme.com', 'www.eduivme.com', 'eduivme.com.tr', 'www.eduivme.com.tr', 'EDUIVME.COM'])
+    for (const host of ['admin.eduivme.com', 'eduivme.com', 'www.eduivme.com', 'eduivme.com.tr', 'www.eduivme.com.tr', 'EDUIVME.COM'])
       expect(authVoiceForHost(host)).toBe('siz');
-    for (const host of ['onuraltintas.net', 'www.onuraltintas.net', 'staging.onuraltintas.net', 'localhost', '', null, 'noteduivme.com'])
+    for (const host of ['maxkoc.com', 'www.maxkoc.com', 'veli.maxkoc.com', 'ogretmen.eduivme.com', 'kurum.eduivme.com', 'localhost', '', null, 'noteduivme.com'])
       expect(authVoiceForHost(host)).toBe('sen');
   });
 

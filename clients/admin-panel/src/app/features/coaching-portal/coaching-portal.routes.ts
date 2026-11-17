@@ -1,15 +1,17 @@
 import { Route, Routes } from '@angular/router';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { coachingRoleGuard } from '../../core/auth/auth.guard';
+import { coachingRoleGuard, currentSite } from '../../core/auth/auth.guard';
 import { AuthService, hasRole } from '../../core/auth/auth.service';
 import { catchError, map, of } from 'rxjs';
 import { CoachingPlanningPermissionService } from '../../core/services/coaching-planning-permission.service';
 
-/** A parent who is not also a student starts on the parent panel. */
+/** A parent who is not also a student starts on the parent panel; on the parent address (veli.maxkoc.com) every parent does. */
 const parentHomeRedirect: CanActivateFn = () => {
   const profile = inject(AuthService).userProfile();
-  return hasRole(profile, 'Parent') && !hasRole(profile, 'Student') ? inject(Router).createUrlTree(['/coaching-portal/parent']) : true;
+  const parentSite = currentSite() === 'parent';
+  return hasRole(profile, 'Parent') && (parentSite || !hasRole(profile, 'Student'))
+    ? inject(Router).createUrlTree(['/coaching-portal/parent']) : true;
 };
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
 import type { StudentStudyRoutineComponent } from './pages/student-study-routine.component';

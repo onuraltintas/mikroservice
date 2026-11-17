@@ -257,7 +257,7 @@ describe('CoachingPortalHomeComponent', () => {
         provideRouter([]),
         { provide: AuthService, useValue: { userProfile: profile } },
         { provide: CoachingPortalService, useValue: service },
-        { provide: StaffPortalRedirectService, useValue: { redirect, url: () => 'https://onuraltintas.net/staff/?product=coaching' } }
+        { provide: StaffPortalRedirectService, useValue: { redirect, url: () => 'https://ogretmen.eduivme.com/staff/?product=coaching' } }
       ]
     });
     await TestBed.compileComponents();

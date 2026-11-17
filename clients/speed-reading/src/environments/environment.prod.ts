@@ -2,10 +2,13 @@ export const environment = {
     production: true,
     apiUrl: '/api',
     speedReadingApiUrl: '/api/speed-reading',
-    centralAdminUrl: 'https://eduivme.com/dashboard',
-    centralAdminLoginUrl: 'https://eduivme.com/auth/login',
-    // Parents use the coaching site: the parent panel lives at /coaching-portal/parent there.
-    coachingSiteUrl: 'https://onuraltintas.net',
+    centralAdminUrl: 'https://admin.eduivme.com/dashboard',
+    centralAdminLoginUrl: 'https://admin.eduivme.com/auth/login',
+    // Alan adı planı (18.11.2026): every group has its own address.
+    coachingSiteUrl: 'https://maxkoc.com',
+    parentSiteUrl: 'https://veli.maxkoc.com',
+    teacherPortalUrl: 'https://ogretmen.eduivme.com/staff/',
+    institutionPortalUrl: 'https://kurum.eduivme.com/staff/',
     googleClientId: '503453099078-s04ol7rissjlt59sc86lo3ef79igg4mj.apps.googleusercontent.com',
     vapidPublicKey: 'BDXTL-5iQzjdtDzUdtbPDU5bwYmrbmconj_j6e4M91hR1S5TpOH9m8TQOhJrdtpHKxmMOt1uugbSL1rynlVqoUI'
 };

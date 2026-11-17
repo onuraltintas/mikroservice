@@ -365,6 +365,11 @@ export class AuthService implements OnDestroy {
             { email, product: 'coaching' }));
     }
 
+    /** Alan adı planı: ends the session on this address only, before the browser moves to the account's own address. */
+    async signOutHere(): Promise<void> {
+        await this.endSession();
+    }
+
     async logout() {
         await this.endSession();
         await this.router.navigate(['/auth/login']);

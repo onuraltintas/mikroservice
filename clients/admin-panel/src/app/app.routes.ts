@@ -72,6 +72,13 @@ export const routes: Routes = [
         ]
     },
 
+    // Alan adı planı (18.11.2026): an account opened on another group's address is told where it signs in.
+    {
+        path: 'other-site',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/auth/other-site.component').then(m => m.OtherSiteComponent)
+    },
+
     // Default Redirect
     {
         path: '',

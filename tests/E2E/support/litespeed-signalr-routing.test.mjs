@@ -6,7 +6,7 @@ import test from 'node:test';
 // Events or Long Polling (WebSockets are off in the client). LiteSpeed's `websocket /hubs/notifications`
 // directive claims that path, so a plain HTTP GET there gets LiteSpeed's own 404 unless an explicit
 // proxy context exists for the hub root (found live on onuraltintas.net, 06.11.2026).
-const sites = ['eduivme.com', 'onuraltintas.net'];
+const sites = ['eduivme.com', 'maxkoc.com'];
 
 for (const site of sites) {
   const vhost = readFileSync(

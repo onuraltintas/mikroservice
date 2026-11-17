@@ -107,8 +107,9 @@ export class ExistingProductJoinComponent {
   }
 
   get loginUrl(): string {
-    if (this.account !== 'student') return 'https://onuraltintas.net/staff/?product=' + this.product;
-    return this.product === 'coaching' ? 'https://eduivme.com/auth/login' : 'https://masterhizliokuma.com/auth/login';
+    if (this.account === 'institution') return environment.institutionPortalUrl + '?product=' + this.product;
+    if (this.account !== 'student') return environment.teacherPortalUrl + '?product=' + this.product;
+    return this.product === 'coaching' ? environment.coachingSiteUrl + '/auth/login' : 'https://masterhizliokuma.com/auth/login';
   }
 
   submit(): void {

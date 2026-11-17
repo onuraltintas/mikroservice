@@ -37,7 +37,8 @@ public sealed class CoachingSubscriptionNoticeConsumer(
         if (!string.IsNullOrWhiteSpace(notice.RecipientEmail) && notice.Kind != CoachingSubscriptionNoticeKinds.TransferSubmitted)
         {
             // Coaching audit K3: teachers and institutions manage billing in the coaching staff portal.
-            var link = notice.Audience == "Individual" ? $"{baseUrl}/coaching-portal/account/payments" : urls.StaffPortalLink();
+            var link = notice.Audience == "Individual" ? $"{baseUrl}/coaching-portal/account/payments"
+                : notice.Audience == "Teacher" ? urls.StaffPortalLink() : urls.InstitutionPortalLink();
             await emailDeliveryQueue.QueueAsync(messageId, nameof(CoachingSubscriptionNoticeConsumer), notice.RecipientEmail.Trim(),
                 $"{Product}: {EmailContent.SubjectText(text.Title)}", Body(text.Message, link, "Aboneliğini görüntüle"),
                 notice.RecipientUserId, context.CancellationToken);

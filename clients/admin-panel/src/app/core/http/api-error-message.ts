@@ -114,7 +114,7 @@ export function getApiErrorMessage(error: unknown, fallback: string, options: Ap
   if (!error || typeof error !== 'object') return fallback;
   const voice = options.voice ?? 'siz';
   const response = error as { status?: unknown; error?: unknown };
-  // Paket F L8: with "sen" (onuraltintas.net) the identity service's "siz" texts are rewritten by code or text.
+  // Paket F L8: with "sen" (the Coaching sites) the identity service's "siz" texts are rewritten by code or text.
   const code = voice === 'sen' ? getApiErrorCode(error) : null;
   const translate: Translate | undefined = voice === 'sen'
     ? (text, validation) => toSenServerMessage(text, validation ? null : code, validation)
