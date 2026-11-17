@@ -28,4 +28,18 @@ describe('Coaching feedback', () => {
     expect(toaster.success).not.toHaveBeenCalled();expect(toaster.error).not.toHaveBeenCalled();
     fixture.destroy();
   });
+  it('on a wide screen leaves a success message where it is, so the calendar stays in view (live test #29)', async () => {
+    const scroll = vi.fn(); Element.prototype.scrollIntoView = scroll;
+    const original = globalThis.matchMedia;
+    globalThis.matchMedia = ((query: string) => ({ matches: false, media: query })) as unknown as typeof matchMedia;
+    try {
+      TestBed.configureTestingModule({imports:[FeedbackHost],providers:[{provide:ToasterService,useValue:{success:vi.fn(),error:vi.fn()}}]});
+      const fixture=TestBed.createComponent(FeedbackHost);fixture.detectChanges();
+      fixture.componentInstance.success.set('Çalışma takvime kaydedildi.');fixture.detectChanges();await fixture.whenStable();
+      expect(scroll).not.toHaveBeenCalled();
+      fixture.componentInstance.error.set('İşlem tamamlanamadı.');fixture.detectChanges();await fixture.whenStable();
+      await vi.waitFor(()=>expect(scroll).toHaveBeenCalledTimes(1));
+      fixture.destroy();
+    } finally { globalThis.matchMedia = original; }
+  });
 });
