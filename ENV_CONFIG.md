@@ -71,7 +71,7 @@ Aşağıdaki veritabanları otomatik oluşturulur:
 
 ## Koçluk bağlantı adresi (D3)
 
-- Koçluk e-postalarındaki bağlantılar (doğrulama, hoş geldin, davet, bülten, veli özeti ve bağlantısı, abonelik bildirimleri) Koçluk sitesine, `PUBLIC_APP_BASE_URL` adresine gider; compose bunu bildirim servisine `PublicApp__BaseUrl`, koçluk servisine `Coaching__PublicBaseUrl` olarak verir (production'da boşsa `https://onuraltintas.net`). Yönetim hesaplarının (SystemAdmin, Editor) bağlantıları ve yönetici bildirimleri `PUBLIC_ADMIN_PANEL_URL` (`https://eduivme.com`) adresine gider. Sürümde sunucudaki `.env` içindeki `PUBLIC_APP_BASE_URL` değerini kontrol edin.
+- Alan adı planı (18.11.2026): her grup kendi adresinde giriş yapar. E-posta bağlantıları: Koçluk öğrencisi `PUBLIC_APP_BASE_URL` (`https://maxkoc.com`), veli `PUBLIC_PARENT_BASE_URL` (`https://veli.maxkoc.com`), öğretmen `PUBLIC_STAFF_PORTAL_URL` (`https://ogretmen.eduivme.com/staff`), kurum yöneticisi `PUBLIC_INSTITUTION_PORTAL_URL` (`https://kurum.eduivme.com/staff`), yönetim hesapları ve yönetici bildirimleri `PUBLIC_ADMIN_PANEL_URL` (`https://admin.eduivme.com`). Production compose bu adresleri varsayılan olarak kullanır; sunucudaki `.env` içinde eski değerler (onuraltintas.net, eduivme.com) kalmamalıdır.
 - Production ve Staging'de adres `https` olmalıdır; değilse koçluk servisi başlamaz. Yayından önce sunucudaki `.env` değerini kontrol edin.
 - Eski `CoachingNewsletter__PublicBaseUrl` ayarı yalnız `Coaching__PublicBaseUrl` yoksa okunur.
 

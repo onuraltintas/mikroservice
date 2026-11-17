@@ -1,23 +1,23 @@
 import { vi } from 'vitest';
 import { CachedFetcher, buildRobots, buildSitemap, cmsPreviewTarget, enrichHead, publicOrigin } from './server-site';
 
-const allowed = ['eduivme.com', 'onuraltintas.net', 'localhost'];
+const allowed = ['eduivme.com', 'maxkoc.com', 'localhost'];
 
 describe('server site helpers (O11)', () => {
   it('builds origins only for accepted hosts', () => {
-    expect(publicOrigin('onuraltintas.net', allowed)).toBe('https://onuraltintas.net');
+    expect(publicOrigin('maxkoc.com', allowed)).toBe('https://maxkoc.com');
     expect(publicOrigin('EDUIVME.COM:443', allowed)).toBe('https://eduivme.com');
-    expect(publicOrigin('evil.example', allowed)).toBe('https://eduivme.com');
+    expect(publicOrigin('evil.example', allowed)).toBe('https://maxkoc.com');
     expect(publicOrigin('localhost:4000', allowed)).toBe('http://localhost:4000');
-    expect(publicOrigin(undefined, allowed)).toBe('https://eduivme.com');
+    expect(publicOrigin(undefined, allowed)).toBe('https://maxkoc.com');
   });
 
   it('lets crawlers into the public site only and points them to the sitemap', () => {
-    const robots = buildRobots('https://onuraltintas.net');
+    const robots = buildRobots('https://maxkoc.com');
     expect(robots).toContain('Allow: /coaching');
     expect(robots).toContain('Disallow: /coaching-portal');
     expect(robots).toContain('Disallow: /dashboard');
-    expect(robots).toContain('Sitemap: https://onuraltintas.net/sitemap.xml');
+    expect(robots).toContain('Sitemap: https://maxkoc.com/sitemap.xml');
   });
 
   it('lists the fixed pages and the published CMS pages and posts', () => {

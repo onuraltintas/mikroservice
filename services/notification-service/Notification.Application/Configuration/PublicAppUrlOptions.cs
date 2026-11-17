@@ -6,8 +6,14 @@ public sealed class PublicAppUrlOptions
 {
     public const string SectionName = "PublicApp";
 
-    /// <summary>The Coaching site (production https://onuraltintas.net): Coaching and parent links.</summary>
+    /// <summary>The Coaching site (production https://maxkoc.com): Coaching student and staff links.</summary>
     public string BaseUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Alan adı planı (18.11.2026): the parents' own address (production https://veli.maxkoc.com), so a parent and a
+    /// student can stay signed in in one browser. Empty means <see cref="BaseUrl"/>.
+    /// </summary>
+    public string ParentBaseUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// Public origin for the standalone Master Hızlı Okuma application. The
@@ -16,17 +22,33 @@ public sealed class PublicAppUrlOptions
     public string SpeedReadingBaseUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// Coaching audit K3: the coaching staff portal (teachers and institutions), e.g. https://onuraltintas.net/staff.
+    /// Coaching audit K3: the coaching staff portal of teachers, e.g. https://ogretmen.eduivme.com/staff.
     /// Empty means "{BaseUrl}/staff".
     /// </summary>
     public string StaffPortalUrl { get; set; } = string.Empty;
 
-    /// <summary>Coaching audit K3: the admin panel origin, e.g. https://eduivme.com. Empty means BaseUrl.
+    /// <summary>Alan adı planı (18.11.2026): the staff portal of institution managers, e.g. https://kurum.eduivme.com/staff.
+    /// Empty means <see cref="StaffPortalUrl"/>.</summary>
+    public string InstitutionPortalUrl { get; set; } = string.Empty;
+
+    /// <summary>Coaching audit K3: the admin panel origin, e.g. https://admin.eduivme.com. Empty means BaseUrl.
     /// Also the origin of links sent to management accounts (SystemAdmin, Editor).</summary>
     public string AdminPanelUrl { get; set; } = string.Empty;
 
     public string StaffPortalLink() =>
         $"{(IsValidBaseUrl(StaffPortalUrl) ? StaffPortalUrl.TrimEnd('/') : ResolveBaseUrl(null, "coaching") + "/staff")}/?product=coaching";
+
+    public string InstitutionPortalLink() =>
+        IsValidBaseUrl(InstitutionPortalUrl) ? $"{InstitutionPortalUrl.TrimEnd('/')}/?product=coaching" : StaffPortalLink();
+
+    /// <summary>A Coaching page link: the parent panel (/coaching-portal/parent…) opens on the parents' address.</summary>
+    public string CoachingLink(string path)
+    {
+        var relative = "/" + path.TrimStart('/');
+        var parentPage = relative == "/coaching-portal/parent" || relative.StartsWith("/coaching-portal/parent/", StringComparison.Ordinal)
+            || relative.StartsWith("/coaching-portal/parent?", StringComparison.Ordinal);
+        return (parentPage && IsValidBaseUrl(ParentBaseUrl) ? ParentBaseUrl.TrimEnd('/') : ResolveBaseUrl(null, "coaching")) + relative;
+    }
 
     public string AdminPanelLink(string path) =>
         (IsValidBaseUrl(AdminPanelUrl) ? AdminPanelUrl.TrimEnd('/') : ResolveBaseUrl(null, "coaching")) + "/" + path.TrimStart('/');
@@ -125,9 +147,10 @@ public sealed class PublicAppUrlOptions
     public string ResolveBaseUrl(string? role = null) => ResolveBaseUrl(role, null);
 
     /// <summary>
-    /// User decision 05.11.2026: <see cref="BaseUrl"/> is the Coaching site (production https://onuraltintas.net)
-    /// for students, parents and Coaching staff; management accounts use <see cref="AdminPanelUrl"/> when it is set;
-    /// speed-reading links use <see cref="SpeedReadingBaseUrl"/>.
+    /// User decision 05.11.2026: <see cref="BaseUrl"/> is the Coaching site (production https://maxkoc.com)
+    /// for students and Coaching staff; parents use <see cref="ParentBaseUrl"/> when it is set (alan adı planı
+    /// 18.11.2026); management accounts use <see cref="AdminPanelUrl"/> when it is set; speed-reading links use
+    /// <see cref="SpeedReadingBaseUrl"/>.
     /// </summary>
     public string ResolveBaseUrl(string? role, string? product)
     {
@@ -135,6 +158,8 @@ public sealed class PublicAppUrlOptions
             ? AdminPanelUrl
             : IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
             ? SpeedReadingBaseUrl
+            : string.Equals(role?.Trim(), "Parent", StringComparison.OrdinalIgnoreCase) && IsValidBaseUrl(ParentBaseUrl)
+            ? ParentBaseUrl
             : BaseUrl;
 
         if (!IsValidBaseUrl(candidate))

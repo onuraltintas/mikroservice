@@ -4,8 +4,8 @@ import { environment } from '../../../environments/environment';
 
 export function resolveCoachingDestination(pathname: string): string {
   return pathname.replace(/\/+$/, '') === '/student/coaching'
-    ? new URL('/coaching-portal', environment.centralAdminUrl).href
-    : 'https://onuraltintas.net/staff/?product=coaching';
+    ? new URL('/coaching-portal', environment.coachingSiteUrl).href
+    : environment.teacherPortalUrl + '?product=coaching';
 }
 
 @Component({
@@ -15,7 +15,7 @@ export function resolveCoachingDestination(pathname: string): string {
 })
 export class CoachingRedirectComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
-  destination = new URL('/coaching-portal', environment.centralAdminUrl).href;
+  destination = new URL('/coaching-portal', environment.coachingSiteUrl).href;
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;

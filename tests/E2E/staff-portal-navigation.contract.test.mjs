@@ -21,11 +21,16 @@ async function files(dir) {
 
 test('The staff portal address comes from the environment', async () => {
   const hardcoded = [];
-  for (const path of await files(`${app}/src/app`)) if ((await read(path)).includes('onuraltintas.net/staff')) hardcoded.push(path);
-  assert.deepEqual(hardcoded, [], 'use environment.staffPortalUrl');
-  assert.match(await read(`${app}/src/environments/environment.production.ts`), /staffPortalUrl:\s*'https:\/\/onuraltintas\.net\/staff\/'/);
-  for (const name of ['environment.ts', 'environment.development.ts'])
+  for (const path of await files(`${app}/src/app`)) if (/(ogretmen|kurum)\.eduivme\.com\/staff/.test(await read(path))) hardcoded.push(path);
+  assert.deepEqual(hardcoded, [], 'use environment.staffPortalUrl and environment.institutionPortalUrl');
+  // Alan adı planı (18.11.2026): teachers on ogretmen.eduivme.com, institution managers on kurum.eduivme.com.
+  const production = await read(`${app}/src/environments/environment.production.ts`);
+  assert.match(production, /staffPortalUrl:\s*'https:\/\/ogretmen\.eduivme\.com\/staff\/'/);
+  assert.match(production, /institutionPortalUrl:\s*'https:\/\/kurum\.eduivme\.com\/staff\/'/);
+  for (const name of ['environment.ts', 'environment.development.ts']) {
     assert.match(await read(`${app}/src/environments/${name}`), /staffPortalUrl:\s*'http:\/\/localhost:4201\/'/);
+    assert.match(await read(`${app}/src/environments/${name}`), /institutionPortalUrl:\s*'http:\/\/localhost:4201\/'/);
+  }
   const angular = JSON.parse(await read(`${app}/angular.json`));
   assert.equal(angular.projects['staff-portal'].architect.serve.options.port, 4201);
 });

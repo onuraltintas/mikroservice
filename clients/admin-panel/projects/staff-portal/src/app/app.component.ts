@@ -18,6 +18,7 @@ import { StaffNotificationCenterComponent } from './notifications/staff-notifica
 import type { WeeklyDestination } from '../../../../shared/coaching-notification-target';
 import { CourseManagementWorkspaceComponent } from './features/course-management/course-management-workspace.component';
 import { CourseManagementEnrollmentComponent } from './features/course-management/course-management-enrollment.component';
+import { EDUIVME_SITE_URLS, STAFF_PORTAL_PATH, siteForHost } from '../../../../shared/eduivme-sites';
 
 type StaffWorkspaceRole = 'teacher' | 'institution';
 
@@ -53,6 +54,15 @@ export class AppComponent implements AfterViewInit {
   private readonly host = inject(ElementRef, { optional: true }) as ElementRef<HTMLElement> | null;
   private readonly destroyRef = inject(DestroyRef);
   readonly currentYear = new Date().getFullYear();
+  /**
+   * Alan adı planı (user decision 18.11.2026): teachers sign in on ogretmen.eduivme.com and institution managers on
+   * kurum.eduivme.com, so both accounts can stay open in one browser. On those hosts the workspace role is the host's;
+   * on any other host (localhost) the role switch stays as before.
+   */
+  readonly siteRole: StaffWorkspaceRole | null = (() => {
+    const site = siteForHost(this.document.defaultView?.location?.hostname);
+    return site === 'teacher' || site === 'institution' ? site : null;
+  })();
   readonly hasCourseAccess = (access: StaffProductAccess): boolean => access.product === 'course-management';
   selectedProduct: StaffProduct = this.initialProduct();
 
@@ -159,10 +169,30 @@ export class AppComponent implements AfterViewInit {
   }
 
   get canSwitchWorkspaceRole(): boolean {
-    return this.hasTeacherRole && this.isInstitutionManager;
+    return !this.siteRole && this.hasTeacherRole && this.isInstitutionManager;
+  }
+
+  /** On the teacher or institution address: where the account's other workspace opens, or that this address is not its own. */
+  get otherSiteNotice(): { text: string; host: string; url: string } | null {
+    if (!this.siteRole || !this.activeAccess) return null;
+    const other: StaffWorkspaceRole = this.siteRole === 'teacher' ? 'institution' : 'teacher';
+    const hasOther = other === 'teacher' ? this.hasTeacherRole : this.isInstitutionManager;
+    const url = EDUIVME_SITE_URLS[other] + STAFF_PORTAL_PATH;
+    const host = new URL(url).host;
+    if (this.activeWorkspaceRole) {
+      return hasOther ? { text: other === 'teacher' ? 'Öğretmen görünümü ayrı adreste açılır:' : 'Kurum yöneticisi görünümü ayrı adreste açılır:', host, url } : null;
+    }
+    const here = this.siteRole === 'teacher' ? 'öğretmenler' : 'kurum yöneticileri';
+    return hasOther
+      ? { text: `Bu adres ${here} içindir. Hesabınız şu adreste açılır:`, host, url }
+      : { text: `Bu adres ${here} içindir. Bu hesapta ${this.currentProductLabel} için uygun bir rol yok.`, host: '', url: '' };
   }
 
   get activeWorkspaceRole(): StaffWorkspaceRole | null {
+    if (this.siteRole) {
+      if (this.siteRole === 'teacher') return this.hasTeacherRole ? 'teacher' : null;
+      return this.isInstitutionManager ? 'institution' : null;
+    }
     const selectedRole = this.selectedWorkspaceRoles[this.auth.activeProduct() ?? 'coaching'];
     if (selectedRole === 'teacher' && this.hasTeacherRole) return selectedRole;
     if (selectedRole === 'institution' && this.isInstitutionManager) return selectedRole;

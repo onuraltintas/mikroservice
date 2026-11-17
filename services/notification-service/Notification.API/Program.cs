@@ -86,8 +86,10 @@ builder.Services.AddOptions<PublicAppUrlOptions>()
         "PublicApp:SpeedReadingBaseUrl must be an absolute URL without credentials, query, or fragment; production requires https and cannot use loopback.")
     .Validate(
         options => PublicAppUrlOptions.IsValidOptionalForEnvironment(options.StaffPortalUrl, builder.Environment.IsProduction())
+            && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.InstitutionPortalUrl, builder.Environment.IsProduction())
+            && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.ParentBaseUrl, builder.Environment.IsProduction())
             && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.AdminPanelUrl, builder.Environment.IsProduction()),
-        "PublicApp:StaffPortalUrl and PublicApp:AdminPanelUrl must be empty or absolute https URLs in production.")
+        "PublicApp:StaffPortalUrl, InstitutionPortalUrl, ParentBaseUrl and AdminPanelUrl must be empty or absolute https URLs in production.")
     .ValidateOnStart();
 
 // Add services

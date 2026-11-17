@@ -41,15 +41,21 @@ test('speed-reading verification links open the verify-email page with the names
   assert.deepEqual(queryNames(linkTemplate('SpeedReadingEmailVerificationPath')), read_);
 });
 
-// User decision 05.11.2026: Coaching e-mail links (verification, parent summary and link, subscription
-// notices, invitations) go to the Coaching site onuraltintas.net; management links stay on eduivme.com.
-test('production sends Coaching links to onuraltintas.net and management links to eduivme.com', () => {
+// User decision 05.11.2026 and alan adı planı 18.11.2026: Coaching e-mail links go to each group's own address
+// (students maxkoc.com, parents veli.maxkoc.com, teachers ogretmen.eduivme.com, institutions kurum.eduivme.com);
+// management links go to admin.eduivme.com.
+test('production sends Coaching links to the group addresses and management links to admin.eduivme.com', () => {
   const compose = read('docker-compose.production.yml');
   const defaults = name => [...compose.matchAll(new RegExp(`\\$\\{${name}:-([^}]+)\\}`, 'g'))].map(m => m[1]);
   assert.ok(defaults('PUBLIC_APP_BASE_URL').length >= 2, 'coaching and notification services read PUBLIC_APP_BASE_URL');
-  assert.deepEqual([...new Set(defaults('PUBLIC_APP_BASE_URL'))], ['https://onuraltintas.net']);
-  assert.deepEqual([...new Set(defaults('PUBLIC_ADMIN_PANEL_URL'))], ['https://eduivme.com']);
-  assert.deepEqual([...new Set(defaults('PUBLIC_STAFF_PORTAL_URL'))], ['https://onuraltintas.net/staff']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_APP_BASE_URL'))], ['https://maxkoc.com']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_PARENT_BASE_URL'))], ['https://veli.maxkoc.com']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_ADMIN_PANEL_URL'))], ['https://admin.eduivme.com']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_STAFF_PORTAL_URL'))], ['https://ogretmen.eduivme.com/staff']);
+  assert.deepEqual([...new Set(defaults('PUBLIC_INSTITUTION_PORTAL_URL'))], ['https://kurum.eduivme.com/staff']);
+  assert.match(compose, /PublicApp__ParentBaseUrl: \$\{PUBLIC_PARENT_BASE_URL:-/);
+  assert.match(compose, /PublicApp__InstitutionPortalUrl: \$\{PUBLIC_INSTITUTION_PORTAL_URL:-/);
+  assert.doesNotMatch(compose, /onuraltintas\.net/);
   assert.match(compose, /Coaching__PublicBaseUrl: \$\{PUBLIC_APP_BASE_URL:-/);
   assert.match(compose, /PublicApp__BaseUrl: \$\{PUBLIC_APP_BASE_URL:-/);
   assert.match(compose, /PublicApp__AdminPanelUrl: \$\{PUBLIC_ADMIN_PANEL_URL:-/);
@@ -57,16 +63,36 @@ test('production sends Coaching links to onuraltintas.net and management links t
   assert.match(read('docs/VPS_STAGING_DEPLOYMENT.md'), /PUBLIC_APP_BASE_URL=https:\/\/staging\.onuraltintas\.net/);
 });
 
-test('onuraltintas.net serves the pages the Coaching links open', () => {
+/** The Caddy block of a host (alan adı planı 18.11.2026): the block whose address list names exactly that host. */
+function siteBlock(caddy, host) {
+  for (const match of caddy.matchAll(/(?:^|\n)([^\s{#][^\n{]*)\{([\s\S]*?)\n\}/g)) {
+    const names = match[1].split(',').map(name => name.trim().replace(/:80$/, ''));
+    if (names.includes(host)) return match[2];
+  }
+  return null;
+}
+
+/** The paths a block sends elsewhere or refuses (matchers other than the API routes and the root). */
+function movedPaths(block) {
+  return [...block.matchAll(/@(?!api|health|signalr|root|staffRoot)\w+ path ([^\n]+)/g)].flatMap(m => m[1].trim().split(/\s+/));
+}
+
+test('each group address serves the auth pages the Coaching links open', () => {
   const caddy = read('infrastructure/caddy/Caddyfile.production.litespeed');
-  const site = /onuraltintas\.net:80, www\.onuraltintas\.net:80 \{([\s\S]*?)\n\}/.exec(caddy);
-  assert.ok(site, 'the Coaching site block exists');
-  assert.match(site[1], /reverse_proxy admin-panel:4000/);
-  const blocked = [...site[1].matchAll(/@management path ([^\n]+)/g)].map(m => m[1]).join(' ');
-  for (const path of ['/auth/confirm-email', '/auth/login', '/auth/reset-password', '/coaching-portal'])
-    assert.ok(!blocked.split(/\s+/).some(prefix => path === prefix || path.startsWith(prefix.replace('/*', '/'))), `${path} is not blocked`);
+  assert.doesNotMatch(caddy, /onuraltintas\.net/);
   const hosts = read('clients/admin-panel/src/server-config.ts');
-  assert.match(hosts, /'onuraltintas\.net'/);
+  for (const host of ['maxkoc.com', 'veli.maxkoc.com', 'ogretmen.eduivme.com', 'kurum.eduivme.com', 'admin.eduivme.com']) {
+    const block = siteBlock(caddy, host);
+    assert.ok(block, `the ${host} block exists`);
+    assert.match(block, /reverse_proxy admin-panel:4000/);
+    const moved = movedPaths(block);
+    for (const path of ['/auth/confirm-email', '/auth/login', '/auth/reset-password', '/auth/confirm-email-change'])
+      assert.ok(!moved.some(prefix => path === prefix || path.startsWith(prefix.replace('/*', '/'))), `${path} stays on ${host}`);
+    assert.match(hosts, new RegExp(`'${host.replace(/\./g, '\\.')}'`));
+  }
+  // Students open the Coaching portal on maxkoc.com, parents their panel on veli.maxkoc.com.
+  assert.match(siteBlock(caddy, 'maxkoc.com'), /@parentPages path \/coaching-portal\/parent \/coaching-portal\/parent\/\*\n\s*redir @parentPages https:\/\/veli\.maxkoc\.com\{uri\}/);
+  assert.match(siteBlock(caddy, 'veli.maxkoc.com'), /redir @root \/coaching-portal\/parent/);
 });
 
 // Final review: password reset links open the reset page of the product's own site with the names it reads.
@@ -95,7 +121,7 @@ test('production sends speed-reading links to masterhizliokuma.com', () => {
 });
 
 // E5 (#22): the e-mail change link opens the admin-panel page (Coaching site; management: the admin panel) that reads
-// exactly the names the link carries, and that page is not one of the blocked management paths on onuraltintas.net.
+// exactly the names the link carries, and that page is not sent elsewhere on any group address.
 test('e-mail change links open the confirm-email-change page with the names it reads', () => {
   const path = constant('EmailChangeConfirmationPath');
   assert.equal(path, '/auth/confirm-email-change');
@@ -108,7 +134,8 @@ test('e-mail change links open the confirm-email-change page with the names it r
   // The link always goes to an admin-panel origin: the speed-reading app has no such page.
   assert.match(options, /BuildEmailChangeLink[\s\S]{0,300}ResolveBaseUrl\(role, "coaching"\)/);
   const caddy = read('infrastructure/caddy/Caddyfile.production.litespeed');
-  const site = /onuraltintas\.net:80, www\.onuraltintas\.net:80 \{([\s\S]*?)\n\}/.exec(caddy)[1];
-  const blocked = [...site.matchAll(/@management path ([^\n]+)/g)].map(m => m[1]).join(' ').split(/\s+/);
-  assert.ok(!blocked.some(prefix => path.startsWith(prefix.replace('/*', '/')) || path === prefix));
+  for (const host of ['maxkoc.com', 'veli.maxkoc.com', 'admin.eduivme.com']) {
+    const moved = movedPaths(siteBlock(caddy, host));
+    assert.ok(!moved.some(prefix => path.startsWith(prefix.replace('/*', '/')) || path === prefix), host);
+  }
 });

@@ -106,7 +106,7 @@ export class ExistingProductJoinComponent {
 
   /**
    * Review #6: students are addressed with "sen", teachers and institutions with "siz". Paket F #12 (07.11.2026):
-   * every sign-up on the Coaching site (onuraltintas.net) uses "sen".
+   * every sign-up on the Coaching sites uses "sen".
    */
   get voice(): 'sen' | 'siz' {
     return this.account === 'student' || this.product === 'coaching' ? 'sen' : 'siz';
@@ -117,8 +117,9 @@ export class ExistingProductJoinComponent {
   }
 
   get loginUrl(): string {
+    if (this.account === 'institution') return `${environment.institutionPortalUrl}?product=${this.product}`;
     if (this.account !== 'student') return `${environment.staffPortalUrl}?product=${this.product}`;
-    // Third review: a Coaching student signs in on the Coaching site they are on (onuraltintas.net).
+    // Third review: a Coaching student signs in on the Coaching site they are on (maxkoc.com).
     return this.product === 'coaching' ? '/auth/login' : 'https://masterhizliokuma.com/auth/login';
   }
 

@@ -54,7 +54,7 @@ public sealed class CoachingParentWeeklySummaryConsumer(
         if (string.IsNullOrWhiteSpace(s.ParentEmail)) return;
         // Roadmap O9: the parent may turn the summary e-mail off in the notification preferences.
         if (channels is not null && !(await channels.PlanAsync([s.ParentUserId], Type, context.CancellationToken))[s.ParentUserId].Email) return;
-        var link = $"{publicAppUrlOptions.Value.ResolveBaseUrl(null, "coaching")}/coaching-portal/parent/children/{s.StudentUserId}";
+        var link = publicAppUrlOptions.Value.CoachingLink($"/coaching-portal/parent/children/{s.StudentUserId}");
         var body = $"<h1>{Product}</h1><p>Merhaba {EmailContent.Html(s.ParentName)},</p>"
             + $"<p><strong>{EmailContent.Html(s.StudentName)}</strong> için {week} haftasının özeti:</p>"
             + string.Concat(sections.Select(x => $"<h2>{x.Heading}</h2><ul>{string.Concat(x.Html.Select(line => $"<li>{line}</li>"))}</ul>"))

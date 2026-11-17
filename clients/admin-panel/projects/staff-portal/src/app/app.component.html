@@ -80,6 +80,12 @@
           </div>
         }
 
+        @if (otherSiteNotice; as notice) {
+          <div class="notice" role="status" data-testid="staff-other-site">{{ notice.text }}
+            @if (notice.url) { <a [href]="notice.url">{{ notice.host }}</a> }
+          </div>
+        }
+
         @if (switchError) {
           <div class="notice warning" role="alert">{{ switchError }}</div>
         }

@@ -9,9 +9,20 @@
 	}
 }
 
-# The Coaching portal has its own public origin while sharing the existing
-# Identity and Coaching APIs. Keep management pages on eduivme.com.
-onuraltintas.net:80, www.onuraltintas.net:80 {
+# Alan adı planı (user decision 18.11.2026): every group signs in on its own host, so the host-only session cookie
+# keeps a student, a parent, a teacher, an institution manager and an administrator apart in one browser.
+#   maxkoc.com            Koçluk students and the public Koçluk pages
+#   veli.maxkoc.com       parents
+#   ogretmen.eduivme.com  teachers (staff portal)
+#   kurum.eduivme.com     institution managers (staff portal)
+#   admin.eduivme.com     management panel
+# eduivme.com forwards to admin.eduivme.com (catch-all block below). The old Coaching domain is closed.
+
+www.maxkoc.com:80 {
+	redir https://maxkoc.com{uri} 301
+}
+
+maxkoc.com:80 {
 	encode gzip zstd
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -25,8 +36,95 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 		@root path /
 		redir @root /coaching-portal 302
 
+		@parentPages path /coaching-portal/parent /coaching-portal/parent/*
+		redir @parentPages https://veli.maxkoc.com{uri} 302
+
+		@staffElsewhere path /staff /staff/*
+		redir @staffElsewhere https://ogretmen.eduivme.com{uri} 302
+
 		@legacyCoachingStaff path /coaching-portal/teacher /coaching-portal/teacher/*
-		redir @legacyCoachingStaff https://onuraltintas.net/staff/?product=coaching 302
+		redir @legacyCoachingStaff https://ogretmen.eduivme.com/staff/?product=coaching 302
+
+		@management path /dashboard /dashboard/*
+		redir @management https://admin.eduivme.com{uri} 302
+
+		@api path /api/*
+		reverse_proxy @api api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@health path /health /health/*
+		reverse_proxy @health api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@signalr path /hubs/notifications /hubs/notifications/*
+		reverse_proxy @signalr api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		reverse_proxy admin-panel:4000
+	}
+}
+
+veli.maxkoc.com:80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	route {
+		@root path /
+		redir @root /coaching-portal/parent 302
+
+		@publicPages path /coaching /coaching/*
+		redir @publicPages https://maxkoc.com{uri} 302
+
+		@staffElsewhere path /staff /staff/*
+		redir @staffElsewhere https://ogretmen.eduivme.com{uri} 302
+
+		@legacyCoachingStaff path /coaching-portal/teacher /coaching-portal/teacher/*
+		redir @legacyCoachingStaff https://ogretmen.eduivme.com/staff/?product=coaching 302
+
+		@management path /dashboard /dashboard/*
+		redir @management https://admin.eduivme.com{uri} 302
+
+		@api path /api/*
+		reverse_proxy @api api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@health path /health /health/*
+		reverse_proxy @health api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@signalr path /hubs/notifications /hubs/notifications/*
+		reverse_proxy @signalr api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		reverse_proxy admin-panel:4000
+	}
+}
+
+ogretmen.eduivme.com:80, kurum.eduivme.com:80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	route {
+		@root path /
+		redir @root /staff/ 302
 
 		@staffRoot path /staff
 		redir @staffRoot /staff/ 308
@@ -34,8 +132,60 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 			reverse_proxy staff-portal:8080
 		}
 
+		@coachingPortal path /coaching-portal /coaching-portal/*
+		redir @coachingPortal https://maxkoc.com{uri} 302
+
+		@publicPages path /coaching /coaching/*
+		redir @publicPages https://maxkoc.com{uri} 302
+
 		@management path /dashboard /dashboard/*
-		respond @management 404
+		redir @management https://admin.eduivme.com{uri} 302
+
+		@api path /api/*
+		reverse_proxy @api api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@health path /health /health/*
+		reverse_proxy @health api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@signalr path /hubs/notifications /hubs/notifications/*
+		reverse_proxy @signalr api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		# Sign-in help pages (password reset, e-mail confirmation, legal texts) come from the admin panel app.
+		reverse_proxy admin-panel:4000
+	}
+}
+
+admin.eduivme.com:80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	route {
+		@root path /
+		redir @root /dashboard 302
+
+		@coachingPortal path /coaching-portal /coaching-portal/*
+		redir @coachingPortal https://maxkoc.com{uri} 302
+
+		@publicPages path /coaching /coaching/*
+		redir @publicPages https://maxkoc.com{uri} 302
+
+		@staffElsewhere path /staff /staff/*
+		redir @staffElsewhere https://ogretmen.eduivme.com{uri} 302
+
+		@legacyCoachingStaff path /coaching-portal/teacher /coaching-portal/teacher/*
+		redir @legacyCoachingStaff https://ogretmen.eduivme.com/staff/?product=coaching 302
 
 		@api path /api/*
 		reverse_proxy @api api-gateway:8080 {
@@ -57,23 +207,10 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 }
 
 # LiteSpeed terminates public TLS. Caddy is an internal HTTP router only.
+# eduivme.com (and www., .com.tr) only forwards: Koçluk pages to maxkoc.com, the staff portal to ogretmen.eduivme.com,
+# everything else to admin.eduivme.com.
 :80 {
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "SAMEORIGIN"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Permissions-Policy "camera=(), microphone=(), geolocation=()"
-	}
-
-	@api path /api/*
-	handle @api {
-		reverse_proxy api-gateway:8080 {
-			header_up X-Forwarded-Proto https
-		}
-	}
-
+	# The container health check (http://127.0.0.1/health/live) and release checks still reach the gateway.
 	@health path /health /health/*
 	handle @health {
 		reverse_proxy api-gateway:8080 {
@@ -81,19 +218,17 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 		}
 	}
 
-	# SignalR negotiation and WebSocket upgrades must reach the gateway;
-	# otherwise the SPA fallback returns index.html instead of JSON.
-	@signalr path /hubs/notifications /hubs/notifications/*
-	handle @signalr {
-		reverse_proxy api-gateway:8080 {
-			header_up X-Forwarded-Proto https
-		}
+	@coaching path /coaching /coaching/* /coaching-portal /coaching-portal/*
+	handle @coaching {
+		redir https://maxkoc.com{uri} 302
 	}
 
-	@legacyCoachingStaff path /coaching-portal/teacher /coaching-portal/teacher/*
-	redir @legacyCoachingStaff https://onuraltintas.net/staff/?product=coaching 302
+	@staff path /staff /staff/*
+	handle @staff {
+		redir https://ogretmen.eduivme.com{uri} 302
+	}
 
 	handle {
-		reverse_proxy admin-panel:4000
+		redir https://admin.eduivme.com{uri} 302
 	}
 }

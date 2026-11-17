@@ -3,13 +3,13 @@ import { InjectionToken, inject } from '@angular/core';
 
 /**
  * Paket F #12 (user decision 07.11.2026): the sign-in, sign-up, password and e-mail verification pages address the
- * user with "sen" on the Coaching site (onuraltintas.net). The same pages also serve the management panel on
- * eduivme.com, which keeps "siz". The voice follows the host: eduivme.com / eduivme.com.tr (and www.) → siz,
- * every other host (onuraltintas.net, staging, localhost) → sen.
+ * user with "sen" on the Coaching sites. The same pages also serve the management panel, which keeps "siz". The voice
+ * follows the host (alan adı planı 18.11.2026): admin.eduivme.com and eduivme.com / eduivme.com.tr (and www.) → siz,
+ * every other host (maxkoc.com, veli.maxkoc.com, ogretmen. and kurum.eduivme.com, localhost) → sen.
  */
 export type AuthVoice = 'sen' | 'siz';
 
-const MANAGEMENT_HOST = /(^|\.)eduivme\.com(\.tr)?$/i;
+const MANAGEMENT_HOST = /^((www|admin)\.)?eduivme\.com(\.tr)?$/i;
 
 export function authVoiceForHost(hostname: string | null | undefined): AuthVoice {
   return MANAGEMENT_HOST.test((hostname ?? '').trim().replace(/\.$/, '')) ? 'siz' : 'sen';

@@ -6,7 +6,7 @@ describe('LegacyStaffRedirectComponent', () => {
   it('offers the unified portal as the fallback for old staff URLs', () => {
     const fixture = TestBed.createComponent(LegacyStaffRedirectComponent);
 
-    expect(fixture.componentInstance.destination).toBe('https://onuraltintas.net/staff/?product=speed-reading');
+    expect(fixture.componentInstance.destination).toBe('https://ogretmen.eduivme.com/staff/?product=speed-reading');
   });
 
   it('routes every previous teacher and institution path through the portal handoff', () => {

@@ -76,7 +76,7 @@ export function resolveCentralAdminPath(pathname: string): string {
   template: `
     <main aria-labelledby="admin-moved-title" class="admin-moved">
       <h1 id="admin-moved-title">Yönetim paneli taşındı</h1>
-      <p>Yönetim işlemleri artık eduivme.com üzerindeki merkezi panelden yürütülüyor.</p>
+      <p>Yönetim işlemleri artık admin.eduivme.com üzerindeki merkezi panelden yürütülüyor.</p>
       <a [href]="destination">Merkezi yönetim panelini aç</a>
     </main>
   `

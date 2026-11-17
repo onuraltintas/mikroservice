@@ -11,9 +11,9 @@ import {
 
 describe('Coaching calendar subscription (roadmap O6)', () => {
   it('builds absolute, webcal and Google Calendar addresses from the feed path', () => {
-    const links = coachingCalendarLinks('/api/calendar/feed/abc_DEF-123.ics', 'https://onuraltintas.net');
-    expect(links.https).toBe('https://onuraltintas.net/api/calendar/feed/abc_DEF-123.ics');
-    expect(links.webcal).toBe('webcal://onuraltintas.net/api/calendar/feed/abc_DEF-123.ics');
+    const links = coachingCalendarLinks('/api/calendar/feed/abc_DEF-123.ics', 'https://maxkoc.com');
+    expect(links.https).toBe('https://maxkoc.com/api/calendar/feed/abc_DEF-123.ics');
+    expect(links.webcal).toBe('webcal://maxkoc.com/api/calendar/feed/abc_DEF-123.ics');
     expect(links.google).toBe('https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(links.webcal));
   });
 

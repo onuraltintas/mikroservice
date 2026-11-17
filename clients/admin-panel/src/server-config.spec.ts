@@ -17,8 +17,12 @@ describe('admin SSR server configuration', () => {
         'www.eduivme.com',
         'eduivme.com.tr',
         'www.eduivme.com.tr',
-        'onuraltintas.net',
-        'www.onuraltintas.net',
+        'admin.eduivme.com',
+        'ogretmen.eduivme.com',
+        'kurum.eduivme.com',
+        'maxkoc.com',
+        'www.maxkoc.com',
+        'veli.maxkoc.com',
         'localhost',
         '127.0.0.1',
       ]),
@@ -27,10 +31,10 @@ describe('admin SSR server configuration', () => {
 
   it('adds exact configured staging hosts without allowing wildcard or URL entries', () => {
     const allowedHosts = resolveServerAllowedHosts(
-      ' staging.onuraltintas.net, EDUivme.com, *.example.test, https://untrusted.example, host.test:443 ',
+      ' extra.example.test, EDUivme.com, *.example.test, https://untrusted.example, host.test:443 ',
     );
 
-    expect(allowedHosts).toContain('staging.onuraltintas.net');
+    expect(allowedHosts).toContain('extra.example.test');
     expect(allowedHosts.filter((host) => host === 'eduivme.com')).toHaveLength(1);
     expect(allowedHosts).not.toContain('*.example.test');
     expect(allowedHosts).not.toContain('https://untrusted.example');

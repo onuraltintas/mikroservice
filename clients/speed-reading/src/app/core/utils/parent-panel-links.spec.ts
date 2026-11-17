@@ -3,8 +3,8 @@ import { parentPanelLinks } from './parent-panel-links';
 describe('parentPanelLinks', () => {
   it('points parents at the coaching site, not the management panel', () => {
     const links = parentPanelLinks();
-    expect(links.login).toBe('https://onuraltintas.net/auth/login');
-    expect(links.register).toBe('https://onuraltintas.net/auth/register/parent');
+    expect(links.login).toBe('https://veli.maxkoc.com/auth/login');
+    expect(links.register).toBe('https://veli.maxkoc.com/auth/register/parent');
     expect(links.login).not.toContain('eduivme.com');
   });
 
