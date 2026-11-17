@@ -159,7 +159,9 @@
   }
   @if (ready() && step() === 'Preview') {
     @for (warning of state()?.warnings ?? []; track warning) { <p class="notice">{{ warning }}</p> }
-    @if (state()?.isReady) {
+    @if (state()?.isReady && planningClosed()) {
+      <p class="notice success" data-testid="teacher-plans-note">Bilgilerin hazır. Planını öğretmenin hazırlıyor; verdiğin bu bilgiler ona yol gösterir. Planın hazır olduğunda <a routerLink="/coaching-portal/plan">Planım</a> sayfasında görünür.</p>
+    } @else if (state()?.isReady) {
       <p class="notice success">Bilgilerin hazır. Mevcut planın, yeni taslağı yayımlayana kadar korunur.</p>
       <!-- E6 #29: the draft preview itself (from the saved availability), not only a link to the wizard. -->
       <app-student-plan-preview [lessonIds]="courseIds()" (editAvailability)="goTo('Availability')" (editCourses)="goTo('Courses')" />

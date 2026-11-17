@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CoachingSubscriptionAccess } from '../../../core/services/coaching-management.service';
 import { CoachingSession, ExamResult, StudentAssignment, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
-import { ParentAdherenceWeek, ParentCoachingWeek, ParentLinkProduct, ParentSpeedReadingOverview, ParentWeeklyReview } from './parent-model';
+import { ParentAdherenceWeek, ParentCoachingWeek, ParentLinkProduct, ParentSpeedReadingOverview, ParentWeeklyReview, ParentPlanWeek } from './parent-model';
 
 export type ParentRelationship = 'Mother' | 'Father' | 'Guardian';
 
@@ -68,6 +68,11 @@ export class CoachingParentService {
   // V4: parent-only reads. Coaching V3 adds these three under api/coaching/parents/me/children/{id}; the envelope may be
   // bare or { data }, so both are accepted. getWeeklyReview is a proposed endpoint — rewire here if V3 names it differently.
   getCoachingWeek(studentId: string): Observable<ParentCoachingWeek> { return this.http.get<unknown>(`${this.parentChild(studentId)}/week`).pipe(map(unwrap<ParentCoachingWeek>)); }
+  /** The child's active plan in one week (a Monday, else this week); read-only (live test 16.11.2026, #49). */
+  getPlanWeek(studentId: string, weekStart?: string): Observable<ParentPlanWeek> {
+    return this.http.get<unknown>(`${this.parentChild(studentId)}/plan`, { params: weekStart ? new HttpParams().set('weekStart', weekStart) : new HttpParams() })
+      .pipe(map(unwrap<ParentPlanWeek>));
+  }
   getAdherence(studentId: string, weeks = 8): Observable<ParentAdherenceWeek[]> {
     return this.http.get<unknown>(`${this.parentChild(studentId)}/adherence`, { params: new HttpParams().set('weeks', weeks) }).pipe(map(r => unwrap<ParentAdherenceWeek[]>(r) ?? []));
   }

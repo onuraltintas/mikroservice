@@ -125,6 +125,34 @@ public sealed class CoachingParentChildPostgresTests
         Assert.IsType<BadRequestObjectResult>(await f.Api().Adherence(f.Student, 13));
     }
 
+    // Live test 16.11.2026 (#49): the parent reads the child's active plan of a week, day by day; nothing more than reading.
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task ThePlanOfAWeekListsTheActivePlansWorkInDayOrder()
+    {
+        await using var pg = await CurriculumPostgresTests.Pg.Create();
+        var f = await Family.Create(pg);
+        var plan = StudyPlanRevision.Create(f.Student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
+        var late = StudyPlanTask.Create(plan, Monday.AddDays(1), "Fen", 40, plannedQuestions: 10);
+        var early = StudyPlanTask.Create(plan, Monday, "Matematik", 30); early.Complete(30, workedOn: Monday);
+        var nextWeek = StudyPlanTask.Create(plan, Monday.AddDays(7), "Türkçe", 20);
+        var archived = StudyPlanRevision.Create(f.Student, Guid.NewGuid(), 2, "Eski plan");
+        var hidden = StudyPlanTask.Create(archived, Monday, "Taslaktaki çalışma", 25);
+        pg.Db.AddRange(plan, late, early, nextWeek, archived, hidden); await pg.Db.SaveChangesAsync(); pg.Db.ChangeTracker.Clear();
+
+        var week = Data<ParentChildPlanWeek>(await f.Api().Plan(f.Student));
+        Assert.Equal((Monday, new DateOnly(2026, 11, 5), true), (week.WeekStart, week.Today, week.HasActivePlan));
+        Assert.Equal(["Matematik", "Fen"], week.Tasks.Select(x => x.Title));
+        Assert.Equal((true, false, (int?)10), (week.Tasks[0].Completed, week.Tasks[1].Completed, week.Tasks[1].Questions));
+
+        var next = Data<ParentChildPlanWeek>(await f.Api().Plan(f.Student, Monday.AddDays(7)));
+        Assert.Equal("Türkçe", Assert.Single(next.Tasks).Title);
+        Assert.IsType<BadRequestObjectResult>(await f.Api().Plan(f.Student, Monday.AddDays(1)));        // not a Monday
+        Assert.IsType<BadRequestObjectResult>(await f.Api().Plan(f.Student, Monday.AddDays(7 * 9)));    // too far ahead
+
+        f.Accounts.ParentReads.Clear();
+        Assert.Equal(403, Assert.IsType<ObjectResult>(await f.Api().Plan(f.Student)).StatusCode);
+    }
+
     // The teacher's notes and decisions of recent weeks, read-only; the student's own reflection text is not shown.
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task WeeklyReviewsShowTheTeachersNotesAndDecisions()

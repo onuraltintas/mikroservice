@@ -1,4 +1,5 @@
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
+import { CoachingPlanningPermissionService } from '../../../core/services/coaching-planning-permission.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -23,7 +24,9 @@ describe('StudentLearningSetupComponent', () => {
         of<LearningSetupImpact>({ removedTargets: [], teacherGoalMismatch: false, diplomaGradeRemoved: null })),
       catalog: vi.fn((_lessonId?: string | null, _page?: number) => of({ curriculum: null, lessons: [], topics: { items: [], totalCount: 0, pageNumber: 1, pageSize: 50 }, missingDurationCount: 0, warnings: ['Katalog hazırlanıyor.'] } as LearningCatalog)) };
     const planning = { getAvailability: vi.fn(() => of(null)), getTopicOutcomes: vi.fn(() => of([{ outcomeId: 'outcome-1', code: 'MAT.8.1.1', name: 'Çarpanları belirler', estimateId: 'estimate-1', estimateNumber: 1, learningMinutes: 20, practiceMinutes: 10, checkMinutes: 5, totalMinutes: 35, editionCode: 'MEB-2026', officialLessonPeriods: null, sourceKind: 'Official' as const }])) };
-    TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: CoachingLearningSetupService, useValue: service }, { provide: CoachingStudyPlanningService, useValue: planning }] });
+    TestBed.configureTestingModule({ imports: [StudentLearningSetupComponent], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: CoachingLearningSetupService, useValue: service },
+      // Live test 16.11.2026 (#25): the student plans for herself unless a test says otherwise.
+      { provide: CoachingPlanningPermissionService, useValue: { own: () => of({ hasTeacher: false, allowedByTeacher: false, studentMayPlan: true }) } }, { provide: CoachingStudyPlanningService, useValue: planning }] });
     if (url) await TestBed.inject(Router).navigateByUrl(url);
     const fixture = TestBed.createComponent(StudentLearningSetupComponent); fixture.detectChanges(); await fixture.whenStable();
     return { fixture, component: fixture.componentInstance, service, planning };

@@ -107,3 +107,22 @@ test('second group: teacher-facing plan texts, institution name on invitations, 
   assert.match(read('services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs'), /institutionName = x\.InstitutionId is \{ \} institution/);
   assert.doesNotMatch(read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-institution-subscription.component.ts'), /Etkin kurum aboneliği bulunamadı/);
 });
+
+test('#49: a parent reads the child plan of a week and nothing in that view writes', () => {
+  assert.match(read('services/coaching-service/Coaching.API/Controllers/CoachingParentChildrenController.cs'), /\[HttpGet\("plan"\)\]/);
+  const view = read('clients/admin-panel/src/app/features/coaching-portal/parent/parent-plan-week.component.ts');
+  assert.match(view, /getPlanWeek\(this\.studentId\(\), weekStart\)/);
+  assert.doesNotMatch(view, /\.(post|put|patch|delete)\(/);
+  assert.match(read('clients/admin-panel/src/app/features/coaching-portal/parent/parent-coaching-tab.component.ts'), /<cp-plan-week \[studentId\]="studentId\(\)" \[name\]="name\(\)" \/>/);
+});
+
+test('#8: after "Gelecek haftayı ekle" the new plan is opened', () => {
+  const plans = read('clients/admin-panel/src/app/features/coaching-portal/pages/student-study-plans.component.html');
+  assert.equal(plans.split('(extended)="openExtended($event)"').length - 1, 2);
+});
+
+test('#26 and #46: the planning switch stands next to the plan; an unknown address gets the application shell', () => {
+  assert.match(read('clients/admin-panel/projects/staff-portal/src/app/features/coaching/coaching-teacher-study-overview.component.html'),
+    /<staff-coaching-planning-permission \[studentId\]="selected\.student\.studentId" \/>/);
+  assert.match(read('clients/admin-panel/src/server.ts'), /res\.status\(404\)\.sendFile\(join\(browserDistFolder, 'index\.csr\.html'\)/);
+});

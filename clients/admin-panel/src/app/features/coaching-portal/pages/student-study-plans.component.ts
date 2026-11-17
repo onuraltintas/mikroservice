@@ -241,6 +241,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     return !(this.dirty || !!this.calendarForm || !!this.correction || this.hasUnsavedTaskInputs()) || (typeof window !== 'undefined' && await this.toaster.confirm('Kaydedilmemiş değişikliklerin var. Değişikliklerden vazgeçerek ayrılmak istiyor musun?'));
   }
 
+  /** Live test 16.11.2026 (#8): after "Gelecek haftayı ekle" the screen shows the new plan, not the one it just archived. */
+  async openExtended(planId: string) {
+    if (this.busy() || this.dirty || this.calendarForm || this.correction || this.hasUnsavedTaskInputs()) return;
+    await this.open(planId);
+  }
+
   async refreshAfterExternalChange() {
     if (this.busy() || this.dirty || this.calendarForm || this.correction || this.hasUnsavedTaskInputs()) return;
     const plan = this.selected();

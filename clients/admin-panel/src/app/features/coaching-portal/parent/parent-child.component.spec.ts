@@ -38,6 +38,8 @@ function parentServiceMock(overrides: Record<string, unknown> = {}) {
     getLinks: vi.fn(() => of([])),
     getCoachingWeek: vi.fn(() => of(parentWeek)),
     getAdherence: vi.fn(() => of([{ weekStart: '2026-10-26', planned: 14, completed: 9, minutes: 320 }])),
+    getPlanWeek: vi.fn(() => of({ weekStart: '2026-10-26', today: '2026-10-28', hasActivePlan: true, tasks: [
+      { date: '2026-10-26', startMinute: 1020, minutes: 30, title: 'Üslü Sayılar', lesson: 'Matematik', questions: 10, completed: true, continuation: false }] })),
     getWeeklyReview: vi.fn(() => of(null)),
     getAssignments: vi.fn(() => of({ items: [], totalCount: 0 })),
     getSessions: vi.fn(() => of({ items: [], totalCount: 0 })),
@@ -207,6 +209,20 @@ describe('ParentCoachingTabComponent', () => {
     const section = fixture.nativeElement.querySelector('[data-testid="parent-review"]') as HTMLElement;
     expect(section.textContent).toContain('Matematikte düzenli'); expect(section.textContent).toContain('Elektrik konusunu tekrar et');
     expect(section.querySelector('textarea, input')).toBeNull();
+  });
+
+  // Live test 16.11.2026 (#49): the plan of the week is read, day by day, with nothing to press but the week arrows.
+  it('shows the plan of the week read-only', () => {
+    const service = parentServiceMock();
+    const fixture = setup(service);
+    const plan: HTMLElement = fixture.nativeElement.querySelector('[data-testid="parent-plan"]');
+    expect(plan.textContent).toContain('Üslü Sayılar');
+    expect(plan.textContent).toContain('17:00–17:30 · 30 dk');
+    expect(plan.textContent).toContain('Tamamlandı');
+    expect(plan.querySelectorAll('.days > li').length).toBe(7);
+    expect([...plan.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))).toEqual(['Önceki hafta', 'Sonraki hafta']);
+    (plan.querySelector('button[aria-label="Sonraki hafta"]') as HTMLButtonElement).click();
+    expect(service.getPlanWeek).toHaveBeenLastCalledWith('child-1', '2026-11-02');
   });
 
   it('keeps the other sections when one read fails', () => {

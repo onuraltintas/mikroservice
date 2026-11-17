@@ -1,4 +1,5 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
+import { CoachingPlanningPermissionComponent } from './coaching-planning-permission.component';
 import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,ViewChild,inject,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -10,7 +11,7 @@ import {StudentStudyPlanAssistantComponent} from '../../../../../../src/app/feat
 import {dateKey} from '../../../../../../src/app/features/coaching-portal/pages/study-plan-calendar';
 import {clock} from '../../../../../../src/app/features/coaching-portal/pages/weekly-calendar';
 
-@Component({selector:'staff-coaching-teacher-study-overview',standalone:true,imports:[CommonModule,FormsModule,StudentStudyPlansComponent,StudentStudyPlanAssistantComponent],templateUrl:'./coaching-teacher-study-overview.component.html',styleUrl:'./coaching-teacher-study-overview.component.scss'})
+@Component({selector:'staff-coaching-teacher-study-overview',standalone:true,imports:[CommonModule,FormsModule,StudentStudyPlansComponent,StudentStudyPlanAssistantComponent,CoachingPlanningPermissionComponent],templateUrl:'./coaching-teacher-study-overview.component.html',styleUrl:'./coaching-teacher-study-overview.component.scss'})
 export class CoachingTeacherStudyOverviewComponent{
   readonly clock=clock;
   private readonly api=inject(CoachingStudyPlanningService);private readonly destroyRef=inject(DestroyRef);private request?:Subscription;

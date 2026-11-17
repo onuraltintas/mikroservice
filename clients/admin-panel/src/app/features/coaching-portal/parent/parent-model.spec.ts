@@ -1,6 +1,6 @@
 import {
   coachingStatusLine, firstName, hiddenProductsText, parentNotificationLabel, parentNotificationTarget, possessive, productFromSlug,
-  productSlug, speedReadingStatusLine, visibleProducts
+  productSlug, speedReadingStatusLine, visibleProducts, ParentPlanWeek, parentPlanDays, planClock, shiftWeek
 } from './parent-model';
 
 // V4 (01.11.2026): the parent panel shows only the products the child uses and left visible, in the parent's voice.
@@ -76,5 +76,27 @@ describe('parent model', () => {
       expect(parentNotificationTarget({ type, relatedEntityId: 'a4cea155-5485-4db6-9f52-1ec4df8080c3' })).toEqual({ path: '/coaching-portal/parent', label: 'Çocuklarım' });
       expect(parentNotificationLabel(type)).toBe('Veli bağlantısı');
     }
+  });
+});
+
+// Live test 16.11.2026 (#49): the parent's read-only plan of a week.
+describe('the child plan of a week', () => {
+  const week: ParentPlanWeek = { weekStart: '2026-11-16', today: '2026-11-17', hasActivePlan: true, tasks: [
+    { date: '2026-11-16', startMinute: 1020, minutes: 9, title: 'Konu A', lesson: 'Tarih', questions: null, completed: true, continuation: true },
+    { date: '2026-11-17T00:00:00', startMinute: null, minutes: 30, title: 'Konu B', lesson: null, questions: 12, completed: false, continuation: false }] };
+  it('lays the work out over the seven days and marks today', () => {
+    const days = parentPlanDays(week);
+    expect(days.map(day => day.date)).toEqual(['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22']);
+    expect(days[0].tasks.map(task => task.title)).toEqual(['Konu A']);
+    expect(days[1].isToday).toBe(true);
+    expect(days[1].tasks.length).toBe(1);
+    expect(days[2].tasks).toEqual([]);
+    expect(days[0].label).toContain('16 Kasım');
+  });
+  it('writes the hour of a work and moves by whole weeks', () => {
+    expect(planClock(1020, 9)).toBe('17:00–17:09 · 9 dk');
+    expect(planClock(null, 30)).toBe('30 dk');
+    expect(shiftWeek('2026-11-16', 1)).toBe('2026-11-23');
+    expect(shiftWeek('2026-11-16', -1)).toBe('2026-11-09');
   });
 });

@@ -22,6 +22,9 @@ public sealed record ParentChildExamCountdown(string Name, DateOnly Date, int Da
 public sealed record ParentChildAttentionItem(string Kind, string Text, string? Link = null);
 public sealed record ParentChildWeek(DateOnly WeekStart, int Planned, int Completed, IReadOnlyList<ParentChildOverdueItem> Overdue,
     ParentChildNextSession? NextSession, ParentChildExamCountdown? ExamCountdown, IReadOnlyList<ParentChildAttentionItem> Attention);
+/// <summary>Live test 16.11.2026 (#49, decided by the owner): the child's plan of one week, for reading only.</summary>
+public sealed record ParentChildPlanTask(DateOnly Date, int? StartMinute, int Minutes, string Title, string? Lesson, int? Questions, bool Completed, bool Continuation);
+public sealed record ParentChildPlanWeek(DateOnly WeekStart, DateOnly Today, bool HasActivePlan, IReadOnlyList<ParentChildPlanTask> Tasks);
 public sealed record ParentChildAdherenceWeek(DateOnly WeekStart, int Planned, int Completed, long? Minutes);
 public sealed record ParentChildTeacherNote(string TeacherName, string Note, DateTime ReviewedAt);
 public sealed record ParentChildDecision(string Title, string Note, DateOnly DueOn, string Status, bool IsOverdue, DateTime? CompletedAt);
@@ -173,6 +176,31 @@ public sealed class CoachingParentChildService(CoachingDbContext db, ICoachingAc
                 decisions.Where(x => x.ReviewWeekStart == week)
                     .Select(x => new ParentChildDecision(x.Title, x.Note, x.DueOn, x.Status, x.IsOpen && x.DueOn < day, x.CompletedAt)).ToArray());
         }).ToArray();
+    }
+
+    /// <summary>
+    /// The work of the child's active plan in one week (Monday to Sunday): the given Monday, else this week. The parent reads
+    /// which day holds which topic; nothing here can be changed. Weeks from 12 back to 8 ahead of the current one.
+    /// </summary>
+    public async Task<ParentChildPlanWeek> GetPlanWeekAsync(ParentChildScope child, DateOnly? weekStart, CancellationToken ct)
+    {
+        var student = child.StudentId;
+        var zone = CoachingStudentZone.Find(await CoachingStudentZone.IdAsync(db, student, ct));
+        var todayDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), zone).DateTime);
+        var current = Monday(todayDate);
+        var week = weekStart ?? current;
+        if (week.DayOfWeek != DayOfWeek.Monday || week < current.AddDays(-7 * (MaxWeeks - 1)) || week > current.AddDays(7 * 8))
+            throw new ArgumentException("Hafta, son 12 hafta ile gelecek 8 hafta arasında bir pazartesi olmalı.", nameof(weekStart));
+        var active = await db.StudyPlanRevisions.AsNoTracking().Where(x => x.StudentId == student && x.Status == StudyPlanStatus.Active)
+            .Select(x => (Guid?)x.Id).SingleOrDefaultAsync(ct);
+        if (active is null) return new(week, todayDate, false, []);
+        var end = week.AddDays(6);
+        var tasks = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == active && x.StudentId == student
+                && x.PlannedDate >= week && x.PlannedDate <= end && x.SkippedAt == null)
+            .OrderBy(x => x.PlannedDate).ThenBy(x => x.PlannedStartMinute).ThenBy(x => x.Title)
+            .Select(x => new ParentChildPlanTask(x.PlannedDate, x.PlannedStartMinute, x.PlannedMinutes, x.Title, x.LessonNameSnapshot,
+                x.PlannedQuestions, x.IsCompleted, x.PredecessorTaskId != null)).ToListAsync(ct);
+        return new(week, todayDate, true, tasks);
     }
 
     private async Task<DateOnly> CurrentWeekAsync(Guid student, CancellationToken ct)
