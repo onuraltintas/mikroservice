@@ -16,6 +16,28 @@ export interface ParentCoachingWeek {
   examCountdown: { name: string; date: string; daysLeft: number; source?: string; estimated?: boolean } | null;
   attention: { kind: string; text: string; link?: string | null }[];
 }
+/** `GET api/coaching/parents/me/children/{id}/plan?weekStart=` — the child's active plan in one week, for reading only (live test 16.11.2026, #49). */
+export interface ParentPlanTask { date: string; startMinute: number | null; minutes: number; title: string; lesson: string | null; questions: number | null; completed: boolean; continuation: boolean }
+export interface ParentPlanWeek { weekStart: string; today: string; hasActivePlan: boolean; tasks: ParentPlanTask[] }
+export interface ParentPlanDay { date: string; label: string; isToday: boolean; tasks: ParentPlanTask[] }
+const planDayName = new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' });
+/** The seven days of the week, each with its work in the order of the day; a day without work stays in the list. */
+export function parentPlanDays(week: ParentPlanWeek): ParentPlanDay[] {
+  const start = new Date(week.weekStart + 'T00:00:00Z');
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(start.getTime() + index * 86_400_000);
+    const date = day.toISOString().slice(0, 10);
+    return { date, label: planDayName.format(day), isToday: date === week.today, tasks: week.tasks.filter(task => task.date.slice(0, 10) === date) };
+  });
+}
+export function planClock(startMinute: number | null, minutes: number): string {
+  if (startMinute === null) return `${minutes} dk`;
+  const clock = (value: number) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+  return `${clock(startMinute)}–${clock(startMinute + minutes)} · ${minutes} dk`;
+}
+export function shiftWeek(weekStart: string, weeks: number): string {
+  return new Date(new Date(weekStart + 'T00:00:00Z').getTime() + weeks * 7 * 86_400_000).toISOString().slice(0, 10);
+}
 /** `GET api/coaching/parents/me/children/{id}/adherence?weeks=8` (Coaching V3). */
 export interface ParentAdherenceWeek { weekStart: string; planned: number; completed: number; minutes: number }
 /**

@@ -12,6 +12,7 @@ import { CsCardComponent, CsProgressRingComponent, CsStatusChipComponent } from 
 import { CoachingParentService, PARENT_PAGE_SIZE } from './coaching-parent.service';
 import { ParentBar, ParentWeekBarsComponent } from './parent-charts.component';
 import { ParentPaymentsComponent } from './parent-payments.component';
+import { ParentPlanWeekComponent } from './parent-plan-week.component';
 import { ParentAdherenceWeek, ParentCoachingWeek, ParentWeeklyReview, firstName, possessive, shortDate } from './parent-model';
 
 const dayTime = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
@@ -26,7 +27,7 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
 @Component({
   selector: 'app-parent-coaching-tab',
   standalone: true,
-  imports: [RouterLink, CoachingDatePipe, CoachingLabelPipe, CoachingMotivationComponent, CsCardComponent, CsProgressRingComponent, CsStatusChipComponent,
+  imports: [RouterLink, ParentPlanWeekComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMotivationComponent, CsCardComponent, CsProgressRingComponent, CsStatusChipComponent,
     ParentWeekBarsComponent, StudentExamOverviewComponent, StudentGoalSummaryComponent, ParentPaymentsComponent],
   template: `
     <div class="cp-top">
@@ -69,6 +70,8 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
       @else if (adherenceBars().length) { <cp-week-bars [bars]="adherenceBars()" [label]="'Son ' + adherenceBars().length + ' hafta plan uyumu'" /> }
       @else if (adherenceLoaded()) { <p class="cp-muted">Henüz planlanmış bir hafta yok.</p> }
     </section>
+
+    <cp-plan-week [studentId]="studentId()" [name]="name()" />
 
     <section class="cp-section cs-growth-parent" aria-labelledby="cp-goal-title">
       <h2 id="cp-goal-title" class="cp-sr-only">{{ possessiveName() }} hedefi</h2>
