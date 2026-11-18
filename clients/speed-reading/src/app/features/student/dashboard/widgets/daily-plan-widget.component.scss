@@ -156,7 +156,7 @@
 
 .dp-timeline__check {
   font-size: 16px;
-  color: #fff;
+  color: var(--ui-brand-contrast);
 }
 
 .dp-timeline__num {
@@ -177,8 +177,8 @@
   transition: border-color var(--sp-transition-fast);
 
   .dp-timeline__item--active & {
-    border-color: rgba(99, 102, 241, 0.3);
-    background: rgba(99, 102, 241, 0.04);
+    border-color: color-mix(in srgb, var(--ui-brand) 30%, transparent);
+    background: color-mix(in srgb, var(--ui-brand) 4%, transparent);
   }
 
   .dp-timeline__item--done & {
@@ -197,7 +197,6 @@
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--sp-primary);
-  text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
@@ -254,7 +253,7 @@
 
   &--primary {
     background: var(--sp-primary);
-    color: #fff;
+    color: var(--ui-brand-contrast);
     &:hover { background: var(--sp-primary-dark); }
   }
 

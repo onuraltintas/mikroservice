@@ -52,17 +52,17 @@ export interface HeatmapData {
     .heatmap-cell:hover {
       transform: scale(1.2);
     }
-    .level-0 { background-color: #e0e7ff; }
-    .level-1 { background-color: #a5b4fc; }
-    .level-2 { background-color: #818cf8; }
-    .level-3 { background-color: #6366f1; }
-    .level-4 { background-color: #4f46e5; }
+    .level-0 { background-color: var(--ui-brand-soft); }
+    .level-1 { background-color: var(--ui-brand); }
+    .level-2 { background-color: var(--ui-brand); }
+    .level-3 { background-color: var(--ui-brand); }
+    .level-4 { background-color: var(--ui-brand); }
     .heatmap-legend {
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 12px;
-      color: var(--sp-text-3, #6b7280);
+      color: var(--sp-text-3, var(--ui-text-muted));
     }
     .legend-cell {
       width: 12px;

@@ -93,7 +93,7 @@
   &--speed { color: var(--sp-primary); }
   &--comp  { color: var(--sp-success); }
   &--eye   { color: var(--sp-warning); }
-  &--focus { color: #8b5cf6; }
+  &--focus { color: var(--ui-brand-text); }
 }
 .pa-metric__label {
   font-size: 0.8125rem;
@@ -140,7 +140,7 @@
   &--speed { background: var(--sp-primary); }
   &--comp  { background: var(--sp-success); }
   &--eye   { background: var(--sp-warning); }
-  &--focus { background: #8b5cf6; }
+  &--focus { background: var(--ui-brand); }
 }
 
 // ── 2x2 Metrik Grid ──────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@
   &--speed { stroke: var(--sp-primary); }
   &--comp  { stroke: var(--sp-success); }
   &--eye   { stroke: var(--sp-warning); }
-  &--focus { stroke: #8b5cf6; }
+  &--focus { stroke: var(--ui-brand-text); }
 }
 
 // Kart içeriği

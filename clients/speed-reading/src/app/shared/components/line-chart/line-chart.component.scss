@@ -5,7 +5,7 @@
   .chart-title {
     font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: var(--ui-text);
     margin-bottom: 12px;
     text-align: center;
   }
@@ -16,14 +16,14 @@
     display: block;
 
     .grid-line {
-      stroke: #e0e0e0;
+      stroke: var(--ui-brand-contrast);
       stroke-width: 1;
       stroke-dasharray: 2, 2;
     }
 
     .axis-label {
       font-size: 11px;
-      fill: #999;
+      fill: var(--ui-text-muted);
       text-anchor: end;
 
       &.x-label {
@@ -57,7 +57,7 @@
   .empty-state {
     padding: 40px;
     text-align: center;
-    color: #999;
+    color: var(--ui-text-muted);
     font-size: 14px;
   }
 }

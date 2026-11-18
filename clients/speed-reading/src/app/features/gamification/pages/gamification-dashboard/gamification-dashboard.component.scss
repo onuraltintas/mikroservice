@@ -1,6 +1,6 @@
 .gamification-dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--ui-surface-muted);
   padding: 24px;
 }
 
@@ -10,7 +10,7 @@
   background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--ui-text) 8%, transparent);
 
   .header-content {
     display: flex;
@@ -40,7 +40,7 @@
 
       .header-subtitle {
         font-size: 14px;
-        color: #666;
+        color: var(--ui-text-muted);
         margin: 0;
       }
     }
@@ -65,7 +65,7 @@
   padding: 64px 24px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--ui-text) 8%, transparent);
 
   mat-icon {
     font-size: 64px;
@@ -77,7 +77,7 @@
   }
 
   p {
-    color: #666;
+    color: var(--ui-text-muted);
     font-size: 16px;
     margin: 0;
   }
@@ -107,7 +107,7 @@
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 20px;
-  color: #333;
+  color: var(--ui-text);
 
   mat-icon {
     font-size: 28px;
@@ -141,13 +141,13 @@
 .tabs-section {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--ui-text) 8%, transparent);
   overflow: hidden;
   animation: sectionFadeIn 0.6s ease-out 0.4s backwards;
 
   ::ng-deep .mat-mdc-tab-group {
     .mat-mdc-tab-labels {
-      background: #f9f9f9;
+      background: var(--ui-surface);
       padding: 0 16px;
     }
 

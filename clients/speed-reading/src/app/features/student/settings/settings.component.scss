@@ -79,14 +79,14 @@ $transition: all var(--sp-transition-normal);
 .settings-card {
     background: $glass-bg;
     border-radius: 1.5rem;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--ui-text) 5%, transparent);
     border: $glass-border;
     overflow: hidden;
 
     // Custom Tab Styling
     ::ng-deep .mat-mdc-tab-header {
         background: white;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--ui-border);
         padding: 0 1.5rem;
     }
 
@@ -188,13 +188,13 @@ $transition: all var(--sp-transition-normal);
 }
 
 .slider-container {
-    background: #f9fafb;
+    background: var(--ui-surface);
     padding: 1rem 1.5rem;
     border-radius: 1rem;
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--ui-border);
 
     mat-slider {
         flex: 1;
@@ -206,20 +206,20 @@ $transition: all var(--sp-transition-normal);
         border-radius: 0.5rem;
         font-weight: 700;
         color: $primary-dark;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--ui-text) 5%, transparent);
         min-width: 3.5rem;
         text-align: center;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--ui-border);
     }
 }
 
 // 7. Preview Box
 .preview-card {
     background: white;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--ui-border);
     border-radius: 1.5rem;
     padding: 2rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ui-text) 5%, transparent);
     position: sticky;
     top: 2rem;
     transition: $transition;
@@ -227,25 +227,25 @@ $transition: all var(--sp-transition-normal);
 
     // Theme Variants
     &.theme-light {
-        background: #ffffff;
-        color: #1f2937;
-        border-color: #e5e7eb;
+        background: var(--ui-surface);
+        color: var(--ui-text);
+        border-color: var(--ui-border);
     }
 
     &.theme-dark {
-        background: #1f2937;
-        color: #e5e7eb;
-        border-color: #374151;
+        background: var(--ui-text);
+        color: var(--ui-brand-contrast);
+        border-color: var(--ui-border-strong);
     }
 
     &.theme-sepia {
-        background: #fbf0d9;
-        color: #5f4b32;
-        border-color: #e6dbbf;
+        background: var(--ui-warning-soft);
+        color: var(--ui-warning);
+        border-color: var(--ui-warning);
     }
 
     .preview-header {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid color-mix(in srgb, var(--ui-border-strong) 10%, transparent);
         padding-bottom: 1rem;
         margin-bottom: 1.5rem;
         display: flex;
@@ -257,8 +257,7 @@ $transition: all var(--sp-transition-normal);
             font-weight: 600;
             opacity: 0.6;
             font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0;
         }
 
         .material-icons { opacity: 0.6; font-size: 1.1rem; }
@@ -283,14 +282,14 @@ $transition: all var(--sp-transition-normal);
     align-items: center;
     padding: 1.25rem 1.5rem;
     background: white;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--ui-border);
     border-radius: 1rem;
     transition: $transition;
 
     &:hover {
         border-color: $primary-light;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 10%, transparent);
     }
 
     .info {
@@ -302,7 +301,7 @@ $transition: all var(--sp-transition-normal);
             width: 48px;
             height: 48px;
             border-radius: 12px;
-            background: #f3f4f6;
+            background: var(--ui-surface-muted);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -334,7 +333,7 @@ $transition: all var(--sp-transition-normal);
 
     // Active state for icon
     &:hover .icon-box {
-        background: rgba(99, 102, 241, 0.1);
+        background: color-mix(in srgb, var(--ui-brand) 10%, transparent);
         color: $primary-dark;
     }
 }
@@ -346,7 +345,7 @@ $transition: all var(--sp-transition-normal);
     gap: 1rem;
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--ui-border);
 
     button {
         padding: 0.5rem 1.5rem;
@@ -410,16 +409,16 @@ $transition: all var(--sp-transition-normal);
   gap: 8px;
   padding: 12px 8px;
   border-radius: 12px;
-  border: 2px solid var(--sp-border, #e2e8f0);
-  background: var(--sp-surface, #fff);
+  border: 2px solid var(--sp-border, var(--ui-brand-soft));
+  background: var(--sp-surface, var(--ui-surface));
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover { border-color: var(--sp-primary, #6366f1); transform: translateY(-2px); }
+  &:hover { border-color: var(--sp-primary, var(--ui-brand)); transform: translateY(-2px); }
 
   &--active {
-    border-color: var(--sp-primary, #6366f1);
-    background: var(--sp-primary-ghost, rgba(99,102,241,.1));
+    border-color: var(--sp-primary, var(--ui-brand));
+    background: var(--sp-primary-ghost, color-mix(in srgb, var(--ui-brand) 10%, transparent));
   }
 
   &__preview {
@@ -431,26 +430,26 @@ $transition: all var(--sp-transition-normal);
     justify-content: center;
     gap: 4px;
 
-    &--light { background: #f8fafc; border: 1px solid #e2e8f0; }
-    &--dark  { background: #0f172a; border: 1px solid #1e293b; }
-    &--sepia { background: #fdf6e3; border: 1px solid #d4c5a0; }
+    &--light { background: var(--ui-surface); border: 1px solid var(--ui-brand-soft); }
+    &--dark  { background: var(--ui-text); border: 1px solid var(--ui-border-strong); }
+    &--sepia { background: var(--ui-warning-soft); border: 1px solid var(--ui-warning); }
   }
 
   &__label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--sp-text-2, #475569);
+    color: var(--sp-text-2, var(--ui-text));
   }
 
-  &--active &__label { color: var(--sp-primary, #6366f1); }
+  &--active &__label { color: var(--sp-primary, var(--ui-brand-text)); }
 
   &__check {
     position: absolute;
     top: -6px;
     right: -6px;
     font-size: 18px;
-    color: var(--sp-primary, #6366f1);
-    background: var(--sp-surface, #fff);
+    color: var(--sp-primary, var(--ui-brand-text));
+    background: var(--sp-surface, var(--ui-surface));
     border-radius: 50%;
   }
 }
@@ -458,12 +457,12 @@ $transition: all var(--sp-transition-normal);
 // ── Dark mode uyumu (settings sayfası) ──────────────────────────────────────
 :host-context([data-sp-theme='dark']) {
   .settings-container { background: transparent; }
-  .settings-card { background: var(--sp-surface, #0f172a); border-color: var(--sp-border, #1e293b); color: var(--sp-text-1, #f1f5f9); }
+  .settings-card { background: var(--sp-surface, var(--ui-text)); border-color: var(--sp-border, var(--ui-border-strong)); color: var(--sp-text-1, var(--ui-brand-contrast)); }
   .header-section { background: transparent; }
-  .preview-card { background: var(--sp-surface-3, #334155); color: var(--sp-text-1, #f1f5f9); }
-  .sp-tab-btn { color: var(--sp-text-2, #94a3b8); &.active { color: var(--sp-primary, #818cf8); border-bottom-color: var(--sp-primary, #818cf8); } }
-  .toggle-card { background: var(--sp-surface-3, #1e293b); border-color: var(--sp-border, #334155); }
-  .setting-group label { color: var(--sp-text-2, #94a3b8); }
+  .preview-card { background: var(--sp-surface-3, var(--ui-brand)); color: var(--sp-text-1, var(--ui-brand-contrast)); }
+  .sp-tab-btn { color: var(--sp-text-2, var(--ui-brand-text)); &.active { color: var(--sp-primary, var(--ui-brand-text)); border-bottom-color: var(--sp-primary, var(--ui-brand)); } }
+  .toggle-card { background: var(--sp-surface-3, var(--ui-text)); border-color: var(--sp-border, var(--ui-brand)); }
+  .setting-group label { color: var(--sp-text-2, var(--ui-brand-text)); }
 }
 
 // ── Shared token alignment ──────────────────────────────────────────────────

@@ -9,10 +9,10 @@
   gap: 12px;
 
   &--pending {
-    border-color: rgba(220, 38, 38, 0.3);
+    border-color: color-mix(in srgb, var(--ui-danger) 30%, transparent);
   }
   &--completed {
-    border-color: rgba(5, 150, 105, 0.3);
+    border-color: color-mix(in srgb, var(--ui-success) 30%, transparent);
   }
 }
 
@@ -35,11 +35,11 @@
   .material-icons { font-size: 22px; }
 
   &--pending {
-    background: rgba(220, 38, 38, 0.1);
+    background: color-mix(in srgb, var(--ui-danger) 10%, transparent);
     color: var(--sp-danger);
   }
   &--completed {
-    background: rgba(5, 150, 105, 0.1);
+    background: color-mix(in srgb, var(--ui-success) 10%, transparent);
     color: var(--sp-success);
   }
 }

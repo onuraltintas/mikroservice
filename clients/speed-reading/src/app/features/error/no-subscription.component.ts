@@ -41,14 +41,14 @@ import { AuthService } from '../../core/services/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f8fafc;
+      background: var(--ui-surface);
       padding: 24px;
       font-family: 'Inter', system-ui, sans-serif;
     }
 
     .ns-card {
       background: white;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--ui-brand-soft);
       border-radius: 20px;
       padding: 48px 40px;
       max-width: 440px;
@@ -58,30 +58,30 @@ import { AuthService } from '../../core/services/auth.service';
       flex-direction: column;
       align-items: center;
       gap: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      box-shadow: 0 4px 24px color-mix(in srgb, var(--ui-text) 6%, transparent);
     }
 
     .ns-icon {
       width: 72px;
       height: 72px;
       border-radius: 20px;
-      background: #eef2ff;
+      background: var(--ui-brand-soft);
       display: flex;
       align-items: center;
       justify-content: center;
-      .material-icons { font-size: 36px; color: #6366f1; }
+      .material-icons { font-size: 36px; color: var(--ui-brand-text); }
     }
 
     .ns-title {
       font-size: 1.5rem;
       font-weight: 800;
-      color: #0f172a;
+      color: var(--ui-text);
       margin: 0;
     }
 
     .ns-desc {
       font-size: 0.9375rem;
-      color: #475569;
+      color: var(--ui-text);
       line-height: 1.6;
       margin: 0;
     }
@@ -109,16 +109,16 @@ import { AuthService } from '../../core/services/auth.service';
       transition: all 0.15s;
 
       &--primary {
-        background: #6366f1;
+        background: var(--ui-brand);
         color: white;
-        &:hover { background: #4f46e5; }
+        &:hover { background: var(--ui-brand); }
       }
 
       &--outline {
         background: transparent;
-        border: 1.5px solid #e2e8f0;
-        color: #475569;
-        &:hover { border-color: #6366f1; color: #6366f1; }
+        border: 1.5px solid var(--ui-brand-soft);
+        color: var(--ui-text);
+        &:hover { border-color: var(--ui-brand); color: var(--ui-brand-text); }
       }
 
       .material-icons { font-size: 18px; }
@@ -126,9 +126,9 @@ import { AuthService } from '../../core/services/auth.service';
 
     .ns-footer {
       font-size: 0.8125rem;
-      color: #94a3b8;
+      color: var(--ui-brand-text);
       margin: 0;
-      a { color: #6366f1; &:hover { text-decoration: underline; } }
+      a { color: var(--ui-brand-text); &:hover { text-decoration: underline; } }
     }
   `],
 })

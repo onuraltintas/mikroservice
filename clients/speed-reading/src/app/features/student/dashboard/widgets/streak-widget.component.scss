@@ -54,9 +54,9 @@
   justify-content: space-between;
   margin-bottom: 16px;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(234, 179, 8, 0.06) 100%);
+  background: color-mix(in srgb, var(--ui-warning) 8%, transparent);
   border-radius: var(--sp-radius-md);
-  border: 1px solid rgba(249, 115, 22, 0.15);
+  border: 1px solid color-mix(in srgb, var(--ui-warning) 15%, transparent);
 }
 
 .sw-streak-value {
@@ -81,8 +81,7 @@
   font-size: 0.6875rem;
   font-weight: 700;
   color: var(--sp-text-3);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   margin-top: 2px;
 }
 
@@ -117,7 +116,7 @@
   cursor: default;
 }
 
-.sw-stat--freeze .sw-stat__icon { color: #60a5fa; }
+.sw-stat--freeze .sw-stat__icon { color: var(--ui-brand-text); }
 
 .sw-stat__icon {
   font-size: 18px;
@@ -166,18 +165,17 @@
   &--active {
     background: var(--sp-streak);
     border-color: var(--sp-streak);
-    box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--ui-text) 40%, transparent);
   }
   &--today {
     border-color: var(--sp-primary);
-    &.sw-week__dot--active { box-shadow: 0 0 12px rgba(249, 115, 22, 0.6); }
+    &.sw-week__dot--active { box-shadow: 0 0 12px color-mix(in srgb, var(--ui-text) 60%, transparent); }
   }
 }
 .sw-week__label {
   font-size: 0.625rem;
   font-weight: 600;
   color: var(--sp-text-3);
-  text-transform: uppercase;
 }
 
 // ── Ateş ikonları animasyonu ─────────────────────────────────────────────────
@@ -199,4 +197,4 @@
 }
 
 // ── Freeze ikonu rengi ────────────────────────────────────────────────────────
-.sw-stat__icon--freeze { color: #60a5fa; }
+.sw-stat__icon--freeze { color: var(--ui-brand-text); }

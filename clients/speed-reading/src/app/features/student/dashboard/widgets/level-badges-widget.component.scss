@@ -14,7 +14,7 @@
 .lb-icon-wrap {
   width: 40px;
   height: 40px;
-  background: var(--sp-platinum-light, rgba(139, 92, 246, 0.12));
+  background: var(--sp-platinum-light, color-mix(in srgb, var(--ui-brand) 12%, transparent));
   border-radius: var(--sp-radius-sm);
   display: flex;
   align-items: center;
@@ -85,7 +85,7 @@
 .lb-badge__icon {
   width: 36px;
   height: 36px;
-  background: var(--sp-platinum-light, rgba(139, 92, 246, 0.12));
+  background: var(--sp-platinum-light, color-mix(in srgb, var(--ui-brand) 12%, transparent));
   border-radius: var(--sp-radius-sm);
   display: flex;
   align-items: center;

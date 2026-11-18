@@ -8,7 +8,7 @@ section h2 { margin: 0 0 12px; font-size: 26px; font-weight: 600; }
 .rich-text { @include rich-text; }
 .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .testimonial-card { @include card; display: flex; flex-direction: column; gap: 10px; }
-.rating { color: var(--ds-accent); letter-spacing: 2px; }
+.rating { color: var(--ds-accent); letter-spacing: 0; }
 .star { opacity: 0.35; }
 .star.filled { opacity: 1; }
 .text { margin: 0; line-height: 1.6; }

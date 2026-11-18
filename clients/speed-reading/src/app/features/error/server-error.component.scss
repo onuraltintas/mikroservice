@@ -3,7 +3,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #ec008c 0%, #fc6767 100%);
+    background: var(--ui-brand);
     padding: 20px;
 }
 
@@ -21,7 +21,7 @@
         font-size: 120px;
         width: 120px;
         height: 120px;
-        color: #f44336;
+        color: var(--ui-danger);
     }
 }
 
@@ -29,19 +29,19 @@ h1 {
     font-size: 72px;
     font-weight: 700;
     margin: 0;
-    color: #f44336;
+    color: var(--ui-danger);
 }
 
 h2 {
     font-size: 24px;
     font-weight: 500;
     margin: 16px 0;
-    color: rgba(0, 0, 0, 0.87);
+    color: color-mix(in srgb, var(--ui-text) 87%, transparent);
 }
 
 p {
     font-size: 16px;
-    color: rgba(0, 0, 0, 0.6);
+    color: color-mix(in srgb, var(--ui-text) 60%, transparent);
     margin: 0 0 16px 0;
     line-height: 1.6;
 }

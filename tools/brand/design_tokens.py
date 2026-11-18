@@ -70,6 +70,14 @@ out.append('''// Eski bileşenler (--ui-*) marka kapsamı içinde yeni renkleri 
   --ui-brand-hover: var(--ds-primary-hover);
   --ui-brand-soft: var(--ds-soft);
   --ui-brand-contrast: var(--ds-on-primary);
+  --ui-brand-text: var(--ds-link);
+  --ui-brand-spark: var(--ds-accent);
+  --ui-accent: var(--ds-accent);
+  --ui-accent-soft: color-mix(in srgb, var(--ds-accent) 14%, var(--ds-surface));
+  --ui-accent-text: var(--ds-warning);
+  --ui-info: var(--ds-link);
+  --ui-info-soft: var(--ds-soft);
+  --ui-surface-raised: var(--ds-surface);
   --ui-page: var(--ds-bg);
   --ui-surface: var(--ds-surface);
   --ui-surface-muted: var(--ds-bg);

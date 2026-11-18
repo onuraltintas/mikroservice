@@ -118,10 +118,10 @@ mat-card {
       color: var(--sp-primary);
 
       &.group-icon-assignment { color: var(--sp-primary); }
-      &.group-icon-emoji_events { color: #f57c00; }
-      &.group-icon-check_circle { color: #388e3c; }
-      &.group-icon-assessment { color: #7b1fa2; }
-      &.group-icon-campaign { color: #c62828; }
+      &.group-icon-emoji_events { color: var(--ui-warning); }
+      &.group-icon-check_circle { color: var(--ui-success); }
+      &.group-icon-assessment { color: var(--ui-brand-text); }
+      &.group-icon-campaign { color: var(--ui-danger); }
     }
 
     .group-info {
@@ -225,7 +225,7 @@ mat-card {
   padding: 16px;
   background: var(--sp-primary-ghost);
   border-radius: 8px;
-  border-left: 4px solid #1976d2;
+  border-left: 4px solid var(--ui-brand);
 
   mat-icon {
     color: var(--sp-primary);

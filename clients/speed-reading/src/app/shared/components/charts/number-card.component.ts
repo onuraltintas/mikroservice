@@ -48,8 +48,7 @@ export interface NumberCardData {
       font-size: 0.8125rem;
       opacity: 0.9;
       margin-bottom: var(--ui-space-2, 8px);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0;
     }
 
     .card-value {
