@@ -6,7 +6,7 @@
   padding: 0;
   max-width: 600px;
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ui-brand);
   border-radius: 24px;
   overflow: hidden;
   color: white;
@@ -28,7 +28,7 @@
   position: absolute;
   width: 10px;
   height: 10px;
-  background: #FFD700;
+  background: var(--ui-accent);
   top: -10px;
   opacity: 0;
   animation: confettiFall 3s ease-out forwards;
@@ -65,7 +65,7 @@
   width: 300px;
   height: 300px;
   margin: -150px 0 0 -150px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  background: color-mix(in srgb, var(--ui-surface) 30%, transparent);
   border-radius: 50%;
   animation: burstExpand 0.8s ease-out;
   pointer-events: none;
@@ -106,7 +106,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--ui-text) 30%, transparent);
   z-index: 2;
 
   .icon-emoji {
@@ -119,7 +119,7 @@
     font-size: 20px;
     font-weight: 700;
     color: white;
-    background: rgba(0, 0, 0, 0.3);
+    background: color-mix(in srgb, var(--ui-text) 30%, transparent);
     padding: 4px 12px;
     border-radius: 12px;
     margin-top: 4px;
@@ -197,7 +197,7 @@
   font-weight: 700;
   text-align: center;
   margin: 0 0 8px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--ui-text) 30%, transparent);
   animation: titleBounce 0.8s ease-out 0.4s backwards;
 }
 
@@ -230,7 +230,7 @@
   gap: 12px;
   margin-bottom: 24px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   border-radius: 16px;
   backdrop-filter: blur(10px);
   animation: levelInfoFadeIn 0.6s ease-out 0.5s backwards;
@@ -252,9 +252,8 @@
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 20%, transparent);
 }
 
 .level-title {
@@ -262,7 +261,7 @@
   font-weight: 600;
   margin: 0;
   text-align: center;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 8px color-mix(in srgb, var(--ui-text) 20%, transparent);
 }
 
 // XP Progress
@@ -272,7 +271,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
   border-radius: 12px;
   margin-bottom: 24px;
   animation: xpFadeIn 0.6s ease-out 0.6s backwards;
@@ -298,7 +297,6 @@
   .xp-label {
     font-size: 12px;
     opacity: 0.9;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
@@ -307,7 +305,7 @@
     font-weight: 700;
 
     &.gained {
-      color: #4CAF50;
+      color: var(--ui-success);
       animation: gainedPulse 1.5s infinite;
     }
   }
@@ -325,7 +323,7 @@
 .xp-divider {
   width: 2px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.3);
+  background: color-mix(in srgb, var(--ui-surface) 30%, transparent);
 }
 
 // Achievements Section
@@ -358,7 +356,7 @@
     font-size: 24px;
     width: 24px;
     height: 24px;
-    color: #FFD700;
+    color: var(--ui-accent-text);
     animation: iconRotate 2s infinite;
   }
 }
@@ -389,8 +387,8 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(255, 215, 0, 0.2);
-  border: 2px solid rgba(255, 215, 0, 0.5);
+  background: color-mix(in srgb, var(--ui-accent) 20%, transparent);
+  border: 2px solid color-mix(in srgb, var(--ui-accent) 50%, transparent);
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
@@ -401,12 +399,12 @@
     font-size: 20px;
     width: 20px;
     height: 20px;
-    color: #FFD700;
+    color: var(--ui-accent-text);
   }
 
   strong {
     font-weight: 700;
-    color: #FFD700;
+    color: var(--ui-accent-text);
   }
 }
 
@@ -445,13 +443,13 @@
   font-weight: 600;
   border-radius: 12px;
   background: white !important;
-  color: #667eea !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  color: var(--ui-brand-text) !important;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ui-text) 20%, transparent);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--ui-text) 30%, transparent);
   }
 
   mat-icon {

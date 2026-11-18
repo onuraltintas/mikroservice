@@ -25,7 +25,7 @@ import { PublicCmsService } from '../../../core/services/public-cms.service';
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background-color: #f3f4f6;
+      background-color: var(--ui-surface-muted);
       padding: 20px;
     }
     .unsubscribe-card {
@@ -40,8 +40,8 @@ import { PublicCmsService } from '../../../core/services/public-cms.service';
       width: 64px;
       margin-bottom: 20px;
     }
-    .success { color: #10b981; }
-    .error { color: #ef4444; }
+    .success { color: var(--ui-success); }
+    .error { color: var(--ui-danger); }
     .spinner-container {
       display: flex;
       flex-direction: column;

@@ -34,7 +34,7 @@ interface ReadingStart {
       } @else {
         @if (error) { <div class="notice" role="alert">{{ error }}</div> }
         @if (reading) {
-        <div class="eyebrow">KİŞİSEL ÖĞRENME YOLU · OKUMA ÇALIŞMASI</div>
+        <div class="eyebrow">Kişisel öğrenme yolu, okuma çalışması</div>
         <h1>{{ reading.title }}</h1>
         @if (stage === 'text') {
           <article class="reading-text">{{ reading.content }}</article>
@@ -67,7 +67,7 @@ interface ReadingStart {
   styles: [`
     .reading-page { max-width: 850px; margin: 0 auto; padding: 32px 20px 72px; color: var(--sp-text-1); }
     .back { border: 0; background: none; color: var(--sp-primary); cursor: pointer; margin-bottom: 28px; font: inherit; }
-    .eyebrow { color: var(--sp-primary); font-size: .75rem; font-weight: 750; letter-spacing: .08em; }
+    .eyebrow { color: var(--sp-primary); font-size: .75rem; font-weight: 750; letter-spacing: 0; }
     h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.15; margin: 12px 0 28px; }
     .reading-text { white-space: pre-wrap; line-height: 1.9; font-size: 1.125rem; padding: 32px;
       border: 1px solid var(--sp-border-strong); border-radius: var(--sp-radius-lg);

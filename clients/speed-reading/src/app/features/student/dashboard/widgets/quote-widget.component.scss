@@ -1,6 +1,6 @@
 .qw-widget {
-  background: linear-gradient(135deg, var(--sp-primary-ghost) 0%, rgba(139, 92, 246, 0.06) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: color-mix(in srgb, var(--ui-brand) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ui-brand) 15%, transparent);
   border-radius: var(--sp-radius-card);
   padding: 20px;
   display: flex;

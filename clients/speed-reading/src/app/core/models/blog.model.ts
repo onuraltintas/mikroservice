@@ -56,12 +56,12 @@ export function getCategory(tags: string[]): string {
 // Helper function to get category color (can be customized)
 export function getCategoryColor(category: string): string {
     const colors: Record<string, string> = {
-        'Teknikler': 'bg-blue-500',
-        'Bilim': 'bg-purple-500',
-        'Araştırma': 'bg-emerald-500',
-        'İpuçları': 'bg-amber-500',
-        'Motivasyon': 'bg-rose-500',
-        'Teknoloji': 'bg-cyan-500'
+        'Teknikler': 'bg-(--ui-brand)',
+        'Bilim': 'bg-(--ui-brand)',
+        'Araştırma': 'bg-(--ui-success)',
+        'İpuçları': 'bg-(--ui-warning)',
+        'Motivasyon': 'bg-(--ui-danger)',
+        'Teknoloji': 'bg-(--ui-brand)'
     };
-    return colors[category] || 'bg-gray-500';
+    return colors[category] || 'bg-(--ui-text)';
 }

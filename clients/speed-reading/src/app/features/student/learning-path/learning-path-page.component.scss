@@ -68,9 +68,9 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 0.16);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 16%, transparent);
   border-radius: var(--sp-radius-md);
-  background: rgb(255 255 255 / 0.1);
+  background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
   padding: 12px;
 }
 
@@ -82,7 +82,7 @@
   height: 40px;
   flex: 0 0 40px;
   border-radius: var(--sp-radius-full);
-  background: rgb(255 255 255 / 0.16);
+  background: color-mix(in srgb, var(--ui-surface) 16%, transparent);
 }
 
 .stat-icon .material-icons { font-size: 21px; }
@@ -91,7 +91,7 @@
 .stat-label {
   display: block;
   overflow: hidden;
-  color: rgb(255 255 255 / 0.82);
+  color: color-mix(in srgb, var(--ui-brand-contrast) 82%, transparent);
   font-size: 0.6875rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -107,7 +107,7 @@
 
 .overall-progress {
   height: 8px;
-  background: rgb(255 255 255 / 0.18);
+  background: color-mix(in srgb, var(--ui-surface) 18%, transparent);
 }
 
 .progress-summary-card .overall-progress .sp-bar-fill {
@@ -222,8 +222,7 @@
   color: var(--sp-text-2);
   font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .item-title {

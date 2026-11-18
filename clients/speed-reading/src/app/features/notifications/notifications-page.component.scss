@@ -57,13 +57,13 @@
   background-color: var(--sp-surface);
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ui-text) 10%, transparent);
     transform: translateY(-2px);
   }
 
   &.unread {
     background-color: var(--sp-primary-ghost);
-    border-left: 4px solid #2196f3;
+    border-left: 4px solid var(--ui-brand);
 
     &:hover {
       background-color: var(--sp-primary-ghost-hover);
@@ -71,11 +71,11 @@
   }
 
   &.high-priority {
-    border-left: 4px solid #ff9800;
+    border-left: 4px solid var(--ui-warning);
   }
 
   &.urgent-priority {
-    border-left: 4px solid #f44336;
+    border-left: 4px solid var(--ui-danger);
     background-color: var(--sp-danger-light);
 
     &:hover {

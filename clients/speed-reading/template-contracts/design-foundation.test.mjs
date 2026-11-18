@@ -62,3 +62,10 @@ test('sign-in pages carry a brand and keep their test hooks', () => {
   const shell = read('clients/speed-reading/src/app/features/auth/registration-shell.component.html');
   assert.match(shell, /class="ds-auth" data-brand="ho"/);
 });
+
+test('the reading app carries the Master Hızlı Okuma brand and its panel tokens point at it', () => {
+  assert.match(read('clients/speed-reading/src/index.html'), /<html lang="tr" data-brand="ho">/);
+  const tokens = read('clients/speed-reading/src/styles/_student-tokens.scss');
+  assert.match(tokens, /--sp-primary:\s+var\(--ds-primary\);/);
+  assert.match(tokens, /--sp-sidebar-bg:\s+var\(--ds-nav\);/);
+});

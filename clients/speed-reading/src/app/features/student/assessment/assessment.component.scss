@@ -87,8 +87,8 @@ $bg-color: var(--sp-surface-2);
     background: white;
     padding: 16px 20px;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    border: 1px solid #f3f4f6;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 3%, transparent);
+    border: 1px solid var(--ui-border);
 
     .progress-labels {
       display: flex;
@@ -99,7 +99,6 @@ $bg-color: var(--sp-surface-2);
         font-size: 0.85rem;
         color: $light-text;
         font-weight: 600;
-        text-transform: uppercase;
         letter-spacing: 0.5px;
       }
 
@@ -119,7 +118,7 @@ $bg-color: var(--sp-surface-2);
     .sub-text {
       margin: 0;
       font-size: 0.8rem;
-      color: #9ca3af;
+      color: var(--ui-text-muted);
       text-align: right;
     }
   }
@@ -138,21 +137,21 @@ $bg-color: var(--sp-surface-2);
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 4%, transparent);
   border: 1px solid white;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--ui-text) 8%, transparent);
   }
 
   &.completed {
-    background: #f0fdf4; // Light green bg
-    border-color: #bbf7d0;
+    background: var(--ui-success-soft); // Light green bg
+    border-color: var(--ui-success-soft);
 
     .icon-box {
-      background: rgba(16, 185, 129, 0.1);
+      background: color-mix(in srgb, var(--ui-success) 10%, transparent);
 
       >mat-icon {
         color: $success;
@@ -163,16 +162,16 @@ $bg-color: var(--sp-surface-2);
   &.locked {
     opacity: 0.6;
     pointer-events: none;
-    background: #f9fafb;
+    background: var(--ui-surface);
     border-style: dashed;
-    border-color: #e5e7eb;
+    border-color: var(--ui-border);
     box-shadow: none;
   }
 
   .icon-box {
     width: 64px;
     height: 64px; // Large icon box
-    background: #eef2ff;
+    background: var(--ui-brand-soft);
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -198,7 +197,7 @@ $bg-color: var(--sp-surface-2);
       align-items: center;
       justify-content: center;
       border: 3px solid white; // Thicker border for better separation
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px color-mix(in srgb, var(--ui-text) 10%, transparent);
 
       &.number {
         background: $primary;
@@ -260,32 +259,32 @@ $bg-color: var(--sp-surface-2);
         }
 
         &.type {
-          background: #eff6ff;
-          color: #1e40af;
-          border: 1px solid #bfdbfe;
+          background: var(--ui-brand-soft);
+          color: var(--ui-brand-text);
+          border: 1px solid var(--ui-brand-soft);
 
           mat-icon {
-            color: #3b82f6;
+            color: var(--ui-brand-text);
           }
         }
 
         &.level {
-          background: #fef3c7;
-          color: #92400e;
-          border: 1px solid #fcd34d;
+          background: var(--ui-warning-soft);
+          color: var(--ui-warning);
+          border: 1px solid var(--ui-warning);
 
           mat-icon {
-            color: #f59e0b;
+            color: var(--ui-warning);
           }
         }
 
         &.age-group {
-          background: #f0fdf4;
-          color: #065f46;
-          border: 1px solid #bbf7d0;
+          background: var(--ui-success-soft);
+          color: var(--ui-text);
+          border: 1px solid var(--ui-success-soft);
 
           mat-icon {
-            color: #10b981;
+            color: var(--ui-success);
           }
         }
       }
@@ -316,8 +315,8 @@ $bg-color: var(--sp-surface-2);
   flex-direction: column; // Stack on mobile, row on desktop usually
   gap: 16px;
   align-items: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--ui-text) 6%, transparent);
+  border: 1px solid var(--ui-border);
   text-align: center;
 
   @media (min-width: 600px) {
@@ -368,12 +367,11 @@ $bg-color: var(--sp-surface-2);
   gap: 32px;
   padding: 36px 40px;
   margin-bottom: 24px;
-  color: #fff;
+  color: var(--ui-brand-contrast);
   border-radius: 28px;
-  background:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.18), transparent 30%),
+  background: color-mix(in srgb, var(--ui-surface) 18%, transparent)
     linear-gradient(135deg, var(--sp-primary-dark), var(--sp-primary) 62%, #7c3aed);
-  box-shadow: 0 22px 55px rgba(79, 70, 229, 0.22);
+  box-shadow: 0 22px 55px color-mix(in srgb, var(--ui-text) 22%, transparent);
 
   &::after {
     content: '';
@@ -382,7 +380,7 @@ $bg-color: var(--sp-surface-2);
     height: 220px;
     right: -80px;
     bottom: -140px;
-    border: 32px solid rgba(255, 255, 255, 0.08);
+    border: 32px solid color-mix(in srgb, var(--ui-border) 8%, transparent);
     border-radius: 50%;
   }
 }
@@ -402,7 +400,7 @@ $bg-color: var(--sp-surface-2);
   p {
     max-width: 590px;
     margin: 0;
-    color: rgba(255, 255, 255, 0.82);
+    color: color-mix(in srgb, var(--ui-brand-contrast) 82%, transparent);
     font-size: 1.05rem;
     line-height: 1.6;
   }
@@ -413,13 +411,12 @@ $bg-color: var(--sp-surface-2);
   align-items: center;
   gap: 7px;
   padding: 7px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 24%, transparent);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--ui-surface) 12%, transparent);
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 
   .material-icons { font-size: 17px; }
 }
@@ -429,22 +426,21 @@ $bg-color: var(--sp-surface-2);
   z-index: 1;
   min-width: 215px;
   padding: 22px 54px 22px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 28%, transparent);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--ui-surface) 14%, transparent);
   backdrop-filter: blur(12px);
 
   &__label {
     display: block;
     margin-bottom: 5px;
-    color: rgba(255, 255, 255, 0.72);
+    color: color-mix(in srgb, var(--ui-brand-contrast) 72%, transparent);
     font-size: 0.75rem;
     font-weight: 700;
-    text-transform: uppercase;
   }
 
   strong { font-size: 1.35rem; line-height: 1.2; }
-  > .material-icons { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 30px; color: #fde68a; }
+  > .material-icons { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 30px; color: var(--ui-warning); }
 }
 
 .result-overview {
@@ -503,8 +499,7 @@ $bg-color: var(--sp-surface-2);
   color: var(--sp-primary);
   font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .score-summary__copy {
@@ -545,7 +540,7 @@ $bg-color: var(--sp-surface-2);
   top: 14px;
   padding: 5px 8px;
   border-radius: 999px;
-  color: var(--sp-success-text, #047857);
+  color: var(--sp-success-text, var(--ui-text));
   background: var(--sp-success-light);
   font-size: 0.68rem;
   font-weight: 700;
@@ -593,7 +588,7 @@ $bg-color: var(--sp-surface-2);
   border-radius: 999px;
   background: var(--sp-primary-ghost);
 
-  span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sp-primary), #8b5cf6); transition: width 500ms ease-out; }
+  span { display: block; height: 100%; border-radius: inherit; background: var(--ui-brand); transition: width 500ms ease-out; }
 }
 
 .next-step-card {

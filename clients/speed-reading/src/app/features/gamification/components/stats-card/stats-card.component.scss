@@ -2,14 +2,14 @@
   position: relative;
   overflow: hidden;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--ui-text) 15%, transparent);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 100%;
   color: white;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--ui-text) 20%, transparent);
   }
 
   ::ng-deep .mat-mdc-card-content {
@@ -26,7 +26,7 @@
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
     opacity: 0.5;
     pointer-events: none;
   }
@@ -42,13 +42,13 @@
 .icon-wrapper {
   width: 56px;
   height: 56px;
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 10%, transparent);
 
   mat-icon {
     font-size: 32px;
@@ -63,7 +63,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   border-radius: 8px;
   backdrop-filter: blur(10px);
 
@@ -73,17 +73,17 @@
     height: 18px;
 
     &.trend-up {
-      color: #4CAF50;
+      color: var(--ui-success);
       animation: trendUp 0.6s ease-out;
     }
 
     &.trend-down {
-      color: #F44336;
+      color: var(--ui-danger);
       animation: trendDown 0.6s ease-out;
     }
 
     &.trend-neutral {
-      color: #FFC107;
+      color: var(--ui-warning);
     }
   }
 
@@ -104,7 +104,6 @@
   font-weight: 500;
   margin: 0;
   opacity: 0.95;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
@@ -113,7 +112,7 @@
   font-weight: 700;
   line-height: 1.2;
   margin: 8px 0;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 8px color-mix(in srgb, var(--ui-text) 20%, transparent);
   animation: countUp 0.6s ease-out;
 }
 

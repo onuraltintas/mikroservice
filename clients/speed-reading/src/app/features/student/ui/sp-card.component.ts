@@ -38,7 +38,7 @@ import { CommonModule } from '@angular/common';
 
     :host(.sp-card--ghost) {
       background: var(--sp-primary-ghost);
-      border-color: rgba(99, 102, 241, 0.2);
+      border-color: color-mix(in srgb, var(--ui-brand) 20%, transparent);
       box-shadow: none;
     }
 

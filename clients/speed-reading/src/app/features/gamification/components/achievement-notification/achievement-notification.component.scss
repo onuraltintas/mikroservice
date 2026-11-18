@@ -4,9 +4,9 @@
   min-width: min(350px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ui-brand);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ui-text) 30%, transparent);
   animation: slideInRight 0.5s ease;
   overflow: hidden;
 
@@ -17,7 +17,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
     animation: shimmer 2s infinite;
   }
 }
@@ -41,7 +41,7 @@
     align-items: center;
     justify-content: center;
     font-size: 32px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 20%, transparent);
     animation: bounceIn 0.6s ease;
 
     img {
@@ -74,7 +74,7 @@
     font-size: 16px;
     font-weight: 700;
     margin-bottom: 4px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 2px 4px color-mix(in srgb, var(--ui-text) 20%, transparent);
   }
 
   .message {
@@ -90,7 +90,7 @@
     gap: 4px;
     font-size: 13px;
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
     padding: 4px 10px;
     border-radius: 12px;
     width: fit-content;
@@ -129,20 +129,20 @@
   position: absolute;
   width: 10px;
   height: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--ui-surface) 80%, transparent);
   top: 50%;
   left: 50%;
   border-radius: 50%;
   animation: confettiFall 1.5s ease-out forwards;
 
   &:nth-child(1) { animation-delay: 0s; }
-  &:nth-child(2) { animation-delay: 0.1s; background: #FFD700; }
-  &:nth-child(3) { animation-delay: 0.2s; background: #FF6B9D; }
-  &:nth-child(4) { animation-delay: 0.3s; background: #00BCD4; }
+  &:nth-child(2) { animation-delay: 0.1s; background: var(--ui-accent); }
+  &:nth-child(3) { animation-delay: 0.2s; background: var(--ui-danger); }
+  &:nth-child(4) { animation-delay: 0.3s; background: var(--ui-brand); }
   &:nth-child(5) { animation-delay: 0.4s; }
-  &:nth-child(6) { animation-delay: 0.5s; background: #4CAF50; }
-  &:nth-child(7) { animation-delay: 0.6s; background: #FFA500; }
-  &:nth-child(8) { animation-delay: 0.7s; background: #9C27B0; }
+  &:nth-child(6) { animation-delay: 0.5s; background: var(--ui-success); }
+  &:nth-child(7) { animation-delay: 0.6s; background: var(--ui-warning); }
+  &:nth-child(8) { animation-delay: 0.7s; background: var(--ui-brand); }
 }
 
 // Animations
@@ -196,19 +196,19 @@
 
 // Different notification types
 .achievement {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ui-brand);
 }
 
 .xp {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  background: var(--ui-warning);
 }
 
 .streak {
-  background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+  background: var(--ui-danger);
 }
 
 .level {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  background: var(--ui-accent);
 }
 
 @media (max-width: 420px) {

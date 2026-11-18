@@ -19,7 +19,7 @@
   border-radius: 0.75rem;
   padding: 0.7rem 1.1rem;
   background: var(--sp-primary);
-  color: #fff;
+  color: var(--ui-brand-contrast);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -48,8 +48,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--sp-xp);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   margin: 0 0 4px;
 }
 .ach-header__title {
@@ -155,12 +154,12 @@
   &--active {
     background: var(--sp-primary);
     border-color: var(--sp-primary);
-    color: #fff;
+    color: var(--ui-brand-contrast);
   }
 }
 .ach-filter-chip__count {
   font-size: 0.6875rem;
-  background: rgba(0,0,0,0.12);
+  background: color-mix(in srgb, var(--ui-text) 12%, transparent);
   border-radius: var(--sp-radius-full);
   padding: 0 6px;
 }
@@ -186,8 +185,7 @@
   color: var(--sp-text-2);
   white-space: nowrap;
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 .ach-tier__line {
   flex: 1;

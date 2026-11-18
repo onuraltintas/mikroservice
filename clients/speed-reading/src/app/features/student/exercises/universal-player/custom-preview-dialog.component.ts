@@ -37,7 +37,7 @@ import { caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from
       <button type="button" class="primary" [disabled]="!controls.length" (click)="submit()">Denemeyi başlat</button>
     </mat-dialog-actions>
   `,
-  styles: [`label{display:block;font-weight:600;margin:18px 0 6px}input,select{width:100%;padding:10px;border:1px solid #aebbc9;border-radius:8px;font:inherit;box-sizing:border-box}small{display:block;margin-top:5px;color:#52647b}p{line-height:1.6}button{padding:10px 14px;border:1px solid #dce2ef;border-radius:8px;cursor:pointer;background:transparent;font:inherit}.primary{background:var(--primary-blue,#1976d2);color:white}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #1976d2;outline-offset:2px}[role=alert]{color:#b42318}mat-dialog-actions{gap:8px;flex-wrap:wrap}`]
+  styles: [`label{display:block;font-weight:600;margin:18px 0 6px}input,select{width:100%;padding:10px;border: 1px solid var(--ui-border);border-radius:8px;font:inherit;box-sizing:border-box}small{display:block;margin-top:5px;color: var(--ui-text-muted)}p{line-height:1.6}button{padding:10px 14px;border: 1px solid var(--ui-brand-soft);border-radius:8px;cursor:pointer;background:transparent;font:inherit}.primary{background: var(--primary-blue,var(--ui-brand));color:white}button:focus-visible,input:focus-visible,select:focus-visible{outline: 3px solid var(--ui-brand);outline-offset:2px}[role=alert]{color: var(--ui-danger)}mat-dialog-actions{gap:8px;flex-wrap:wrap}`]
 })
 export class CustomPreviewDialogComponent {
   readonly configuration = inject<Record<string, unknown>>(MAT_DIALOG_DATA);

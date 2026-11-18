@@ -5,7 +5,7 @@
   padding: 16px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .level-badge {
@@ -17,7 +17,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 15%, transparent);
   flex-shrink: 0;
 
   .level-icon {
@@ -29,7 +29,7 @@
     font-size: 14px;
     font-weight: 700;
     color: white;
-    background: rgba(0, 0, 0, 0.2);
+    background: color-mix(in srgb, var(--ui-text) 20%, transparent);
     padding: 2px 6px;
     border-radius: 8px;
     margin-top: 2px;
@@ -65,7 +65,7 @@
   .level-title {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--ui-text);
   }
 
   .tier-badge {
@@ -74,7 +74,6 @@
     font-size: 11px;
     font-weight: 600;
     color: white;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 }
@@ -88,10 +87,10 @@
 .progress-track {
   position: relative;
   height: 24px;
-  background: #f0f0f0;
+  background: var(--ui-surface-muted);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 2px 4px color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .progress-fill {
@@ -141,12 +140,12 @@
 
   .current-xp {
     font-weight: 600;
-    color: #666;
+    color: var(--ui-text-muted);
   }
 
   .percentage {
     font-weight: 700;
-    color: #333;
+    color: var(--ui-text);
   }
 }
 
@@ -155,7 +154,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #666;
+  color: var(--ui-text-muted);
 
   .label {
     font-weight: 500;
@@ -163,7 +162,7 @@
 
   .value {
     font-weight: 700;
-    color: #FF9800;
+    color: var(--ui-warning);
   }
 }
 

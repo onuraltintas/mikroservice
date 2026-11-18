@@ -1,7 +1,7 @@
 .level-up-modal {
     padding: 32px;
     text-align: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--ui-brand);
     color: white;
     border-radius: 16px;
     position: relative;
@@ -20,7 +20,7 @@
     font-size: 36px;
     font-weight: bold;
     margin: 0 0 32px 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 4px color-mix(in srgb, var(--ui-text) 30%, transparent);
 }
 
 .level-display {
@@ -59,7 +59,7 @@
 .tier-change {
     margin: 24px 0;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
     border-radius: 12px;
 }
 
@@ -71,7 +71,7 @@
     border-radius: 24px;
     font-size: 20px;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 20%, transparent);
 }
 
 .tier-icon {
@@ -91,7 +91,7 @@
 }
 
 .stat-item {
-    background: rgba(255, 255, 255, 0.15);
+    background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
     padding: 16px 24px;
     border-radius: 12px;
     min-width: 120px;
@@ -111,7 +111,7 @@
 .achievements-unlocked {
     margin: 24px 0;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
     border-radius: 12px;
 }
 
@@ -131,7 +131,7 @@
     align-items: center;
     gap: 12px;
     padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
     border-radius: 8px;
 }
 

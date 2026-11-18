@@ -1,7 +1,7 @@
 .achievement-modal {
     padding: 32px;
     text-align: center;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: var(--ui-brand);
     color: white;
     border-radius: 16px;
     position: relative;
@@ -36,7 +36,7 @@
     font-size: 32px;
     font-weight: bold;
     margin: 0 0 24px 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 4px color-mix(in srgb, var(--ui-text) 30%, transparent);
 }
 
 .achievements-container {
@@ -50,7 +50,7 @@
     display: flex;
     gap: 16px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.15);
+    background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
     border-radius: 12px;
     backdrop-filter: blur(10px);
     text-align: left;
@@ -65,7 +65,7 @@
     justify-content: center;
     border: 3px solid;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
     flex-shrink: 0;
 }
 
@@ -99,8 +99,8 @@
 }
 
 .xp-badge {
-    background: rgba(255, 215, 0, 0.3);
-    color: #FFD700;
+    background: color-mix(in srgb, var(--ui-accent) 30%, transparent);
+    color: var(--ui-accent-text);
     padding: 4px 12px;
     border-radius: 12px;
     font-weight: 600;

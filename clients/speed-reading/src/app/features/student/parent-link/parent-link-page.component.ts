@@ -123,7 +123,7 @@ const RELATIONSHIPS: Record<string, string> = { Mother: 'Anne', Father: 'Baba', 
     .plp__error { margin: 0; padding: 10px 14px; border-radius: var(--sp-radius-md); background: var(--sp-danger-light); color: var(--sp-danger); }
     .plp__code { display: grid; gap: 4px; margin: 12px 0; padding: 14px 16px; border-radius: var(--sp-radius-md); background: var(--sp-primary-ghost); }
     .plp__code-label, .plp__code-expiry { font-size: .875rem; color: var(--sp-text-2); }
-    .plp__code-value { font-family: var(--sp-font-mono); font-size: 1.5rem; letter-spacing: .15em; color: var(--sp-text-1); }
+    .plp__code-value { font-family: var(--sp-font-mono); font-size: 1.5rem; letter-spacing: 0; color: var(--sp-text-1); }
     .plp__text + sp-button, .plp__share + sp-button { margin-top: 12px; }
     .plp__share { display: grid; gap: 8px; margin: 0; padding: 14px 16px; border-radius: var(--sp-radius-md); border: 1px solid var(--sp-border); }
     .plp__share-label { margin: 0; font-size: .875rem; font-weight: 600; color: var(--sp-text-2); }
