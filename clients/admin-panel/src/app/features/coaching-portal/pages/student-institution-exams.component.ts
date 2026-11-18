@@ -13,8 +13,8 @@ import { CoachingDatePipe } from '../coaching-labels';
       <section class="panel" aria-labelledby="institution-exams-heading">
         <h2 id="institution-exams-heading">Kurum denemelerim</h2>
         @for (item of ranks(); track item.examId) {
-          <p class="plan-row"><strong>{{ item.title }}</strong> · {{ item.examName }} · {{ item.examDate | coachingDate }}<br>
-            {{ net(item.net) }} net · Kurumda {{ item.rank }}. / {{ item.participants }} öğrenci · İlk {{ percent(item.topPercent) }}</p>
+          <p class="plan-row"><strong>{{ item.title }}</strong>, {{ item.examName }}, {{ item.examDate | coachingDate }}<br>
+            {{ net(item.net) }} net, Kurumda {{ item.rank }}. / {{ item.participants }} öğrenci, İlk {{ percent(item.topPercent) }}</p>
         }
       </section>
     }`

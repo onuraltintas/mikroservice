@@ -14,10 +14,10 @@ describe('exam time choices (G2 #40)', () => {
   it('lists the catalog session and then each later year up to four years ahead with no date yet', () => {
     const choices = examTimeChoices('Yks', [yks27, lgs27], 2026, high(11));
     expect(choices.map(x => [x.value, x.label])).toEqual([
-      ['session:tyt-27:2027', '2027 · 19.06.2027'],
-      ['year:2028', '2028 · tarih henüz açıklanmadı · önerilen'],
-      ['year:2029', '2029 · tarih henüz açıklanmadı'],
-      ['year:2030', '2030 · tarih henüz açıklanmadı']]);
+      ['session:tyt-27:2027', '2027, 19.06.2027'],
+      ['year:2028', '2028, tarih henüz açıklanmadı, önerilen'],
+      ['year:2029', '2029, tarih henüz açıklanmadı'],
+      ['year:2030', '2030, tarih henüz açıklanmadı']]);
     expect(choices.map(x => x.sessionId)).toEqual(['tyt-27', null, null, null]);
     expect(examTimeQuestion(choices)).toBe('Hangi oturuma hazırlanıyorsun?');
   });
@@ -59,7 +59,7 @@ describe('exam time choices (G2 #40)', () => {
     });
     it('does the same for LGS', () => {
       const choices = examTimeChoices('Lgs', [], 2026, middle(8), { openYears: open });
-      expect(choices[0]).toMatchObject({ value: 'year:2028', label: '2028 · tarih henüz açıklanmadı · önerilen' });
+      expect(choices[0]).toMatchObject({ value: 'year:2028', label: '2028, tarih henüz açıklanmadı, önerilen' });
       expect(choices.some(x => x.year === 2027)).toBe(false);
     });
   });
@@ -67,7 +67,7 @@ describe('exam time choices (G2 #40)', () => {
   // G2 review (L6): a saved year-only choice outside the list stays, said as the catalog has it.
   it('keeps a saved year: "oturum seçmedim" once that year has sessions, the bare year when it is older', () => {
     const kept = examTimeChoices('Yks', [yks27], 2026, high(11), { keepYear: 2027 });
-    expect(kept.map(x => x.label).slice(0, 2)).toEqual(['2027 · 19.06.2027', '2027 · oturum seçmedim']);
+    expect(kept.map(x => x.label).slice(0, 2)).toEqual(['2027, 19.06.2027', '2027, oturum seçmedim']);
     expect(examTimeChoices('Yks', [], 2026, high(11), { keepYear: 2026 })[0]).toMatchObject({ value: 'year:2026', label: '2026', recommended: false });
   });
 

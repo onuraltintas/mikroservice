@@ -28,7 +28,7 @@ import { ParentSpeedReadingTabComponent } from './parent-speed-reading-tab.compo
       } @else if (link(); as child) {
         <header class="cp-header">
           <h1 id="parent-child-title">{{ child.studentName }}</h1>
-          <p>{{ relationship(child.relationship) }}@if (child.verifiedAt) { · {{ child.verifiedAt | coachingDate }} tarihinden beri bağlı }</p>
+          <p>{{ relationship(child.relationship) }}@if (child.verifiedAt) {, {{ child.verifiedAt | coachingDate }} tarihinden beri bağlı }</p>
         </header>
         @if (!products().length) {
           <p class="cp-notice" data-testid="no-products">{{ hiddenText() }}</p>
@@ -78,7 +78,7 @@ export class ParentChildComponent implements OnInit {
     void this.router.navigate([], { relativeTo: this.route, queryParams: { urun: slug }, replaceUrl: true });
   }
 
-  label(product: ParentProduct | null) { return product ? `${firstName(this.link()?.studentName)} · ${PRODUCT_LABELS[product]}` : ''; }
+  label(product: ParentProduct | null) { return product ? `${firstName(this.link()?.studentName)}, ${PRODUCT_LABELS[product]}` : ''; }
   relationship(value: string) { return parentRelationshipLabel(value); }
   /** Roadmap O13: the browser's print dialog, where the page can also be saved as PDF. */
   print(): void { window.print(); }

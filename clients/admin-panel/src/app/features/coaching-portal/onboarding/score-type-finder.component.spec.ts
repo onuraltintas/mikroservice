@@ -60,7 +60,7 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     request.flush({ data: [{ name: 'Bilgisayar Mühendisliği', scoreType: 'SAY' }, { name: 'Hukuk', scoreType: 'EA' }, { name: 'İşletme', scoreType: 'SOZ' },
       { name: 'İngilizce Öğretmenliği', scoreType: 'YDT' }, { name: 'Bilgisayar Programcılığı', scoreType: 'TYT' }] });
     await t.settle();
-    expect(t.rows()).toEqual(['Bilgisayar Mühendisliği · Sayısal', 'Hukuk · Eşit Ağırlık', 'İşletme · Sözel', 'İngilizce Öğretmenliği · Dil']);
+    expect(t.rows()).toEqual(['Bilgisayar Mühendisliği, Sayısal', 'Hukuk, Eşit Ağırlık', 'İşletme, Sözel', 'İngilizce Öğretmenliği, Dil']);
     expect(t.el.querySelector('[role="status"]')!.textContent).toContain('4 bölüm');
     (Array.from(t.el.querySelectorAll('ul button')).find(x => x.textContent!.includes('Dil')) as HTMLElement).click();
     expect(t.chosen).toHaveBeenCalledWith({ field: { value: 'DIL', label: 'Dil' }, program: 'İngilizce Öğretmenliği' });
@@ -76,7 +76,7 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     const second = t.http.expectOne(r => r.url === url && r.params.get('search') === 'işletme');
     expect(first.cancelled).toBe(true);
     second.flush({ data: [{ name: 'İşletme', scoreType: 'EA' }] }); await t.settle();
-    expect(t.rows()).toEqual(['İşletme · Eşit Ağırlık']);
+    expect(t.rows()).toEqual(['İşletme, Eşit Ağırlık']);
   });
 
   it('says when nothing is found and when the search fails, with "Yeniden dene"', async () => {
@@ -92,7 +92,7 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     (Array.from(t.el.querySelectorAll('button')).find(x => x.textContent!.trim() === 'Yeniden dene') as HTMLElement).click(); await t.settle();
     t.http.expectOne(r => r.url === url && r.params.get('search') === 'hukuk').flush({ data: [{ name: 'Hukuk', scoreType: 'EA' }] }); await t.settle();
     expect(t.el.querySelector('[role="alert"]')).toBeNull();
-    expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
+    expect(t.rows()).toEqual(['Hukuk, Eşit Ağırlık']);
   });
   // PR 137 review: separators alone or one-letter words are not a search (the server would list nothing either).
   it('sends nothing without a word of two letters and says so', async () => {
@@ -113,11 +113,11 @@ describe('ScoreTypeFinderComponent (Paket H6)', () => {
     t.toggle().click(); await t.settle();
     await t.type('hukuk'); await wait(); await t.settle();
     t.http.expectOne(r => r.url === url).flush({ data: [{ name: 'Hukuk', scoreType: 'EA' }] }); await t.settle();
-    expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
+    expect(t.rows()).toEqual(['Hukuk, Eşit Ağırlık']);
     await t.type(''); await t.type('hukuk'); await wait(); await t.settle();
     t.http.expectOne(r => r.url === url && r.params.get('search') === 'hukuk').flush({ data: [{ name: 'Hukuk', scoreType: 'EA' }] }); await t.settle();
     expect(t.box().value).toBe('hukuk');
-    expect(t.rows()).toEqual(['Hukuk · Eşit Ağırlık']);
+    expect(t.rows()).toEqual(['Hukuk, Eşit Ağırlık']);
   });
 
   // PR 137 review: reopening starts over (no rows of the last search under an empty box), even with a search still running.

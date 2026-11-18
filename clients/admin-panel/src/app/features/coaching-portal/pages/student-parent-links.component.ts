@@ -21,7 +21,7 @@ import { siteHref } from '../../../../../shared/eduivme-sites';
       @if (error()) { <p role="alert" class="mt-3 text-sm text-(--ui-danger)">{{ error() }}</p> }
       @for (link of links(); track link.id) {
         <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-(--ui-border) pt-3 text-sm">
-          <span><strong>{{ link.parentName }}</strong> · {{ relationshipLabel(link.relationship) }} · {{ link.status === 'Pending' ? 'onayını bekliyor' : (link.verifiedAt | coachingDate) + ' tarihinden beri bağlı' }}</span>
+          <span><strong>{{ link.parentName }}</strong>, {{ relationshipLabel(link.relationship) }}, {{ link.status === 'Pending' ? 'onayını bekliyor' : (link.verifiedAt | coachingDate) + ' tarihinden beri bağlı' }}</span>
           <span class="flex gap-2">
             @if (link.status === 'Pending') { <button type="button" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-(--ui-brand-contrast) disabled:opacity-50" [disabled]="busy()" (click)="approve(link)">Onayla</button> }
             <button type="button" class="rounded-lg border border-(--ui-border) px-3 py-1 disabled:opacity-50" [disabled]="busy()" (click)="revoke(link)">{{ link.status === 'Pending' ? 'Reddet' : 'Bağlantıyı kaldır' }}</button>

@@ -217,7 +217,7 @@ describe('ParentCoachingTabComponent', () => {
     const fixture = setup(service);
     const plan: HTMLElement = fixture.nativeElement.querySelector('[data-testid="parent-plan"]');
     expect(plan.textContent).toContain('Üslü Sayılar');
-    expect(plan.textContent).toContain('17:00–17:30 · 30 dk');
+    expect(plan.textContent).toContain('17:00–17:30, 30 dk');
     expect(plan.textContent).toContain('Tamamlandı');
     expect(plan.querySelectorAll('.days > li').length).toBe(7);
     expect([...plan.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))).toEqual(['Önceki hafta', 'Sonraki hafta']);

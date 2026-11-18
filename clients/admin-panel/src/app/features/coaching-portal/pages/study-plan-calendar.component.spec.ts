@@ -12,7 +12,7 @@ describe('saved study plan calendar',()=>{
   afterEach(()=>vi.useRealTimers());
   it('shows partial effort without marking the calendar task completed',async()=>{
     const {f}=await setup({...plan,status:'Active',tasks:[{...task('partial'),actualMinutes:12,actualQuestions:4}]});
-    expect(f.nativeElement.textContent).toContain('Kısmi çalışma · 12 dk');
+    expect(f.nativeElement.textContent).toContain('Kısmi çalışma, 12 dk');
     expect(f.nativeElement.querySelector('.timed-block.completed')).toBeNull();
   });
   it('opens the next occupied week and its evening hours, merges adjacent outcome pieces and emits their IDs',async()=>{
@@ -81,8 +81,8 @@ describe('saved study plan calendar',()=>{
       {...task('complete',date,750),weeklyLessonId:'english',lessonName:'İngilizce',isCompleted:true,actualMinutes:30}
     ]};
     const {f,c}=await setup(value);c.changeView('day');c.goToDate(date);f.detectChanges();await f.whenStable();
-    expect(Array.from(f.nativeElement.querySelectorAll('.task-status'),(node:HTMLElement)=>node.textContent?.trim())).toEqual(['Gecikti · tamamlanmadı','Kısmen tamamlandı · 1/2 · gecikti','Tamamlandı']);
-    expect(f.nativeElement.querySelector('.timed-block')?.getAttribute('aria-label')).toContain('Gecikti · tamamlanmadı');
+    expect(Array.from(f.nativeElement.querySelectorAll('.task-status'),(node:HTMLElement)=>node.textContent?.trim())).toEqual(['Gecikti, tamamlanmadı','Kısmen tamamlandı, 1/2, gecikti','Tamamlandı']);
+    expect(f.nativeElement.querySelector('.timed-block')?.getAttribute('aria-label')).toContain('Gecikti, tamamlanmadı');
     c.changeView('month');f.detectChanges();await f.whenStable();
     expect(f.nativeElement.querySelectorAll('.month-block .task-status')).toHaveLength(3);
   });

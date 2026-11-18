@@ -180,7 +180,7 @@ test('student signs in with an existing product, accepts invitation and joins th
     await page.getByRole('heading', { name: 'Ödevlerim' }).waitFor();
     await page.getByText('Ödev dosyaları son teslim tarihinden 180 gün sonra silinir.', { exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Ders geçmişim' }).waitFor();
-    await page.getByRole('heading', { name: 'Matematik · Katılmadı', exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Matematik: Katılmadı', exact: true }).waitFor();
     await page.getByText('Kalan ders hakkı: 3 / 5', { exact: false }).waitFor();
     const teacherDownload = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Dosyayı indir', exact: true }).click();

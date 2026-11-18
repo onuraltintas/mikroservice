@@ -9,15 +9,15 @@
     <select #programSelect (change)="selectProgram(programSelect.value)" [value]="selectedProgramId() || ''">
       <option value="">Güncel program</option>
       @for (program of programHistory(); track program.progressId) {
-        <option [value]="program.progressId">{{ program.templateName }} · {{ program.assignedDate | date:'dd.MM.yyyy' }}</option>
+        <option [value]="program.progressId">{{ program.templateName }}, {{ program.assignedDate | date:'dd.MM.yyyy' }}</option>
       }
     </select>
   </label>
   @if (programHistoryError()) { <p role="alert">Program geçmişi yüklenemedi. Sayfayı yeniden dene.</p> }
   @if (selectedProgram(); as program) {
     @if (program.selectionPolicyVersion) {
-      <p>Bu eğitim seçildiğinde ölçülen seviye: {{ program.measuredLevel }} · Önerilen eğitim seviyesi: {{ program.recommendedTrainingLevel }}
-        · Seçilen eğitim seviyesi: {{ program.selectedTrainingLevel }}.</p>
+      <p>Bu eğitim seçildiğinde ölçülen seviye: {{ program.measuredLevel }}, Önerilen eğitim seviyesi: {{ program.recommendedTrainingLevel }}
+       , Seçilen eğitim seviyesi: {{ program.selectedTrainingLevel }}.</p>
     }
   }
 

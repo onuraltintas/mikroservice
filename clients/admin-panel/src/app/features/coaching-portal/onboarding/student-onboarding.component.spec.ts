@@ -166,8 +166,8 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     await t.click('YKS');
     await t.click('Sayısal');
     // G2 (#40): no catalog session: the years up to four ahead; a 10th grader's YKS (2029) is marked.
-    expect(t.button('2029 · tarih henüz açıklanmadı · önerilen')).toBeTruthy();
-    await t.click('2028 · tarih henüz açıklanmadı');
+    expect(t.button('2029, tarih henüz açıklanmadı, önerilen')).toBeTruthy();
+    await t.click('2028, tarih henüz açıklanmadı');
     const exam = t.http.expectOne(`${base}/steps/exam`);
     expect(exam.request.body).toEqual({ purpose: 'Yks', primaryScoreType: 'SAY', foreignLanguage: null, targetExamSessionId: null, targetExamYear: 2028,
       diplomaGrade: null, diplomaGradeEstimated: false });
@@ -301,9 +301,9 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   it('a validation message has no "Yeniden dene"; a server error does (#18)', async () => {
     const twelfth = { ...stepTwo, educationStatus: 'Student' as const, gradeLevel: 12, purpose: null, targetExamSessionId: null, targetExamYear: null };
     const t = await render(view({ status: 'InProgress', nextStep: 2, savedSteps: [1], allowedPurposes: ['Yks'] }, twelfth));
-    await t.click('YKS'); await t.click('Sayısal'); await t.click('2027 · tarih henüz açıklanmadı · önerilen');
+    await t.click('YKS'); await t.click('Sayısal'); await t.click('2027, tarih henüz açıklanmadı, önerilen');
     // The answer in the chat is the year without the mark.
-    expect(t.el.querySelector('[data-question="session"] .ob-me')!.textContent).toContain('2027 · tarih henüz açıklanmadı');
+    expect(t.el.querySelector('[data-question="session"] .ob-me')!.textContent).toContain('2027, tarih henüz açıklanmadı');
     expect(t.el.querySelector('[data-question="session"] .ob-me')!.textContent).not.toContain('önerilen');
     const grade = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
     grade.value = '45'; grade.dispatchEvent(new Event('input')); await t.click('Kaydet');
@@ -414,7 +414,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
   describe('E7: the current target first', () => {
     const completed = { status: 'Completed' as const, nextStep: 7, savedSteps: [1, 2, 3, 4, 5, 6, 7], completedAt: '2026-11-06T00:00:00Z' };
     const yks = { ...stepTwo, educationStatus: 'Student' as const, gradeLevel: 12, purpose: 'Yks' as const, primaryScoreType: 'EA', targetExamSessionId: null, targetExamYear: 2027 };
-    const program = { kind: 'program' as const, targetId: 'p-1', name: 'Ankara Üniversitesi · Hukuk', detail: 'Hukuk Fakültesi', minimumScore: 475.14192,
+    const program = { kind: 'program' as const, targetId: 'p-1', name: 'Ankara Üniversitesi, Hukuk', detail: 'Hukuk Fakültesi', minimumScore: 475.14192,
       scoreYear: 2025, scoreType: 'EA', scores: [], canEdit: true };
     const scores = { kind: 'score' as const, targetId: null, name: 'TYT ve Eşit Ağırlık', detail: null, minimumScore: null, scoreYear: null, scoreType: 'EA',
       scores: [{ scoreType: 'EA', score: 450 }, { scoreType: 'TYT', score: 400 }], canEdit: true };
@@ -422,7 +422,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
     it('"Hedefini belirle" shows the saved programme with its taban in tr-TR before asking anything', async () => {
       const t = await render(view(completed, { ...yks, target: program }), { step: 'target' });
       const bubble = t.el.querySelector('[data-question="targetSaved"] .ob-me')!;
-      expect(bubble.textContent).toContain('Ankara Üniversitesi · Hukuk · taban 475,14');
+      expect(bubble.textContent).toContain('Ankara Üniversitesi, Hukuk, taban 475,14');
       expect(bubble.textContent).not.toContain('475.14');
       expect(t.el.querySelector('[data-question="targetMode"]')).toBeNull();
       expect(bubble.querySelector('button')!.textContent).toContain('Değiştir');
@@ -435,7 +435,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('targetMode');
       expect(t.button('Bölüm seçeceğim')).toBeTruthy();
       await t.click('Vazgeç');
-      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Üniversitesi · Hukuk');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Üniversitesi, Hukuk');
       t.http.expectNone(`${base}/steps/target`);
       expect(t.navigate).not.toHaveBeenCalled();
     });
@@ -458,7 +458,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       const t = await render(view(completed, { ...stepTwo, target: { ...program, kind: 'school', name: 'Ankara Fen Lisesi', scoreType: 'LGS', minimumScore: 480.5 } }), {}, {}, { embedded: true });
       expect(t.el.querySelector('h1')).toBeNull();
       expect(t.el.textContent).not.toContain('Çıkış yap');
-      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi · taban 480,5');
+      expect(t.el.querySelector('[data-question="targetSaved"] .ob-me')!.textContent).toContain('Ankara Fen Lisesi, taban 480,5');
       (t.el.querySelector('[data-question="targetSaved"] .ob-me button') as HTMLElement).click(); await t.settle();
       await t.click('Hedef puan gireceğim');
       const input = t.el.querySelector('[data-current] input[type="number"]') as HTMLInputElement;
@@ -771,15 +771,15 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       const toggle = t.button('Emin değil misin? Bölümüne göre bulalım');
       expect(toggle.getAttribute('aria-expanded')).toBe('false');
       await find(t, 'bilgisayar', [{ name: 'Bilgisayar Mühendisliği', scoreType: 'SAY' }, { name: 'Bilgisayar Mühendisliği', scoreType: 'EA' }]);
-      expect(t.button('Bilgisayar Mühendisliği · Eşit Ağırlık')).toBeTruthy();
-      await t.click('Bilgisayar Mühendisliği · Sayısal');
+      expect(t.button('Bilgisayar Mühendisliği, Eşit Ağırlık')).toBeTruthy();
+      await t.click('Bilgisayar Mühendisliği, Sayısal');
       expect(t.el.querySelector('[data-question="yksField"] .ob-me')!.textContent).toContain('Sayısal');
       expect(t.el.querySelector('[data-current]')!.getAttribute('data-question')).toBe('session');
       const note = t.el.querySelector('[data-testid="ob-field-note"]')!;
       expect(note.getAttribute('role')).toBe('status');
       expect(note.textContent!.trim()).toBe('Bu bölüm Sayısal puanla öğrenci alıyor; puan türün Sayısal olarak seçildi.');
       // The note goes with the next answer.
-      await t.click('2028 · tarih henüz açıklanmadı');
+      await t.click('2028, tarih henüz açıklanmadı');
       expect(t.el.querySelector('[data-testid="ob-field-note"]')).toBeNull();
       t.http.expectNone(r => r.url === fields);
     });
@@ -790,7 +790,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
       expect(t.el.querySelector('[data-question="language"]')).not.toBeNull();
       (t.el.querySelector('[data-question="yksField"] .ob-me button') as HTMLElement).click(); await t.settle();
       await find(t, 'hukuk', [{ name: 'Hukuk', scoreType: 'EA' }]);
-      await t.click('Hukuk · Eşit Ağırlık');
+      await t.click('Hukuk, Eşit Ağırlık');
       expect(t.el.querySelector('[data-question="yksField"] .ob-me')!.textContent).toContain('Eşit Ağırlık');
       expect(t.el.querySelector('[data-question="language"]')).toBeNull();
       // The diploma grade depends on the field: it is asked again; the session does not and stays.
@@ -799,7 +799,7 @@ describe('StudentOnboardingComponent (Paket C #3)', () => {
 
       (t.el.querySelector('[data-question="yksField"] .ob-me button') as HTMLElement).click(); await t.settle();
       await find(t, 'ingilizce', [{ name: 'İngilizce Öğretmenliği', scoreType: 'YDT' }]);
-      await t.click('İngilizce Öğretmenliği · Dil');
+      await t.click('İngilizce Öğretmenliği, Dil');
       expect(t.el.querySelector('[data-question="yksField"] .ob-me')!.textContent).toContain('Dil');
       expect(t.el.querySelector('[data-question="language"] .ob-me')!.textContent).toContain('İngilizce');
       expect(t.el.querySelector('[data-testid="ob-field-note"]')!.textContent).toContain('Bu bölüm Dil puanla öğrenci alıyor; puan türün Dil olarak seçildi.');

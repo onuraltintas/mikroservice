@@ -37,7 +37,7 @@ import { readVerificationEmailOutcome } from './registration-outcome';
                 (change)="selectedInstitutionId = $any($event.target).value" [disabled]="loading">
                 <option value="" disabled>Kurum seçin</option>
                 @for (institution of institutions; track institution.id) {
-                  <option [value]="institution.id">{{ institution.name }} · {{ institution.role === 'Owner' ? 'Kurum sahibi' : institution.role === 'Admin' ? 'Yönetici' : 'Yetkili' }}</option>
+                  <option [value]="institution.id">{{ institution.name }}, {{ institution.role === 'Owner' ? 'Kurum sahibi' : institution.role === 'Admin' ? 'Yönetici' : 'Yetkili' }}</option>
                 }
               </select>
               <mat-hint>Yalnız seçilen kurum bu servise bağlanır. Diğer bağlantılarınız korunur.</mat-hint>

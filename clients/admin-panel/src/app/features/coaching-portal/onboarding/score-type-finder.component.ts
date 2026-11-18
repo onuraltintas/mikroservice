@@ -152,7 +152,7 @@ export function rowsOf(list: ProgramField[]): Row[] {
     const field = yksFieldOf(item.scoreType); const key = `${item.name}|${field?.value}`;
     if (!field || seen.has(key)) continue;
     seen.add(key);
-    rows.push({ key, label: `${item.name} · ${field.label}`, found: { field, program: item.name } });
+    rows.push({ key, label: `${item.name}, ${field.label}`, found: { field, program: item.name } });
   }
   return rows;
 }

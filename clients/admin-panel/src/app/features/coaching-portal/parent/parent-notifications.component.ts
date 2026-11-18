@@ -33,7 +33,7 @@ import { parentNotificationLabel, parentNotificationTarget } from './parent-mode
                 <div class="cp-notice-text">
                   <strong>{{ item.title }}</strong>
                   @if (item.message) { <p>{{ item.message }}</p> }
-                  <small>{{ label(item.type) }} · {{ item.createdAt | date:'HH:mm' }}@if (!item.isRead) { · <b>Yeni</b> }</small>
+                  <small>{{ label(item.type) }}, {{ item.createdAt | date:'HH:mm' }}@if (!item.isRead) {, <b>Yeni</b> }</small>
                 </div>
                 <div class="cp-notice-actions">
                   @if (target(item); as destination) { <a class="cp-primary-link" [routerLink]="destination.path" (click)="open(item)">{{ destination.label }}</a> }

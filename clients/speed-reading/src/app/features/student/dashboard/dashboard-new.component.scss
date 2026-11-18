@@ -242,7 +242,7 @@
   .material-icons { font-size: 14px; }
 }
 
-.db-hero__badge-sep { opacity: 0.5; }
+.db-hero__badge-sep { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; }
 
 .db-hero__stats {
   display: flex;

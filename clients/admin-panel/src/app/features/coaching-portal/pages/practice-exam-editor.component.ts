@@ -38,7 +38,7 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, examTypeForPro
             <td data-label="Net" class="net">{{rowValid(section) ? (net(answers.correct, answers.wrong) | number:'1.2-2') : '—'}}</td>
           </tr> }
         }</tbody></table></div>
-      @if (totals(); as total) { <p class="summary" role="status">Toplam: {{total.correct}} doğru · {{total.wrong}} yanlış · {{total.empty}} boş · <strong>{{total.net | number:'1.2-2'}} net</strong></p> }
+      @if (totals(); as total) { <p class="summary" role="status">Toplam: {{total.correct}} doğru, {{total.wrong}} yanlış, {{total.empty}} boş, <strong>{{total.net | number:'1.2-2'}} net</strong></p> }
       @else { <p class="error" role="alert">{{ invalidSections() }}: doğru ve yanlış toplamı soru sayısını geçemez.</p> }
     }
   ` })

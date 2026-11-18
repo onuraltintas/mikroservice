@@ -85,7 +85,7 @@ const RELATIONSHIPS: Record<string, string> = { Mother: 'Anne', Father: 'Baba', 
               <li class="plp__link">
                 <div class="plp__who">
                   <strong>{{ link.parentName }}</strong>
-                  <span class="plp__meta">{{ relationship(link.relationship) }} ·
+                  <span class="plp__meta">{{ relationship(link.relationship) }},
                     {{ link.status === 'Pending' ? 'Onayını bekliyor' : date(link.verifiedAt) + ' tarihinden beri bağlı' }}</span>
                 </div>
                 @if (link.status === 'Verified') {
@@ -171,7 +171,7 @@ export class ParentLinkPageComponent implements OnInit {
     const issued = this.code();
     if (!issued) return '';
     const days = Math.max(1, Math.ceil((new Date(issued.expiresAt).getTime() - Date.now()) / DAY_MS));
-    return `Veli panelinden beni ekle: ${this.panel.register} · Kod: ${issued.code} (${days} gün geçerli)`;
+    return `Veli panelinden beni ekle: ${this.panel.register}, Kod: ${issued.code} (${days} gün geçerli)`;
   });
 
   ngOnInit(): void {

@@ -103,7 +103,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   // Live test #34: at 150 px a day the week needed 1094 px and Sunday was cut in the teacher's panel (1012 px); 128 px fits it.
   columns(){return `44px repeat(${this.days().length},minmax(${this.view()==='week'?128:240}px,1fr))`;}
   done(block:PlanCalendarBlock){return block.tasks.filter(t=>t.isCompleted).length;}
-  status(block:PlanCalendarBlock){const done=this.done(block);if(done===block.tasks.length)return 'Tamamlandı';const overdue=block.tasks.some(task=>calendarTaskOverdue(task,this.zone));if(done)return `Kısmen tamamlandı · ${done}/${block.tasks.length}${overdue?' · gecikti':''}`;const minutes=block.tasks.reduce((sum,t)=>sum+(t.actualMinutes??0),0);if(minutes)return `Kısmi çalışma · ${minutes} dk${overdue?' · gecikti':''}`;return overdue?'Gecikti · tamamlanmadı':'Bekliyor';}
+  status(block:PlanCalendarBlock){const done=this.done(block);if(done===block.tasks.length)return 'Tamamlandı';const overdue=block.tasks.some(task=>calendarTaskOverdue(task,this.zone));if(done)return `Kısmen tamamlandı, ${done}/${block.tasks.length}${overdue?', gecikti':''}`;const minutes=block.tasks.reduce((sum,t)=>sum+(t.actualMinutes??0),0);if(minutes)return `Kısmi çalışma, ${minutes} dk${overdue?', gecikti':''}`;return overdue?'Gecikti, tamamlanmadı':'Bekliyor';}
   statusClass(block:PlanCalendarBlock){const done=this.done(block);return done===block.tasks.length?'ui-status--success':done?'ui-status--info':block.tasks.some(task=>calendarTaskOverdue(task,this.zone))?'ui-status--danger':'ui-status--warning';}
   color(block:PlanCalendarBlock){return this.colors.get(block.lessonKey)??'var(--coaching-lesson-text-0)';}
   writable(){return this.editable&&!this.disabled&&this.plan.status!=='Archived';}
@@ -149,7 +149,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   menuMove(){const b=this.menu?.block;this.closeMenu();if(b&&this.canMove(b)){this.moveForm={id:b.id,date:b.date,time:clock(b.startMinute!)};afterNextRender(()=>{const field=this.host.nativeElement.querySelector<HTMLElement>('.move-form select');field?.focus();field?.scrollIntoView?.({block:'nearest'});},{injector:this.injector});}}
   @HostListener('document:click',['$event']) outsideMenu(event:MouseEvent){if(!(event.target as HTMLElement).closest('.calendar-context-menu'))this.closeMenu();}
   range(block:PlanCalendarBlock){return block.startMinute===null?'Saati belirtilmemiş':`${clock(block.startMinute)}–${clock(block.startMinute+block.minutes)}`;}
-  label(block:PlanCalendarBlock){const badges=this.badges(block).map(b=>b.label).join(', ');return `${block.lesson} · ${this.dayTitle(calendarDate(block.date))} · ${this.range(block)} · ${block.minutes} dk · ${block.tasks.length} çalışma · ${this.status(block)}${badges?' · '+badges:''}`;}
+  label(block:PlanCalendarBlock){const badges=this.badges(block).map(b=>b.label).join(', ');return `${block.lesson}, ${this.dayTitle(calendarDate(block.date))}, ${this.range(block)}, ${block.minutes} dk, ${block.tasks.length} çalışma, ${this.status(block)}${badges?', '+badges:''}`;}
   select(block:PlanCalendarBlock){if(this.suppressClick){this.suppressClick=false;return;}this.taskSelected.emit(block.tasks.map(t=>t.id));}
   canMove(block:PlanCalendarBlock){return this.editable&&!this.disabled&&this.plan.status!=='Archived'&&block.startMinute!==null&&!block.tasks.some(t=>t.isCompleted);}
   movable(){return this.blocks.filter(b=>this.canMove(b));}

@@ -190,8 +190,8 @@ export class StudentLearningSetupComponent implements OnInit {
   sessionLabel(session: LearningExamSession) {
     const day = (iso: string) => iso.split('-').reverse().join('.');
     const window = session.applicationStart && session.applicationEnd
-      ? ` · başvuru ${day(session.applicationStart).slice(0, 5)}–${day(session.applicationEnd)}` : '';
-    return `${session.label} · ${day(session.date)}${window}`;
+      ? `, başvuru ${day(session.applicationStart).slice(0, 5)}–${day(session.applicationEnd)}` : '';
+    return `${session.label}, ${day(session.date)}${window}`;
   }
   fieldError(name: SetupField) { return this.fieldErrors()[name] ?? null; }
   invalid(name: SetupField) { return this.fieldErrors()[name] ? 'true' : null; }

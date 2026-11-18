@@ -271,7 +271,7 @@ describe('StudentStudyPlansComponent', () => {
     service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], plannedQuestions: null, outcomes: [{ outcomeId: 'o', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e', estimateNumber: 2, allocatedMinutes: 30, origin: 'Catalog' }] }] } as any));
     await component.open('plan'); component.openTask(active.tasks[0].id); fixture.detectChanges(); await fixture.whenStable();
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Çarpanları bulur · 30 dk');
+    expect(text).toContain('Çarpanları bulur, 30 dk');
     expect(text).not.toContain('M.8.1.1.1');
     expect(text).not.toContain('süre sürümü');
     expect(text).not.toContain('Planlanan soru: Kayıt yok');
@@ -378,7 +378,7 @@ describe('StudentStudyPlansComponent', () => {
     service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], planKind: 'Spaced', planReason: 'Aralıklı tekrar: konuyu bitirdikten 7 gün sonra' }] }));
     await component.open('plan'); component.openTask(active.tasks[0].id); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     const text = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="plan-reason"]')).map((x: any) => x.textContent).join(' ');
-    expect(text).toContain('Aralıklı tekrar · Aralıklı tekrar: konuyu bitirdikten 7 gün sonra');
+    expect(text).toContain('Aralıklı tekrar, Aralıklı tekrar: konuyu bitirdikten 7 gün sonra');
   });
   it('submits explicit zero questions and rejects negative and fractional counts', async () => {
     const { component, service } = await setup(); await component.open('plan');

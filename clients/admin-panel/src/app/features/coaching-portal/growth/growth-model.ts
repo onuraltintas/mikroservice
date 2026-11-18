@@ -73,7 +73,7 @@ export interface GaugeRow { label: string; current: string; target: string; perc
 /** Review 06.11.2026: `label` is set for approximate models with a range (LGS, MEB-AGS); `status` adds "borderline". */
 export interface GoalGauge { targetName: string; scoreType: string; headline: string; rows: GaugeRow[]; reached: boolean; missingData: boolean;
   status: 'reached' | 'borderline' | 'below' | null; label: string | null;
-  /** E7 (#30): the target score or the taban, also before the first practice exam ("Hedef puanın 450", "Taban puanı 475,14 · 2025"). */
+  /** E7 (#30): the target score or the taban, also before the first practice exam ("Hedef puanın 450", "Taban puanı 475,14, 2025"). */
   detail: string | null;
   /** E7 (#30): YKS: the other target score (TYT or the field's), one line each. */
   secondary: string[] }
@@ -137,7 +137,7 @@ export function goalScore(estimate: ScoreEstimate, childName: string | null = nu
     return card(childName ? 'Deneme sonucu girildiğinde puanı burada görünür.' : 'Bu sınavda bir deneme gir; puanını burada gösterelim.');
   const score = decimal.format(goal.score);
   if (goal.exact) {
-    const level = goal.level ? ` · Seviye ${goal.level}` : '';
+    const level = goal.level ? `, Seviye ${goal.level}` : '';
     return card(childName ? `${possessive(childName)} deneme puanı ${score}${level}` : `Deneme puanın ${score}${level}`);
   }
   // The same range as the estimate card (practice spread and model ±).
@@ -212,7 +212,7 @@ export function targetDetail(target: NonNullable<ScoreEstimate['target']>, child
   if (target.targetScore === null) return null;
   const kind = target.kind ?? 'program';
   return kind === 'score' || target.ownTargetScore ? `${childName ? 'Hedef puanı' : 'Hedef puanın'} ${decimal.format(target.targetScore)}`
-    : `Taban puanı ${decimal.format(target.targetScore)}${target.scoreType === 'LGS' ? ' (yaklaşık)' : ''}${target.scoreYear ? ` · ${target.scoreYear}` : ''}`;
+    : `Taban puanı ${decimal.format(target.targetScore)}${target.scoreType === 'LGS' ? ' (yaklaşık)' : ''}${target.scoreYear ? `, ${target.scoreYear}` : ''}`;
 }
 
 function isExact(scoreType: string) { return scoreType === 'YDS_EN' || scoreType.startsWith('YOKDIL_'); }

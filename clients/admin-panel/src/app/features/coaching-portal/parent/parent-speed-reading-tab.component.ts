@@ -27,9 +27,9 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
           @if (v.program; as program) {
             <p class="cp-big"><strong>{{ program.currentDay }}/{{ program.totalDays }}. gün</strong>
               <cs-status-chip [label]="status(program.status)" [tone]="isCompleted(program.status) ? 'success' : 'brand'" /></p>
-            <p class="cp-line">{{ program.name }} · Seviye {{ program.level }}</p>
+            <p class="cp-line">{{ program.name }}, Seviye {{ program.level }}</p>
             <cs-progress-bar [value]="program.completedDays" [max]="program.totalDays" [label]="'Programda tamamlanan gün: ' + program.completedDays + '/' + program.totalDays" />
-            <p class="cp-muted">Tamamlanan görev: <strong>{{ program.completedTasks }}/{{ program.totalTasks }}</strong> · tamamlanan gün: {{ program.completedDays }}</p>
+            <p class="cp-muted">Tamamlanan görev: <strong>{{ program.completedTasks }}/{{ program.totalTasks }}</strong>, tamamlanan gün: {{ program.completedDays }}</p>
           } @else {
             <p class="cp-line">{{ name() }} henüz bir hızlı okuma programına başlamadı.</p>
           }
@@ -87,7 +87,7 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
         <h2 id="cp-reading-results-title">Son ölçülen sonuçlar</h2>
         <ul class="cp-rows">
           @for (result of v.recentResults; track $index) {
-            <li><span class="cp-row-main"><strong>{{ result.exerciseName }}</strong><small>{{ result.exerciseType ? result.exerciseType + ' · ' : '' }}{{ day(result.date) }}</small></span>
+            <li><span class="cp-row-main"><strong>{{ result.exerciseName }}</strong><small>{{ result.exerciseType ? result.exerciseType + ', ' : '' }}{{ day(result.date) }}</small></span>
               <span class="cp-row-side">@if (result.wpm !== null) { <strong>{{ result.wpm }} kelime/dk</strong> }@if (result.comprehension !== null) { <span>anlama {{ pct(result.comprehension) }}</span> }@if (result.wpm === null && result.score !== null) { <strong>{{ result.score }} puan</strong> }</span></li>
           } @empty { <li class="cp-muted">Henüz ölçülen sonuç yok. Öğrenme ve tekrar alıştırmaları ölçüme sayılmaz.</li> }
         </ul>

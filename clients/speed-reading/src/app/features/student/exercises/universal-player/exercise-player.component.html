@@ -1692,7 +1692,7 @@
             <section class="schulte-summary" *ngIf="engine?.engineType === 'grid_interaction'">
                 <div class="schulte-summary__heading">
                     <div>
-                        <span class="schulte-summary__eyebrow">SCHULTE TABLOSU · {{ result?.details?.gridSize || 5 }}×{{ result?.details?.gridSize || 5 }}</span>
+                        <span class="schulte-summary__eyebrow">SCHULTE TABLOSU, {{ result?.details?.gridSize || 5 }}×{{ result?.details?.gridSize || 5 }}</span>
                         <h2>Tablo tamamlandı</h2>
                         <p>Bakış ritmin ve sayı bulma sürelerin</p>
                     </div>
@@ -1772,7 +1772,7 @@
                 <h3>{{ engine?.engineType === 'visual_expansion' ? 'Çevresel harf tanıma başarısı' : 'Sayı tanıma başarısı' }}</h3>
                 <p>Alıştırma turları dahil değildir. Bu sonuç klinik bir ölçüm veya okuma hızı değildir.</p>
                 <p *ngFor="let block of blocks">
-                    Blok {{ block.block }} · {{ block.rounds }} tur · %{{ block.accuracy | number:'1.0-1' }}
+                    Blok {{ block.block }}, {{ block.rounds }} tur, %{{ block.accuracy | number:'1.0-1' }}
                     {{ engine?.engineType === 'text_stream' ? '· ' + block.value + ' ms' : '' }}
                 </p>
             </section>
@@ -1853,7 +1853,7 @@
                 <section *ngIf="getErrorAnalysisReview().length" aria-label="Hata düzeltmeleri">
                     <h3>Hata düzeltmeleri</h3>
                     <p *ngFor="let item of getErrorAnalysisReview()">
-                        {{ item.errorWord }} → {{ item.originalWord }} · {{ isErrorWordFoundError(item.wordIndex) ? 'Bulundu' : 'Kaçırıldı' }}
+                        {{ item.errorWord }} → {{ item.originalWord }}, {{ isErrorWordFoundError(item.wordIndex) ? 'Bulundu' : 'Kaçırıldı' }}
                         <span *ngIf="item.explanation"> — {{ item.explanation }}</span>
                     </p>
                 </section>

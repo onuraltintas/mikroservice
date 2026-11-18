@@ -24,5 +24,5 @@ export function assessmentRoundLabel(plan: AssessmentBlockProtocol | null | unde
   if (plan?.version !== 2) return null;
   if (round < plan.practiceRounds) return `Alıştırma ${round + 1}/${plan.practiceRounds} — puana dahil değil`;
   const completed = round - plan.practiceRounds, total = plan.roundsPerBlock * 3;
-  return `Ölçüm ${Math.min(completed, total)}/${total} · Blok ${Math.min(3, Math.floor(completed / plan.roundsPerBlock) + 1)}/3`;
+  return `Ölçüm ${Math.min(completed, total)}/${total}, Blok ${Math.min(3, Math.floor(completed / plan.roundsPerBlock) + 1)}/3`;
 }

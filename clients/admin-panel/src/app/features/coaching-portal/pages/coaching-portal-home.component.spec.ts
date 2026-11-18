@@ -221,7 +221,7 @@ describe('CoachingPortalHomeComponent', () => {
       const failed = [{ anyOf: [{ code: 'TUR', name: 'Türkçe', rawScore: 0.25 }] }];
       let r = await render(view({ goal: null }), true, { estimates: [], notice: null,
         notComputed: [{ scoreType: 'SAY', name: 'SAY', modelYear: 2026, notComputedReason: 'minRawScore', failedConditions: failed, examsUsed: 1, lastExamDate: '2026-10-20' }],
-        target: { ...school, scoreType: 'SAY', kind: 'program', targetName: 'ODTÜ · Fizik', notComputedReason: 'minRawScore', status: null } });
+        target: { ...school, scoreType: 'SAY', kind: 'program', targetName: 'ODTÜ, Fizik', notComputedReason: 'minRawScore', status: null } });
       expect(card(r.el).textContent).toContain('Türkçe testinden en az 0,5 ham puan gerekir');
       TestBed.resetTestingModule();
       r = await render(view({ goal: null }), true, { estimates: [], notice: null,

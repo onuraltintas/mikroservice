@@ -16,7 +16,7 @@
       <section aria-label="Net hedefi" class="my-3 rounded-lg border p-3">
         <h4>Deneme net hedeflerin</h4>
         <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-(--ui-success-soft) bg-(--ui-success-soft) p-4 shadow-sm"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{net(metric.targetNet)}} net</p></article>}</div><p>{{ netOnly ? 'Yalnız aynı sınavın denemeleriyle karşılaştırılır.' : 'Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.' }}</p>
-        <p *ngIf="current.netTarget?.examCode && !current.netTargets?.length">{{current.netTarget?.examCode}} · {{net(current.netTarget?.targetNet)}} net</p>
+        <p *ngIf="current.netTarget?.examCode && !current.netTargets?.length">{{current.netTarget?.examCode}}, {{net(current.netTarget?.targetNet)}} net</p>
         <ng-container *ngIf="current.canEdit">
           <button type="button" (click)="openNet()" [disabled]="saving() || busy()">Net hedefini düzenle</button>
           <fieldset *ngIf="netExpanded()" [disabled]="saving() || busy() || stale()">
@@ -39,7 +39,7 @@
             <div class="flex flex-wrap gap-3 sm:col-span-3"><button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-(--ui-brand-contrast)">Puan hedefini kaydet</button><button type="button" (click)="clearScore()" class="text-sm underline">Puan hedefini kaldır</button></div>
           </fieldset>
         </form>
-        <ng-template #readonlyScore><p class="mt-2 text-sm">Öğretmenin belirlediği puan hedefi: {{ current.scoreTarget?.targetScore ?? 'Belirtilmemiş' }} / {{ current.scoreTarget?.maxScore ?? 'Ölçek belirtilmemiş' }} · {{ current.scoreTarget?.examType ?? 'Sınav türü belirtilmemiş' }}</p></ng-template>
+        <ng-template #readonlyScore><p class="mt-2 text-sm">Öğretmenin belirlediği puan hedefi: {{ current.scoreTarget?.targetScore ?? 'Belirtilmemiş' }} / {{ current.scoreTarget?.maxScore ?? 'Ölçek belirtilmemiş' }}, {{ current.scoreTarget?.examType ?? 'Sınav türü belirtilmemiş' }}</p></ng-template>
       </section>
       <p class="mt-2 text-sm text-(--ui-text-muted)">{{ current.targetSchoolId ? 'Bir okul hedefi bağlı.' : current.targetUniversityProgramId ? 'Bir üniversite programı bağlı.' : 'Henüz okul veya üniversite programı bağlanmadı.' }}</p>
       <div *ngIf="current.catalogTarget as linked" class="mt-2 rounded-lg bg-(--ui-brand-soft) p-3">

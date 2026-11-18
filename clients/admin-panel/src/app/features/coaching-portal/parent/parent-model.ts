@@ -38,7 +38,7 @@ export function parentTaskState(task: { completed: boolean; date: string }, toda
 export function planClock(startMinute: number | null, minutes: number): string {
   if (startMinute === null) return `${minutes} dk`;
   const clock = (value: number) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
-  return `${clock(startMinute)}–${clock(startMinute + minutes)} · ${minutes} dk`;
+  return `${clock(startMinute)}–${clock(startMinute + minutes)}, ${minutes} dk`;
 }
 export function shiftWeek(weekStart: string, weeks: number): string {
   return new Date(new Date(weekStart + 'T00:00:00Z').getTime() + weeks * 7 * 86_400_000).toISOString().slice(0, 10);

@@ -24,7 +24,7 @@ interface TrainingTemplate { id: string; name: string; description: string; tota
           <a class="primary-action" routerLink="/student/daily-exercises">Eğitime devam et <span aria-hidden="true">→</span></a></aside>
       }
       <div class="catalog-heading"><div><span class="eyebrow">Program kataloğu</span><h2>Size uygun programı keşfedin</h2></div><span>{{ filteredTemplates().length }} program</span></div>
-      <div class="catalog-toolbar"><label for="program-age">Yaş grubu</label><select id="program-age" [value]="selectedAge()" (change)="selectedAge.set($any($event.target).value)"><option value="">Tüm yaş grupları</option>@for (age of ageGroups; track age) { <option [value]="age">{{ age }}</option> }</select><span>Yaş grubu · Seviye sırasıyla</span></div>
+      <div class="catalog-toolbar"><label for="program-age">Yaş grubu</label><select id="program-age" [value]="selectedAge()" (change)="selectedAge.set($any($event.target).value)"><option value="">Tüm yaş grupları</option>@for (age of ageGroups; track age) { <option [value]="age">{{ age }}</option> }</select><span>Yaş grubu, Seviye sırasıyla</span></div>
       @if (active()) { <p class="enrollment-notice">Önce aktif programınızı tamamlayın; ardından aşağıdaki programlardan birini başlatabilirsiniz.</p> }
       <div class="program-grid">
         @for (program of filteredTemplates(); track program.id) {
@@ -38,8 +38,8 @@ interface TrainingTemplate { id: string; name: string; description: string; tota
       @if (history().length) {
         <h2>Program geçmişim</h2>
         @for (program of history(); track program.progressId) {
-          <p class="history-row">{{ program.templateName }} · {{ program.totalDaysCompleted }} gün tamamlandı
-            @if (program.completedDate) { · Tamamlandı }</p>
+          <p class="history-row">{{ program.templateName }}, {{ program.totalDaysCompleted }} gün tamamlandı
+            @if (program.completedDate) {, Tamamlandı }</p>
         }
       }
     </section>
