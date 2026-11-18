@@ -309,8 +309,8 @@ diğer sitelerin vhost/listener dosyalarına dokunmayın. Geri alma sırasında
 önceki vhost yedeğini geri yükleyip `lshttpd -t` ve `lswsctrl reload` çalıştırın.
 
 LiteSpeed'e yalnızca `infrastructure/litespeed/eduivme.com.vhost.conf` içindeki
-yeni vhost eklenmelidir. Önce DNS'in `eduivme.com`, `www.eduivme.com` ve
-kullanılacak `.com.tr` isimlerini VPS'e çözdüğünü doğrulayın. Sonra ACME
+yeni vhost eklenmelidir. Önce DNS'in `eduivme.com`, `www.eduivme.com`, `admin.`,
+`ogretmen.` ve `kurum.eduivme.com` isimlerini VPS'e çözdüğünü doğrulayın. Sonra ACME
 challenge docroot'u ve sertifikayı oluşturun:
 
 ```bash
@@ -318,7 +318,7 @@ mkdir -p /home/eduivme.com/public_html/.well-known/acme-challenge
 certbot certonly --webroot \
   -w /home/eduivme.com/public_html \
   -d eduivme.com -d www.eduivme.com \
-  -d eduivme.com.tr -d www.eduivme.com.tr \
+  -d admin.eduivme.com -d ogretmen.eduivme.com -d kurum.eduivme.com \
   --email <sertifika-iletisim-adresi> --agree-tos --no-eff-email
 ```
 
@@ -331,9 +331,8 @@ install -m 0750 infrastructure/litespeed/eduivme-certbot-deploy-hook.sh \
 certbot renew --dry-run
 ```
 
-`.com.tr` DNS'i henüz hazır değilse önce yalnızca `.com` isimleriyle sertifika
-alın; `.com.tr` kayıtları yayıldıktan sonra aynı sertifikayı SAN isimleriyle
-yenileyin. Sertifika alındıktan sonra LiteSpeed yapılandırmasını doğrulayın ve
+`eduivme.com.tr` kullanılmıyor (kullanıcı kararı, 18.11.2026); sertifikaya eklenmez.
+Sertifika alındıktan sonra LiteSpeed yapılandırmasını doğrulayın ve
 graceful reload yapın:
 
 ```bash

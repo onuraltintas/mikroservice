@@ -207,7 +207,7 @@ admin.eduivme.com:80 {
 }
 
 # LiteSpeed terminates public TLS. Caddy is an internal HTTP router only.
-# eduivme.com (and www., .com.tr) only forwards: Koçluk pages to maxkoc.com, the staff portal to ogretmen.eduivme.com,
+# eduivme.com (and www.) only forwards: Koçluk pages to maxkoc.com, the staff portal to ogretmen.eduivme.com,
 # everything else to admin.eduivme.com.
 :80 {
 	# The container health check (http://127.0.0.1/health/live) and release checks still reach the gateway.

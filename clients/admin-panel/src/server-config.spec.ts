@@ -15,8 +15,6 @@ describe('admin SSR server configuration', () => {
       expect.arrayContaining([
         'eduivme.com',
         'www.eduivme.com',
-        'eduivme.com.tr',
-        'www.eduivme.com.tr',
         'admin.eduivme.com',
         'ogretmen.eduivme.com',
         'kurum.eduivme.com',

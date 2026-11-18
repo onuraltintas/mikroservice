@@ -62,4 +62,10 @@ public sealed class BillingRulesTests
         seller.TaxNumber = " ";
         Assert.False(seller.IsComplete);
     }
+
+    [Theory]
+    [InlineData(false, "Onay geri alındı (18.11.2026 12:47): TEST")]
+    [InlineData(true, "Cayma kabul edildi (18.11.2026 12:47): TEST")]
+    public void Reversal_line_names_a_withdrawal_and_uses_turkey_time(bool withdrawal, string expected) =>
+        Assert.Equal(expected, BillingRules.ReversalLine(new DateTime(2026, 11, 18, 9, 47, 0, DateTimeKind.Utc), "TEST", withdrawal));
 }

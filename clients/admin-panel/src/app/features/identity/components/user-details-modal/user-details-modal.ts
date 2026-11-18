@@ -81,6 +81,12 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                     <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Son Giriş</p>
                     <p class="text-gray-900 dark:text-white font-medium">{{ user()?.lastLoginAt ? (user()?.lastLoginAt | date:'dd.MM.yyyy HH:mm') : 'Henüz giriş yapmadı' }}</p>
                   </div>
+                  <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900/20 border border-gray-100 dark:border-gray-700">
+                    <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Kimlik numarası</p>
+                    <p class="flex items-center gap-2 text-gray-900 dark:text-white font-mono text-xs break-all" data-testid="user-id">{{ userId }}
+                      <button type="button" class="shrink-0 rounded-md border border-gray-300 dark:border-gray-600 px-2 py-0.5 font-sans text-xs" (click)="copyId()">{{ idCopied() ? 'Kopyalandı' : 'Kopyala' }}</button>
+                    </p>
+                  </div>
                 </div>
 
                 <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
@@ -278,6 +284,11 @@ export class UserDetailsModalComponent implements OnInit {
   private auth = inject(AuthService);
 
   user = signal<UserProfileDto | null>(null);
+  /** The id is what "Abonelik ve Ödeme › Elle abonelik ver" asks for. */
+  readonly idCopied = signal(false);
+  copyId(): void {
+    void navigator.clipboard?.writeText(this.userId).then(() => this.idCopied.set(true), () => undefined);
+  }
   sessions = signal<UserSessionDto[]>([]);
   sessionsLoading = signal(false);
   loading = signal(true);

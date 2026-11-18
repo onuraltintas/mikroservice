@@ -6,6 +6,25 @@ namespace Billing.Domain;
 public static partial class BillingRules
 {
     public const string DefaultCurrency = "TRY";
+
+    /// <summary>
+    /// The line written on an order whose approval is taken back, as the buyer reads it in their payment history:
+    /// a withdrawal (cayma) and a plain reversal are named differently, and the time is Turkey's, not UTC.
+    /// </summary>
+    public static string ReversalLine(DateTime utcNow, string note, bool withdrawal) =>
+        $"{(withdrawal ? "Cayma kabul edildi" : "Onay geri alındı")} ({TurkeyTime(utcNow).ToString("dd.MM.yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture)}): {note}";
+
+    /// <summary>A UTC instant on Turkey's clock (Europe/Istanbul; fixed UTC+3 where the zone data is missing).</summary>
+    public static DateTime TurkeyTime(DateTime utc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Istanbul);
+
+    private static readonly TimeZoneInfo Istanbul = ResolveIstanbul();
+
+    private static TimeZoneInfo ResolveIstanbul()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul"); }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.CreateCustomTimeZone("Europe/Istanbul", TimeSpan.FromHours(3), "Istanbul", "Istanbul"); }
+    }
     public const int MaxDurationDays = 3650;
     public const int MaxTrialDays = 90;
     public const decimal MaxPrice = 1_000_000m;
