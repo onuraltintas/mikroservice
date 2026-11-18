@@ -825,7 +825,7 @@
     "clients/speed-reading/src/styles/_student-tokens.scss": "c391cbfafeda284237498345365031cd5d73778795a93f4166c98a21dc53b7eb",
     "clients/speed-reading/src/tailwind.css": "1a1a340d6efa2bef4f9201bc6e4ceff3f8c7f88625fbc6cc3871a654d38e5cdf",
     "clients/speed-reading/tailwind.config.js": "7c276522fc283b2a08c91b9ef42f2a18da22422ba0ca6157a641c4c4a7a91a7f",
-    "clients/speed-reading/template-contracts/design-foundation.test.mjs": "218344709eb5273b7b3b7590e2988c60b78c7df578c53e12956a90f23b6cf894",
+    "clients/speed-reading/template-contracts/design-foundation.test.mjs": "56a46942a275b97254d47340ba89feb3fdff150a95bfb811c34612db86f86d16",
     "clients/speed-reading/template-contracts/free-reading-rendering.test.mjs": "e0cf0701c68ba1063d70c91a3e9daa302370b47dbed9ba912b7352e5f425a8e3",
     "clients/speed-reading/template-contracts/learning-path-availability-count.test.mjs": "1edc2494a52122a947907f54421425ea3ad99beb8c27055ff665f03478ea47b1",
     "clients/speed-reading/template-contracts/learning-path-completion.test.mjs": "7a66e5f2c78fb303320d2ca04aa8770a45e4cb7d7e7c522adeae92b1445a591f",
