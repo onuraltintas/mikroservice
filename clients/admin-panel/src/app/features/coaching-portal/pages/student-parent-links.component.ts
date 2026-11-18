@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -7,6 +7,7 @@ import { CoachingParentService, ParentLink, ParentLinkCode, ParentLinkCodeStatus
 import { parentCodeNote, staleParentCode } from '../onboarding/onboarding-model';
 import { apiMessage, parentRelationshipLabel } from '../parent/parent-home.component';
 import { copyMessage, copyText } from '../copy-text';
+import { siteHref } from '../../../../../shared/eduivme-sites';
 
 /** Roadmap Y7: the student gives a parent a code, approves the parent's request and can end the link. */
 @Component({
@@ -28,7 +29,7 @@ import { copyMessage, copyText } from '../copy-text';
         </div>
       }
       @if (code(); as issued) {
-        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest" #codeText>{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu girdiğinde isteği burada onaylarsın.</p>
+        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest" #codeText>{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu <a class="font-medium underline" data-testid="parent-site-link" [href]="parentSignUp">veli.maxkoc.com</a> adresinde girer; hesabı yoksa orada kayıt olur. Velin kodu girdiğinde isteği burada onaylarsın.</p>
         <!-- G5 (#45): copies the code (or selects it when the browser does not allow copying). -->
         <button type="button" class="mt-2 rounded-lg border border-(--ui-border) px-3 py-1 text-sm font-medium" [attr.aria-label]="'Veli kodunu kopyala: ' + issued.code" (click)="copyCode(issued.code, codeText)">Kopyala</button>
 
@@ -55,6 +56,8 @@ import { copyMessage, copyText } from '../copy-text';
   `
 })
 export class StudentParentLinksComponent implements OnInit {
+  /** Canlı test B1 (18.11.2026): parents sign in on their own address, so the code note says where to enter it. */
+  readonly parentSignUp = siteHref('parent', '/auth/register/parent', inject(DOCUMENT).defaultView?.location?.hostname);
   private readonly service = inject(CoachingParentService);
   private readonly toaster = inject(ToasterService);
   readonly links = signal<ParentLink[]>([]);

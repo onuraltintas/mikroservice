@@ -3,6 +3,8 @@
  * Pure helpers (tested in server-site.spec.ts); server.ts wires them to Express.
  */
 
+import { siteForHost } from '../shared/eduivme-sites';
+
 export interface SitemapEntry { kind: 'Page' | 'Blog' | string; slug: string; lastModified: string }
 export interface SocialPreview { title: string; description: string | null; url: string; image: string | null; type: 'website' | 'article' }
 
@@ -20,6 +22,10 @@ export function publicOrigin(host: string | undefined, allowedHosts: readonly st
 }
 
 export function buildRobots(origin: string): string {
+  // Canlı test B5 (18.11.2026): the public Coaching pages live on maxkoc.com only; the parent, teacher, institution
+  // and management addresses have nothing for search engines.
+  const site = siteForHost(new URL(origin).hostname);
+  if (site !== null && site !== 'student') return ['User-agent: *', 'Disallow: /', ''].join('\n');
   return [
     'User-agent: *',
     'Allow: /coaching',

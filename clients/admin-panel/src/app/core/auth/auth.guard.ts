@@ -2,7 +2,7 @@ import { inject, PLATFORM_ID } from '@angular/core';
 import { DOCUMENT, isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService, hasManagementRole, hasRequiredRole, hasRole } from './auth.service';
-import { EduivmeSite, siteForHost } from '../../../../shared/eduivme-sites';
+import { EDUIVME_SITE_URLS, EduivmeSite, siteForHost } from '../../../../shared/eduivme-sites';
 
 // Parents have a read-only panel of their linked children (roadmap Y7).
 export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
@@ -38,6 +38,21 @@ export function accountSites(user: { roles: string[]; product?: string } | null)
 /** The site of the page's host; null on any other host (localhost, a test host), where every account may stay. */
 export function currentSite(): EduivmeSite | null {
     return siteForHost(inject(DOCUMENT).defaultView?.location?.hostname);
+}
+
+/**
+ * Canlı test B2 (18.11.2026): a sign-up page opens on its group's own address, so the new account signs in where it
+ * belongs (the parent sign-up on veli.maxkoc.com, the teacher sign-up on ogretmen.eduivme.com, …). On any other host
+ * (localhost) the page stays.
+ */
+export function signUpSiteGuard(target: EduivmeSite): CanActivateFn {
+    return (_route, state) => {
+        if (isPlatformServer(inject(PLATFORM_ID))) return true;
+        const site = currentSite();
+        if (site === null || site === target) return true;
+        inject(DOCUMENT).defaultView?.location.assign(EDUIVME_SITE_URLS[target] + state.url);
+        return false;
+    };
 }
 
 /** True when the account belongs on this host; otherwise the "other address" page opens. */
@@ -162,7 +177,10 @@ export const coachingPortalGuard: CanActivateFn = async (_route, state) => {
         return staysOnThisSite(authService, router, site);
     }
 
-    if (site !== null && accountSites(authService.userProfile()).length) {
+    // Canlı test B4: an account that belongs on this address (a manager on admin.eduivme.com) goes back to its
+    // panel as before; only an account of another address sees where it signs in.
+    const sites = accountSites(authService.userProfile());
+    if (site !== null && sites.length && !sites.includes(site)) {
         await router.navigate(['/other-site']);
         return false;
     }

@@ -20,6 +20,12 @@ describe('server site helpers (O11)', () => {
     expect(robots).toContain('Sitemap: https://maxkoc.com/sitemap.xml');
   });
 
+  it('closes the parent, teacher, institution and management addresses to search engines (B5)', () => {
+    for (const origin of ['https://veli.maxkoc.com', 'https://ogretmen.eduivme.com', 'https://kurum.eduivme.com', 'https://admin.eduivme.com', 'https://eduivme.com'])
+      expect(buildRobots(origin)).toBe('User-agent: *\nDisallow: /\n');
+    expect(buildRobots('http://localhost:4000')).toContain('Allow: /coaching');
+  });
+
   it('lists the fixed pages and the published CMS pages and posts', () => {
     const xml = buildSitemap('https://eduivme.com', [
       { kind: 'Page', slug: 'kurumlar', lastModified: '2026-10-20T08:00:00Z' },

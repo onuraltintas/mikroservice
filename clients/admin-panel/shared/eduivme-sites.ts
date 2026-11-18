@@ -46,3 +46,8 @@ export function siteForHost(hostname: string | null | undefined): EduivmeSite | 
 export function siteStartUrl(site: EduivmeSite): string {
   return EDUIVME_SITE_URLS[site] + (site === 'teacher' || site === 'institution' ? STAFF_PORTAL_PATH : '/');
 }
+
+/** A link to another group's page: absolute on the public addresses, the bare path on any other host (localhost). */
+export function siteHref(target: EduivmeSite, path: string, hostname: string | null | undefined): string {
+  return siteForHost(hostname) === null ? path : EDUIVME_SITE_URLS[target] + path;
+}

@@ -107,7 +107,7 @@
               }
               @case ('parent') {
                 @if (parentCode(); as issued) {
-                  <p class="ob-card">Velinle paylaş: <strong class="ob-code" #parentCodeText>{{ issued.code }}</strong><br><small>{{ codeNote(issued.expiresAt) }} Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
+                  <p class="ob-card">Velinle paylaş: <strong class="ob-code" #parentCodeText>{{ issued.code }}</strong><br><small>{{ codeNote(issued.expiresAt) }} Velin kodu <a data-testid="ob-parent-site-link" [href]="parentSignUp">veli.maxkoc.com</a> adresinde girer; hesabı yoksa orada kayıt olur. Velin kodu girince isteği Profil ve ayarlar'da onaylarsın.</small></p>
                   <!-- G5 (#45): copies the code (or selects it when the browser does not allow copying). -->
                   <div class="ob-chips">
                     <button type="button" class="ob-chip" [attr.aria-label]="'Veli kodunu kopyala: ' + issued.code" (click)="copyParentCode(issued.code, parentCodeText)">Kopyala</button>
