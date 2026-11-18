@@ -1,25 +1,35 @@
-// Login component styles
-// This file is intentionally left minimal as we are using Tailwind CSS classes in the HTML.
-// You can add specific overrides here if needed.
+// Giriş sayfasının yalnız bu sayfaya ait parçaları. Düzen ve ortak bileşenler: shared/styles/_design-components.scss.
+:host { display: block; }
 
-:host {
-    display: block;
-    width: 100%;
-}
+.login-visual__copy { display: flex; flex-direction: column; gap: 18px; }
 
-.google-btn-wrapper {
-    ::ng-deep {
-        asl-google-signin-button {
-            display: flex;
-            justify-content: center;
-            transform: scale(1.2); // Google butonu standart 40px'tir, 1.2 scale ile tam 48px olur
-            transform-origin: center;
-            margin: 10px 0;
-        }
-    }
-}
+// eduivme: koyu zemin üstünde büyük "i" işareti.
+.login-visual--dark { justify-content: space-between; }
+.login-visual__mark { position: absolute; right: 8%; bottom: -180px; }
+.login-visual__stem { fill: currentColor; opacity: 0.08; }
+.login-visual__arc { stroke: var(--ds-accent); opacity: 0.45; }
+.login-visual__dot { fill: var(--ds-accent); opacity: 0.9; }
 
-.auth-background-pattern {
-    background-image: radial-gradient(#fff 1px, transparent 1px);
-    background-size: 24px 24px;
-}
+// maxkoç: örnek gün ve haftalık özet.
+.login-sample__head, .login-sample__line { display: flex; justify-content: space-between; gap: 12px; }
+.login-sample__head span, .login-sample__line > span { color: var(--ds-muted); font-size: 14px; font-weight: 500; }
+.login-sample__line { font-size: 15px; }
+.login-sample__row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--ds-radius-control); font-size: 15px; }
+.login-sample__row--done { color: var(--ds-muted); }
+.login-sample__row--now { background: var(--ds-soft); }
+.login-sample__now { margin-left: auto; padding: 1px 7px; border-radius: 4px; background: var(--ds-accent); color: var(--ds-on-accent); font-size: 12px; font-weight: 700; }
+.login-sample__bar { display: block; height: 8px; border-radius: 4px; background: var(--ds-line); overflow: hidden; }
+.login-sample__bar span { display: block; width: 69%; height: 100%; background: var(--ds-primary); }
+
+// Ders etiketleri: renkler --ds-math-* gibi değişkenlerden (açık ve koyu tema üreticide).
+.login-chip { flex: none; padding: 2px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.login-chip--math { background: var(--ds-math-bg); color: var(--ds-math-fg); }
+.login-chip--turkish { background: var(--ds-turkish-bg); color: var(--ds-turkish-fg); }
+.login-chip--science { background: var(--ds-science-bg); color: var(--ds-science-fg); }
+
+.login-google { display: flex; justify-content: center; min-height: 44px; overflow-x: hidden; }
+
+.login-recovery { display: flex; flex-direction: column; gap: 14px; }
+.login-recovery summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; }
+.login-recovery[open] summary { margin-bottom: 12px; }
+.login-recovery .ds-btn { margin-top: 12px; }

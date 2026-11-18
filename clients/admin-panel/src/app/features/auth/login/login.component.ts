@@ -1,14 +1,9 @@
 import { Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// Material Modules
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AuthService, NO_ROLE_FOR_PRODUCT_CODE } from '../../../core/auth/auth.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
@@ -20,6 +15,8 @@ import { AuthRecaptchaService } from '../../../core/auth/auth-recaptcha.service'
 
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { injectSiteBrand } from '../../../core/brand/site-brand';
+import { siteForHost, siteHref } from '../../../../../shared/eduivme-sites';
+import { LOGIN_PAGES } from './login-page-content';
 
 @Component({
     selector: 'app-login',
@@ -28,10 +25,6 @@ import { injectSiteBrand } from '../../../core/brand/site-brand';
         CommonModule,
         FormsModule,
         RouterLink,
-        MatCardModule,
-        MatButtonModule,
-        MatIconModule,
-        MatProgressSpinnerModule,
         GoogleSigninButtonModule,
         GoogleRegistrationConsentComponent
     ],
@@ -40,6 +33,10 @@ import { injectSiteBrand } from '../../../core/brand/site-brand';
 })
 export class LoginComponent {
   protected readonly brand = injectSiteBrand();
+    private readonly hostname = inject(DOCUMENT).location?.hostname;
+    /** Redesign 18.11.2026: the page text follows the address; localhost and test hosts show the student page. */
+    protected readonly page = LOGIN_PAGES[siteForHost(this.hostname) ?? 'student'];
+    protected readonly otherSiteHref = this.page.other ? siteHref(this.page.other.site, '/auth/login', this.hostname) : null;
     private authService = inject(AuthService);
     private router = inject(Router);
     private toaster = inject(ToasterService);
