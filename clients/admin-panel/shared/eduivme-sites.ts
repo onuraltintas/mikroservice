@@ -33,8 +33,6 @@ const SITE_BY_HOST: Readonly<Record<string, EduivmeSite>> = {
   'admin.eduivme.com': 'admin',
   'eduivme.com': 'admin',
   'www.eduivme.com': 'admin',
-  'eduivme.com.tr': 'admin',
-  'www.eduivme.com.tr': 'admin'
 };
 
 /** The site a host belongs to; null for any other host (localhost, a test host), where no site rule applies. */

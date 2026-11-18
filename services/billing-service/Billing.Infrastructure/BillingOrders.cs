@@ -387,7 +387,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         }
 
         order.Status = OrderStatus.Cancelled;
-        var line = $"Onay geri alındı ({now:yyyy-MM-dd HH:mm} UTC): {note}";
+        var line = BillingRules.ReversalLine(now, note, withdrawal is not null);
         order.ReviewNote = string.IsNullOrWhiteSpace(order.ReviewNote) ? line : $"{order.ReviewNote}\n{line}";
         if (order.ReviewNote.Length > 2_000) order.ReviewNote = order.ReviewNote[..2_000];
         order.UpdatedAt = now;

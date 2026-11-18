@@ -14,13 +14,13 @@ import { AuthService } from '../../core/services/auth.service';
         </div>
         <h1 class="ns-title">Abonelik Gerekli</h1>
         <p class="ns-desc">
-          Hızlı Okuma platformuna erişmek için aktif bir aboneliğe ihtiyacınız var.
-          Abonelik planlarını inceleyerek hemen başlayabilirsiniz.
+          Hızlı Okuma'yı kullanmak için etkin bir aboneliğin olmalı.
+          Planlara göz atıp hemen başlayabilirsin.
         </p>
         <div class="ns-actions">
           <a routerLink="/student/subscription" class="ns-btn ns-btn--primary">
             <span class="material-icons">shopping_cart</span>
-            Abonelik Planlarını Gör
+            Planları gör
           </a>
           <button class="ns-btn ns-btn--outline" (click)="logout()">
             <span class="material-icons">logout</span>
@@ -28,8 +28,8 @@ import { AuthService } from '../../core/services/auth.service';
           </button>
         </div>
         <p class="ns-footer">
-          Aboneliğiniz olduğunu düşünüyorsanız
-          <a routerLink="/iletisim">bizimle iletişime geçin</a>.
+          Aboneliğin olduğunu düşünüyorsan
+          <a routerLink="/iletisim">bize yaz</a>.
         </p>
       </div>
     </div>

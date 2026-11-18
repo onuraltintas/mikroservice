@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
-  BillingHttp, BillingOrder, BillingPlan, MyBilling, MySubscriptionController, billingDuration, billingError, billingMoney,
+  BILLING_NAME_SETTLE_MS, BillingHttp, BillingOrder, BillingPlan, MyBilling, MySubscriptionController, billingDuration, billingError, billingMoney,
   billingOrderStatus, billingPlansFor, billingReceiptProblem
 } from '../../../../../shared/billing/my-subscription';
 import { AuthService } from '../../core/auth/auth.service';
@@ -76,6 +76,47 @@ describe('Aboneliğim (shared billing page)', () => {
     expect(billingPlansFor(plans, ['Student'], false).map(item => item.id)).toEqual(['p1']);
     expect(billingPlansFor(plans, ['Teacher'], false).map(item => item.id)).toEqual(['p1', 'p2']);
     expect(billingPlansFor(plans, ['InstitutionAdmin'], true).map(item => item.id)).toEqual(['p1', 'p3']);
+  });
+
+  it('offers no student plan where individual plans are turned off (staff sites)', () => {
+    const plans = [plan(), plan({ id: 'p2', buyerType: 'Teacher' }), plan({ id: 'p3', buyerType: 'Institution' })];
+    expect(billingPlansFor(plans, ['InstitutionAdmin'], true, false).map(item => item.id)).toEqual(['p3']);
+    expect(billingPlansFor(plans, ['Teacher'], false, false).map(item => item.id)).toEqual(['p2']);
+  });
+
+  it('speaks "siz" when the host asks for it and "sen" otherwise', async () => {
+    const server = fake({
+      'GET /api/billing/v1/me': me(), 'GET /api/billing/v1/catalog/coaching': catalog(), 'GET /api/billing/v1/orders': [],
+      'GET /api/billing/v1/organizations': []
+    });
+    const options = { product: 'coaching', apiUrl: '/api', roles: ['InstitutionAdmin'], buyerName: '', changed: () => undefined, save: () => undefined };
+    const formal = new MySubscriptionController(server.http, { ...options, voice: 'siz' });
+    const plain = new MySubscriptionController(server.http, options);
+    expect(formal.t.noActive).toBe('Etkin bir aboneliğiniz yok.');
+    expect(plain.t.noActive).toBe('Etkin bir aboneliğin yok.');
+    expect(formal.withdrawalStatus('Approved')).toBe('Cayma talebiniz kabul edildi');
+    await formal.startTrial(plan({ trialDays: 7 }));
+    expect(formal.error).toContain('adınızı ve soyadınızı yazın');
+  });
+
+  it('brings the sales documents back shortly after the buyer stops typing a name', async () => {
+    vi.useFakeTimers();
+    try {
+      const { c, calls } = controller({ 'GET /api/billing/v1/documents': documents });
+      await c.load();
+      c.choose(c.plans[0]);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(c.documents).toEqual(documents);
+      c.setBuyerName('Yeni Ad');
+      c.setBuyerName('Yeni Ad Soyad');
+      expect(c.documents).toBeNull();
+      await vi.advanceTimersByTimeAsync(BILLING_NAME_SETTLE_MS + 10);
+      expect(c.documents).toEqual(documents);
+      expect(calls.filter(call => call.url.startsWith('/api/billing/v1/documents')).at(-1)!.url).toContain(encodeURIComponent('Yeni Ad Soyad'));
+      expect(calls.filter(call => call.url.startsWith('/api/billing/v1/documents'))).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('orders a plan only after the documents written for this buyer and this price are accepted', async () => {

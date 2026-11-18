@@ -54,6 +54,10 @@ export interface MySubscriptionOptions {
   roles: readonly string[];
   /** The user's name for the contract; the session token carries none. */
   buyerName: string;
+  /** Address the reader with "sen" (default) or "siz". */
+  voice?: BillingVoice;
+  /** Offer individual (student) plans; staff sites set false. Default true. */
+  individualPlans?: boolean;
   /** Called after every change of state, so the host can refresh its view. */
   changed: () => void;
   /** Hands a downloaded file to the browser. */
@@ -63,17 +67,59 @@ export interface MySubscriptionOptions {
 export const BILLING_MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 export const BILLING_RECEIPT_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
+/** How the page addresses the reader: "sen" on student and parent sites, "siz" on staff and management sites. */
+export type BillingVoice = 'sen' | 'siz';
+
+export interface BillingTexts {
+  loading: string; loadFailed: string; open: string; noActive: string; nameLabel: string; writeCode: string;
+  paidPrefix: string; paidSuffix: string; docsHint: string; contactPlan: string; pendingPlan: string;
+  withdrawPrefix: string; withdrawSuffix: string; tryFree: string; trialName: string; contractName: string;
+  paidNotice: string; cancelledNotice: string; withdrawalNotice: string; retry: string;
+  orderNotice: (code: string) => string; seatOrderNotice: (code: string) => string; trialNotice: (days: number) => string;
+  withdrawal: Record<WithdrawalStatus, string>;
+}
+
+export const BILLING_TEXTS: Record<BillingVoice, BillingTexts> = {
+  sen: {
+    loading: '{{ c.t.loading }}', loadFailed: 'Abonelik bilgilerin yüklenemedi.',
+    open: 'Bu ürün şu anda abonelik gerektirmiyor; hesabınla kullanabilirsin.', noActive: 'Etkin bir aboneliğin yok.',
+    nameLabel: 'Adın ve soyadın (sözleşmede yer alır)', writeCode: 'yaz',
+    paidPrefix: 'Ödemeni', paidSuffix: 'tarihinde bildirdin.', docsHint: 'Sözleşme metinleri için adını ve soyadını yaz.',
+    contactPlan: 'Bu plan için bizimle iletişime geç.', pendingPlan: 'Bu plan için bekleyen bir siparişin var.',
+    withdrawPrefix: 'Cayma hakkını', withdrawSuffix: 'tarihine kadar kullanabilirsin. Talebin kabul edilirse aboneliğin sona erer ve ödediğin tutar iade edilir.',
+    tryFree: 'gün ücretsiz dene', trialName: 'Ücretsiz deneme için adını ve soyadını yaz.', contractName: 'Sözleşme için adını ve soyadını yaz.',
+    paidNotice: 'Ödeme bildirimin alındı. Onaylandığında aboneliğin başlar ve sana haber veririz.', cancelledNotice: 'Siparişten vazgeçtin.',
+    withdrawalNotice: 'Cayma talebin alındı. Sonucu e-postayla bildireceğiz.', retry: 'İşlem tamamlanamadı. Lütfen tekrar dene.',
+    orderNotice: code => `Siparişin oluşturuldu. Havale açıklamasına ${code} kodunu yaz.`,
+    seatOrderNotice: code => `Ek koltuk siparişin oluşturuldu. Havale açıklamasına ${code} kodunu yaz.`,
+    trialNotice: days => `${days} günlük ücretsiz denemen başladı.`,
+    withdrawal: { Requested: 'Cayma talebin inceleniyor', Approved: 'Cayma talebin kabul edildi', Rejected: 'Cayma talebin reddedildi' }
+  },
+  siz: {
+    loading: 'Abonelik bilgileriniz yükleniyor…', loadFailed: 'Abonelik bilgileriniz yüklenemedi.',
+    open: 'Bu ürün şu anda abonelik gerektirmiyor; hesabınızla kullanabilirsiniz.', noActive: 'Etkin bir aboneliğiniz yok.',
+    nameLabel: 'Adınız ve soyadınız (sözleşmede yer alır)', writeCode: 'yazın',
+    paidPrefix: 'Ödemenizi', paidSuffix: 'tarihinde bildirdiniz.', docsHint: 'Sözleşme metinleri için adınızı ve soyadınızı yazın.',
+    contactPlan: 'Bu plan için bizimle iletişime geçin.', pendingPlan: 'Bu plan için bekleyen bir siparişiniz var.',
+    withdrawPrefix: 'Cayma hakkınızı', withdrawSuffix: 'tarihine kadar kullanabilirsiniz. Talebiniz kabul edilirse aboneliğiniz sona erer ve ödediğiniz tutar iade edilir.',
+    tryFree: 'gün ücretsiz deneyin', trialName: 'Ücretsiz deneme için adınızı ve soyadınızı yazın.', contractName: 'Sözleşme için adınızı ve soyadınızı yazın.',
+    paidNotice: 'Ödeme bildiriminiz alındı. Onaylandığında aboneliğiniz başlar ve size haber veririz.', cancelledNotice: 'Siparişten vazgeçtiniz.',
+    withdrawalNotice: 'Cayma talebiniz alındı. Sonucu e-postayla bildireceğiz.', retry: 'İşlem tamamlanamadı. Lütfen tekrar deneyin.',
+    orderNotice: code => `Siparişiniz oluşturuldu. Havale açıklamasına ${code} kodunu yazın.`,
+    seatOrderNotice: code => `Ek koltuk siparişiniz oluşturuldu. Havale açıklamasına ${code} kodunu yazın.`,
+    trialNotice: days => `${days} günlük ücretsiz denemeniz başladı.`,
+    withdrawal: { Requested: 'Cayma talebiniz inceleniyor', Approved: 'Cayma talebiniz kabul edildi', Rejected: 'Cayma talebiniz reddedildi' }
+  }
+};
+
 const ORDER_STATUS: Record<OrderStatus, string> = {
   Pending: 'Ödeme bekleniyor', Paid: 'Ödendi', Rejected: 'Onaylanmadı', Expired: 'Süresi doldu', Withdrawn: 'Vazgeçildi', Cancelled: 'İptal edildi'
-};
-const WITHDRAWAL_STATUS: Record<WithdrawalStatus, string> = {
-  Requested: 'Cayma talebin inceleniyor', Approved: 'Cayma talebin kabul edildi', Rejected: 'Cayma talebin reddedildi'
 };
 
 export function billingOrderStatus(order: Pick<BillingOrder, 'status' | 'paidDeclaredAt'>): string {
   return order.status === 'Pending' && order.paidDeclaredAt ? 'Ödeme bildirildi, onay bekleniyor' : ORDER_STATUS[order.status] ?? order.status;
 }
-export function billingWithdrawalStatus(status: WithdrawalStatus): string { return WITHDRAWAL_STATUS[status] ?? status; }
+export function billingWithdrawalStatus(status: WithdrawalStatus, voice: BillingVoice = 'sen'): string { return BILLING_TEXTS[voice].withdrawal[status] ?? status; }
 export function billingMoney(value: number, currency = 'TRY'): string {
   return `${new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} ${currency === 'TRY' ? 'TL' : currency}`;
 }
@@ -92,15 +138,18 @@ export function billingError(error: unknown, fallback = 'İşlem tamamlanamadı.
   return typeof body?.detail === 'string' && body.detail.trim() ? body.detail : fallback;
 }
 /** Plans this user may order here: individual for everybody, teacher plans for teachers, institution plans for whoever administers one. */
-export function billingPlansFor(plans: readonly BillingPlan[], roles: readonly string[], administersInstitution: boolean): BillingPlan[] {
+export function billingPlansFor(plans: readonly BillingPlan[], roles: readonly string[], administersInstitution: boolean, individualPlans = true): BillingPlan[] {
   const teacher = roles.includes('Teacher');
-  return plans.filter(plan => plan.buyerType === 'Individual' || (plan.buyerType === 'Teacher' && teacher) || (plan.buyerType === 'Institution' && administersInstitution));
+  return plans.filter(plan => (plan.buyerType === 'Individual' && individualPlans) || (plan.buyerType === 'Teacher' && teacher) || (plan.buyerType === 'Institution' && administersInstitution));
 }
 export function billingReceiptProblem(file: { size: number; type: string } | null): string | null {
   if (!file) return null;
   if (!BILLING_RECEIPT_TYPES.includes(file.type)) return 'Dekont PDF, JPG ya da PNG olmalı.';
   return file.size > BILLING_MAX_RECEIPT_BYTES ? 'Dekont en fazla 5 MB olabilir.' : null;
 }
+
+/** How long the buyer's name must stay unchanged before the sales documents are rebuilt with it. */
+export const BILLING_NAME_SETTLE_MS = 600;
 
 export class MySubscriptionController {
   loading = true;
@@ -142,7 +191,11 @@ export class MySubscriptionController {
 
   constructor(private readonly http: BillingHttp, private readonly options: MySubscriptionOptions) {
     this.buyerName = options.buyerName;
+    this.t = BILLING_TEXTS[options.voice ?? 'sen'];
   }
+
+  /** The page's wording in the host's voice. */
+  readonly t: BillingTexts;
 
   private get base(): string { return `${this.options.apiUrl}/billing/v1`; }
 
@@ -182,7 +235,7 @@ export class MySubscriptionController {
     return [...own, ...institution.filter(order => !own.some(item => item.id === order.id))];
   }
   get history(): BillingOrder[] { return this.orders.filter(order => order.status !== 'Pending'); }
-  get plans(): BillingPlan[] { return billingPlansFor(this.catalog?.plans ?? [], this.options.roles, this.organizations.length > 0); }
+  get plans(): BillingPlan[] { return billingPlansFor(this.catalog?.plans ?? [], this.options.roles, this.organizations.length > 0, this.options.individualPlans ?? true); }
   get canBuy(): boolean { return !!this.me?.salesOpen && !!this.catalog?.salesOpen; }
   get bankAccounts(): BillingBankAccount[] { return this.catalog?.bankAccounts ?? []; }
   get price(): number { return this.quote?.amount ?? this.plan?.price ?? 0; }
@@ -224,9 +277,15 @@ export class MySubscriptionController {
     this.seatQuote = null;
     this.seatAccepted = false;
     this.options.changed();
+    // Reload the documents shortly after typing stops, so the acceptance box comes back without leaving the field.
+    if (this.documentsTimer) clearTimeout(this.documentsTimer);
+    this.documentsTimer = setTimeout(() => { this.documentsTimer = null; void this.loadDocuments(); }, BILLING_NAME_SETTLE_MS);
   }
 
+  private documentsTimer: ReturnType<typeof setTimeout> | null = null;
+
   async loadDocuments(): Promise<void> {
+    if (this.documentsTimer) { clearTimeout(this.documentsTimer); this.documentsTimer = null; }
     if (!this.plan || this.buyerName.trim().length < 3) return;
     const plan = this.plan;
     try {
@@ -272,16 +331,16 @@ export class MySubscriptionController {
       this.plan = null;
       this.documents = null;
       this.quote = null;
-      this.notice = `Siparişin oluşturuldu. Havale açıklamasına ${order.paymentCode} kodunu yaz.`;
+      this.notice = this.t.orderNotice(order.paymentCode);
       await this.load();
     });
   }
 
   async startTrial(plan: BillingPlan): Promise<void> {
-    if (this.buyerName.trim().length < 3) { this.error = 'Ücretsiz deneme için adını ve soyadını yaz.'; this.options.changed(); return; }
+    if (this.buyerName.trim().length < 3) { this.error = this.t.trialName; this.options.changed(); return; }
     await this.run(async () => {
       await this.http.post(`${this.base}/trials`, { planId: plan.id, buyerName: this.buyerName.trim() });
-      this.notice = `${plan.trialDays} günlük ücretsiz denemen başladı.`;
+      this.notice = this.t.trialNotice(plan.trialDays);
       await this.load();
     });
   }
@@ -310,7 +369,7 @@ export class MySubscriptionController {
       if (this.receipt) form.append('receipt', this.receipt, this.receipt.name);
       await this.http.post(`${this.base}/orders/${id}/paid`, form);
       this.payingOrderId = null;
-      this.notice = 'Ödeme bildirimin alındı. Onaylandığında aboneliğin başlar ve sana haber veririz.';
+      this.notice = this.t.paidNotice;
       await this.load();
     });
   }
@@ -318,7 +377,7 @@ export class MySubscriptionController {
   async giveUp(order: BillingOrder): Promise<void> {
     await this.run(async () => {
       await this.http.delete(`${this.base}/orders/${order.id}`);
-      this.notice = 'Siparişten vazgeçtin.';
+      this.notice = this.t.cancelledNotice;
       await this.load();
     });
   }
@@ -336,7 +395,7 @@ export class MySubscriptionController {
     await this.run(async () => {
       await this.http.post(`${this.base}/orders/${id}/withdrawal`, { reason: this.withdrawalReason.trim() || null });
       this.withdrawingOrderId = null;
-      this.notice = 'Cayma talebin alındı. Sonucu e-postayla bildireceğiz.';
+      this.notice = this.t.withdrawalNotice;
       await this.load();
     });
   }
@@ -370,7 +429,7 @@ export class MySubscriptionController {
 
   async quoteSeats(): Promise<void> {
     if (!this.pool) return;
-    if (this.buyerName.trim().length < 3) { this.error = 'Sözleşme için adını ve soyadını yaz.'; this.options.changed(); return; }
+    if (this.buyerName.trim().length < 3) { this.error = this.t.contractName; this.options.changed(); return; }
     if (!(this.seatCount >= 1)) { this.error = 'Ek koltuk sayısı en az 1 olmalı.'; this.options.changed(); return; }
     await this.run(async () => {
       this.seatQuote = await this.http.get<SeatQuote>(
@@ -386,7 +445,7 @@ export class MySubscriptionController {
         { count: this.seatQuote!.count, documentsVersion: this.seatQuote!.documents.version, buyerName: this.buyerName.trim() });
       this.pool = null;
       this.seatQuote = null;
-      this.notice = `Ek koltuk siparişin oluşturuldu. Havale açıklamasına ${order.paymentCode} kodunu yaz.`;
+      this.notice = this.t.seatOrderNotice(order.paymentCode);
       await this.load();
     });
   }
@@ -414,7 +473,7 @@ export class MySubscriptionController {
   date = billingDate;
   duration = billingDuration;
   orderStatus = billingOrderStatus;
-  withdrawalStatus = billingWithdrawalStatus;
+  withdrawalStatus(status: WithdrawalStatus): string { return billingWithdrawalStatus(status, this.options.voice ?? 'sen'); }
 
   private async run(work: () => Promise<void>): Promise<void> {
     if (this.busy) return;
@@ -425,7 +484,7 @@ export class MySubscriptionController {
     try {
       await work();
     } catch (error) {
-      this.error = billingError(error);
+      this.error = billingError(error, this.t.retry);
     } finally {
       this.busy = false;
       this.options.changed();
@@ -439,11 +498,11 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
     <p class="bill-muted" role="status">Abonelik bilgilerin yükleniyor…</p>
   } @else if (c.failed) {
     <div class="bill-alert bill-alert--error" role="alert">
-      Abonelik bilgilerin yüklenemedi.
+      {{ c.t.loadFailed }}
       <button type="button" class="bill-btn" (click)="c.load()">Tekrar dene</button>
     </div>
   } @else if (c.open) {
-    <div class="bill-card"><h2>{{ c.me!.productName }}</h2><p>Bu ürün şu anda abonelik gerektirmiyor; hesabınla kullanabilirsin.</p></div>
+    <div class="bill-card"><h2>{{ c.me!.productName }}</h2><p>{{ c.t.open }}</p></div>
   } @else {
     @if (c.notice) { <div class="bill-alert bill-alert--ok" role="status">{{ c.notice }}</div> }
     @if (c.error) { <div class="bill-alert bill-alert--error" role="alert">{{ c.error }}</div> }
@@ -451,7 +510,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
     <div class="bill-card">
       <h2>Aboneliğim</h2>
       @if (c.current.length === 0) {
-        <p class="bill-muted">Etkin bir aboneliğin yok.</p>
+        <p class="bill-muted">{{ c.t.noActive }}</p>
       }
       @for (item of c.subscriptions; track item.id) {
         <div class="bill-row">
@@ -478,7 +537,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         </p>
         @if (pool.extraSeatPrice !== null) {
           <div class="bill-form">
-            <label>Adın ve soyadın (sözleşmede yer alır)
+            <label>{{ c.t.nameLabel }}
               <input type="text" maxlength="200" autocomplete="name" [value]="c.buyerName" (input)="c.setBuyerName($any($event.target).value)" />
             </label>
             <label>Ek koltuk sayısı
@@ -512,7 +571,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
           <dd><strong class="bill-code">{{ order.paymentCode }}</strong>
             <button type="button" class="bill-copy" (click)="c.copy(order.paymentCode)">{{ c.copied === order.paymentCode ? 'Kopyalandı' : 'Kopyala' }}</button></dd>
         </dl>
-        <p>Havale ya da EFT açıklamasına <strong>yalnız bu kodu</strong> yaz. Sipariş {{ c.date(order.expiresAt) }} tarihine kadar geçerli.</p>
+        <p>Havale ya da EFT açıklamasına <strong>yalnız bu kodu</strong> {{ c.t.writeCode }}. Sipariş {{ c.date(order.expiresAt) }} tarihine kadar geçerli.</p>
         @for (account of c.bankAccounts; track account.iban) {
           <div class="bill-bank">
             <div><strong>{{ account.bankName }}</strong> · {{ account.accountHolder }}</div>
@@ -537,7 +596,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             @if (!order.paidDeclaredAt) {
               <button type="button" class="bill-btn bill-btn--primary" [disabled]="c.busy" (click)="c.beginPaid(order)">Ödemeyi yaptım</button>
             } @else {
-              <span class="bill-muted">Ödemeni {{ c.date(order.paidDeclaredAt) }} tarihinde bildirdin.</span>
+              <span class="bill-muted">{{ c.t.paidPrefix }} {{ c.date(order.paidDeclaredAt) }} {{ c.t.paidSuffix }}</span>
             }
             <button type="button" class="bill-btn" [disabled]="c.busy" (click)="c.giveUp(order)">Siparişten vazgeç</button>
           </div>
@@ -554,7 +613,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
           } @else { <strong>{{ c.money(plan.price, plan.currency) }}</strong> }
         </p>
         <div class="bill-form">
-          <label>Adın ve soyadın (sözleşmede yer alır)
+          <label>{{ c.t.nameLabel }}
             <input type="text" maxlength="200" autocomplete="name" [value]="c.buyerName"
               (input)="c.setBuyerName($any($event.target).value)" (blur)="c.loadDocuments()" />
           </label>
@@ -586,7 +645,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
           <label class="bill-check"><input type="checkbox" [checked]="c.accepted" (change)="c.accept($any($event.target).checked)" />
             Ön bilgilendirme formunu ve mesafeli satış sözleşmesini okudum, kabul ediyorum.</label>
         } @else {
-          <p class="bill-muted">Sözleşme metinleri için adını ve soyadını yaz.</p>
+          <p class="bill-muted">{{ c.t.docsHint }}</p>
         }
         <div class="bill-actions">
           <button type="button" class="bill-btn bill-btn--primary" [disabled]="!c.canOrder" (click)="c.order()">Havale ile öde</button>
@@ -608,13 +667,13 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
               @if (plan.seatCount) { <p class="bill-muted">{{ plan.seatCount }} koltuk</p> }
               <ul>@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul>
               @if (plan.isContactOnly) {
-                <p class="bill-muted">Bu plan için bizimle iletişime geç.</p>
+                <p class="bill-muted">{{ c.t.contactPlan }}</p>
               } @else if (c.hasPendingFor(plan)) {
-                <p class="bill-muted">Bu plan için bekleyen bir siparişin var.</p>
+                <p class="bill-muted">{{ c.t.pendingPlan }}</p>
               } @else {
                 <button type="button" class="bill-btn bill-btn--primary" [disabled]="!c.canBuy || c.busy" (click)="c.choose(plan)">Satın al</button>
                 @if (plan.trialDays > 0 && plan.buyerType !== 'Institution' && c.subscriptions.length === 0) {
-                  <button type="button" class="bill-btn" [disabled]="!c.canBuy || c.busy" (click)="c.startTrial(plan)">{{ plan.trialDays }} gün ücretsiz dene</button>
+                  <button type="button" class="bill-btn" [disabled]="!c.canBuy || c.busy" (click)="c.startTrial(plan)">{{ plan.trialDays }} {{ c.t.tryFree }}</button>
                 }
               }
             </article>
@@ -648,7 +707,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
           </div>
           @if (c.withdrawingOrderId === order.id) {
             <div class="bill-form">
-              <p>Cayma hakkını {{ c.date(order.withdrawUntil) }} tarihine kadar kullanabilirsin. Talebin kabul edilirse aboneliğin sona erer ve ödediğin tutar iade edilir.</p>
+              <p>{{ c.t.withdrawPrefix }} {{ c.date(order.withdrawUntil) }} {{ c.t.withdrawSuffix }}</p>
               <label>Gerekçe (isteğe bağlı)
                 <input type="text" maxlength="500" [value]="c.withdrawalReason" (input)="c.set('withdrawalReason', $any($event.target).value)" />
               </label>

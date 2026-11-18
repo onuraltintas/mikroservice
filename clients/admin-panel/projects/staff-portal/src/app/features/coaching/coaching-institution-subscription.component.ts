@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, Input, OnChanges, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, Input, OnChanges, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, finalize, forkJoin } from 'rxjs';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionSubscription } from './coaching-institution.service';
@@ -10,7 +10,7 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
   template: `
     <section aria-labelledby="institution-plan-title" class="institution-plan">
       <header><div><h3 id="institution-plan-title">Kurum aboneliği ve kontenjan</h3><p>Etkin kurum lisansınızın öğrenci erişimini yönetin.</p></div>
-        <button type="button" (click)="load()" [disabled]="loading() || saving()">Yenile</button></header>
+        <button type="button" (click)="refresh()" [disabled]="loading() || saving()">Yenile</button></header>
       <!-- Billing service: the institution's plan is bought, renewed and paid for here; the seats below go to its own students. -->
       <div data-testid="institution-billing"><staff-my-subscription product="coaching" [roles]="['InstitutionAdmin']" /></div>
       @if (error()) { <p role="alert" class="error">{{ error() }}</p> }
@@ -64,6 +64,7 @@ export class CoachingInstitutionSubscriptionComponent implements OnChanges {
   private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;
   private write?: Subscription;
+  private readonly billing = viewChild(StaffMySubscriptionComponent);
   readonly subscription = signal<CoachingInstitutionSubscription | null>(null);
   readonly students = signal<CoachingInstitutionStudent[]>([]);
   readonly page = signal(1);
@@ -83,6 +84,9 @@ export class CoachingInstitutionSubscriptionComponent implements OnChanges {
   }
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent): void { if (this.saving()) { event.preventDefault(); event.returnValue = ''; } }
+  /** "Yenile": the billing card above and the seats below come from different services; both are reloaded. */
+  refresh(): void { this.billing()?.reload(); this.load(); }
+
   load(): void {
     if (!this.institutionId || this.saving()) return;
     this.request?.unsubscribe(); this.loading.set(true); this.error.set(null);

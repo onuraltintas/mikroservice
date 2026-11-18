@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 /**
  * "Aboneliğim" for staff (a teacher or an institution's admin). The page itself is shared by every client application
  * in clients/shared/billing; this component gives it the staff portal's HTTP client. The staff session carries no
- * name, so the buyer writes it for the contract.
+ * name, so the buyer writes it for the contract. Staff are addressed with "siz" and are not offered student plans.
  */
 @Component({
   selector: 'staff-my-subscription',
@@ -37,6 +37,8 @@ export class StaffMySubscriptionComponent implements OnInit {
       apiUrl: environment.apiUrl,
       roles: this.roles(),
       buyerName: '',
+      voice: 'siz',
+      individualPlans: false,
       changed: () => this.changes.markForCheck(),
       save: (blob, fileName) => {
         const url = URL.createObjectURL(blob);
@@ -49,4 +51,7 @@ export class StaffMySubscriptionComponent implements OnInit {
     });
     void this.c.load();
   }
+
+  /** Reloads the subscription, e.g. after the host page's "Yenile" or a seat change. */
+  reload(): void { if (this.c) void this.c.load(); }
 }
