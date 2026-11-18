@@ -27,9 +27,9 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
   template: `
     <main class="space-y-6" aria-labelledby="coaching-cms-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Koçluk servisi</p>
-        <h1 id="coaching-cms-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Koçluk içerik yönetimi</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Koçluk ana sayfa bloklarını, yayın sayfalarını, blog yazılarını ve menüleri yalnız Koçluk platformu için yönetin.</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Koçluk servisi</p>
+        <h1 id="coaching-cms-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Koçluk içerik yönetimi</h1>
+        <p class="mt-2 text-sm text-(--ui-text-muted)">Koçluk ana sayfa bloklarını, yayın sayfalarını, blog yazılarını ve menüleri yalnız Koçluk platformu için yönetin.</p>
       </header>
 
       <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Koçluk CMS sekmeleri">
@@ -42,7 +42,7 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
         <button type="button" class="ui-tab rounded-lg border px-3 py-2" [attr.aria-pressed]="tab() === 'newsletter'" (click)="selectTab('newsletter')">Bülten aboneleri</button>
       </nav>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       @if (tab() === 'home') {
         <section class="space-y-4" aria-labelledby="home-cms-heading">
@@ -185,7 +185,7 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
           </section>
         </div>
       }
-      @if (loading()) { <div role="status" class="text-center text-sm text-gray-500">Yükleniyor…</div> }
+      @if (loading()) { <div role="status" class="text-center text-sm text-(--ui-text-muted)">Yükleniyor…</div> }
     </main>
   `,
   styles: [`
@@ -194,9 +194,9 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
     .form-grid label { display: flex; flex-direction: column; gap: .25rem; font-size: .875rem; }
     .form-grid .wide { grid-column: 1 / -1; }
     .form-grid .check { flex-direction: row; align-items: center; padding-top: 1.5rem; }
-    .content-guide { border: 1px solid var(--ui-border); border-radius: .65rem; padding: .85rem; background: color-mix(in srgb, var(--ui-surface) 86%, #6366f1); font-size: .8rem; }
-    .content-guide p { margin-top: .3rem; color: var(--ui-text-muted, #64748b); line-height: 1.55; }
-    .content-guide code { border-radius: .25rem; background: rgba(15, 23, 42, .08); padding: .1rem .25rem; }
+    .content-guide { border: 1px solid var(--ui-border); border-radius: .65rem; padding: .85rem; background: color-mix(in srgb, var(--ui-surface) 86%, var(--ui-brand)); font-size: .8rem; }
+    .content-guide p { margin-top: .3rem; color: var(--ui-text-muted, var(--ui-text-muted)); line-height: 1.55; }
+    .content-guide code { border-radius: .25rem; background: color-mix(in srgb, var(--ui-text) 8%, transparent); padding: .1rem .25rem; }
     input, select, textarea { border: 1px solid var(--ui-border-strong); border-radius: .5rem; background: transparent; padding: .5rem .75rem; color: inherit; }
     .form-actions, .pager { display: flex; justify-content: flex-end; align-items: center; gap: .5rem; margin-top: 1rem; }
     .primary, .secondary, .actions button, .pager button { border-radius: .5rem; padding: .5rem .75rem; font-size: .875rem; }
@@ -208,8 +208,8 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
     .muted { color: var(--ui-text-muted); font-size: .8rem; } .empty { padding: 2rem; text-align: center; color: var(--ui-text-muted); }
     .pager { justify-content: space-between; }
     .group-picker { display: flex; max-width: 28rem; flex-direction: column; gap: .25rem; font-size: .875rem; }
-    .dialog-backdrop-shield { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow-y: auto; padding: 1rem; background: rgba(15, 23, 42, .6); }
-    .preview-dialog { width: min(100%, 56rem); max-height: min(90vh, 60rem); overflow-y: auto; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); padding: 1.25rem; box-shadow: 0 24px 60px rgba(15, 23, 42, .28); }
+    .dialog-backdrop-shield { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow-y: auto; padding: 1rem; background: color-mix(in srgb, var(--ui-text) 60%, transparent); }
+    .preview-dialog { width: min(100%, 56rem); max-height: min(90vh, 60rem); overflow-y: auto; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); padding: 1.25rem; box-shadow: 0 24px 60px color-mix(in srgb, var(--ui-text) 28%, transparent); }
     .preview-body { max-width: 46rem; margin: 1.5rem auto .5rem; line-height: 1.7; }
     .preview-body h1 { margin: .5rem 0 1rem; font-size: 2rem; font-weight: 700; line-height: 1.15; }
     .preview-body h2 { margin: 1.5rem 0 .5rem; font-size: 1.35rem; font-weight: 650; }

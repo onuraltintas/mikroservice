@@ -1,5 +1,5 @@
 <section class="institution-settings" aria-labelledby="institution-settings-title">
-  <header class="settings-heading"><div><p class="workspace-eyebrow">HIZLI OKUMA · KURUM</p><h3 id="institution-settings-title">Kurum ayarları</h3><p>Kurum iletişim bilgileri ve bu ürüne ait erişim/lisans özetini görüntüleyin.</p></div></header>
+  <header class="settings-heading"><div><p class="workspace-eyebrow">Hızlı Okuma, kurum</p><h3 id="institution-settings-title">Kurum ayarları</h3><p>Kurum iletişim bilgileri ve bu ürüne ait erişim/lisans özetini görüntüleyin.</p></div></header>
 
   @if (successMessage()) { <p class="success-message" role="status">{{ successMessage() }}</p> }
   @if (errorMessage()) { <div class="inline-error" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="loadInstitution()">Tekrar dene</button></div> }
@@ -7,7 +7,7 @@
   @else if (profile(); as currentProfile) {
     <div class="settings-grid">
       <section class="settings-card" aria-labelledby="institution-contact-title">
-        <div><p class="workspace-eyebrow">KURUM KİMLİĞİ</p><h4 id="institution-contact-title">İletişim bilgileri</h4></div>
+        <div><p class="workspace-eyebrow">Kurum kimliği</p><h4 id="institution-contact-title">İletişim bilgileri</h4></div>
         <form (ngSubmit)="saveProfile()">
           <label><span>Kurum adı</span><input name="institutionName" [(ngModel)]="name" maxlength="200" required></label>
           @if (currentProfile.code) { <label><span>Kurum kodu</span><input name="institutionCode" [value]="currentProfile.code" disabled></label> }

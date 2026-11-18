@@ -1,7 +1,7 @@
 .assignment-editor { margin-top: 20px; padding: clamp(16px, 3vw, 26px); border: 1px solid var(--ui-border); border-radius: 16px; background: var(--ui-surface); }
 .editor-heading { margin-bottom: 20px; }
 .editor-back { display: block; margin: 0 0 20px; padding: 0; border: 0; color: var(--ui-text); background: transparent; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
-.editor-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: .15em; }
+.editor-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .editor-heading h2 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
 .editor-heading > p:last-child { margin: 7px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.6; }
 .editor-error, .inactive-students { margin-bottom: 15px; padding: 11px 13px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-text); background: var(--ui-surface); font-size: 13px; line-height: 1.55; }
@@ -9,7 +9,7 @@
 .editor-empty h3 { margin: 0; color: var(--ui-text); font-size: 13px; }
 .editor-empty p { max-width: 650px; margin: 7px 0 14px; color: var(--ui-text-muted); font-size: 13px; line-height: 1.6; }
 .editor-loading { display: grid; gap: 9px; }
-.editor-loading div { height: 62px; border-radius: 10px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: assignment-form-shimmer 1.4s linear infinite; }
+.editor-loading div { height: 62px; border-radius: 10px; background: var(--ui-surface-muted); background-size: 200% 100%; animation: assignment-form-shimmer 1.4s linear infinite; }
 .editor-form { display: grid; gap: 20px; padding: clamp(15px, 2.5vw, 24px); border: 1px solid var(--ui-border); border-radius: 14px; background: var(--ui-surface); }
 .editor-section-heading h3 { margin: 0; color: var(--ui-text); font-size: 13px; font-weight: 800; }
 .editor-section-heading p { margin: 6px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.55; }
@@ -23,7 +23,7 @@
 .editor-form label > .label-line { display: inline; }
 .editor-form input:not([type='checkbox']), .editor-form select, .editor-form textarea { width: 100%; min-height: 39px; box-sizing: border-box; padding: 9px 10px; border: 1px solid var(--ui-border); border-radius: 8px; outline: none; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; }
 .editor-form textarea { resize: vertical; }
-.editor-form input:focus, .editor-form select:focus, .editor-form textarea:focus { border-color: var(--ui-border); box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.editor-form input:focus, .editor-form select:focus, .editor-form textarea:focus { border-color: var(--ui-border); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-text) 14%, transparent); }
 .editor-full { display: grid; gap: 6px; color: var(--ui-text); font-size: 13px; font-weight: 700; }
 .book-section { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-surface); }
 .student-picker { min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--ui-border); border-radius: 12px; }
@@ -34,11 +34,11 @@
 .student-search { display: flex; gap: 7px; margin: 12px 0; }
 .student-search > input { flex: 1; min-width: 0; }
 .search-button, .secondary-button, .student-pagination button { min-height: 36px; padding: 0 11px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text-muted); background: var(--ui-surface-muted); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-.search-button { border-color: var(--ui-border); color: #fff; background: var(--ui-brand); }
+.search-button { border-color: var(--ui-border); color: var(--ui-brand-contrast); background: var(--ui-brand); }
 .student-options { display: grid; max-height: 280px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; overflow-y: auto; padding: 8px; border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-surface); }
 .student-option { display: flex !important; min-height: 42px; align-items: center; gap: 9px !important; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
 .student-option:hover { background: var(--ui-surface); }
-.student-option input { flex: 0 0 auto; accent-color: #355b4b; }
+.student-option input { flex: 0 0 auto; accent-color: var(--ui-success); }
 .student-option > span { display: grid; min-width: 0; gap: 3px; }
 .student-option strong { overflow: hidden; color: var(--ui-text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .student-option small { color: var(--ui-text-muted); font-size: 13px; }
@@ -47,9 +47,9 @@
 .selected-count { margin: 11px 0 0 !important; color: var(--ui-text) !important; font-weight: 700; }
 .student-list-error { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; border: 1px solid var(--ui-border); border-radius: 9px; color: var(--ui-danger); font-size: 13px; }
 .no-students { margin: 0 !important; padding: 18px; border: 1px dashed var(--ui-border); border-radius: 10px; text-align: center; }
-.student-skeleton { height: 58px; border-radius: 10px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: assignment-form-shimmer 1.4s linear infinite; }
+.student-skeleton { height: 58px; border-radius: 10px; background: var(--ui-surface-muted); background-size: 200% 100%; animation: assignment-form-shimmer 1.4s linear infinite; }
 .editor-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.save-button { min-height: 39px; padding: 0 15px; border: 1px solid var(--ui-border); border-radius: 8px; color: #fff; background: var(--ui-brand); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.save-button { min-height: 39px; padding: 0 15px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-brand-contrast); background: var(--ui-brand); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
 .save-button:hover { background: var(--ui-brand); }
 .save-button:disabled { opacity: .5; cursor: not-allowed; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }

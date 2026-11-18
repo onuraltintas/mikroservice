@@ -21,124 +21,124 @@ type Resource = 'session' | 'exam' | 'goal';
   template: `
     <section class="mx-auto max-w-4xl space-y-6">
       <div>
-        <a routerLink="/dashboard/coaching/operations" class="text-sm font-medium text-indigo-600 hover:underline">← Operasyonlara dön</a>
-        <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ title() }}</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Domain doğrulamalarına tabi, idempotent yönetici kaydı oluşturun.</p>
+        <a routerLink="/dashboard/coaching/operations" class="text-sm font-medium text-(--ui-brand-text) hover:underline">← Operasyonlara dön</a>
+        <h1 class="mt-2 text-2xl font-bold text-(--ui-text)">{{ title() }}</h1>
+        <p class="text-sm text-(--ui-text-muted)">Domain doğrulamalarına tabi, idempotent yönetici kaydı oluşturun.</p>
       </div>
 
-      @if (error()) { <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div> }
-      @if (loadingUsers()) { <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">Kullanıcı listeleri yükleniyor…</div> }
-      <div class="flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
-        <label class="min-w-56 text-sm text-gray-700 dark:text-gray-200">Öğretmen ara
-          <input [(ngModel)]="teacherSearch" name="teacherSearch" maxlength="100" placeholder="Ad veya e-posta" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+      @if (error()) { <div class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
+      @if (loadingUsers()) { <div class="rounded-lg border border-(--ui-brand-soft) bg-(--ui-brand-soft) p-4 text-sm text-(--ui-brand-text)">Kullanıcı listeleri yükleniyor…</div> }
+      <div class="flex flex-wrap items-end gap-3 rounded-lg border border-(--ui-border) bg-(--ui-surface-muted) p-3">
+        <label class="min-w-56 text-sm text-(--ui-text)">Öğretmen ara
+          <input [(ngModel)]="teacherSearch" name="teacherSearch" maxlength="100" placeholder="Ad veya e-posta" class="mt-1 w-full rounded border px-3 py-2" />
         </label>
-        <label class="min-w-56 text-sm text-gray-700 dark:text-gray-200">Öğrenci ara
-          <input [(ngModel)]="studentSearch" name="studentSearch" maxlength="100" placeholder="Ad veya e-posta" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+        <label class="min-w-56 text-sm text-(--ui-text)">Öğrenci ara
+          <input [(ngModel)]="studentSearch" name="studentSearch" maxlength="100" placeholder="Ad veya e-posta" class="mt-1 w-full rounded border px-3 py-2" />
         </label>
-        <button type="button" (click)="searchUsers()" [disabled]="loadingUsers()" class="rounded-lg border border-indigo-300 px-4 py-2 text-sm text-indigo-700 disabled:opacity-50">Ara</button>
+        <button type="button" (click)="searchUsers()" [disabled]="loadingUsers()" class="rounded-lg border border-(--ui-brand) px-4 py-2 text-sm text-(--ui-brand-text) disabled:opacity-50">Ara</button>
       </div>
 
       @if (resource() === 'session') {
-        <form (ngSubmit)="submitSession()" class="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <form (ngSubmit)="submitSession()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Öğretmen
-              <select [(ngModel)]="session.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
+            <label class="text-sm text-(--ui-text)">Öğretmen
+              <select [(ngModel)]="session.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Seans tipi
-              <select [(ngModel)]="session.type" name="type" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="OneOnOne">Birebir</option><option value="Group">Grup</option></select>
+            <label class="text-sm text-(--ui-text)">Seans tipi
+              <select [(ngModel)]="session.type" name="type" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="OneOnOne">Birebir</option><option value="Group">Grup</option></select>
             </label>
           </div>
           @if (session.type === 'OneOnOne') {
-            <label class="block text-sm text-gray-700 dark:text-gray-200">Öğrenci
-              <select [(ngModel)]="session.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select>
+            <label class="block text-sm text-(--ui-text)">Öğrenci
+              <select [(ngModel)]="session.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select>
             </label>
           } @else {
             <fieldset>
-              <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Grup öğrencileri (en az 2)</legend>
-              <div class="grid max-h-56 gap-2 overflow-y-auto rounded-lg border p-3 md:grid-cols-2 dark:border-gray-700">@for (student of students(); track student.userId) {<label class="flex items-center gap-2 text-sm"><input type="checkbox" [checked]="selectedStudentIds.has(student.userId)" (change)="toggleStudent(student.userId)" /><span>{{ student.fullName }} · {{ student.email }}</span></label>} @empty {<span class="text-sm text-gray-500">Aktif öğrenci bulunamadı.</span>}</div>
-              <p class="mt-1 text-xs text-gray-500">Seçili: {{ selectedStudentIds.size }}/100</p>
+              <legend class="mb-2 text-sm font-medium text-(--ui-text)">Grup öğrencileri (en az 2)</legend>
+              <div class="grid max-h-56 gap-2 overflow-y-auto rounded-lg border p-3 md:grid-cols-2">@for (student of students(); track student.userId) {<label class="flex items-center gap-2 text-sm"><input type="checkbox" [checked]="selectedStudentIds.has(student.userId)" (change)="toggleStudent(student.userId)" /><span>{{ student.fullName }} · {{ student.email }}</span></label>} @empty {<span class="text-sm text-(--ui-text-muted)">Aktif öğrenci bulunamadı.</span>}</div>
+              <p class="mt-1 text-xs text-(--ui-text-muted)">Seçili: {{ selectedStudentIds.size }}/100</p>
             </fieldset>
           }
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Başlangıç
-              <input [(ngModel)]="session.startTime" name="startTime" type="datetime-local" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Başlangıç
+              <input [(ngModel)]="session.startTime" name="startTime" type="datetime-local" required class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Süre (dakika)
-              <input [(ngModel)]="session.durationMinutes" name="durationMinutes" type="number" min="1" max="240" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Süre (dakika)
+              <input [(ngModel)]="session.durationMinutes" name="durationMinutes" type="number" min="1" max="240" required class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
           </div>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Konu
-            <input [(ngModel)]="session.subject" name="subject" maxlength="200" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+          <label class="block text-sm text-(--ui-text)">Konu
+            <input [(ngModel)]="session.subject" name="subject" maxlength="200" class="mt-1 w-full rounded-lg border px-3 py-2" />
           </label>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Notlar
-            <textarea [(ngModel)]="session.notes" name="notes" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"></textarea>
+          <label class="block text-sm text-(--ui-text)">Notlar
+            <textarea [(ngModel)]="session.notes" name="notes" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2"></textarea>
           </label>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Online görüşme bağlantısı (isteğe bağlı)
-            <input [(ngModel)]="session.meetingLink" name="meetingLink" type="url" maxlength="500" placeholder="https://..." class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+          <label class="block text-sm text-(--ui-text)">Online görüşme bağlantısı (isteğe bağlı)
+            <input [(ngModel)]="session.meetingLink" name="meetingLink" type="url" maxlength="500" placeholder="https://..." class="mt-1 w-full rounded-lg border px-3 py-2" />
           </label>
-          <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm dark:border-gray-600">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Seans oluştur' }}</button></div>
+          <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-(--ui-brand) px-5 py-2 text-sm font-medium text-(--ui-brand-contrast) disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Seans oluştur' }}</button></div>
         </form>
       } @else if (resource() === 'exam') {
-        <form (ngSubmit)="submitExam()" class="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <form (ngSubmit)="submitExam()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Öğretmen
-              <select [(ngModel)]="exam.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
+            <label class="text-sm text-(--ui-text)">Öğretmen
+              <select [(ngModel)]="exam.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Sınav tipi
-              <select [(ngModel)]="exam.type" name="type" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="Mock">Deneme</option><option value="Weekly">Haftalık</option><option value="Monthly">Aylık</option><option value="LGS">LGS</option><option value="YKS">YKS</option><option value="MidTerm">Ara sınav</option><option value="Final">Final</option><option value="Quiz">Kısa sınav</option></select>
+            <label class="text-sm text-(--ui-text)">Sınav tipi
+              <select [(ngModel)]="exam.type" name="type" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="Mock">Deneme</option><option value="Weekly">Haftalık</option><option value="Monthly">Aylık</option><option value="LGS">LGS</option><option value="YKS">YKS</option><option value="MidTerm">Ara sınav</option><option value="Final">Final</option><option value="Quiz">Kısa sınav</option></select>
             </label>
           </div>
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Başlık
-              <input [(ngModel)]="exam.title" name="title" maxlength="200" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Başlık
+              <input [(ngModel)]="exam.title" name="title" maxlength="200" required class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Sınav tarihi
-              <input [(ngModel)]="exam.examDate" name="examDate" type="datetime-local" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Sınav tarihi
+              <input [(ngModel)]="exam.examDate" name="examDate" type="datetime-local" required class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
           </div>
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Maksimum puan
-              <input [(ngModel)]="exam.maxScore" name="maxScore" type="number" min="0.01" max="999.99" step="0.01" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Maksimum puan
+              <input [(ngModel)]="exam.maxScore" name="maxScore" type="number" min="0.01" max="999.99" step="0.01" required class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Kurum (isteğe bağlı)
-              <select [(ngModel)]="exam.institutionId" name="institutionId" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="">Öğretmen kurumundan türet</option>@for (institution of institutions(); track institution.id) {<option [value]="institution.id">{{ institution.name }}</option>}</select>
+            <label class="text-sm text-(--ui-text)">Kurum (isteğe bağlı)
+              <select [(ngModel)]="exam.institutionId" name="institutionId" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen kurumundan türet</option>@for (institution of institutions(); track institution.id) {<option [value]="institution.id">{{ institution.name }}</option>}</select>
             </label>
           </div>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Açıklama
-            <textarea [(ngModel)]="exam.description" name="description" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"></textarea>
+          <label class="block text-sm text-(--ui-text)">Açıklama
+            <textarea [(ngModel)]="exam.description" name="description" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2"></textarea>
           </label>
-          <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm dark:border-gray-600">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Sınav oluştur' }}</button></div>
+          <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-(--ui-brand) px-5 py-2 text-sm font-medium text-(--ui-brand-contrast) disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Sınav oluştur' }}</button></div>
         </form>
       } @else {
-        <form (ngSubmit)="submitGoal()" class="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <form (ngSubmit)="submitGoal()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Öğrenci
-              <select [(ngModel)]="goal.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select>
+            <label class="text-sm text-(--ui-text)">Öğrenci
+              <select [(ngModel)]="goal.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select>
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Koç (isteğe bağlı)
-              <select [(ngModel)]="goal.teacherId" name="teacherId" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="">Öğrencinin hedefi</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
+            <label class="text-sm text-(--ui-text)">Koç (isteğe bağlı)
+              <select [(ngModel)]="goal.teacherId" name="teacherId" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrencinin hedefi</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
             </label>
           </div>
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Başlık
-              <input [(ngModel)]="goal.title" name="title" maxlength="200" required class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Başlık
+              <input [(ngModel)]="goal.title" name="title" maxlength="200" required class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Kategori
-              <select [(ngModel)]="goal.category" name="category" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="ExamPreparation">Sınav hazırlığı</option><option value="SubjectMastery">Ders hâkimiyeti</option><option value="GradeImprovement">Not yükseltme</option><option value="StudyHabits">Çalışma alışkanlığı</option><option value="TimeManagement">Zaman yönetimi</option><option value="Other">Diğer</option></select>
+            <label class="text-sm text-(--ui-text)">Kategori
+              <select [(ngModel)]="goal.category" name="category" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="ExamPreparation">Sınav hazırlığı</option><option value="SubjectMastery">Ders hâkimiyeti</option><option value="GradeImprovement">Not yükseltme</option><option value="StudyHabits">Çalışma alışkanlığı</option><option value="TimeManagement">Zaman yönetimi</option><option value="Other">Diğer</option></select>
             </label>
           </div>
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Hedef tarihi (isteğe bağlı)
-              <input [(ngModel)]="goal.targetDate" name="targetDate" type="date" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Hedef tarihi (isteğe bağlı)
+              <input [(ngModel)]="goal.targetDate" name="targetDate" type="date" class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Hedef puan (isteğe bağlı)
-              <input [(ngModel)]="goal.targetScore" name="targetScore" type="number" min="0" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+            <label class="text-sm text-(--ui-text)">Hedef puan (isteğe bağlı)
+              <input [(ngModel)]="goal.targetScore" name="targetScore" type="number" min="0" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border px-3 py-2" />
             </label>
           </div>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Açıklama
-            <textarea [(ngModel)]="goal.description" name="description" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"></textarea>
+          <label class="block text-sm text-(--ui-text)">Açıklama
+            <textarea [(ngModel)]="goal.description" name="description" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2"></textarea>
           </label>
-          <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm dark:border-gray-600">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Hedef oluştur' }}</button></div>
+          <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-(--ui-brand) px-5 py-2 text-sm font-medium text-(--ui-brand-contrast) disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Hedef oluştur' }}</button></div>
         </form>
       }
     </section>

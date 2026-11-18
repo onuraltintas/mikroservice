@@ -6,7 +6,7 @@
         <!-- Mobile Sidebar Toggle -->
         <button type="button" (click)="layoutService.toggleMobileSidebar()"
             aria-label="Mobil menüyü aç veya kapat"
-            class="md:hidden mr-4 p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 focus:outline-none transition-all duration-200">
+            class="md:hidden mr-4 p-2.5 rounded-xl text-(--ui-text-muted) hover:text-(--ui-brand-text) hover:bg-(--ui-brand-soft) focus:outline-none transition-all duration-200">
             <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -17,7 +17,7 @@
             <label for="search" class="sr-only">Ara</label>
             <div class="relative group">
                 <div class="pointer-events-none absolute inset-y-0 left-0 pl-4 flex items-center">
-                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-indigo-500 transition-colors"
+                    <svg class="h-5 w-5 text-(--ui-text-muted) group-focus-within:text-(--ui-brand-text) transition-colors"
                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd"
                             d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
@@ -25,7 +25,7 @@
                     </svg>
                 </div>
                 <input id="search"
-                    class="block w-full bg-gray-50 dark:bg-gray-800 py-2.5 pl-11 pr-4 border border-gray-200 dark:border-gray-700 rounded-xl leading-5 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all duration-200 shadow-sm"
+                    class="block w-full bg-(--ui-surface-muted) py-2.5 pl-11 pr-4 border border-(--ui-border) rounded-xl leading-5 text-(--ui-text) placeholder-(--ui-border-strong) focus:outline-none focus:bg-(--ui-surface) focus:ring-2 focus:ring-(--ui-brand) focus:border-transparent text-sm transition-all duration-200 shadow-sm"
                     placeholder="Arama yap..." type="search" name="search">
             </div>
         </div>
@@ -35,17 +35,17 @@
     <div *ngIf="isMaintenanceMode()" class="flex items-center mr-2 md:mr-6 animate-pulse">
         <!-- Desktop: Full Badge -->
         <div
-            class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800 shadow-sm">
+            class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-(--ui-danger-soft) text-(--ui-danger) rounded-lg border border-(--ui-danger-soft) shadow-sm">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <span class="text-xs font-bold uppercase tracking-wider">Sistem Bakım Modunda</span>
+            <span class="text-xs font-bold">Sistem Bakım Modunda</span>
         </div>
 
         <!-- Mobile: Icon Only -->
         <div
-            class="md:hidden flex items-center justify-center w-9 h-9 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full border border-red-200 dark:border-red-800">
+            class="md:hidden flex items-center justify-center w-9 h-9 bg-(--ui-danger-soft) text-(--ui-danger) rounded-full border border-(--ui-danger-soft)">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -58,11 +58,11 @@
         <!-- Dark Mode Toggle -->
         <button type="button" (click)="toggleTheme()"
             [attr.aria-label]="darkModeService.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'"
-            class="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200"
+            class="p-2.5 rounded-xl text-(--ui-text-muted) hover:text-(--ui-brand-text) hover:bg-(--ui-surface-muted) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 transition-all duration-200"
             [title]="darkModeService.isDarkMode() ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'">
             <span class="sr-only">Toggle Dark Mode</span>
             <!-- Sun Icon (showing when dark) -->
-            <svg *ngIf="darkModeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400"
+            <svg *ngIf="darkModeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-(--ui-warning)"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -79,10 +79,10 @@
         <div class="relative notification-container">
             <button type="button" (click)="toggleNotificationMenu()"
                 aria-label="Bildirimleri aç veya kapat" [attr.aria-expanded]="showNotificationMenu()"
-                class="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 relative group">
+                class="p-2.5 rounded-xl text-(--ui-text-muted) hover:text-(--ui-brand-text) hover:bg-(--ui-surface-muted) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 transition-all duration-200 relative group">
                 <span class="sr-only">Bildirimler</span>
                 <span *ngIf="unreadCount > 0"
-                    class="absolute top-2 right-2 block h-4 min-w-4 px-1 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900 animate-pulse text-[10px] text-white font-bold flex items-center justify-center">
+                    class="absolute top-2 right-2 block h-4 min-w-4 px-1 rounded-full bg-(--ui-danger-soft) ring-2 ring-white animate-pulse text-[10px] text-(--ui-danger) font-bold flex items-center justify-center">
                     {{ unreadCount }}
                 </span>
                 <svg class="h-5 w-5 transform group-hover:scale-110 transition-transform duration-200"
@@ -95,34 +95,34 @@
 
             <!-- Notification Dropdown -->
             <div *ngIf="showNotificationMenu()"
-                class="header-notification-dropdown absolute right-0 mt-2 rounded-2xl shadow-2xl bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 focus:outline-none z-50 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                class="header-notification-dropdown absolute right-0 mt-2 rounded-2xl shadow-2xl bg-(--ui-surface) ring-1 ring-(--ui-border) focus:outline-none z-50 animate-in fade-in slide-in-from-top-2 overflow-hidden">
                 <div
-                    class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50">
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-white">Bildirimler</h3>
+                    class="px-5 py-4 border-b border-(--ui-border) flex items-center justify-between bg-(--ui-surface-muted)">
+                    <h3 class="text-sm font-bold text-(--ui-text)">Bildirimler</h3>
                     <button type="button" *ngIf="unreadCount > 0" (click)="markAllAsRead()"
-                        class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+                        class="text-xs text-(--ui-brand-text) font-bold hover:underline">
                         Tümünü Okundu İşaretle
                     </button>
                 </div>
 
                 <div class="max-h-[400px] overflow-y-auto">
                     <div *ngIf="notifications.length === 0" class="py-12 text-center">
-                        <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none"
+                        <svg class="mx-auto h-12 w-12 text-(--ui-text-muted) mb-3" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Henüz bildiriminiz yok.</p>
+                        <p class="text-sm text-(--ui-text-muted)">Henüz bildiriminiz yok.</p>
                     </div>
 
                     <div *ngFor="let n of notifications"
-                        class="p-4 border-b border-gray-50 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex gap-4 items-start relative group"
-                        [class.bg-indigo-50/30]="!n.isRead" [class.dark:bg-indigo-900/10]="!n.isRead">
+                        class="p-4 border-b border-(--ui-border) last:border-0 hover:bg-(--ui-surface-muted) transition-colors flex gap-4 items-start relative group"
+                        [class.bg-(--ui-brand-soft)]="!n.isRead">
 
                         <div [ngClass]="{
-                            'bg-blue-100 text-blue-600': n.type === 'SupportRequest',
-                            'bg-orange-100 text-orange-600': n.type === 'System',
-                            'bg-green-100 text-green-600': n.type === 'Info'
+                            'bg-(--ui-brand-soft) text-(--ui-brand-text)': n.type === 'SupportRequest',
+                            'bg-(--ui-warning-soft) text-(--ui-warning)': n.type === 'System',
+                            'bg-(--ui-success-soft) text-(--ui-success)': n.type === 'Info'
                           }" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
                             <svg *ngIf="n.type === 'SupportRequest'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -138,9 +138,9 @@
                         </div>
 
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate pr-6">{{ n.title }}</h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">{{ n.message }}</p>
-                            <p class="text-[10px] text-gray-400 mt-2 flex items-center">
+                            <h4 class="text-sm font-bold text-(--ui-text) truncate pr-6">{{ n.title }}</h4>
+                            <p class="text-xs text-(--ui-text-muted) line-clamp-2 mt-1">{{ n.message }}</p>
+                            <p class="text-[10px] text-(--ui-text-muted) mt-2 flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"
                                         stroke-linejoin="round" stroke-width="2" />
@@ -151,7 +151,7 @@
 
                         <button type="button" *ngIf="!n.isRead" (click)="markAsRead(n.id, $event)"
                             aria-label="Bildirimi okundu işaretle"
-                            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 transition-all">
+                            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-1 rounded-full bg-(--ui-brand-soft) text-(--ui-brand-text) transition-all">
                             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" />
@@ -160,9 +160,9 @@
                     </div>
                 </div>
 
-                <div class="p-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
+                <div class="p-3 bg-(--ui-surface-muted) border-t border-(--ui-border)">
                     <a [routerLink]="['/dashboard/notifications']" (click)="showNotificationMenu.set(false)"
-                        class="block w-full text-center py-2 text-xs font-bold text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors">
+                        class="block w-full text-center py-2 text-xs font-bold text-(--ui-text-muted) hover:text-(--ui-brand-text) transition-colors">
                         Tüm Bildirimleri Gör
                     </a>
                 </div>
@@ -170,16 +170,16 @@
         </div>
 
         <!-- Divider -->
-        <div class="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+        <div class="hidden md:block h-8 w-px bg-(--ui-surface-muted) mx-2"></div>
 
         <!-- User Profile Dropdown -->
         <div class="relative user-menu-container">
             <button type="button" (click)="toggleUserMenu()"
                 aria-label="Kullanıcı menüsünü aç veya kapat" [attr.aria-expanded]="showUserMenu()"
-                class="flex items-center space-x-3 py-1.5 px-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+                class="flex items-center space-x-3 py-1.5 px-2 rounded-xl hover:bg-(--ui-surface-muted) transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2">
                 <!-- Avatar Symbol -->
                 <div
-                    class="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-500/30">
+                    class="h-8 w-8 rounded-lg bg-(--ui-brand) flex items-center justify-center text-(--ui-brand-contrast) font-bold text-xs shadow-lg">
                     {{ user()?.firstName?.charAt(0) || 'U' }}
                 </div>
                 <!-- User Info Text -->
@@ -193,7 +193,7 @@
                     </p>
                 </div>
                 <!-- Chevron -->
-                <svg class="h-3 w-3 text-gray-400 dark:text-gray-500 hidden md:block" xmlns="http://www.w3.org/2000/svg"
+                <svg class="h-3 w-3 text-(--ui-text-muted) hidden md:block" xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                         d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -203,11 +203,11 @@
 
             <!-- Dropdown Menu -->
             <div *ngIf="showUserMenu()"
-                class="absolute right-0 mt-2 w-56 rounded-xl shadow-xl bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 divide-y divide-gray-100 dark:divide-gray-700 focus:outline-none z-50 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                class="absolute right-0 mt-2 w-56 rounded-xl shadow-xl bg-(--ui-surface) ring-1 ring-(--ui-border) divide-y divide-(--ui-border) focus:outline-none z-50 animate-in fade-in slide-in-from-top-2 overflow-hidden">
 
                 <!-- User Info Section -->
                 <div
-                    class="px-6 py-6 bg-gray-50 dark:bg-gray-900/50 flex flex-col justify-center border-b border-gray-100 dark:border-gray-700">
+                    class="px-6 py-6 bg-(--ui-surface-muted) flex flex-col justify-center border-b border-(--ui-border)">
                     <div class="header-menu-name-row">
                         <span class="header-menu-name">{{ user()?.firstName }}</span>
                         <span class="header-menu-name">{{ user()?.lastName }}</span>
@@ -219,8 +219,8 @@
 
                 <div class="py-1">
                     <a [routerLink]="['/dashboard/identity/profile']" (click)="showUserMenu.set(false)"
-                        class="group flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-indigo-500"
+                        class="group flex items-center px-4 py-2.5 text-sm text-(--ui-text) hover:bg-(--ui-brand-soft) hover:text-(--ui-brand-text) transition-colors">
+                        <svg class="mr-3 h-5 w-5 text-(--ui-text-muted) group-hover:text-(--ui-brand-text)"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -228,8 +228,8 @@
                         Profilim
                     </a>
                     <a [routerLink]="['/dashboard']" (click)="showUserMenu.set(false)"
-                        class="group flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-indigo-500"
+                        class="group flex items-center px-4 py-2.5 text-sm text-(--ui-text) hover:bg-(--ui-brand-soft) hover:text-(--ui-brand-text) transition-colors">
+                        <svg class="mr-3 h-5 w-5 text-(--ui-text-muted) group-hover:text-(--ui-brand-text)"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -241,8 +241,8 @@
                 </div>
                 <div class="py-1">
                     <button type="button" (click)="logout()" aria-label="Çıkış yap"
-                        class="w-full group flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                        <svg class="mr-3 h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        class="w-full group flex items-center px-4 py-2.5 text-sm text-(--ui-danger) hover:bg-(--ui-danger-soft) transition-colors">
+                        <svg class="mr-3 h-5 w-5 text-(--ui-danger)" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

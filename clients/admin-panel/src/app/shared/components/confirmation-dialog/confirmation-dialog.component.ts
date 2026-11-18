@@ -84,7 +84,7 @@ export interface ConfirmationDialogData {
 
         .confirm-btn {
             background: var(--ui-brand);
-            color: #fff;
+            color: var(--ui-brand-contrast);
         }
 
         .confirm-btn:hover {

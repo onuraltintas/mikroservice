@@ -7,26 +7,26 @@ import { CoachingCatalogImportReview, CoachingCatalogService } from '../../../co
 import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({ selector: 'app-coaching-catalog-import', standalone: true, imports: [FormsModule], template: `
-  <section class="space-y-4 rounded-xl border bg-white p-5 dark:bg-gray-900" aria-labelledby="catalog-import-title" [attr.aria-busy]="busy()">
+  <section class="space-y-4 rounded-xl border bg-(--ui-surface) p-5" aria-labelledby="catalog-import-title" [attr.aria-busy]="busy()">
     <h2 id="catalog-import-title" class="text-xl font-semibold">Kontrollü katalog aktarımı</h2>
-    @if(busy()) { <p role="status" aria-live="polite" class="text-sm text-indigo-600">İşlem sürüyor; tamamlanana kadar bekleyin.</p> }
-    <p class="text-sm text-gray-500">Beş JSON dosyasını birlikte seçin. Yeni kayıtlar pasif eklenir; yayınlama ayrı onay ister. Mevcut içerik değiştirilmez, geçmiş silinmez.</p>
+    @if(busy()) { <p role="status" aria-live="polite" class="text-sm text-(--ui-brand-text)">İşlem sürüyor; tamamlanana kadar bekleyin.</p> }
+    <p class="text-sm text-(--ui-text-muted)">Beş JSON dosyasını birlikte seçin. Yeni kayıtlar pasif eklenir; yayınlama ayrı onay ister. Mevcut içerik değiştirilmez, geçmiş silinmez.</p>
     <fieldset [disabled]="busy() || !permitted()" class="space-y-3">
-      <label class="block text-sm">Kaynak adı<input [(ngModel)]="source" (ngModelChange)="invalidate()" maxlength="100" class="ml-3 rounded border p-2 dark:bg-gray-800" /></label>
+      <label class="block text-sm">Kaynak adı<input [(ngModel)]="source" (ngModelChange)="invalidate()" maxlength="100" class="ml-3 rounded border p-2" /></label>
       <label class="block text-sm">Katalog JSON dosyaları<input type="file" multiple accept=".json,application/json" (change)="selectFiles($event)" class="ml-3" /></label>
-      <ul class="text-xs text-gray-500">@for(name of fileNames; track name) { <li>{{ name }} — {{ files[name] ? 'Seçildi' : 'Bekliyor' }}</li> }</ul>
-      <button type="button" (click)="preview()" [disabled]="!ready()" class="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-40">Önizle ve doğrula</button>
+      <ul class="text-xs text-(--ui-text-muted)">@for(name of fileNames; track name) { <li>{{ name }} — {{ files[name] ? 'Seçildi' : 'Bekliyor' }}</li> }</ul>
+      <button type="button" (click)="preview()" [disabled]="!ready()" class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-40">Önizle ve doğrula</button>
       @if(review(); as result) {
         <div role="status" class="space-y-2 rounded border p-3"><p>{{ total() }} kaynak kayıt: {{ result.newRecords }} yeni, {{ total() - result.newRecords }} mevcut ve aynı içerikli.</p>
           <table class="w-full text-left text-sm"><thead><tr><th>Dosya</th><th>Kayıt</th></tr></thead><tbody>@for(name of fileNames; track name) { <tr><td>{{ name }}</td><td>{{ result.counts[name] || 0 }}</td></tr> }</tbody></table>
           <p class="break-all text-xs">Önizleme kimliği: {{ result.fingerprint }}</p></div>
-        <label class="block text-sm">İşlem gerekçesi<textarea [(ngModel)]="reason" minlength="5" maxlength="200" class="mt-1 block w-full rounded border p-2 dark:bg-gray-800"></textarea></label>
+        <label class="block text-sm">İşlem gerekçesi<textarea [(ngModel)]="reason" minlength="5" maxlength="200" class="mt-1 block w-full rounded border p-2"></textarea></label>
         <button type="button" (click)="approve(false)" [disabled]="!result.newRecords || reason.trim().length < 5" class="rounded border px-4 py-2 disabled:opacity-40">Yeni kayıtları pasif aktar</button>
-        <button type="button" (click)="approve(true)" [disabled]="result.newRecords !== 0 || total() === 0 || reason.trim().length < 5" class="ml-3 rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-40">Doğrulanmış kaynağı yayınla</button>
-        <p class="text-xs text-gray-500">Aktarımdan sonra yayın için yeniden önizleyin. Başka bir yönetici kaydı değiştirirse eski onay geçersiz olur.</p>
+        <button type="button" (click)="approve(true)" [disabled]="result.newRecords !== 0 || total() === 0 || reason.trim().length < 5" class="ml-3 rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-40">Doğrulanmış kaynağı yayınla</button>
+        <p class="text-xs text-(--ui-text-muted)">Aktarımdan sonra yayın için yeniden önizleyin. Başka bir yönetici kaydı değiştirirse eski onay geçersiz olur.</p>
       }
     </fieldset>
-    @if(error()) { <p role="alert" class="rounded bg-red-50 p-3 text-red-800">{{ error() }}</p> }
+    @if(error()) { <p role="alert" class="rounded bg-(--ui-danger-soft) p-3 text-(--ui-danger)">{{ error() }}</p> }
   </section>` })
 export class CoachingCatalogImportComponent {
   private readonly service = inject(CoachingCatalogService);

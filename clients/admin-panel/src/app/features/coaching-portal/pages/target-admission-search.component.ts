@@ -54,10 +54,10 @@ interface AdmissionItem {
           <label>Dil<select name="language" [(ngModel)]="filters['language']" (ngModelChange)="filterChanged()" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['language'] || []" [value]="value">{{value}}</option></select></label>
           <label>Alan<select name="field" [(ngModel)]="filters['field']" (ngModelChange)="filterChanged()" [disabled]="!(facets()['field'] || []).length" class="w-full rounded border p-2"><option value="">{{(facets()['field'] || []).length ? 'Tümü' : 'Kaynakta alan bilgisi yok'}}</option><option *ngFor="let value of facets()['field'] || []" [value]="value">{{value}}</option></select></label>
         </ng-template>
-        <button type="submit" class="rounded bg-(--ui-brand) p-2 text-white">Ara</button>
+        <button type="submit" class="rounded bg-(--ui-brand) p-2 text-(--ui-brand-contrast)">Ara</button>
       </fieldset>
     </form>
-    <p *ngIf="error()" role="alert" class="mt-2 text-red-600">{{error()}}</p>
+    <p *ngIf="error()" role="alert" class="mt-2 text-(--ui-danger)">{{error()}}</p>
     <p *ngIf="busy()" role="status">Katalog yükleniyor…</p>
     <p *ngIf="searched() && !busy()" role="status" class="my-2">{{total()}} doğrulanmış kayıt</p>
     <p *ngIf="searched() && !total()" class="my-2 text-sm">Bu filtrelerle katalog kaydı bulunamadı.</p>

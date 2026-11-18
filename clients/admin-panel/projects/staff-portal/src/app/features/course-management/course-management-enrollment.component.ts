@@ -20,7 +20,7 @@ import { StaffAuthService } from '../../auth/staff-auth.service';
       @if (error) { <p role="alert">{{ error }}</p> }
     </section>
   `,
-  styles: `section{margin:20px 12px;padding:16px;border:1px solid #d7dfd6;border-radius:12px}h2{font-size:16px}p,label{font-size:12px;line-height:1.6}select,button{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid #b9c5b9;background:white;color:#24392e}`
+  styles: `section{margin:20px 12px;padding:16px;border: 1px solid var(--ui-border);border-radius:12px}h2{font-size:16px}p,label{font-size:12px;line-height:1.6}select,button{width:100%;padding:10px;margin-top:8px;border-radius:8px;border: 1px solid var(--ui-border);background:white;color: var(--ui-text)}`
 })
 export class CourseManagementEnrollmentComponent {
   private readonly auth = inject(StaffAuthService);

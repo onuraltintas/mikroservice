@@ -1,0 +1,49 @@
+// Redesign 18.11.2026: the staff portal (teacher, institution) carries the eduivme identity: graphite and amber, IBM Plex
+// Sans, a see-through sidebar. <html data-brand="eduivme"> provides the --ds-* values (light and dark); this file points the
+// portal's own variables (--ui-*, --coaching-*), which the coaching student tokens set for the shared coaching pages, at them.
+html[data-brand='eduivme'] body,
+html[data-brand='eduivme'] .portal-shell,
+html[data-brand='eduivme'] .portal-shell.coaching-shell.coaching-staff-shell {
+  --ui-page: var(--ds-bg); --ui-surface: var(--ds-surface); --ui-surface-muted: var(--ds-bg); --ui-surface-raised: var(--ds-surface);
+  --ui-border: var(--ds-line); --ui-border-strong: var(--ds-field);
+  --ui-text: var(--ds-text); --ui-text-muted: var(--ds-muted); --ui-text-subtle: var(--ds-muted);
+  --ui-brand: var(--ds-primary); --ui-brand-strong: var(--ds-primary-hover); --ui-brand-hover: var(--ds-primary-hover);
+  --ui-brand-soft: var(--ds-soft); --ui-brand-text: var(--ds-link); --ui-brand-contrast: var(--ds-on-primary); --ui-brand-spark: var(--ds-accent);
+  --ui-accent: var(--ds-accent); --ui-accent-soft: var(--ds-warning-soft); --ui-accent-text: var(--ds-warning);
+  --ui-success: var(--ds-success); --ui-success-soft: var(--ds-success-soft);
+  --ui-warning: var(--ds-warning); --ui-warning-soft: var(--ds-warning-soft);
+  --ui-danger: var(--ds-danger); --ui-danger-soft: var(--ds-danger-soft);
+  --ui-info: var(--ds-link); --ui-info-soft: var(--ds-soft);
+  --ui-font-body: var(--ds-font); --ui-font-display: var(--ds-font);
+  --coaching-focus: var(--ds-focus);
+  --coaching-sidebar: var(--ds-nav); --coaching-sidebar-raised: var(--ds-surface); --coaching-sidebar-border: var(--ds-line);
+  --coaching-sidebar-text: var(--ds-text); --coaching-sidebar-muted: var(--ds-muted); --coaching-sidebar-active: var(--ds-primary);
+  --coaching-avatar: var(--ds-warning-soft); --coaching-avatar-text: var(--ds-warning); --coaching-badge: var(--ds-danger); --coaching-badge-text: var(--ds-surface);
+  --coaching-card-shadow: var(--ds-shadow); --coaching-radius-card: var(--ds-radius); --coaching-radius-control: var(--ds-radius-control);
+  --mat-sys-primary: var(--ds-primary); --mat-sys-on-primary: var(--ds-on-primary); --mat-sys-surface: var(--ds-surface);
+  --mat-sys-surface-container: var(--ds-surface); --mat-sys-on-surface: var(--ds-text); --mat-sys-on-surface-variant: var(--ds-muted);
+  --mat-sys-outline: var(--ds-field); --mat-sys-outline-variant: var(--ds-line); --mat-sys-error: var(--ds-danger);
+  --mat-sys-body-large-font: var(--ds-font); --mat-sys-body-medium-font: var(--ds-font); --mat-sys-label-large-font: var(--ds-font);
+  font-family: var(--ds-font);
+}
+html[data-brand='eduivme'] body { background: var(--ds-bg); color: var(--ds-text); }
+
+// Shell: see-through sidebar, the chosen workspace white with a graphite (dark theme: amber) line.
+html[data-brand='eduivme'] .portal-shell {
+  background: var(--ds-bg);
+  .sidebar { background: var(--ds-nav); color: var(--ds-text); border-right: 1px solid var(--ds-line); }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ds-text); text-decoration: none; }
+  .brand-logo { flex: none; }
+  .brand-copy strong { display: block; font-size: 20px; font-weight: 700; line-height: 1.1; }
+  .brand-copy small { display: block; color: var(--ds-muted); font-size: 13px; letter-spacing: 0; text-transform: none; }
+  .sidebar-caption { color: var(--ds-muted); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+  .product-choice { color: var(--ds-text); border-radius: var(--ds-radius-control); }
+  .product-choice:hover { background: color-mix(in srgb, var(--ds-surface) 60%, transparent); }
+  .product-choice.active { background: var(--ds-surface); border-color: transparent; box-shadow: inset 3px 0 var(--ds-primary), var(--ds-shadow); color: var(--ds-text); }
+  .product-logo { flex: none; }
+  .product-copy strong { font-size: 15px; font-weight: 600; }
+  .product-copy small { color: var(--ds-muted); font-size: 13px; }
+  .sidebar-bottom { border-color: var(--ds-line); color: var(--ds-text); strong { font-size: 13px; } small { color: var(--ds-muted); font-size: 12px; } }
+  .secure-dot { background: var(--ds-success); box-shadow: none; }
+  .topbar { background: color-mix(in srgb, var(--ds-bg) 92%, transparent); border-color: var(--ds-line); color: var(--ds-text); }
+}

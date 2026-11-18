@@ -16,32 +16,32 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
   template: `
     <div class="fixed inset-0 z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <!-- Backdrop (Static) -->
-      <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
+      <div class="fixed inset-0 bg-(--ui-text) backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
 
       <!-- Modal Position Container -->
       <div class="fixed inset-0 z-[101] overflow-y-auto">
         <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-12">
             
             <!-- Modal Panel -->
-            <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-left shadow-2xl transition-all border border-gray-100 dark:border-gray-700 bg-opacity-100 dark:bg-opacity-100">
+            <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-(--ui-surface) text-left shadow-2xl transition-all border border-(--ui-border) bg-opacity-100">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+                <div class="bg-(--ui-brand-soft) p-6 border-b border-(--ui-border)">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-4">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-(--ui-brand-soft) text-(--ui-brand-text)">
                                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                 </svg>
                             </div>
                             <div>
-                                <h3 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı Düzenle</h3>
+                                <h3 id="modal-title" class="text-lg font-semibold text-(--ui-text)">Kullanıcı Düzenle</h3>
                                 <div class="mt-1 flex items-center gap-2">
-                                     <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-400/20">{{ user()?.email }}</span>
+                                     <span class="inline-flex items-center rounded-md bg-(--ui-surface-muted) px-2 py-1 text-xs font-medium text-(--ui-text-muted) ring-1 ring-inset ring-(--ui-border-strong)">{{ user()?.email }}</span>
                                 </div>
                             </div>
                         </div>
-                        <button (click)="closeModal()" [disabled]="loading() || accessLoading() !== null" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <button (click)="closeModal()" [disabled]="loading() || accessLoading() !== null" class="text-(--ui-text-muted) hover:text-(--ui-text-muted)">
                             <span class="sr-only">Kapat</span>
                             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -53,97 +53,97 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                 <!-- Body -->
                 <div class="p-6 space-y-5">
                     <section aria-labelledby="edit-user-services" class="space-y-3">
-                        <h4 id="edit-user-services" class="font-semibold text-gray-900 dark:text-white">Servis erişimleri</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Her servis ayrı yönetilir. Erişim değişikliği hemen kaydedilir; roller, abonelikler ve kurum bağlantıları korunur.</p>
+                        <h4 id="edit-user-services" class="font-semibold text-(--ui-text)">Servis erişimleri</h4>
+                        <p class="text-xs text-(--ui-text-muted)">Her servis ayrı yönetilir. Erişim değişikliği hemen kaydedilir; roller, abonelikler ve kurum bağlantıları korunur.</p>
                         @if (isGlobalAdministrator()) {
-                            <p class="text-sm text-gray-600 dark:text-gray-300">SystemAdmin tüm servislerde genel yetkilidir; servis erişimiyle kısıtlanamaz.</p>
+                            <p class="text-sm text-(--ui-text-muted)">SystemAdmin tüm servislerde genel yetkilidir; servis erişimiyle kısıtlanamaz.</p>
                         } @else {
                             @for (service of services; track service.product) {
-                                <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-700" [attr.data-service]="service.product">
+                                <div class="rounded-xl border border-(--ui-border) p-3" [attr.data-service]="service.product">
                                     <div class="flex items-center justify-between gap-3">
                                         <div>
-                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ service.label }}</p>
-                                            <p class="mt-1 text-xs" [class.text-green-700]="hasProductAccess(service.product)" [class.text-gray-500]="!hasProductAccess(service.product)">{{ hasProductAccess(service.product) ? 'Erişim açık' : 'Erişim kapalı' }}</p>
+                                            <p class="text-sm font-semibold text-(--ui-text)">{{ service.label }}</p>
+                                            <p class="mt-1 text-xs" [class.text-(--ui-success)]="hasProductAccess(service.product)" [class.text-(--ui-text-muted)]="!hasProductAccess(service.product)">{{ hasProductAccess(service.product) ? 'Erişim açık' : 'Erişim kapalı' }}</p>
                                         </div>
                                         @if (canManageProductAccess()) {
                                             <button type="button" (click)="setProductAccess(service.product, !hasProductAccess(service.product))" [disabled]="loading() || accessLoading() !== null"
                                                 [attr.aria-label]="service.label + (hasProductAccess(service.product) ? ' erişimini kapat' : ' erişimini aç')"
-                                                class="shrink-0 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/20">
+                                                class="shrink-0 rounded-lg border border-(--ui-brand-soft) px-3 py-2 text-xs font-semibold text-(--ui-brand-text) hover:bg-(--ui-brand-soft) disabled:opacity-50">
                                                 {{ accessLoading() === service.product ? 'Kaydediliyor…' : hasProductAccess(service.product) ? 'Erişimi kapat' : 'Erişim aç' }}
                                             </button>
                                         }
                                     </div>
-                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Roller: {{ rolesForProduct(service.product) || 'Atanmamış — Roller bölümünden ayrıca tanımlayın.' }}</p>
+                                    <p class="mt-2 text-xs text-(--ui-text-muted)">Roller: {{ rolesForProduct(service.product) || 'Atanmamış — Roller bölümünden ayrıca tanımlayın.' }}</p>
                                     @if (service.product === 'speed-reading' && canManageProgression()) {
                                       <div class="mt-4 space-y-2 border-t pt-3">
                                         <label for="user-progression-mode" class="block text-sm font-semibold">Program ilerleme izni</label>
-                                        <select id="user-progression-mode" class="w-full rounded-lg border p-2 dark:bg-gray-800" [value]="progressionMode" (change)="progressionMode = $any($event.target).value" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">
+                                        <select id="user-progression-mode" class="w-full rounded-lg border p-2" [value]="progressionMode" (change)="progressionMode = $any($event.target).value" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">
                                           <option value="inherit">Genel ayarı kullan</option>
                                           <option value="allow">Beklemeden ilerleyebilir</option>
                                           <option value="deny">Ertesi günü beklesin</option>
                                         </select>
-                                        @if (progression(); as policy) { <p class="text-xs text-gray-500">Geçerli izin: {{ policy.allowEarlyAdvance ? 'Beklemeden ilerleyebilir' : 'Takvime bağlı' }} · Genel ayar: {{ policy.defaultAllowEarlyAdvance ? 'Açık' : 'Kapalı' }}</p> }
-                                        @if (progressionError()) { <p role="alert" class="text-sm text-red-600">{{ progressionError() }}</p> }
-                                        <button type="button" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50" (click)="saveProgression()" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">{{ progressionSaving() ? 'Kaydediliyor…' : 'İlerleme iznini kaydet' }}</button>
+                                        @if (progression(); as policy) { <p class="text-xs text-(--ui-text-muted)">Geçerli izin: {{ policy.allowEarlyAdvance ? 'Beklemeden ilerleyebilir' : 'Takvime bağlı' }} · Genel ayar: {{ policy.defaultAllowEarlyAdvance ? 'Açık' : 'Kapalı' }}</p> }
+                                        @if (progressionError()) { <p role="alert" class="text-sm text-(--ui-danger)">{{ progressionError() }}</p> }
+                                        <button type="button" class="rounded-lg border border-(--ui-brand-soft) px-3 py-2 text-sm font-semibold text-(--ui-brand-text) disabled:opacity-50" (click)="saveProgression()" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">{{ progressionSaving() ? 'Kaydediliyor…' : 'İlerleme iznini kaydet' }}</button>
                                       </div>
                                     }
                                 </div>
                             }
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Erişim kapatılınca yeni giriş ve oturum yenileme durur. Açık oturumun mevcut erişim süresi sona erene kadar devam etmesi mümkündür.</p>
+                            <p class="text-xs text-(--ui-text-muted)">Erişim kapatılınca yeni giriş ve oturum yenileme durur. Açık oturumun mevcut erişim süresi sona erene kadar devam etmesi mümkündür.</p>
                             @if (hasProductAccessPermission() && !auth.userProfile()?.mfaVerified) {
-                                <p class="text-sm text-amber-700 dark:text-amber-300">Servis erişimlerini değiştirmek için MFA doğrulaması gerekiyor.</p>
+                                <p class="text-sm text-(--ui-warning)">Servis erişimlerini değiştirmek için MFA doğrulaması gerekiyor.</p>
                             }
                         }
-                        @if (accessError()) { <p role="alert" class="text-sm text-red-600 dark:text-red-300">{{ accessError() }}</p> }
+                        @if (accessError()) { <p role="alert" class="text-sm text-(--ui-danger)">{{ accessError() }}</p> }
                     </section>
                     <form [formGroup]="form">
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="group">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Ad</label>
+                                    <label class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Ad</label>
                                     <input type="text" formControlName="firstName" 
-                                        [class.border-red-500]="f['firstName'].invalid && f['firstName'].touched"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors">
+                                        [class.border-(--ui-danger)]="f['firstName'].invalid && f['firstName'].touched"
+                                        class="block w-full rounded-lg border-(--ui-border) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm p-2.5 transition-colors">
                                     @if (f['firstName'].invalid && f['firstName'].touched) {
-                                        <p class="mt-1 text-xs text-red-500 ml-0.5">En az 2 karakter gereklidir.</p>
+                                        <p class="mt-1 text-xs text-(--ui-danger) ml-0.5">En az 2 karakter gereklidir.</p>
                                     }
                                 </div>
                                 <div class="group">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Soyad</label>
+                                    <label class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Soyad</label>
                                     <input type="text" formControlName="lastName" 
-                                        [class.border-red-500]="f['lastName'].invalid && f['lastName'].touched"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors">
+                                        [class.border-(--ui-danger)]="f['lastName'].invalid && f['lastName'].touched"
+                                        class="block w-full rounded-lg border-(--ui-border) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm p-2.5 transition-colors">
                                     @if (f['lastName'].invalid && f['lastName'].touched) {
-                                        <p class="mt-1 text-xs text-red-500 ml-0.5">En az 2 karakter gereklidir.</p>
+                                        <p class="mt-1 text-xs text-(--ui-danger) ml-0.5">En az 2 karakter gereklidir.</p>
                                     }
                                 </div>
                             </div>
 
                             <div class="group">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Telefon Numarası</label>
+                                <label class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Telefon Numarası</label>
                                 <div class="relative">
                                     <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <svg class="h-5 w-5 text-(--ui-text-muted)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
                                         </svg>
                                     </div>
                                     <input type="text" formControlName="phoneNumber" 
-                                        [class.border-red-500]="f['phoneNumber'].invalid && f['phoneNumber'].touched"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white transition-colors" placeholder="+90 5xx xxx xx xx">
+                                        [class.border-(--ui-danger)]="f['phoneNumber'].invalid && f['phoneNumber'].touched"
+                                        class="block w-full rounded-lg border-(--ui-border) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm p-2.5 pl-10 transition-colors" placeholder="+90 5xx xxx xx xx">
                                 </div>
                                 @if (f['phoneNumber'].invalid && f['phoneNumber'].touched) {
-                                    <p class="mt-1 text-xs text-red-500 ml-0.5">Geçerli bir telefon numarası girin.</p>
+                                    <p class="mt-1 text-xs text-(--ui-danger) ml-0.5">Geçerli bir telefon numarası girin.</p>
                                 }
                             </div>
 
                             @if (isTeacher() || isStudent()) {
-                                <p class="text-sm text-gray-600 dark:text-gray-300">Eğitim profili ve kurum ilişkileri ilgili ürünün koçluk veya hızlı okuma panelinden yönetilir.</p>
+                                <p class="text-sm text-(--ui-text-muted)">Eğitim profili ve kurum ilişkileri ilgili ürünün koçluk veya hızlı okuma panelinden yönetilir.</p>
                             }
                         </div>
                     </form>
 
                     @if (error()) {
-                        <div class="p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-xl border border-red-100 dark:border-red-800 flex items-start gap-3">
+                        <div class="p-4 bg-(--ui-danger-soft) text-(--ui-danger) rounded-xl border border-(--ui-danger-soft) flex items-start gap-3">
                             <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                             <span class="text-sm font-medium">{{ error() }}</span>
                         </div>
@@ -151,13 +151,13 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                 </div>
 
                 <!-- Footer -->
-                <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <div class="bg-(--ui-surface-muted) px-6 py-4 border-t border-(--ui-border) flex justify-end gap-3">
                     <button type="button" (click)="closeModal()" [disabled]="loading() || accessLoading() !== null"
-                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-(--ui-text) bg-(--ui-surface) border border-(--ui-border) hover:bg-(--ui-surface-muted) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--ui-brand) transition-colors">
                         Kapat
                     </button>
                     <button type="button" (click)="save()" [disabled]="loading() || accessLoading() !== null || !form.dirty"
-                        class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) bg-(--ui-brand) hover:bg-(--ui-brand) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--ui-brand) disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
                         @if(loading()) {
                             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

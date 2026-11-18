@@ -60,7 +60,7 @@ import { CoachingMessageListComponent, coachingMessageTime, messageOf } from '..
         }
       }
     </section>`,
-  styles: [`.institution-messages{display:grid;gap:.75rem}.error{color:#b91c1c}.reason{display:grid;gap:.5rem;max-width:40rem}textarea{font:inherit;padding:.5rem;border:1px solid #cbd5e1;border-radius:.5rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.primary{background:#4f46e5;color:#fff;border:0;border-radius:.5rem;padding:.45rem .8rem;font-weight:600}.link{border:0;background:none;color:#4f46e5;font-weight:600;justify-self:start}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.5rem;border-bottom:1px solid #e2e8f0}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}`]
+  styles: [`.institution-messages{display:grid;gap:.75rem}.error{color: var(--ui-danger)}.reason{display:grid;gap:.5rem;max-width:40rem}textarea{font:inherit;padding:.5rem;border: 1px solid var(--ui-brand);border-radius:.5rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.primary{background: var(--ui-brand);color: var(--ui-brand-contrast);border:0;border-radius:.5rem;padding:.45rem .8rem;font-weight:600}.link{border:0;background:none;color: var(--ui-brand-text);font-weight:600;justify-self:start}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.5rem;border-bottom: 1px solid var(--ui-brand-soft)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}`]
 })
 export class CoachingInstitutionMessagesComponent implements OnInit {
   private readonly api = new CoachingInstitutionMessagesApi(inject(HttpClient), environment.apiUrl);

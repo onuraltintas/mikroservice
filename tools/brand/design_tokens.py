@@ -63,8 +63,8 @@ for br in B:
     dark={**B[br]['dark'],**STATE['dark'],'shadow':'none'}
     out.append(block(f"{DARK} [data-brand='{br}'],\n[data-brand='{br}']{DARK}", dark))
 out.append('''// Eski bileşenler (--ui-*) marka kapsamı içinde yeni renkleri kullanır; böylece kayıt formları gibi henüz yenilenmemiş
-// parçalar da aynı kimlikte görünür.
-[data-brand] {
+// parçalar da aynı kimlikte görünür. Seçici iki kez yazıldı: html.dark'taki eski koyu tema değerlerinin (0,1,1) önüne geçer.
+[data-brand][data-brand] {
   --ui-brand: var(--ds-primary);
   --ui-brand-strong: var(--ds-primary-hover);
   --ui-brand-hover: var(--ds-primary-hover);

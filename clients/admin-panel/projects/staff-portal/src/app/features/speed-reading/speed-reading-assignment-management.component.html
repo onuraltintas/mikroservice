@@ -1,7 +1,7 @@
 <section class="assignment-section" aria-labelledby="reading-assignments-title">
   <div class="section-heading">
     <div>
-      <p class="workspace-eyebrow">HIZLI OKUMA · ÖDEVLER</p>
+      <p class="workspace-eyebrow">Hızlı Okuma, ödevler</p>
       <h3 id="reading-assignments-title">Ödev yönetimi</h3>
       <p class="section-description">Ödevleri oluşturun, öğrenci katılımını inceleyin ve gerekli olduğunda kaldırın.</p>
     </div>
@@ -78,7 +78,7 @@
 
   @if (selectedAssignment(); as assignment) {
     <section class="details-panel" aria-labelledby="assignment-details-title">
-      <div class="section-heading"><div><p class="workspace-eyebrow">ÖDEV İNCELEMESİ</p><h4 id="assignment-details-title">{{ assignment.title }}</h4></div><button class="secondary-button" type="button" (click)="closeDetails()">Kapat</button></div>
+      <div class="section-heading"><div><p class="workspace-eyebrow">Ödev incelemesi</p><h4 id="assignment-details-title">{{ assignment.title }}</h4></div><button class="secondary-button" type="button" (click)="closeDetails()">Kapat</button></div>
       @if (isDetailsLoading()) { <p class="loading" role="status">Ödev ayrıntıları yükleniyor…</p> }
       @else if (details(); as detail) {
         <p>{{ detail.description || 'Açıklama yok' }} · Teslim: {{ formatDate(detail.dueDate) }}</p>
@@ -112,7 +112,7 @@
 
   @if (isCreateFormVisible) {
     <section class="create-panel" aria-labelledby="create-assignment-title">
-      <div class="section-heading"><div><p class="workspace-eyebrow">YENİ ÖDEV</p><h4 id="create-assignment-title">Öğrencilere ödev ata</h4></div><button class="secondary-button" type="button" (click)="closeCreateForm()">Kapat</button></div>
+      <div class="section-heading"><div><p class="workspace-eyebrow">Yeni ödev</p><h4 id="create-assignment-title">Öğrencilere ödev ata</h4></div><button class="secondary-button" type="button" (click)="closeCreateForm()">Kapat</button></div>
       @if (catalogErrorMessage()) { <div class="inline-error" role="alert">{{ catalogErrorMessage() }} <button type="button" (click)="loadExerciseTypes()">Tekrar dene</button></div> }
       <form class="create-form" (ngSubmit)="submitAssignment()">
         @if (institutionId) {

@@ -78,7 +78,7 @@ export interface AuthCopy {
 
 export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
   sen: {
-    welcome: 'Hoş geldin 👋',
+    welcome: 'Hoş geldin',
     loginIntro: 'Hesabına giriş yap.',
     brandIntro: 'Çalışmanı, hedeflerini ve ilerlemeni tek bir yerden takip et.',
     noAccount: 'Hesabın yok mu?',
@@ -102,7 +102,7 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     forgotSentHint: 'Gelen kutunu (ve spam klasörünü) kontrol et.',
     forgotFailed: 'Sıfırlama bağlantısı şu an gönderilemedi. Biraz sonra yeniden dene.',
     resetIntroSuffix: 'hesabın için yeni şifre oluştur.',
-    resetDoneTitle: 'Şifren değiştirildi! 🎉',
+    resetDoneTitle: 'Şifren değiştirildi',
     resetDoneHint: 'Yeni şifrenle giriş yapabilirsin.',
     resetDoneToast: 'Şifren değiştirildi!',
     resetFailed: 'Şifre sıfırlanamadı. Yeniden dene ya da yeni bir bağlantı iste.',
@@ -129,7 +129,7 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     legalNote: 'Onayladığın metinler kaydınla birlikte saklanır.'
   },
   siz: {
-    welcome: 'Hoş Geldiniz 👋',
+    welcome: 'Hoş geldiniz',
     loginIntro: 'Lütfen hesabınıza giriş yapın.',
     brandIntro: 'Tüm okul süreçlerinizi tek bir modern platformda birleştirin.',
     noAccount: 'Hesabınız yok mu?',
@@ -152,7 +152,7 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     forgotSentHint: 'Lütfen gelen kutunuzu (ve spam klasörünü) kontrol edin.',
     forgotFailed: 'Sıfırlama bağlantısı şu an gönderilemedi. Lütfen biraz sonra yeniden deneyin.',
     resetIntroSuffix: 'hesabınız için yeni şifre oluşturun.',
-    resetDoneTitle: 'Şifreniz Değiştirildi! 🎉',
+    resetDoneTitle: 'Şifreniz değiştirildi',
     resetDoneHint: 'Yeni şifrenizle giriş yapabilirsiniz.',
     resetDoneToast: 'Şifreniz başarıyla değiştirildi!',
     resetFailed: 'Şifre sıfırlanamadı. Lütfen yeniden deneyin ya da yeni bir bağlantı isteyin.',

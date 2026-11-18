@@ -56,7 +56,7 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
         }
       }
     </fieldset></section>`,
-  styles: [`:host{display:block;min-width:0;max-width:100%}section{min-width:0}fieldset{border:0;padding:0;margin:0;min-width:0;display:grid;gap:.8rem}label{display:grid;gap:.3rem;min-width:0}input,select,textarea,button{font:inherit;padding:.55rem;border:1px solid #b8c5d5;border-radius:.4rem;max-width:100%;box-sizing:border-box}select,textarea,input:not([type=file]){width:100%;min-width:0}button{cursor:pointer;justify-self:start}button:disabled{opacity:.5}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem}article{border-top:1px solid #d6deea;padding:.7rem 0}p{overflow-wrap:anywhere}[role=alert]{color:#a21825}`]
+  styles: [`:host{display:block;min-width:0;max-width:100%}section{min-width:0}fieldset{border:0;padding:0;margin:0;min-width:0;display:grid;gap:.8rem}label{display:grid;gap:.3rem;min-width:0}input,select,textarea,button{font:inherit;padding:.55rem;border: 1px solid var(--ui-brand);border-radius:.4rem;max-width:100%;box-sizing:border-box}select,textarea,input:not([type=file]){width:100%;min-width:0}button{cursor:pointer;justify-self:start}button:disabled{opacity:.5}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem}article{border-top: 1px solid var(--ui-brand-soft);padding:.7rem 0}p{overflow-wrap:anywhere}[role=alert]{color: var(--ui-danger)}`]
 })
 export class CoachingOutcomesComponent implements OnInit {
   private readonly http = inject(HttpClient); private readonly destroy = inject(DestroyRef);

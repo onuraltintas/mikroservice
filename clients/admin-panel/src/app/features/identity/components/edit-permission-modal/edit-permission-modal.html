@@ -1,6 +1,6 @@
 <div class="fixed inset-0 z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <!-- Backdrop (Static) -->
-    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="onCancel()"></div>
+    <div class="fixed inset-0 bg-(--ui-text) backdrop-blur-sm transition-opacity" (click)="onCancel()"></div>
 
     <!-- Modal Position Container -->
     <div class="fixed inset-0 z-[101] overflow-y-auto">
@@ -8,15 +8,15 @@
 
             <!-- Modal Panel -->
             <div
-                class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-left shadow-2xl transition-all border border-gray-100 dark:border-gray-700 bg-opacity-100 dark:bg-opacity-100">
+                class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-(--ui-surface) text-left shadow-2xl transition-all border border-(--ui-border) bg-opacity-100">
 
                 <!-- Header -->
                 <div
-                    class="bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+                    class="bg-(--ui-brand-soft) p-6 border-b border-(--ui-border)">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-4">
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-(--ui-brand-soft) text-(--ui-brand-text)">
                                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -24,20 +24,20 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">İzni Düzenle</h3>
+                                <h3 class="text-lg font-semibold text-(--ui-text)">İzni Düzenle</h3>
 
                                 <div *ngIf="permission" class="flex items-center gap-2 mt-1">
                                     <span
-                                        class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">{{
+                                        class="font-mono text-xs bg-(--ui-surface-muted) px-2 py-0.5 rounded text-(--ui-text-muted) border border-(--ui-border)">{{
                                         permission.key }}</span>
                                     @if(permission.isSystem) {
                                     <span
-                                        class="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/30">Sistem</span>
+                                        class="inline-flex items-center rounded-md bg-(--ui-brand-soft) px-1.5 py-0.5 text-xs font-medium text-(--ui-brand-text) ring-1 ring-inset ring-(--ui-brand)">Sistem</span>
                                     }
                                 </div>
                             </div>
                         </div>
-                        <button (click)="onCancel()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <button (click)="onCancel()" class="text-(--ui-text-muted) hover:text-(--ui-text-muted)">
                             <span class="sr-only">Kapat</span>
                             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor">
@@ -55,23 +55,23 @@
                             <!-- Group Input -->
                             <div class="group">
                                 <label for="group"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Grup</label>
+                                    class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Grup</label>
                                 <input type="text" id="group" formControlName="group"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors"
+                                    class="block w-full rounded-lg border-(--ui-border) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm p-2.5 transition-colors"
                                     placeholder="Örn: Products">
                                 <p *ngIf="form.get('group')?.touched && form.get('group')?.errors?.['required']"
-                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                                    class="mt-1 text-xs text-(--ui-danger) ml-0.5">Bu alan zorunludur.</p>
                             </div>
 
                             <!-- Description Input -->
                             <div class="group">
                                 <label for="description"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Açıklama</label>
+                                    class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Açıklama</label>
                                 <textarea id="description" formControlName="description" rows="3"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors resize-none"
+                                    class="block w-full rounded-lg border-(--ui-border) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm p-2.5 transition-colors resize-none"
                                     placeholder="İzin hakkında kısa açıklama..."></textarea>
                                 <p *ngIf="form.get('description')?.touched && form.get('description')?.errors?.['required']"
-                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                                    class="mt-1 text-xs text-(--ui-danger) ml-0.5">Bu alan zorunludur.</p>
                             </div>
                         </div>
                     </form>
@@ -79,13 +79,13 @@
 
                 <!-- Footer -->
                 <div
-                    class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                    class="bg-(--ui-surface-muted) px-6 py-4 border-t border-(--ui-border) flex justify-end gap-3">
                     <button type="button" (click)="onCancel()"
-                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-(--ui-text) bg-(--ui-surface) border border-(--ui-border) hover:bg-(--ui-surface-muted) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--ui-brand) transition-colors">
                         İptal
                     </button>
                     <button type="button" (click)="onSubmit()" [disabled]="form.invalid || loading()"
-                        class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) bg-(--ui-brand) hover:bg-(--ui-brand) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--ui-brand) disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
                         <svg *ngIf="loading()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">

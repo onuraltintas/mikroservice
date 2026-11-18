@@ -246,15 +246,15 @@ export class NotificationListComponent implements OnInit {
       <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
           <div [ngClass]="{
-            'bg-blue-100 text-blue-600': data.type === 'SupportRequest',
-            'bg-orange-100 text-orange-600': data.type === 'System',
-            'bg-green-100 text-green-600': data.type === 'Account' || data.type === 'Info'
+            'bg-(--ui-brand-soft) text-(--ui-brand-text)': data.type === 'SupportRequest',
+            'bg-(--ui-warning-soft) text-(--ui-warning)': data.type === 'System',
+            'bg-(--ui-success-soft) text-(--ui-success)': data.type === 'Account' || data.type === 'Info'
           }" class="w-12 h-12 rounded-2xl flex items-center justify-center">
             <mat-icon>{{ data.type === 'SupportRequest' ? 'support_agent' : data.type === 'Account' ? 'person' : 'info' }}</mat-icon>
           </div>
           <div>
             <h2 class="text-xl font-bold mb-0">Bildirim Detayı</h2>
-            <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-0">{{ getCategoryLabel(data.type) }}</p>
+            <p class="text-[10px] text-(--ui-text-muted) mb-0">{{ getCategoryLabel(data.type) }}</p>
           </div>
         </div>
                 <button mat-icon-button type="button" mat-dialog-close aria-label="Pencereyi kapat">
@@ -264,13 +264,13 @@ export class NotificationListComponent implements OnInit {
 
       <div class="space-y-6">
         <div>
-          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Konu</label>
-          <p class="text-lg font-bold text-gray-900 dark:text-white">{{ data.title }}</p>
+          <label class="text-[11px] font-bold text-(--ui-text-muted) mb-1 block">Konu</label>
+          <p class="text-lg font-bold text-(--ui-text)">{{ data.title }}</p>
         </div>
 
         <div>
-          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Mesaj İçeriği</label>
-          <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 whitespace-pre-wrap">
+          <label class="text-[11px] font-bold text-(--ui-text-muted) mb-1 block">Mesaj İçeriği</label>
+          <p class="text-sm text-(--ui-text) leading-relaxed bg-(--ui-surface-muted) p-5 rounded-2xl border border-(--ui-border) whitespace-pre-wrap">
             {{ data.message }}
           </p>
         </div>
@@ -281,9 +281,9 @@ export class NotificationListComponent implements OnInit {
             </button>
         </div>
 
-        <div *ngIf="showReplyForm" class="bg-indigo-50 dark:bg-indigo-900/10 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-800">
+        <div *ngIf="showReplyForm" class="bg-(--ui-brand-soft) p-5 rounded-2xl border border-(--ui-brand-soft)">
             <form [formGroup]="replyForm" (ngSubmit)="sendReply()">
-                <label class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3 block">Yanıtınız</label>
+                <label class="text-[11px] font-bold text-(--ui-brand-text) mb-3 block">Yanıtınız</label>
                 <mat-form-field appearance="outline" class="w-full">
                     <textarea matInput formControlName="message" rows="5" placeholder="Kullanıcıya gönderilecek e-posta içeriğini yazın..."></textarea>
                     <mat-hint align="end">{{replyForm.value.message?.length || 0}}/2000</mat-hint>
@@ -299,9 +299,9 @@ export class NotificationListComponent implements OnInit {
             </form>
         </div>
 
-        <div class="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-50 dark:border-gray-800">
+        <div class="flex items-center justify-between text-xs text-(--ui-text-muted) pt-2 border-t border-(--ui-border)">
             <span>{{ data.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
-            <span *ngIf="data.isRead" class="flex items-center gap-1 text-green-500 font-medium">
+            <span *ngIf="data.isRead" class="flex items-center gap-1 text-(--ui-success) font-medium">
                 <mat-icon class="!text-sm !w-4 !h-4 !text-[16px]">done_all</mat-icon> Okundu
             </span>
         </div>

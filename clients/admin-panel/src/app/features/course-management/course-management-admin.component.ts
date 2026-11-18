@@ -17,7 +17,7 @@ import {
     <section class="course-admin" aria-labelledby="course-admin-title">
       <header class="page-header">
         <div>
-          <p class="eyebrow">ÜRÜN OPERASYONLARI</p>
+          <p class="eyebrow">Ürün operasyonları</p>
           <h1 id="course-admin-title">Kurs yönetimi</h1>
           <p>Çalışma alanı görünümü, plan ve etkin öğrenci limiti yönetimi.</p>
         </div>
@@ -148,35 +148,35 @@ import {
   `,
   styles: `
     :host { display: block; }
-    .course-admin { padding: 28px; color: #172033; }
+    .course-admin { padding: 28px; color: var(--ui-text); }
     .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
-    .eyebrow { margin: 0 0 8px; color: #52637a; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+    .eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 12px; font-weight: 700; letter-spacing: 0; }
     h1 { margin: 0; font-size: 28px; }
-    .page-header p:last-child { margin: 8px 0 0; color: #52637a; }
-    button { border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #172033; padding: 9px 14px; font: inherit; cursor: pointer; }
+    .page-header p:last-child { margin: 8px 0 0; color: var(--ui-text-muted); }
+    button { border: 1px solid var(--ui-brand); border-radius: 8px; background: var(--ui-surface); color: var(--ui-text); padding: 9px 14px; font: inherit; cursor: pointer; }
     button:disabled { cursor: wait; opacity: .65; }
     .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
-    article { min-height: 94px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 18px; }
-    article h2 { margin: 0; color: #52637a; font-size: 14px; font-weight: 600; }
+    article { min-height: 94px; border: 1px solid var(--ui-brand-soft); border-radius: 12px; background: var(--ui-surface); padding: 18px; }
+    article h2 { margin: 0; color: var(--ui-text-muted); font-size: 14px; font-weight: 600; }
     article p { margin: 12px 0 0; font-size: 28px; font-weight: 700; }
-    .status, .privacy-note { color: #52637a; line-height: 1.6; }
-    .error { margin: 16px 0; border: 1px solid #fecaca; border-radius: 8px; background: #fff7f7; padding: 12px 16px; color: #991b1b; }
+    .status, .privacy-note { color: var(--ui-text-muted); line-height: 1.6; }
+    .error { margin: 16px 0; border: 1px solid var(--ui-danger-soft); border-radius: 8px; background: var(--ui-danger-soft); padding: 12px 16px; color: var(--ui-danger); }
     .error p { margin: 0 0 10px; }
-    .subscriptions { margin-top: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 20px; }
+    .subscriptions { margin-top: 30px; border: 1px solid var(--ui-brand-soft); border-radius: 12px; background: var(--ui-surface); padding: 20px; }
     .section-heading, .pagination, .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .section-heading h2, .subscription-form h3 { margin: 0; font-size: 18px; }
-    .section-heading p { margin: 6px 0 16px; color: #52637a; }
+    .section-heading p { margin: 6px 0 16px; color: var(--ui-text-muted); }
     .table-scroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; min-width: 820px; }
-    th, td { padding: 11px 10px; border-bottom: 1px solid #e2e8f0; text-align: left; white-space: nowrap; }
-    th { color: #52637a; font-size: 13px; font-weight: 600; }
-    .pagination { justify-content: flex-end; margin-top: 14px; color: #52637a; }
-    .subscription-form { margin-top: 22px; border-top: 1px solid #e2e8f0; padding-top: 18px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--ui-brand-soft); text-align: left; white-space: nowrap; }
+    th { color: var(--ui-text-muted); font-size: 13px; font-weight: 600; }
+    .pagination { justify-content: flex-end; margin-top: 14px; color: var(--ui-text-muted); }
+    .subscription-form { margin-top: 22px; border-top: 1px solid var(--ui-brand-soft); padding-top: 18px; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
-    .form-grid label { display: grid; gap: 6px; color: #52637a; font-size: 14px; }
-    .form-grid input, .form-grid select { min-width: 0; border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px; color: #172033; font: inherit; }
+    .form-grid label { display: grid; gap: 6px; color: var(--ui-text-muted); font-size: 14px; }
+    .form-grid input, .form-grid select { min-width: 0; border: 1px solid var(--ui-brand); border-radius: 8px; padding: 9px; color: var(--ui-text); font: inherit; }
     .form-actions { justify-content: flex-start; }
-    .error-text { color: #991b1b; }
+    .error-text { color: var(--ui-danger); }
     @media (max-width: 600px) { .course-admin { padding: 18px; } .page-header { flex-direction: column; } }
   `
 })

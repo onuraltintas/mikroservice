@@ -1,11 +1,11 @@
 .teacher-workspace { margin-top: 30px; }
 .workspace-heading h2 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 27px; font-weight: 400; letter-spacing: -.035em; }
 .workspace-heading p:not(.workspace-eyebrow) { margin: 7px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.6; }
-.workspace-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: .15em; }
+.workspace-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .workspace-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 19px; padding: 4px; border: 1px solid var(--ui-border); border-radius: 11px; background: var(--ui-surface); }
 .workspace-tabs button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 8px; color: var(--ui-text); background: transparent; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
-.workspace-tabs button.active { color: var(--ui-text); background: var(--ui-surface); box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
-.workspace-tabs button:focus-visible { outline: 2px solid #779372; outline-offset: 2px; }
+.workspace-tabs button.active { color: var(--ui-text); background: var(--ui-surface); box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-text) 12%, transparent); }
+.workspace-tabs button:focus-visible { outline: 2px solid var(--ui-border-strong); outline-offset: 2px; }
 .section-loading { margin: 0; padding: 1rem; color: var(--ui-text); font-size: .85rem; }
 
 // Live test 16.11.2026 (#30): the space under the section tabs was 0 px in five sections (the heading stood against the frame)

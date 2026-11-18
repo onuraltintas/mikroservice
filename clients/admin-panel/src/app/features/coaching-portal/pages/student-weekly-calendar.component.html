@@ -1,5 +1,5 @@
 <section class="weekly-page" aria-labelledby="weekly-title">
-  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık düzenim</h1><p>Çalışma saatlerinde hangi derse çalışacağını yerleştir.</p></div><div><a routerLink="/coaching-portal/plan/wizard">Plan sihirbazı ↗</a>　<a routerLink="/coaching-portal/plan">Mevcut planlarım ↗</a></div></header>
+  <header class="page-heading"><div><p class="eyebrow">Kendi çalışma ritmin</p><h1 id="weekly-title">Haftalık düzenim</h1><p>Çalışma saatlerinde hangi derse çalışacağını yerleştir.</p></div><div><a routerLink="/coaching-portal/plan/wizard">Plan sihirbazı ↗</a>　<a routerLink="/coaching-portal/plan">Mevcut planlarım ↗</a></div></header>
   <div class="draft-strip"><span class="draft-badge">Haftalık taslak</span><span>Bu düzen her hafta tekrar eder. Mevcut planın ve çalışma kayıtların korunur.</span><strong>{{ weeklyMinutes() }} dk / hafta</strong></div>
   @if(error()){<div role="alert" class="notice error">{{ error() }}</div>}
   @if(message()){<p role="status" class="notice success">{{ message() }}</p>}
@@ -60,7 +60,7 @@
 }
 @if(form;as f){
   <div class="dialog-backdrop" (click)="form=null"><section class="slot-dialog" role="dialog" aria-modal="true" aria-labelledby="slot-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
-    <header><div><p class="eyebrow">HAFTALIK DÜZEN</p><h2 id="slot-title">{{ hasSlot()?'Dersi düzenle':'Ders ekle' }}</h2></div><button type="button" aria-label="Ders formunu kapat" (click)="form=null">×</button></header>
+    <header><div><p class="eyebrow">Haftalık düzen</p><h2 id="slot-title">{{ hasSlot()?'Dersi düzenle':'Ders ekle' }}</h2></div><button type="button" aria-label="Ders formunu kapat" (click)="form=null">×</button></header>
     <form #slotForm="ngForm" (ngSubmit)="apply()">
       <label>Ders<select aria-label="Ders" name="lesson" [(ngModel)]="f.lessonId" required><option value="" disabled>Ders seç</option>@for(lesson of lessons();track lesson.id){<option [value]="lesson.id">{{ lesson.name }}{{ lesson.examCode?' · '+lesson.examCode:'' }}</option>}</select></label>
       <div class="form-grid"><label>Gün<select aria-label="Gün" name="day" [(ngModel)]="f.day" required>@for(d of weekDays;track d.value){<option [value]="d.value">{{ d.label }}</option>}</select></label><label>Başlangıç<input aria-label="Başlangıç" type="time" name="start" step="1800" min="00:00" max="23:30" [(ngModel)]="f.start" required></label></div>

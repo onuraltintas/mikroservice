@@ -1,9 +1,9 @@
 .pending-invitations {
   margin-top: 14px;
   padding: 16px;
-  border: 1px solid #e3e5dc;
+  border: 1px solid var(--ui-border);
   border-radius: 12px;
-  background: #fbfaf6;
+  background: var(--ui-surface-muted);
 }
 .pending-heading,
 .pending-item,
@@ -15,15 +15,14 @@
 }
 .pending-eyebrow {
   margin: 0 0 4px;
-  color: #64876e;
+  color: var(--ui-text-muted);
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 .pending-heading h3 {
   margin: 0;
-  color: #17333a;
+  color: var(--ui-text);
   font-size: 15px;
 }
 .pending-refresh,
@@ -32,10 +31,10 @@
 .pending-cancel-dismiss {
   min-height: 34px;
   padding: 0 10px;
-  border: 1px solid #d9dfd7;
+  border: 1px solid var(--ui-border);
   border-radius: 8px;
-  color: #425b56;
-  background: #fffefa;
+  color: var(--ui-text);
+  background: var(--ui-warning-soft);
   font: inherit;
   font-size: 10px;
   font-weight: 700;
@@ -43,13 +42,13 @@
 }
 .pending-cancel-request,
 .pending-cancel-confirm {
-  border-color: #e6c7be;
-  color: #873f2d;
-  background: #fff7f3;
+  border-color: var(--ui-danger);
+  color: var(--ui-danger);
+  background: var(--ui-warning-soft);
 }
 .pending-item {
   padding: 12px 0;
-  border-top: 1px solid #e6e8e0;
+  border-top: 1px solid var(--ui-border);
 }
 .pending-list {
   margin: 14px 0 0;
@@ -60,7 +59,7 @@
   display: grid;
   gap: 4px;
   min-width: 0;
-  color: #40544e;
+  color: var(--ui-text);
   font-size: 11px;
 }
 .pending-details strong {
@@ -69,7 +68,7 @@
 .pending-details span,
 .pending-confirmation span,
 .pending-state {
-  color: #72817d;
+  color: var(--ui-text-muted);
   font-size: 10px;
 }
 .pending-confirmation {
@@ -84,14 +83,14 @@
   font-size: 10px;
 }
 .pending-error {
-  border: 1px solid #efc7b9;
-  color: #873f2d;
-  background: #fff1eb;
+  border: 1px solid var(--ui-warning);
+  color: var(--ui-danger);
+  background: var(--ui-warning-soft);
 }
 .pending-success {
-  border: 1px solid #bbdec6;
-  color: #27623b;
-  background: #f0faf2;
+  border: 1px solid var(--ui-success);
+  color: var(--ui-success);
+  background: var(--ui-surface-muted);
 }
 .pending-state {
   margin: 14px 0 0;

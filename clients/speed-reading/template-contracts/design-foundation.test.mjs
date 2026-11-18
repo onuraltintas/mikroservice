@@ -62,3 +62,20 @@ test('sign-in pages carry a brand and keep their test hooks', () => {
   const shell = read('clients/speed-reading/src/app/features/auth/registration-shell.component.html');
   assert.match(shell, /class="ds-auth" data-brand="ho"/);
 });
+
+test('panels carry their brand: maxkoç student portal, eduivme staff portal and management panel', () => {
+  const coaching = read('clients/admin-panel/src/app/features/coaching-portal/layout/coaching-student-tokens.scss');
+  assert.match(coaching, /--ui-brand: #1f4e8c;/, 'maxkoç ink blue');
+  assert.match(coaching, /--ui-font-body: 'IBM Plex Sans'/);
+  assert.match(read('clients/admin-panel/projects/staff-portal/src/index.html'), /<html lang="tr" data-brand="eduivme">/);
+  assert.match(read('clients/admin-panel/projects/staff-portal/src/styles.scss'), /@use '\.\/app\/staff-brand';/);
+  assert.match(read('clients/admin-panel/src/app/features/dashboard/layout/dashboard-layout/dashboard-layout.ts'), /setAttribute\('data-brand', 'eduivme'\)/);
+});
+
+test('panels use theme variables instead of Tailwind palette colours', () => {
+  const { execFileSync } = require_();
+  const out = execFileSync('grep', ['-rlE', '(bg|text|border)-(blue|indigo|purple|violet|slate|gray|emerald|green|red|amber|teal|orange|sky|cyan)-[0-9]{2,3}\\b',
+    'clients/admin-panel/src/app', 'clients/admin-panel/projects/staff-portal/src/app', '--include=*.html', '--include=*.ts'], { cwd: new URL('.', repo), encoding: 'utf8' }).trim().split('\n').filter(f => f && !f.endsWith('.spec.ts'));
+  assert.deepEqual(out, []);
+});
+function require_() { return { execFileSync: (cmd, args, opts) => { try { return execFileSync(cmd, args, opts); } catch (e) { return e.stdout ?? ''; } } }; }

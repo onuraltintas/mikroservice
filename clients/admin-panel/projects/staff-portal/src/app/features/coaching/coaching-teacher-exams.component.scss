@@ -1,10 +1,10 @@
 .exams-workspace { display: grid; gap: 1.25rem; color: var(--ui-text); }
 .exams-heading, .panel-heading, .exam-card, .exam-card-title, .exam-actions, .form-actions, .result-form-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .exams-heading { align-items: flex-start; }
-.eyebrow { margin: 0 0 .35rem; color: var(--ui-text-muted); font-size: .68rem; font-weight: 800; letter-spacing: .09em; }
+.eyebrow { margin: 0 0 .35rem; color: var(--ui-text-muted); font-size: .68rem; font-weight: 800; letter-spacing: 0; }
 .exams-heading h2, .panel-heading h3 { margin: 0; color: var(--ui-text); font-size: 1.35rem; }
 .exams-heading p:not(.eyebrow), .panel-heading p:not(.eyebrow) { margin: .35rem 0 0; color: var(--ui-text-muted); font-size: .86rem; }
-.panel { padding: 1.2rem; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); box-shadow: 0 4px 16px rgb(15 23 42 / 3%); }
+.panel { padding: 1.2rem; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--ui-text) 3%, transparent); }
 .panel-heading { margin-bottom: 1rem; }
 .primary-button, .secondary-button, .load-more { min-height: 2.55rem; padding: .55rem .9rem; border-radius: .7rem; font: inherit; font-size: .82rem; font-weight: 750; cursor: pointer; }
 .primary-button { border: 1px solid var(--ui-border); background: var(--ui-brand); color: white; }
@@ -18,7 +18,7 @@ button:disabled { cursor: wait; opacity: .55; }
 .field { display: grid; align-content: start; gap: .4rem; min-width: 0; color: var(--ui-text); font-size: .78rem; font-weight: 700; }
 .field input, .field select, .field textarea { width: 100%; min-height: 2.55rem; box-sizing: border-box; padding: .65rem .75rem; border: 1px solid var(--ui-border); border-radius: .65rem; background: var(--ui-surface); color: var(--ui-text); font: inherit; font-weight: 450; }
 .field textarea { resize: vertical; }
-.field input:focus, .field select:focus, .field textarea:focus { outline: 3px solid rgb(99 102 241 / 18%); border-color: var(--ui-border); }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 3px solid color-mix(in srgb, var(--ui-brand) 18%, transparent); border-color: var(--ui-border); }
 .field small, .field-hint { color: var(--ui-text-muted); font-size: .73rem; font-weight: 450; }
 .span-two { grid-column: span 2; }
 .field-hint { margin: .7rem 0 0; }
@@ -45,7 +45,7 @@ button:disabled { cursor: wait; opacity: .55; }
 .student-load-more { grid-column: 1 / -1; width: auto; justify-self: start; margin: -.3rem 0 0; }
 .results-table-wrap { overflow-x: auto; }
 .results-table { width: 100%; border-collapse: collapse; font-size: .78rem; text-align: left; }
-.results-table th { padding: .7rem; background: var(--ui-surface); color: var(--ui-text); font-size: .68rem; text-transform: uppercase; }
+.results-table th { padding: .7rem; background: var(--ui-surface); color: var(--ui-text); font-size: .68rem; }
 .results-table td { padding: .7rem; border-top: 1px solid var(--ui-border); vertical-align: top; }
 .student-name { min-width: 9rem; font-weight: 700; }
 .result-note { min-width: 10rem; max-width: 18rem; color: var(--ui-text-muted); white-space: pre-wrap; }

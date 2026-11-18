@@ -28,14 +28,14 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
     <main class="space-y-6" aria-labelledby="billing-products-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-          <h1 id="billing-products-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Ürünler ve haklar</h1>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Her ürünün abonelik isteyip istemediğini ve havale/EFT ödemelerinin nasıl onaylanacağını buradan belirlersiniz. Haklar, planların kullanıcıya açtığı erişimlerdir.</p>
+          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+          <h1 id="billing-products-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Ürünler ve haklar</h1>
+          <p class="mt-2 text-sm text-(--ui-text-muted)">Her ürünün abonelik isteyip istemediğini ve havale/EFT ödemelerinin nasıl onaylanacağını buradan belirlersiniz. Haklar, planların kullanıcıya açtığı erişimlerdir.</p>
         </div>
         <button type="button" class="primary" (click)="startProduct()" data-testid="new-product">Yeni ürün</button>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       @if (productDraft(); as draft) {
         <form (ngSubmit)="saveProduct()" class="form-card" data-testid="product-form">
@@ -57,7 +57,7 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
         <section class="data-card" [attr.aria-labelledby]="'product-' + product.id" [attr.data-testid]="'product-' + product.code">
           <div class="product-head">
             <div>
-              <h2 [id]="'product-' + product.id" class="text-lg font-semibold text-gray-900 dark:text-white">{{ product.name }}</h2>
+              <h2 [id]="'product-' + product.id" class="text-lg font-semibold text-(--ui-text)">{{ product.name }}</h2>
               <p class="muted"><span class="font-mono">{{ product.code }}</span> · <span class="badge" [class.on]="product.isActive" [class.off]="!product.isActive">{{ product.isActive ? 'Etkin' : 'Kapalı' }}</span></p>
             </div>
             <button type="button" class="secondary" (click)="startProduct(product)">Adı ve sırayı düzenle</button>
@@ -86,7 +86,7 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
           }
 
           <div class="mt-4 flex items-center justify-between gap-3">
-            <h3 class="font-semibold text-gray-900 dark:text-white">Haklar</h3>
+            <h3 class="font-semibold text-(--ui-text)">Haklar</h3>
             <button type="button" class="secondary" (click)="startEntitlement(product)">Hak ekle</button>
           </div>
           @if (entitlementDraft(); as draft) {

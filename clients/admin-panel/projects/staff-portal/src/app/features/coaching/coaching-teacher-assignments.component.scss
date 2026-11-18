@@ -1,11 +1,11 @@
 .assignments { margin-top: 28px; }
 .assignments-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
-.assignments-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: .15em; }
+.assignments-eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .assignments-heading h2 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
 .assignments-description { margin: 8px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.6; }
 .assignments-count { flex: 0 0 auto; padding: 8px 11px; border: 1px solid var(--ui-border); border-radius: 999px; color: var(--ui-text); background: var(--ui-surface); font-size: 13px; font-weight: 700; }
 .assignments-heading-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
-.create-assignment-button { min-height: 36px; padding: 0 12px; border: 1px solid var(--ui-border); border-radius: 8px; color: #fff; background: var(--ui-brand); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.create-assignment-button { min-height: 36px; padding: 0 12px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-brand-contrast); background: var(--ui-brand); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
 .create-assignment-button:hover { background: var(--ui-brand); }
 .assignments-toolbar { display: flex; align-items: center; gap: 10px; margin: 22px 0 13px; color: var(--ui-text); font-size: 13px; font-weight: 700; }
 .assignments-toolbar select { min-height: 38px; padding: 0 30px 0 10px; border: 1px solid var(--ui-border); border-radius: 9px; color: var(--ui-text); background: var(--ui-surface); font: inherit; }
@@ -29,7 +29,7 @@
 .cancel-confirmation p { margin: 0; font-size: 13px; line-height: 1.5; }
 .cancel-confirmation > div { display: flex; flex: 0 0 auto; gap: 7px; }
 .dismiss-button:disabled, .confirm-cancel-button:disabled, .assignments-error button:disabled, .assignments-pagination button:disabled { opacity: .5; cursor: not-allowed; }
-.confirm-cancel-button { border-color: var(--ui-border); color: #fff; background: var(--ui-brand); }
+.confirm-cancel-button { border-color: var(--ui-border); color: var(--ui-brand-contrast); background: var(--ui-brand); }
 .assignments-empty, .assignments-error { padding: 25px; border: 1px dashed var(--ui-border); border-radius: 13px; color: var(--ui-text); background: var(--ui-surface); text-align: center; }
 .assignments-empty > span { display: grid; width: 33px; height: 33px; place-items: center; margin: 0 auto 9px; border: 1px solid var(--ui-border); border-radius: 50%; color: var(--ui-text); font-size: 18px; }
 .assignments-empty h3 { margin: 0; color: var(--ui-text); font-size: 13px; }
@@ -39,7 +39,7 @@
 .assignments-error button { min-height: 34px; flex: 0 0 auto; border-color: var(--ui-border); color: var(--ui-danger); background: var(--coaching-danger-soft); }
 .assignments-success { margin-bottom: 12px; padding: 11px 13px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-success); background: var(--ui-brand-soft); font-size: 13px; }
 .assignments-loading { display: grid; gap: 8px; }
-.assignment-skeleton { height: 70px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: assignment-shimmer 1.4s linear infinite; }
+.assignment-skeleton { height: 70px; border-radius: 12px; background: var(--ui-surface-muted); background-size: 200% 100%; animation: assignment-shimmer 1.4s linear infinite; }
 .assignments-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 8px 10px; border: 1px solid var(--ui-border); border-radius: 11px; color: var(--ui-text); background: var(--ui-surface); font-size: 13px; }
 .assignments-pagination button:disabled { opacity: .45; }
 @keyframes assignment-shimmer { to { background-position: -200% 0; } }

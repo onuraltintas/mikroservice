@@ -3,7 +3,7 @@
 
   <header class="report-identity">
     <div>
-      <p class="report-eyebrow">KOÇLUK · KURUM ÖĞRETMEN RAPORU</p>
+      <p class="report-eyebrow">Koçluk, kurum öğretmen raporu</p>
       <h2 id="teacher-report-title">{{ teacher.firstName }} {{ teacher.lastName }}</h2>
       <p>{{ teacher.email }} · yalnızca bu kurumdaki işlemler ve aktif öğrenci bağlantıları</p>
     </div>
@@ -11,7 +11,7 @@
   </header>
 
   <section class="report-panel" aria-labelledby="teacher-overview-title">
-    <div class="section-heading"><div><p class="report-eyebrow">KURUM ÖZETİ</p><h3 id="teacher-overview-title">Öğretmen çalışma özeti</h3></div><button type="button" class="outline-button" (click)="retryOverview()" [disabled]="isOverviewLoading()">Yenile</button></div>
+    <div class="section-heading"><div><p class="report-eyebrow">Kurum özeti</p><h3 id="teacher-overview-title">Öğretmen çalışma özeti</h3></div><button type="button" class="outline-button" (click)="retryOverview()" [disabled]="isOverviewLoading()">Yenile</button></div>
     @if (isOverviewLoading()) {
       <p class="inline-status" role="status">Öğretmen özeti yükleniyor…</p>
     } @else if (overviewError()) {
@@ -27,7 +27,7 @@
   </section>
 
   <section class="report-panel" aria-labelledby="teacher-analytics-title">
-    <div class="section-heading"><div><p class="report-eyebrow">DÖNEMSEL KARŞILAŞTIRMA</p><h3 id="teacher-analytics-title">{{ periodLabel() }} ve önceki dönem</h3></div><button type="button" class="outline-button" (click)="retryAnalytics()" [disabled]="isAnalyticsLoading()">Yenile</button></div>
+    <div class="section-heading"><div><p class="report-eyebrow">Dönemsel karşılaştırma</p><h3 id="teacher-analytics-title">{{ periodLabel() }} ve önceki dönem</h3></div><button type="button" class="outline-button" (click)="retryAnalytics()" [disabled]="isAnalyticsLoading()">Yenile</button></div>
     <form class="period-range" (ngSubmit)="applyAnalyticsRange()" aria-label="Analiz tarih aralığı">
       <label>Başlangıç <input type="date" name="analyticsFrom" [(ngModel)]="analyticsFrom" data-testid="analytics-from"></label>
       <label>Bitiş <input type="date" name="analyticsTo" [(ngModel)]="analyticsTo" data-testid="analytics-to"></label>
@@ -56,7 +56,7 @@
   </section>
 
   <section class="report-panel student-panel" aria-labelledby="teacher-students-title">
-    <div class="section-heading"><div><p class="report-eyebrow">AKTİF BAĞLANTILAR</p><h3 id="teacher-students-title">Öğretmene bağlı öğrenciler</h3><p>{{ studentTotalCount() }} aktif kurum öğrencisi</p></div><button type="button" class="outline-button" (click)="retryStudents()" [disabled]="isStudentsLoading()">Yenile</button></div>
+    <div class="section-heading"><div><p class="report-eyebrow">Aktif bağlantılar</p><h3 id="teacher-students-title">Öğretmene bağlı öğrenciler</h3><p>{{ studentTotalCount() }} aktif kurum öğrencisi</p></div><button type="button" class="outline-button" (click)="retryStudents()" [disabled]="isStudentsLoading()">Yenile</button></div>
     <div class="student-filters">
       <label>Öğrenci ara<input #search type="search" maxlength="100" [value]="studentSearch()" (change)="searchStudents(search.value)" (keydown.enter)="$event.preventDefault(); searchStudents(search.value)" placeholder="Ad, soyad veya e-posta"></label>
       <label>Sınıf<select [value]="gradeFilter() ?? ''" (change)="setGradeFilter($any($event.target).value)"><option value="">Tüm sınıflar</option>@for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }</select></label>

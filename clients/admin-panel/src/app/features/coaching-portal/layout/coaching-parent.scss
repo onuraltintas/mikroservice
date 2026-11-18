@@ -86,7 +86,7 @@
     :is(input:not([type=checkbox]), select) { min-height: 44px; width: 100%; padding: 0 var(--coaching-space-3); border: 1px solid var(--ui-border-strong); border-radius: var(--coaching-radius-control);
       background: var(--ui-surface); color: var(--ui-text); font: inherit; font-weight: 500; }
     .cp-span { grid-column: 1 / -1; } }
-  .cp-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; letter-spacing: .12em; }
+  .cp-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
   .cp-check { display: flex !important; align-items: flex-start; gap: var(--coaching-space-2); font-weight: 500 !important;
     input { width: 22px; height: 22px; margin-top: 1px; flex-shrink: 0; accent-color: var(--ui-brand); } }
   .cp-link-form { display: grid; > h2 { margin: 0 0 var(--coaching-space-1); font-size: var(--coaching-text-lg); font-weight: 800; } }
