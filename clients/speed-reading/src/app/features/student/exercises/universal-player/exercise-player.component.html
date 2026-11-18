@@ -169,7 +169,7 @@
                 <button *ngIf="canPracticeFocus" class="ep-btn ep-btn--secondary" (click)="startFocusPractice()">Kısa alıştırma yap</button>
                 <button *ngIf="canPracticeFocus && (asFocusEngine?.nLevel || 1) > 1" class="ep-btn ep-btn--secondary"
                     (click)="startFocusPractice(true)">Önceki N ile alıştırma</button>
-                <button class="ep-btn ep-btn--primary" class="start-button-large" (click)="startExercise()">
+                <button class="ep-btn ep-btn--primary start-button-large" (click)="startExercise()">
                     <span class="material-icons">play_circle_filled</span>
                     EGZERSİZE BAŞLA
                 </button>
@@ -991,7 +991,7 @@
             </div>
 
             <div class="options-grid">
-                <button class="ep-btn ep-btn--primary" class="option-button" *ngFor="let option of ['A', 'B', 'C', 'D']"
+                <button class="ep-btn ep-btn--primary option-button" *ngFor="let option of ['A', 'B', 'C', 'D']"
                     [class.selected]="selectedAnswer === option"
                     [class.correct]="questionFeedback?.isCorrect === true && questionFeedback?.correctAnswer === option"
                     [class.wrong]="questionFeedback?.isCorrect === false && selectedAnswer === option"
@@ -1007,7 +1007,7 @@
             <!-- Feedback Gösterimi removed as per user request -->
 
             <!-- Cevabı Gönder butonu - feedback yokken -->
-            <button class="ep-btn ep-btn--primary" class="submit-answer-btn" *ngIf="!questionFeedback"
+            <button class="ep-btn ep-btn--primary submit-answer-btn" *ngIf="!questionFeedback"
                 [disabled]="!selectedAnswer || questionSubmissionPending || engineState.isPaused" (click)="submitRegressionAnswer(selectedAnswer!)">
                 <span class="material-icons">check</span>
                 Cevabı Gönder
@@ -1229,7 +1229,7 @@
                     <span class="option-letter">{{ option }}</span>
                     <span class="option-text">{{ getSubvocCurrentQuestion()['Option' + option] ||
                         getSubvocCurrentQuestion()['option' + option] }}</span>
-                    <span class="material-icons" class="option-arrow">chevron_right</span>
+                    <span class="material-icons option-arrow">chevron_right</span>
                 </button>
             </div>
 
@@ -1244,14 +1244,14 @@
                     <span class="option-letter">{{ option }}</span>
                     <span class="option-text">{{ getSubvocCurrentQuestion()['Option' + option] ||
                         getSubvocCurrentQuestion()['option' + option] }}</span>
-                    <span class="material-icons" class="feedback-icon" *ngIf="option === getSubvocCorrectAnswer()">check_circle</span>
+                    <span class="material-icons feedback-icon" *ngIf="option === getSubvocCorrectAnswer()">check_circle</span>
                     <span class="material-icons feedback-icon"
                         *ngIf="questionFeedback?.isCorrect === false && option === getSubvocLastAnswer()">cancel</span>
                 </div>
             </div>
 
             <!-- Next Button -->
-            <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isSubvocShowingFeedback()"
+            <button class="ep-btn ep-btn--primary next-question-btn" *ngIf="isSubvocShowingFeedback()"
                 [disabled]="questionSubmissionPending || engineState.isPaused" (click)="nextSubvocQuestion()">
                 <span>{{ (getSubvocCurrentQuestionIndex() + 1) >= getSubvocQuestionCount() ? 'Tamamla' : 'Sonraki Soru'
                     }}</span>
@@ -1382,7 +1382,7 @@
                     class="modern-option-btn" [disabled]="engineState.isPaused" (click)="submitVisualizationAnswer(option)">
                     <span class="option-letter">{{ ['A', 'B', 'C', 'D'][i] }}</span>
                     <span class="option-text">{{ option }}</span>
-                    <span class="material-icons" class="option-arrow">chevron_right</span>
+                    <span class="material-icons option-arrow">chevron_right</span>
                 </button>
             </div>
 
@@ -1402,7 +1402,7 @@
             </div>
 
             <!-- Next Button -->
-            <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isVisualizationShowingFeedback()"
+            <button class="ep-btn ep-btn--primary next-question-btn" *ngIf="isVisualizationShowingFeedback()"
                 [disabled]="isVisualizationAnswerPending() || engineState.isPaused" (click)="nextVisualizationQuestion()">
                 <span>{{ getVisualizationQuestionProgress().current >= getVisualizationQuestionProgress().total ?
                     'Sonraki Sahne' : 'Sonraki Soru' }}</span>
@@ -1516,7 +1516,7 @@
 
             <!-- DUAL MODE BUTTONS -->
             <div class="interaction-area dual-buttons" *ngIf="asFocusEngine?.isDualMode">
-                <button class="ep-btn ep-btn--primary" class="match-btn dual-btn position-btn"
+                <button class="ep-btn ep-btn--primary match-btn dual-btn position-btn"
                     (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused || asFocusEngine?.isAwaitingAssessmentStep">
                     <span class="material-icons">grid_on</span>
                     KONUM (Q)
@@ -1669,7 +1669,7 @@
                         <p class="correct-definition">{{ getVocabCurrentWord().definition }}</p>
                     </div>
 
-                    <button class="ep-btn ep-btn--primary" class="next-btn" [disabled]="engineState.isPaused || isVocabAwaitingPersistence()" (click)="nextVocabQuizQuestion()">
+                    <button class="ep-btn ep-btn--primary next-btn" [disabled]="engineState.isPaused || isVocabAwaitingPersistence()" (click)="nextVocabQuizQuestion()">
                         Sonraki Kelime
                         <span class="material-icons">arrow_forward</span>
                     </button>
@@ -2226,7 +2226,7 @@
 
             <div class="header-section">
                 <div class="trophy-icon-wrapper">
-                    <span class="material-icons" class="trophy-icon">emoji_events</span>
+                    <span class="material-icons trophy-icon">emoji_events</span>
                 </div>
                 <h2>Tebrikler, mezun oldun! 🎓</h2>
                 <p>Mevcut programını başarıyla tamamladın.</p>

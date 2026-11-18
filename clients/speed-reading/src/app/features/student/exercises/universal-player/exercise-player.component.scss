@@ -8467,3 +8467,34 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .target-hunt-cell { transition: none; &.is-last { transform: none; } }
 }
+
+// Exercise surfaces (start card, engine cards, results, dialogs) are always
+// light, even when the student panel uses the dark theme. Pin the panel tokens
+// to their light values on these surfaces, so inherited text and token-based
+// colors stay dark on white instead of turning near-white.
+.start-card,
+.game-container,
+.result-card-new,
+.exit-confirm-card,
+.completion-card {
+  --sp-surface: #ffffff;
+  --sp-surface-2: #f8fafc;
+  --sp-surface-3: #f1f5f9;
+  --sp-surface-4: #e2e8f0;
+  --sp-border: #e2e8f0;
+  --sp-border-strong: #cbd5e1;
+  --sp-text-1: #0f172a;
+  --sp-text-2: #475569;
+  --sp-text-3: #64748b;
+  --sp-text-inv: #ffffff;
+  --sp-primary: #4f46e5;
+  --sp-primary-light: #818cf8;
+  --sp-primary-dark: #4338ca;
+  --sp-primary-ghost: rgba(99, 102, 241, 0.12);
+  --sp-primary-ghost-hover: rgba(99, 102, 241, 0.18);
+  --sp-on-primary: #ffffff;
+  --sp-primary-hover: #4338ca;
+  --sp-success-text: #065f46;
+  --sp-warning-text: #78350f;
+  color: var(--sp-text-1);
+}
