@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { signUpSiteGuard } from '../../core/auth/auth.guard';
 
 export const AUTH_ROUTES: Routes = [
     {
@@ -20,18 +21,22 @@ export const AUTH_ROUTES: Routes = [
     },
     {
         path: 'register/student',
+        canActivate: [signUpSiteGuard('student')],
         loadComponent: () => import('./register/student/student-register.component').then(m => m.StudentRegisterComponent)
     },
     {
         path: 'register/teacher',
+        canActivate: [signUpSiteGuard('teacher')],
         loadComponent: () => import('./register/teacher/teacher-register.component').then(m => m.TeacherRegisterComponent)
     },
     {
         path: 'register/institution',
+        canActivate: [signUpSiteGuard('institution')],
         loadComponent: () => import('./register/institution/institution-register.component').then(m => m.InstitutionRegisterComponent)
     },
     {
         path: 'register/parent',
+        canActivate: [signUpSiteGuard('parent')],
         loadComponent: () => import('./register/parent/parent-register.component').then(m => m.ParentRegisterComponent)
     },
     {

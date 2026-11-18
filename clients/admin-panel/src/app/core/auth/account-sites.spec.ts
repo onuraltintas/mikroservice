@@ -1,5 +1,5 @@
 import { accountSites } from './auth.guard';
-import { EDUIVME_SITE_URLS, siteForHost, siteStartUrl } from '../../../../shared/eduivme-sites';
+import { EDUIVME_SITE_URLS, siteForHost, siteHref, siteStartUrl } from '../../../../shared/eduivme-sites';
 
 // Alan adı planı (user decision 18.11.2026): every group signs in on its own address.
 describe('eduivme sites', () => {
@@ -34,5 +34,10 @@ describe('eduivme sites', () => {
     expect(accountSites({ product: 'admin', roles: ['SystemAdmin'] })).toEqual(['admin']);
     expect(accountSites(null)).toEqual([]);
     expect(accountSites({ product: 'speed-reading', roles: ['Student'] })).toEqual([]);
+  });
+
+  it('links to another group page absolutely on the public addresses only (B1)', () => {
+    expect(siteHref('parent', '/auth/register/parent', 'maxkoc.com')).toBe('https://veli.maxkoc.com/auth/register/parent');
+    expect(siteHref('parent', '/auth/register/parent', 'localhost')).toBe('/auth/register/parent');
   });
 });

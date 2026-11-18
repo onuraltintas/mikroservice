@@ -30,6 +30,11 @@ export function parentPlanDays(week: ParentPlanWeek): ParentPlanDay[] {
     return { date, label: planDayName.format(day), isToday: date === week.today, tasks: week.tasks.filter(task => task.date.slice(0, 10) === date) };
   });
 }
+/** Canlı test (17.11.2026): a past day's unfinished study is late, not waiting. */
+export function parentTaskState(task: { completed: boolean; date: string }, today: string): 'Tamamlandı' | 'Gecikti' | 'Bekliyor' {
+  if (task.completed) return 'Tamamlandı';
+  return task.date.slice(0, 10) < today ? 'Gecikti' : 'Bekliyor';
+}
 export function planClock(startMinute: number | null, minutes: number): string {
   if (startMinute === null) return `${minutes} dk`;
   const clock = (value: number) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;

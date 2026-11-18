@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { CoachingParentService } from './coaching-parent.service';
-import { ParentPlanWeek, parentPlanDays, planClock, shiftWeek, shortDate } from './parent-model';
+import { ParentPlanWeek, parentPlanDays, planClock, parentTaskState, shiftWeek, shortDate } from './parent-model';
 
 /**
  * Live test 16.11.2026 (#49, decided by the owner): the parent reads the child's plan of a week — which day holds which
@@ -38,7 +38,7 @@ import { ParentPlanWeek, parentPlanDays, planClock, shiftWeek, shortDate } from 
                         <span class="when">{{ clock(task.startMinute, task.minutes) }}</span>
                         <span class="what"><strong>{{ task.title }}</strong>
                           <small>{{ task.lesson || 'Çalışma' }}@if (task.questions) { · {{ task.questions }} soru }@if (task.continuation) { · yarım kalanın devamı }</small></span>
-                        <span class="state">{{ task.completed ? 'Tamamlandı' : 'Bekliyor' }}</span>
+                        <span class="state" [class.late]="taskState(task) === 'Gecikti'">{{ taskState(task) }}</span>
                       </li>
                     }
                   </ul>
@@ -62,7 +62,7 @@ import { ParentPlanWeek, parentPlanDays, planClock, shiftWeek, shortDate } from 
     ul li{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr) auto;gap:var(--coaching-space-3);align-items:baseline;min-width:0}
     .when{font-size:var(--coaching-text-sm);font-variant-numeric:tabular-nums;color:var(--ui-text-muted)}
     .what{display:grid;min-width:0}.what strong{font-weight:650;color:var(--ui-text);overflow-wrap:anywhere}.what small{color:var(--ui-text-muted);font-size:12px}
-    .state{font-size:12px;font-weight:650;color:var(--ui-text-muted);white-space:nowrap}.done .state{color:var(--ui-success, var(--ui-brand))}
+    .state{font-size:12px;font-weight:650;color:var(--ui-text-muted);white-space:nowrap}.done .state{color:var(--ui-success, var(--ui-brand))}.state.late{color:var(--ui-danger)}
     @media (max-width:600px){ul li{grid-template-columns:minmax(0,1fr) auto}.when{grid-column:1 / -1}}
   `]
 })
@@ -76,6 +76,7 @@ export class ParentPlanWeekComponent implements OnInit {
   readonly days = computed(() => this.week() ? parentPlanDays(this.week()!) : []);
   readonly range = computed(() => { const w = this.week(); return w ? `${shortDate(w.weekStart)} – ${shortDate(lastDay(w.weekStart))}` : ''; });
   readonly clock = planClock;
+  taskState(task: { completed: boolean; date: string }): string { return parentTaskState(task, this.week()?.today ?? ''); }
 
   ngOnInit(): void { this.load(); }
   go(weeks: number): void { const w = this.week(); if (w) this.load(shiftWeek(w.weekStart, weeks)); }

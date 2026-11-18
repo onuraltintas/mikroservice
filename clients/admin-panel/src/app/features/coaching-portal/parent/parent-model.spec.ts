@@ -1,6 +1,6 @@
 import {
   coachingStatusLine, firstName, hiddenProductsText, parentNotificationLabel, parentNotificationTarget, possessive, productFromSlug,
-  productSlug, speedReadingStatusLine, visibleProducts, ParentPlanWeek, parentPlanDays, planClock, shiftWeek
+  productSlug, speedReadingStatusLine, visibleProducts, ParentPlanWeek, parentPlanDays, parentTaskState, planClock, shiftWeek
 } from './parent-model';
 
 // V4 (01.11.2026): the parent panel shows only the products the child uses and left visible, in the parent's voice.
@@ -98,5 +98,11 @@ describe('the child plan of a week', () => {
     expect(planClock(null, 30)).toBe('30 dk');
     expect(shiftWeek('2026-11-16', 1)).toBe('2026-11-23');
     expect(shiftWeek('2026-11-16', -1)).toBe('2026-11-09');
+  });
+
+  it('shows a past unfinished study as late (Gecikti)', () => {
+    expect(parentTaskState({ completed: false, date: '2026-11-16T00:00:00' }, '2026-11-18')).toBe('Gecikti');
+    expect(parentTaskState({ completed: false, date: '2026-11-18' }, '2026-11-18')).toBe('Bekliyor');
+    expect(parentTaskState({ completed: true, date: '2026-11-16' }, '2026-11-18')).toBe('Tamamlandı');
   });
 });

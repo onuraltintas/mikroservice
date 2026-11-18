@@ -11,6 +11,8 @@ import { coachingDate } from '../coaching-labels';
 import { CoachingParentService, ParentLinkCode, ParentLinkCodeStatus } from '../parent/coaching-parent.service';
 import { NotificationPreference, NotificationPreferencesApi } from '../../../../../shared/notification-preferences.component';
 import { InvitationEnds, invitationEndsText } from '../../../../../shared/invitation-ends';
+import { siteHref } from '../../../../../shared/eduivme-sites';
+import { DOCUMENT } from '@angular/common';
 import { ComboOption, ComboPage, OnboardingComboboxComponent, fold } from './onboarding-combobox.component';
 import { ScoreTypeFound, ScoreTypeFinderComponent } from './score-type-finder.component';
 import {
@@ -43,6 +45,8 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
   styleUrl: './student-onboarding.component.scss'
 })
 export class StudentOnboardingComponent implements OnInit {
+  /** Canlı test B1 (18.11.2026): parents enter the code on their own address. */
+  readonly parentSignUp = siteHref('parent', '/auth/register/parent', inject(DOCUMENT).defaultView?.location?.hostname);
   private readonly api = inject(CoachingOnboardingService);
   private readonly locations = inject(LocationService);
   private readonly parents = inject(CoachingParentService);

@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { accountSites, currentSite } from '../../core/auth/auth.guard';
 import { EDUIVME_SITE_LABELS, EDUIVME_SITE_URLS, EduivmeSite, siteStartUrl } from '../../../../shared/eduivme-sites';
@@ -24,14 +25,21 @@ import { EDUIVME_SITE_LABELS, EDUIVME_SITE_URLS, EduivmeSite, siteStartUrl } fro
       }
     </main>`
 })
-export class OtherSiteComponent {
+export class OtherSiteComponent implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   private readonly here = currentSite();
   readonly busy = signal(false);
   readonly hereLabel = computed(() => this.here ? EDUIVME_SITE_LABELS[this.here] : 'başka bir hesap');
   readonly target = computed<EduivmeSite | null>(() =>
     accountSites(this.auth.userProfile()).find(site => site !== this.here) ?? null);
+
+  /** Canlı test B4: an account that belongs on this address has nothing to move; it goes to its own start page. */
+  ngOnInit(): void {
+    if (this.here && accountSites(this.auth.userProfile()).includes(this.here))
+      void this.router.navigateByUrl(this.auth.getLandingRoute() ?? '/');
+  }
 
   host(site: EduivmeSite): string {
     return new URL(EDUIVME_SITE_URLS[site]).host;

@@ -16,7 +16,9 @@ registerLocaleData(localeTr);
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: LOCALE_ID, useValue: 'tr' },
-    provideRouter([]),
+    // Canlı test B3 (18.11.2026): the portal keeps its own address (StaffLocationService). A router without routes
+    // could not match a reloaded address (NG04002) and reset it to /staff/; this route accepts every address.
+    provideRouter([{ path: '**', children: [] }]),
     // Roadmap O2: product, workspace and section are kept in the address.
     StaffLocationService,
     provideHttpClient(withFetch(), withInterceptors([staffAuthInterceptor, staffAuthRecaptchaInterceptor, coachingInstitutionInterceptor])),
