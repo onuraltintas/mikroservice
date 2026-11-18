@@ -41,10 +41,10 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
           </div>
           <dl class="cp-facts">
             @if (w.nextSession; as session) {
-              <div><dt>Sıradaki seans</dt><dd><strong>{{ session.title }}</strong> · {{ when(session.startsAt) }}@if (session.teacherName) { · {{ session.teacherName }} }</dd></div>
+              <div><dt>Sıradaki seans</dt><dd><strong>{{ session.title }}</strong>, {{ when(session.startsAt) }}@if (session.teacherName) {, {{ session.teacherName }} }</dd></div>
             }
             @if (w.examCountdown; as exam) {
-              <div><dt>Sınava kalan</dt><dd><strong>{{ exam.name }}</strong> · {{ exam.estimated ? 'yaklaşık ' : '' }}{{ exam.daysLeft }} gün ({{ exam.date | coachingDate }}@if (exam.estimated) {<span data-testid="exam-estimated">, tahmini tarih</span>})</dd></div>
+              <div><dt>Sınava kalan</dt><dd><strong>{{ exam.name }}</strong>, {{ exam.estimated ? 'yaklaşık ' : '' }}{{ exam.daysLeft }} gün ({{ exam.date | coachingDate }}@if (exam.estimated) {<span data-testid="exam-estimated">, tahmini tarih</span>})</dd></div>
             }
           </dl>
           @if (w.overdue.length) {
@@ -102,7 +102,7 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
       <ul class="cp-rows">
         @for (assignment of assignments().items; track assignment.id) {
           <li>
-            <span class="cp-row-main"><strong>{{ assignment.title }}</strong><small>{{ assignment.subject ? assignment.subject + ' · ' : '' }}son gün {{ assignment.dueDate | coachingDate }}</small>
+            <span class="cp-row-main"><strong>{{ assignment.title }}</strong><small>{{ assignment.subject ? assignment.subject + ', ' : '' }}son gün {{ assignment.dueDate | coachingDate }}</small>
               @if (assignment.teacherFeedback) { <q class="cp-feedback">{{ assignment.teacherFeedback }}</q> }</span>
             <span class="cp-row-side">
               @if (assignment.score !== null && assignment.score !== undefined) { <strong>{{ assignment.score }}/{{ assignment.maxScore ?? 100 }}</strong> }
@@ -119,7 +119,7 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
       <ul class="cp-rows">
         @for (session of sessions().items; track session.id) {
           <li>
-            <span class="cp-row-main"><strong>{{ session.subject || 'Koçluk seansı' }}</strong><small>{{ session.startTime | coachingDate }} · {{ session.type | coachingLabel }}</small></span>
+            <span class="cp-row-main"><strong>{{ session.subject || 'Koçluk seansı' }}</strong><small>{{ session.startTime | coachingDate }}, {{ session.type | coachingLabel }}</small></span>
             <span class="cp-row-side">
               @if (attendance(session); as present) { <cs-status-chip [label]="present" [tone]="present === 'Katıldı' ? 'success' : 'warning'" /> }
               @else { <cs-status-chip [label]="session.status | coachingLabel" /> }

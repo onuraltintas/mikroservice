@@ -4,16 +4,13 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormGroup } 
 import { RouterLink } from '@angular/router';
 
 // Material
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSelectModule } from '@angular/material/select';
 import { SupportService } from '../../../core/services/support.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { inject } from '@angular/core';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
@@ -24,13 +21,10 @@ import { injectSiteBrand } from '../../../core/brand/site-brand';
         FormsModule,
         ReactiveFormsModule,
         RouterLink,
-        MatIconModule,
-        MatButtonModule,
         MatInputModule,
         MatFormFieldModule,
-        MatProgressSpinnerModule,
-        MatExpansionModule,
-        MatSelectModule
+        MatSelectModule,
+        AuthShellComponent
     ],
     templateUrl: './support.component.html',
     styleUrl: './support.component.scss'

@@ -3,141 +3,123 @@
   <app-google-registration-consent product="speed-reading" [busy]="loading" [error]="error"
     (confirm)="completeGoogleRegistration($event)" (cancel)="cancelGoogleRegistration()" />
 }
-<div [hidden]="!!googleRegistrationToken">
+<div [hidden]="!!googleRegistrationToken" class="login-body">
 
-    <mat-card class="register-card login-card">
-      <mat-card-content>
-        @if (mfaStage === 'none') {
-        <form [formGroup]="loginForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>E-posta</mat-label>
-            <input matInput type="email" formControlName="email" placeholder="ornek@email.com" autocomplete="username">
-            @if (loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched) {
-            <mat-error>E-posta gereklidir</mat-error>
-            }
-            @if (loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched) {
-            <mat-error>Geçerli bir e-posta giriniz</mat-error>
-            }
-          </mat-form-field>
+    @if (mfaStage === 'none') {
+    <form class="ds-auth__form" [formGroup]="loginForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
+      <div class="ds-field">
+        <label class="ds-field__label" for="login-email">E-posta adresi</label>
+        <input id="login-email" class="ds-input" type="email" formControlName="email" placeholder="ornek@eposta.com" autocomplete="username"
+          [attr.aria-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched ? 'true' : null" aria-describedby="login-email-error">
+        <span id="login-email-error" class="ds-field__error" aria-live="polite">
+          @if (loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched) { E-posta adresini yaz. }
+          @if (loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched) { Geçerli bir e-posta adresi yaz. }
+        </span>
+      </div>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Şifre</mat-label>
-            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
-              placeholder="Şifreniz" autocomplete="current-password" (focus)="prepareSignIn()" (input)="prepareSignIn()">
-            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword"
-              [attr.aria-label]="'Şifreyi ' + (hidePassword ? 'göster' : 'gizle')">
-              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-            </button>
-            @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
-            <mat-error>Şifre gereklidir</mat-error>
-            }
-          </mat-form-field>
-
-          <div class="remember-forgot-row">
-            <mat-checkbox formControlName="rememberMe">Beni Hatırla</mat-checkbox>
-            <a routerLink="/auth/forgot-password" class="forgot-link">Şifremi Unuttum?</a>
-          </div>
-
-          @if (error) {
-          <div class="error-message" role="alert">{{ error }}</div>
-          }
-
-          @if (showEmailVerificationWarning) {
-          <div class="verification-warning" role="status">
-            <p>E-posta adresiniz doğrulanmadı. Doğrulama e-postasını almadınız mı?</p>
-            <button mat-stroked-button color="primary" type="button" (click)="resendVerificationEmail()"
-              [disabled]="resendingEmail">
-              @if (resendingEmail) {
-              <mat-spinner diameter="20"></mat-spinner>
-              } @else {
-              Doğrulama E-postasını Tekrar Gönder
-              }
-            </button>
-          </div>
-          }
-
-          <button mat-raised-button color="primary" type="submit" [disabled]="loading || loginForm.invalid"
-            class="submit-btn full-width">
-            @if (loading) {
-            <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-            Giriş Yap
-            }
+      <div class="ds-field">
+        <span class="ds-field__row">
+          <label for="login-password">Şifre</label>
+          <a routerLink="/auth/forgot-password" class="ds-link">Şifremi unuttum</a>
+        </span>
+        <span class="ds-input-wrap">
+          <input id="login-password" class="ds-input" [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+            autocomplete="current-password" (focus)="prepareSignIn()" (input)="prepareSignIn()"
+            [attr.aria-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched ? 'true' : null" aria-describedby="login-password-error">
+          <button type="button" class="ds-input-action" (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Şifreyi ' + (hidePassword ? 'göster' : 'gizle')" [attr.aria-pressed]="!hidePassword">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"></path>
+              <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"></circle>
+              @if (!hidePassword) { <path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> }
+            </svg>
           </button>
+        </span>
+        <span id="login-password-error" class="ds-field__error" aria-live="polite">
+          @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) { Şifreni yaz. }
+        </span>
+      </div>
 
-          <div class="divider">
-            <span class="divider-text">veya</span>
-          </div>
+      <label class="ds-check"><input type="checkbox" formControlName="rememberMe"> Beni hatırla</label>
 
-          <div id="google-signin-button" class="google-button"></div>
+      @if (error) {
+      <div class="ds-alert" role="alert">{{ error }}</div>
+      }
 
-          <section class="register-options" aria-label="Kayıt seçenekleri">
-            <p>Hesabınız yok mu? Size uygun kayıt türünü seçin.</p>
-            <a routerLink="/auth/register" [queryParams]="invitationReturnUrl ? { returnUrl: invitationReturnUrl } : null" class="register-option">
-              <span><strong>Öğrenci kaydı</strong><small>Bireysel erişim için</small></span>
-              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
-            </a>
-            <a routerLink="/auth/register-teacher" [queryParams]="invitationReturnUrl ? { returnUrl: invitationReturnUrl } : null" class="register-option">
-              <span><strong>Öğretmen kaydı</strong><small>Öğrencilerinizle çalışmak için</small></span>
-              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
-            </a>
-            <a routerLink="/auth/register-school" class="register-option">
-              <span><strong>Kurum kaydı</strong><small>Kurumsal erişim için</small></span>
-              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
-            </a>
-          </section>
-        </form>
-        } @else if (mfaStage === 'recovery') {
-        <section class="mfa-login-panel">
-          <h2>İki adımlı doğrulama etkinleştirildi</h2>
-          <p>Bu kurtarma kodlarını güvenli bir yerde saklayın. Her biri yalnızca bir kez kullanılabilir.</p>
-          <div class="mfa-recovery-codes">
-            @for (code of mfaRecoveryCodes; track code) {
-            <code>{{ code }}</code>
-            }
-          </div>
-          <button mat-raised-button color="primary" type="button" class="full-width"
-            (click)="finishMfaEnrollment()">Devam et</button>
-        </section>
-        } @else {
-        <form (ngSubmit)="submitMfa()" class="mfa-login-panel">
-          <h2>{{ mfaStage === 'setup' ? 'İki adımlı doğrulamayı etkinleştir' : 'İki adımlı doğrulama' }}</h2>
-          @if (mfaStage === 'setup') {
-          <p>Authenticator uygulamanıza aşağıdaki anahtarı ekleyin ve üretilen 6 haneli kodu girin.</p>
-          <code class="mfa-secret">{{ mfaSecret }}</code>
-          }
-          @if (mfaUsingRecoveryCode) {
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Kurtarma kodu</mat-label>
-            <input matInput [(ngModel)]="mfaRecoveryCode" name="mfaRecoveryCode" autocomplete="one-time-code">
-          </mat-form-field>
-          } @else {
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Doğrulama kodu</mat-label>
-            <input matInput type="text" inputmode="numeric" maxlength="6" [(ngModel)]="mfaCode" name="mfaCode"
-              autocomplete="one-time-code">
-          </mat-form-field>
-          }
-          @if (error) {
-          <div class="error-message" role="alert">{{ error }}</div>
-          }
-          <button mat-raised-button color="primary" type="submit" class="full-width"
-            [disabled]="loading || (mfaUsingRecoveryCode ? !mfaRecoveryCode.trim() : !isMfaCodeValid())">
-            @if (loading) {
-            <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-            {{ mfaStage === 'setup' ? 'Kodu doğrula ve etkinleştir' : 'Giriş yap' }}
-            }
-          </button>
-          @if (mfaStage === 'verify') {
-          <button mat-button type="button" class="full-width" (click)="toggleRecoveryCode()">
-            {{ mfaUsingRecoveryCode ? 'Authenticator kodu kullan' : 'Kurtarma kodu kullan' }}
-          </button>
-          }
-        </form>
-        }
-      </mat-card-content>
-    </mat-card>
+      @if (showEmailVerificationWarning) {
+      <div class="ds-alert ds-alert--warning" role="status">
+        <span>E-posta adresin doğrulanmadı. Doğrulama e-postası gelmediyse yeniden gönderebilirsin.</span>
+        <button class="ds-btn ds-btn--quiet" type="button" (click)="resendVerificationEmail()" [disabled]="resendingEmail">
+          @if (resendingEmail) { <span class="ds-spinner" aria-hidden="true"></span> }
+          Doğrulama e-postasını yeniden gönder
+        </button>
+      </div>
+      }
+
+      <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="loading || loginForm.invalid">
+        @if (loading) { <span class="ds-spinner" aria-hidden="true"></span><span>Giriş yapılıyor</span> } @else { Giriş yap }
+      </button>
+
+      <div class="ds-divider">ya da</div>
+
+      <div id="google-signin-button" class="google-button"></div>
+
+      <section class="register-options" aria-labelledby="register-options-title">
+        <h2 id="register-options-title">Hesabın yok mu? Sana uygun kaydı seç.</h2>
+        <a routerLink="/auth/register" [queryParams]="invitationReturnUrl ? { returnUrl: invitationReturnUrl } : null" class="register-option">
+          <strong>Öğrenci</strong><small>Seviyeni belirle, ücretsiz başla</small>
+        </a>
+        <a routerLink="/auth/register-teacher" [queryParams]="invitationReturnUrl ? { returnUrl: invitationReturnUrl } : null" class="register-option">
+          <strong>Öğretmen</strong><small>Öğrencilerinle çalış</small>
+        </a>
+        <a routerLink="/auth/register-school" class="register-option">
+          <strong>Kurum</strong><small>Kurumsal erişim</small>
+        </a>
+      </section>
+    </form>
+    } @else if (mfaStage === 'recovery') {
+    <section class="ds-auth__form" aria-labelledby="mfa-recovery-title">
+      <h2 id="mfa-recovery-title" class="mfa-title">İki adımlı doğrulama etkinleştirildi</h2>
+      <p class="ds-alert ds-alert--warning">Bu kurtarma kodlarını güvenli bir yerde sakla. Her biri yalnız bir kez kullanılabilir.</p>
+      <ul class="ds-code-list" aria-label="Tek kullanımlık kurtarma kodları">
+        @for (code of mfaRecoveryCodes; track code) { <li>{{ code }}</li> }
+      </ul>
+      <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="button" (click)="finishMfaEnrollment()">Devam et</button>
+    </section>
+    } @else {
+    <form class="ds-auth__form" (ngSubmit)="submitMfa()" aria-labelledby="mfa-title">
+      <h2 id="mfa-title" class="mfa-title">{{ mfaStage === 'setup' ? 'İki adımlı doğrulamayı etkinleştir' : 'İki adımlı doğrulama' }}</h2>
+      @if (mfaStage === 'setup') {
+      <p class="mfa-hint">Doğrulama uygulamana aşağıdaki anahtarı ekle ve üretilen altı haneli kodu gir.</p>
+      <code class="ds-code">{{ mfaSecret }}</code>
+      }
+      @if (mfaUsingRecoveryCode) {
+      <div class="ds-field">
+        <label class="ds-field__label" for="mfa-recovery">Kurtarma kodu</label>
+        <input id="mfa-recovery" class="ds-input" [(ngModel)]="mfaRecoveryCode" name="mfaRecoveryCode" autocomplete="one-time-code">
+      </div>
+      } @else {
+      <div class="ds-field">
+        <label class="ds-field__label" for="mfa-code">Doğrulama kodu</label>
+        <input id="mfa-code" class="ds-input ds-input--code" type="text" inputmode="numeric" maxlength="6" [(ngModel)]="mfaCode" name="mfaCode"
+          autocomplete="one-time-code">
+      </div>
+      }
+      @if (error) {
+      <div class="ds-alert" role="alert">{{ error }}</div>
+      }
+      <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit"
+        [disabled]="loading || (mfaUsingRecoveryCode ? !mfaRecoveryCode.trim() : !isMfaCodeValid())">
+        @if (loading) { <span class="ds-spinner" aria-hidden="true"></span><span>Doğrulanıyor</span> }
+        @else { {{ mfaStage === 'setup' ? 'Kodu doğrula ve etkinleştir' : 'Giriş yap' }} }
+      </button>
+      @if (mfaStage === 'verify') {
+      <button class="ds-btn ds-btn--quiet" type="button" (click)="toggleRecoveryCode()">
+        {{ mfaUsingRecoveryCode ? 'Doğrulama uygulamasındaki kodu kullan' : 'Kurtarma kodu kullan' }}
+      </button>
+      }
+    </form>
+    }
     @if (mfaStage === 'none') {
     <app-parent-panel-entry />
     }

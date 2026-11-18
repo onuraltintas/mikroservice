@@ -55,7 +55,7 @@ export class NavigationService {
 
     items.push(
       {
-        label: 'Günlük Egzersizler',
+        label: 'Günlük egzersizler',
         icon: 'fitness_center',
         route: '/student/daily-exercises'
       },
@@ -65,12 +65,12 @@ export class NavigationService {
         route: '/student/assignments'
       },
       {
-        label: 'Tekrar Egzersizleri',
+        label: 'Tekrar egzersizleri',
         icon: 'replay',
         route: '/student/reviews'
       },
       {
-        label: 'Kişisel Öğrenme Yolu',
+        label: 'Kişisel öğrenme yolu',
         icon: 'route',
         route: '/student/learning-path'
       },

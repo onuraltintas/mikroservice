@@ -22,25 +22,25 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
   template: `
     <section class="space-y-6" aria-labelledby="bulk-users-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Kimlik yönetimi</p>
-        <h1 id="bulk-users-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Toplu kullanıcı işlemleri</h1>
-        <p class="mt-2 max-w-3xl text-sm text-gray-600 dark:text-gray-300">Kullanıcıları UTF-8 CSV ile güvenli biçimde içe veya dışa aktarın; seçili kullanıcılara tek seferde rol atayın.</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Kimlik yönetimi</p>
+        <h1 id="bulk-users-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Toplu kullanıcı işlemleri</h1>
+        <p class="mt-2 max-w-3xl text-sm text-(--ui-text-muted)">Kullanıcıları UTF-8 CSV ile güvenli biçimde içe veya dışa aktarın; seçili kullanıcılara tek seferde rol atayın.</p>
       </header>
 
       @if (error()) {
-        <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div>
+        <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div>
       }
 
       <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         @if (canImport()) {
           <section class="data-card space-y-4" aria-labelledby="bulk-import-title">
-            <div><h2 id="bulk-import-title" class="text-lg font-semibold text-gray-900 dark:text-white">CSV içe aktar</h2><p class="muted">Her satır yeni bir kullanıcı daveti oluşturur. Parola panelde tutulmaz.</p></div>
+            <div><h2 id="bulk-import-title" class="text-lg font-semibold text-(--ui-text)">CSV içe aktar</h2><p class="muted">Her satır yeni bir kullanıcı daveti oluşturur. Parola panelde tutulmaz.</p></div>
             <div class="flex flex-wrap gap-3">
               <button type="button" class="secondary" (click)="downloadTemplate()" [disabled]="busy()">Şablonu indir</button>
               <label class="secondary cursor-pointer">CSV seç<input #fileInput type="file" accept=".csv,text/csv" class="sr-only" (change)="selectFile($event)" /></label>
               @if (selectedFile()) { <span class="muted self-center">{{ selectedFile()?.name }}</span> }
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">UTF-8, en fazla 5 MB ve 1.000 satır. Sütunlar: firstName, lastName, email, phoneNumber, role.</p>
+            <p class="text-xs text-(--ui-text-muted)">UTF-8, en fazla 5 MB ve 1.000 satır. Sütunlar: firstName, lastName, email, phoneNumber, role.</p>
             <button type="button" class="primary" (click)="importUsers()" [disabled]="busy() || !selectedFile()">{{ importing() ? 'İçe aktarılıyor…' : 'Kullanıcıları içe aktar' }}</button>
             @if (importResult(); as result) { <div class="result-card"><strong>İçe aktarma sonucu</strong><p class="muted">Başarılı: {{ result.succeeded }} · Başarısız: {{ result.failed }}</p><ul class="error-list">@for (item of result.errors; track item) { <li>{{ item }}</li> }</ul></div> }
           </section>
@@ -48,7 +48,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
         @if (canView()) {
           <section class="data-card space-y-4" aria-labelledby="bulk-export-title">
-            <div><h2 id="bulk-export-title" class="text-lg font-semibold text-gray-900 dark:text-white">CSV dışa aktar</h2><p class="muted">Yetkiniz dahilindeki kullanıcı alanları UTF-8 CSV olarak indirilir.</p></div>
+            <div><h2 id="bulk-export-title" class="text-lg font-semibold text-(--ui-text)">CSV dışa aktar</h2><p class="muted">Yetkiniz dahilindeki kullanıcı alanları UTF-8 CSV olarak indirilir.</p></div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <label>Arama<input [(ngModel)]="exportSearch" name="exportSearch" maxlength="100" placeholder="Ad veya e-posta" /></label>
               <label>Rol<select [(ngModel)]="exportRole" name="exportRole"><option value="">Tüm roller</option>@for (role of roles(); track role) { <option [value]="role">{{ role }}</option> }</select></label>
@@ -61,7 +61,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
       @if (canEdit()) {
         <section class="data-card space-y-4" aria-labelledby="bulk-role-title">
-          <div><h2 id="bulk-role-title" class="text-lg font-semibold text-gray-900 dark:text-white">Toplu rol ataması</h2><p class="muted">İşlem yalnızca seçilen servisin rollerini değiştirir; diğer servisin rolleri korunur. Rol ataması sunucuda MFA ve SystemAdmin politikalarıyla doğrulanır. Liste seçimleri en fazla 100 kullanıcıyla sınırlıdır.</p></div>
+          <div><h2 id="bulk-role-title" class="text-lg font-semibold text-(--ui-text)">Toplu rol ataması</h2><p class="muted">İşlem yalnızca seçilen servisin rollerini değiştirir; diğer servisin rolleri korunur. Rol ataması sunucuda MFA ve SystemAdmin politikalarıyla doğrulanır. Liste seçimleri en fazla 100 kullanıcıyla sınırlıdır.</p></div>
           <label>Rolün ekleneceği servis<select [(ngModel)]="assignmentProduct" [disabled]="busy()"><option value="">Servis seçin</option><option value="coaching">Koçluk</option><option value="speed-reading">Hızlı Okuma</option></select></label>
           <form (ngSubmit)="loadUsers()" class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,14rem)_auto] md:items-end">
             <label>Arama<input [(ngModel)]="userSearch" name="userSearch" maxlength="100" placeholder="Ad veya e-posta" /></label>
@@ -86,7 +86,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
     .primary { background: var(--ui-brand); color: var(--ui-brand-contrast); } .primary:disabled, .secondary:disabled { opacity: .5; }
     .secondary { border: 1px solid var(--ui-border-strong); color: var(--ui-text); background: var(--ui-surface); }
     .check { display: flex; align-items: center; gap: .5rem; white-space: nowrap; } .check input { width: 1rem; height: 1rem; }
-    .data-table { width: 100%; text-align: left; font-size: .875rem; } .data-table th { border-bottom: 1px solid var(--ui-border); padding: .5rem .75rem; font-size: .75rem; text-transform: uppercase; color: var(--ui-text-muted); } .data-table td { border-bottom: 1px solid var(--ui-border); padding: .5rem .75rem; }
+    .data-table { width: 100%; text-align: left; font-size: .875rem; } .data-table th { border-bottom: 1px solid var(--ui-border); padding: .5rem .75rem; font-size: .75rem; color: var(--ui-text-muted); } .data-table td { border-bottom: 1px solid var(--ui-border); padding: .5rem .75rem; }
     .empty { padding: 1.25rem 0; text-align: center; color: var(--ui-text-muted); } .error-list { margin-top: .5rem; max-height: 10rem; overflow-y: auto; color: var(--ui-danger); font-size: .8rem; }
   `]
 })

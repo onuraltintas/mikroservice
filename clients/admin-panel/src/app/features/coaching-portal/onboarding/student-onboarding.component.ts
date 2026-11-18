@@ -489,22 +489,22 @@ export class StudentOnboardingComponent implements OnInit {
 
   readonly loadOwnSchools = (search: string, page: number): Observable<ComboPage> =>
     this.api.schools(this.answers().city?.label ?? '', null, search, page, this.answers().district?.label ?? null).pipe(map(r => ({ total: r.totalCount,
-      items: r.items.map(x => ({ value: x.id, label: x.name, hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(' · ') || undefined })) })));
+      items: r.items.map(x => ({ value: x.id, label: x.name, hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(', ') || undefined })) })));
   /** The LGS school step: when the chosen city is the student's own, the schools of their district come first. */
   readonly loadSchools = (search: string, page: number): Observable<ComboPage> => {
     const a = this.answers();
     const home = a.city && a.schoolCity && fold(a.city.label) === fold(a.schoolCity.label) ? a.district?.label ?? null : null;
     return this.api.schools(String(a.schoolCity?.value ?? ''), String(a.schoolType?.value ?? ''), search, page, home).pipe(map(r => ({ total: r.totalCount,
       items: r.items.map(x => ({ value: x.id, label: x.name, data: { minimumScore: x.minimumScore },
-        hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.minimumScore !== null ? `taban yaklaşık ${formatScore(x.minimumScore)}` : 'taban puanı yok'].filter(Boolean).join(' · ') })) })));
+        hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.minimumScore !== null ? `taban yaklaşık ${formatScore(x.minimumScore)}` : 'taban puanı yok'].filter(Boolean).join(', ') })) })));
   };
   readonly loadPrograms = (search: string, page: number): Observable<ComboPage> => {
     const a = this.answers();
     return this.api.programs(String(a.level?.value), this.programScoreType(), String(a.programCity?.value ?? ''), a.university?.label ?? '', search, page).pipe(map(r => ({
       total: r.totalCount,
-      items: r.items.map(x => ({ value: x.id, label: [x.name, x.faculty].filter(Boolean).join(' · '), data: { minimumScore: x.minimumScore },
+      items: r.items.map(x => ({ value: x.id, label: [x.name, x.faculty].filter(Boolean).join(', '), data: { minimumScore: x.minimumScore },
         hint: [x.minimumScore !== null ? `taban ${formatScore(x.minimumScore)}` : 'taban puanı yok', x.rank !== null ? `başarı sırası ${whole.format(x.rank)}` : null,
-          x.scholarship, x.educationType].filter(Boolean).join(' · ') })) })));
+          x.scholarship, x.educationType].filter(Boolean).join(', ') })) })));
   };
   comboOptions(question: Question): ComboOption[] | null {
     switch (question.id) {

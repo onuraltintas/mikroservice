@@ -173,11 +173,11 @@ export class NotificationService {
       case NotificationType.MilestoneAchieved:
         return 'Milestone';
       case NotificationType.WeeklyProgress:
-        return 'Haftalık İlerleme';
+        return 'Haftalık ilerleme';
       case NotificationType.MonthlyProgress:
         return 'Aylık İlerleme';
       case NotificationType.DailyReminder:
-        return 'Günlük Hatırlatma';
+        return 'Günlük hatırlatma';
       case NotificationType.SystemAnnouncement:
         return 'Sistem Duyurusu';
       case NotificationType.TeacherFeedback:
@@ -185,7 +185,7 @@ export class NotificationService {
       case NotificationType.AchievementUnlocked:
         return 'Başarı Kazanıldı';
       case NotificationType.GoalCompleted:
-        return 'Günlük Hedef';
+        return 'Günlük hedef';
       case NotificationType.StudentActivitySummary:
         return 'Öğrenci Aktivitesi';
       case NotificationType.StudentProgramCompleted:

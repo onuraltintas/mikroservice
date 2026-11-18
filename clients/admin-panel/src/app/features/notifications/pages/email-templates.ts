@@ -15,8 +15,8 @@ type BodyTarget = 'create' | 'edit';
     <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">E-posta Şablonları</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
+          <h1 class="text-2xl font-bold text-(--ui-text)">E-posta Şablonları</h1>
+          <p class="text-sm text-(--ui-text-muted)">
             Konu ve içerikleri görsel olarak düzenleyin; HTML kaynağı yalnızca gerektiğinde açılır.
           </p>
         </div>
@@ -24,20 +24,20 @@ type BodyTarget = 'create' | 'edit';
           <button type="button" class="rounded-lg border px-4 py-2" [disabled]="loading()" (click)="load()">
             {{ loading() ? 'Yükleniyor…' : 'Yenile' }}
           </button>
-          <button type="button" class="rounded-lg bg-indigo-600 px-4 py-2 text-white" (click)="toggleCreating()">
+          <button type="button" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast)" (click)="toggleCreating()">
             {{ creating() ? 'Vazgeç' : 'Yeni şablon' }}
           </button>
         </div>
       </header>
 
       @if (error()) {
-        <div class="rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-950/30 dark:text-red-200" role="alert">
+        <div class="rounded-lg bg-(--ui-danger-soft) p-3 text-(--ui-danger)" role="alert">
           {{ error() }}
         </div>
       }
 
       @if (creating()) {
-        <form class="template-form rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800" (ngSubmit)="create()">
+        <form class="template-form rounded-xl border bg-(--ui-surface) p-5" (ngSubmit)="create()">
           <div class="form-heading">
             <div>
               <h2>Yeni e-posta şablonu</h2>
@@ -91,7 +91,7 @@ type BodyTarget = 'create' | 'edit';
           </div>
 
           <div class="form-actions">
-            <button class="rounded bg-emerald-600 px-4 py-2 text-white" [disabled]="saving()">Oluştur</button>
+            <button class="rounded bg-(--ui-success-soft) px-4 py-2 text-(--ui-success)" [disabled]="saving()">Oluştur</button>
           </div>
         </form>
       }
@@ -107,18 +107,18 @@ type BodyTarget = 'create' | 'edit';
           @for (template of templates(); track template.id) {
             <button type="button" class="template-card" [class.selected]="selected()?.id === template.id" (click)="select(template)">
               <div class="font-semibold">{{ template.templateName }}</div>
-              <div class="text-xs text-gray-500">{{ categoryLabel(template.category) }} · {{ template.isActive ? 'Aktif' : 'Pasif' }}</div>
+              <div class="text-xs text-(--ui-text-muted)">{{ categoryLabel(template.category) }} · {{ template.isActive ? 'Aktif' : 'Pasif' }}</div>
               <div class="template-subject">{{ template.subject }}</div>
             </button>
           } @empty {
-            <div class="rounded-lg border p-6 text-gray-500">
+            <div class="rounded-lg border p-6 text-(--ui-text-muted)">
               {{ loading() ? 'Şablonlar yükleniyor…' : 'Şablon bulunamadı.' }}
             </div>
           }
         </div>
 
         @if (selected(); as template) {
-          <form class="template-form rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800" (ngSubmit)="save(template)">
+          <form class="template-form rounded-xl border bg-(--ui-surface) p-5" (ngSubmit)="save(template)">
             <div class="form-heading">
               <div>
                 <div class="eyebrow">Şablon düzenleme</div>
@@ -173,7 +173,7 @@ type BodyTarget = 'create' | 'edit';
               <span>Bu şablon gönderimlerde kullanılabilir</span>
             </label>
             <div class="form-actions">
-              <button class="rounded bg-indigo-600 px-4 py-2 text-white" [disabled]="saving()">{{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}</button>
+              <button class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast)" [disabled]="saving()">{{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}</button>
             </div>
           </form>
         }
@@ -191,7 +191,7 @@ type BodyTarget = 'create' | 'edit';
     .template-subject { margin-top: .55rem; overflow: hidden; color: var(--ui-text-muted); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
     .template-form { display: grid; gap: 1.15rem; color: var(--ui-text); }
     .form-heading { padding-bottom: .85rem; border-bottom: 1px solid var(--ui-border); }
-    .eyebrow { margin-bottom: .25rem; color: var(--ui-brand); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .eyebrow { margin-bottom: .25rem; color: var(--ui-brand); font-size: .72rem; font-weight: 700; letter-spacing: 0; }
     .step-badge, .status-badge { flex: none; border-radius: 999px; padding: .35rem .65rem; background: color-mix(in srgb, var(--ui-brand) 12%, transparent); color: var(--ui-brand); font-size: .72rem; font-weight: 700; }
     .status-badge.inactive { background: color-mix(in srgb, var(--ui-text-muted) 14%, transparent); color: var(--ui-text-muted); }
     .form-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -206,10 +206,10 @@ type BodyTarget = 'create' | 'edit';
     .mode-tabs button.active { border-color: color-mix(in srgb, var(--ui-brand) 38%, transparent); background: color-mix(in srgb, var(--ui-brand) 12%, transparent); color: var(--ui-brand); }
     .editor-toolbar { display: flex; flex-wrap: wrap; gap: .35rem; border-bottom: 1px solid var(--ui-border); padding-bottom: .55rem; }
     .editor-toolbar button { border-color: var(--ui-border); background: var(--ui-surface); }
-    .visual-editor { min-height: 20rem; overflow: auto; border: 1px solid var(--ui-border-strong); border-radius: .65rem; padding: 1rem; background: #fff; color: #172033; line-height: 1.55; }
-    .visual-editor:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
+    .visual-editor { min-height: 20rem; overflow: auto; border: 1px solid var(--ui-border-strong); border-radius: .65rem; padding: 1rem; background: var(--ui-surface); color: var(--ui-text); line-height: 1.55; }
+    .visual-editor:empty::before { content: attr(data-placeholder); color: var(--ui-brand-text); pointer-events: none; }
     .source-editor { min-height: 20rem; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .78rem; line-height: 1.55; }
-    .email-preview { display: block; width: 100%; min-height: 30rem; border: 1px solid var(--ui-border-strong); border-radius: .65rem; background: #fff; }
+    .email-preview { display: block; width: 100%; min-height: 30rem; border: 1px solid var(--ui-border-strong); border-radius: .65rem; background: var(--ui-surface); }
     .editor-hint { margin: 0; color: var(--ui-text-muted); font-size: .75rem; line-height: 1.45; }
     .active-toggle { display: flex; align-items: center; gap: .55rem; font-weight: 600; }
     .form-actions { display: flex; justify-content: flex-end; gap: .6rem; }

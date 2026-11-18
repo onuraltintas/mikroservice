@@ -26,72 +26,72 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
   template: `
     <section class="space-y-5">
       <div>
-        <h1 class="text-2xl font-bold dark:text-white">Koçluk {{ kind === 'students' ? 'Öğrencileri' : 'Öğretmenleri' }}</h1>
-        <p class="text-sm text-gray-500">İsim ve hesap bilgileri Identity, sonuçlar yalnızca Koçluk servisinden gelir.</p>
+        <h1 class="text-2xl font-bold">Koçluk {{ kind === 'students' ? 'Öğrencileri' : 'Öğretmenleri' }}</h1>
+        <p class="text-sm text-(--ui-text-muted)">İsim ve hesap bilgileri Identity, sonuçlar yalnızca Koçluk servisinden gelir.</p>
       </div>
       @if (scope()?.isGlobal) {
-      <div class="rounded-xl border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div class="rounded-xl border bg-(--ui-surface) p-4">
         <label class="block text-sm">Kurum ara
-          <span class="mt-1 flex gap-2"><input [(ngModel)]="institutionSearch" (keyup.enter)="loadInstitutions()" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Kurum adı" /><button type="button" class="rounded border px-3" (click)="loadInstitutions()">Ara</button></span>
+          <span class="mt-1 flex gap-2"><input [(ngModel)]="institutionSearch" (keyup.enter)="loadInstitutions()" maxlength="100" class="w-full rounded border px-3 py-2" placeholder="Kurum adı" /><button type="button" class="rounded border px-3" (click)="loadInstitutions()">Ara</button></span>
         </label>
         <label class="mt-3 block text-sm">Kurum
-          <select [(ngModel)]="institutionId" (ngModelChange)="onInstitutionChange()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-900">
+          <select [(ngModel)]="institutionId" (ngModelChange)="onInstitutionChange()" class="mt-1 w-full rounded border px-3 py-2">
             <option value="">Kurum seçin</option>
             @for (institution of institutions(); track institution.id) { <option [value]="institution.id">{{ institution.name }}</option> }
           </select>
         </label>
       </div>
-      } @else if (scope()) { <p class="text-sm text-gray-500">Yalnızca kurumunuzun koçluk verileri gösterilir.</p> }
+      } @else if (scope()) { <p class="text-sm text-(--ui-text-muted)">Yalnızca kurumunuzun koçluk verileri gösterilir.</p> }
 
       @if (institutionId) {
         @if (detailId) {
           <button type="button" class="rounded border px-3 py-2 text-sm" (click)="backToList()">← Listeye dön</button>
           @if (loading()) { <p role="status">Ayrıntılar yükleniyor…</p> }
-          @if (error()) { <p role="alert" class="text-red-700">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
+          @if (error()) { <p role="alert" class="text-(--ui-danger)">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
           @if (kind === 'students' && selectedStudent(); as student) {
-            <article class="space-y-4 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-gray-500">{{ student.email }} · {{ educationLabel(student.educationStatus, student.gradeLevel, 'Sınıf yok') }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
+            <article class="space-y-4 rounded-xl border bg-(--ui-surface) p-5">
+              <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-(--ui-text-muted)">{{ student.email }} · {{ educationLabel(student.educationStatus, student.gradeLevel, 'Sınıf yok') }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
               @if (canManageMemberships()) {
-                <section class="space-y-3 rounded-lg bg-gray-50 p-4 text-sm dark:bg-gray-900" aria-labelledby="student-membership-heading">
+                <section class="space-y-3 rounded-lg bg-(--ui-surface-muted) p-4 text-sm" aria-labelledby="student-membership-heading">
                   <h3 id="student-membership-heading" class="font-semibold">Kurum üyeliğini yönet</h3>
                   <label class="block">Eğitim durumu
-                    <select [ngModel]="editingStage" (ngModelChange)="changeEditingStage($event)" name="editingStage" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
+                    <select [ngModel]="editingStage" (ngModelChange)="changeEditingStage($event)" name="editingStage" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2">
                       <option value="">Eğitim durumunu seçin</option>
                       @for (item of educationStages; track item.value) { <option [value]="item.value">{{ item.staffLabel }}</option> }
                     </select>
                   </label>
                   @if (isStudentStage(editingStage)) {
                     <label class="block">Sınıf seviyesi
-                      <select [(ngModel)]="editingGradeLevel" name="editingGradeLevel" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
+                      <select [(ngModel)]="editingGradeLevel" name="editingGradeLevel" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2">
                         <option [ngValue]="null">Sınıf seçin</option>
                         @for (grade of gradesFor(editingStage); track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
                       </select>
                     </label>
                   }
-                  @if (editingClearsSchoolNotice(); as notice) { <p class="text-amber-800" role="status" data-testid="membership-clears-school">{{ notice }}</p> }
+                  @if (editingClearsSchoolNotice(); as notice) { <p class="text-(--ui-warning)" role="status" data-testid="membership-clears-school">{{ notice }}</p> }
                   <label class="block">Öğretmen ara
-                    <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" [disabled]="savingMembership()" class="w-full rounded border px-3 py-2 dark:bg-gray-800" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading() || savingMembership()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
+                    <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" [disabled]="savingMembership()" class="w-full rounded border px-3 py-2" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading() || savingMembership()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
                   </label>
-                  @if (teacherLookupError()) { <p role="alert" class="text-red-700">{{ teacherLookupError() }}</p> }
-                  @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
+                  @if (teacherLookupError()) { <p role="alert" class="text-(--ui-danger)">{{ teacherLookupError() }}</p> }
+                  @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="text-sm text-(--ui-brand-text) underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
                   <label class="block">Atanan öğretmen
-                    <select [(ngModel)]="editingTeacherUserId" name="editingTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
+                    <select [(ngModel)]="editingTeacherUserId" name="editingTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2">
                       <option value="">Öğretmen atama</option>
                       @if (student.teacherUserId && !hasTeacherLookupResult(student.teacherUserId)) { <option [value]="student.teacherUserId">{{ student.teacherName || 'Mevcut öğretmen' }}</option> }
                       @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
                     </select>
                   </label>
-                  <button type="button" class="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50" [disabled]="savingMembership() || !editingStage || isStudentStage(editingStage) && editingGradeLevel === null" (click)="saveStudentMembership()">{{ savingMembership() ? 'Kaydediliyor…' : 'Eğitim durumunu ve atamayı kaydet' }}</button>
-                  <p class="text-xs text-gray-500">Bu işlem üyeliği ve öğretmen atamasını günceller; hesabı veya koçluk geçmişini silmez.</p>
+                  <button type="button" class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-50" [disabled]="savingMembership() || !editingStage || isStudentStage(editingStage) && editingGradeLevel === null" (click)="saveStudentMembership()">{{ savingMembership() ? 'Kaydediliyor…' : 'Eğitim durumunu ve atamayı kaydet' }}</button>
+                  <p class="text-xs text-(--ui-text-muted)">Bu işlem üyeliği ve öğretmen atamasını günceller; hesabı veya koçluk geçmişini silmez.</p>
                 </section>
               }
               @if (studentDetail(); as detail) {
                 <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
-                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status | coachingLabel }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
-                  <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score ?? 'puan yok' }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
+                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status | coachingLabel }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
+                  <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score ?? 'puan yok' }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Sonuç yok.</p> }</div>
                 </div>
-                <p class="text-xs text-gray-500">Bu öğrenciye erişim aktif kurum üyeliğiyle doğrulanır; ayrıntı kurum değişikliği dâhil tüm koçluk geçmişini kapsar.</p>
+                <p class="text-xs text-(--ui-text-muted)">Bu öğrenciye erişim aktif kurum üyeliğiyle doğrulanır; ayrıntı kurum değişikliği dâhil tüm koçluk geçmişini kapsar.</p>
               }
               @if (scope()?.isGlobal) {
                 <app-coaching-admin-study [studentId]="student.userId" />
@@ -99,13 +99,13 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 @if (financeVisible()) { <app-coaching-finance mode="admin" [studentId]="student.userId" /> }
               }
             </article>
-            <section class="space-y-3 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800" aria-labelledby="student-history-heading">
+            <section class="space-y-3 rounded-xl border bg-(--ui-surface) p-5" aria-labelledby="student-history-heading">
               <div class="flex flex-wrap items-end justify-between gap-3">
-                <div><h3 id="student-history-heading" class="font-semibold">Tüm koçluk geçmişi</h3><p class="text-xs text-gray-500">Kurum değişikliği öncesi kayıtlar da dâhil, sayfalı geçmiş.</p></div>
+                <div><h3 id="student-history-heading" class="font-semibold">Tüm koçluk geçmişi</h3><p class="text-xs text-(--ui-text-muted)">Kurum değişikliği öncesi kayıtlar da dâhil, sayfalı geçmiş.</p></div>
                 <button type="button" (click)="exportStudentHistory()" [disabled]="studentHistoryExporting() || studentHistoryLoading()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">{{ studentHistoryExporting() ? 'Tam rapor hazırlanıyor…' : 'Filtreli tam raporu CSV indir' }}</button>
                 <button type="button" (click)="printStudentHistory()" [disabled]="studentHistoryExporting() || studentHistoryLoading()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">Filtreli tam raporu yazdır</button>
                 <label class="text-sm">Kayıt türü
-                  <select [ngModel]="studentHistoryType" (ngModelChange)="selectStudentHistoryType($event)" class="mt-1 rounded border px-3 py-2 dark:bg-gray-900">
+                  <select [ngModel]="studentHistoryType" (ngModelChange)="selectStudentHistoryType($event)" class="mt-1 rounded border px-3 py-2">
                     @for (option of historyTypeOptions; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
                   </select>
                 </label>
@@ -115,110 +115,110 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 <label class="text-sm">Bitiş<input type="date" [(ngModel)]="studentHistoryToDate" class="mt-1 block w-full rounded border px-2 py-2"></label>
                 <label class="text-sm">Durum<select [(ngModel)]="studentHistoryStatus" class="mt-1 block w-full rounded border px-2 py-2"><option value="">Tümü</option>@for (option of historyStatusOptions[studentHistoryType]; track option.value) { <option [value]="option.value">{{ option.label }}</option> }</select></label>
                 <label class="text-sm">Başlık ara<input type="search" [(ngModel)]="studentHistorySearch" maxlength="100" (keyup.enter)="applyStudentHistoryFilters()" class="mt-1 block w-full rounded border px-2 py-2"></label>
-                <button type="button" (click)="applyStudentHistoryFilters()" [disabled]="studentHistoryLoading()" class="self-end rounded bg-indigo-600 px-3 py-2 text-sm text-white disabled:opacity-50">Filtrele</button>
+                <button type="button" (click)="applyStudentHistoryFilters()" [disabled]="studentHistoryLoading()" class="self-end rounded bg-(--ui-brand) px-3 py-2 text-sm text-(--ui-brand-contrast) disabled:opacity-50">Filtrele</button>
               </div>
               @if (studentHistoryLoading()) { <p role="status">Geçmiş yükleniyor…</p> }
               @if (studentHistory(); as history) {
                 <div class="divide-y text-sm">
                   @for (item of history.items; track item.id) {
                     <article class="py-3"><div class="flex flex-wrap justify-between gap-2"><strong>{{ item.title }}</strong><time>{{ item.eventDate | date:'dd.MM.yyyy HH:mm' }}</time></div>
-                      <p class="mt-1 text-gray-500">{{ item.status | coachingLabel }}</p>
-                      @if (item.category) { <p class="text-gray-500">Kategori: {{ item.category | coachingLabel }}</p> }
-                      @if (item.progress !== null && item.progress !== undefined) { <p class="text-gray-500">İlerleme: %{{ item.progress }}</p> }
-                      @if (item.score !== null && item.score !== undefined) { <p class="text-gray-500">Puan: {{ item.score }} / {{ item.maxScore ?? '—' }}</p> }
+                      <p class="mt-1 text-(--ui-text-muted)">{{ item.status | coachingLabel }}</p>
+                      @if (item.category) { <p class="text-(--ui-text-muted)">Kategori: {{ item.category | coachingLabel }}</p> }
+                      @if (item.progress !== null && item.progress !== undefined) { <p class="text-(--ui-text-muted)">İlerleme: %{{ item.progress }}</p> }
+                      @if (item.score !== null && item.score !== undefined) { <p class="text-(--ui-text-muted)">Puan: {{ item.score }} / {{ item.maxScore ?? '—' }}</p> }
                     </article>
-                  } @empty { <p class="py-3 text-gray-500">Bu türde geçmiş kayıt yok.</p> }
+                  } @empty { <p class="py-3 text-(--ui-text-muted)">Bu türde geçmiş kayıt yok.</p> }
                 </div>
                 <div class="flex items-center gap-3 text-sm"><span>{{ history.totalCount }} kayıt · {{ studentHistoryPage }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="studentHistoryPage <= 1 || studentHistoryLoading()" (click)="loadStudentHistory(studentHistoryPage - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="studentHistoryPage * 25 >= history.totalCount || studentHistoryLoading()" (click)="loadStudentHistory(studentHistoryPage + 1)">Sonraki</button></div>
               }
             </section>
           }
           @if (kind === 'teachers' && selectedTeacher(); as teacher) {
-            <article class="space-y-4 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-              <div><h2 class="text-lg font-semibold">{{ teacher.firstName }} {{ teacher.lastName }}</h2><p class="text-sm text-gray-500">{{ teacher.email }}</p></div>
-              @if (canManageMemberships()) { <button type="button" class="rounded border border-red-300 px-3 py-2 text-sm text-red-700 disabled:opacity-50" [disabled]="savingMembership()" (click)="removeTeacherFromInstitution(teacher)">Öğretmeni kurumdan çıkar</button> }
+            <article class="space-y-4 rounded-xl border bg-(--ui-surface) p-5">
+              <div><h2 class="text-lg font-semibold">{{ teacher.firstName }} {{ teacher.lastName }}</h2><p class="text-sm text-(--ui-text-muted)">{{ teacher.email }}</p></div>
+              @if (canManageMemberships()) { <button type="button" class="rounded border border-(--ui-danger) px-3 py-2 text-sm text-(--ui-danger) disabled:opacity-50" [disabled]="savingMembership()" (click)="removeTeacherFromInstitution(teacher)">Öğretmeni kurumdan çıkar</button> }
               @if (teacherAnalytics(); as analytics) {
                 <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev, son 30 gün: {{ analytics.currentPeriod.assignments }} · önceki dönem: {{ analytics.previousPeriod.assignments }}</p><p>Sınav: {{ analytics.currentPeriod.exams }} · önceki: {{ analytics.previousPeriod.exams }}</p><p>Seans: {{ analytics.currentPeriod.sessions }} · önceki: {{ analytics.previousPeriod.sessions }}</p></div>
                 <div class="text-sm"><h3 class="font-semibold">Sınav sonuç dağılımı (son 30 gün)</h3><p>Düşük (&lt;%50): {{ analytics.lowResults }} · Orta (%50–79): {{ analytics.mediumResults }} · Yüksek (≥%80): {{ analytics.highResults }}</p></div>
               }
               <div class="text-sm"><h3 class="font-semibold">Atanmış öğrenciler</h3>
                 <label class="mt-2 block">Öğrenci ara
-                  <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherStudentSearch" (keyup.enter)="loadTeacherStudents(1)" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" (click)="loadTeacherStudents(1)">Ara</button></span>
+                  <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherStudentSearch" (keyup.enter)="loadTeacherStudents(1)" maxlength="100" class="w-full rounded border px-3 py-2" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" (click)="loadTeacherStudents(1)">Ara</button></span>
                 </label>
-                @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }} · {{ student.email }}</p> } @empty { <p class="mt-2 text-gray-500">Atanmış öğrenci yok.</p> }
+                @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }} · {{ student.email }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Atanmış öğrenci yok.</p> }
                 <div class="mt-3 flex items-center gap-3"><span>Toplam {{ teacherStudents()?.totalCount ?? 0 }}</span><button type="button" class="rounded border px-2 py-1" [disabled]="teacherStudentPage <= 1" (click)="loadTeacherStudents(teacherStudentPage - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="teacherStudentPage * 25 >= (teacherStudents()?.totalCount ?? 0)" (click)="loadTeacherStudents(teacherStudentPage + 1)">Sonraki</button></div>
               </div>
             </article>
           }
         } @else {
           @if (canManageMemberships() && kind === 'teachers') {
-            <form class="flex flex-wrap items-end gap-3 rounded-xl border bg-white p-4 dark:border-gray-700 dark:bg-gray-800" (ngSubmit)="sendTeacherInvitation()">
+            <form class="flex flex-wrap items-end gap-3 rounded-xl border bg-(--ui-surface) p-4" (ngSubmit)="sendTeacherInvitation()">
               <label class="min-w-64 flex-1 text-sm">Öğretmen e-posta adresi
-                <input type="email" name="teacherInviteEmail" [(ngModel)]="teacherInviteEmail" required maxlength="254" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="ogretmen@ornek.com" />
+                <input type="email" name="teacherInviteEmail" [(ngModel)]="teacherInviteEmail" required maxlength="254" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2" placeholder="ogretmen@ornek.com" />
               </label>
-              <button type="submit" [disabled]="savingMembership()" class="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50">Öğretmen davet et</button>
-              <p class="basis-full text-xs text-gray-500">Davet e-postasına katılım bağlantısı gönderilir; öğretmen kabul edince kurum listesine eklenir.</p>
+              <button type="submit" [disabled]="savingMembership()" class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-50">Öğretmen davet et</button>
+              <p class="basis-full text-xs text-(--ui-text-muted)">Davet e-postasına katılım bağlantısı gönderilir; öğretmen kabul edince kurum listesine eklenir.</p>
             </form>
           }
           @if (canManageMemberships() && kind === 'students') {
-            <section class="space-y-3 rounded-xl border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <section class="space-y-3 rounded-xl border bg-(--ui-surface) p-4">
               <h2 class="font-semibold">Öğrenci davet et</h2>
               <form class="flex flex-wrap items-end gap-3" (ngSubmit)="sendStudentInvitation()">
                 <label class="min-w-64 flex-1 text-sm">Öğrenci e-posta adresi
-                  <input type="email" name="studentInviteEmail" [(ngModel)]="studentInviteEmail" required maxlength="254" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="ogrenci@ornek.com" />
+                  <input type="email" name="studentInviteEmail" [(ngModel)]="studentInviteEmail" required maxlength="254" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2" placeholder="ogrenci@ornek.com" />
                 </label>
                 <label class="min-w-64 flex-1 text-sm">Davet sırasında öğretmen ata (isteğe bağlı)
-                  <select [(ngModel)]="studentInviteTeacherUserId" name="studentInviteTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-900">
+                  <select [(ngModel)]="studentInviteTeacherUserId" name="studentInviteTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2">
                     <option value="">Şimdilik atama yapma</option>
                     @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
                   </select>
                 </label>
-                <button type="submit" [disabled]="savingMembership()" class="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50">Öğrenci davet et</button>
+                <button type="submit" [disabled]="savingMembership()" class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-50">Öğrenci davet et</button>
               </form>
               <label class="block text-sm">Atanabilecek öğretmen ara
-                <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
+                <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" class="w-full rounded border px-3 py-2" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
               </label>
-              @if (teacherLookupError()) { <p role="alert" class="text-sm text-red-700">{{ teacherLookupError() }}</p> }
-              @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
-              <p class="text-xs text-gray-500">Öğrenci daveti kabul edildikten sonra kurum listesinde görünür. Davet mevcut hesabı silmez veya değiştirmez.</p>
+              @if (teacherLookupError()) { <p role="alert" class="text-sm text-(--ui-danger)">{{ teacherLookupError() }}</p> }
+              @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="text-sm text-(--ui-brand-text) underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
+              <p class="text-xs text-(--ui-text-muted)">Öğrenci daveti kabul edildikten sonra kurum listesinde görünür. Davet mevcut hesabı silmez veya değiştirmez.</p>
             </section>
           }
-          <div class="rounded-xl border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div class="rounded-xl border bg-(--ui-surface) p-4">
             <label class="block text-sm">{{ kind === 'students' ? 'Öğrenci' : 'Öğretmen' }} ara
-              <span class="mt-1 flex gap-2"><input [(ngModel)]="search" (keyup.enter)="loadPage()" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" (click)="loadPage()">Ara</button></span>
+              <span class="mt-1 flex gap-2"><input [(ngModel)]="search" (keyup.enter)="loadPage()" maxlength="100" class="w-full rounded border px-3 py-2" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" (click)="loadPage()">Ara</button></span>
             </label>
             @if (kind === 'students') {
               <label class="mt-3 block text-sm">Sınıf seviyesi
-                <select [(ngModel)]="gradeLevelFilter" (ngModelChange)="loadPage()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-900">
+                <select [(ngModel)]="gradeLevelFilter" (ngModelChange)="loadPage()" class="mt-1 w-full rounded border px-3 py-2">
                   <option [ngValue]="null">Tüm sınıflar</option>
                   @for (grade of gradeLevels; track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }
                 </select>
               </label>
               <label class="mt-3 block text-sm">Öğretmen ara ve filtrele
-                <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" (keyup.enter)="searchInstitutionTeachers()" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Öğretmenleri bul' }}</button></span>
+                <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" (keyup.enter)="searchInstitutionTeachers()" maxlength="100" class="w-full rounded border px-3 py-2" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Öğretmenleri bul' }}</button></span>
               </label>
               <label class="mt-3 block text-sm">Atanmış öğretmen
-                <select [(ngModel)]="teacherFilterUserId" (ngModelChange)="loadPage()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-900">
+                <select [(ngModel)]="teacherFilterUserId" (ngModelChange)="loadPage()" class="mt-1 w-full rounded border px-3 py-2">
                   <option value="">Tüm öğretmenler</option>
                   @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
                 </select>
               </label>
-              @if (teacherLookupError()) { <p role="alert" class="mt-2 text-sm text-red-700">{{ teacherLookupError() }}</p> }
-              @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="mt-2 text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
+              @if (teacherLookupError()) { <p role="alert" class="mt-2 text-sm text-(--ui-danger)">{{ teacherLookupError() }}</p> }
+              @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="mt-2 text-sm text-(--ui-brand-text) underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
             }
             @if (loading()) { <p role="status" class="mt-3">Yükleniyor…</p> }
-            @if (error()) { <p role="alert" class="mt-3 text-red-700">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
+            @if (error()) { <p role="alert" class="mt-3 text-(--ui-danger)">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
             <div class="mt-4 overflow-x-auto"><table class="min-w-full text-left text-sm"><thead><tr><th class="py-2">Ad</th><th>E-posta</th><th>{{ kind === 'students' ? 'Öğretmen' : 'Kurum' }}</th><th></th></tr></thead><tbody>
               @if (kind === 'students') {
-                @for (student of studentPage()?.students; track student.userId) { <tr class="border-t"><td class="py-2">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.email }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td class="space-x-3"><button type="button" class="text-indigo-700 underline" (click)="openDetail(student.userId)">Ayrıntı</button>@if (canManageMemberships()) { <button type="button" class="text-red-700 underline disabled:opacity-50" [disabled]="savingMembership()" (click)="removeStudentFromInstitution(student)">Kurumdan çıkar</button> }</td></tr> }
+                @for (student of studentPage()?.students; track student.userId) { <tr class="border-t"><td class="py-2">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.email }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td class="space-x-3"><button type="button" class="text-(--ui-brand-text) underline" (click)="openDetail(student.userId)">Ayrıntı</button>@if (canManageMemberships()) { <button type="button" class="text-(--ui-danger) underline disabled:opacity-50" [disabled]="savingMembership()" (click)="removeStudentFromInstitution(student)">Kurumdan çıkar</button> }</td></tr> }
               } @else {
-                @for (teacher of teacherPage()?.teachers; track teacher.userId) { <tr class="border-t"><td class="py-2">{{ teacher.firstName }} {{ teacher.lastName }}</td><td>{{ teacher.email }}</td><td>{{ selectedInstitutionName() }}</td><td class="space-x-3"><button type="button" class="text-indigo-700 underline" (click)="openDetail(teacher.userId)">Ayrıntı</button>@if (canManageMemberships()) { <button type="button" class="text-red-700 underline disabled:opacity-50" [disabled]="savingMembership()" (click)="removeTeacherFromInstitution(teacher)">Kurumdan çıkar</button> }</td></tr> }
+                @for (teacher of teacherPage()?.teachers; track teacher.userId) { <tr class="border-t"><td class="py-2">{{ teacher.firstName }} {{ teacher.lastName }}</td><td>{{ teacher.email }}</td><td>{{ selectedInstitutionName() }}</td><td class="space-x-3"><button type="button" class="text-(--ui-brand-text) underline" (click)="openDetail(teacher.userId)">Ayrıntı</button>@if (canManageMemberships()) { <button type="button" class="text-(--ui-danger) underline disabled:opacity-50" [disabled]="savingMembership()" (click)="removeTeacherFromInstitution(teacher)">Kurumdan çıkar</button> }</td></tr> }
               }
             </tbody></table></div>
             <div class="mt-3 flex items-center gap-3 text-sm"><span>Toplam {{ totalCount() }} · {{ pageNumber }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="pageNumber <= 1 || loading()" (click)="loadPage(pageNumber - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="pageNumber * 25 >= totalCount() || loading()" (click)="loadPage(pageNumber + 1)">Sonraki</button></div>
           </div>
         }
-      } @else { <p class="text-sm text-gray-500">Liste için kurum seçin.</p> }
+      } @else { <p class="text-sm text-(--ui-text-muted)">Liste için kurum seçin.</p> }
     </section>
   `
 })

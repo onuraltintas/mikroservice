@@ -142,7 +142,7 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     fixture.detectChanges();
 
     expect(service.getAssignment).toHaveBeenCalledWith('assignment-1');
-    expect(fixture.nativeElement.textContent).toContain('ÖDEV DEĞERLENDİRMESİ');
+    expect(fixture.nativeElement.textContent).toContain('ödev değerlendirmesi');
     expect(fixture.nativeElement.textContent).toContain('Öğrenci teslimleri');
   });
 });

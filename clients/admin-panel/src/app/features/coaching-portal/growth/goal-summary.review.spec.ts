@@ -19,8 +19,8 @@ const lgsGoal: ScoreGoalEstimate = { scoreType: 'LGS', name: 'LGS', group: 'LGS'
 const borderline: ScoreEstimate = { estimates: [lgs], notice: null, goal: lgsGoal,
   target: { targetName: 'Fen Lisesi', scoreType: 'LGS', targetScore: 440, targetRank: null, targetPercentile: null, scoreGap: 6.67, netGap: 1.8, rankGap: null,
     reached: false, status: 'borderline', margin: 13.33 } };
-const ags: ScoreGoalEstimate = { scoreType: 'P2_IMAT', name: 'MEB-AGS P2 · İlköğretim Matematik', group: 'MEB-AGS', score: null, scoreLow: null, scoreHigh: null,
-  margin: null, scaleMax: 100, label: 'Yaklaşık tahmin', exact: false, level: null, notComputedReason: null, reason: 'missingExam', missingExams: ['ÖABT · İlköğretim Matematik'] };
+const ags: ScoreGoalEstimate = { scoreType: 'P2_IMAT', name: 'MEB-AGS P2, İlköğretim Matematik', group: 'MEB-AGS', score: null, scoreLow: null, scoreHigh: null,
+  margin: null, scaleMax: 100, label: 'Yaklaşık tahmin', exact: false, level: null, notComputedReason: null, reason: 'missingExam', missingExams: ['ÖABT, İlköğretim Matematik'] };
 
 function render(data: ScoreEstimate, parent = false) {
   TestBed.configureTestingModule({ imports: [StudentGoalSummaryComponent], providers: [provideRouter([]), { provide: CoachingScoreEstimateService, useValue: { estimate: vi.fn(() => of(data)) } }] });
@@ -71,8 +71,8 @@ describe('Paket B review: approximate targets and goal reasons', () => {
     const base: ScoreEstimate = { estimates: [], target: null, notice: null };
     expect(goalScore({ ...base, goal: { ...ags, reason: 'noModel', missingExams: [] } })!.headline).toBe('Bu sınav için puan tahmini henüz hazır değil.');
     expect(goalScore({ ...base, goal: { ...ags, reason: 'noModel', missingExams: [] } }, 'Elif')!.headline).toBe('Bu sınav için puan tahmini henüz hazır değil.');
-    expect(goalScore({ ...base, goal: ags })!.headline).toBe('Bu puan için ÖABT · İlköğretim Matematik denemesi de gir.');
-    expect(goalScore({ ...base, goal: ags }, 'Elif')!.headline).toBe('Bu puan için ÖABT · İlköğretim Matematik denemesi de gerekiyor.');
+    expect(goalScore({ ...base, goal: ags })!.headline).toBe('Bu puan için ÖABT, İlköğretim Matematik denemesi de gir.');
+    expect(goalScore({ ...base, goal: ags }, 'Elif')!.headline).toBe('Bu puan için ÖABT, İlköğretim Matematik denemesi de gerekiyor.');
     expect(goalScore({ ...base, goal: { ...ags, reason: 'noExam', missingExams: [] } })!.headline).toBe('Bu sınavda bir deneme gir; puanını burada gösterelim.');
   });
 
@@ -112,10 +112,10 @@ describe('Paket B review: score page notes and admin preview', () => {
   }
 
   it('labels the model ± as "model payı", explains P2-16 and P3, and words a borderline target', () => {
-    const p216: ScoreTypeEstimate = { ...lgs, scoreType: 'P2_16', name: 'MEB-AGS P2-16 · Din Kültürü ve Ahlak Bilgisi', group: 'MEB-AGS', score: 70, scoreLow: 67.5,
+    const p216: ScoreTypeEstimate = { ...lgs, scoreType: 'P2_16', name: 'MEB-AGS P2-16, Din Kültürü ve Ahlak Bilgisi', group: 'MEB-AGS', score: 70, scoreLow: 67.5,
       scoreHigh: 72.5, margin: 2.5, scaleMin: 0, scaleMax: 100 };
     const text = page({ estimates: [p216], target: null, notice: null, goal: { ...ags, scoreType: 'P1', name: 'MEB-AGS P1', reason: 'noExam', missingExams: [] } });
-    expect(text).toContain('(67,5–72,5) · model payı ±2,5');
+    expect(text).toContain('(67,5–72,5), model payı ±2,5');
     expect(text).toContain("1 net koşulu burada ÖABT'nin tamamına uygulanır; alt testler ayrı girilmiyor.");
     expect(text).toContain("Yabancı dil öğretmenliği adaylarının puanı P3'tür (AGS + YDS); P3 tahmin edilmez.");
     TestBed.resetTestingModule();

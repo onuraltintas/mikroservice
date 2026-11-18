@@ -1,5 +1,5 @@
 <section class="weekly-page" aria-labelledby="weekly-title">
-  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık düzenim</h1><p>Çalışma saatlerinde hangi derse çalışacağını yerleştir.</p></div><div><a routerLink="/coaching-portal/plan/wizard">Plan sihirbazı ↗</a>　<a routerLink="/coaching-portal/plan">Mevcut planlarım ↗</a></div></header>
+  <header class="page-heading"><div><p class="eyebrow">Kendi çalışma ritmin</p><h1 id="weekly-title">Haftalık düzenim</h1><p>Çalışma saatlerinde hangi derse çalışacağını yerleştir.</p></div><div><a routerLink="/coaching-portal/plan/wizard">Plan sihirbazı ↗</a>　<a routerLink="/coaching-portal/plan">Mevcut planlarım ↗</a></div></header>
   <div class="draft-strip"><span class="draft-badge">Haftalık taslak</span><span>Bu düzen her hafta tekrar eder. Mevcut planın ve çalışma kayıtların korunur.</span><strong>{{ weeklyMinutes() }} dk / hafta</strong></div>
   @if(error()){<div role="alert" class="notice error">{{ error() }}</div>}
   @if(message()){<p role="status" class="notice success">{{ message() }}</p>}
@@ -18,14 +18,14 @@
       @else if(outsideCount()){<p class="notice availability-notice outside" data-testid="availability-notice" role="status">{{ outsideCount() }} ders kartın müsait saatlerinin dışında. İstersen <a routerLink="/coaching-portal/plan/hours">müsait saatlerini güncelle</a> ya da kartları taşı.</p>}
     }
     @if(!lessons().length){<p class="notice">Takvime ders eklemek için <a routerLink="/coaching-portal/account/settings">çalışma düzeninden derslerini seç</a>. Kaydedilmiş kartların burada korunur.</p>}
-    @if(preview()){<p role="status" class="gesture-status" [class.invalid]="!!previewError()">{{ previewError()||preview()!.lessonName+' · '+clock(preview()!.startMinute)+'–'+clock(preview()!.startMinute+preview()!.durationMinutes) }}</p>}
+    @if(preview()){<p role="status" class="gesture-status" [class.invalid]="!!previewError()">{{ previewError()||preview()!.lessonName+', '+clock(preview()!.startMinute)+'–'+clock(preview()!.startMinute+preview()!.durationMinutes) }}</p>}
     @if(view()==='month'){
       <div class="month-grid" aria-label="Aylık haftalık düzen önizlemesi">
         @for(day of weekDays;track day.value){<div class="month-heading">{{ day.label.slice(0,3) }}</div>}
         @for(date of days();track date.getTime()){
           <div class="month-day" [class.other-month]="date.getMonth()!==anchor().getMonth()" (contextmenu)="openMenu($event,date,1080)">
             <button type="button" class="month-date" [attr.aria-label]="dayTitle(date)+' günlük görünüm'" (click)="monthDay(date)">{{ date.getDate() }}</button>
-            @for(slot of rows(date);track slot.id){<button type="button" class="month-slot color-{{ color(slot) }}" [class.outside]="isOutside(slot)" [attr.aria-label]="dayTitle(date)+' '+slot.lessonName+(isOutside(slot)?' · '+outsideLabel:'')+' düzenle'" (click)="edit(slot)"><span>{{ clock(slot.startMinute) }}</span> {{ slot.lessonName }}</button>}
+            @for(slot of rows(date);track slot.id){<button type="button" class="month-slot color-{{ color(slot) }}" [class.outside]="isOutside(slot)" [attr.aria-label]="dayTitle(date)+' '+slot.lessonName+(isOutside(slot)?', '+outsideLabel:'')+' düzenle'" (click)="edit(slot)"><span>{{ clock(slot.startMinute) }}</span> {{ slot.lessonName }}</button>}
           </div>
         }
       </div>
@@ -42,7 +42,7 @@
               @for(slot of rows(date);track slot.id){
                 <div class="slot-card color-{{ color(slot) }}" [class.outside]="isOutside(slot)" [class.unavailable]="!available(slot)" [class.invalid]="preview()?.id===slot.id&&!!previewError()" [attr.data-testid]="'slot-'+slot.id" [attr.data-slot-id]="slot.id" [style.top.px]="slot.startMinute/30*36" [style.height.px]="slot.durationMinutes/30*36">
                   <button type="button" class="resize top" [attr.aria-label]="slot.lessonName+' başlangıcını ayarla'" [disabled]="busy()" (pointerdown)="begin($event,slot,'top')" (click)="edit(slot)"><span></span></button>
-                  <button type="button" class="slot-content" [disabled]="busy()" [attr.aria-label]="slot.lessonName+' '+clock(slot.startMinute)+' '+slot.durationMinutes+' dakika'+(isOutside(slot)?' · '+outsideLabel:'')+' düzenle'" (pointerdown)="begin($event,slot,'move')" (click)="edit(slot)"><strong>{{ slot.lessonName }}</strong><span>{{ clock(slot.startMinute) }}–{{ clock(slot.startMinute+slot.durationMinutes) }} · {{ slot.durationMinutes }} dk</span>@if(isOutside(slot)){<span class="outside-mark">{{ outsideLabel }}</span>}@if(!available(slot)){<span>Ders artık seçilemiyor</span>}</button>
+                  <button type="button" class="slot-content" [disabled]="busy()" [attr.aria-label]="slot.lessonName+' '+clock(slot.startMinute)+' '+slot.durationMinutes+' dakika'+(isOutside(slot)?', '+outsideLabel:'')+' düzenle'" (pointerdown)="begin($event,slot,'move')" (click)="edit(slot)"><strong>{{ slot.lessonName }}</strong><span>{{ clock(slot.startMinute) }}–{{ clock(slot.startMinute+slot.durationMinutes) }}, {{ slot.durationMinutes }} dk</span>@if(isOutside(slot)){<span class="outside-mark">{{ outsideLabel }}</span>}@if(!available(slot)){<span>Ders artık seçilemiyor</span>}</button>
                   <button type="button" class="resize bottom" [attr.aria-label]="slot.lessonName+' bitişini ayarla'" [disabled]="busy()" (pointerdown)="begin($event,slot,'bottom')" (click)="edit(slot)"><span></span></button>
                 </div>
               }
@@ -56,13 +56,13 @@
   }
 </section>
 @if(menu;as target){
-  <div class="context-menu" role="menu" aria-label="Takvime ders ekle" [style.left.px]="target.x" [style.top.px]="target.y" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><small>{{ dayTitle(target.date) }} · {{ clock(target.minute) }}</small><button type="button" role="menuitem" (click)="add(target.date,target.minute)" [disabled]="!lessons().length">+ Ders ekle</button><button type="button" role="menuitem" (click)="menu=null">Kapat</button></div>
+  <div class="context-menu" role="menu" aria-label="Takvime ders ekle" [style.left.px]="target.x" [style.top.px]="target.y" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><small>{{ dayTitle(target.date) }}, {{ clock(target.minute) }}</small><button type="button" role="menuitem" (click)="add(target.date,target.minute)" [disabled]="!lessons().length">+ Ders ekle</button><button type="button" role="menuitem" (click)="menu=null">Kapat</button></div>
 }
 @if(form;as f){
   <div class="dialog-backdrop" (click)="form=null"><section class="slot-dialog" role="dialog" aria-modal="true" aria-labelledby="slot-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
-    <header><div><p class="eyebrow">HAFTALIK DÜZEN</p><h2 id="slot-title">{{ hasSlot()?'Dersi düzenle':'Ders ekle' }}</h2></div><button type="button" aria-label="Ders formunu kapat" (click)="form=null">×</button></header>
+    <header><div><p class="eyebrow">Haftalık düzen</p><h2 id="slot-title">{{ hasSlot()?'Dersi düzenle':'Ders ekle' }}</h2></div><button type="button" aria-label="Ders formunu kapat" (click)="form=null">×</button></header>
     <form #slotForm="ngForm" (ngSubmit)="apply()">
-      <label>Ders<select aria-label="Ders" name="lesson" [(ngModel)]="f.lessonId" required><option value="" disabled>Ders seç</option>@for(lesson of lessons();track lesson.id){<option [value]="lesson.id">{{ lesson.name }}{{ lesson.examCode?' · '+lesson.examCode:'' }}</option>}</select></label>
+      <label>Ders<select aria-label="Ders" name="lesson" [(ngModel)]="f.lessonId" required><option value="" disabled>Ders seç</option>@for(lesson of lessons();track lesson.id){<option [value]="lesson.id">{{ lesson.name }}{{ lesson.examCode?', '+lesson.examCode:'' }}</option>}</select></label>
       <div class="form-grid"><label>Gün<select aria-label="Gün" name="day" [(ngModel)]="f.day" required>@for(d of weekDays;track d.value){<option [value]="d.value">{{ d.label }}</option>}</select></label><label>Başlangıç<input aria-label="Başlangıç" type="time" name="start" step="1800" min="00:00" max="23:30" [(ngModel)]="f.start" required></label></div>
       <label>Süre<select aria-label="Süre" name="duration" [(ngModel)]="f.duration"><option [ngValue]="30">30 dakika</option><option [ngValue]="60">1 saat (60 dakika)</option></select></label>
       <p class="muted">Bu değişiklik haftalık şablona uygulanır. Mevcut çalışma planın değişmez.</p>

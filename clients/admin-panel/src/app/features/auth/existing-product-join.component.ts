@@ -4,7 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { RegistrationLegalConsentComponent } from './registration-legal-consent.component';
 import { RegistrationLegalAcceptance } from '../../core/services/identity.service';
 import { environment } from '../../../environments/environment';
@@ -15,7 +14,7 @@ import { AUTH_VOICE } from './auth-voice';
 @Component({
   selector: 'app-existing-product-join',
   standalone: true,
-  imports: [ReactiveFormsModule, MatInputModule, MatButtonModule, RegistrationLegalConsentComponent],
+  imports: [ReactiveFormsModule, MatInputModule, RegistrationLegalConsentComponent],
   template: `
     <section aria-label="Mevcut hesapla servise katılım">
       <h3>{{ copy.heading }}</h3>
@@ -55,7 +54,7 @@ import { AUTH_VOICE } from './auth-voice';
             (acceptancesChange)="legalAcceptances = $event"
             (readinessChange)="legalReady = $event" />
           @if (error) { <p role="alert">{{ error }}</p> }
-          <button mat-flat-button type="submit" [disabled]="loading || form.invalid || !legalReady || legalAcceptances.length !== 3">
+          <button class="ds-btn ds-btn--primary ds-btn--block" type="submit" [disabled]="loading || form.invalid || !legalReady || legalAcceptances.length !== 3">
             {{ loading ? 'Katılım tamamlanıyor…' : 'Bu servise katıl' }}
           </button>
         </form>
@@ -63,12 +62,14 @@ import { AUTH_VOICE } from './auth-voice';
     </section>
   `,
   styles: [`
-    :host { display:block; margin:1rem 0; }
-    section { padding:1rem; border:1px solid #94a3b8; border-radius:12px; }
-    h3 { margin:0 0 .75rem; font-size:1.2rem; }
-    p { line-height:1.5; margin-bottom:1rem; }
-    form { display:flex; flex-direction:column; gap:1rem; }
-    [role="alert"] { color:#b91c1c; }
+    :host { display: block; margin: 0 0 18px; }
+    section { display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius); background: var(--ds-surface); }
+    h3 { margin: 0; color: var(--ds-text); font-size: 18px; font-weight: 600; }
+    p { margin: 0; color: var(--ds-muted); line-height: 1.5; }
+    form { display: flex; flex-direction: column; gap: 14px; }
+    [role="alert"] { color: var(--ds-danger); }
+    [role="status"] { color: var(--ds-success); }
+    a { color: var(--ds-link); font-weight: 600; }
   `]
 })
 export class ExistingProductJoinComponent {

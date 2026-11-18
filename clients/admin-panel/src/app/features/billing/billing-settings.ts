@@ -33,12 +33,12 @@ const EMPTY_SELLER: BillingSellerRequest = { title: '', address: '', taxOffice: 
   template: `
     <main class="space-y-6" aria-labelledby="billing-settings-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-        <h1 id="billing-settings-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Ayarlar</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Satıcı bilgileri ve banka hesapları bütün ürünler için ortaktır. Satıcı bilgileri eksikken ya da etkin banka hesabı yokken hiçbir üründe satın alma açılmaz.</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <h1 id="billing-settings-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Ayarlar</h1>
+        <p class="mt-2 text-sm text-(--ui-text-muted)">Satıcı bilgileri ve banka hesapları bütün ürünler için ortaktır. Satıcı bilgileri eksikken ya da etkin banka hesabı yokken hiçbir üründe satın alma açılmaz.</p>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
       @if (loading()) { <p class="muted" role="status">Yükleniyor…</p> }
 
       <form (ngSubmit)="saveSeller()" class="form-card" data-testid="seller-form" aria-labelledby="seller-title">
@@ -64,7 +64,7 @@ const EMPTY_SELLER: BillingSellerRequest = { title: '', address: '', taxOffice: 
       <section class="space-y-3" aria-labelledby="bank-accounts-title">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 id="bank-accounts-title" class="text-lg font-semibold text-gray-900 dark:text-white">Banka hesapları</h2>
+            <h2 id="bank-accounts-title" class="text-lg font-semibold text-(--ui-text)">Banka hesapları</h2>
             <p class="muted">Etkin hesapların hepsi ödeme sayfasında görünür. Kullanıcı hangisine gönderirse göndersin, ödeme kodu aynıdır.</p>
           </div>
           <button type="button" class="primary" (click)="startAccount()" data-testid="new-bank-account">Hesap ekle</button>

@@ -66,7 +66,7 @@ body .coaching-shell.coaching-staff-shell .coaching-body .coaching-content {
   :is(.error, .overdue, .editor-error, .roster-error, .invitation-error, [role=alert]) { color: var(--ui-danger); }
   :is(.success, .invitation-success) { color: var(--ui-success); background: var(--ui-brand-soft); }
   .tracking .status.review { background: var(--ui-brand-soft); color: var(--ui-success); }
-  :is(.primary, .primary-button, .save-goal, .submit-button, .create-assignment-button, .create-session-button, .create-exam-button, .search-button, .student-invitation button, .filters button[type=submit]) { background: var(--ui-brand); color: #fff; border-color: var(--ui-brand); }
+  :is(.primary, .primary-button, .save-goal, .submit-button, .create-assignment-button, .create-session-button, .create-exam-button, .search-button, .student-invitation button, .filters button[type=submit]) { background: var(--ui-brand); color: var(--ui-brand-contrast); border-color: var(--ui-brand); }
   :is(.account-panel, .account-card, .notification-center, .notification-card) { background: var(--ui-surface); border-color: var(--ui-border); color: var(--ui-text); }
   :is(.notification-card.unread, .notification-center .empty-state, .notification-center .preference-panel) { background: var(--ui-surface-muted); border-color: var(--ui-border); }
   :is(.account-heading p, .account-card label, .account-card small, .notification-copy p, .notification-copy time, .notification-center .section-heading p) { color: var(--ui-text-muted); font-size: 13px; }
@@ -110,7 +110,7 @@ body:has(.coaching-staff-shell) .ui-toast .mat-mdc-button { color: var(--ui-succ
     .sidebar-caption, .sidebar-bottom { display: flex; }
     .teacher-drawer-close { display: grid; align-self: flex-end; margin-bottom: 12px; }
     .teacher-menu-toggle { display: grid; }
-    .teacher-scrim { display: block; position: fixed; inset: 0; z-index: 89; background: #071b15a8; border: 0; }
+    .teacher-scrim { display: block; position: fixed; inset: 0; z-index: 89; background: color-mix(in srgb, var(--ui-text) 66%, transparent); border: 0; }
     .topbar { flex-wrap: wrap; padding: 12px 16px; }
     .breadcrumb { flex: 1; }
     .topbar-actions { gap: 6px; }

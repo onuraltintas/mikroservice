@@ -43,9 +43,9 @@ describe('E7 Hedefim goal editor', () => {
     const gauge = goalGauge(yksScores)!;
     expect(gauge.detail).toBe('Hedef puanın 450');
     expect(gauge.secondary).toEqual(['TYT hedef puanın 400']);
-    const program = goalGauge({ estimates: [], notice: null, target: { targetName: 'Ankara Üniversitesi · Hukuk', scoreType: 'EA', targetScore: 475.14192,
+    const program = goalGauge({ estimates: [], notice: null, target: { targetName: 'Ankara Üniversitesi, Hukuk', scoreType: 'EA', targetScore: 475.14192,
       targetRank: 9000, targetPercentile: null, scoreGap: null, netGap: null, rankGap: null, reached: false, kind: 'program', scoreYear: 2025 } })!;
-    expect(program.detail).toBe('Taban puanı 475,14 · 2025');
+    expect(program.detail).toBe('Taban puanı 475,14, 2025');
   });
 
   it('the summary card shows the target score and both score targets', () => {
@@ -134,7 +134,7 @@ describe('E7 Hedefim goal editor', () => {
 
   it('the net-only goal editor shows the net targets in tr-TR and no score, exam-type or catalog form', async () => {
     const target: GoalTarget = { goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: 'p', canEdit: true,
-      catalogTarget: { name: 'Ankara Üniversitesi · Hukuk', detail: 'Hukuk Fakültesi', isActive: true },
+      catalogTarget: { name: 'Ankara Üniversitesi, Hukuk', detail: 'Hukuk Fakültesi', isActive: true },
       scoreTarget: { targetScore: 450, maxScore: 560, examType: 'YKS', subject: null }, netTargets: [{ examCode: 'TYT', targetNet: 82.5 }, { examCode: 'AYT_EA', targetNet: 50 }] };
     TestBed.configureTestingModule({ imports: [StudentGoalTargetComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
       { provide: CoachingStudyPlanningService, useValue: { getGoalTarget: vi.fn(() => of(target)), practiceProfiles: vi.fn(() => of([])) } }] });
@@ -147,7 +147,7 @@ describe('E7 Hedefim goal editor', () => {
     expect(text).toContain('AYT EA');
     expect(text).toContain('Net hedefini düzenle');
     for (const hidden of ['Sınav türü', 'En yüksek puan', 'Puan hedefi', 'Deneme sınavı', 'Kısa sınav', 'Hedef bağlantısını kaldır', 'Okul / üniversite hedefi',
-      'Yerleştirme puanı', 'Öğrenci beyanı', 'Ankara Üniversitesi · Hukuk'])
+      'Yerleştirme puanı', 'Öğrenci beyanı', 'Ankara Üniversitesi, Hukuk'])
       expect(text).not.toContain(hidden);
     expect((fixture.nativeElement as HTMLElement).querySelector('app-target-admission-search')).toBeNull();
   });

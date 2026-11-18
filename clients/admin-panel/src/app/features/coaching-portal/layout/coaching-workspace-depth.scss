@@ -24,7 +24,7 @@ body .coaching-shell.coaching-staff-shell {
   .welcome-block {
     padding: 24px 28px; border: 1px solid var(--ui-border); border-radius: 22px;
     background: linear-gradient(115deg, var(--coaching-mint-tint), var(--ui-surface) 75%);
-    .eyebrow { display: inline-block; color: var(--ui-success); font-weight: 750; letter-spacing: .1em; }
+    .eyebrow { display: inline-block; color: var(--ui-success); font-weight: 750; letter-spacing: 0; }
     h1 { font-weight: 800; letter-spacing: -.035em; }
   }
   .product-choice.active { box-shadow: inset 3px 0 var(--ui-success); }

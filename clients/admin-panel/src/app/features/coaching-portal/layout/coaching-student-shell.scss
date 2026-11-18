@@ -1,12 +1,12 @@
 // Shell navigation, header and account menu (moved out of the layout component so its style budget stays under 10 kB; every selector is scoped by .coaching-shell).
 /* T2 (31.10.2026): one flat menu, a page title in the header, the account menu and the notification bell. */
 .coaching-shell .coaching-navigation { display: grid; gap: 4px; margin-bottom: 22px;
-  a { position: relative; display: flex; align-items: center; gap: 13px; padding: 11px 14px; border-radius: 11px; min-height: 48px; color: var(--coaching-sidebar-text); font-size: 15px; font-weight: 550; transition: background .18s, color .18s;
-    app-coaching-icon { opacity: .9; font-size: 18px; }
-    &:hover { background: var(--coaching-sidebar-raised); }
-    &.is-active { color: var(--coaching-sidebar-active); background: var(--coaching-sidebar-raised); box-shadow: inset 3px 0 var(--coaching-sidebar-active); font-weight: 700; }
+  a { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--coaching-radius-control); min-height: 46px; color: var(--coaching-sidebar-text); font-size: 15px; font-weight: 500; transition: background .15s, color .15s;
+    app-coaching-icon { color: var(--coaching-sidebar-muted); font-size: 18px; }
+    &:hover { background: color-mix(in srgb, var(--coaching-sidebar-raised) 60%, transparent); }
+    &.is-active { color: var(--coaching-sidebar-text); background: var(--coaching-sidebar-raised); box-shadow: inset 3px 0 var(--coaching-sidebar-active), var(--coaching-card-shadow); font-weight: 600; app-coaching-icon { color: var(--coaching-sidebar-active); } }
     .coaching-badge { position: static; margin-left: auto; } } }
-.coaching-shell .coaching-page-title { flex: 1; margin: 0; min-width: 0; font-size: 18px; font-weight: 800; color: var(--ui-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.coaching-shell .coaching-page-title { flex: 1; margin: 0; min-width: 0; font-size: 18px; font-weight: 600; color: var(--ui-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .coaching-shell .coaching-topbar-actions { gap: 12px; }
 .coaching-shell .coaching-bell { position: relative; background: var(--ui-surface); }
 .coaching-shell .coaching-account { position: relative; }

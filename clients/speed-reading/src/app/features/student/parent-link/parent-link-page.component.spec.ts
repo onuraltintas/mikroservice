@@ -88,7 +88,7 @@ describe('ParentLinkPageComponent (Veli bağlantısı)', () => {
     fixture.detectChanges();
   }
 
-  const MESSAGE = () => `Veli panelinden beni ekle: ${parentPanelLinks().register} · Kod: ABCD-EFGH (7 gün geçerli)`;
+  const MESSAGE = () => `Veli panelinden beni ekle: ${parentPanelLinks().register}, Kod: ABCD-EFGH (7 gün geçerli)`;
 
   it('keeps button icon ligatures out of the accessible names', async () => {
     await createCode();

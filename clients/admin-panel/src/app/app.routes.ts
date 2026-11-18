@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, coachingPortalGuard, coachingRoleGuard, managementShellGuard } from './core/auth/auth.guard';
+import { eduivmeHomeHost } from './features/public/eduivme-home.guard';
 import { studentOnboardingGuard } from './features/coaching-portal/onboarding/onboarding.guard';
 
 export const routes: Routes = [
@@ -77,6 +78,14 @@ export const routes: Routes = [
         path: 'other-site',
         canActivate: [authGuard],
         loadComponent: () => import('./features/auth/other-site.component').then(m => m.OtherSiteComponent)
+    },
+
+    // Redesign 18.11.2026: eduivme.com (and www.) shows the parent brand's own page; other hosts keep the redirect.
+    {
+        path: '',
+        pathMatch: 'full',
+        canMatch: [eduivmeHomeHost],
+        loadComponent: () => import('./features/public/eduivme-home.component').then(m => m.EduivmeHomeComponent)
     },
 
     // Default Redirect

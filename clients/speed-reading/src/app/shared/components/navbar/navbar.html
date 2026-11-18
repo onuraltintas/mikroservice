@@ -26,15 +26,12 @@
                 <button (click)="switchLanguage('en')" [class.active]="currentLanguage() === 'en'">EN</button>
             </div>
             @if (panelLink; as panel) { <a [routerLink]="panel" [class.scrolled]="isScrolled">Panelime git</a> }
-            @else { <a routerLink="/auth/login" [class.scrolled]="isScrolled">Giriş Yap</a> }
-            <button mat-raised-button [class.primary]="!isScrolled" [class.white]="isScrolled"
-                routerLink="/auth/register">
-                Başlangıç yap
-            </button>
+            @else { <a routerLink="/auth/login" [class.scrolled]="isScrolled">Giriş yap</a> }
+            <a class="ds-btn ds-btn--primary nav-cta" routerLink="/auth/register">Ücretsiz başla</a>
         </div>
 
         <!-- Mobile Toggle -->
-        <button type="button" mat-icon-button class="mobile-toggle" (click)="toggleMobileMenu()"
+        <button type="button" class="mobile-toggle" (click)="toggleMobileMenu()"
             [attr.aria-label]="mobileMenuOpen ? 'Menüyü kapat' : 'Menüyü aç'"
             [attr.aria-expanded]="mobileMenuOpen">
             <mat-icon [class.scrolled]="isScrolled">
@@ -57,10 +54,8 @@
                 </a>
             </ng-container>
             @if (panelLink; as panel) { <a [routerLink]="panel" (click)="closeMobileMenu()">Panelime git</a> }
-            @else { <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş Yap</a> }
-            <button mat-raised-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()">
-                Başlangıç yap
-            </button>
+            @else { <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş yap</a> }
+            <a class="ds-btn ds-btn--primary ds-btn--block" routerLink="/auth/register" (click)="closeMobileMenu()">Ücretsiz başla</a>
         </div>
     </div>
 </nav>

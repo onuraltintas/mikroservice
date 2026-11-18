@@ -104,7 +104,7 @@ import { CommonModule } from '@angular/common';
       border-radius: var(--sp-radius-sm);
       border: none;
       background: var(--sp-primary);
-      color: #fff;
+      color: var(--ui-brand-contrast);
       font-family: var(--sp-font-sans);
       font-size: 0.875rem;
       font-weight: 600;
@@ -114,7 +114,7 @@ import { CommonModule } from '@angular/common';
 
       &:hover {
         background: var(--sp-primary-dark);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 35%, transparent);
       }
     }
   `]

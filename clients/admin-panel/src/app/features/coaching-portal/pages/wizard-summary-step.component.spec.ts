@@ -77,8 +77,8 @@ describe('WizardSummaryStepComponent', () => {
   it('proposes in Fill mode with the tempo\'s finish date when the week has cards, and shows the week day by day', async () => {
     const { el, weekly } = await setup();
     expect(weekly.proposal).toHaveBeenCalledWith('Fill', null, undefined, undefined, '2027-05-12');
-    expect([...el.querySelectorAll('[data-testid="proposal-day"]')].map(text)).toEqual(['Pazartesi 18:00–19:00 · Matematik', 'Salı 18:00–19:00 · Türkçe Yeni']);
-    expect([...el.querySelectorAll('[data-testid="proposal-lessons"] li')].map(text)).toEqual(['Matematik · haftada 1 saat', 'Türkçe · haftada 1 saat']);
+    expect([...el.querySelectorAll('[data-testid="proposal-day"]')].map(text)).toEqual(['Pazartesi 18:00–19:00, Matematik', 'Salı 18:00–19:00, Türkçe Yeni']);
+    expect([...el.querySelectorAll('[data-testid="proposal-lessons"] li')].map(text)).toEqual(['Matematik, haftada 1 saat', 'Türkçe, haftada 1 saat']);
   });
 
   it('proposes in Replace mode when the weekly draft is empty, without "Haftanı baştan öner"', async () => {
@@ -227,7 +227,7 @@ describe('WizardSummaryStepComponent', () => {
       { lessonId: 'tur', lessonName: 'Türkçe', examCode: 'LGS', existingMinutes: 0, proposedMinutes: 60, neededMinutes: 240, noTime: false }] });
     const { el, c, fixture } = await setup({ proposal: short });
     const gaps = [...el.querySelectorAll('[data-testid="lesson-gap"]')].map(x => text(x));
-    expect(gaps).toEqual(['· 1 saat eksik', '· 3 saat eksik']);
+    expect(gaps).toEqual([', 1 saat eksik', ', 3 saat eksik']);
     const solutions = text(el.querySelector('[data-testid="shortage-solutions"]'))!;
     // 240 minutes: 48 a weekday, rounded up to an hour; or four hours at the weekend.
     expect(solutions).toContain('Hafta içi her gün yaklaşık 1 saat daha ya da hafta sonu toplam 4 saat eklersen bütün derslerine yetişirsin.');
@@ -407,7 +407,7 @@ describe('WizardSummaryStepComponent', () => {
     (el.querySelector('[aria-label="Paragraf konusunu öne al"]') as HTMLButtonElement).click(); fixture.detectChanges();
     c.choices.pickerSearch.set(''); fixture.detectChanges();
     (el.querySelector('[aria-label="Cümlenin ögeleri konusunu öne al"]') as HTMLButtonElement).click(); fixture.detectChanges();
-    expect([...el.querySelectorAll('.chosen-topics li')].map(text)).toEqual(['Türkçe · Paragraf Kaldır', 'Türkçe · Cümlenin ögeleri Kaldır']);
+    expect([...el.querySelectorAll('.chosen-topics li')].map(text)).toEqual(['Türkçe, Paragraf Kaldır', 'Türkçe, Cümlenin ögeleri Kaldır']);
     // The plan cannot be published from a preview made without the chosen topics.
     expect((el.querySelector('[data-testid="publish-plan"]') as HTMLButtonElement).disabled).toBe(true);
     // Live test 13.11.2026: the disabled button says why.

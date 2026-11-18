@@ -11,11 +11,11 @@
     <aside class="sidebar" aria-label="Personel portalı" [attr.role]="hasPhoneMenu && menuOpen() ? 'dialog' : null" [attr.aria-modal]="hasPhoneMenu && menuOpen() ? 'true' : null" [cdkTrapFocus]="hasPhoneMenu && menuOpen()" [cdkTrapFocusAutoCapture]="hasPhoneMenu && menuOpen()">
       @if (hasPhoneMenu && menuOpen()) { <button class="teacher-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeTeacherMenu()"><app-coaching-icon name="close" /></button> }
       <a class="brand" href="/staff/" aria-label="eduivme personel alanı ana sayfa">
-        <span class="brand-symbol">İ</span>
-        <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
+        <img class="brand-logo" src="brand/eduivme.svg" alt="" width="40" height="40">
+        <span class="brand-copy"><strong>eduivme</strong><small>Personel paneli</small></span>
       </a>
 
-      <div class="sidebar-caption">ÇALIŞMA ALANI</div>
+      <div class="sidebar-caption">Çalışma alanı</div>
       <nav class="product-list" aria-label="Yetkili ürünler">
         @for (access of auth.products(); track access.product) {
           <button
@@ -24,14 +24,11 @@
             [attr.aria-current]="auth.activeProduct() === access.product ? 'page' : null"
             type="button"
             (click)="chooseProductFromMenu(access.product)">
-            <span class="product-mark" [class.reading]="access.product === 'speed-reading'">
-              {{ access.product === 'course-management' ? 'D' : access.product === 'coaching' ? 'K' : 'H' }}
-            </span>
+            <img class="product-logo" [src]="access.product === 'coaching' ? 'brand/maxkoc.svg' : access.product === 'speed-reading' ? 'brand/master-hizli-okuma.svg' : 'brand/eduivme.svg'" alt="" width="32" height="32">
             <span class="product-copy">
               <strong>{{ productLabel(access.product) }}</strong>
               <small>{{ roleLabel(access.roles) }}</small>
             </span>
-            <span class="product-arrow" aria-hidden="true">↗</span>
           </button>
         }
       </nav>
@@ -93,7 +90,7 @@
         @if (!isTeacherWorkspaceSelected) { <section class="session-panel" aria-labelledby="session-title">
           <div class="session-heading">
             <div>
-              <p class="eyebrow">OTURUM VE YETKİ</p>
+              <p class="eyebrow">Oturum ve yetki</p>
               <h2 id="session-title">Ürün verileri birbirinden ayrı kalır</h2>
             </div>
             <span class="active-pill"><span></span> Aktif · {{ currentProductLabel }}</span>
@@ -175,109 +172,122 @@
     </main>
   </div>
 } @else {
-  <main class="login-page">
-    <section class="login-story" aria-label="eduivme personel portalı hakkında">
-      <a class="brand light-brand" href="/staff/" aria-label="eduivme personel alanı ana sayfa">
-        <span class="brand-symbol">İ</span>
-        <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
-      </a>
-
-      <div class="story-content">
-        <p class="eyebrow">TEK PERSONEL PORTALI</p>
-        <h1>İki ürün.<br><em>Net yetkiler.</em></h1>
-        <p>Koçluk ve Hızlı Okuma çalışma alanlarınız tek yerde. Hangi ürüne erişebileceğinizi sistem doğrular; ürün verileri birbirine karışmaz.</p>
-        <div class="story-diagram" aria-hidden="true">
-          <span class="diagram-line"></span>
-          <span class="diagram-node node-coaching">K<span>Koçluk</span></span>
-          <span class="diagram-hub">İ</span>
-          <span class="diagram-node node-reading">H<span>Hızlı Okuma</span></span>
-        </div>
+  <!-- Redesign 18.11.2026 (tuval: "Giriş: eduivme"). Renkler --ds-* değişkenlerinden; marka html'de data-brand="eduivme". -->
+  <div class="ds-auth staff-login" data-brand="eduivme">
+    <section class="ds-auth__visual staff-login__visual" aria-label="eduivme personel paneli hakkında">
+      <svg class="staff-login__mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
+        <rect class="staff-login__stem" x="210" y="300" width="130" height="420" rx="65"></rect>
+        <path class="staff-login__arc" d="M150 200c40-80 120-120 190-108" fill="none" stroke-width="22" stroke-linecap="round"></path>
+        <circle class="staff-login__dot" cx="370" cy="110" r="78"></circle>
+      </svg>
+      <span class="ds-auth__place">Öğretmen ve kurum paneli</span>
+      <div class="staff-login__copy">
+        <h1 class="ds-auth__headline">Öğrencilerinizin haftası tek listede.</h1>
+        <p class="ds-auth__sub">maxkoç ve Master Hızlı Okuma öğrencilerinizi aynı panelden izleyin. Hangi ürüne erişebileceğinizi sistem doğrular; ürün verileri birbirine karışmaz.</p>
       </div>
-      <div class="story-foot"><span>ÖĞRETMEN · KURUM</span><span>GÜVENLİ OTURUM</span></div>
+      <ul class="ds-auth__points">
+        <li>Ödev, seans ve haftalık değerlendirme</li>
+        <li>Deneme analizi ve raporlar</li>
+        <li>Veliyle ve öğrenciyle mesajlaşma</li>
+      </ul>
     </section>
 
-    <section class="login-side">
-      <div class="login-box">
+    <main class="ds-auth__main">
+      <div class="ds-auth__panel">
+        <a class="ds-auth__brand" href="/staff/" aria-label="eduivme personel paneli ana sayfa">
+          <img src="brand/eduivme.svg" alt="" width="44" height="44">
+          <span><span class="ds-auth__brand-name">eduivme</span><span class="ds-auth__brand-note">Personel paneli</span></span>
+        </a>
+
         @if (mfaStage === 'setup' || mfaStage === 'verify') {
-          <p class="eyebrow">İKİ ADIMLI DOĞRULAMA</p>
-          <h2>{{ mfaStage === 'setup' ? 'Güvenli girişinizi kurun.' : 'Girişinizi doğrulayın.' }}</h2>
-          <p class="form-intro">
-            {{ mfaStage === 'setup'
-              ? 'Authenticator uygulamanıza bu anahtarı ekleyin; ardından uygulamanın ürettiği kodu girin.'
-              : productLabel(selectedProduct) + ' hesabınızın doğrulama kodunu girin.' }}
-          </p>
+          <div class="ds-auth__heading">
+            <h2 class="ds-auth__title">{{ mfaStage === 'setup' ? 'İki adımlı doğrulamayı kurun' : 'Girişinizi doğrulayın' }}</h2>
+            <p class="ds-auth__lead">
+              {{ mfaStage === 'setup'
+                ? 'Doğrulama uygulamanıza bu anahtarı ekleyin; ardından uygulamanın ürettiği kodu girin.'
+                : productLabel(selectedProduct) + ' hesabınızın doğrulama kodunu girin.' }}
+            </p>
+          </div>
           @if (mfaStage === 'setup') {
-            <div class="mfa-secret-panel">
-              <span>Authenticator kurulum anahtarı</span>
-              <code>{{ mfaSecret }}</code>
-            </div>
+            <div class="ds-field"><span class="ds-field__label">Kurulum anahtarı</span><code class="ds-code">{{ mfaSecret }}</code></div>
           }
-          <form (ngSubmit)="submitMfa()">
-            <label for="mfa-code">6 haneli doğrulama kodu</label>
-            <input id="mfa-code" name="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" [(ngModel)]="mfaCode" required>
-            @if (errorMessage) { <div class="form-error" role="alert">{{ errorMessage }}</div> }
-            <button class="submit-button" type="submit" [disabled]="isSubmitting || mfaCode.trim().length !== 6">
+          <form class="ds-auth__form" (ngSubmit)="submitMfa()">
+            <div class="ds-field">
+              <label class="ds-field__label" for="mfa-code">Altı haneli doğrulama kodu</label>
+              <input class="ds-input ds-input--code" id="mfa-code" name="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" [(ngModel)]="mfaCode" required>
+            </div>
+            @if (errorMessage) { <div class="ds-alert" role="alert">{{ errorMessage }}</div> }
+            <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="isSubmitting || mfaCode.trim().length !== 6">
               {{ isSubmitting ? 'Doğrulanıyor…' : (mfaStage === 'setup' ? 'Kur ve devam et' : 'Doğrula ve devam et') }}
             </button>
           </form>
           @if (mfaStage === 'verify') {
-            <details class="recovery-entry">
-              <summary>Kurtarma kodu kullan</summary>
-              <form (ngSubmit)="submitRecoveryCode()">
-                <label for="mfa-recovery-code">Tek kullanımlık kurtarma kodu</label>
-                <input id="mfa-recovery-code" name="mfaRecoveryCode" type="text" autocomplete="one-time-code" [(ngModel)]="mfaRecoveryCode">
-                <button class="back-button" type="submit" [disabled]="isSubmitting || !mfaRecoveryCode.trim()">Kurtarma koduyla doğrula</button>
+            <details class="staff-login__recovery">
+              <summary class="ds-link">Kurtarma kodu kullan</summary>
+              <form class="ds-auth__form" (ngSubmit)="submitRecoveryCode()">
+                <div class="ds-field">
+                  <label class="ds-field__label" for="mfa-recovery-code">Tek kullanımlık kurtarma kodu</label>
+                  <input class="ds-input" id="mfa-recovery-code" name="mfaRecoveryCode" type="text" autocomplete="one-time-code" [(ngModel)]="mfaRecoveryCode">
+                </div>
+                <button class="ds-btn ds-btn--secondary ds-btn--block" type="submit" [disabled]="isSubmitting || !mfaRecoveryCode.trim()">Kurtarma koduyla doğrula</button>
               </form>
             </details>
           }
-          <button class="back-button" type="button" (click)="cancelMfa()">Girişe dön</button>
+          <button class="ds-btn ds-btn--quiet" type="button" (click)="cancelMfa()">Girişe dön</button>
         } @else if (mfaStage === 'recovery') {
-          <p class="eyebrow">KURTARMA KODLARI</p>
-          <h2>Bu kodları güvenle saklayın.</h2>
-          <p class="recovery-warning">Kodlar yalnızca şimdi gösterilir ve her biri bir kez kullanılabilir. Güvenli bir parola yöneticisine kaydedin.</p>
-          <ul class="recovery-code-list" aria-label="Tek kullanımlık kurtarma kodları">
+          <div class="ds-auth__heading"><h2 class="ds-auth__title">Kurtarma kodlarını saklayın</h2></div>
+          <p class="ds-alert ds-alert--warning">Kodlar yalnız şimdi gösterilir ve her biri bir kez kullanılabilir. Güvenli bir parola yöneticisine kaydedin.</p>
+          <ul class="ds-code-list" aria-label="Tek kullanımlık kurtarma kodları">
             @for (code of recoveryCodes; track code) { <li>{{ code }}</li> }
           </ul>
-          <button class="submit-button" type="button" (click)="finishMfaEnrollment()">Kodları kaydettim, devam et</button>
+          <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="button" (click)="finishMfaEnrollment()">Kodları kaydettim, devam et</button>
         } @else {
-          <p class="eyebrow">HOŞ GELDİNİZ</p>
-          <h2>Çalışma alanınıza<br>giriş yapın.</h2>
-          <p class="form-intro">Personel olarak kullandığınız ürünü seçin. Diğer yetkili ürünler girişten sonra görünür.</p>
+          <div class="ds-auth__heading">
+            <h2 class="ds-auth__title">Personel girişi</h2>
+            <p class="ds-auth__lead">Kullandığınız ürünü seçin. Yetkili olduğunuz diğer ürünler girişten sonra görünür.</p>
+          </div>
 
-          <div class="product-selector" role="group" aria-label="Giriş yapılacak ürün">
+          <div class="staff-login__products" role="group" aria-label="Giriş yapılacak ürün">
             <button type="button" [class.selected]="selectedProduct === 'coaching'" [attr.aria-pressed]="selectedProduct === 'coaching'" (click)="selectedProduct = 'coaching'">
-              <span class="selector-mark">K</span><span><strong>Koçluk</strong><small>Öğretmen · Kurum</small></span>
+              <img src="brand/maxkoc.svg" alt="" width="32" height="32"><span><strong>maxkoç</strong><small>Koçluk</small></span>
             </button>
             <button type="button" [class.selected]="selectedProduct === 'speed-reading'" [attr.aria-pressed]="selectedProduct === 'speed-reading'" (click)="selectedProduct = 'speed-reading'">
-              <span class="selector-mark reading-mark">H</span><span><strong>Hızlı Okuma</strong><small>Öğretmen · Kurum</small></span>
+              <img src="brand/master-hizli-okuma.svg" alt="" width="32" height="32"><span><strong>Hızlı Okuma</strong><small>Master Hızlı Okuma</small></span>
             </button>
             @if (courseManagementOffered) {
               <button type="button" [class.selected]="selectedProduct === 'course-management'" [attr.aria-pressed]="selectedProduct === 'course-management'" (click)="selectedProduct = 'course-management'">
-                <span class="selector-mark">D</span><span><strong>Kurs Yönetimi</strong><small>Yetkili pilot hesaplar</small></span>
+                <img src="brand/eduivme.svg" alt="" width="32" height="32"><span><strong>Kurs Yönetimi</strong><small>Yetkili pilot hesaplar</small></span>
               </button>
             }
           </div>
 
-          <form class="login-form" (ngSubmit)="submitLogin()">
-            <label for="email">E-posta adresi</label>
-            <input id="email" name="email" type="email" autocomplete="username" [(ngModel)]="email" placeholder="ornek@okul.com" required>
-            <div class="password-label"><label for="password">Şifre</label></div>
-            <input id="password" name="password" type="password" autocomplete="current-password" [(ngModel)]="password" placeholder="Şifrenizi girin" required>
-            <label class="remember-choice" for="remember-me">
+          <form class="ds-auth__form" (ngSubmit)="submitLogin()">
+            <div class="ds-field">
+              <label class="ds-field__label" for="email">E-posta adresi</label>
+              <input class="ds-input" id="email" name="email" type="email" autocomplete="username" [(ngModel)]="email" placeholder="ornek@okul.com" required>
+            </div>
+            <div class="ds-field">
+              <label class="ds-field__label" for="password">Şifre</label>
+              <input class="ds-input" id="password" name="password" type="password" autocomplete="current-password" [(ngModel)]="password" required>
+            </div>
+            <label class="ds-check" for="remember-me">
               <input id="remember-me" name="rememberMe" type="checkbox" [(ngModel)]="rememberMe">
               <span>Bu cihazda oturumu açık tut</span>
             </label>
-            @if (auth.notStaffAccount() && !errorMessage) { <div class="form-error" role="status" data-testid="not-staff-account">Bu tarayıcıda açık olan hesap personel hesabı değil; o hesabın oturumuna dokunulmadı. Öğretmen ya da kurum hesabınızla giriş yapabilirsiniz.</div> }
-            @if (errorMessage) { <div class="form-error" role="alert">{{ errorMessage }}</div> }
-            <button class="submit-button" type="submit" [disabled]="isSubmitting || !email.trim() || !password">
-              {{ isSubmitting ? 'Güvenli giriş yapılıyor…' : 'Personel olarak giriş yap' }}
-              <span aria-hidden="true">→</span>
+            @if (auth.notStaffAccount() && !errorMessage) { <div class="ds-alert ds-alert--warning" role="status" data-testid="not-staff-account">Bu tarayıcıda açık olan hesap personel hesabı değil; o hesabın oturumuna dokunulmadı. Öğretmen ya da kurum hesabınızla giriş yapabilirsiniz.</div> }
+            @if (errorMessage) { <div class="ds-alert" role="alert">{{ errorMessage }}</div> }
+            <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="isSubmitting || !email.trim() || !password">
+              {{ isSubmitting ? 'Giriş yapılıyor…' : 'Personel olarak giriş yap' }}
             </button>
           </form>
-          <p class="login-privacy">Giriş bilgileriniz yalnızca kimlik doğrulama için kullanılır. Erişim token’ı tarayıcı belleğinde tutulur.</p>
+          <div class="ds-auth__footer">
+            <span><a class="ds-link" href="/auth/forgot-password">Şifremi unuttum</a></span>
+            <span>Hesabınız yok mu? <a class="ds-link" href="/auth/register/teacher">Öğretmen olarak katılın</a></span>
+          </div>
+          <p class="ds-field__hint">Giriş bilgileriniz yalnız kimlik doğrulama için kullanılır.</p>
         }
+        <p class="ds-field__hint">© {{ currentYear }} ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır.</p>
       </div>
-      <footer class="login-footer">© {{ currentYear }} eduivme <span>Koçluk ve Hızlı Okuma için personel girişi</span></footer>
-    </section>
-  </main>
+    </main>
+  </div>
 }

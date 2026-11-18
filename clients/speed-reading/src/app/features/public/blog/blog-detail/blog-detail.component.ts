@@ -14,6 +14,7 @@ import { FooterComponent } from '../../../../shared/components/footer/footer';
 
 @Component({
     selector: 'app-blog-detail',
+    host: { 'data-brand': 'ho' },
     standalone: true,
     imports: [
         CommonModule,

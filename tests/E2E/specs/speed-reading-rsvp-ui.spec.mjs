@@ -53,7 +53,7 @@ for (const version of [1, 2]) for (const evaluation of [false, true]) {
     for (const item of questions) {
       await expect(page.getByText(item.questionText, { exact: true })).toBeVisible();
       await page.getByRole('button', { name: /Kitap/ }).click();
-      const next = page.getByRole('button', { name: /Sonuçları Gör|Sonraki Soru/ });
+      const next = page.getByRole('button', { name: /Sonuçları Gör|Sonraki Soru/i });
       await expect(next).toBeEnabled();
       await next.click();
     }
@@ -106,7 +106,7 @@ for (const [role, available] of [['Admin', true], ['Teacher', true], ['Admin', f
       for (const question of row.questions) {
         await expect(page.getByText(question.questionText, { exact: true })).toBeVisible({ timeout: 20000 });
         await page.getByRole('button', { name: `${question.correctAnswer} ${question['option' + question.correctAnswer]}`, exact: true }).click();
-        const next = page.getByRole('button', { name: /Sonuçları Gör|Sonraki Soru/ });
+        const next = page.getByRole('button', { name: /Sonuçları Gör|Sonraki Soru/i });
         await expect(next).toBeEnabled(); await next.click();
       }
       await expect(page.getByText('Önizleme sonucu — kaydedilmedi.')).toBeVisible();

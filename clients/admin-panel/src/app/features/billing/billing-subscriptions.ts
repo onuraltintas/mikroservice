@@ -13,12 +13,12 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   template: `
     <main class="space-y-6" aria-labelledby="billing-subscriptions-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-        <h1 id="billing-subscriptions-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Abonelikler</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Onaylanan ödemelerin, ücretsiz denemelerin ve elle verilenlerin açtığı abonelikler. Bitiş tarihi, onaylı dönemlerin toplamıdır; yenileme mevcut dönemin bittiği gün başlar.</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <h1 id="billing-subscriptions-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Abonelikler</h1>
+        <p class="mt-2 text-sm text-(--ui-text-muted)">Onaylanan ödemelerin, ücretsiz denemelerin ve elle verilenlerin açtığı abonelikler. Bitiş tarihi, onaylı dönemlerin toplamıdır; yenileme mevcut dönemin bittiği gün başlar.</p>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       @if (granting()) {
         <form class="form-card" (ngSubmit)="grant()" data-testid="grant-form">
@@ -33,7 +33,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
             </label>
             <label>{{ grantsInstitution() ? 'Kurum kimliği' : 'Kullanıcı kimliği' }}
               <input [(ngModel)]="form.holderId" name="grantHolder" required placeholder="00000000-0000-0000-0000-000000000000" />
-              <span class="muted">{{ grantsInstitution() ? 'Kullanıcı İşlemleri › Kurumlar listesinde kurumun altındaki "Kimliği kopyala".' : 'Kullanıcılar listesinde kullanıcının Detay penceresindeki "Kimlik numarası".' }}</span>
+              <span class="muted">{{ grantsInstitution() ? 'Kullanıcı işlemleri › Kurumlar listesinde kurumun altındaki "Kimliği kopyala".' : 'Kullanıcılar listesinde kullanıcının Detay penceresindeki "Kimlik numarası".' }}</span>
             </label>
             <label>{{ grantsInstitution() ? 'Kurumun adı' : 'Adı ve soyadı' }}
               <input [(ngModel)]="form.displayName" name="grantName" required maxlength="200" />
@@ -59,7 +59,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
       <div class="data-card">
         <div class="mb-3 flex flex-wrap items-center gap-2">
-          <label class="text-sm text-gray-700 dark:text-gray-200" for="subscription-product-filter">Ürün</label>
+          <label class="text-sm text-(--ui-text)" for="subscription-product-filter">Ürün</label>
           <select id="subscription-product-filter" [ngModel]="product()" (ngModelChange)="product.set($event); load()" name="subscriptionProduct">
             <option value="">Tüm ürünler</option>
             @for (item of products(); track item.id) { <option [value]="item.code">{{ item.name }}</option> }

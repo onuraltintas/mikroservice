@@ -293,6 +293,6 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'settings/configurations',
         canActivate: [permissionGuard],
         loadComponent: () => import('../settings/pages/configurations/configurations.component').then(m => m.ConfigurationsComponent),
-        data: { title: 'Sistem Ayarları', permission: ADMIN_PERMISSIONS.operationsView }
+        data: { title: 'Sistem ayarları', permission: ADMIN_PERMISSIONS.operationsView }
     }
 ];

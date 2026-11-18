@@ -1,0 +1,272 @@
+// eduivme tasarım değişkenleri (redesign, 18.11.2026). Kurallar: .claude/skills/eduivme-design/SKILL.md
+// Üretici: tools/brand/design_tokens.py. Elle değiştirme; üreticiyi değiştirip yeniden üret.
+// Kullanım: bir kapsayıcıya data-brand="maxkoc" | "eduivme" | "ho" ver; bileşenler yalnız --ds-* değişkenlerini kullanır.
+// Koyu tema mevcut düzenlerden gelir: html.dark (admin-panel, staff-portal) ve data-sp-theme / data-theme (Hızlı Okuma).
+// Yazı ve zemin çiftleri en az 4,5:1; kenarlık ve odak halkası en az 3:1 (üretici bunu denetler).
+
+[data-brand='maxkoc'] {
+  --ds-font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ds-bg: #EDF2F8;
+  --ds-surface: #FFFFFF;
+  --ds-text: #18222F;
+  --ds-muted: #4F5D6F;
+  --ds-line: #DCE4EE;
+  --ds-field: #7D8B9C;
+  --ds-primary: #1F4E8C;
+  --ds-primary-hover: #183F72;
+  --ds-on-primary: #FFFFFF;
+  --ds-link: #1F4E8C;
+  --ds-focus: #1F4E8C;
+  --ds-accent: #FFE066;
+  --ds-on-accent: #18222F;
+  --ds-soft: #E6EEFB;
+  --ds-visual-bg: #E3ECF8;
+  --ds-visual-text: #18222F;
+  --ds-visual-muted: #3E4C5E;
+  --ds-nav: rgba(31, 78, 140, 0.08);
+  --ds-math-bg: #E6EEFB;
+  --ds-math-fg: #1E4FA3;
+  --ds-turkish-bg: #FDEBDD;
+  --ds-turkish-fg: #9A3412;
+  --ds-science-bg: #E3F3E8;
+  --ds-science-fg: #166534;
+  --ds-history-bg: #F1E8FB;
+  --ds-history-fg: #6B21A8;
+  --ds-danger: #B42318;
+  --ds-danger-soft: #FEF3F2;
+  --ds-danger-line: #F3B8B2;
+  --ds-warning: #8A5300;
+  --ds-warning-soft: #FDF0D5;
+  --ds-success: #11624F;
+  --ds-success-soft: #E3F4EE;
+  --ds-radius: 10px;
+  --ds-radius-control: 8px;
+  --ds-radius-button: 8px;
+  --ds-shadow: 0 1px 2px rgba(23, 43, 77, 0.06), 0 8px 20px -10px rgba(23, 43, 77, 0.18);
+}
+
+:is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) [data-brand='maxkoc'],
+[data-brand='maxkoc']:is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) {
+  --ds-bg: #0F141B;
+  --ds-surface: #161D27;
+  --ds-text: #E8EDF3;
+  --ds-muted: #A3B0C0;
+  --ds-line: #2A3544;
+  --ds-field: #5E6E82;
+  --ds-primary: #7FB0F0;
+  --ds-primary-hover: #A3C7F5;
+  --ds-on-primary: #0F141B;
+  --ds-link: #7FB0F0;
+  --ds-focus: #E6C84A;
+  --ds-accent: #E6C84A;
+  --ds-on-accent: #0F141B;
+  --ds-soft: #1E2B3D;
+  --ds-visual-bg: #0F141B;
+  --ds-visual-text: #E8EDF3;
+  --ds-visual-muted: #A3B0C0;
+  --ds-nav: rgba(127, 176, 240, 0.06);
+  --ds-math-bg: #1E2B3D;
+  --ds-math-fg: #9CC2F5;
+  --ds-turkish-bg: #3A2614;
+  --ds-turkish-fg: #F5B97A;
+  --ds-science-bg: #183326;
+  --ds-science-fg: #8FE0B8;
+  --ds-history-bg: #2C1D3A;
+  --ds-history-fg: #D3B4F5;
+  --ds-danger: #FDA29B;
+  --ds-danger-soft: #3A1714;
+  --ds-danger-line: #7A2A23;
+  --ds-warning: #F5C76A;
+  --ds-warning-soft: #3A2E14;
+  --ds-success: #8FE0C2;
+  --ds-success-soft: #16302A;
+  --ds-shadow: none;
+}
+
+[data-brand='eduivme'] {
+  --ds-font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ds-bg: #F4F5F7;
+  --ds-surface: #FFFFFF;
+  --ds-text: #1C2430;
+  --ds-muted: #555F6D;
+  --ds-line: #E1E4E9;
+  --ds-field: #7A8492;
+  --ds-primary: #1C2430;
+  --ds-primary-hover: #2E3A49;
+  --ds-on-primary: #FFFFFF;
+  --ds-link: #1C2430;
+  --ds-focus: #1C2430;
+  --ds-accent: #F2B33D;
+  --ds-on-accent: #1C2430;
+  --ds-soft: #ECEEF2;
+  --ds-visual-bg: #1C2430;
+  --ds-visual-text: #FFFFFF;
+  --ds-visual-muted: #C9D2DC;
+  --ds-nav: rgba(28, 36, 48, 0.05);
+  --ds-danger: #B42318;
+  --ds-danger-soft: #FEF3F2;
+  --ds-danger-line: #F3B8B2;
+  --ds-warning: #8A5300;
+  --ds-warning-soft: #FDF0D5;
+  --ds-success: #11624F;
+  --ds-success-soft: #E3F4EE;
+  --ds-radius: 10px;
+  --ds-radius-control: 8px;
+  --ds-radius-button: 8px;
+  --ds-shadow: 0 1px 2px rgba(28, 36, 48, 0.06), 0 8px 20px -12px rgba(28, 36, 48, 0.18);
+}
+
+:is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) [data-brand='eduivme'],
+[data-brand='eduivme']:is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) {
+  --ds-bg: #12161C;
+  --ds-surface: #1A2029;
+  --ds-text: #E6E9EE;
+  --ds-muted: #A7B0BC;
+  --ds-line: #2B3340;
+  --ds-field: #677385;
+  --ds-primary: #F2B33D;
+  --ds-primary-hover: #F5C46A;
+  --ds-on-primary: #1C2430;
+  --ds-link: #F2B33D;
+  --ds-focus: #F2B33D;
+  --ds-accent: #F2B33D;
+  --ds-on-accent: #1C2430;
+  --ds-soft: #26303D;
+  --ds-visual-bg: #0D1116;
+  --ds-visual-text: #FFFFFF;
+  --ds-visual-muted: #C9D2DC;
+  --ds-nav: rgba(255, 255, 255, 0.03);
+  --ds-danger: #FDA29B;
+  --ds-danger-soft: #3A1714;
+  --ds-danger-line: #7A2A23;
+  --ds-warning: #F5C76A;
+  --ds-warning-soft: #3A2E14;
+  --ds-success: #8FE0C2;
+  --ds-success-soft: #16302A;
+  --ds-shadow: none;
+}
+
+[data-brand='ho'] {
+  --ds-font: 'Lexend', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ds-bg: #EAF4F0;
+  --ds-surface: #FFFFFF;
+  --ds-text: #10201D;
+  --ds-muted: #4A5F5B;
+  --ds-line: #D3E4DE;
+  --ds-field: #6F8A84;
+  --ds-primary: #0B7A64;
+  --ds-primary-hover: #096553;
+  --ds-on-primary: #FFFFFF;
+  --ds-link: #0B7A64;
+  --ds-focus: #C2610A;
+  --ds-accent: #E8730C;
+  --ds-on-accent: #10201D;
+  --ds-soft: #E3F3ED;
+  --ds-visual-bg: #0B7A64;
+  --ds-visual-text: #FFFFFF;
+  --ds-visual-muted: #E1F2EC;
+  --ds-nav: rgba(11, 122, 100, 0.09);
+  --ds-danger: #B42318;
+  --ds-danger-soft: #FEF3F2;
+  --ds-danger-line: #F3B8B2;
+  --ds-warning: #8A5300;
+  --ds-warning-soft: #FDF0D5;
+  --ds-success: #11624F;
+  --ds-success-soft: #E3F4EE;
+  --ds-radius: 18px;
+  --ds-radius-control: 14px;
+  --ds-radius-button: 999px;
+  --ds-shadow: 0 1px 2px rgba(11, 60, 50, 0.06), 0 8px 20px -10px rgba(11, 60, 50, 0.18);
+}
+
+:is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) [data-brand='ho'],
+[data-brand='ho']:is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) {
+  --ds-bg: #0C1413;
+  --ds-surface: #13201E;
+  --ds-text: #E6F0EE;
+  --ds-muted: #9FB5B0;
+  --ds-line: #24342F;
+  --ds-field: #5C7871;
+  --ds-primary: #3CC9A8;
+  --ds-primary-hover: #62D6BA;
+  --ds-on-primary: #0C1413;
+  --ds-link: #3CC9A8;
+  --ds-focus: #FF9A3D;
+  --ds-accent: #FF9A3D;
+  --ds-on-accent: #0C1413;
+  --ds-soft: #173029;
+  --ds-visual-bg: #0A3F35;
+  --ds-visual-text: #FFFFFF;
+  --ds-visual-muted: #E1F2EC;
+  --ds-nav: rgba(60, 201, 168, 0.06);
+  --ds-danger: #FDA29B;
+  --ds-danger-soft: #3A1714;
+  --ds-danger-line: #7A2A23;
+  --ds-warning: #F5C76A;
+  --ds-warning-soft: #3A2E14;
+  --ds-success: #8FE0C2;
+  --ds-success-soft: #16302A;
+  --ds-shadow: none;
+}
+
+// Eski bileşenler (--ui-*) marka kapsamı içinde yeni renkleri kullanır; böylece kayıt formları gibi henüz yenilenmemiş
+// parçalar da aynı kimlikte görünür. Seçici iki kez yazıldı: html.dark'taki eski koyu tema değerlerinin (0,1,1) önüne geçer.
+[data-brand][data-brand] {
+  --ui-brand: var(--ds-primary);
+  --ui-brand-strong: var(--ds-primary-hover);
+  --ui-brand-hover: var(--ds-primary-hover);
+  --ui-brand-soft: var(--ds-soft);
+  --ui-brand-contrast: var(--ds-on-primary);
+  --ui-brand-text: var(--ds-link);
+  --ui-brand-spark: var(--ds-accent);
+  --ui-accent: var(--ds-accent);
+  --ui-accent-soft: color-mix(in srgb, var(--ds-accent) 14%, var(--ds-surface));
+  --ui-accent-text: var(--ds-warning);
+  --ui-info: var(--ds-link);
+  --ui-info-soft: var(--ds-soft);
+  --ui-surface-raised: var(--ds-surface);
+  --ui-page: var(--ds-bg);
+  --ui-surface: var(--ds-surface);
+  --ui-surface-muted: var(--ds-bg);
+  --ui-border: var(--ds-line);
+  --ui-border-strong: var(--ds-field);
+  --ui-text: var(--ds-text);
+  --ui-text-muted: var(--ds-muted);
+  --ui-text-subtle: var(--ds-muted);
+  --ui-danger: var(--ds-danger);
+  --ui-danger-soft: var(--ds-danger-soft);
+  --ui-warning: var(--ds-warning);
+  --ui-warning-soft: var(--ds-warning-soft);
+  --ui-success: var(--ds-success);
+  --ui-success-soft: var(--ds-success-soft);
+  --ui-font-body: var(--ds-font);
+  --ui-font-display: var(--ds-font);
+  // Angular Material bileşenleri (form alanları, menüler, onay kutuları) aynı kimliği kullanır.
+  --mat-sys-primary: var(--ds-primary);
+  --mat-sys-on-primary: var(--ds-on-primary);
+  --mat-sys-primary-container: var(--ds-soft);
+  --mat-sys-on-primary-container: var(--ds-text);
+  --mat-sys-surface: var(--ds-surface);
+  --mat-sys-surface-container-lowest: var(--ds-surface);
+  --mat-sys-surface-container-low: var(--ds-surface);
+  --mat-sys-surface-container: var(--ds-surface);
+  --mat-sys-surface-container-high: var(--ds-surface);
+  --mat-sys-surface-container-highest: var(--ds-bg);
+  --mat-sys-on-surface: var(--ds-text);
+  --mat-sys-on-surface-variant: var(--ds-muted);
+  --mat-sys-outline: var(--ds-field);
+  --mat-sys-outline-variant: var(--ds-line);
+  --mat-sys-error: var(--ds-danger);
+  --mat-sys-body-large-font: var(--ds-font);
+  --mat-sys-body-medium-font: var(--ds-font);
+  --mat-sys-body-small-font: var(--ds-font);
+  --mat-sys-label-large-font: var(--ds-font);
+  --mat-sys-label-medium-font: var(--ds-font);
+  --mat-sys-label-small-font: var(--ds-font);
+  --mat-sys-title-medium-font: var(--ds-font);
+  --mat-form-field-outlined-container-shape: var(--ds-radius-control);
+  --mat-form-field-container-text-font: var(--ds-font);
+  --mat-form-field-outlined-label-text-font: var(--ds-font);
+  font-family: var(--ds-font);
+  color: var(--ds-text);
+}

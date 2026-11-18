@@ -1,20 +1,23 @@
 @use '@angular/material' as mat;
 @use '../../../../shared/styles/platform-tokens';
 @use '../../../../shared/styles/platform-components';
+@use '../../../../shared/styles/design-tokens';
+@use '../../../../shared/styles/design-components';
 @use '../../../src/app/features/coaching-portal/layout/coaching-student-tokens';
 @use '../../../src/app/features/coaching-portal/layout/coaching-student-surfaces';
 @use './app/coaching-teacher-theme';
 @use '../../../src/app/features/coaching-portal/layout/coaching-workspace-depth';
+@use './app/staff-brand';
 
 body:has(.coaching-staff-shell) {
-  @include mat.theme((color: (primary: mat.$azure-palette, tertiary: mat.$blue-palette), typography: Inter, density: 0));
+  @include mat.theme((color: (primary: mat.$azure-palette, tertiary: mat.$blue-palette), typography: 'IBM Plex Sans', density: 0));
 }
 
 :root {
   color-scheme: light;
-  font-family: Inter, "Segoe UI", sans-serif;
-  background: #f4f3ed;
-  color: #132a34;
+  font-family: var(--ds-font, "IBM Plex Sans", "Segoe UI", sans-serif);
+  background: var(--ui-surface-muted);
+  color: var(--ui-text);
 }
 
 * {
@@ -31,24 +34,24 @@ body {
   .content-wrap table:has(thead) { display: block; border: 0; }
   .content-wrap table:has(thead) thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .content-wrap table:has(thead) tbody { display: block; }
-  .content-wrap table:has(thead) tr { display: block; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--ui-border, #d6dfe2); border-radius: 12px; background: var(--ui-surface, #fff); }
+  .content-wrap table:has(thead) tr { display: block; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--ui-border, var(--ui-border)); border-radius: 12px; background: var(--ui-surface, var(--ui-surface)); }
   .content-wrap table:has(thead) :is(td, tbody th) { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border: 0; text-align: right; }
-  .content-wrap table:has(thead) td[data-label]::before { content: attr(data-label); font-weight: 700; text-align: left; color: var(--ui-text-muted, #5b6b66); }
+  .content-wrap table:has(thead) td[data-label]::before { content: attr(data-label); font-weight: 700; text-align: left; color: var(--ui-text-muted, var(--ui-text-muted)); }
 }
 
 /* Roadmap O2: the institution workspace gets the same phone menu as the teacher workspace. */
 .portal-shell.staff-phone-menu:not(.coaching-staff-shell) {
-  .teacher-menu-toggle, .teacher-drawer-close { display: none; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid #d6dfe2; border-radius: 11px; background: #fff; color: inherit; cursor: pointer; flex-shrink: 0; }
+  .teacher-menu-toggle, .teacher-drawer-close { display: none; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid var(--ui-border); border-radius: 11px; background: var(--ui-surface); color: inherit; cursor: pointer; flex-shrink: 0; }
   .teacher-scrim { display: none; }
 }
 @media (max-width: 850px) {
   .portal-shell.staff-phone-menu:not(.coaching-staff-shell) {
-    .sidebar { display: none; position: fixed; top: 0; bottom: 0; left: 0; width: min(310px, 86vw); height: 100dvh; overflow-y: auto; z-index: 90; padding: 24px 18px; background: #fff; }
+    .sidebar { display: none; position: fixed; top: 0; bottom: 0; left: 0; width: min(310px, 86vw); height: 100dvh; overflow-y: auto; z-index: 90; padding: 24px 18px; background: var(--ui-surface); }
     &.menu-open .sidebar { display: flex; flex-direction: column; }
     .product-list { grid-template-columns: 1fr; }
     .teacher-drawer-close { display: grid; align-self: flex-end; margin-bottom: 12px; }
     .teacher-menu-toggle { display: grid; }
-    .teacher-scrim { display: block; position: fixed; inset: 0; z-index: 89; background: #071b15a8; border: 0; }
+    .teacher-scrim { display: block; position: fixed; inset: 0; z-index: 89; background: color-mix(in srgb, var(--ui-text) 66%, transparent); border: 0; }
   }
 }
 
@@ -57,7 +60,7 @@ body {
   .sidebar, .topbar, .teacher-skip, .teacher-scrim, .teacher-menu-toggle, staff-section-nav, .no-print { display: none !important; }
   .portal-shell { display: block !important; }
   .main-area { margin: 0 !important; padding: 0 !important; }
-  html, body { background: #fff !important; color: #111 !important; }
+  html, body { background: var(--ui-surface) !important; color: var(--ui-text) !important; }
   .metric-card, article, tr { break-inside: avoid; }
   .table-scroll { overflow: visible !important; }
   @page { margin: 12mm; }

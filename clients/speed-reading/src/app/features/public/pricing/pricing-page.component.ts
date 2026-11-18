@@ -6,6 +6,7 @@ import { PricingSectionComponent } from '../home/sections/pricing-section/pricin
 
 @Component({
   selector: 'app-pricing-page',
+  host: { 'data-brand': 'ho' },
   standalone: true,
   imports: [NavbarComponent, PricingSectionComponent, FooterComponent],
   template: `

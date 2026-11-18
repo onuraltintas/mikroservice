@@ -5,12 +5,12 @@
     margin-bottom: 20px;
 
     .title-icon {
-        color: #3f51b5;
+        color: var(--ui-brand-text);
     }
 
     .subtitle {
         font-size: 14px;
-        color: #666;
+        color: var(--ui-text-muted);
         font-weight: normal;
         margin-left: auto;
     }
@@ -29,16 +29,16 @@
     justify-content: space-between;
     padding: 16px;
     border-radius: 8px;
-    background-color: #f5f5f5;
+    background-color: var(--ui-surface-muted);
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid transparent;
 
     &:hover {
-        background-color: #e8eaf6;
-        border-color: #c5cae9;
+        background-color: var(--ui-brand-soft);
+        border-color: var(--ui-brand);
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px color-mix(in srgb, var(--ui-text) 5%, transparent);
 
         .play-btn {
             transform: scale(1.1);
@@ -58,13 +58,13 @@
 
         .level-title {
             font-weight: 500;
-            color: #333;
+            color: var(--ui-text);
         }
 
         .level-desc {
             margin: 0;
             font-size: 13px;
-            color: #666;
+            color: var(--ui-text-muted);
         }
     }
 
@@ -75,18 +75,18 @@
         border-radius: 12px;
 
         &.easy {
-            background-color: #e8f5e9;
-            color: #2e7d32;
+            background-color: var(--ui-success-soft);
+            color: var(--ui-success);
         }
 
         &.medium {
-            background-color: #fff3e0;
-            color: #ef6c00;
+            background-color: var(--ui-warning-soft);
+            color: var(--ui-warning);
         }
 
         &.hard {
-            background-color: #ffebee;
-            color: #c62828;
+            background-color: var(--ui-danger-soft);
+            color: var(--ui-danger);
         }
     }
 
@@ -97,29 +97,29 @@
         border-radius: 12px;
 
         // Varsayılan - mavi
-        background-color: #e1f5fe;
-        color: #0277bd;
-        border: 1px solid #b3e5fc;
+        background-color: var(--ui-brand-soft);
+        color: var(--ui-brand-text);
+        border: 1px solid var(--ui-brand);
 
         // Çocuk - mor/pembe
         &.child {
-            background-color: #f3e5f5;
-            color: #7b1fa2;
-            border-color: #ce93d8;
+            background-color: var(--ui-brand-soft);
+            color: var(--ui-brand-text);
+            border-color: var(--ui-brand);
         }
 
         // Genç - turuncu
         &.teen {
-            background-color: #fff3e0;
-            color: #ef6c00;
-            border-color: #ffcc80;
+            background-color: var(--ui-warning-soft);
+            color: var(--ui-warning);
+            border-color: var(--ui-warning);
         }
 
         // Yetişkin - mavi/yeşil
         &.adult {
-            background-color: #e0f2f1;
-            color: #00796b;
-            border-color: #80cbc4;
+            background-color: var(--ui-brand-soft);
+            color: var(--ui-text);
+            border-color: var(--ui-brand);
         }
     }
 
@@ -142,15 +142,15 @@
 
     select {
         padding: 8px 12px;
-        border: 1px solid #c5cae9;
+        border: 1px solid var(--ui-brand);
         border-radius: 8px;
         background: white;
-        color: #333;
+        color: var(--ui-text);
         font: inherit;
     }
 }
 
 .empty-state {
-    color: #666;
+    color: var(--ui-text-muted);
     padding: 16px 0;
 }

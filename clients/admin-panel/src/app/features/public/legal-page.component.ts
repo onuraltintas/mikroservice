@@ -13,29 +13,29 @@ import { injectSiteBrand } from '../../core/brand/site-brand';
   imports: [CommonModule, RouterLink],
   template: `
     <main class="mx-auto min-h-screen max-w-4xl px-4 py-10 sm:px-6" aria-labelledby="legal-page-title">
-      <header class="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
-        <a routerLink="/coaching" class="text-lg font-bold text-indigo-800 dark:text-indigo-200">{{ brand.name }}</a>
-        <nav class="flex gap-4 text-sm" aria-label="Yasal sayfalar"><a routerLink="/legal/privacy" class="text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300">Gizlilik</a><a routerLink="/legal/kvkk" class="text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300">KVKK</a></nav>
+      <header class="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-(--ui-border) pb-5">
+        <a routerLink="/coaching" class="text-lg font-bold text-(--ui-brand-text)">{{ brand.name }}</a>
+        <nav class="flex gap-4 text-sm" aria-label="Yasal sayfalar"><a routerLink="/legal/privacy" class="text-(--ui-brand-text) underline-offset-4 hover:underline">Gizlilik</a><a routerLink="/legal/kvkk" class="text-(--ui-brand-text) underline-offset-4 hover:underline">KVKK</a></nav>
       </header>
 
       @if (loading()) {
-        <p class="rounded-xl border border-slate-200 p-5 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300" role="status">Yasal belge yükleniyor…</p>
+        <p class="rounded-xl border border-(--ui-border) p-5 text-sm text-(--ui-text-muted)" role="status">Yasal belge yükleniyor…</p>
       } @else if (page()) {
-        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-9">
-          <h1 id="legal-page-title" class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{{ page()?.title }}</h1>
-          <pre class="mt-8 whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-700 dark:text-slate-200">{{ page()?.content }}</pre>
+        <article class="rounded-2xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm sm:p-9">
+          <h1 id="legal-page-title" class="text-3xl font-bold tracking-tight text-(--ui-text)">{{ page()?.title }}</h1>
+          <pre class="mt-8 whitespace-pre-wrap break-words font-sans text-sm leading-7 text-(--ui-text)">{{ page()?.content }}</pre>
         </article>
       } @else if (notFound()) {
-        <section class="rounded-2xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950" role="status">
-          <h1 id="legal-page-title" class="text-xl font-semibold text-amber-950 dark:text-amber-100">Belge henüz yayımlanmadı</h1>
-          <p class="mt-2 text-sm leading-6 text-amber-900 dark:text-amber-200">Bu ortak yasal belge henüz yetkili yönetici tarafından yayımlanmamış. Yayımlandığında Koçluk ve Hızlı Okuma ürünlerinde aynı güncel metin gösterilecektir.</p>
+        <section class="rounded-2xl border border-(--ui-warning-soft) bg-(--ui-warning-soft) p-6" role="status">
+          <h1 id="legal-page-title" class="text-xl font-semibold text-(--ui-warning)">Belge henüz yayımlanmadı</h1>
+          <p class="mt-2 text-sm leading-6 text-(--ui-warning)">Bu ortak yasal belge henüz yetkili yönetici tarafından yayımlanmamış. Yayımlandığında Koçluk ve Hızlı Okuma ürünlerinde aynı güncel metin gösterilecektir.</p>
         </section>
       } @else {
-        <p class="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200" role="alert">Yasal belge şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.</p>
+        <p class="rounded-xl border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-5 text-sm text-(--ui-danger)" role="alert">Yasal belge şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.</p>
       }
     </main>
   `,
-  styles: [`:host { display: block; min-height: 100%; background: var(--ui-page, #f8fafc); }`]
+  styles: [`:host { display: block; min-height: 100%; background: var(--ui-page, var(--ui-surface)); }`]
 })
 export class PlatformLegalPageComponent implements OnInit {
   protected readonly brand = injectSiteBrand();

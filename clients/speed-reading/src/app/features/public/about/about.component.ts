@@ -15,6 +15,7 @@ export interface Testimonial {
 
 @Component({
     selector: 'app-about',
+    host: { 'data-brand': 'ho' },
     standalone: true,
     imports: [CommonModule, NavbarComponent, FooterComponent],
     templateUrl: './about.component.html',

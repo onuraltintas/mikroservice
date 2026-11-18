@@ -67,17 +67,17 @@ export interface InstitutionSeats { enabled: boolean; pool: InstitutionSeatPool 
     </section>
   `,
   styles: [`
-    .seats { display: grid; gap: 1rem; margin: 1rem 0; padding: 1rem; border: 1px solid #d7dce5; border-radius: .75rem; background: #fff; }
+    .seats { display: grid; gap: 1rem; margin: 1rem 0; padding: 1rem; border: 1px solid var(--ui-brand-soft); border-radius: .75rem; background: var(--ui-surface); }
     h3 { margin: 0; font-size: 1.125rem; }
-    .seats-muted { color: #5b6577; font-size: .875rem; }
-    .seats-error { padding: .75rem 1rem; border-radius: .5rem; background: #fde8e8; color: #7f1d1d; }
+    .seats-muted { color: var(--ui-text-muted); font-size: .875rem; }
+    .seats-error { padding: .75rem 1rem; border-radius: .5rem; background: var(--ui-danger-soft); color: var(--ui-danger); }
     .seats-scroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .875rem; text-align: left; }
-    th, td { padding: .625rem .75rem; border-bottom: 1px solid #d7dce5; }
+    th, td { padding: .625rem .75rem; border-bottom: 1px solid var(--ui-brand-soft); }
     .seats-actions { text-align: right; white-space: nowrap; }
-    button { min-height: 2.75rem; padding: .5rem 1rem; border: 1px solid #b9c1cf; border-radius: .5rem; background: #fff; font: inherit; cursor: pointer; }
+    button { min-height: 2.75rem; padding: .5rem 1rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: var(--ui-surface); font: inherit; cursor: pointer; }
     button:disabled { opacity: .55; cursor: not-allowed; }
-    button:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+    button:focus-visible { outline: 3px solid var(--ui-warning); outline-offset: 2px; }
   `]
 })
 export class SpeedReadingInstitutionSeatsComponent implements OnInit {

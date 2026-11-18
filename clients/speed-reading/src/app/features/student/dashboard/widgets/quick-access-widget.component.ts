@@ -28,7 +28,7 @@ export class QuickAccessWidgetComponent implements OnInit {
   private router = inject(Router);
 
   quickLinks: QuickLink[] = [
-    { label: 'Günlük Egzersizler', icon: 'today', route: '/student/daily-exercises', tone: 'primary' },
+    { label: 'Günlük egzersizler', icon: 'today', route: '/student/daily-exercises', tone: 'primary' },
     {
       label: 'Geçmiş Egzersizler',
       icon: 'history',

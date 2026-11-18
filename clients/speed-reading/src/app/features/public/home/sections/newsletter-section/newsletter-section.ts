@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { PublicCmsService } from '../../../../../core/services/public-cms.service';
 import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
 import { PlatformLegalPagesService } from '../../../../../core/services/platform-legal-pages.service';
@@ -22,8 +20,6 @@ type NewsletterContent = HomeSectionHeading & { benefits: string[] };
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatButtonModule,
-        MatIconModule
     ],
     templateUrl: './newsletter-section.html',
     styleUrl: './newsletter-section.scss'

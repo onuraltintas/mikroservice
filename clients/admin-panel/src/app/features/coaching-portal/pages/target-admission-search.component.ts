@@ -35,7 +35,7 @@ interface AdmissionItem {
     a { color:var(--ui-brand-text); text-decoration:underline; }
   `], template: `
   <section aria-label="Doğrulanmış hedef kataloğu" class="mt-4 rounded-lg border p-3">
-    <h4 class="font-semibold">{{ kind === 'program' ? 'Üniversite programları · MEBİ kataloğu' : 'LGS okul programları · MEBİ kataloğu' }}</h4>
+    <h4 class="font-semibold">{{ kind === 'program' ? 'Üniversite programları, MEBİ kataloğu' : 'LGS okul programları, MEBİ kataloğu' }}</h4>
     <p class="my-2 text-xs">{{kind === 'school' ? 'MEBİ okul programları ve kaynakta gösterilen taban puanları listelenir. Kaynakta puan yılı, yerleştirme aşaması ve kontenjan belirtilmemiştir.' : 'Güncel MEBİ program kataloğu listelenir. Kaynakta bulunmayan bilgiler boş gösterilir. Geçmiş yerleştirme sonucu, gelecek yıl için kabul garantisi değildir.'}}</p>
     <form (ngSubmit)="search()">
       <fieldset [disabled]="busy() || disabled" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -54,10 +54,10 @@ interface AdmissionItem {
           <label>Dil<select name="language" [(ngModel)]="filters['language']" (ngModelChange)="filterChanged()" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['language'] || []" [value]="value">{{value}}</option></select></label>
           <label>Alan<select name="field" [(ngModel)]="filters['field']" (ngModelChange)="filterChanged()" [disabled]="!(facets()['field'] || []).length" class="w-full rounded border p-2"><option value="">{{(facets()['field'] || []).length ? 'Tümü' : 'Kaynakta alan bilgisi yok'}}</option><option *ngFor="let value of facets()['field'] || []" [value]="value">{{value}}</option></select></label>
         </ng-template>
-        <button type="submit" class="rounded bg-(--ui-brand) p-2 text-white">Ara</button>
+        <button type="submit" class="rounded bg-(--ui-brand) p-2 text-(--ui-brand-contrast)">Ara</button>
       </fieldset>
     </form>
-    <p *ngIf="error()" role="alert" class="mt-2 text-red-600">{{error()}}</p>
+    <p *ngIf="error()" role="alert" class="mt-2 text-(--ui-danger)">{{error()}}</p>
     <p *ngIf="busy()" role="status">Katalog yükleniyor…</p>
     <p *ngIf="searched() && !busy()" role="status" class="my-2">{{total()}} doğrulanmış kayıt</p>
     <p *ngIf="searched() && !total()" class="my-2 text-sm">Bu filtrelerle katalog kaydı bulunamadı.</p>
@@ -65,19 +65,19 @@ interface AdmissionItem {
       <li *ngFor="let item of items()" class="flex flex-wrap items-center justify-between gap-3 rounded border p-3">
         <div *ngIf="kind === 'program'; else schoolResult">
           <strong>{{item.name}}</strong><p class="text-sm">{{item.field}}</p>
-          <p class="text-sm">{{item.institution}} · {{display(item.degree || '')}} · {{display(item.scoreType)}}</p>
+          <p class="text-sm">{{item.institution}}, {{display(item.degree || '')}}, {{display(item.scoreType)}}</p>
           <p class="text-sm">Taban puan: {{number(item.minimumScore)}}</p>
         </div>
         <ng-template #schoolResult>
-          <div><strong>{{item.institution}}</strong><p class="text-sm">{{item.city}} / {{item.district}} · {{display(item.institutionType || '')}}</p>
-            <p class="text-sm">Dil: {{item.language ?? '—'}} · Alan: {{item.field ?? '—'}}</p>
-            <p class="text-sm">Taban puan: {{number(item.minimumScore)}} · Yüzdelik: {{number(item.percentile)}} · Kontenjan: {{item.quota ?? 'Bilinmiyor'}}</p></div>
+          <div><strong>{{item.institution}}</strong><p class="text-sm">{{item.city}} / {{item.district}}, {{display(item.institutionType || '')}}</p>
+            <p class="text-sm">Dil: {{item.language ?? '—'}}, Alan: {{item.field ?? '—'}}</p>
+            <p class="text-sm">Taban puan: {{number(item.minimumScore)}}, Yüzdelik: {{number(item.percentile)}}, Kontenjan: {{item.quota ?? 'Bilinmiyor'}}</p></div>
         </ng-template>
         <div class="flex items-center gap-3"><a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="underline">Resmî kaynak</a>
           <button type="button" (click)="choose(item.id)" [disabled]="disabled || busy()" class="rounded border px-3 py-2">Bu hedefi bağla</button></div>
       </li>
     </ul>
-    <div *ngIf="total() > 20" class="mt-3 flex gap-3"><button type="button" (click)="search(page-1)" [disabled]="page<=1 || busy()">Önceki</button><span>Sayfa {{page}} · {{total()}} kayıt</span><button type="button" (click)="search(page+1)" [disabled]="page*20>=total() || busy()">Sonraki</button></div>
+    <div *ngIf="total() > 20" class="mt-3 flex gap-3"><button type="button" (click)="search(page-1)" [disabled]="page<=1 || busy()">Önceki</button><span>Sayfa {{page}}, {{total()}} kayıt</span><button type="button" (click)="search(page+1)" [disabled]="page*20>=total() || busy()">Sonraki</button></div>
   </section>` })
 export class TargetAdmissionSearchComponent implements OnChanges {
   @Input() kind: 'school' | 'program' = 'program';

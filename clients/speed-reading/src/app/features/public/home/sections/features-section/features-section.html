@@ -1,18 +1,17 @@
-<section id="ozellikler" class="features-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>{{ content.title }}</h2>
-            <p>{{ content.subtitle }}</p>
-        </div>
-
-        <div class="features-grid">
-            <mat-card *ngFor="let feature of content.items" class="feature-card">
-                <div class="icon-wrapper">
-                    <mat-icon>{{ feature.icon }}</mat-icon>
-                </div>
-                <h3>{{ feature.title }}</h3>
-                <p>{{ feature.description }}</p>
-            </mat-card>
-        </div>
+<section id="ozellikler" class="features-section" aria-labelledby="features-title">
+  <div class="container">
+    <div class="section-header">
+      <h2 id="features-title">{{ content.title }}</h2>
+      <p>{{ content.subtitle }}</p>
     </div>
+    <div class="features-grid">
+      @for (feature of content.items; track feature.title) {
+        <article class="feature-card">
+          <span class="icon-wrapper" aria-hidden="true"><mat-icon>{{ feature.icon }}</mat-icon></span>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+        </article>
+      }
+    </div>
+  </div>
 </section>

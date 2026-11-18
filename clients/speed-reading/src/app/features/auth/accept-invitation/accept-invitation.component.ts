@@ -2,53 +2,48 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
 import { environment } from '../../../../environments/environment';
+
+import { RegistrationShellComponent } from '../registration-shell.component';
 
 @Component({
   selector: 'app-accept-invitation',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule],
+  imports: [CommonModule, RegistrationShellComponent],
   template: `
-    <main class="invitation-page">
-      <mat-card>
-        <mat-card-content>
-          <ng-container *ngIf="!accepted && !error">
-            <mat-icon>group_add</mat-icon>
-            <h1>Daveti kabul et</h1>
-            <p class="history-notice">
+    <app-registration-shell mode="page">
+      <section class="ds-auth__form invitation">
+        <ng-container *ngIf="!accepted && !error">
+          <div class="ds-auth__heading">
+            <h1 class="ds-auth__title">Daveti kabul et</h1>
+            <p class="ds-auth__lead history-notice">
               Kabul edersen seni davet eden kurumun yöneticileri ve öğretmenleri, önceki kurum ve öğretmenlerindeki
               Hızlı Okuma çalışma geçmişini (alıştırmalar, okuma ve anlama sonuçları, değerlendirmeler, ödevler) görebilir.
             </p>
-            <div class="actions">
-              <button mat-stroked-button type="button" [disabled]="loading" (click)="continue()">Vazgeç</button>
-              <button mat-raised-button color="primary" type="button" data-testid="accept-invitation"
-                      [disabled]="loading" (click)="accept()">
-                {{ loading ? 'Kabul ediliyor…' : 'Kabul et' }}
-              </button>
-            </div>
-          </ng-container>
-          <ng-container *ngIf="accepted || error">
-            <mat-icon [class.error-icon]="!!error">{{ error ? 'error_outline' : 'check_circle' }}</mat-icon>
-            <h1>{{ error ? 'Davet kabul edilemedi' : 'Davet kabul edildi' }}</h1>
-            <p>{{ error || 'Bağlantınız oluşturuldu. Çalışma alanınıza dönebilirsiniz.' }}</p>
-            <button mat-raised-button color="primary" type="button" (click)="continue()">Devam et</button>
-          </ng-container>
-        </mat-card-content>
-      </mat-card>
-    </main>
+          </div>
+          <div class="actions">
+            <button class="ds-btn ds-btn--primary ds-btn--large" type="button" data-testid="accept-invitation"
+                    [disabled]="loading" (click)="accept()">
+              {{ loading ? 'Kabul ediliyor…' : 'Kabul et' }}
+            </button>
+            <button class="ds-btn ds-btn--secondary ds-btn--large" type="button" [disabled]="loading" (click)="continue()">Vazgeç</button>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="accepted || error">
+          <div class="ds-auth__heading">
+            <h1 class="ds-auth__title">{{ error ? 'Davet kabul edilemedi' : 'Davet kabul edildi' }}</h1>
+          </div>
+          <p [class.ds-alert]="!!error" [class.invitation-ok]="!error" [attr.role]="error ? 'alert' : 'status'">{{ error || 'Bağlantın oluşturuldu. Çalışma alanına dönebilirsin.' }}</p>
+          <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="button" (click)="continue()">Devam et</button>
+        </ng-container>
+      </section>
+    </app-registration-shell>
   `,
   styles: [`
-    .invitation-page { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; background: #f5f8f8; }
-    mat-card { width: min(100%, 28rem); text-align: center; }
-    mat-card-content { display: grid; justify-items: center; gap: 1rem; padding: 2rem; }
-    mat-icon { width: 2.5rem; height: 2.5rem; font-size: 2.5rem; color: #27766f; }
-    .error-icon { color: #b42318; }
-    h1, p { margin: 0; }
-    p { color: #5f6f6d; line-height: 1.5; }
-    .actions { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .actions .ds-btn--primary { flex: 1 1 200px; }
+    p { margin: 0; }
+    .invitation-ok { padding: 14px 16px; border: 1px solid currentColor; border-radius: var(--ds-radius-control); background: var(--ds-success-soft); color: var(--ds-success); line-height: 1.5; }
   `]
 })
 export class AcceptInvitationComponent implements OnInit {

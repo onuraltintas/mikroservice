@@ -15,36 +15,36 @@ import {
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <section class="mx-auto max-w-4xl space-y-6">
-      <a [routerLink]="['/dashboard/coaching/assignments', id]" class="text-sm font-medium text-indigo-600 hover:underline">← Ödev detayına dön</a>
+      <a [routerLink]="['/dashboard/coaching/assignments', id]" class="text-sm font-medium text-(--ui-brand-text) hover:underline">← Ödev detayına dön</a>
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ödevi düzenle</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Düzenlenen tüm alanlar tek işlemde kaydedilir. Öğrenci değişikliği teslim edilmiş çalışmaları silemez.</p>
+        <h1 class="text-2xl font-bold text-(--ui-text)">Ödevi düzenle</h1>
+        <p class="text-sm text-(--ui-text-muted)">Düzenlenen tüm alanlar tek işlemde kaydedilir. Öğrenci değişikliği teslim edilmiş çalışmaları silemez.</p>
       </div>
-      @if (loading()) { <div class="rounded-xl border bg-white p-8 text-center text-gray-500 dark:border-gray-700 dark:bg-gray-800">Yükleniyor…</div> }
-      @if (error()) { <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div> }
+      @if (loading()) { <div class="rounded-xl border bg-(--ui-surface) p-8 text-center text-(--ui-text-muted)">Yükleniyor…</div> }
+      @if (error()) { <div class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
       @if (!loading()) {
-        <form (ngSubmit)="save()" class="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <form (ngSubmit)="save()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Başlık<input [(ngModel)]="form.title" name="title" required maxlength="200" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Konu<input [(ngModel)]="form.subject" name="subject" maxlength="200" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label>
+            <label class="text-sm text-(--ui-text)">Başlık<input [(ngModel)]="form.title" name="title" required maxlength="200" class="mt-1 w-full rounded border px-3 py-2" /></label>
+            <label class="text-sm text-(--ui-text)">Konu<input [(ngModel)]="form.subject" name="subject" maxlength="200" class="mt-1 w-full rounded border px-3 py-2" /></label>
           </div>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Açıklama<textarea [(ngModel)]="form.description" name="description" maxlength="2000" rows="3" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"></textarea></label>
+          <label class="block text-sm text-(--ui-text)">Açıklama<textarea [(ngModel)]="form.description" name="description" maxlength="2000" rows="3" class="mt-1 w-full rounded border px-3 py-2"></textarea></label>
           <div class="grid gap-4 md:grid-cols-3">
-            <label class="text-sm text-gray-700 dark:text-gray-200">Kaynak<select [(ngModel)]="form.assignmentSource" name="source" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"><option value="Digital">Dijital</option><option value="Book">Kitap</option><option value="Mixed">Dijital + kitap</option></select></label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Son tarih<input [(ngModel)]="form.dueDate" name="dueDate" type="datetime-local" required class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label>
-            <label class="text-sm text-gray-700 dark:text-gray-200">Sınıf seviyesi<input [(ngModel)]="form.targetGradeLevel" name="grade" type="number" min="1" max="12" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label>
+            <label class="text-sm text-(--ui-text)">Kaynak<select [(ngModel)]="form.assignmentSource" name="source" class="mt-1 w-full rounded border px-3 py-2"><option value="Digital">Dijital</option><option value="Book">Kitap</option><option value="Mixed">Dijital + kitap</option></select></label>
+            <label class="text-sm text-(--ui-text)">Son tarih<input [(ngModel)]="form.dueDate" name="dueDate" type="datetime-local" required class="mt-1 w-full rounded border px-3 py-2" /></label>
+            <label class="text-sm text-(--ui-text)">Sınıf seviyesi<input [(ngModel)]="form.targetGradeLevel" name="grade" type="number" min="1" max="12" class="mt-1 w-full rounded border px-3 py-2" /></label>
           </div>
           @if (form.assignmentSource !== 'Digital') {
-            <div class="space-y-4 rounded-lg border border-indigo-100 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/30">
-              <h2 class="font-semibold text-indigo-900 dark:text-indigo-200">Kitap ödevi</h2>
-              <div class="grid gap-4 md:grid-cols-2"><label class="text-sm">Kitap adı<input [(ngModel)]="form.bookTitle" name="bookTitle" maxlength="200" required class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">ISBN<input [(ngModel)]="form.bookIsbn" name="isbn" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label></div>
-              <div class="grid gap-4 md:grid-cols-4"><label class="text-sm">İlk sayfa<input [(ngModel)]="form.bookStartPage" name="startPage" type="number" min="1" required class="mt-1 w-full rounded border px-2 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Son sayfa<input [(ngModel)]="form.bookEndPage" name="endPage" type="number" min="1" required class="mt-1 w-full rounded border px-2 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">İlk soru<input [(ngModel)]="form.bookStartQuestion" name="startQuestion" type="number" min="1" class="mt-1 w-full rounded border px-2 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Son soru<input [(ngModel)]="form.bookEndQuestion" name="endQuestion" type="number" min="1" class="mt-1 w-full rounded border px-2 py-2 dark:border-gray-600 dark:bg-gray-900" /></label></div>
-              <div class="grid gap-4 md:grid-cols-2"><label class="text-sm">Baskı<input [(ngModel)]="form.bookEdition" name="edition" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Bölüm<input [(ngModel)]="form.bookChapter" name="chapter" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label></div>
+            <div class="space-y-4 rounded-lg border border-(--ui-brand-soft) bg-(--ui-brand-soft) p-4">
+              <h2 class="font-semibold text-(--ui-brand-text)">Kitap ödevi</h2>
+              <div class="grid gap-4 md:grid-cols-2"><label class="text-sm">Kitap adı<input [(ngModel)]="form.bookTitle" name="bookTitle" maxlength="200" required class="mt-1 w-full rounded border px-3 py-2" /></label><label class="text-sm">ISBN<input [(ngModel)]="form.bookIsbn" name="isbn" class="mt-1 w-full rounded border px-3 py-2" /></label></div>
+              <div class="grid gap-4 md:grid-cols-4"><label class="text-sm">İlk sayfa<input [(ngModel)]="form.bookStartPage" name="startPage" type="number" min="1" required class="mt-1 w-full rounded border px-2 py-2" /></label><label class="text-sm">Son sayfa<input [(ngModel)]="form.bookEndPage" name="endPage" type="number" min="1" required class="mt-1 w-full rounded border px-2 py-2" /></label><label class="text-sm">İlk soru<input [(ngModel)]="form.bookStartQuestion" name="startQuestion" type="number" min="1" class="mt-1 w-full rounded border px-2 py-2" /></label><label class="text-sm">Son soru<input [(ngModel)]="form.bookEndQuestion" name="endQuestion" type="number" min="1" class="mt-1 w-full rounded border px-2 py-2" /></label></div>
+              <div class="grid gap-4 md:grid-cols-2"><label class="text-sm">Baskı<input [(ngModel)]="form.bookEdition" name="edition" class="mt-1 w-full rounded border px-3 py-2" /></label><label class="text-sm">Bölüm<input [(ngModel)]="form.bookChapter" name="chapter" class="mt-1 w-full rounded border px-3 py-2" /></label></div>
             </div>
           }
-          <div class="grid gap-4 md:grid-cols-3"><label class="text-sm">Tahmini süre (dk)<input [(ngModel)]="form.estimatedDurationMinutes" name="duration" type="number" min="1" max="240" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Maksimum puan<input [(ngModel)]="form.maxScore" name="maxScore" type="number" min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Geçme puanı<input [(ngModel)]="form.passingScore" name="passingScore" type="number" min="0" max="999.99" step="0.01" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" /></label></div>
-          <label class="block text-sm text-gray-700 dark:text-gray-200">Öğrenci kimlikleri (virgülle ayırın; boş bırakılırsa mevcut atamalar korunur)<textarea [(ngModel)]="studentIdsText" name="studentIds" rows="2" class="mt-1 w-full rounded border px-3 py-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-900"></textarea></label>
-          <div class="flex justify-end gap-3"><a [routerLink]="['/dashboard/coaching/assignments', id]" class="rounded border px-4 py-2 text-sm">Vazgeç</a><button type="submit" [disabled]="saving()" class="rounded bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50">{{ saving() ? 'Kaydediliyor…' : 'Değişiklikleri kaydet' }}</button></div>
+          <div class="grid gap-4 md:grid-cols-3"><label class="text-sm">Tahmini süre (dk)<input [(ngModel)]="form.estimatedDurationMinutes" name="duration" type="number" min="1" max="240" class="mt-1 w-full rounded border px-3 py-2" /></label><label class="text-sm">Maksimum puan<input [(ngModel)]="form.maxScore" name="maxScore" type="number" min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded border px-3 py-2" /></label><label class="text-sm">Geçme puanı<input [(ngModel)]="form.passingScore" name="passingScore" type="number" min="0" max="999.99" step="0.01" class="mt-1 w-full rounded border px-3 py-2" /></label></div>
+          <label class="block text-sm text-(--ui-text)">Öğrenci kimlikleri (virgülle ayırın; boş bırakılırsa mevcut atamalar korunur)<textarea [(ngModel)]="studentIdsText" name="studentIds" rows="2" class="mt-1 w-full rounded border px-3 py-2 font-mono text-xs"></textarea></label>
+          <div class="flex justify-end gap-3"><a [routerLink]="['/dashboard/coaching/assignments', id]" class="rounded border px-4 py-2 text-sm">Vazgeç</a><button type="submit" [disabled]="saving()" class="rounded bg-(--ui-brand) px-5 py-2 text-sm font-medium text-(--ui-brand-contrast) disabled:opacity-50">{{ saving() ? 'Kaydediliyor…' : 'Değişiklikleri kaydet' }}</button></div>
         </form>
       }
     </section>

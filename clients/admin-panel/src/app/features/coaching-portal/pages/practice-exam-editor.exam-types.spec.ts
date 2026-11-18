@@ -7,9 +7,9 @@ const profiles: PracticeExamProfile[] = [
   { code: 'LGS', name: 'LGS', wrongAnswerDivisor: 3, sections: [{ code: 'TUR', name: 'Türkçe', questionCount: 20 }] },
   { code: 'TYT', name: 'TYT', wrongAnswerDivisor: 4, sections: [{ code: 'MAT', name: 'Temel Matematik', questionCount: 40 }] },
   { code: 'AGS', name: 'AGS', wrongAnswerDivisor: 4, sections: [{ code: 'SOZ', name: 'Sözel Yetenek', questionCount: 15 }, { code: 'EGT', name: 'Eğitim Bilimleri ve TMES', questionCount: 30 }] },
-  { code: 'OABT_OZEL', name: 'ÖABT · Özel Eğitim', wrongAnswerDivisor: 4, sections: [{ code: 'ALAN', name: 'Alan Bilgisi ve Alan Eğitimi', questionCount: 50 }] },
-  { code: 'YDS_EN', name: 'YDS · İngilizce', wrongAnswerDivisor: 0, sections: [{ code: 'ENG', name: 'İngilizce', questionCount: 80 }] },
-  { code: 'YOKDIL_SAG', name: 'YÖKDİL · Sağlık Bilimleri · İngilizce', wrongAnswerDivisor: 0, sections: [{ code: 'ENG', name: 'İngilizce', questionCount: 80 }] }
+  { code: 'OABT_OZEL', name: 'ÖABT, Özel Eğitim', wrongAnswerDivisor: 4, sections: [{ code: 'ALAN', name: 'Alan Bilgisi ve Alan Eğitimi', questionCount: 50 }] },
+  { code: 'YDS_EN', name: 'YDS, İngilizce', wrongAnswerDivisor: 0, sections: [{ code: 'ENG', name: 'İngilizce', questionCount: 80 }] },
+  { code: 'YOKDIL_SAG', name: 'YÖKDİL, Sağlık Bilimleri, İngilizce', wrongAnswerDivisor: 0, sections: [{ code: 'ENG', name: 'İngilizce', questionCount: 80 }] }
 ];
 
 describe('practice exam rules for AGS, YDS and YÖKDİL', () => {

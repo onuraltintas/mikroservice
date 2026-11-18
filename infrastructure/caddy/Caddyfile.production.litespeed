@@ -16,7 +16,7 @@
 #   ogretmen.eduivme.com  teachers (staff portal)
 #   kurum.eduivme.com     institution managers (staff portal)
 #   admin.eduivme.com     management panel
-# eduivme.com forwards to admin.eduivme.com (catch-all block below). The old Coaching domain is closed.
+# eduivme.com shows the parent brand page (catch-all block below). The old Coaching domain is closed.
 
 www.maxkoc.com:80 {
 	redir https://maxkoc.com{uri} 301
@@ -33,8 +33,9 @@ maxkoc.com:80 {
 	}
 
 	route {
+		# Redesign 18.11.2026: the address opens the public Koçluk page; signed-in students reach the portal from it.
 		@root path /
-		redir @root /coaching-portal 302
+		redir @root /coaching 302
 
 		@parentPages path /coaching-portal/parent /coaching-portal/parent/*
 		redir @parentPages https://veli.maxkoc.com{uri} 302
@@ -207,9 +208,18 @@ admin.eduivme.com:80 {
 }
 
 # LiteSpeed terminates public TLS. Caddy is an internal HTTP router only.
-# eduivme.com (and www.) only forwards: Koçluk pages to maxkoc.com, the staff portal to ogretmen.eduivme.com,
-# everything else to admin.eduivme.com.
+# eduivme.com (and www.): the parent brand's own page at "/" (redesign 18.11.2026). Koçluk pages go to maxkoc.com, the
+# staff portal to ogretmen.eduivme.com, sign-in and management to admin.eduivme.com.
 :80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
 	# The container health check (http://127.0.0.1/health/live) and release checks still reach the gateway.
 	@health path /health /health/*
 	handle @health {
@@ -228,7 +238,13 @@ admin.eduivme.com:80 {
 		redir https://ogretmen.eduivme.com{uri} 302
 	}
 
-	handle {
+	@management path /auth /auth/* /dashboard /dashboard/* /other-site /api /api/* /hubs /hubs/*
+	handle @management {
 		redir https://admin.eduivme.com{uri} 302
+	}
+
+	# "/", the legal pages and the page's own files (scripts, styles, fonts, brand images) come from the admin-panel app.
+	handle {
+		reverse_proxy admin-panel:4000
 	}
 }

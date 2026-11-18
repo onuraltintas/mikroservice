@@ -2,13 +2,13 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
-            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Kullanıcılar</h1>
-            <p class="mt-2 text-sm text-gray-700 dark:text-gray-400">Tüm sistem kullanıcılarını yönetin, rolleri
+            <h1 class="text-xl font-semibold text-(--ui-text)">Kullanıcılar</h1>
+            <p class="mt-2 text-sm text-(--ui-text)">Tüm sistem kullanıcılarını yönetin, rolleri
                 düzenleyin veya hesapları pasif duruma getirin.</p>
         </div>
         @if (canCreate()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button type="button" (click)="openCreateModal()"
-                class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto transition-colors duration-200">
+                class="inline-flex items-center justify-center rounded-md border border-transparent bg-(--ui-brand) px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) shadow-sm hover:bg-(--ui-brand) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 sm:w-auto transition-colors duration-200">
                 Kullanıcı Ekle
             </button>
         </div> }
@@ -20,7 +20,7 @@
         <!-- Search -->
         <div class="relative w-full sm:w-64">
             <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                <svg class="h-5 w-5 text-(--ui-text-muted)" xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                         d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
@@ -28,27 +28,27 @@
                 </svg>
             </div>
             <input type="text" [ngModel]="searchTerm()" (input)="onSearch($event)"
-                class="block w-full rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 shadow-sm transition-colors"
+                class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) pl-10 focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm py-2.5 shadow-sm transition-colors"
                 placeholder="İsim veya e-posta ile ara...">
         </div>
 
         <!-- Role Filter -->
         <select (change)="onRoleChange($event)"
-            class="block w-full sm:w-48 rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white py-2.5 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 shadow-sm cursor-pointer transition-colors">
+            class="block w-full sm:w-48 rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) py-2.5 pl-3 pr-10 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) shadow-sm cursor-pointer transition-colors">
             @for (role of roleOptions(); track role.value) {
             <option [value]="role.value" [class.font-medium]="role.value === 'all'"
-                [class.text-gray-500]="role.value === 'all'">{{ role.label }}</option>
+                [class.text-(--ui-text-muted)]="role.value === 'all'">{{ role.label }}</option>
             }
         </select>
 
         <!-- Status Filter -->
         <select (change)="onStatusChange($event)"
-            class="block w-full sm:w-48 rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white py-2.5 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 shadow-sm cursor-pointer transition-colors">
+            class="block w-full sm:w-48 rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) py-2.5 pl-3 pr-10 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) shadow-sm cursor-pointer transition-colors">
             @for (status of statuses; track status.label) {
             <option [value]="status.value" [ngClass]="{
-                    'text-gray-500 font-medium': status.value === null,
-                    'text-green-600 font-medium': status.value === true,
-                    'text-red-600 font-medium': status.value === false
+                    'text-(--ui-text-muted) font-medium': status.value === null,
+                    'text-(--ui-success) font-medium': status.value === true,
+                    'text-(--ui-danger) font-medium': status.value === false
                 }">
                 {{ status.label }}
             </option>
@@ -61,49 +61,49 @@
         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8 min-h-[450px]">
                 <div
-                    class="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white dark:bg-gray-800 overflow-visible">
-                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    class="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-(--ui-surface) overflow-visible">
+                    <table class="min-w-full divide-y divide-(--ui-border)">
+                        <thead class="bg-(--ui-surface-muted)">
                             <tr>
                                 <th scope="col"
-                                    class="py-3.5 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300 sm:pl-6">
+                                    class="py-3.5 pl-4 pr-3 text-left text-xs font-medium text-(--ui-text-muted) sm:pl-6">
                                     E-Posta</th>
                                 <th scope="col"
-                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     İsim Soyisim</th>
                                 <th scope="col"
-                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     Rol</th>
                                 <th scope="col"
-                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     Durum</th>
                                 <th scope="col"
-                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     Son Giriş</th>
                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                     <span class="sr-only">İşlemler</span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <tbody class="divide-y divide-(--ui-border) bg-(--ui-surface)">
                             <!-- Loading State -->
                             @if (loading()) {
                             @for (i of [1,2,3,4,5]; track i) {
                             <tr class="animate-pulse">
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-48"></div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-32"></div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-16"></div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-12"></div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-24"></div>
                                 </td>
                                 <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 </td>
@@ -111,20 +111,20 @@
                             }
                             } @else {
                             @for (user of users(); track user.email) {
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                            <tr class="hover:bg-(--ui-surface-muted) transition-colors duration-150">
                                 <td
-                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
+                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-(--ui-text) sm:pl-6">
                                     <div class="flex items-center space-x-2">
                                         <span>{{ user.email }}</span>
                                         @if (user.emailConfirmed) {
-                                        <svg class="h-4 w-4 text-green-500" xmlns="http://www.w3.org/2000/svg"
+                                        <svg class="h-4 w-4 text-(--ui-success)" xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 20 20" fill="currentColor" title="Doğrulandı">
                                             <path fill-rule="evenodd"
                                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                                 clip-rule="evenodd" />
                                         </svg>
                                         } @else {
-                                        <svg class="h-4 w-4 text-red-500" xmlns="http://www.w3.org/2000/svg"
+                                        <svg class="h-4 w-4 text-(--ui-danger)" xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 20 20" fill="currentColor" title="Doğrulanmadı">
                                             <path fill-rule="evenodd"
                                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -133,43 +133,37 @@
                                         }
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-(--ui-text-muted)">
                                     {{ user.fullName }}
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-(--ui-text-muted)">
                                     <div class="flex flex-wrap gap-1">
                                         @for (assignment of userProductRoles(user); track assignment.role + ':' + assignment.product) {
                                         <span
                                             class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 shadow-sm"
-                                            [ngClass]="{
-                                                            'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300': assignment.role === 'Student',
-                                                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300': assignment.role === 'Teacher',
-                                                            'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300': assignment.role === 'InstitutionAdmin' || assignment.role === 'InstitutionOwner',
-                                                            'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300': assignment.role === 'SystemAdmin',
-                                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300': assignment.role === 'Parent'
-                                                          }">
+                                            [ngClass]="{ 'bg-(--ui-success-soft) text-(--ui-success)': assignment.role === 'Student', 'bg-(--ui-brand-soft) text-(--ui-brand-text)': (assignment.role === 'Teacher') || (assignment.role === 'InstitutionAdmin' || assignment.role === 'InstitutionOwner'), 'bg-(--ui-danger-soft) text-(--ui-danger)': assignment.role === 'SystemAdmin', 'bg-(--ui-warning-soft) text-(--ui-warning)': assignment.role === 'Parent' }">
                                             {{ productRoleLabel(assignment) }}
                                         </span>
                                         }
                                         @if (userProductRoles(user).length === 0 && !showErased()) {
-                                        <span class="text-gray-400 italic text-xs">Rol atanmadı</span>
+                                        <span class="text-(--ui-text-muted) italic text-xs">Rol atanmadı</span>
                                         }
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-(--ui-text-muted)">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-                                        [ngClass]="user.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-600'">
+                                        [ngClass]="user.isActive ? 'bg-(--ui-success-soft) text-(--ui-success)' : 'bg-(--ui-warning-soft) text-(--ui-warning)'">
                                         {{ showErased() ? 'Silinmiş hesap' : (user.isActive ? 'Aktif' : 'Pasif') }}
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-(--ui-text-muted)">
                                     {{ user.lastLoginAt ? (user.lastLoginAt | date:'dd.MM.yyyy HH:mm') : '-' }}
                                 </td>
                                 <td
                                     class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                     <div class="inline-block text-left" [class.hidden]="showErased()" data-testid="user-actions">
                                         <button (click)="toggleMenu(user.userId, $event)" type="button"
-                                            class="flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                                            class="flex items-center text-(--ui-text-muted) hover:text-(--ui-text-muted) focus:outline-none"
                                             id="menu-button" aria-expanded="false" aria-haspopup="true">
                                             <span class="sr-only">Menüyü aç</span>
                                             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"
@@ -180,14 +174,14 @@
                                         </button>
 
                                         @if (openMenuId() === user.userId) {
-                                        <div class="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-2xl ring-1 ring-black ring-opacity-10 focus:outline-none"
+                                        <div class="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-md bg-(--ui-surface) shadow-2xl ring-1 ring-black ring-opacity-10 focus:outline-none"
                                             role="menu" aria-orientation="vertical" aria-labelledby="menu-button"
                                             tabindex="-1">
                                             <div class="py-1.5" role="none">
                                                 <button (click)="openDetailsModal(user.userId)"
-                                                    class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-text) hover:bg-(--ui-surface-muted) items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-blue-500/70" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-brand-text)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -199,9 +193,9 @@
                                                 </button>
 
                                                 @if (canEdit()) { <button (click)="editUser(user)"
-                                                    class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-text) hover:bg-(--ui-surface-muted) items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-gray-400" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-text-muted)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -211,9 +205,9 @@
                                                 </button> }
 
                                                 @if (canEdit()) { <button (click)="openRoleModal(user)"
-                                                    class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors border-t border-gray-50 dark:border-gray-700/50"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-text) hover:bg-(--ui-surface-muted) items-center transition-colors border-t border-(--ui-border)"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-indigo-500/70" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-brand-text)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -223,9 +217,9 @@
                                                 </button> }
 
                                                 @if (canChangePassword()) { <button (click)="openPasswordModal(user)"
-                                                    class="flex w-full px-4 py-3 text-sm text-yellow-500 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-warning) hover:bg-(--ui-surface-muted) items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-yellow-500/70" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-warning)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -236,9 +230,9 @@
 
                                                 @if (canDelete() && user.isActive) {
                                                 <button (click)="deleteUser(user.userId)"
-                                                    class="flex w-full px-4 py-3 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-warning) hover:bg-(--ui-surface-muted) items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-yellow-400" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-warning)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -248,9 +242,9 @@
                                                 </button>
                                                 } @else if (canActivate()) {
                                                 <button (click)="activateUser(user.userId)"
-                                                    class="flex w-full px-4 py-3 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-success) hover:bg-(--ui-surface-muted) items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-green-400" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-success)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -262,9 +256,9 @@
 
                                                 @if (canConfirmEmail() && !user.emailConfirmed) {
                                                 <button (click)="confirmUserEmail(user.userId)"
-                                                    class="flex w-full px-4 py-3 text-sm text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700 transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-brand-text) hover:bg-(--ui-surface-muted) items-center border-t border-(--ui-border) transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-blue-400" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-brand-text)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -275,9 +269,9 @@
                                                 }
 
                                                 @if (canErase()) { <button (click)="eraseUser(user)" data-testid="erase-user"
-                                                    class="flex w-full px-4 py-3 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700 transition-colors"
+                                                    class="flex w-full px-4 py-3 text-sm text-(--ui-danger) hover:bg-(--ui-surface-muted) items-center border-t border-(--ui-border) transition-colors"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-4 h-5 w-5 text-red-400" fill="none"
+                                                    <svg class="mr-4 h-5 w-5 text-(--ui-danger)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -299,7 +293,7 @@
                                 }
                                 @if (users().length === 0) {
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center text-(--ui-text-muted)">
                                         Kayıt bulunamadı.
                                     </td>
                                 </tr>
@@ -309,13 +303,13 @@
                     </table>
 
                     <!-- Footer: Pagination & Page Size (Attached to Table) -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <div class="border-t border-(--ui-border) bg-(--ui-surface)">
                         <!-- Main Footer Row: Info & Pagination -->
                         <div class="flex items-center justify-between px-4 py-4 sm:px-6">
                             <div class="flex flex-1 items-center justify-between flex-wrap gap-4">
                                 <!-- Record Info -->
-                                <p class="text-sm text-gray-700 dark:text-gray-400">
-                                    Toplam <span class="font-medium text-gray-900 dark:text-white">{{ totalCount()
+                                <p class="text-sm text-(--ui-text)">
+                                    Toplam <span class="font-medium text-(--ui-text)">{{ totalCount()
                                         }}</span> kayıt
                                     @if (totalPages > 1) {
                                     <span class="ml-1">(<span class="font-medium">{{ currentPage() }}</span> / {{
@@ -328,7 +322,7 @@
                                 <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm"
                                     aria-label="Pagination">
                                     <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1"
-                                        class="relative inline-flex items-center rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        class="relative inline-flex items-center rounded-l-md border border-(--ui-border) bg-(--ui-surface) px-2 py-2 text-sm font-medium text-(--ui-text-muted) hover:bg-(--ui-surface-muted) disabled:opacity-50 transition-colors">
                                         <span class="sr-only">Önceki</span>
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                             fill="currentColor">
@@ -341,11 +335,11 @@
                                     @for (page of pagesArray; track $index) {
                                     @if (page === '...') {
                                     <span
-                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">...</span>
+                                        class="relative inline-flex items-center border border-(--ui-border) bg-(--ui-surface) px-4 py-2 text-sm font-medium text-(--ui-text)">...</span>
                                     } @else {
                                     <button (click)="changePage(+$any(page))"
-                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-600"
-                                        [ngClass]="{'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900/20': page === currentPage()}">
+                                        class="relative inline-flex items-center border border-(--ui-border) bg-(--ui-surface) px-4 py-2 text-sm font-medium transition-colors hover:bg-(--ui-surface-muted)"
+                                        [ngClass]="{'bg-(--ui-brand-soft) text-(--ui-brand-text) border-(--ui-brand) z-10': page === currentPage()}">
                                         {{ page }}
                                     </button>
                                     }
@@ -353,7 +347,7 @@
 
                                     <button (click)="changePage(currentPage() + 1)"
                                         [disabled]="currentPage() === totalPages"
-                                        class="relative inline-flex items-center rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        class="relative inline-flex items-center rounded-r-md border border-(--ui-border) bg-(--ui-surface) px-2 py-2 text-sm font-medium text-(--ui-text-muted) hover:bg-(--ui-surface-muted) disabled:opacity-50 transition-colors">
                                         <span class="sr-only">Sonraki</span>
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                             fill="currentColor">
@@ -369,11 +363,11 @@
 
                         <!-- Page Size Selector (Bottom Row) -->
                         <div
-                            class="px-4 py-3 sm:px-6 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700/50 flex justify-center items-center">
-                            <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                            class="px-4 py-3 sm:px-6 bg-(--ui-surface-muted) border-t border-(--ui-border) flex justify-center items-center">
+                            <div class="flex items-center space-x-2 text-sm text-(--ui-text-muted)">
                                 <span>Sayfa başına kayıt:</span>
                                 <select (change)="onPageSizeChange($event)" [value]="pageSize()"
-                                    class="block rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1 pl-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 transition-colors">
+                                    class="block rounded-md border-(--ui-border) py-1 pl-2 pr-8 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) transition-colors">
                                     <option [value]="10">10</option>
                                     <option [value]="25">25</option>
                                     <option [value]="50">50</option>

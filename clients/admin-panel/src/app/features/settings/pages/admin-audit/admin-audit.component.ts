@@ -17,74 +17,74 @@ import {
   template: `
     <main class="p-4 md:p-6 min-h-full" aria-labelledby="audit-title">
       <header class="mb-6">
-        <h1 id="audit-title" class="text-2xl font-bold text-gray-900 dark:text-white">Yönetici Denetim Kayıtları</h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yönetim işlemlerinin servis bazlı, değiştirilemez işlem ve değişen alan geçmişi.</p>
+        <h1 id="audit-title" class="text-2xl font-bold text-(--ui-text)">Yönetici Denetim Kayıtları</h1>
+        <p class="mt-1 text-sm text-(--ui-text-muted)">Yönetim işlemlerinin servis bazlı, değiştirilemez işlem ve değişen alan geçmişi.</p>
       </header>
 
       <nav class="ui-tab-list flex flex-wrap gap-2 mb-5" aria-label="Audit servisi">
         @for (service of services; track service.value) {
           <button type="button" (click)="selectService(service.value)"
             [attr.aria-pressed]="selectedService() === service.value"
-            [class.bg-indigo-600]="selectedService() === service.value"
+            [class.bg-(--ui-brand)]="selectedService() === service.value"
             [class.text-white]="selectedService() === service.value"
-            class="ui-tab px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium">
+            class="ui-tab px-4 py-2 rounded-lg border border-(--ui-border) text-sm font-medium">
             {{ service.label }}
           </button>
         }
       </nav>
 
-      <form (ngSubmit)="applyFilters()" class="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 mb-5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-        <label class="text-sm text-gray-700 dark:text-gray-300 md:col-span-2">Arama
+      <form (ngSubmit)="applyFilters()" class="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 mb-5 rounded-xl bg-(--ui-surface) border border-(--ui-border)">
+        <label class="text-sm text-(--ui-text) md:col-span-2">Arama
           <input [(ngModel)]="search" name="search" maxlength="100" placeholder="Kullanıcı, endpoint veya correlation ID"
-            class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent" />
+            class="mt-1 w-full px-3 py-2 rounded-lg border border-(--ui-border) bg-transparent" />
         </label>
-        <label class="text-sm text-gray-700 dark:text-gray-300">HTTP durum kodu
+        <label class="text-sm text-(--ui-text)">HTTP durum kodu
           <input [(ngModel)]="statusCode" name="statusCode" type="number" min="100" max="599"
-            class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent" />
+            class="mt-1 w-full px-3 py-2 rounded-lg border border-(--ui-border) bg-transparent" />
         </label>
         <div class="flex items-end gap-2">
-          <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white">Filtrele</button>
-          <button type="button" (click)="clearFilters()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600">Temizle</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-(--ui-brand) text-(--ui-brand-contrast)">Filtrele</button>
+          <button type="button" (click)="clearFilters()" class="px-4 py-2 rounded-lg border border-(--ui-border)">Temizle</button>
         </div>
       </form>
 
       @if (error()) {
-        <div role="alert" class="mb-4 p-4 rounded-lg bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div>
+        <div role="alert" class="mb-4 p-4 rounded-lg bg-(--ui-danger-soft) text-(--ui-danger)">{{ error() }}</div>
       }
 
-      <section class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden" [attr.aria-busy]="loading()">
+      <section class="rounded-xl bg-(--ui-surface) border border-(--ui-border) overflow-hidden" [attr.aria-busy]="loading()">
         <div class="overflow-x-auto">
           <table class="w-full min-w-[1050px] text-left text-sm">
-            <thead class="bg-gray-50 dark:bg-gray-900 text-xs uppercase text-gray-500 dark:text-gray-400">
+            <thead class="bg-(--ui-surface-muted) text-xs text-(--ui-text-muted)">
               <tr><th class="px-4 py-3">Zaman</th><th class="px-4 py-3">Aktör</th><th class="px-4 py-3">İşlem</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Tenant</th><th class="px-4 py-3">Değişen alanlar</th><th class="px-4 py-3">Correlation ID</th></tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody class="divide-y divide-(--ui-border)">
               @for (record of records(); track record.id) {
                 <tr>
                   <td class="px-4 py-3 whitespace-nowrap">{{ record.occurredAt | date:'dd.MM.yyyy HH:mm:ss' }}</td>
                   <td class="px-4 py-3">
                     <div class="font-medium">{{ actorLabel(record) }}</div>
-                    @if (actorEmail(record)) { <div class="text-xs text-gray-500">{{ actorEmail(record) }}</div> }
-                    <div class="text-xs text-gray-500">{{ roleLabels(record.actorRoles) }}</div>
-                    <details class="mt-1 text-xs text-gray-400"><summary class="cursor-pointer">Teknik kimlik</summary><span>{{ record.actorUserId }}</span></details>
+                    @if (actorEmail(record)) { <div class="text-xs text-(--ui-text-muted)">{{ actorEmail(record) }}</div> }
+                    <div class="text-xs text-(--ui-text-muted)">{{ roleLabels(record.actorRoles) }}</div>
+                    <details class="mt-1 text-xs text-(--ui-text-muted)"><summary class="cursor-pointer">Teknik kimlik</summary><span>{{ record.actorUserId }}</span></details>
                   </td>
                   <td class="px-4 py-3">
                     <div class="font-semibold">{{ actionLabel(record) }}</div>
-                    <details class="mt-1 text-xs text-gray-500"><summary class="cursor-pointer">Teknik ayrıntı</summary><div>{{ record.httpMethod }} {{ record.path }}</div>@if (record.resourceId) { <div>Kayıt kimliği: {{ record.resourceId }}</div> }</details>
+                    <details class="mt-1 text-xs text-(--ui-text-muted)"><summary class="cursor-pointer">Teknik ayrıntı</summary><div>{{ record.httpMethod }} {{ record.path }}</div>@if (record.resourceId) { <div>Kayıt kimliği: {{ record.resourceId }}</div> }</details>
                   </td>
-                  <td class="px-4 py-3"><span [class]="statusClass(record.statusCode)">{{ statusLabel(record.statusCode) }}</span><div class="text-xs text-gray-500">HTTP {{ record.statusCode }}</div></td>
+                  <td class="px-4 py-3"><span [class]="statusClass(record.statusCode)">{{ statusLabel(record.statusCode) }}</span><div class="text-xs text-(--ui-text-muted)">HTTP {{ record.statusCode }}</div></td>
                   <td class="px-4 py-3">{{ tenantLabel(record) }}</td>
                   <td class="px-4 py-3 text-xs" [title]="record.changedFieldsJson || ''">{{ changedFields(record) }}</td>
                   <td class="px-4 py-3 font-mono text-xs" [title]="record.correlationId">{{ shortId(record.correlationId) }}</td>
                 </tr>
               } @empty {
-                <tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">{{ loading() ? 'Yükleniyor…' : 'Kayıt bulunamadı.' }}</td></tr>
+                <tr><td colspan="7" class="px-6 py-12 text-center text-(--ui-text-muted)">{{ loading() ? 'Yükleniyor…' : 'Kayıt bulunamadı.' }}</td></tr>
               }
             </tbody>
           </table>
         </div>
-        <footer class="flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-          <span class="text-xs text-gray-500">Toplam {{ totalCount() }} kayıt · Sayfa {{ currentPage() }} / {{ totalPages() }}</span>
+        <footer class="flex items-center justify-between gap-3 px-4 py-3 bg-(--ui-surface-muted) border-t border-(--ui-border)">
+          <span class="text-xs text-(--ui-text-muted)">Toplam {{ totalCount() }} kayıt · Sayfa {{ currentPage() }} / {{ totalPages() }}</span>
           <div class="flex gap-2">
             <button type="button" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() <= 1 || loading()" class="px-3 py-2 rounded-lg border disabled:opacity-40">Önceki</button>
             <button type="button" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() >= totalPages() || loading()" class="px-3 py-2 rounded-lg border disabled:opacity-40">Sonraki</button>
@@ -225,9 +225,9 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
     return 'İşlem sonucu';
   }
   statusClass(statusCode: number): string {
-    if (statusCode >= 200 && statusCode < 300) return 'text-emerald-600';
-    if (statusCode >= 400) return 'text-red-600';
-    return 'text-amber-600';
+    if (statusCode >= 200 && statusCode < 300) return 'text-(--ui-success)';
+    if (statusCode >= 400) return 'text-(--ui-danger)';
+    return 'text-(--ui-warning)';
   }
   tenantLabel(record: AdminAuditRecord): string {
     return record.tenantId ? 'Kurum kapsamı' : 'Merkezi yönetim';

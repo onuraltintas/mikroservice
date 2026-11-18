@@ -125,8 +125,7 @@
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--sp-text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .db-onboarding__chip-value {
@@ -145,18 +144,18 @@
   border-radius: var(--sp-radius-full);
   border: none;
   background: linear-gradient(135deg, var(--sp-primary) 0%, var(--sp-primary-dark) 100%);
-  color: #fff;
+  color: var(--ui-brand-contrast);
   font-family: var(--sp-font-sans);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ui-text) 40%, transparent);
   transition: box-shadow var(--sp-transition-fast), transform var(--sp-transition-fast);
 
   .material-icons { font-size: 22px; }
 
   &:hover {
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--ui-text) 50%, transparent);
     transform: translateY(-2px);
   }
   &:active { transform: translateY(0); }
@@ -164,7 +163,7 @@
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
 .db-hero {
-  background: linear-gradient(135deg, var(--sp-primary) 0%, #8b5cf6 50%, #a855f7 100%);
+  background: var(--ui-brand);
   border-radius: var(--sp-radius-2xl);
   padding: 32px;
   margin-bottom: 24px;
@@ -175,7 +174,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-image: color-mix(in srgb, var(--ui-surface) 7%, transparent);
     background-size: 24px 24px;
     pointer-events: none;
   }
@@ -201,15 +200,15 @@
   width: 56px;
   height: 56px;
   border-radius: var(--sp-radius-full);
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
+  border: 2px solid color-mix(in srgb, var(--ui-border) 40%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--sp-font-sans);
   font-size: 1.125rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--ui-brand-contrast);
   flex-shrink: 0;
 }
 
@@ -217,14 +216,14 @@
   font-family: var(--sp-font-sans);
   font-size: 1.5rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--ui-brand-contrast);
   margin: 0 0 4px;
   letter-spacing: -0.02em;
 }
 
 .db-hero__sub {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--ui-brand-contrast) 75%, transparent);
   margin: 0 0 8px;
 }
 
@@ -232,18 +231,18 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 25%, transparent);
   border-radius: var(--sp-radius-full);
   padding: 4px 12px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: color-mix(in srgb, var(--ui-brand-contrast) 90%, transparent);
 
   .material-icons { font-size: 14px; }
 }
 
-.db-hero__badge-sep { opacity: 0.5; }
+.db-hero__badge-sep { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; }
 
 .db-hero__stats {
   display: flex;
@@ -274,7 +273,7 @@
   font-family: var(--sp-font-sans);
   font-size: 0.75rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--ui-brand-contrast);
 }
 
 .db-quick-stat--text {
@@ -290,7 +289,7 @@
   font-family: var(--sp-font-sans);
   font-size: 1.75rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--ui-brand-contrast);
   line-height: 1;
 }
 
@@ -302,9 +301,8 @@
 .db-quick-stat__label {
   font-size: 0.6875rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.65);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--ui-brand-contrast) 65%, transparent);
+  letter-spacing: 0;
   width: 100%;
   text-align: center;
 }
@@ -433,6 +431,6 @@
 .db-no-program {
   transition: background 0.25s ease, border-color 0.25s ease;
 }
- .db-program-choice,.db-followup{margin-top:18px;padding:18px;border:1px solid var(--border-color,#dce2ef);border-radius:12px}
+ .db-program-choice,.db-followup{margin-top:18px;padding:18px;border: 1px solid var(--border-color,var(--ui-brand-soft));border-radius:12px}
  .db-program-choice label{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
  .db-followup a{display:block;margin-top:12px}

@@ -9,32 +9,78 @@ import { SiteAnalyticsService } from '../../../core/services/site-analytics.serv
   standalone: true,
   imports: [CommonModule, RouterLink, RouterOutlet],
   template: `
-    <div class="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
-      <header class="sticky top-0 z-30 border-b border-[var(--ui-border)] bg-[var(--ui-surface)]/95 shadow-sm backdrop-blur">
-        <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <a routerLink="/coaching" class="flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500" aria-label="maxkoç ana sayfası">
-            <img src="brand/maxkoc.svg" alt="" width="40" height="40" class="h-10 w-10">
-            <span><span class="block text-sm font-bold tracking-tight">{{ branding()?.title || 'maxkoç' }}</span><span class="block text-xs text-indigo-700 dark:text-indigo-300">{{ branding()?.eyebrow || 'Öğrenci Koçluğu' }}</span></span>
+    <div class="site" data-brand="maxkoc">
+      <a class="skip ds-btn ds-btn--primary" href="#main-content">İçeriğe geç</a>
+      <header class="site__header">
+        <div class="site__bar">
+          <a routerLink="/coaching" class="site__brand" aria-label="maxkoç ana sayfası">
+            <img src="brand/maxkoc.svg" alt="" width="40" height="40">
+            <span><span class="site__name">{{ branding()?.title || 'maxkoç' }}</span><span class="site__note">{{ branding()?.eyebrow || 'bir eduivme markası' }}</span></span>
           </a>
-          <nav class="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:justify-end" aria-label="Koçluk içerik menüsü">
+          <nav class="site__nav" aria-label="Koçluk içerik menüsü">
             @for (item of navigation(); track item.id) {
-              <a [href]="item.url" [target]="item.openInNewTab ? '_blank' : null" [rel]="item.openInNewTab ? 'noopener noreferrer' : null" class="rounded-lg px-2.5 py-2 text-xs font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-slate-800 sm:px-3 sm:text-sm">{{ item.label }}</a>
+              <a [href]="item.url" [target]="item.openInNewTab ? '_blank' : null" [rel]="item.openInNewTab ? 'noopener noreferrer' : null">{{ item.label }}</a>
             }
-            <a [href]="branding()?.linkUrl || '/auth/login?returnUrl=%2Fcoaching-portal'" class="ml-1 rounded-lg bg-indigo-700 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-2 sm:text-sm">{{ branding()?.linkLabel || 'Giriş / kayıt' }}</a>
           </nav>
+          <div class="site__actions">
+            <a href="/auth/login?returnUrl=%2Fcoaching-portal" class="ds-btn ds-btn--quiet">Giriş yap</a>
+            <a [href]="branding()?.linkUrl || '/auth/register/student'" class="ds-btn ds-btn--primary">{{ branding()?.linkLabel || 'Ücretsiz başla' }}</a>
+          </div>
         </div>
       </header>
-      <main id="main-content" class="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10 lg:px-8"><router-outlet></router-outlet></main>
-      <footer class="mt-10 border-t border-[var(--ui-border)] bg-[var(--ui-surface)]">
-        <div class="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:grid-cols-[1fr_auto] sm:px-6 lg:px-8">
-          <div><p class="text-sm font-bold">{{ branding()?.title || 'maxkoç' }} {{ branding()?.eyebrow || 'Koçluk' }}</p><p class="mt-2 max-w-xl text-xs leading-5 text-slate-500 dark:text-slate-400">{{ branding()?.summary || 'Hedef belirleme, çalışma planı ve ilerleme değerlendirmesi için öğrenci, öğretmen ve kurumlara özel koçluk alanı.' }}</p></div>
-          <nav class="flex flex-wrap items-start gap-x-5 gap-y-2 text-xs font-medium text-slate-600 dark:text-slate-300" aria-label="Alt menü">@for (item of footerNavigation(); track item.id) {<a [href]="item.url" [target]="item.openInNewTab ? '_blank' : null" [rel]="item.openInNewTab ? 'noopener noreferrer' : null" class="hover:text-indigo-700 dark:hover:text-indigo-300">{{ item.label }}</a>}<a routerLink="/coaching/newsletter" class="hover:text-indigo-700 dark:hover:text-indigo-300">Bültene abone ol</a><a routerLink="/legal/privacy" class="hover:text-indigo-700 dark:hover:text-indigo-300">Gizlilik politikası</a><a routerLink="/legal/kvkk" class="hover:text-indigo-700 dark:hover:text-indigo-300">KVKK aydınlatma metni</a>@if (analytics.measurementId()) {<button type="button" data-testid="cookie-preferences" class="text-left hover:text-indigo-700 dark:hover:text-indigo-300" (click)="analytics.reopen()">Çerez tercihleri</button>}</nav>
-          <p class="border-t border-[var(--ui-border)] pt-4 text-xs text-slate-500 dark:text-slate-400 sm:col-span-2">© {{ currentYear }} {{ branding()?.title || 'maxkoç' }} {{ branding()?.eyebrow || 'Koçluk' }}</p>
+      <main id="main-content" class="site__main" tabindex="-1"><router-outlet></router-outlet></main>
+      <footer class="site__footer">
+        <div class="site__footer-inner">
+          <div class="site__about">
+            <p class="site__name">{{ branding()?.title || 'maxkoç' }}</p>
+            <p>{{ branding()?.summary || 'Hedef belirleme, çalışma planı ve ilerleme değerlendirmesi için öğrenci, öğretmen ve kurumlara özel koçluk alanı.' }}</p>
+          </div>
+          <nav class="site__links" aria-label="Alt menü">
+            @for (item of footerNavigation(); track item.id) {
+              <a [href]="item.url" [target]="item.openInNewTab ? '_blank' : null" [rel]="item.openInNewTab ? 'noopener noreferrer' : null">{{ item.label }}</a>
+            }
+            <a routerLink="/coaching/newsletter">Bültene abone ol</a>
+            <a routerLink="/legal/privacy">Gizlilik politikası</a>
+            <a routerLink="/legal/kvkk">KVKK aydınlatma metni</a>
+            @if (analytics.measurementId()) { <button type="button" data-testid="cookie-preferences" (click)="analytics.reopen()">Çerez tercihleri</button> }
+          </nav>
+          <p class="site__copyright">maxkoç bir eduivme markasıdır. © {{ currentYear }} ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır.</p>
         </div>
       </footer>
     </div>
   `,
   styles: [`
+    :host { display: block; }
+    .site { min-height: 100vh; display: flex; flex-direction: column; background: var(--ds-bg); }
+    .skip { position: absolute; left: 12px; top: -80px; z-index: 50; }
+    .skip:focus { top: 12px; }
+    .site__header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--ds-line); background: color-mix(in srgb, var(--ds-surface) 94%, transparent); backdrop-filter: blur(8px); }
+    .site__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; max-width: 1200px; margin: 0 auto; padding: 12px 24px; }
+    .site__brand { display: flex; align-items: center; gap: 10px; color: var(--ds-text); text-decoration: none; }
+    .site__name { display: block; font-size: 18px; font-weight: 700; line-height: 1.1; }
+    .site__note { display: block; color: var(--ds-muted); font-size: 12px; }
+    .site__nav { display: flex; flex-wrap: wrap; gap: 4px; margin-right: auto; }
+    .site__nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--ds-radius-control); color: var(--ds-text); font-size: 15px; font-weight: 500; text-decoration: none; }
+    .site__nav a:hover { background: var(--ds-soft); }
+    .site__actions { display: flex; align-items: center; gap: 8px; }
+    .site__actions .ds-btn { min-height: 44px; }
+    .site__main { flex: 1; width: 100%; max-width: 1200px; box-sizing: border-box; margin: 0 auto; padding: 32px 24px 72px; outline: none; }
+    .site__footer { border-top: 1px solid var(--ds-line); background: var(--ds-surface); }
+    .site__footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+    .site__about { display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
+    .site__about p:not(.site__name) { margin: 0; color: var(--ds-muted); font-size: 14px; line-height: 1.6; }
+    .site__about .site__name { margin: 0; }
+    .site__links { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0 18px; }
+    .site__links a, .site__links button { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ds-text); font: inherit; font-size: 14px; text-decoration: none; cursor: pointer; }
+    .site__links a:hover, .site__links button:hover { color: var(--ds-link); text-decoration: underline; text-underline-offset: 3px; }
+    .site__copyright { grid-column: 1 / -1; margin: 0; padding-top: 16px; border-top: 1px solid var(--ds-line); color: var(--ds-muted); font-size: 13px; }
+    @media (max-width: 760px) {
+      .site__bar { padding: 10px 16px; }
+      .site__nav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+      .site__actions { margin-left: auto; }
+      .site__main { padding: 24px 16px 56px; }
+      .site__footer-inner { grid-template-columns: 1fr; padding: 24px 16px; }
+    }
   `]
 })
 export class CoachingPublicCmsLayoutComponent implements OnInit {

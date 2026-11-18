@@ -27,14 +27,14 @@ interface CouponDraft {
     <main class="space-y-6" aria-labelledby="billing-coupons-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-          <h1 id="billing-coupons-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Kuponlar</h1>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Bir hesap bir kuponu bir kez kullanır. Ödeme bekleyen siparişler de kullanım sayılır; reddedilen, düşen ya da onayı geri alınan sipariş kullanımını geri verir.</p>
+          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+          <h1 id="billing-coupons-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Kuponlar</h1>
+          <p class="mt-2 text-sm text-(--ui-text-muted)">Bir hesap bir kuponu bir kez kullanır. Ödeme bekleyen siparişler de kullanım sayılır; reddedilen, düşen ya da onayı geri alınan sipariş kullanımını geri verir.</p>
         </div>
         <button type="button" class="primary" (click)="start()" data-testid="new-coupon">Yeni kupon</button>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       @if (draft(); as coupon) {
         <form (ngSubmit)="save()" class="form-card" data-testid="coupon-form">

@@ -31,7 +31,7 @@
   padding: 28px;
   border-radius: var(--sp-radius-2xl);
   background: linear-gradient(135deg, var(--sp-primary-dark), var(--sp-primary), var(--sp-platinum));
-  color: #fff;
+  color: var(--ui-brand-contrast);
 }
 
 .hero-section::before {
@@ -39,7 +39,7 @@
   inset: 0;
   content: '';
   pointer-events: none;
-  background-image: radial-gradient(circle, rgb(255 255 255 / 0.12) 1px, transparent 1px);
+  background-image: color-mix(in srgb, var(--ui-surface) 12%, transparent);
   background-size: 24px 24px;
 }
 
@@ -50,7 +50,7 @@
 
 .hero-title {
   margin: 0 0 6px;
-  color: #fff;
+  color: var(--ui-brand-contrast);
   font-family: var(--sp-font-sans);
   font-size: clamp(1.35rem, 3vw, 1.875rem);
   font-weight: 800;
@@ -59,7 +59,7 @@
 
 .hero-subtitle {
   margin: 0;
-  color: rgb(255 255 255 / 0.78);
+  color: color-mix(in srgb, var(--ui-brand-contrast) 78%, transparent);
   font-size: 0.9375rem;
   line-height: 1.5;
 }
@@ -76,13 +76,13 @@
   gap: 12px;
   min-width: 0;
   padding: 14px;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 20%, transparent);
   border-radius: var(--sp-radius-md);
-  background: rgb(255 255 255 / 0.14);
+  background: color-mix(in srgb, var(--ui-surface) 14%, transparent);
   backdrop-filter: blur(10px);
 }
 
-.metric-card.primary { background: rgb(255 255 255 / 0.22); }
+.metric-card.primary { background: color-mix(in srgb, var(--ui-surface) 22%, transparent); }
 
 .metric-icon {
   display: grid;
@@ -91,7 +91,7 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: var(--sp-radius-sm);
-  background: rgb(255 255 255 / 0.16);
+  background: color-mix(in srgb, var(--ui-surface) 16%, transparent);
 }
 
 .metric-icon .material-icons { font-size: 22px; }
@@ -99,7 +99,7 @@
 .metric-content { min-width: 0; }
 
 .metric-value {
-  color: #fff;
+  color: var(--ui-brand-contrast);
   font-size: 1.5rem;
   font-weight: 800;
   line-height: 1.1;
@@ -108,12 +108,12 @@
 .metric-label,
 .metric-trend {
   display: block;
-  color: rgb(255 255 255 / 0.78);
+  color: color-mix(in srgb, var(--ui-brand-contrast) 78%, transparent);
 }
 
 .metric-label { margin-top: 4px; font-size: 0.78rem; }
 .metric-trend { margin-top: 2px; font-size: 0.7rem; }
-.metric-trend.positive { color: #bbf7d0; font-weight: 700; }
+.metric-trend.positive { color: var(--ui-success-soft); font-weight: 700; }
 
 .stats-grid {
   display: grid;

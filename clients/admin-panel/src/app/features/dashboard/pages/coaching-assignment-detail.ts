@@ -19,46 +19,46 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
   imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterModule],
   template: `
     <section class="space-y-6">
-      <a routerLink="/dashboard/coaching/assignments" class="inline-flex text-sm font-medium text-indigo-600 hover:underline">← Ödev listesine dön</a>
+      <a routerLink="/dashboard/coaching/assignments" class="inline-flex text-sm font-medium text-(--ui-brand-text) hover:underline">← Ödev listesine dön</a>
 
       @if (loading()) {
-        <div class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500 dark:border-gray-700 dark:bg-gray-800">Yükleniyor…</div>
+        <div class="rounded-xl border border-(--ui-border) bg-(--ui-surface) p-8 text-center text-(--ui-text-muted)">Yükleniyor…</div>
       } @else if (error()) {
-        <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+        <div class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div>
       } @else if (assignment(); as item) {
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ item.title }}</h1>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ item.source | coachingLabel }} · {{ item.status | coachingLabel }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
+              <h1 class="text-2xl font-bold text-(--ui-text)">{{ item.title }}</h1>
+              <p class="mt-1 text-sm text-(--ui-text-muted)">{{ item.source | coachingLabel }} · {{ item.status | coachingLabel }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600">Yenile</button>
+              <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-(--ui-border) px-4 py-2 text-sm">Yenile</button>
               @if (canManage()) {
-                <a [routerLink]="['/dashboard/coaching/assignments', item.id, 'edit']" class="rounded-lg border border-indigo-300 px-4 py-2 text-sm text-indigo-700 dark:border-indigo-700 dark:text-indigo-300">Düzenle</a>
+                <a [routerLink]="['/dashboard/coaching/assignments', item.id, 'edit']" class="rounded-lg border border-(--ui-brand) px-4 py-2 text-sm text-(--ui-brand-text)">Düzenle</a>
               }
               @if (canManage() && item.status === 'Active') {
-                <button type="button" (click)="cancelAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-amber-300 px-4 py-2 text-sm text-amber-700 dark:border-amber-700 dark:text-amber-300">İptal et</button>
+                <button type="button" (click)="cancelAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-(--ui-warning) px-4 py-2 text-sm text-(--ui-warning)">İptal et</button>
               }
               @if (canManage()) {
-                <button type="button" (click)="deleteAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 dark:border-red-700 dark:text-red-300">Sil</button>
+                <button type="button" (click)="deleteAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-(--ui-danger) px-4 py-2 text-sm text-(--ui-danger)">Sil</button>
               }
             </div>
           </div>
           @if (item.bookTitle) {
-            <p class="mt-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+            <p class="mt-4 rounded-lg bg-(--ui-brand-soft) p-3 text-sm text-(--ui-brand-text)">
               Kitap: {{ item.bookTitle }} · sayfa {{ item.bookStartPage }}-{{ item.bookEndPage }}
               @if (item.bookStartQuestion) { · soru {{ item.bookStartQuestion }}-{{ item.bookEndQuestion }} }
             </p>
           }
         </div>
 
-        <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
-            <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+        <div class="overflow-x-auto rounded-xl border border-(--ui-border) bg-(--ui-surface) shadow-sm">
+          <table class="min-w-full divide-y divide-(--ui-border) text-sm">
+            <thead class="bg-(--ui-surface-muted) text-left text-xs text-(--ui-text-muted)">
               <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Teslim</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Geri bildirim</th><th class="px-4 py-3">Fotoğraflar</th>@if (canManage()) { <th class="px-4 py-3">İşlem</th> }</tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody class="divide-y divide-(--ui-border)">
               @for (student of item.assignedStudents; track student.studentId) {
                 <tr>
                   <td class="px-4 py-3 font-mono text-xs">{{ student.studentId }}</td>
@@ -69,20 +69,20 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                   <td class="px-4 py-3">
                     @for (attachment of student.attachments ?? []; track attachment.id) {
                       @if (attachment.status === 'Clean') {
-                        <a class="mr-2 inline-block text-indigo-600 hover:underline" href="#" (click)="openAttachment($event, item.id, student.studentId, attachment.id)">{{ attachment.originalFileName }}</a>
-                      } @else { <span class="mr-2 text-amber-600">{{ attachment.originalFileName }} ({{ attachment.status | coachingLabel }})</span> }
-                    } @empty { <span class="text-gray-400">—</span> }
+                        <a class="mr-2 inline-block text-(--ui-brand-text) hover:underline" href="#" (click)="openAttachment($event, item.id, student.studentId, attachment.id)">{{ attachment.originalFileName }}</a>
+                      } @else { <span class="mr-2 text-(--ui-warning)">{{ attachment.originalFileName }} ({{ attachment.status | coachingLabel }})</span> }
+                    } @empty { <span class="text-(--ui-text-muted)">—</span> }
                   </td>
                   @if (canManage()) { <td class="min-w-64 px-4 py-3">
                     <div class="space-y-2">
-                      <input type="number" min="0" [max]="item.maxScore ?? 100" [ngModel]="scoreFor(student.studentId)" (ngModelChange)="setScore(student.studentId, $event)" class="w-24 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-900" placeholder="Puan" />
-                      <input type="text" maxlength="1000" [ngModel]="feedbackFor(student.studentId)" (ngModelChange)="setFeedback(student.studentId, $event)" class="w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-900" placeholder="Geri bildirim" />
-                      <button type="button" (click)="gradeAssignment(item.id, student.studentId)" [disabled]="actionLoading() || scoreFor(student.studentId) === ''" class="rounded bg-indigo-600 px-3 py-1 text-xs font-medium text-white disabled:opacity-50">Notu kaydet</button>
+                      <input type="number" min="0" [max]="item.maxScore ?? 100" [ngModel]="scoreFor(student.studentId)" (ngModelChange)="setScore(student.studentId, $event)" class="w-24 rounded border border-(--ui-border) px-2 py-1 text-sm" placeholder="Puan" />
+                      <input type="text" maxlength="1000" [ngModel]="feedbackFor(student.studentId)" (ngModelChange)="setFeedback(student.studentId, $event)" class="w-full rounded border border-(--ui-border) px-2 py-1 text-sm" placeholder="Geri bildirim" />
+                      <button type="button" (click)="gradeAssignment(item.id, student.studentId)" [disabled]="actionLoading() || scoreFor(student.studentId) === ''" class="rounded bg-(--ui-brand) px-3 py-1 text-xs font-medium text-(--ui-brand-contrast) disabled:opacity-50">Notu kaydet</button>
                     </div>
                   </td> }
                 </tr>
               } @empty {
-                <tr><td [attr.colspan]="canManage() ? 7 : 6" class="px-4 py-10 text-center text-gray-500">Atanmış öğrenci bulunamadı.</td></tr>
+                <tr><td [attr.colspan]="canManage() ? 7 : 6" class="px-4 py-10 text-center text-(--ui-text-muted)">Atanmış öğrenci bulunamadı.</td></tr>
               }
             </tbody>
           </table>

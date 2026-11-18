@@ -48,7 +48,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     const row = fixture.nativeElement.querySelector('[data-testid="estimate-not-computed"]') as HTMLElement;
     expect(row.textContent).toContain('YKS Eşit Ağırlık: puan hesaplanmaz');
     expect(row.textContent).toContain('Bu puan türünde puan hesaplanmaz: AYT Matematik ya da AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 testinden en az 0,5 ham puan gerekir.');
-    expect(row.textContent).toContain('Son 3 denemenin ortalama ham puanı: AYT Matematik 0,25 · AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 0.');
+    expect(row.textContent).toContain('Son 3 denemenin ortalama ham puanı: AYT Matematik 0,25, AYT Türk Dili ve Edebiyatı-Sosyal Bilimler-1 0.');
     expect(row.textContent).not.toMatch(/\b(sen|senin|siz|sizin)\b/);
   });
   // Paket B (05.11.2026): the teacher sees MEB-AGS with its ± range and the YDS level in words that address nobody.
@@ -66,9 +66,9 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     });
     fixture.detectChanges();
     const card = fixture.nativeElement.querySelector('[data-testid="score-estimate"]') as HTMLElement;
-    expect(card.textContent).toContain('MEB-AGS P2 · Sınıf Öğretmenliği: yaklaşık 71,2 puan (69,5–72,9) · model payı ±1,7');
+    expect(card.textContent).toContain('MEB-AGS P2 · Sınıf Öğretmenliği: yaklaşık 71,2 puan (69,5–72,9), model payı ±1,7');
     expect(card.textContent).not.toContain('Tahmini sıralama');
-    expect(card.textContent).toContain('YDS · İngilizce: 72,5 puan (72,5–72,5) · Seviye C');
+    expect(card.textContent).toContain('YDS · İngilizce: 72,5 puan (72,5–72,5), Seviye C');
     expect(card.textContent).not.toMatch(/\b(sen|senin|denemene|siz|sizin)\b/);
   });
   let http: HttpTestingController;

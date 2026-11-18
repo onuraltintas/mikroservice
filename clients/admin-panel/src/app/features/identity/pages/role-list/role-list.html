@@ -2,14 +2,14 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
-            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Roller</h1>
-            <p class="mt-2 text-sm text-gray-700 dark:text-gray-400">
+            <h1 class="text-xl font-semibold text-(--ui-text)">Roller</h1>
+            <p class="mt-2 text-sm text-(--ui-text)">
                 Sistemdeki rolleri yönetin. Yeni roller ekleyebilir, mevcutları düzenleyebilir veya silebilirsiniz.
             </p>
         </div>
         @if (canCreate()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button type="button" (click)="openCreateModal()"
-                class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto transition-colors duration-200">
+                class="inline-flex items-center justify-center rounded-md border border-transparent bg-(--ui-brand) px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) shadow-sm hover:bg-(--ui-brand) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 sm:w-auto transition-colors duration-200">
                 Rol Ekle
             </button>
         </div> }
@@ -20,7 +20,7 @@
         <!-- Search -->
         <div class="relative w-full sm:w-64">
             <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                <svg class="h-5 w-5 text-(--ui-text-muted)" xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                         d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
@@ -28,17 +28,17 @@
                 </svg>
             </div>
             <input type="text" [ngModel]="searchTerm()" (input)="onSearch($event)"
-                class="block w-full rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 shadow-sm transition-colors"
+                class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) pl-10 focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm py-2.5 shadow-sm transition-colors"
                 placeholder="Rol adı veya açıklama ara...">
         </div>
 
         <!-- Status Filter -->
         <div class="w-full sm:w-48">
             <select (change)="onStatusChange($event)"
-                class="block w-full rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white py-2.5 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 shadow-sm cursor-pointer transition-colors">
-                <option value="all" class="font-medium text-gray-500">Tüm Durumlar</option>
-                <option value="active" class="text-green-600 font-medium">Aktif</option>
-                <option value="passive" class="text-red-600 font-medium">Pasif</option>
+                class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) py-2.5 pl-3 pr-10 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) shadow-sm cursor-pointer transition-colors">
+                <option value="all" class="font-medium text-(--ui-text-muted)">Tüm Durumlar</option>
+                <option value="active" class="text-(--ui-success) font-medium">Aktif</option>
+                <option value="passive" class="text-(--ui-danger) font-medium">Pasif</option>
             </select>
         </div>
     </div>
@@ -48,36 +48,36 @@
         <div class="-my-2 -mx-4 overflow-visible sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8 min-h-[450px]">
                 <div
-                    class="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white dark:bg-gray-800 overflow-visible">
-                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    class="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-(--ui-surface) overflow-visible">
+                    <table class="min-w-full divide-y divide-(--ui-border)">
+                        <thead class="bg-(--ui-surface-muted)">
                             <tr>
                                 <th scope="col"
-                                    class="py-3.5 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300 sm:pl-6">
+                                    class="py-3.5 pl-4 pr-3 text-left text-xs font-medium text-(--ui-text-muted) sm:pl-6">
                                     Rol Adı</th>
                                 <th scope="col"
-                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     Açıklama</th>
                                 <th scope="col"
-                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     Durum</th>
                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                     <span class="sr-only">İşlemler</span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <tbody class="divide-y divide-(--ui-border) bg-(--ui-surface)">
                             @if (loading()) {
                             @for (i of [1,2,3]; track i) {
                             <tr class="animate-pulse">
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-32"></div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-64"></div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                    <div class="h-4 bg-(--ui-surface-muted) rounded w-16"></div>
                                 </td>
                                 <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 </td>
@@ -85,32 +85,32 @@
                             }
                             } @else {
                             @for (role of paginatedRoles(); track role.id) {
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                            <tr class="hover:bg-(--ui-surface-muted) transition-colors duration-150">
                                 <td
-                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
+                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-(--ui-text) sm:pl-6">
                                     <div class="flex items-center space-x-2">
                                         <span>{{ role.name }}</span>
                                         @if (role.isSystemRole) {
                                         <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-(--ui-brand-soft) text-(--ui-brand-text)">
                                             Sistem
                                         </span>
                                         }
                                     </div>
                                 </td>
                                 <td
-                                    class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">
+                                    class="whitespace-nowrap px-3 py-4 text-sm text-(--ui-text-muted) max-w-xs truncate">
                                     {{ role.description }}
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-(--ui-text-muted)">
                                     @if (role.isDeleted) {
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-(--ui-warning-soft) text-(--ui-warning)">
                                         Pasif
                                     </span>
                                     } @else {
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-(--ui-success-soft) text-(--ui-success)">
                                         Aktif
                                     </span>
                                     }
@@ -119,7 +119,7 @@
                                     class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                     <div class="inline-block text-left">
                                         <button (click)="toggleMenu(role.id, $event)" type="button"
-                                            class="flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none">
+                                            class="flex items-center text-(--ui-text-muted) hover:text-(--ui-text-muted) focus:outline-none">
                                             <span class="sr-only">Menüyü aç</span>
                                             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path
@@ -128,13 +128,13 @@
                                         </button>
 
                                         @if (openMenuId() === role.id) {
-                                        <div class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                        <div class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-(--ui-surface) shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                             role="menu" tabindex="-1">
                                             <div class="py-1" role="none">
                                                 @if (canEdit()) { <button (click)="editRole(role)"
-                                                    class="flex w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    class="flex w-full px-4 py-2 text-sm text-(--ui-text) hover:bg-(--ui-surface-muted) items-center"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-3 h-4 w-4 text-gray-400" fill="none"
+                                                    <svg class="mr-3 h-4 w-4 text-(--ui-text-muted)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -145,9 +145,9 @@
 
 
                                                 @if (canManagePermissions()) { <button (click)="openPermissionsModal(role)"
-                                                    class="flex w-full px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    class="flex w-full px-4 py-2 text-sm text-(--ui-brand-text) hover:bg-(--ui-surface-muted) items-center"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-3 h-4 w-4 text-indigo-500" fill="none"
+                                                    <svg class="mr-3 h-4 w-4 text-(--ui-brand-text)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -158,9 +158,9 @@
 
                                                 @if (canDelete() && !role.isDeleted && !role.isSystemRole) {
                                                 <button (click)="deleteRole(role)"
-                                                    class="flex w-full px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    class="flex w-full px-4 py-2 text-sm text-(--ui-warning) hover:bg-(--ui-surface-muted) items-center"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-3 h-4 w-4 text-yellow-500" fill="none"
+                                                    <svg class="mr-3 h-4 w-4 text-(--ui-warning)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -172,9 +172,9 @@
 
                                                 @if (role.isDeleted && (canEdit() || canDelete())) {
                                                 @if (canEdit()) { <button (click)="restoreRole(role)"
-                                                    class="flex w-full px-4 py-2 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700"
+                                                    class="flex w-full px-4 py-2 text-sm text-(--ui-success) hover:bg-(--ui-surface-muted) items-center border-t border-(--ui-border)"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none"
+                                                    <svg class="mr-3 h-4 w-4 text-(--ui-success)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -184,9 +184,9 @@
                                                 </button> }
 
                                                 @if (canDelete()) { <button (click)="permanentDeleteRole(role)"
-                                                    class="flex w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    class="flex w-full px-4 py-2 text-sm text-(--ui-danger) hover:bg-(--ui-surface-muted) items-center"
                                                     role="menuitem" tabindex="-1">
-                                                    <svg class="mr-3 h-4 w-4 text-red-500" fill="none"
+                                                    <svg class="mr-3 h-4 w-4 text-(--ui-danger)" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
@@ -204,15 +204,15 @@
                             }
                             @if (paginatedRoles().length === 0) {
                             <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="4" class="px-6 py-10 text-center text-(--ui-text-muted)">
                                     <div class="flex flex-col items-center justify-center">
-                                        <svg class="h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor"
+                                        <svg class="h-12 w-12 text-(--ui-text-muted) mb-3" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
                                         <span class="text-base font-medium">Sonuç bulunamadı</span>
-                                        <p class="text-sm text-gray-500 mt-1">Arama kriterlerinize uygun rol yok.</p>
+                                        <p class="text-sm text-(--ui-text-muted) mt-1">Arama kriterlerinize uygun rol yok.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -222,13 +222,13 @@
                     </table>
 
                     <!-- Footer: Pagination & Page Size -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+                    <div class="border-t border-(--ui-border) bg-(--ui-surface) rounded-b-lg">
                         <!-- Main Footer Row: Info & Pagination -->
                         <div class="flex items-center justify-between px-4 py-4 sm:px-6">
                             <div class="flex flex-1 items-center justify-between flex-wrap gap-4">
                                 <!-- Record Info -->
-                                <p class="text-sm text-gray-700 dark:text-gray-400">
-                                    Toplam <span class="font-medium text-gray-900 dark:text-white">{{ totalCount()
+                                <p class="text-sm text-(--ui-text)">
+                                    Toplam <span class="font-medium text-(--ui-text)">{{ totalCount()
                                         }}</span> kayıt
                                     @if (totalPages > 1) {
                                     <span class="ml-1">(<span class="font-medium">{{ currentPage() }}</span> / {{
@@ -241,7 +241,7 @@
                                 <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm"
                                     aria-label="Pagination">
                                     <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1"
-                                        class="relative inline-flex items-center rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        class="relative inline-flex items-center rounded-l-md border border-(--ui-border) bg-(--ui-surface) px-2 py-2 text-sm font-medium text-(--ui-text-muted) hover:bg-(--ui-surface-muted) disabled:opacity-50 transition-colors">
                                         <span class="sr-only">Önceki</span>
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                             fill="currentColor">
@@ -254,11 +254,11 @@
                                     @for (page of pagesArray; track $index) {
                                     @if (page === '...') {
                                     <span
-                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">...</span>
+                                        class="relative inline-flex items-center border border-(--ui-border) bg-(--ui-surface) px-4 py-2 text-sm font-medium text-(--ui-text)">...</span>
                                     } @else {
                                     <button (click)="changePage(+$any(page))"
-                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-600"
-                                        [ngClass]="{'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900/20': page === currentPage()}">
+                                        class="relative inline-flex items-center border border-(--ui-border) bg-(--ui-surface) px-4 py-2 text-sm font-medium transition-colors hover:bg-(--ui-surface-muted)"
+                                        [ngClass]="{'bg-(--ui-brand-soft) text-(--ui-brand-text) border-(--ui-brand) z-10': page === currentPage()}">
                                         {{ page }}
                                     </button>
                                     }
@@ -266,7 +266,7 @@
 
                                     <button (click)="changePage(currentPage() + 1)"
                                         [disabled]="currentPage() === totalPages"
-                                        class="relative inline-flex items-center rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        class="relative inline-flex items-center rounded-r-md border border-(--ui-border) bg-(--ui-surface) px-2 py-2 text-sm font-medium text-(--ui-text-muted) hover:bg-(--ui-surface-muted) disabled:opacity-50 transition-colors">
                                         <span class="sr-only">Sonraki</span>
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                             fill="currentColor">
@@ -282,11 +282,11 @@
 
                         <!-- Page Size Selector (Bottom Row) -->
                         <div
-                            class="px-4 py-3 sm:px-6 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700/50 flex justify-center items-center">
-                            <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                            class="px-4 py-3 sm:px-6 bg-(--ui-surface-muted) border-t border-(--ui-border) flex justify-center items-center">
+                            <div class="flex items-center space-x-2 text-sm text-(--ui-text-muted)">
                                 <span>Sayfa başına kayıt:</span>
                                 <select (change)="onPageSizeChange($event)" [value]="pageSize()"
-                                    class="block rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1 pl-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 transition-colors">
+                                    class="block rounded-md border-(--ui-border) py-1 pl-2 pr-8 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) transition-colors">
                                     <option [value]="10">10</option>
                                     <option [value]="25">25</option>
                                     <option [value]="50">50</option>

@@ -1,8 +1,8 @@
-<header><strong>eduivme</strong><span>Kurs öğrenci alanı</span>
+<header><div class="brand"><img src="brand/eduivme.svg" alt=""><strong>eduivme</strong><span>Kurs öğrenci alanı</span></div>
   @if (auth.isAuthenticated()) { <button type="button" (click)="logout()" [disabled]="busy">Çıkış yap</button> }
 </header>
 <main>
-  <p class="eyebrow">KURS YÖNETİMİ</p><h1>Kursunuzla buluşun.</h1>
+  <h1>Kursunuzla buluşun.</h1><p class="lead">Davetlerinizi, derslerinizi ve ödevlerinizi buradan takip edin.</p>
   @if (error) { <p class="error" role="alert">{{ error }}</p> }
   @if (notice) { <p role="status">{{ notice }}</p> }
   @if (busy) { <p role="status">İşlem sürüyor…</p> }
@@ -51,7 +51,7 @@
         @if (!notifications.length && !notificationsError) { <p>Henüz kurs bildiriminiz yok.</p> }
         @for (notification of notifications; track notification.id) {
           <article [attr.aria-label]="notification.isRead ? 'Okunmuş kurs bildirimi' : 'Okunmamış kurs bildirimi'">
-            <h3>{{ notification.title }} @if (!notification.isRead) { <span>· Yeni</span> }</h3>
+            <h3>{{ notification.title }} @if (!notification.isRead) { <span class="new">Yeni</span> }</h3>
             <p>{{ notification.message }}</p>
             <time>{{ lessonTime(notification.createdAt) }}</time>
             @if (!notification.isRead) { <button type="button" (click)="markNotificationAsRead(notification)" [disabled]="busy">Okundu işaretle</button> }
@@ -68,14 +68,14 @@
       </section>
       <section><h2>Kurslarım</h2>
         @if (!courses.length) { <p>Henüz bir kurs veya gruba kaydınız yok.</p> }
-        @for (course of courses; track course.id) { <article><h3>{{ course.name }}</h3><p>{{ course.subject }} · {{ course.groupName }}</p></article> }
+        @for (course of courses; track course.id) { <article><h3>{{ course.name }}</h3><p>{{ course.subject }}, {{ course.groupName }}</p></article> }
       </section>
       <section><h2>Yaklaşan derslerim</h2>
         @if (!lessons.length) { <p>Yaklaşan planlanmış bir dersiniz yok.</p> }
         @for (lesson of lessons; track lesson.id) {
-          <article><h3>{{ lesson.courseName }} · {{ lesson.groupName || 'Bire bir ders' }}</h3>
+          <article><h3>{{ lesson.courseName }}, {{ lesson.groupName || 'Bire bir ders' }}</h3>
             <p>{{ lessonTime(lesson.startsAt) }} – {{ lessonTime(lesson.endsAt) }}</p>
-            <p>{{ lesson.workspaceName }} · {{ lesson.subject }}{{ lesson.teacherName ? ' · ' + lesson.teacherName : '' }}</p>
+            <p>{{ lesson.workspaceName }}, {{ lesson.subject }}{{ lesson.teacherName ? ', ' + lesson.teacherName : '' }}</p>
             @if (isWorkspaceReadOnly(lesson.workspaceId)) { <p>Bu çalışma alanı salt okunur; ders katılımı değiştirilemez.</p> }
             @if (canCancelLesson(lesson)) { <button type="button" (click)="cancelLesson(lesson)" [disabled]="busy">Derse katılımımı iptal et</button>
               <p>Ders başlangıcına en az 24 saat varken iptal ederseniz telafi kredisi öğretmen onayına gönderilir; 24 saatten az süre kaldıysa kredi oluşmaz.</p> }
@@ -85,8 +85,8 @@
       <section><h2>Ders geçmişim</h2>
         @if (!attendance.length) { <p>Henüz tamamlanmış ders ve yoklama kaydı bulunmuyor.</p> }
         @for (record of attendance; track record.id) {
-          <article><h3>{{ record.courseName }} · {{ attendanceLabel(record.status) }}</h3>
-            <p>{{ record.workspaceName }} · {{ record.subject }} · {{ lessonTime(record.startsAt) }}</p>
+          <article><h3>{{ record.courseName }}: {{ attendanceLabel(record.status) }}</h3>
+            <p>{{ record.workspaceName }}, {{ record.subject }}, {{ lessonTime(record.startsAt) }}</p>
           </article>
         }
       </section>
@@ -103,18 +103,18 @@
         @for (assignment of assignments; track assignment.id) {
           <article>
             <h3>{{ assignment.title }}</h3>
-            <p>{{ assignment.workspaceName }} · {{ assignment.courseName }}</p>
+            <p>{{ assignment.workspaceName }}, {{ assignment.courseName }}</p>
             @if (assignment.instructions) { <p>{{ assignment.instructions }}</p> }
-            <p>Son teslim: {{ lessonTime(assignment.dueAt) }} · {{ assignmentStatus(assignment.status, assignment.isLate) }}</p>
+            <p>Son teslim: {{ lessonTime(assignment.dueAt) }}. Durum: {{ assignmentStatus(assignment.status, assignment.isLate) }}</p>
             @if (isWorkspaceReadOnly(assignment.workspaceId)) { <p>Bu çalışma alanı salt okunur; ödev yanıtı ve dosya teslimi durduruldu.</p> }
             @for (attachment of assignment.materials; track attachment.id) {
-              <p>Öğretmen dosyası: {{ attachment.fileName }} · <button type="button" (click)="downloadAssignmentAttachment(assignment, attachment)" [disabled]="busy">Dosyayı indir</button></p>
+              <p>Öğretmen dosyası: {{ attachment.fileName }} <button type="button" (click)="downloadAssignmentAttachment(assignment, attachment)" [disabled]="busy">Dosyayı indir</button></p>
             }
             @if (assignment.submittedAt) { <p>Gönderim: {{ lessonTime(assignment.submittedAt) }}</p> }
             @if (assignment.score !== null) { <p>Puan: {{ assignment.score }} / 100</p> }
             @if (assignment.feedback) { <p>Öğretmen geri bildirimi: {{ assignment.feedback }}</p> }
             @for (attachment of assignment.submissionAttachments; track attachment.id) {
-              <p>Teslim ettiğiniz dosya: {{ attachment.fileName }} · <button type="button" (click)="downloadAssignmentAttachment(assignment, attachment)" [disabled]="busy">Dosyanızı indir</button></p>
+              <p>Teslim ettiğiniz dosya: {{ attachment.fileName }} <button type="button" (click)="downloadAssignmentAttachment(assignment, attachment)" [disabled]="busy">Dosyanızı indir</button></p>
             }
             <label [attr.for]="'assignment-response-' + assignment.id">Yanıtınız</label>
             <textarea [id]="'assignment-response-' + assignment.id" [name]="'assignment-response-' + assignment.id"
@@ -123,7 +123,7 @@
               {{ assignment.submittedAt ? 'Yanıtı güncelle' : 'Ödevi teslim et' }}
             </button>
             @if (canUploadFile(assignment)) {
-              <label [attr.for]="'assignment-files-' + assignment.id">Ödev dosyalarınız (PDF, JPEG, PNG · en çok 10 MB/dosya)</label>
+              <label [attr.for]="'assignment-files-' + assignment.id">Ödev dosyalarınız (PDF, JPEG ya da PNG; dosya başına en çok 10 MB)</label>
               <input [id]="'assignment-files-' + assignment.id" [name]="'assignment-files-' + assignment.id" type="file"
                 accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" multiple
                 (change)="selectSubmissionFiles(assignment.id, $event)" [disabled]="busy || isWorkspaceReadOnly(assignment.workspaceId)">
@@ -145,7 +145,7 @@
             @if (!account.packageBalances.length) { <p>Kalan paket hakkı bulunmuyor.</p> }
             @for (packageBalance of account.packageBalances; track packageBalance.agreementId) {
               <p>Kalan ders hakkı: {{ packageBalance.remainingSessions }} / {{ packageBalance.grantedSessions }}
-                @if (packageBalance.expiresAt) { · Son kullanım: {{ lessonTime(packageBalance.expiresAt) }} }
+                @if (packageBalance.expiresAt) { , son kullanım: {{ lessonTime(packageBalance.expiresAt) }} }
               </p>
             }
           </article>
@@ -153,4 +153,4 @@
       </section>
     }
   }
-</main><footer>eduivme · Kurs yönetimi</footer>
+</main><footer>© ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır.</footer>

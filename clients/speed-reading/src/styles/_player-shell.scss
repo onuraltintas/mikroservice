@@ -68,7 +68,7 @@ app-exercise-player {
   }
 
   .ep-btn--primary { border-color: var(--sp-primary); background: var(--sp-primary); color: var(--sp-text-inv); }
-  .ep-btn--danger { border-color: var(--sp-danger); background: var(--sp-danger); color: #fff; }
+  .ep-btn--danger { border-color: var(--sp-danger); background: var(--sp-danger); color: var(--ui-brand-contrast); }
   .ep-btn--ghost { background: var(--sp-surface); color: var(--sp-text-2); }
 
   .ep-btn--icon {

@@ -32,44 +32,44 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
   template: `
     <section class="space-y-5" aria-labelledby="approvals-title">
       <div>
-        <p class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Koçluk / Müfredat</p>
-        <h1 id="approvals-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Konu–kazanım onay kuyruğu</h1>
-        <p class="mt-2 max-w-3xl text-sm text-gray-600 dark:text-gray-300">İçe aktarılan konu–kazanım bağlantılarını inceleyin. Onaylı bağlantılar öğrenci planlarında kullanılır; reddedilen bağlantılar denetim için saklanır ama planlamada sayılmaz ve konunun silinmesini engellemez.</p>
-        <a routerLink="/dashboard/coaching/curriculum" class="mt-2 inline-block text-sm font-medium text-indigo-700 underline dark:text-indigo-300">Ders ve Müfredat Yönetimine dön</a>
+        <p class="text-sm font-semibold text-(--ui-brand-text)">Koçluk / Müfredat</p>
+        <h1 id="approvals-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Konu–kazanım onay kuyruğu</h1>
+        <p class="mt-2 max-w-3xl text-sm text-(--ui-text-muted)">İçe aktarılan konu–kazanım bağlantılarını inceleyin. Onaylı bağlantılar öğrenci planlarında kullanılır; reddedilen bağlantılar denetim için saklanır ama planlamada sayılmaz ve konunun silinmesini engellemez.</p>
+        <a routerLink="/dashboard/coaching/curriculum" class="mt-2 inline-block text-sm font-medium text-(--ui-brand-text) underline">Ders ve Müfredat Yönetimine dön</a>
       </div>
 
-      <form (ngSubmit)="search(1)" class="grid gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-5" aria-label="Kuyruk filtreleri">
+      <form (ngSubmit)="search(1)" class="grid gap-3 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-4 sm:grid-cols-2 lg:grid-cols-5" aria-label="Kuyruk filtreleri">
         <label class="grid min-w-0 gap-1 text-sm font-medium">Durum
-          <select name="status" [(ngModel)]="status" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+          <select name="status" [(ngModel)]="status" class="w-full min-w-0 rounded-lg border p-2">
             <option value="pending">Onay bekliyor</option><option value="approved">Onaylı</option><option value="rejected">Reddedildi</option><option value="all">Tümü</option>
           </select></label>
         <label class="grid min-w-0 gap-1 text-sm font-medium">Sınav
-          <select name="exam" [(ngModel)]="examCode" (ngModelChange)="examChanged()" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+          <select name="exam" [(ngModel)]="examCode" (ngModelChange)="examChanged()" class="w-full min-w-0 rounded-lg border p-2">
             <option value="">Tümü</option>
             @for (group of examGroups(); track group.label) { <optgroup [label]="group.label">@for (exam of group.exams; track exam.code) { <option [value]="exam.code">{{ exam.name }}</option> }</optgroup> }
           </select></label>
         <label class="grid min-w-0 gap-1 text-sm font-medium">Ders
-          <select name="lesson" [(ngModel)]="lessonId" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+          <select name="lesson" [(ngModel)]="lessonId" class="w-full min-w-0 rounded-lg border p-2">
             <option value="">Tümü</option>@for (lesson of lessons(); track lesson.id) { <option [value]="lesson.id">{{ lesson.name }}</option> }
           </select></label>
         <label class="grid min-w-0 gap-1 text-sm font-medium">Kaynak
-          <select name="source" [(ngModel)]="source" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+          <select name="source" [(ngModel)]="source" class="w-full min-w-0 rounded-lg border p-2">
             <option value="">Tümü</option>@for (item of sources(); track item) { <option [value]="item">{{ sourceName(item) }}</option> }
           </select></label>
         <label class="grid min-w-0 gap-1 text-sm font-medium">Ara
-          <input name="search" [(ngModel)]="term" maxlength="200" placeholder="Konu, kazanım kodu veya metni" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
-        <div class="flex items-end"><button type="submit" [disabled]="busy()" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50">Listele</button></div>
+          <input name="search" [(ngModel)]="term" maxlength="200" placeholder="Konu, kazanım kodu veya metni" class="w-full min-w-0 rounded-lg border p-2"></label>
+        <div class="flex items-end"><button type="submit" [disabled]="busy()" class="rounded-lg bg-(--ui-brand) px-4 py-2 font-medium text-(--ui-brand-contrast) disabled:opacity-50">Listele</button></div>
       </form>
 
-      @if (error()) { <p role="alert" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">{{ error() }}</p> }
+      @if (error()) { <p role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-3 text-sm text-(--ui-danger)">{{ error() }}</p> }
       @if (result(); as r) {
-        <div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+        <div role="status" class="rounded-lg border border-(--ui-success-soft) bg-(--ui-success-soft) p-3 text-sm text-(--ui-success)">
           <p>{{ r.changed }} bağlantı {{ r.done }}.@if (r.skipped.length) { {{ r.skipped.length }} bağlantı atlandı. }</p>
           @if (r.skipped.length) { <ul class="mt-1 list-disc pl-5">@for (item of skippedSummary(); track item.reason) { <li>{{ item.reason }} ({{ item.count }})</li> }</ul> }
         </div>
       }
 
-      <section class="space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900" aria-labelledby="approval-action-title">
+      <section class="space-y-3 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-4" aria-labelledby="approval-action-title">
         <h2 id="approval-action-title" class="font-semibold">Seçilenler için karar</h2>
         <p class="text-sm" aria-live="polite">{{ selectionText() }}</p>
         <div class="flex flex-wrap gap-2">
@@ -78,11 +78,11 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
           <button type="button" (click)="clearSelection()" [disabled]="busy() || !selectedCount()" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50">Seçimi temizle</button>
         </div>
         <label class="grid min-w-0 gap-1 text-sm font-medium">İşlem gerekçesi (5–500 karakter)
-          <textarea name="reason" [(ngModel)]="reason" maxlength="500" rows="2" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800" placeholder="Örn. ÖSYM 2026 kılavuzuyla karşılaştırıldı"></textarea></label>
+          <textarea name="reason" [(ngModel)]="reason" maxlength="500" rows="2" class="w-full min-w-0 rounded-lg border p-2" placeholder="Örn. ÖSYM 2026 kılavuzuyla karşılaştırıldı"></textarea></label>
         <div class="flex flex-wrap gap-2">
-          <button type="button" (click)="decide('approve')" [disabled]="!canDecide()" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Onayla</button>
+          <button type="button" (click)="decide('approve')" [disabled]="!canDecide()" class="rounded-lg bg-(--ui-success-soft) px-4 py-2 text-sm font-semibold text-(--ui-success) disabled:opacity-50">Onayla</button>
           <button type="button" (click)="decide('unapprove')" [disabled]="!canDecide()" class="rounded-lg border px-4 py-2 text-sm font-semibold disabled:opacity-50">Onayı kaldır</button>
-          <button type="button" (click)="decide('reject')" [disabled]="!canDecide()" class="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Reddet</button>
+          <button type="button" (click)="decide('reject')" [disabled]="!canDecide()" class="rounded-lg bg-(--ui-danger-soft) px-4 py-2 text-sm font-semibold text-(--ui-danger) disabled:opacity-50">Reddet</button>
         </div>
         @if (progress(); as p) {
           <div role="status" aria-live="polite" class="text-sm">{{ p.label }} {{ p.done }} / {{ p.total }}
@@ -90,22 +90,22 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
         }
       </section>
 
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900" [attr.aria-busy]="loading()" aria-labelledby="approval-list-title">
-        <h2 id="approval-list-title" class="border-b px-4 py-3 text-sm font-semibold dark:border-gray-700">{{ total() }} bağlantı · Sayfa {{ page() }} / {{ pages() }}</h2>
+      <section class="overflow-hidden rounded-xl border border-(--ui-border) bg-(--ui-surface)" [attr.aria-busy]="loading()" aria-labelledby="approval-list-title">
+        <h2 id="approval-list-title" class="border-b px-4 py-3 text-sm font-semibold">{{ total() }} bağlantı · Sayfa {{ page() }} / {{ pages() }}</h2>
         @if (loading()) { <p role="status" class="p-4">Bağlantılar yükleniyor…</p> }
-        @else if (!rows().length) { <p class="p-4 text-gray-600 dark:text-gray-300">Bu filtrelere uyan bağlantı yok.</p> }
+        @else if (!rows().length) { <p class="p-4 text-(--ui-text-muted)">Bu filtrelere uyan bağlantı yok.</p> }
         @else {
-          <ul class="divide-y dark:divide-gray-700">
+          <ul class="divide-y">
             @for (row of rows(); track key(row)) {
               <li class="flex gap-3 p-4">
                 <input type="checkbox" class="mt-1 h-5 w-5 shrink-0" [id]="'link-' + $index" [checked]="isSelected(row)" (change)="toggle(row)" [disabled]="busy()">
                 <label [for]="'link-' + $index" class="min-w-0 flex-1 space-y-1">
-                  <span class="block break-words text-sm font-semibold text-gray-900 dark:text-white">{{ row.topicPath }}</span>
+                  <span class="block break-words text-sm font-semibold text-(--ui-text)">{{ row.topicPath }}</span>
                   <span class="block break-words text-sm"><strong>{{ row.outcomeCode }}</strong> — {{ row.outcomeText }}</span>
-                  <span class="block break-words text-xs text-gray-600 dark:text-gray-300">Dayanak: {{ row.evidence }}</span>
+                  <span class="block break-words text-xs text-(--ui-text-muted)">Dayanak: {{ row.evidence }}</span>
                   <span class="flex flex-wrap gap-2 text-xs">
-                    <span class="rounded bg-gray-100 px-2 py-0.5 text-gray-800 dark:bg-gray-800 dark:text-gray-100">{{ exam(row.examCode) }}</span>
-                    <span class="rounded bg-gray-100 px-2 py-0.5 text-gray-800 dark:bg-gray-800 dark:text-gray-100">{{ sourceName(row.source) }}</span>
+                    <span class="rounded bg-(--ui-surface-muted) px-2 py-0.5 text-(--ui-text)">{{ exam(row.examCode) }}</span>
+                    <span class="rounded bg-(--ui-surface-muted) px-2 py-0.5 text-(--ui-text)">{{ sourceName(row.source) }}</span>
                     <span class="rounded px-2 py-0.5 font-medium" [class]="statusClass(row.status)">{{ statusName(row.status) }}</span>
                   </span>
                 </label>
@@ -113,7 +113,7 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
             }
           </ul>
         }
-        <div class="flex justify-between border-t p-3 dark:border-gray-700">
+        <div class="flex justify-between border-t p-3">
           <button type="button" (click)="search(page() - 1)" [disabled]="busy() || page() <= 1" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50">Önceki</button>
           <button type="button" (click)="search(page() + 1)" [disabled]="busy() || page() >= pages()" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50">Sonraki</button>
         </div>
@@ -164,8 +164,8 @@ export class CoachingOutcomeApprovalsComponent implements OnInit {
   sourceName(source: string): string { return sourceLabel(source); }
   statusName(status: string): string { return linkStatusLabel(status); }
   statusClass(status: string): string {
-    return status === 'approved' ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100'
-      : status === 'rejected' ? 'bg-red-100 text-red-900 dark:bg-red-900/50 dark:text-red-100' : 'bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-100';
+    return status === 'approved' ? 'bg-(--ui-success-soft) text-(--ui-success)'
+      : status === 'rejected' ? 'bg-(--ui-danger-soft) text-(--ui-danger)' : 'bg-(--ui-warning-soft) text-(--ui-warning)';
   }
   selectionText(): string {
     const count = this.selectedCount();

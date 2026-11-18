@@ -16,7 +16,7 @@ export const BILLING_PAGE_STYLES = `
   .primary:disabled, .secondary:disabled, .actions button:disabled { opacity: .5; }
   .secondary, .actions button { border: 1px solid var(--ui-border-strong); color: var(--ui-text); }
   .data-table { width: 100%; text-align: left; font-size: .875rem; }
-  .data-table th { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; font-size: .7rem; text-transform: uppercase; color: var(--ui-text-muted); }
+  .data-table th { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; font-size: .7rem; color: var(--ui-text-muted); }
   .data-table td { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; color: var(--ui-text); vertical-align: top; }
   .actions { white-space: nowrap; text-align: right; }
   .actions button + button { margin-left: .35rem; }

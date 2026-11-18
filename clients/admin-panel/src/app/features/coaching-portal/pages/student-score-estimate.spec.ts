@@ -98,7 +98,7 @@ describe('O5 score estimate', () => {
     const row = el.querySelector('[data-testid="estimate-not-computed"]')!;
     expect(row.textContent).toContain('TYT: puan hesaplanmaz');
     expect(row.textContent).toContain('Bu puan türünde puan hesaplanmaz: Türkçe ya da Temel Matematik testinden en az 0,5 ham puan gerekir.');
-    expect(row.textContent).toContain('Son 2 denemenin ortalama ham puanı: Türkçe 0,25 · Temel Matematik 0');
+    expect(row.textContent).toContain('Son 2 denemenin ortalama ham puanı: Türkçe 0,25, Temel Matematik 0');
     expect(row.textContent).not.toContain('Yaklaşık tahmin'); expect(row.textContent).not.toContain('sıralama');
     expect(el.querySelectorAll('[data-testid="estimate-approximate"]')).toHaveLength(1);
     expect(el.querySelector('[data-testid="score-target"]')!.textContent).toContain('Bu hedefin puan türünde (TYT) puan hesaplanmadığı için hedefe olan fark gösterilemiyor.');

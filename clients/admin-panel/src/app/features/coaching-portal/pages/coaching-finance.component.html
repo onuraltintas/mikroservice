@@ -16,9 +16,9 @@
       @if (receivables(); as openFees) {
         <div class="totals"><p>Açık borç toplamı<strong>{{ currency(openFees.balance) }}</strong></p><p class="overdue">Vadesi geçen<strong>{{ currency(openFees.overdueAmount) }}</strong></p></div>
         <p class="hint">Geçmiş öğrenci ilişkilerine ait açık ücretler de dâhildir.</p>
-        @for (fee of openFees.items; track fee.id) { <article class="row"><div><h3>{{ fee.title }}</h3><p>Kalan: {{ currency(fee.balance) }} · Vadesi geçen: {{ currency(fee.overdueAmount) }}</p></div><button type="button" [attr.data-open-receivable]="fee.id" [disabled]="pending() || loading()" (click)="openAccount(fee.studentId)">Ücret hesabını aç</button></article> }
+        @for (fee of openFees.items; track fee.id) { <article class="row"><div><h3>{{ fee.title }}</h3><p>Kalan: {{ currency(fee.balance) }}, Vadesi geçen: {{ currency(fee.overdueAmount) }}</p></div><button type="button" [attr.data-open-receivable]="fee.id" [disabled]="pending() || loading()" (click)="openAccount(fee.studentId)">Ücret hesabını aç</button></article> }
         @empty { <p>Açık ücret bulunmuyor.</p> }
-        <nav class="row" aria-label="Açık ücret sayfaları"><span>{{ openFees.totalCount }} ücret · {{ openFees.pageNumber }}. sayfa</span><button type="button" [disabled]="openFees.pageNumber <= 1 || receivablesLoading() || pending()" (click)="loadReceivables(openFees.pageNumber - 1)">Önceki</button><button type="button" [disabled]="openFees.pageNumber * openFees.pageSize >= openFees.totalCount || receivablesLoading() || pending()" (click)="loadReceivables(openFees.pageNumber + 1)">Sonraki</button></nav>
+        <nav class="row" aria-label="Açık ücret sayfaları"><span>{{ openFees.totalCount }} ücret, {{ openFees.pageNumber }}. sayfa</span><button type="button" [disabled]="openFees.pageNumber <= 1 || receivablesLoading() || pending()" (click)="loadReceivables(openFees.pageNumber - 1)">Önceki</button><button type="button" [disabled]="openFees.pageNumber * openFees.pageSize >= openFees.totalCount || receivablesLoading() || pending()" (click)="loadReceivables(openFees.pageNumber + 1)">Sonraki</button></nav>
       }
     </section>
     <form class="row" (ngSubmit)="loadCash()">
@@ -31,12 +31,12 @@
       <p class="hint">Düzeltme kayıtları negatif tutarla toplamdan düşülür. Bu ekran banka bakiyesi göstermez.</p>
       <div class="records">
         @for (payment of statement.items; track payment.id) {
-          <article class="row"><div><strong>{{ currency(payment.amount) }}</strong><p>{{ payment.receivedOn | date:'dd.MM.yyyy' }} · {{ paymentMethod(payment.method) }} · {{ payment.reversalOfPaymentId ? 'Tahsilat düzeltmesi' : 'Tahsilat' }}</p><p class="wrap">{{ payment.reference }}</p></div>
+          <article class="row"><div><strong>{{ currency(payment.amount) }}</strong><p>{{ payment.receivedOn | date:'dd.MM.yyyy' }}, {{ paymentMethod(payment.method) }}, {{ payment.reversalOfPaymentId ? 'Tahsilat düzeltmesi' : 'Tahsilat' }}</p><p class="wrap">{{ payment.reference }}</p></div>
             <button type="button" [disabled]="pending() || loading()" (click)="openCashAccount(payment)">Ücret hesabını aç</button>
           </article>
         } @empty { <p>Bu tarih aralığında tahsilat yok.</p> }
       </div>
-      <nav class="row" aria-label="Tahsilat sayfaları"><span>{{ statement.totalCount }} hareket · {{ statement.pageNumber }}. sayfa</span><button type="button" [disabled]="statement.pageNumber <= 1 || loading() || pending()" (click)="loadCash(statement.pageNumber - 1)">Önceki</button><button type="button" [disabled]="statement.pageNumber * statement.pageSize >= statement.totalCount || loading() || pending()" (click)="loadCash(statement.pageNumber + 1)">Sonraki</button></nav>
+      <nav class="row" aria-label="Tahsilat sayfaları"><span>{{ statement.totalCount }} hareket, {{ statement.pageNumber }}. sayfa</span><button type="button" [disabled]="statement.pageNumber <= 1 || loading() || pending()" (click)="loadCash(statement.pageNumber - 1)">Önceki</button><button type="button" [disabled]="statement.pageNumber * statement.pageSize >= statement.totalCount || loading() || pending()" (click)="loadCash(statement.pageNumber + 1)">Sonraki</button></nav>
     }
   }
   @if (account(); as summary) {
@@ -46,12 +46,12 @@
     <div class="records">
       @for (fee of summary.agreements; track fee.id) {
         <article class="fee" [attr.data-fee-id]="fee.id">
-          <header><div><h3>{{ fee.title }}</h3><p>{{ fee.isCancelled ? 'İptal edildi' : fee.balance === 0 ? 'Borç kapandı' : 'Açık ücret' }} · {{ fee.institutionId ? 'Kurum koçluğu' : 'Bağımsız koçluk' }}</p></div><strong>{{ currency(fee.totalAmount) }}</strong></header>
-          <p>Tahsilat: {{ currency(fee.paidAmount) }} · Kalan: {{ currency(fee.balance) }}</p>
+          <header><div><h3>{{ fee.title }}</h3><p>{{ fee.isCancelled ? 'İptal edildi' : fee.balance === 0 ? 'Borç kapandı' : 'Açık ücret' }}, {{ fee.institutionId ? 'Kurum koçluğu' : 'Bağımsız koçluk' }}</p></div><strong>{{ currency(fee.totalAmount) }}</strong></header>
+          <p>Tahsilat: {{ currency(fee.paidAmount) }}, Kalan: {{ currency(fee.balance) }}</p>
           @if (fee.isCancelled) { <p class="wrap">İptal gerekçesi: {{ fee.cancellationReason }}</p> }
           @else {
             <ol class="installments">@for (part of fee.installments; track part.id) {
-              <li [class.overdue]="part.isOverdue"><span>{{ part.sequence }}. taksit · {{ part.dueOn | date:'dd.MM.yyyy' }}</span><span>{{ currency(part.amount) }} · Kalan {{ currency(part.balance) }}{{ part.isOverdue ? ' · Vadesi geçti' : '' }}</span></li>
+              <li [class.overdue]="part.isOverdue"><span>{{ part.sequence }}. taksit, {{ part.dueOn | date:'dd.MM.yyyy' }}</span><span>{{ currency(part.amount) }}, Kalan {{ currency(part.balance) }}{{ part.isOverdue ? ', Vadesi geçti' : '' }}</span></li>
             }</ol>
           }
           <div class="row">
@@ -65,19 +65,19 @@
         </article>
       } @empty { <p>Ücret kaydı bulunmuyor.</p> }
     </div>
-    <nav class="row" aria-label="Ücret sayfaları"><span>{{ summary.totalCount }} ücret · {{ summary.pageNumber }}. sayfa</span><button type="button" [disabled]="summary.pageNumber <= 1 || loading() || pending()" (click)="loadAccount(summary.pageNumber - 1)">Önceki</button><button type="button" [disabled]="summary.pageNumber * summary.pageSize >= summary.totalCount || loading() || pending()" (click)="loadAccount(summary.pageNumber + 1)">Sonraki</button></nav>
+    <nav class="row" aria-label="Ücret sayfaları"><span>{{ summary.totalCount }} ücret, {{ summary.pageNumber }}. sayfa</span><button type="button" [disabled]="summary.pageNumber <= 1 || loading() || pending()" (click)="loadAccount(summary.pageNumber - 1)">Önceki</button><button type="button" [disabled]="summary.pageNumber * summary.pageSize >= summary.totalCount || loading() || pending()" (click)="loadAccount(summary.pageNumber + 1)">Sonraki</button></nav>
   }
   @if (historyFee(); as selectedFee) {
-    <section class="history"><h3>{{ selectedFee.title }} · Tahsilat geçmişi</h3>
+    <section class="history"><h3>{{ selectedFee.title }}, Tahsilat geçmişi</h3>
       @if (historyLoading()) { <p role="status">Tahsilatlar yükleniyor…</p> }
       @if (historyError()) { <p role="alert" class="error">{{ historyError() }}</p><button type="button" [disabled]="historyLoading() || pending()" (click)="loadHistory(selectedFee)">Geçmişi yeniden yükle</button> }
       @if (history(); as payments) {
         @for (payment of payments.items; track payment.id) {
-          <article class="row receipt" [attr.data-payment-id]="payment.id"><div><strong>{{ currency(payment.amount) }}</strong><p>{{ payment.receivedOn | date:'dd.MM.yyyy' }} · {{ paymentMethod(payment.method) }} · {{ payment.reversalOfPaymentId ? 'Düzeltme' : 'Tahsilat' }}</p><p class="wrap">{{ payment.reference }}</p></div>
+          <article class="row receipt" [attr.data-payment-id]="payment.id"><div><strong>{{ currency(payment.amount) }}</strong><p>{{ payment.receivedOn | date:'dd.MM.yyyy' }}, {{ paymentMethod(payment.method) }}, {{ payment.reversalOfPaymentId ? 'Düzeltme' : 'Tahsilat' }}</p><p class="wrap">{{ payment.reference }}</p></div>
             @if (canManage() && !selectedFee.isCancelled && payment.amount > 0) { <button type="button" [disabled]="pending() || loading()" (click)="openReverse(selectedFee, payment)">Tahsilatı düzelt</button> }
           </article>
         } @empty { <p>Tahsilat kaydı yok.</p> }
-        <nav class="row" aria-label="Tahsilat geçmişi sayfaları"><span>{{ payments.totalCount }} hareket · {{ payments.pageNumber }}. sayfa</span><button type="button" [disabled]="payments.pageNumber <= 1 || historyLoading() || pending()" (click)="loadHistory(selectedFee, payments.pageNumber - 1)">Önceki</button><button type="button" [disabled]="payments.pageNumber * payments.pageSize >= payments.totalCount || historyLoading() || pending()" (click)="loadHistory(selectedFee, payments.pageNumber + 1)">Sonraki</button></nav>
+        <nav class="row" aria-label="Tahsilat geçmişi sayfaları"><span>{{ payments.totalCount }} hareket, {{ payments.pageNumber }}. sayfa</span><button type="button" [disabled]="payments.pageNumber <= 1 || historyLoading() || pending()" (click)="loadHistory(selectedFee, payments.pageNumber - 1)">Önceki</button><button type="button" [disabled]="payments.pageNumber * payments.pageSize >= payments.totalCount || historyLoading() || pending()" (click)="loadHistory(selectedFee, payments.pageNumber + 1)">Sonraki</button></nav>
       }
     </section>
   }

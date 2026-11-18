@@ -8,14 +8,19 @@ import { RouterLink } from '@angular/router';
     imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section role="status" aria-live="polite"
-            class="flex flex-col gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-100">
-            <h3 #heading tabindex="-1" class="text-xl font-bold rounded focus:outline focus:outline-2 focus:outline-offset-4 focus:outline-emerald-700 focus-visible:outline-2">{{ title() }}</h3>
-            <p class="leading-relaxed">{{ message() }}</p>
-            <a routerLink="/auth/login" [queryParams]="loginQueryParams()"
-                class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700">Giriş yap</a>
+        <section role="status" aria-live="polite" class="success">
+            <h3 #heading tabindex="-1" class="success__title focus-visible:outline-2">{{ title() }}</h3>
+            <p class="success__message">{{ message() }}</p>
+            <a routerLink="/auth/login" [queryParams]="loginQueryParams()" class="ds-btn ds-btn--primary ds-btn--large ds-btn--block">Giriş yap</a>
         </section>
-    `
+    `,
+  styles: [`
+        .success { display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid currentColor; border-radius: var(--ds-radius);
+            background: var(--ds-success-soft); color: var(--ds-success); }
+        .success__title { margin: 0; color: var(--ds-text); font-size: 20px; font-weight: 700; border-radius: 4px; }
+        .success__title:focus { outline: 3px solid var(--ds-focus, currentColor); outline-offset: 4px; }
+        .success__message { margin: 0; color: var(--ds-text); font-size: 15px; line-height: 1.6; }
+    `]
 })
 export class RegistrationSuccessComponent {
     readonly title = input.required<string>();

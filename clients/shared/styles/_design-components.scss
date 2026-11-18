@@ -1,0 +1,239 @@
+// eduivme ortak bileşenleri (redesign, 18.11.2026). Yalnız --ds-* değişkenlerini kullanır; sabit renk yok.
+// Kurallar: .claude/skills/eduivme-design/SKILL.md. Bileşenler data-brand kapsamı içinde çalışır.
+
+// hidden özniteliği, display veren sınıflardan (ds-auth, flex düzenleri) her zaman üstün gelir.
+[data-brand][hidden], [data-brand] [hidden] { display: none !important; }
+
+:where([data-brand]) :focus-visible {
+  outline: 3px solid var(--ds-focus);
+  outline-offset: 2px;
+}
+
+// Düğmeler: ekran başına tek ana düğme (ds-btn--primary); ikincil eylemler ds-btn--secondary ya da ds-btn--quiet.
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1.5px solid transparent;
+  border-radius: var(--ds-radius-button);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.ds-btn:disabled { cursor: not-allowed; }
+.ds-btn--block { width: 100%; }
+.ds-btn--large { min-height: 52px; font-size: 17px; }
+.ds-btn--primary { background: var(--ds-primary); color: var(--ds-on-primary); }
+.ds-btn--primary:hover:not(:disabled) { background: var(--ds-primary-hover); }
+.ds-btn--primary:disabled { background: var(--ds-line); color: var(--ds-muted); }
+.ds-btn--secondary { background: var(--ds-surface); border-color: var(--ds-field); color: var(--ds-text); }
+.ds-btn--secondary:hover:not(:disabled) { background: var(--ds-soft); }
+.ds-btn--secondary:disabled { color: var(--ds-muted); }
+.ds-btn--quiet { min-height: 44px; padding: 0 8px; background: transparent; color: var(--ds-link); }
+.ds-btn--quiet:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
+
+.ds-link {
+  color: var(--ds-link);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.ds-link:hover { text-decoration-thickness: 2px; }
+
+// Form alanları: etiket her zaman görünür; hata alanın hemen altında.
+.ds-field { display: flex; flex-direction: column; gap: 6px; }
+.ds-field__label, .ds-field__row { color: var(--ds-text); font-size: 14px; font-weight: 600; }
+.ds-field__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ds-field__row .ds-link { display: inline-flex; align-items: center; min-height: 44px; margin: -12px 0; font-weight: 500; }
+.ds-field__hint { color: var(--ds-muted); font-size: 13px; line-height: 1.5; }
+.ds-field__error { color: var(--ds-danger); font-size: 13px; font-weight: 500; line-height: 1.5; }
+
+.ds-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid var(--ds-field);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-surface);
+  color: var(--ds-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+}
+.ds-input::placeholder { color: var(--ds-muted); opacity: 1; }
+.ds-input:focus-visible { outline-offset: 1px; }
+.ds-input[aria-invalid='true'] { border-color: var(--ds-danger); }
+.ds-input--code { text-align: center; font-size: 24px; font-weight: 600; letter-spacing: 0.4em; font-variant-numeric: tabular-nums; }
+
+.ds-input-wrap { position: relative; display: block; }
+.ds-input-wrap .ds-input { padding-right: 52px; }
+.ds-input-action {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--ds-radius-control);
+  background: transparent;
+  color: var(--ds-muted);
+  cursor: pointer;
+}
+.ds-input-action:hover { color: var(--ds-text); }
+
+.ds-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--ds-text); font-size: 15px; cursor: pointer; }
+.ds-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--ds-primary); }
+
+.ds-divider { display: flex; align-items: center; gap: 12px; color: var(--ds-muted); font-size: 14px; }
+.ds-divider::before, .ds-divider::after { content: ''; flex: 1; height: 1px; background: var(--ds-line); }
+
+// Bildirim kutuları: anlam yalnız renkle verilmez, metin her zaman ne olduğunu ve ne yapılacağını söyler.
+.ds-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--ds-danger-line);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-danger-soft);
+  color: var(--ds-danger);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.ds-alert--warning { border-color: currentColor; background: var(--ds-warning-soft); color: var(--ds-warning); }
+.ds-alert .ds-btn--quiet { align-self: flex-start; margin-left: -8px; color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+
+.ds-code {
+  display: block;
+  padding: 12px 14px;
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-soft);
+  color: var(--ds-text);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.ds-code-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 12px; list-style: none; border-radius: var(--ds-radius-control); background: var(--ds-soft); }
+.ds-code-list li { color: var(--ds-text); font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; text-align: center; user-select: all; }
+
+.ds-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ds-spin 0.8s linear infinite;
+}
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+
+.ds-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Giriş ve kayıt sayfası düzeni: solda ürünü anlatan alan, sağda form. Telefonda yalnız form görünür.
+.ds-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--ds-bg);
+}
+.ds-auth__visual {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  box-sizing: border-box;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  padding: 56px clamp(32px, 5vw, 72px);
+  overflow: hidden;
+  background: var(--ds-visual-bg);
+  color: var(--ds-visual-text);
+}
+.ds-auth__visual > * { position: relative; }
+.ds-auth__headline { max-width: 520px; margin: 0; font-size: clamp(34px, 3.2vw, 44px); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+.ds-auth__sub { max-width: 480px; margin: 0; color: var(--ds-visual-muted); font-size: 18px; line-height: 1.55; }
+.ds-auth__place { color: var(--ds-visual-muted); font-size: 15px; }
+.ds-auth__points { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+.ds-auth__points li { display: flex; align-items: center; gap: 10px; }
+.ds-auth__points li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ds-accent); }
+.ds-auth__sample {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  width: min(100%, 400px);
+  padding: 20px;
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow);
+  color: var(--ds-text);
+}
+
+.ds-auth__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  background: var(--ds-surface);
+}
+.ds-auth__panel { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 400px; }
+.ds-auth__brand { display: flex; align-items: center; gap: 12px; color: var(--ds-text); text-decoration: none; }
+.ds-auth__brand img { flex: none; }
+.ds-auth__brand-name { display: block; font-size: 22px; font-weight: 700; line-height: 1.1; }
+.ds-auth__brand-note { display: block; margin-top: 2px; color: var(--ds-muted); font-size: 13px; }
+.ds-auth__heading { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.ds-auth__title { margin: 0; color: var(--ds-text); font-size: 30px; font-weight: 700; line-height: 1.15; letter-spacing: -0.015em; }
+.ds-auth__lead { margin: 0; color: var(--ds-muted); font-size: 15px; line-height: 1.5; }
+.ds-auth__form { display: flex; flex-direction: column; gap: 18px; }
+.ds-auth__footer { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; color: var(--ds-muted); font-size: 15px; }
+.ds-auth__footer > * { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; min-height: 36px; }
+
+@media (max-width: 900px) {
+  .ds-auth { grid-template-columns: 1fr; }
+  .ds-auth__visual { display: none; }
+  .ds-auth__main { align-items: flex-start; padding: 32px 20px 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-brand]) *, :where([data-brand]) *::before, :where([data-brand]) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Form düzeni yardımcıları: yan yana iki alan, başlıklı alan grubu, geri bağlantısı, ortalanmış yığın.
+.ds-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+@media (max-width: 560px) { .ds-form-row { grid-template-columns: 1fr; } }
+.ds-fieldset { margin: 0; padding: 16px 16px 0; border: 1px solid var(--ds-line); border-radius: var(--ds-radius); }
+.ds-fieldset legend { padding: 0 6px; color: var(--ds-text); font-size: 15px; font-weight: 600; }
+.ds-fieldset__fields { display: flex; flex-direction: column; }
+.ds-back-link { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin: -12px 0 -4px; font-weight: 500; }
+.ds-center-stack { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.ds-center-stack .ds-field__hint, .ds-auth__form > .ds-field__hint, .ds-auth__panel > .ds-field__hint { margin: 0; }
+.ds-field__rules { display: block; margin: -12px 0 6px; }

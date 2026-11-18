@@ -26,6 +26,9 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
+    // Redesign 18.11.2026: the management panel carries the eduivme identity; on <html> so dialogs and menus opened in
+    // the page's overlay take it too (shared/styles/_design-tokens.scss bridges --ui-* and Material to --ds-*).
+    document.documentElement.setAttribute('data-brand', 'eduivme');
 
     this.checkMaintenanceMode();
     // Poll every 10 seconds
@@ -33,6 +36,9 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (isPlatformBrowser(this.platformId) && document.documentElement.getAttribute('data-brand') === 'eduivme') {
+      document.documentElement.removeAttribute('data-brand');
+    }
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }

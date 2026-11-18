@@ -2,7 +2,7 @@
     <mat-card class="register-card">
 
         <mat-card-content>
-            <div class="existing-account"><p>Zaten Koçluk hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+            <div class="existing-account"><p>maxkoç ya da başka bir eduivme hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
               {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
             </button></div>
             @if (joinExisting) { <app-existing-product-join product="speed-reading" account="teacher" /> }
@@ -68,7 +68,7 @@
                     </mat-form-field>
                     <app-password-requirements [password]="registerForm.get('password')?.value" describedById="password-rules" />
                     <mat-form-field appearance="outline">
-                        <mat-label>Şifre Tekrar</mat-label>
+                        <mat-label>Şifre tekrar</mat-label>
                         <input matInput formControlName="confirmPassword"
                             [type]="hideConfirmPassword ? 'password' : 'text'" autocomplete="new-password">
                         <button mat-icon-button matSuffix type="button" aria-label="Parola tekrarını göster veya gizle"
@@ -89,21 +89,16 @@
                     (acceptancesChange)="legalAcceptances = $event"
                     (readinessChange)="legalReady = $event"></app-registration-legal-consent>
 
-                <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading"
-                    class="submit-btn full-width">
-                    <mat-spinner diameter="20" *ngIf="isLoading" class="mr-2 inline-block"></mat-spinner>
+                <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading">
+                    @if (isLoading) { <span class="ds-spinner" aria-hidden="true"></span> }
                     {{ isLoading ? 'Kaydediliyor...' : 'Öğretmen hesabını oluştur' }}
                 </button>
 
                 <div class="divider-text">
-                    <span>VEYA GOOGLE İLE</span>
+                    <span>ya da Google ile</span>
                 </div>
 
                 <div id="google-register-teacher-button" class="google-btn-wrapper"></div>
-
-                <div class="login-link">
-                    Zaten hesabınız var mı? <a routerLink="/auth/login">Giriş Yap</a>
-                </div>
             </form>
         </mat-card-content>
     </mat-card>

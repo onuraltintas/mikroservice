@@ -5,7 +5,7 @@
 
   <header class="report-identity">
     <div class="identity-copy">
-      <p class="report-eyebrow">KOÇLUK · ÖĞRENCİ RAPORU</p>
+      <p class="report-eyebrow">Koçluk, öğrenci raporu</p>
       <h2 id="student-report-title">{{ student.fullName }}</h2>
       <p class="student-context">
         {{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}
@@ -23,7 +23,7 @@
   @if (scoreVisible()) { <app-student-score-estimate [studentId]="student.userId" /> }
   <section class="summary-section" aria-label="Öğrenci ilerleme özeti">
     <div class="section-heading">
-      <div><p class="report-eyebrow">GENEL BAKIŞ</p><h3>İlerleme özeti</h3></div>
+      <div><p class="report-eyebrow">Genel bakış</p><h3>İlerleme özeti</h3></div>
       <span class="summary-caption">Koçluk verileri</span>
     </div>
 
@@ -69,7 +69,7 @@
     @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" [briefOnly]="briefMode()" /> }
     <header class="history-heading">
       <div>
-        <p class="report-eyebrow">KAYIT DÖKÜMÜ</p>
+        <p class="report-eyebrow">Kayıt dökümü</p>
         <h3 id="history-title">Geçmiş kayıtlar</h3>
         <p>Öğrencinin önceki kurumlarında oluşan Koçluk kayıtları da kapsanır.</p>
       </div>

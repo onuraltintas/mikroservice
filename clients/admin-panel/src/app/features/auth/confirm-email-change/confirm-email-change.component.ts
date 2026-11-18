@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { IdentityService } from '../../../core/services/identity.service';
@@ -15,43 +16,38 @@ import { IdentityService } from '../../../core/services/identity.service';
 @Component({
   selector: 'app-confirm-email-change',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, AuthShellComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="confirm-change" aria-labelledby="confirm-change-title">
-      <section>
-        <h1 id="confirm-change-title">Yeni e-posta adresini onayla</h1>
+    <app-auth-shell>
+      <section class="ds-auth__form" aria-labelledby="confirm-change-title">
+        <div class="ds-auth__heading"><h1 id="confirm-change-title" class="ds-auth__title">Yeni e-posta adresini onayla</h1></div>
         @if (state() === 'done') {
           <p role="status">E-posta adresin değiştirildi. Bundan sonra giriş yaparken ve bildirimlerde yeni adresin kullanılacak.</p>
-          @if (signedIn()) { <a [routerLink]="accountPage()">Hesabım'a dön</a> }
-          @else { <a routerLink="/auth/login">Giriş yap</a> }
+          @if (signedIn()) { <a class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" [routerLink]="accountPage()">Hesabım'a dön</a> }
+          @else { <a class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" routerLink="/auth/login">Giriş yap</a> }
         } @else if (!userId || !token) {
           <p role="alert">Bağlantı eksik görünüyor. E-postadaki bağlantının tamamını aç ya da Hesabım sayfasından yeni bir bağlantı iste.</p>
-          <a routerLink="/auth/login">Giriş sayfasına dön</a>
+          <a class="ds-link" routerLink="/auth/login">Giriş sayfasına dön</a>
         } @else if (previewError()) {
           <p role="alert">{{ previewError() }}</p>
-          <a routerLink="/auth/login">Giriş sayfasına dön</a>
+          <a class="ds-link" routerLink="/auth/login">Giriş sayfasına dön</a>
         } @else if (!currentMasked()) {
           <p role="status">Bağlantı kontrol ediliyor…</p>
         } @else {
           <p data-testid="change-account">Bu onay, şu an <strong>{{ currentMasked() }}</strong> adresini kullanan hesabın e-posta adresini bu bağlantının gönderildiği adresle değiştirir. Bu hesap senin değilse onaylama ve bu e-postayı dikkate alma.</p>
           <p>Onayladığında bu hesabın bütün oturumları kapanır ve bağlı Google girişi kaldırılır; yeni adresin ve şifrenle giriş yaparsın.</p>
           @if (error()) { <p role="alert">{{ error() }}</p> }
-          <button type="button" data-testid="confirm-email-change" [disabled]="state() === 'working'" (click)="confirm()">
+          <button type="button" class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" data-testid="confirm-email-change" [disabled]="state() === 'working'" (click)="confirm()">
             {{ state() === 'working' ? 'Onaylanıyor…' : 'Yeni adresimi onayla' }}</button>
         }
       </section>
-    </main>`,
+    </app-auth-shell>`,
   styles: [`
-    .confirm-change { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: #f8fafc; color: #111827; }
-    section { width: 100%; max-width: 440px; display: grid; gap: 16px; padding: 32px 24px; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; }
-    h1 { margin: 0; font-size: 24px; }
-    p { margin: 0; line-height: 1.5; }
-    [role="alert"] { padding: 12px 16px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-weight: 600; }
-    [role="status"] { padding: 12px 16px; border-radius: 10px; background: #f0fdf4; color: #15803d; font-weight: 600; }
-    button { min-height: 44px; border: 0; border-radius: 10px; background: #4f46e5; color: #fff; font-weight: 700; cursor: pointer; }
-    button:disabled { opacity: .6; cursor: not-allowed; }
-    a { color: #4338ca; font-weight: 650; }
+    p { margin: 0; color: var(--ds-text); font-size: 15px; line-height: 1.6; }
+    [role="alert"] { padding: 12px 14px; border: 1px solid var(--ds-danger-line); border-radius: var(--ds-radius-control); background: var(--ds-danger-soft); color: var(--ds-danger); font-weight: 500; }
+    [role="status"] { padding: 12px 14px; border: 1px solid currentColor; border-radius: var(--ds-radius-control); background: var(--ds-success-soft); color: var(--ds-success); font-weight: 500; }
+    .ds-link { align-self: flex-start; }
   `]
 })
 export class ConfirmEmailChangeComponent implements OnInit {

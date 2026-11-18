@@ -30,14 +30,14 @@ import { ParentPlanWeek, parentPlanDays, planClock, parentTaskState, shiftWeek, 
           <ol class="days">
             @for (day of days(); track day.date) {
               <li [class.today]="day.isToday">
-                <h3>{{ day.label }}@if (day.isToday) { <small> · bugün</small> }</h3>
+                <h3>{{ day.label }}@if (day.isToday) { <small>, bugün</small> }</h3>
                 @if (day.tasks.length) {
                   <ul>
                     @for (task of day.tasks; track $index) {
                       <li [class.done]="task.completed">
                         <span class="when">{{ clock(task.startMinute, task.minutes) }}</span>
                         <span class="what"><strong>{{ task.title }}</strong>
-                          <small>{{ task.lesson || 'Çalışma' }}@if (task.questions) { · {{ task.questions }} soru }@if (task.continuation) { · yarım kalanın devamı }</small></span>
+                          <small>{{ task.lesson || 'Çalışma' }}@if (task.questions) {, {{ task.questions }} soru }@if (task.continuation) {, yarım kalanın devamı }</small></span>
                         <span class="state" [class.late]="taskState(task) === 'Gecikti'">{{ taskState(task) }}</span>
                       </li>
                     }

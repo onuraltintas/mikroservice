@@ -1,25 +1,9 @@
-// Login component styles
-// This file is intentionally left minimal as we are using Tailwind CSS classes in the HTML.
-// You can add specific overrides here if needed.
+// Giriş formunun yalnız bu sayfaya ait parçaları. Çerçeve: auth-shell; ortak bileşenler: shared/styles/_design-components.scss.
+:host { display: block; }
 
-:host {
-    display: block;
-    width: 100%;
-}
+.login-google { display: flex; justify-content: center; min-height: 44px; overflow-x: hidden; }
 
-.google-btn-wrapper {
-    ::ng-deep {
-        asl-google-signin-button {
-            display: flex;
-            justify-content: center;
-            transform: scale(1.2); // Google butonu standart 40px'tir, 1.2 scale ile tam 48px olur
-            transform-origin: center;
-            margin: 10px 0;
-        }
-    }
-}
-
-.auth-background-pattern {
-    background-image: radial-gradient(#fff 1px, transparent 1px);
-    background-size: 24px 24px;
-}
+.login-recovery { display: flex; flex-direction: column; gap: 14px; }
+.login-recovery summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; }
+.login-recovery[open] summary { margin-bottom: 12px; }
+.login-recovery .ds-btn { margin-top: 12px; }

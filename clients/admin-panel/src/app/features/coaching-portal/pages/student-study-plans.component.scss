@@ -5,7 +5,7 @@
 h1 { font-size: 1.8rem; font-weight: 750; margin: .2rem 0 .5rem; }
 h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: .6rem; }
 h3 { font-weight: 650; }
-.eyebrow { color: var(--ui-brand-text); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+.eyebrow { color: var(--ui-brand-text); font-size: .8rem; letter-spacing: 0; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
 .plan-toolbar { padding: 1rem 1.25rem; }
 .plan-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1rem; }

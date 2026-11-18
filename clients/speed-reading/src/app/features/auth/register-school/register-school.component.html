@@ -3,7 +3,7 @@
 
 
         <mat-card-content>
-            <div class="existing-account"><p>Zaten Koçluk hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+            <div class="existing-account"><p>maxkoç ya da başka bir eduivme hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
               {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
             </button></div>
             @if (joinExisting) { <app-existing-product-join product="speed-reading" account="institution" /> }
@@ -134,7 +134,7 @@
                     </mat-form-field>
                     <app-password-requirements [password]="registerForm.get('password')?.value" describedById="password-rules" />
                     <mat-form-field appearance="outline">
-                        <mat-label>Şifre Tekrar</mat-label>
+                        <mat-label>Şifre tekrar</mat-label>
                         <input matInput formControlName="confirmPassword"
                             [type]="hideConfirmPassword ? 'password' : 'text'" autocomplete="new-password">
                         <button mat-icon-button matSuffix type="button" aria-label="Parola tekrarını göster veya gizle"
@@ -152,15 +152,11 @@
 
                 <!-- Actions -->
                 <div class="actions-container">
-                    <button mat-raised-button color="primary" type="submit"
-                        [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading" class="submit-btn full-width">
-                        <mat-spinner diameter="24" *ngIf="isLoading" class="ui-spinner--centered"></mat-spinner>
+                    <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit"
+                        [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading">
+                        @if (isLoading) { <span class="ds-spinner" aria-hidden="true"></span> }
                         <span *ngIf="!isLoading">Kurum hesabını oluştur</span>
                     </button>
-
-                    <div class="login-link">
-                        Zaten bir hesabınız var mı? <a routerLink="/auth/login">Giriş Yapın</a>
-                    </div>
                 </div>
 
             </form>

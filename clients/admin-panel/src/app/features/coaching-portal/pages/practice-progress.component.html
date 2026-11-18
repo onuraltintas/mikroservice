@@ -23,10 +23,10 @@
       @for (goal of data.goals; track goal.goalId + (goal.examCode || '')) {
         <article><h4>{{goal.title}}</h4>@if (goal.catalogName) {
           <p>{{goal.catalogName}}</p>
-          <p>@if(goal.minimumScore !== null){Kaynak taban puanı: {{goal.minimumScore}} } @if(goal.rank !== null){ · Başarı sırası: {{goal.rank}} } @if(goal.scoreYear !== null){ · {{goal.scoreYear}} verisi }</p>
+          <p>@if(goal.minimumScore !== null){Kaynak taban puanı: {{goal.minimumScore}} } @if(goal.rank !== null){, Başarı sırası: {{goal.rank}} } @if(goal.scoreYear !== null){, {{goal.scoreYear}} verisi }</p>
         }
         @if (goal.targetNet !== null) { <p>{{examName(goal.examCode)}} hedefi: <strong>{{goal.targetNet}} net</strong></p>
-          @for (comparison of goal.comparisons; track comparison.source) { <p>{{source(comparison.source)}} · {{comparison.examDate | date:'dd.MM.yyyy'}}: {{comparison.latestNet | number:'1.2-2'}} net; hedefe kalan {{comparison.remainingNet | number:'1.2-2'}} net.</p> }
+          @for (comparison of goal.comparisons; track comparison.source) { <p>{{source(comparison.source)}}, {{comparison.examDate | date:'dd.MM.yyyy'}}: {{comparison.latestNet | number:'1.2-2'}} net; hedefe kalan {{comparison.remainingNet | number:'1.2-2'}} net.</p> }
           @if (!goal.comparisons.length) { <p>Seçilen kapsamda bu döneme ait deneme yok.</p> }
         } @else { <p>Karşılaştırmak için hedef ayrıntılarından sınav kapsamı ve net hedefi belirle.</p> }
         </article>
@@ -41,7 +41,7 @@
 <p>{{ data.fromDate | coachingDate }} – {{ data.toDate | coachingDate }}. Her kapsam ve kayıt kaynağının son altı denemesi ayrı değerlendirilir.</p>
       @if (!data.trends.length) { <p>Bu dönemde kapsamı belirlenmiş deneme sonucu yok. Deneme sonucu ekleyerek gelişimini izleyebilirsin.</p> }
       @for (trend of data.trends; track trend.examCode + trend.source) {
-        <article><h3>{{trend.name}} · {{source(trend.source)}}</h3>
+        <article><h3>{{trend.name}}, {{source(trend.source)}}</h3>
           <div class="points">@for (point of trend.points; track point.examId) { <div><small>{{point.examDate | date:'dd.MM.yyyy'}}</small><span>{{point.title}}</span><p><strong>{{point.net | number:'1.2-2'}} net</strong></p></div> }</div>
           <p>İlk ve son deneme farkı: {{trend.change === null ? 'En az iki deneme gerekli' : (trend.change | number:'1.2-2') + ' net'}}</p>
           <details><summary>Ders gelişimi ve tekrar öncelikleri</summary><p>Son denemelerde net/soru oranı %50'nin altında olan testler tekrar önceliğidir; bu bilgi belirli bir konunun öğrenilmediği anlamına gelmez.</p>
@@ -69,7 +69,7 @@
       @if (report(); as data) {
       <h3>Çalışma planı</h3><p>Aktif planın seçilen döneminde {{data.completedTasks}} / {{data.scheduledTasks}} çalışma tamamlandı. Aktif planda {{data.overdueTasks}} günü geçmiş çalışma var; {{data.pinnedOverdueTasks}} tanesi sabit.</p>
       <p>{{reason(data.recoveryReason)}}</p>
-      @for (proposal of data.recovery; track proposal.taskIds[0]) { <article><strong>{{proposal.title}}</strong><p>{{ proposal.previousDate | coachingDate }} {{time(proposal.previousStartMinute)}} → {{ proposal.plannedDate | coachingDate }} {{time(proposal.startMinute)}} · {{proposal.minutes}} dk</p>
+      @for (proposal of data.recovery; track proposal.taskIds[0]) { <article><strong>{{proposal.title}}</strong><p>{{ proposal.previousDate | coachingDate }} {{time(proposal.previousStartMinute)}} → {{ proposal.plannedDate | coachingDate }} {{time(proposal.startMinute)}}, {{proposal.minutes}} dk</p>
         @if (!readOnly) { <button type="button" (click)="review(proposal)" [disabled]="saving() || busy()">Öneriyi incele</button> }
       </article> }
       @if (selected(); as proposal) {

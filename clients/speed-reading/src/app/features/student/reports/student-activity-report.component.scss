@@ -41,14 +41,14 @@
 .streak-card {
   border-color: transparent;
   background: linear-gradient(135deg, var(--sp-streak), var(--sp-warning));
-  color: #fff;
+  color: var(--ui-brand-contrast);
 }
 
 .streak-container { display: flex; align-items: center; gap: 16px; }
 .streak-icon { font-size: 42px; }
 .streak-value { font-size: 2rem; font-weight: 800; line-height: 1.1; }
 .streak-label { margin-top: 4px; font-size: 0.9375rem; font-weight: 700; }
-.streak-record { margin-top: 3px; color: rgb(255 255 255 / 0.8); font-size: 0.8125rem; }
+.streak-record { margin-top: 3px; color: color-mix(in srgb, var(--ui-brand-contrast) 80%, transparent); font-size: 0.8125rem; }
 
 .chart-container { position: relative; height: 300px; margin-top: 16px; }
 

@@ -1,36 +1,47 @@
-<div class="registration-page">
-  <aside class="registration-story" aria-label="Master Hızlı Okuma">
-    <a routerLink="/" class="registration-brand" aria-label="Master Hızlı Okuma ana sayfası">
-      <img src="brand/master-hizli-okuma.svg" alt="" width="44" height="44">
-      <span><strong>Master Hızlı Okuma</strong><small>bir eduivme markası</small></span>
-    </a>
-    <div class="story-content">
-      <p class="story-eyebrow">OKU. ANLA. İLERLE.</p>
-      <h2>{{ copy.headline }}</h2>
-      <p class="story-introduction">{{ copy.introduction }}</p>
-      <div class="reading-visual" aria-hidden="true">
-        <div class="reading-paper"><span class="paper-label">HER SAYFADA BİR ADIM</span><i></i><i></i><i></i><i></i><i></i><span class="paper-sign">M<span>+</span></span></div>
-        <span class="reading-caption">Odak <b>·</b> Anlama <b>·</b> Akıcılık</span>
-      </div>
-      <ul class="story-benefits">
-        @for (benefit of copy.benefits; track benefit) { <li><mat-icon aria-hidden="true">check</mat-icon><span>{{ benefit }}</span></li> }
-      </ul>
+<!-- Redesign 18.11.2026 (tuval: "Giriş: Master Hızlı Okuma"). Renkler --ds-* değişkenlerinden gelir. -->
+<div class="ds-auth" data-brand="ho">
+  <section class="ds-auth__visual" aria-label="Master Hızlı Okuma hakkında">
+    <div class="shell-copy">
+      <h2 class="ds-auth__headline">{{ copy.headline }}</h2>
+      <p class="ds-auth__sub">{{ copy.introduction }}</p>
     </div>
-    <a routerLink="/" class="home-link"><mat-icon aria-hidden="true">arrow_back</mat-icon> Ana sayfaya dön</a>
-  </aside>
-  <main class="registration-main">
-    <div class="registration-topline"><span>{{ mode === 'login' ? 'Okuma yolculuğuna devam et' : 'Yeni bir başlangıç' }}</span><a [routerLink]="mode === 'login' ? '/auth/register' : '/auth/login'" queryParamsHandling="preserve">{{ mode === 'login' ? 'Hesap oluştur' : 'Giriş yap' }} <mat-icon aria-hidden="true">arrow_forward</mat-icon></a></div>
-    <div class="registration-workspace">
-      <header class="registration-heading"><p>MASTER HIZLI OKUMA</p><h1>{{ copy.title }}</h1><span>{{ copy.description }}</span></header>
+    <div class="reading-lines" aria-hidden="true">
+      <span></span>
+      <span class="reading-lines__current"><span class="reading-lines__read"></span><span class="reading-lines__focus"></span></span>
+      <span class="reading-lines__short"></span>
+    </div>
+    @if (copy.benefits.length) {
+      <ul class="ds-auth__points">
+        @for (benefit of copy.benefits; track benefit) { <li>{{ benefit }}</li> }
+      </ul>
+    } @else {
+      <p class="reading-skills">Hız, odak ve anlama birlikte gelişir.</p>
+    }
+  </section>
+
+  <main class="ds-auth__main">
+    <div class="ds-auth__panel" [class.shell-panel--wide]="mode === 'register'">
+      <a routerLink="/" class="ds-auth__brand" aria-label="Master Hızlı Okuma ana sayfası">
+        <img src="brand/master-hizli-okuma.svg" alt="" width="44" height="44">
+        <span><span class="ds-auth__brand-name">Master Hızlı Okuma</span><span class="ds-auth__brand-note">bir eduivme markası</span></span>
+      </a>
+      @if (mode !== 'page') {
+      <header class="ds-auth__heading">
+        <h1 class="ds-auth__title">{{ copy.title }}</h1>
+        <p class="ds-auth__lead">{{ copy.description }}</p>
+      </header>
+      }
       @if (mode === 'register') {
-      <nav class="account-navigation" aria-label="Kayıt türü">
-        @for (option of accounts; track option.value) {
-          <a [routerLink]="option.route" queryParamsHandling="preserve" [attr.aria-current]="account === option.value ? 'page' : null"><mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>{{ option.label }}</a>
-        }
-      </nav>
+        <nav class="account-navigation" aria-label="Kayıt türü">
+          @for (option of accounts; track option.value) {
+            <a [routerLink]="option.route" queryParamsHandling="preserve" [attr.aria-current]="account === option.value ? 'page' : null"><mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>{{ option.label }}</a>
+          }
+        </nav>
       }
       <ng-content />
-      <p class="registration-footnote"><mat-icon aria-hidden="true">lock_outline</mat-icon> Hesabın sana özel, gelişimin seninle birlikte.</p>
+      @if (mode === 'register') {
+        <p class="ds-auth__footer"><span>Zaten hesabın var mı? <a routerLink="/auth/login" queryParamsHandling="preserve" class="ds-link">Giriş yap</a></span></p>
+      }
     </div>
   </main>
 </div>

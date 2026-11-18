@@ -33,7 +33,7 @@ type Status = { text: string; failed?: boolean };
             <header>
               <span class="cp-child-avatar" aria-hidden="true">{{ initial(link.studentName) }}</span>
               <div><h3 [id]="'child-' + link.id">{{ link.studentName }}</h3>
-                <p class="cp-muted">{{ relationshipLabel(link.relationship) }}@if (link.verifiedAt) { · {{ link.verifiedAt | coachingDate }} tarihinden beri bağlı }</p></div>
+                <p class="cp-muted">{{ relationshipLabel(link.relationship) }}@if (link.verifiedAt) {, {{ link.verifiedAt | coachingDate }} tarihinden beri bağlı }</p></div>
             </header>
             @if (productsOf(link).length) {
               <ul class="cp-child-products">
@@ -44,7 +44,7 @@ type Status = { text: string; failed?: boolean };
                       <span class="cp-child-status" data-testid="child-status" [class.is-muted]="status(link, product)?.failed">{{ status(link, product)?.text ?? 'Yükleniyor…' }}</span>
                     </span>
                     <a class="cp-child-open" [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" [queryParams]="{ urun: slug(product) }"
-                      [attr.aria-label]="first(link.studentName) + ' · ' + productLabel(product) + ' ayrıntıları'">Ayrıntılar →</a>
+                      [attr.aria-label]="first(link.studentName) + ', ' + productLabel(product) + ' ayrıntıları'">Ayrıntılar →</a>
                   </li>
                 }
               </ul>
@@ -66,7 +66,7 @@ type Status = { text: string; failed?: boolean };
           <h2 id="pending-heading">Bekleyen istekler</h2>
           <ul class="cp-rows">
             @for (link of pending(); track link.id) {
-              <li><span class="cp-row-main"><strong>{{ link.studentName }}</strong><small>Çocuğunun onayını bekliyor · {{ link.requestedAt | coachingDate }}</small></span>
+              <li><span class="cp-row-main"><strong>{{ link.studentName }}</strong><small>Çocuğunun onayını bekliyor, {{ link.requestedAt | coachingDate }}</small></span>
                 <button type="button" class="cp-link-button" [disabled]="busy() === link.id" (click)="remove(link)">İsteği geri al</button></li>
             }
           </ul>

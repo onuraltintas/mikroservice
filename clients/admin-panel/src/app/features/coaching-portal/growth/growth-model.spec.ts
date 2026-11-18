@@ -65,7 +65,7 @@ describe('T6 growth model', () => {
     const estimate: ScoreEstimate = {
       estimates: [{ scoreType: 'SAY', name: 'SAY', modelYear: 2025, score: 380, scoreLow: 360, scoreHigh: 400, rank: 90000, rankBest: 80000,
         rankWorst: 100000, percentile: 12, examsUsed: 3, lastExamDate: '2026-10-20', includesDiplomaGrade: false }],
-      target: { targetName: 'Ege Üniversitesi · Bilgisayar Mühendisliği', scoreType: 'SAY', targetScore: 440, targetRank: 30000, targetPercentile: 4,
+      target: { targetName: 'Ege Üniversitesi, Bilgisayar Mühendisliği', scoreType: 'SAY', targetScore: 440, targetRank: 30000, targetPercentile: 4,
         scoreGap: 60, netGap: 12.5, rankGap: 60000, reached: false }, notice: null };
     const gauge = goalGauge(estimate)!;
     expect(gauge.headline).toBe('Hedefe 12,5 net kaldı');

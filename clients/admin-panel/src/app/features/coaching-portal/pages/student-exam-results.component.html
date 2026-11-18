@@ -13,9 +13,9 @@
     @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     @if (!busy() && !error() && !page().items.length) { <p>Henüz kendi girdiğin bir sonuç yok.</p> }
     @for (exam of page().items; track exam.id) { <button type="button" class="plan-row" (click)="open(exam.id)" [disabled]="busy()">
-      <strong>{{ exam.title }}</strong><span>{{exam.netSummary?.name || (exam.examType | coachingLabel:'examType')}} · {{ exam.examDate | coachingDate }}</span><span>@if (exam.score !== null && exam.score !== undefined) { {{ exam.score }} / {{ exam.maxScore }} } @else { Puan girilmedi } @if (exam.netSummary) { · {{exam.netSummary.net | number:'1.2-2'}} net }</span></button> }
+      <strong>{{ exam.title }}</strong><span>{{exam.netSummary?.name || (exam.examType | coachingLabel:'examType')}}, {{ exam.examDate | coachingDate }}</span><span>@if (exam.score !== null && exam.score !== undefined) { {{ exam.score }} / {{ exam.maxScore }} } @else { Puan girilmedi } @if (exam.netSummary) {, {{exam.netSummary.net | number:'1.2-2'}} net }</span></button> }
     <div class="pagination"><button type="button" (click)="loadList(page().pageNumber - 1)" [disabled]="busy() || page().pageNumber <= 1">Önceki</button>
-      <span>{{ page().pageNumber }} · {{ page().totalCount }} sonuç</span>
+      <span>{{ page().pageNumber }}, {{ page().totalCount }} sonuç</span>
       <button type="button" (click)="loadList(page().pageNumber + 1)" [disabled]="busy() || page().pageNumber * page().pageSize >= page().totalCount">Sonraki</button></div>
     <button type="button" class="secondary" (click)="loadList(page().pageNumber)" [disabled]="busy()">Listeyi yenile</button>
   </aside>}<div class="panel" [attr.aria-busy]="busy()">
@@ -36,7 +36,7 @@
         <label>Yanlış<input type="number" name="wrong" [(ngModel)]="wrongAnswers" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
         <label>Boş<input type="number" name="empty" [(ngModel)]="emptyAnswers" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label></div> }
       <h3>Ders/konu dağılımı (isteğe bağlı)</h3><p class="muted">Konu eklersen genel doğru/yanlış/boş sayıları bu satırlardan hesaplanır. Aynı soruyu iki kez sayma.</p>
-      @for (lesson of lessons; track $index; let i = $index) { <div class="draft-task"><strong>{{ lesson.lessonName }} · {{ lesson.topicName || 'Ders toplamı' }}</strong>
+      @for (lesson of lessons; track $index; let i = $index) { <div class="draft-task"><strong>{{ lesson.lessonName }}, {{ lesson.topicName || 'Ders toplamı' }}</strong>
         <div class="fields"><label>Soru<input type="number" [name]="'questions-'+i" [(ngModel)]="lesson.questionCount" (ngModelChange)="changed()" min="1" max="1000" step="1" required></label>
           <label>Doğru<input type="number" [name]="'correct-'+i" [(ngModel)]="lesson.correct" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
           <label>Yanlış<input type="number" [name]="'wrong-'+i" [(ngModel)]="lesson.wrong" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
@@ -51,8 +51,8 @@
       <label>Sınıf<input type="number" [(ngModel)]="grade" min="1" max="12" step="1" [disabled]="busy()"></label>
       <label>Sınav<select [(ngModel)]="examCode" [disabled]="busy()"><option value="">Tümü</option><option>LGS</option><option>TYT</option><option>AYT</option><option>YDT</option></select></label>
       <button type="button" (click)="searchTopics()" [disabled]="busy()">Konuları ara</button></div>
-      @for (lesson of catalogLessons(); track lesson.lessonId) { <button type="button" class="plan-row" (click)="addLesson(lesson.lessonId!)" [disabled]="busy() || lessons.length >= 50">{{ lesson.lessonName }} · Ders toplamını ekle</button> }
-      @for (topic of topics().items; track topic.id) { <button type="button" class="plan-row" (click)="addTopic(topic.id)" [disabled]="busy() || lessons.length >= 50">{{ topic.lessonName }} · {{ topic.name }} · Ekle</button> }
+      @for (lesson of catalogLessons(); track lesson.lessonId) { <button type="button" class="plan-row" (click)="addLesson(lesson.lessonId!)" [disabled]="busy() || lessons.length >= 50">{{ lesson.lessonName }}, Ders toplamını ekle</button> }
+      @for (topic of topics().items; track topic.id) { <button type="button" class="plan-row" (click)="addTopic(topic.id)" [disabled]="busy() || lessons.length >= 50">{{ topic.lessonName }}, {{ topic.name }}, Ekle</button> }
       <div class="pagination"><button type="button" (click)="searchTopics(topics().pageNumber - 1)" [disabled]="busy() || topics().pageNumber <= 1">Önceki</button>
         <span>{{ topics().totalCount }} konu</span><button type="button" (click)="searchTopics(topics().pageNumber + 1)" [disabled]="busy() || topics().pageNumber * topics().pageSize >= topics().totalCount">Sonraki</button></div>
     </div> }

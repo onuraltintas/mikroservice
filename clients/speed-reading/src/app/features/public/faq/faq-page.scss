@@ -1,160 +1,18 @@
-.faq-page {
-    .hero-section {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        color: white;
-        padding: 8rem 0 4rem;
-        text-align: center;
+@use '../public-page' as *;
+@include page-base;
 
-        .container {
-            max-width: 56rem;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            font-size: 1.125rem;
-            opacity: 0.9;
-        }
-    }
-
-    .filter-section {
-        background: #f8fafc;
-        padding: 1.5rem 0;
-        border-bottom: 1px solid #e5e7eb;
-
-        .container {
-            max-width: 56rem;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .category-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            justify-content: center;
-
-            button {
-                padding: 0.5rem 1.25rem;
-                border: 1px solid #e5e7eb;
-                background: white;
-                border-radius: 9999px;
-                font-size: 0.875rem;
-                font-weight: 500;
-                color: #4b5563;
-                cursor: pointer;
-                transition: all 0.2s ease;
-
-                &:hover {
-                    border-color: #667eea;
-                    color: #667eea;
-                }
-
-                &.active {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border-color: transparent;
-                }
-            }
-        }
-    }
-
-    .faq-list-section {
-        padding: 3rem 0 5rem;
-        background: white;
-
-        .container {
-            max-width: 56rem;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .faq-accordion {
-            .mat-expansion-panel {
-                margin-bottom: 1rem;
-                border: 1px solid #e5e7eb;
-                box-shadow: none !important;
-                border-radius: 0.75rem !important;
-
-                &:hover {
-                    background: #f9fafb;
-                }
-            }
-
-            .mat-expansion-panel-header {
-                padding: 1.5rem;
-                height: auto !important;
-                min-height: 72px;
-            }
-
-            .mat-content {
-                display: block !important;
-            }
-
-            .mat-panel-title {
-                margin-right: 0 !important;
-            }
-
-            .faq-header-content {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
-                width: 100%;
-            }
-
-            .category-badge {
-                display: inline-block;
-                padding: 0.35rem 0.85rem;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                font-size: 0.7rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                border-radius: 4px;
-                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-            }
-
-            .question-text {
-                font-size: 1rem;
-                font-weight: 600;
-                color: #1f2937;
-                line-height: 1.5;
-            }
-
-            .mat-expansion-panel-body {
-                padding: 0 1.5rem 1.5rem;
-
-                p {
-                    color: #6b7280;
-                    line-height: 1.7;
-                    margin: 0;
-                }
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #9ca3af;
-
-            mat-icon {
-                font-size: 3rem;
-                width: 3rem;
-                height: 3rem;
-                margin-bottom: 1rem;
-            }
-
-            p {
-                font-size: 1rem;
-            }
-        }
-    }
-}
+.filter-section { padding: 24px 0 8px; }
+.category-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.category-buttons button { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--ds-line); border-radius: 999px; background: var(--ds-surface); color: var(--ds-text); font: inherit; font-size: 15px; cursor: pointer; }
+.category-buttons button:hover { border-color: var(--ds-primary); }
+.category-buttons button.active { border-color: var(--ds-primary); background: var(--ds-primary); color: var(--ds-on-primary); }
+.faq-list-section { padding: 16px 0 72px; }
+.faq-accordion { display: block; border: 1px solid var(--ds-line); border-radius: var(--ds-radius); overflow: hidden; background: var(--ds-surface); }
+.faq-accordion ::ng-deep .mat-expansion-panel { margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: var(--ds-surface); }
+.faq-accordion ::ng-deep .mat-expansion-panel + .mat-expansion-panel { border-top: 1px solid var(--ds-line); }
+.faq-accordion ::ng-deep .mat-expansion-panel-header { min-height: 56px; height: auto; padding: 8px 20px; }
+.faq-accordion ::ng-deep .mat-expansion-panel-body { padding: 0 20px 20px; color: var(--ds-muted); line-height: 1.7; }
+.faq-header-content { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.category-badge { padding: 2px 10px; border-radius: 999px; background: var(--ds-soft); color: var(--ds-primary); font-size: 13px; font-weight: 600; }
+.question-text { color: var(--ds-text); font-weight: 500; }
+.empty-state { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 24px; border: 1px dashed var(--ds-field); border-radius: var(--ds-radius); color: var(--ds-muted); text-align: left; }

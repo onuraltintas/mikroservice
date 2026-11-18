@@ -19,54 +19,54 @@ import {
     <section class="space-y-6">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Koçluk ödevleri</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Kitap ödevleri ve fotoğraf teslimlerinin kayıtları.</p>
+          <h1 class="text-2xl font-bold text-(--ui-text)">Koçluk ödevleri</h1>
+          <p class="text-sm text-(--ui-text-muted)">Kitap ödevleri ve fotoğraf teslimlerinin kayıtları.</p>
       </div>
         <div class="flex gap-2">
           @if (canManage()) {
-            <a routerLink="/dashboard/coaching/assignments/new" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Yeni ödev</a>
+            <a routerLink="/dashboard/coaching/assignments/new" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) hover:bg-(--ui-brand)">Yeni ödev</a>
           }
           <button type="button" (click)="load()" [disabled]="loading()"
-            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200">
+            class="rounded-lg border border-(--ui-border) px-4 py-2 text-sm font-medium text-(--ui-text) disabled:opacity-50">
             Yenile
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-4 dark:border-gray-700 dark:bg-gray-800">
-        <label class="text-sm text-gray-600 dark:text-gray-300">Arama
+      <div class="grid grid-cols-1 gap-3 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-4 shadow-sm md:grid-cols-4">
+        <label class="text-sm text-(--ui-text-muted)">Arama
           <input [(ngModel)]="search" (keyup.enter)="applyFilters()" maxlength="200"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-900" placeholder="Başlık veya açıklama" />
+            class="mt-1 w-full rounded-lg border border-(--ui-border) px-3 py-2" placeholder="Başlık veya açıklama" />
         </label>
-        <label class="text-sm text-gray-600 dark:text-gray-300">Kaynak
+        <label class="text-sm text-(--ui-text-muted)">Kaynak
           <select [(ngModel)]="source" (change)="applyFilters()"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-900">
+            class="mt-1 w-full rounded-lg border border-(--ui-border) px-3 py-2">
             <option value="">Tümü</option><option value="Digital">Dijital</option><option value="Book">Kitap</option><option value="Mixed">Karma</option>
           </select>
         </label>
-        <label class="text-sm text-gray-600 dark:text-gray-300">Durum
+        <label class="text-sm text-(--ui-text-muted)">Durum
           <select [(ngModel)]="status" (change)="applyFilters()"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-900">
+            class="mt-1 w-full rounded-lg border border-(--ui-border) px-3 py-2">
             <option value="">Tümü</option><option value="Active">Aktif</option><option value="Completed">Tamamlandı</option><option value="Cancelled">İptal</option>
           </select>
         </label>
         <button type="button" (click)="applyFilters()"
-          class="self-end rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">
+          class="self-end rounded-lg border border-(--ui-border) px-4 py-2 text-sm font-medium text-(--ui-text)">
           Filtrele
         </button>
       </div>
 
-      @if (error()) { <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div> }
+      @if (error()) { <div class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
-      <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
-          <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+      <div class="overflow-x-auto rounded-xl border border-(--ui-border) bg-(--ui-surface) shadow-sm">
+        <table class="min-w-full divide-y divide-(--ui-border) text-sm">
+          <thead class="bg-(--ui-surface-muted) text-left text-xs text-(--ui-text-muted)">
             <tr><th class="px-4 py-3">Başlık</th><th class="px-4 py-3">Kaynak</th><th class="px-4 py-3">Kitap aralığı</th><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Ek</th><th class="px-4 py-3">Durum</th></tr>
           </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody class="divide-y divide-(--ui-border)">
             @for (assignment of assignments(); track assignment.id) {
               <tr>
-                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="text-indigo-600 hover:underline" [routerLink]="['/dashboard/coaching/assignments', assignment.id]">{{ assignment.title }}</a></td>
+                <td class="px-4 py-3 font-medium text-(--ui-text)"><a class="text-(--ui-brand-text) hover:underline" [routerLink]="['/dashboard/coaching/assignments', assignment.id]">{{ assignment.title }}</a></td>
                 <td class="px-4 py-3">{{ sourceLabel(assignment.source) }}</td>
                 <td class="px-4 py-3">{{ bookRange(assignment) }}</td>
                 <td class="px-4 py-3">{{ assignment.submittedStudentCount }}/{{ assignment.studentCount }}</td>
@@ -74,13 +74,13 @@ import {
                 <td class="px-4 py-3">{{ assignment.status | coachingLabel }}</td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">Kayıt bulunamadı.</td></tr>
+              <tr><td colspan="6" class="px-4 py-10 text-center text-(--ui-text-muted)">Kayıt bulunamadı.</td></tr>
             }
           </tbody>
         </table>
       </div>
 
-      <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+      <div class="flex items-center justify-between text-sm text-(--ui-text-muted)">
         <span>{{ totalCount() }} kayıt · Sayfa {{ page() }} / {{ totalPages() }}</span>
         <div class="flex gap-2">
           <button type="button" (click)="goTo(page() - 1)" [disabled]="page() <= 1 || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Önceki</button>

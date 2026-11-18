@@ -17,29 +17,29 @@ interface Audit { id:string;occurredAt:string;actorUserId:string;resourceType:st
       <h4 id="correction-heading" class="font-semibold">Gerekçeli düzeltme ve işlem geçmişi</h4>
       <p class="text-sm">Tamamlanmış görevler ve öğrenci beyanı değiştirilemez. Her işlem eski/yeni değerlerle kaydedilir.</p>
       @if(busy()) { <p role="status">İşlem sürüyor…</p> }
-      @if(error()) { <p role="alert" class="text-red-700">{{error()}}</p> }
+      @if(error()) { <p role="alert" class="text-(--ui-danger)">{{error()}}</p> }
       <fieldset [disabled]="busy()" class="space-y-3">
-        <label class="block">İşlem gerekçesi<textarea [(ngModel)]="reason" maxlength="200" class="block w-full rounded border p-2 dark:bg-gray-800"></textarea></label>
+        <label class="block">İşlem gerekçesi<textarea [(ngModel)]="reason" maxlength="200" class="block w-full rounded border p-2"></textarea></label>
         @if(plan && plan.status !== 'Archived') {
-          <label class="block">Düzeltilmiş plan başlığı<input [(ngModel)]="title" maxlength="200" class="block w-full rounded border p-2 dark:bg-gray-800" /></label>
+          <label class="block">Düzeltilmiş plan başlığı<input [(ngModel)]="title" maxlength="200" class="block w-full rounded border p-2" /></label>
           <button type="button" (click)="savePlan(false)" [disabled]="reason.trim().length < 5" class="rounded border px-3 py-2">Plan başlığını düzelt</button>
           <button type="button" (click)="savePlan(true)" [disabled]="reason.trim().length < 5" class="ml-2 rounded border px-3 py-2">Planı arşivle</button>
-          <label class="block">Düzeltilecek bekleyen görev<select [(ngModel)]="taskId" (ngModelChange)="selectTask()" class="block rounded border p-2 dark:bg-gray-800"><option value="">Görev seçin</option>@for(task of plan.tasks;track task.id) {@if(!task.isCompleted) {<option [value]="task.id">{{task.title}}</option>}}</select></label>
+          <label class="block">Düzeltilecek bekleyen görev<select [(ngModel)]="taskId" (ngModelChange)="selectTask()" class="block rounded border p-2"><option value="">Görev seçin</option>@for(task of plan.tasks;track task.id) {@if(!task.isCompleted) {<option [value]="task.id">{{task.title}}</option>}}</select></label>
           @if(taskId) {
-            <label class="block">Görev başlığı<input [(ngModel)]="taskTitle" maxlength="200" class="block rounded border p-2 dark:bg-gray-800" /></label>
-            <label class="block">Planlanan tarih<input type="date" [(ngModel)]="taskDate" class="block rounded border p-2 dark:bg-gray-800" /></label>
-            <label class="block">Planlanan dakika<input type="number" [(ngModel)]="taskMinutes" min="1" max="1440" class="block rounded border p-2 dark:bg-gray-800" /></label>
+            <label class="block">Görev başlığı<input [(ngModel)]="taskTitle" maxlength="200" class="block rounded border p-2" /></label>
+            <label class="block">Planlanan tarih<input type="date" [(ngModel)]="taskDate" class="block rounded border p-2" /></label>
+            <label class="block">Planlanan dakika<input type="number" [(ngModel)]="taskMinutes" min="1" max="1440" class="block rounded border p-2" /></label>
             <button type="button" (click)="saveTask()" [disabled]="reason.trim().length < 5" class="rounded border px-3 py-2">Görevi düzelt</button>
           }
         }
         <button type="button" (click)="loadGoals(1)" class="rounded border px-3 py-2">Düzeltilebilir hedefleri yükle</button>
         @if(goals();as result) {
-          <label class="block">Düzeltilecek hedef<select [(ngModel)]="goalId" (ngModelChange)="selectGoal()" class="block rounded border p-2 dark:bg-gray-800"><option value="">Hedef seçin</option>@for(goal of result.items;track goal.id) {<option [value]="goal.id">{{goal.title}} — kaydedilen ilerleme %{{goal.currentProgress}}</option>}</select></label>
+          <label class="block">Düzeltilecek hedef<select [(ngModel)]="goalId" (ngModelChange)="selectGoal()" class="block rounded border p-2"><option value="">Hedef seçin</option>@for(goal of result.items;track goal.id) {<option [value]="goal.id">{{goal.title}} — kaydedilen ilerleme %{{goal.currentProgress}}</option>}</select></label>
           <button type="button" (click)="loadGoals(goalPage-1)" [disabled]="goalPage<=1">Önceki hedefler</button><button type="button" (click)="loadGoals(goalPage+1)" [disabled]="goalPage*25>=result.totalCount">Sonraki hedefler</button>
           @if(goalId) {
-            <label class="block">Hedef açıklaması<textarea [(ngModel)]="goalDescription" maxlength="500" class="block w-full rounded border p-2 dark:bg-gray-800"></textarea></label>
-            <label class="block">Hedef tarihi<input type="date" [(ngModel)]="goalDate" class="block rounded border p-2 dark:bg-gray-800" /></label>
-            <label class="block">Hedef puanı<input type="number" [(ngModel)]="goalScore" min="0" max="999.99" step="0.01" class="block rounded border p-2 dark:bg-gray-800" /></label>
+            <label class="block">Hedef açıklaması<textarea [(ngModel)]="goalDescription" maxlength="500" class="block w-full rounded border p-2"></textarea></label>
+            <label class="block">Hedef tarihi<input type="date" [(ngModel)]="goalDate" class="block rounded border p-2" /></label>
+            <label class="block">Hedef puanı<input type="number" [(ngModel)]="goalScore" min="0" max="999.99" step="0.01" class="block rounded border p-2" /></label>
             <button type="button" (click)="saveGoal()" [disabled]="reason.trim().length<5" class="rounded border px-3 py-2">Hedefi düzelt</button>
           }
         }

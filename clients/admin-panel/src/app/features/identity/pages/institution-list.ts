@@ -17,69 +17,69 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
     <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kurum Yönetimi</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Kurumların açılışı, kapanışı, lisans limitleri ve aktiflik durumu.</p>
+          <h1 class="text-2xl font-bold text-(--ui-text)">Kurum Yönetimi</h1>
+          <p class="text-sm text-(--ui-text-muted)">Kurumların açılışı, kapanışı, lisans limitleri ve aktiflik durumu.</p>
         </div>
-        @if (canCreate()) { <button type="button" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white" (click)="showCreate.set(!showCreate())">
+        @if (canCreate()) { <button type="button" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-(--ui-brand-contrast)" (click)="showCreate.set(!showCreate())">
           {{ showCreate() ? 'Vazgeç' : 'Yeni Kurum' }}
         </button> }
       </header>
 
       @if (showCreate()) {
-        <form class="grid gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:grid-cols-4" (ngSubmit)="create()">
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="name" [(ngModel)]="draft.name" placeholder="Kurum adı" required maxlength="200">
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="type" [(ngModel)]="draft.type">
+        <form class="grid gap-3 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-4 shadow-sm md:grid-cols-4" (ngSubmit)="create()">
+          <input class="rounded-lg border p-2" name="name" [(ngModel)]="draft.name" placeholder="Kurum adı" required maxlength="200">
+          <select class="rounded-lg border p-2" name="type" [(ngModel)]="draft.type">
             @for (type of institutionTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }}</option> }
           </select>
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="provinceId" [(ngModel)]="draft.provinceId" (ngModelChange)="onCreateProvinceChange()"><option value="">İl seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select>
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="districtId" [(ngModel)]="draft.districtId" [disabled]="!draft.provinceId"><option value="">İlçe seçin</option>@for (district of createDistricts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select>
-          <div class="flex gap-2"><input class="min-w-0 flex-1 rounded-lg border p-2 dark:bg-gray-900" name="email" [(ngModel)]="draft.email" placeholder="E-posta" type="email" maxlength="255"><button class="rounded-lg bg-emerald-600 px-4 py-2 text-white" [disabled]="saving()">Kaydet</button></div>
+          <select class="rounded-lg border p-2" name="provinceId" [(ngModel)]="draft.provinceId" (ngModelChange)="onCreateProvinceChange()"><option value="">İl seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select>
+          <select class="rounded-lg border p-2" name="districtId" [(ngModel)]="draft.districtId" [disabled]="!draft.provinceId"><option value="">İlçe seçin</option>@for (district of createDistricts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select>
+          <div class="flex gap-2"><input class="min-w-0 flex-1 rounded-lg border p-2" name="email" [(ngModel)]="draft.email" placeholder="E-posta" type="email" maxlength="255"><button class="rounded-lg bg-(--ui-success-soft) px-4 py-2 text-(--ui-success)" [disabled]="saving()">Kaydet</button></div>
         </form>
       }
 
       @if (editing(); as institution) {
-        <form class="grid gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm dark:border-indigo-900 dark:bg-indigo-950/30 md:grid-cols-4" (ngSubmit)="saveEdit()">
-          <div class="md:col-span-4 font-semibold text-gray-900 dark:text-white">{{ institution.name }} kurumunu düzenle</div>
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editName" [(ngModel)]="editDraft.name" placeholder="Kurum adı" required maxlength="200">
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="editProvinceId" [(ngModel)]="editDraft.provinceId" (ngModelChange)="onEditProvinceChange()"><option value="">İl seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select>
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="editDistrictId" [(ngModel)]="editDraft.districtId" [disabled]="!editDraft.provinceId"><option value="">İlçe seçin</option>@for (district of editDistricts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select>
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editPhone" [(ngModel)]="editDraft.phone" placeholder="Telefon" maxlength="50">
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editEmail" [(ngModel)]="editDraft.email" placeholder="E-posta" type="email" maxlength="255">
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editWebsite" [(ngModel)]="editDraft.website" placeholder="Web sitesi" maxlength="500">
-          <div class="md:col-span-4 flex gap-2"><button class="rounded-lg bg-indigo-600 px-4 py-2 text-white" [disabled]="saving()">Kaydet</button><button type="button" class="rounded-lg border px-4 py-2" (click)="editing.set(null)">Vazgeç</button></div>
+        <form class="grid gap-3 rounded-xl border border-(--ui-brand-soft) bg-(--ui-brand-soft) p-4 shadow-sm md:grid-cols-4" (ngSubmit)="saveEdit()">
+          <div class="md:col-span-4 font-semibold text-(--ui-text)">{{ institution.name }} kurumunu düzenle</div>
+          <input class="rounded-lg border p-2" name="editName" [(ngModel)]="editDraft.name" placeholder="Kurum adı" required maxlength="200">
+          <select class="rounded-lg border p-2" name="editProvinceId" [(ngModel)]="editDraft.provinceId" (ngModelChange)="onEditProvinceChange()"><option value="">İl seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select>
+          <select class="rounded-lg border p-2" name="editDistrictId" [(ngModel)]="editDraft.districtId" [disabled]="!editDraft.provinceId"><option value="">İlçe seçin</option>@for (district of editDistricts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select>
+          <input class="rounded-lg border p-2" name="editPhone" [(ngModel)]="editDraft.phone" placeholder="Telefon" maxlength="50">
+          <input class="rounded-lg border p-2" name="editEmail" [(ngModel)]="editDraft.email" placeholder="E-posta" type="email" maxlength="255">
+          <input class="rounded-lg border p-2" name="editWebsite" [(ngModel)]="editDraft.website" placeholder="Web sitesi" maxlength="500">
+          <div class="md:col-span-4 flex gap-2"><button class="rounded-lg bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast)" [disabled]="saving()">Kaydet</button><button type="button" class="rounded-lg border px-4 py-2" (click)="editing.set(null)">Vazgeç</button></div>
         </form>
       }
 
       @if (adminInstitution(); as institution) {
-        <form class="grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30 md:grid-cols-4" (ngSubmit)="assignAdmin()">
-          <div class="md:col-span-4 font-semibold text-gray-900 dark:text-white">{{ institution.name }} kurumuna yönetici ata</div>
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="adminProduct" [(ngModel)]="adminDraft.product" (ngModelChange)="onAdminProductChange()" aria-label="Ürün seçin">@for (product of adminProducts; track product.value) { <option [ngValue]="product.value">{{ product.label }}</option> }</select>
-          <div class="relative md:col-span-2"><label class="sr-only" for="institution-admin-search">Kurum yöneticisi ara</label><input id="institution-admin-search" class="w-full rounded-lg border p-2 dark:bg-gray-900" name="adminUserSearch" [(ngModel)]="adminUserSearch" (ngModelChange)="searchAdminCandidates($event)" placeholder="Yönetici adı veya e-postası ara" autocomplete="off" required>@if (adminCandidates().length > 0) {<div class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900" role="listbox" aria-label="Yönetici adayları">@for (candidate of adminCandidates(); track candidate.userId) {<button type="button" role="option" class="block w-full border-b px-3 py-2 text-left text-sm last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800" (click)="selectAdminCandidate(candidate)"><strong>{{ candidate.fullName }}</strong><span class="block text-xs text-gray-500">{{ candidate.email }} · {{ candidate.roles.join(', ') }}</span></button>}</div>}</div>
-          <select class="rounded-lg border p-2 dark:bg-gray-900" name="adminRole" [(ngModel)]="adminDraft.role">@for (role of adminRoles; track role.value) { <option [ngValue]="role.value">{{ role.label }}</option> }</select>
-          <div class="flex gap-2"><button class="rounded-lg bg-emerald-600 px-4 py-2 text-white" [disabled]="saving()">Ata</button><button type="button" class="rounded-lg border px-4 py-2" (click)="adminInstitution.set(null)">Vazgeç</button></div>
-          <div class="md:col-span-4 rounded-lg border bg-white p-3 dark:border-gray-700 dark:bg-gray-900"><div class="mb-2 text-sm font-semibold">Mevcut yöneticiler</div>@for (admin of admins(); track admin.userId) { <div class="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0 dark:border-gray-700"><span>{{ admin.firstName }} {{ admin.lastName }} · {{ admin.email }} · {{ adminRoleName(admin.role) }}</span><button type="button" class="rounded border px-2 py-1" (click)="toggleAdmin(admin)">{{ admin.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button></div> } @empty { <span class="text-sm text-gray-500">Henüz yönetici atanmamış.</span> }</div>
+        <form class="grid gap-3 rounded-xl border border-(--ui-success-soft) bg-(--ui-success-soft) p-4 shadow-sm md:grid-cols-4" (ngSubmit)="assignAdmin()">
+          <div class="md:col-span-4 font-semibold text-(--ui-text)">{{ institution.name }} kurumuna yönetici ata</div>
+          <select class="rounded-lg border p-2" name="adminProduct" [(ngModel)]="adminDraft.product" (ngModelChange)="onAdminProductChange()" aria-label="Ürün seçin">@for (product of adminProducts; track product.value) { <option [ngValue]="product.value">{{ product.label }}</option> }</select>
+          <div class="relative md:col-span-2"><label class="sr-only" for="institution-admin-search">Kurum yöneticisi ara</label><input id="institution-admin-search" class="w-full rounded-lg border p-2" name="adminUserSearch" [(ngModel)]="adminUserSearch" (ngModelChange)="searchAdminCandidates($event)" placeholder="Yönetici adı veya e-postası ara" autocomplete="off" required>@if (adminCandidates().length > 0) {<div class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-(--ui-border) bg-(--ui-surface) shadow-lg" role="listbox" aria-label="Yönetici adayları">@for (candidate of adminCandidates(); track candidate.userId) {<button type="button" role="option" class="block w-full border-b px-3 py-2 text-left text-sm last:border-0 hover:bg-(--ui-surface-muted)" (click)="selectAdminCandidate(candidate)"><strong>{{ candidate.fullName }}</strong><span class="block text-xs text-(--ui-text-muted)">{{ candidate.email }} · {{ candidate.roles.join(', ') }}</span></button>}</div>}</div>
+          <select class="rounded-lg border p-2" name="adminRole" [(ngModel)]="adminDraft.role">@for (role of adminRoles; track role.value) { <option [ngValue]="role.value">{{ role.label }}</option> }</select>
+          <div class="flex gap-2"><button class="rounded-lg bg-(--ui-success-soft) px-4 py-2 text-(--ui-success)" [disabled]="saving()">Ata</button><button type="button" class="rounded-lg border px-4 py-2" (click)="adminInstitution.set(null)">Vazgeç</button></div>
+          <div class="md:col-span-4 rounded-lg border bg-(--ui-surface) p-3"><div class="mb-2 text-sm font-semibold">Mevcut yöneticiler</div>@for (admin of admins(); track admin.userId) { <div class="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0"><span>{{ admin.firstName }} {{ admin.lastName }} · {{ admin.email }} · {{ adminRoleName(admin.role) }}</span><button type="button" class="rounded border px-2 py-1" (click)="toggleAdmin(admin)">{{ admin.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button></div> } @empty { <span class="text-sm text-(--ui-text-muted)">Henüz yönetici atanmamış.</span> }</div>
         </form>
       }
 
       <div class="flex flex-wrap gap-3">
-        <input class="rounded-lg border p-2 dark:bg-gray-900" [(ngModel)]="search" (keyup.enter)="applyFilters()" placeholder="Kurum, şehir veya e-posta ara" aria-label="Kurum ara">
-        <select class="rounded-lg border p-2 dark:bg-gray-900" [(ngModel)]="activeFilter" (change)="applyFilters()" aria-label="Aktiflik filtresi">
+        <input class="rounded-lg border p-2" [(ngModel)]="search" (keyup.enter)="applyFilters()" placeholder="Kurum, şehir veya e-posta ara" aria-label="Kurum ara">
+        <select class="rounded-lg border p-2" [(ngModel)]="activeFilter" (change)="applyFilters()" aria-label="Aktiflik filtresi">
           <option [ngValue]="undefined">Tümü</option><option [ngValue]="true">Aktif</option><option [ngValue]="false">Pasif</option>
         </select>
         <button class="rounded-lg border px-4 py-2" type="button" (click)="applyFilters()">Yenile</button>
       </div>
 
-      @if (error()) { <div class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error() }}</div> }
-      <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <table class="min-w-full text-left text-sm"><thead class="border-b bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900"><tr><th class="p-3">Kurum</th><th class="p-3">Tür</th><th class="p-3">Kullanım</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
+      @if (error()) { <div class="rounded-lg bg-(--ui-danger-soft) p-3 text-sm text-(--ui-danger)" role="alert">{{ error() }}</div> }
+      <div class="overflow-x-auto rounded-xl border border-(--ui-border) bg-(--ui-surface)">
+        <table class="min-w-full text-left text-sm"><thead class="border-b bg-(--ui-surface-muted) text-(--ui-text-muted)"><tr><th class="p-3">Kurum</th><th class="p-3">Tür</th><th class="p-3">Kullanım</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
           <tbody>
             @for (institution of institutions(); track institution.id) {
-<tr class="border-b last:border-0 dark:border-gray-700"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-gray-500">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div><div class="mt-1 flex items-center gap-2 text-xs text-gray-500"><span class="font-mono break-all" [attr.data-testid]="'institution-id-' + institution.id">{{ institution.id }}</span><button type="button" class="rounded border px-1.5 py-0.5" (click)="copyId(institution.id)">{{ copiedId() === institution.id ? 'Kopyalandı' : 'Kimliği kopyala' }}</button></div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }} öğrenci<br>{{ institution.teacherCount }} öğretmen</td><td class="p-3"><span [class]="institution.isActive ? 'text-emerald-600' : 'text-gray-500'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/students" [queryParams]="{ institutionId: institution.id }">Koçluk öğrencileri</a><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/teachers" [queryParams]="{ institutionId: institution.id }">Koçluk öğretmenleri</a><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
-            } @empty { <tr><td colspan="6" class="p-8 text-center text-gray-500">Kurum bulunamadı.</td></tr> }
+<tr class="border-b last:border-0"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-(--ui-text-muted)">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div><div class="mt-1 flex items-center gap-2 text-xs text-(--ui-text-muted)"><span class="font-mono break-all" [attr.data-testid]="'institution-id-' + institution.id">{{ institution.id }}</span><button type="button" class="rounded border px-1.5 py-0.5" (click)="copyId(institution.id)">{{ copiedId() === institution.id ? 'Kopyalandı' : 'Kimliği kopyala' }}</button></div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }} öğrenci<br>{{ institution.teacherCount }} öğretmen</td><td class="p-3"><span [class]="institution.isActive ? 'text-(--ui-success)' : 'text-(--ui-text-muted)'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/students" [queryParams]="{ institutionId: institution.id }">Koçluk öğrencileri</a><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/teachers" [queryParams]="{ institutionId: institution.id }">Koçluk öğretmenleri</a><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
+            } @empty { <tr><td colspan="6" class="p-8 text-center text-(--ui-text-muted)">Kurum bulunamadı.</td></tr> }
           </tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between text-sm text-gray-500"><span>Toplam {{ totalCount() }} kurum · Sayfa {{ currentPage() }} / {{ totalPages() }}</span><div class="flex gap-2"><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() <= 1" (click)="changePage(currentPage() - 1)">Önceki</button><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() >= totalPages()" (click)="changePage(currentPage() + 1)">Sonraki</button></div></div>
+      <div class="flex items-center justify-between text-sm text-(--ui-text-muted)"><span>Toplam {{ totalCount() }} kurum · Sayfa {{ currentPage() }} / {{ totalPages() }}</span><div class="flex gap-2"><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() <= 1" (click)="changePage(currentPage() - 1)">Önceki</button><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() >= totalPages()" (click)="changePage(currentPage() + 1)">Sonraki</button></div></div>
     </section>
   `
 })

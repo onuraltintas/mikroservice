@@ -53,7 +53,7 @@ export class ExerciseLearningPathService {
               if (response.success) {
                 // Show progress toast
                 this.toaster.success(
-                  `🎉 Tebrikler! ${response.completedCount}/${response.totalCount} ${contentType.toLowerCase()} tamamlandı`,
+                  `Tebrikler! ${response.completedCount}/${response.totalCount} ${contentType.toLowerCase()} tamamlandı`,
                   3000
                 );
 
@@ -61,7 +61,7 @@ export class ExerciseLearningPathService {
                 if (response.nextItemId) {
                   setTimeout(() => {
                     this.toaster.info(
-                      `🔓 Yeni içerik açıldı! Dashboard'dan devam edebilirsiniz.`,
+                      `Yeni içerik açıldı. Ana sayfadan devam edebilirsin.`,
                       4000
                     );
                   }, 1000);

@@ -17,26 +17,26 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
     template: `
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <!-- Backdrop -->
-      <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
+      <div class="fixed inset-0 bg-(--ui-text) backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
 
       <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left shadow-2xl transition-all sm:w-full sm:max-w-md border border-gray-100 dark:border-gray-700">
+        <div class="relative transform overflow-hidden rounded-2xl bg-(--ui-surface) text-left shadow-2xl transition-all sm:w-full sm:max-w-md border border-(--ui-border)">
           
           <!-- Header -->
           <div class="px-6 pt-6 pb-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
-                <div class="flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg">
-                  <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex-shrink-0 bg-(--ui-brand-soft) p-2 rounded-lg">
+                  <svg class="w-6 h-6 text-(--ui-brand-text)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Rol Yönetimi</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ user()?.fullName }}</p>
+                  <h3 id="modal-title" class="text-lg font-bold text-(--ui-text) leading-tight">Rol Yönetimi</h3>
+                  <p class="text-sm text-(--ui-text-muted)">{{ user()?.fullName }}</p>
                 </div>
               </div>
-              <button (click)="closeModal()" class="text-gray-400 hover:text-gray-500 transition-colors">
+              <button (click)="closeModal()" class="text-(--ui-text-muted) hover:text-(--ui-text-muted) transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
@@ -47,12 +47,12 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
             
             <!-- Current Roles -->
             <div>
-              <label class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Tanımlı Roller</label>
+              <label class="block text-xs font-semibold text-(--ui-text-muted) mb-3">Tanımlı Roller</label>
               <div class="flex flex-wrap gap-2">
                 @for (assignment of assignments(); track assignment.role + ':' + assignment.product) {
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 group transition-all">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-(--ui-brand-soft) text-(--ui-brand-text) border border-(--ui-brand-soft) group transition-all">
                     {{ productRoleLabel(assignment) }}
-                    <button (click)="removeRole(assignment)" [attr.aria-label]="productRoleLabel(assignment) + ' rolünü kaldır'" [disabled]="busy() || !canRemove(assignment)" class="ml-2 text-indigo-400 hover:text-red-500 dark:hover:text-red-400 focus:outline-none disabled:opacity-40 transition-colors">
+                    <button (click)="removeRole(assignment)" [attr.aria-label]="productRoleLabel(assignment) + ' rolünü kaldır'" [disabled]="busy() || !canRemove(assignment)" class="ml-2 text-(--ui-brand-text) hover:text-(--ui-danger) focus:outline-none disabled:opacity-40 transition-colors">
                       @if (actionLoading() === roleKey(assignment)) {
                         <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                       } @else {
@@ -61,8 +61,8 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
                     </button>
                   </span>
                 } @empty {
-                  <div class="w-full py-4 text-center border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-xl">
-                    <p class="text-sm text-gray-400">Henüz bir rol atanmamış.</p>
+                  <div class="w-full py-4 text-center border-2 border-dashed border-(--ui-border) rounded-xl">
+                    <p class="text-sm text-(--ui-text-muted)">Henüz bir rol atanmamış.</p>
                   </div>
                 }
               </div>
@@ -70,32 +70,32 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
 
             <!-- Available Roles -->
             <div>
-              <label class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Rol Ekle</label>
-              <label for="role-product" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Rolün ekleneceği servis</label>
-              <select id="role-product" [ngModel]="selectedProduct()" (ngModelChange)="selectedProduct.set($event)" [disabled]="busy()" class="w-full mb-3 rounded-lg border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+              <label class="block text-xs font-semibold text-(--ui-text-muted) mb-3">Rol Ekle</label>
+              <label for="role-product" class="block text-sm font-medium text-(--ui-text) mb-2">Rolün ekleneceği servis</label>
+              <select id="role-product" [ngModel]="selectedProduct()" (ngModelChange)="selectedProduct.set($event)" [disabled]="busy()" class="w-full mb-3 rounded-lg border border-(--ui-border) bg-(--ui-surface) p-2 text-sm text-(--ui-text)">
                 <option value="">Servis seçin</option>
                 <option value="coaching">Koçluk</option>
                 <option value="speed-reading">Hızlı Okuma</option>
               </select>
-              <p class="text-xs text-gray-500 mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Bir servisteki son rol kaldırılınca o servise erişim de kapanır. Kapatılmış servis erişimi rol eklenince açılmaz; Kullanıcı Düzenle ekranından açabilirsiniz. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
+              <p class="text-xs text-(--ui-text-muted) mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Bir servisteki son rol kaldırılınca o servise erişim de kapanır. Kapatılmış servis erişimi rol eklenince açılmaz; Kullanıcı Düzenle ekranından açabilirsiniz. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
               @if (refreshFailed()) {
-                <p role="alert" class="text-sm text-red-600 mb-2">Rol değişti ancak güncel liste alınamadı. Devam etmek için listeyi yeniden yükleyin.</p>
-                <button (click)="refreshUser()" [disabled]="actionLoading() !== null" class="text-sm text-indigo-600 underline mb-3">Listeyi yeniden yükle</button>
+                <p role="alert" class="text-sm text-(--ui-danger) mb-2">Rol değişti ancak güncel liste alınamadı. Devam etmek için listeyi yeniden yükleyin.</p>
+                <button (click)="refreshUser()" [disabled]="actionLoading() !== null" class="text-sm text-(--ui-brand-text) underline mb-3">Listeyi yeniden yükle</button>
               }
               <div class="grid grid-cols-1 gap-2">
                 @for (roleName of serviceRoles(); track roleName) {
                   @if (!hasRole(roleName)) {
-                    <button (click)="assignRole(roleName)" [disabled]="busy() || !selectedProduct()" class="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 disabled:opacity-40 transition-all group">
+                    <button (click)="assignRole(roleName)" [disabled]="busy() || !selectedProduct()" class="flex items-center justify-between px-4 py-3 rounded-xl bg-(--ui-surface-muted) hover:bg-(--ui-surface) hover:shadow-sm border border-transparent hover:border-(--ui-brand-soft) disabled:opacity-40 transition-all group">
                       <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm text-sm group-hover:scale-110 transition-transform">
+                        <div class="w-8 h-8 rounded-lg bg-(--ui-surface) flex items-center justify-center shadow-sm text-sm group-hover:scale-110 transition-transform">
                           {{ getRoleEmoji(roleName) }}
                         </div>
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ selectedProduct() ? productRoleLabel({ role: roleName, product: selectedProduct() }) : roleName }}</span>
+                        <span class="text-sm font-medium text-(--ui-text)">{{ selectedProduct() ? productRoleLabel({ role: roleName, product: selectedProduct() }) : roleName }}</span>
                       </div>
                       @if (actionLoading() === roleKey({ role: roleName, product: selectedProduct() })) {
-                        <svg class="animate-spin h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <svg class="animate-spin h-4 w-4 text-(--ui-brand-text)" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                       } @else {
-                        <svg class="w-5 h-5 text-gray-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-5 h-5 text-(--ui-text-muted) group-hover:text-(--ui-brand-text) transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                       }
                     </button>
                   }
@@ -106,8 +106,8 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
           </div>
 
           <!-- Footer -->
-          <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex flex-row-reverse border-t border-gray-100 dark:border-gray-700">
-            <button (click)="closeModal()" class="px-6 py-2.5 rounded-xl bg-white dark:bg-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+          <div class="bg-(--ui-surface-muted) px-6 py-4 flex flex-row-reverse border-t border-(--ui-border)">
+            <button (click)="closeModal()" class="px-6 py-2.5 rounded-xl bg-(--ui-surface) text-sm font-semibold text-(--ui-text) shadow-sm ring-1 ring-inset ring-(--ui-border) hover:bg-(--ui-surface-muted) transition-colors">
               Kapat
             </button>
           </div>

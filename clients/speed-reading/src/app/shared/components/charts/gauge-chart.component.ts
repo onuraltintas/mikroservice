@@ -47,11 +47,11 @@ export interface GaugeChartData {
     .value {
       font-size: 32px;
       font-weight: bold;
-      color: var(--ui-text, var(--sp-text-1, #1e1b4b));
+      color: var(--ui-text, var(--sp-text-1, var(--ui-text)));
     }
     .label {
       font-size: 12px;
-      color: var(--ui-text-subtle, var(--sp-text-3, #6b7280));
+      color: var(--ui-text-subtle, var(--sp-text-3, var(--ui-text-muted)));
       margin-top: 4px;
     }
   `]

@@ -1,0 +1,63 @@
+// Kurs öğrenci alanı: eduivme tasarım değişkenleri ve ortak bileşenler. Sabit renk yok.
+@use '../../shared/styles/design-tokens';
+@use '../../shared/styles/design-components';
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--ds-font);
+  color: var(--ds-text);
+  background: var(--ds-bg);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+header, footer, main { max-width: 1040px; margin: 0 auto; padding: 0 32px; }
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-top: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--ds-line);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand img { display: block; height: 32px; width: auto; }
+.brand strong { font-size: 20px; letter-spacing: -0.01em; }
+.brand span { color: var(--ds-muted); font-size: 15px; padding-left: 12px; border-left: 1px solid var(--ds-line); }
+main { padding-top: 40px; padding-bottom: 48px; }
+h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 8px; }
+h2 { font-size: 20px; margin: 0 0 12px; }
+h3 { font-size: 17px; margin: 0 0 6px; }
+p { line-height: 1.6; margin: 8px 0; }
+.lead { color: var(--ds-muted); font-size: 17px; margin-bottom: 24px; }
+section, form {
+  margin: 20px 0; padding: 24px 28px;
+  background: var(--ds-surface); border: 1px solid var(--ds-line); border-radius: var(--ds-radius);
+  box-shadow: var(--ds-shadow);
+}
+form { max-width: 560px; }
+article { padding: 16px 18px; margin-top: 12px; background: var(--ds-soft); border-radius: var(--ds-radius-control); }
+label { display: block; margin: 16px 0 6px; font-size: 15px; font-weight: 500; }
+input, select, textarea {
+  display: block; width: 100%; max-width: 480px; min-height: 44px; padding: 10px 12px;
+  font: inherit; color: var(--ds-text); background: var(--ds-surface);
+  border: 1px solid var(--ds-field); border-radius: var(--ds-radius-control);
+}
+textarea { min-height: 96px; }
+input[type='file'] { padding: 8px; }
+button {
+  min-height: 44px; padding: 10px 18px; margin: 12px 8px 0 0;
+  font: inherit; font-weight: 600; cursor: pointer;
+  color: var(--ds-text); background: var(--ds-surface);
+  border: 1px solid var(--ds-field); border-radius: var(--ds-radius-button);
+}
+button:hover:not(:disabled) { background: var(--ds-soft); }
+button[type='submit'], button.primary { color: var(--ds-on-primary); background: var(--ds-primary); border-color: var(--ds-primary); }
+button[type='submit']:hover:not(:disabled), button.primary:hover:not(:disabled) { background: var(--ds-primary-hover); }
+button:disabled { cursor: not-allowed; color: var(--ds-muted); background: var(--ds-line); border-color: var(--ds-line); }
+.error { padding: 14px 16px; color: var(--ds-danger); background: var(--ds-danger-soft); border: 1px solid var(--ds-danger-line); border-radius: var(--ds-radius-control); }
+.new { display: inline-block; margin-left: 6px; padding: 2px 8px; font-size: 13px; font-weight: 600; color: var(--ds-text); background: var(--ds-accent); border-radius: 999px; }
+code { overflow-wrap: anywhere; font-size: 14px; }
+footer { padding-top: 20px; padding-bottom: 32px; color: var(--ds-muted); font-size: 14px; border-top: 1px solid var(--ds-line); }
+@media (max-width: 680px) {
+  header, footer, main { padding-left: 16px; padding-right: 16px; }
+  main { padding-top: 24px; }
+  section, form { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

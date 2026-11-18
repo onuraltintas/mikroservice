@@ -1,22 +1,17 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
+
+import { RegistrationShellComponent } from '../registration-shell.component';
 
 @Component({
   selector: 'app-verify-email',
   standalone: true,
   imports: [
+    RegistrationShellComponent,
     CommonModule,
     RouterLink,
-    MatCardModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatIconModule
   ],
   templateUrl: './verify-email.component.html',
   styleUrl: './verify-email.component.scss'

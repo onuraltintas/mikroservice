@@ -1,9 +1,9 @@
 <div class="admin-shell flex h-screen overflow-hidden font-sans flex-col bg-[var(--ui-page)] text-[var(--ui-text)]">
 
     <!-- Maintenance Mode Banner -->
-    <div *ngIf="inMaintenanceMode" class="bg-gradient-to-r from-red-600 to-rose-600 px-4 py-3 shadow-md relative z-50">
+    <div *ngIf="inMaintenanceMode" class=" bg-[var(--ui-danger)] px-4 py-3 shadow-md relative z-50">
         <div class="flex items-center justify-center gap-3">
-            <span class="flex p-1 rounded-lg bg-red-800 bg-opacity-30">
+            <span class="flex p-1 rounded-lg bg-[var(--ui-danger)] bg-opacity-30">
                 <svg class="h-6 w-6 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -11,10 +11,10 @@
                 </svg>
             </span>
             <div class="flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-center">
-                <p class="font-bold text-white text-sm sm:text-base tracking-wide">
-                    SİSTEM GENEL BAKIM MODUNDA
+                <p class="font-bold text-white text-sm sm:text-base">
+                    Sistem bakım modunda
                 </p>
-                <p class="text-red-100 text-xs sm:text-sm font-medium hidden sm:block">
+                <p class="text-[var(--ui-danger-soft)] text-xs sm:text-sm font-medium hidden sm:block">
                     (Normal kullanıcı girişleri kapalıdır. Yönetici olarak işlem yapabilirsiniz.)
                 </p>
             </div>
@@ -24,7 +24,7 @@
     <div class="flex flex-1 overflow-hidden">
         <!-- Mobile Sidebar Backdrop -->
         <div *ngIf="layoutService.isMobileSidebarOpen()" (click)="layoutService.closeMobileSidebar()"
-            class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity md:hidden" aria-hidden="true">
+            class="fixed inset-0 z-40 bg-[var(--ui-text)] bg-opacity-75 transition-opacity md:hidden" aria-hidden="true">
         </div>
 
         <!-- Sidebar (Desktop & Mobile) -->
