@@ -133,7 +133,7 @@ export const AUTH_COPY: Record<AuthVoice, AuthCopy> = {
     loginIntro: 'Lütfen hesabınıza giriş yapın.',
     brandIntro: 'Tüm okul süreçlerinizi tek bir modern platformda birleştirin.',
     noAccount: 'Hesabınız yok mu?',
-    signUp: 'Kayıt Olun',
+    signUp: 'Kayıt olun',
     loginSuccess: 'Giriş başarılı! Yönlendiriliyorsunuz.',
     emailNotConfirmed: 'Lütfen e-posta adresinizi doğrulayın.',
     userInactive: 'Hesabınız şu anda pasif durumdadır.',

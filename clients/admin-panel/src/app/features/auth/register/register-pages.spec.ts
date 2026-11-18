@@ -19,7 +19,7 @@ import { TeacherRegisterComponent } from './teacher/teacher-register.component';
 
 // Paket F #11–#13 (07.11.2026): the sign-up pages on onuraltintas.net say "sen", show no internal wording, and every
 // form ends with a way back to sign-in.
-const formal = /Hoş Geldiniz|hesabınız|giriniz|Seçiniz|Adınız|Soyadınız|Kayıt Olun|yönetin\.|yaratın\.|deneyiniz/;
+const formal = /Hoş [Gg]eldiniz|hesabınız|giriniz|Seçiniz|Adınız|Soyadınız|Kayıt [Oo]lun|yönetin\.|yaratın\.|deneyiniz/;
 
 function render<T>(component: Type<T>) {
   TestBed.configureTestingModule({
