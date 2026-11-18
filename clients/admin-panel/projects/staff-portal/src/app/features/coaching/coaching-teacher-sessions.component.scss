@@ -1,12 +1,12 @@
 .teacher-sessions { margin-top: 18px; }
 .sessions-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
 .sessions-heading-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.sessions-eyebrow { margin: 0 0 7px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: .15em; }
+.sessions-eyebrow { margin: 0 0 7px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .sessions-heading h3 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 24px; font-weight: 400; letter-spacing: -.03em; }
 .sessions-heading p { margin: 6px 0 0; color: var(--ui-text-muted); font-size: 13px; }
 .sessions-heading > button, .load-more-wrap button { min-height: 36px; padding: 0 12px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
 .sessions-heading-actions button { min-height: 36px; padding: 0 12px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
-.sessions-heading-actions .create-session { border-color: var(--ui-border); color: #fff; background: var(--ui-brand); }
+.sessions-heading-actions .create-session { border-color: var(--ui-border); color: var(--ui-brand-contrast); background: var(--ui-brand); }
 .session-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-bottom: 13px; }
 .session-stats > div { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--ui-border); border-radius: 11px; background: var(--ui-surface); }
 .session-stats span, .session-facts dt { color: var(--ui-text); font-size: 13px; }
@@ -14,7 +14,7 @@
 .session-list { display: grid; gap: 12px; }
 .session-card { padding: 16px; border: 1px solid var(--ui-border); border-radius: 13px; background: var(--ui-surface); }
 .session-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.session-type { color: var(--ui-text); font-size: 13px; font-weight: 800; text-transform: uppercase; }
+.session-type { color: var(--ui-text); font-size: 13px; font-weight: 800; }
 .session-card h4 { margin: 5px 0 0; color: var(--ui-text); font-size: 13px; }
 .session-status { flex: 0 0 auto; padding: 6px 9px; border-radius: 999px; color: var(--ui-text); background: var(--ui-surface); font-size: 13px; font-weight: 750; }
 .session-status[data-status='Cancelled'] { color: var(--ui-text); background: var(--ui-surface); }
@@ -47,7 +47,7 @@
 .sessions-error { margin-bottom: 12px; padding: 11px 13px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-danger); background: var(--coaching-danger-soft); font-size: 13px; }
 .sessions-success { margin-bottom: 12px; padding: 11px 13px; border: 1px solid var(--ui-border); border-radius: 10px; color: var(--ui-success); background: var(--ui-brand-soft); font-size: 13px; }
 .sessions-loading { display: grid; gap: 9px; }
-.sessions-loading div { height: 96px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: session-shimmer 1.4s linear infinite; }
+.sessions-loading div { height: 96px; border-radius: 12px; background: var(--ui-surface-muted); background-size: 200% 100%; animation: session-shimmer 1.4s linear infinite; }
 .load-more-wrap { display: flex; justify-content: center; margin-top: 14px; }
 .load-more-wrap button:disabled, .attendance-actions button:disabled, .cancel-confirmation button:disabled { opacity: .5; cursor: not-allowed; }
 @keyframes session-shimmer { to { background-position: -200% 0; } }
@@ -63,7 +63,7 @@
 .view-toggle button { border-radius: 0; }
 .view-toggle button:first-child { border-radius: 8px 0 0 8px; }
 .view-toggle button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
-.view-toggle button[aria-pressed="true"] { color: #fff; background: var(--ui-brand); }
+.view-toggle button[aria-pressed="true"] { color: var(--ui-brand-contrast); background: var(--ui-brand); }
 .agenda { display: grid; gap: 12px; }
 .agenda-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .agenda-heading h4 { margin: 0; font-size: 15px; }

@@ -1,5 +1,5 @@
 <section aria-label="Ödev toplu takibi" class="follow-up">
- <header><div><p class="eyebrow">KOÇLUK · ÖĞRETMEN</p><h2>Geciken ve teslim edilmeyen ödevler</h2><p>Bir öğrenciye verilen her ödev ayrı satırdır. Teslim edilen, değerlendirilen ve iptal edilen ödevler burada gösterilmez.</p></div><button type="button" (click)="close.emit()">Ödev listesine dön</button></header>
+ <header><div><p class="eyebrow">Koçluk, öğretmen</p><h2>Geciken ve teslim edilmeyen ödevler</h2><p>Bir öğrenciye verilen her ödev ayrı satırdır. Teslim edilen, değerlendirilen ve iptal edilen ödevler burada gösterilmez.</p></div><button type="button" (click)="close.emit()">Ödev listesine dön</button></header>
  <div class="totals" aria-label="Aktif ödevlerde teslim özeti"><p><strong>{{ pendingCount() }}</strong> teslim bekleniyor</p><p><strong>{{ overdueCount() }}</strong> geciken teslim</p></div>
  <p>Özetler erişiminizdeki tüm aktif ödevleri kapsar. Başlık araması aşağıdaki listeyi filtreler.</p>
  <form (ngSubmit)="applySearch()" class="toolbar">

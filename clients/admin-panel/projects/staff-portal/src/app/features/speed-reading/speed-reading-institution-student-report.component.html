@@ -1,7 +1,7 @@
 <section class="student-report" aria-labelledby="student-report-title">
   <header class="report-heading">
     <div>
-      <p class="workspace-eyebrow">HIZLI OKUMA · SON 30 GÜN</p>
+      <p class="workspace-eyebrow">Hızlı Okuma, son 30 gün</p>
       <h3 id="student-report-title">Öğrenci ayrıntılı raporu</h3>
       <p>
         {{ student.firstName }} {{ student.lastName }} ·
@@ -74,7 +74,7 @@
       <section class="report-card" aria-labelledby="reading-speed-report-title">
         <div class="section-heading">
           <div>
-            <p class="workspace-eyebrow">OKUMA AKICILIĞI</p>
+            <p class="workspace-eyebrow">Okuma akıcılığı</p>
             <h4 id="reading-speed-report-title">Hız gelişimi</h4>
           </div>
           @if (data.readingSpeed.averageWpm > 0) {
@@ -111,7 +111,7 @@
       <section class="report-card" aria-labelledby="comprehension-report-title">
         <div class="section-heading">
           <div>
-            <p class="workspace-eyebrow">OKUDUĞUNU ANLAMA</p>
+            <p class="workspace-eyebrow">Okuduğunu anlama</p>
             <h4 id="comprehension-report-title">Anlama gelişimi</h4>
           </div>
           @if (data.comprehension.totalQuestionsAttempted > 0) {
@@ -161,7 +161,7 @@
     <section class="report-card activity-card" aria-labelledby="student-activity-title">
       <div class="section-heading">
         <div>
-          <p class="workspace-eyebrow">DÜZENLİ ÇALIŞMA</p>
+          <p class="workspace-eyebrow">Düzenli çalışma</p>
           <h4 id="student-activity-title">Etkinlik ve çalışma geçmişi</h4>
         </div>
         @if (data.activity.dataAvailable) {

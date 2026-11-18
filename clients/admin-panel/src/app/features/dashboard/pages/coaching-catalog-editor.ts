@@ -12,33 +12,33 @@ import { ToasterService } from '../../../core/services/toaster.service';
 @Component({
   selector: 'app-coaching-catalog-editor', standalone: true, imports: [FormsModule],
   template: `
-    <section aria-labelledby="catalog-editor-title" class="space-y-4 rounded-xl border border-indigo-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+    <section aria-labelledby="catalog-editor-title" class="space-y-4 rounded-xl border border-(--ui-brand-soft) bg-(--ui-surface) p-5">
       <p role="status" aria-live="polite" class="sr-only">LGS okulu düzenleme formu açıldı.</p>
       <header class="flex items-start justify-between gap-3">
         <div><h2 id="catalog-editor-title" class="text-xl font-semibold">{{ recordId ? 'LGS okulunu düzenle' : 'Yeni LGS okulu' }}</h2>
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Yeni okul pasif oluşturulur. Yayınlama ayrı onay gerektirir; kaynak kimlikleri değiştirilemez.</p></div>
+          <p class="mt-1 text-sm text-(--ui-text-muted)">Yeni okul pasif oluşturulur. Yayınlama ayrı onay gerektirir; kaynak kimlikleri değiştirilemez.</p></div>
         <button type="button" (click)="cancelled.emit()" [disabled]="saving()" class="rounded-lg border px-3 py-2">Kapat</button>
       </header>
-      @if (error()) { <p role="alert" class="rounded-lg bg-red-50 p-3 text-red-800">{{ error() }}</p> }
+      @if (error()) { <p role="alert" class="rounded-lg bg-(--ui-danger-soft) p-3 text-(--ui-danger)">{{ error() }}</p> }
       @if (loading()) { <p role="status">Güncel kayıt yükleniyor…</p> }
       @else if (permitted()) {
         <form #editor="ngForm" (ngSubmit)="save()" class="space-y-4">
           <fieldset [disabled]="saving()" class="grid min-w-0 gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2"><label for="catalog-edit-name" class="block text-sm font-medium">Okul adı</label>
-              <input id="catalog-edit-name" name="name" [(ngModel)]="form.name" required maxlength="300" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-            @if (document(); as current) { <p class="text-sm text-gray-600 dark:text-gray-400 sm:col-span-2">Kaynak konum (korunur): {{ current.data.city }} / {{ current.data.district }}. Aşağıdaki seçim ortak dizin eşleştirmesidir.</p> }
-            <div><label for="catalog-edit-province" class="block text-sm font-medium">Doğrulanmış şehir</label><select id="catalog-edit-province" name="province" [(ngModel)]="form.provinceId" (ngModelChange)="provinceChanged()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option [ngValue]="null">Seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select></div>
-            <div><label for="catalog-edit-district" class="block text-sm font-medium">Doğrulanmış ilçe</label><select id="catalog-edit-district" name="district" [(ngModel)]="form.districtId" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option [ngValue]="null">Seçin</option>@for (district of districts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select></div>
-            <div><label for="catalog-edit-score" class="block text-sm font-medium">Taban puan (isteğe bağlı)</label><input id="catalog-edit-score" name="score" type="number" min="0" max="500" step="0.0001" [(ngModel)]="form.minimumScore" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-            <div><label for="catalog-edit-year" class="block text-sm font-medium">Puan yılı (isteğe bağlı)</label><input id="catalog-edit-year" name="year" type="number" min="1900" max="2200" step="1" [(ngModel)]="form.scoreYear" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-            <div class="sm:col-span-2"><label for="catalog-edit-reason" class="block text-sm font-medium">İşlem gerekçesi</label><textarea id="catalog-edit-reason" name="reason" [(ngModel)]="form.reason" required minlength="5" maxlength="500" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"></textarea></div>
+              <input id="catalog-edit-name" name="name" [(ngModel)]="form.name" required maxlength="300" class="mt-1 w-full rounded-lg border p-2" /></div>
+            @if (document(); as current) { <p class="text-sm text-(--ui-text-muted) sm:col-span-2">Kaynak konum (korunur): {{ current.data.city }} / {{ current.data.district }}. Aşağıdaki seçim ortak dizin eşleştirmesidir.</p> }
+            <div><label for="catalog-edit-province" class="block text-sm font-medium">Doğrulanmış şehir</label><select id="catalog-edit-province" name="province" [(ngModel)]="form.provinceId" (ngModelChange)="provinceChanged()" class="mt-1 w-full rounded-lg border p-2"><option [ngValue]="null">Seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select></div>
+            <div><label for="catalog-edit-district" class="block text-sm font-medium">Doğrulanmış ilçe</label><select id="catalog-edit-district" name="district" [(ngModel)]="form.districtId" class="mt-1 w-full rounded-lg border p-2"><option [ngValue]="null">Seçin</option>@for (district of districts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select></div>
+            <div><label for="catalog-edit-score" class="block text-sm font-medium">Taban puan (isteğe bağlı)</label><input id="catalog-edit-score" name="score" type="number" min="0" max="500" step="0.0001" [(ngModel)]="form.minimumScore" class="mt-1 w-full rounded-lg border p-2" /></div>
+            <div><label for="catalog-edit-year" class="block text-sm font-medium">Puan yılı (isteğe bağlı)</label><input id="catalog-edit-year" name="year" type="number" min="1900" max="2200" step="1" [(ngModel)]="form.scoreYear" class="mt-1 w-full rounded-lg border p-2" /></div>
+            <div class="sm:col-span-2"><label for="catalog-edit-reason" class="block text-sm font-medium">İşlem gerekçesi</label><textarea id="catalog-edit-reason" name="reason" [(ngModel)]="form.reason" required minlength="5" maxlength="500" class="mt-1 w-full rounded-lg border p-2"></textarea></div>
           </fieldset>
-          <button type="submit" [disabled]="saving() || editor.invalid" class="rounded-lg bg-indigo-700 px-4 py-2 text-white disabled:opacity-40">{{ saving() ? 'Kaydediliyor…' : recordId ? 'Değişiklikleri kaydet' : 'Pasif kayıt oluştur' }}</button>
+          <button type="submit" [disabled]="saving() || editor.invalid" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-40">{{ saving() ? 'Kaydediliyor…' : recordId ? 'Değişiklikleri kaydet' : 'Pasif kayıt oluştur' }}</button>
         </form>
         @if (document(); as current) {
           <div class="space-y-3 border-t pt-4">
             <p class="text-sm">Yayın durumu: <strong>{{ current.data.isActive ? 'Aktif' : 'Pasif' }}</strong>. Alan değişikliklerini önce kaydedin; yayın işlemi ayrıdır.</p>
-            <label for="catalog-status-reason" class="block text-sm font-medium">Yayın durumu değişikliği gerekçesi</label><textarea id="catalog-status-reason" [(ngModel)]="statusReason" maxlength="500" [disabled]="saving()" class="w-full rounded-lg border p-2 dark:bg-gray-800"></textarea>
+            <label for="catalog-status-reason" class="block text-sm font-medium">Yayın durumu değişikliği gerekçesi</label><textarea id="catalog-status-reason" [(ngModel)]="statusReason" maxlength="500" [disabled]="saving()" class="w-full rounded-lg border p-2"></textarea>
             <button type="button" (click)="changeStatus()" [disabled]="saving() || hasUnsavedChanges() || statusReason.trim().length < 5" class="rounded-lg border px-4 py-2 disabled:opacity-40">{{ current.data.isActive ? 'Pasife al' : 'Onayla ve etkinleştir' }}</button>
           </div>
         }

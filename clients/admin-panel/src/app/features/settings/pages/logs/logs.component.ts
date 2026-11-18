@@ -13,42 +13,42 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Sistem Logları</h1>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">Uygulama genelindeki hata ve işlem kayıtları</p>
+          <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem Logları</h1>
+          <p class="text-(--ui-text-muted) text-sm">Uygulama genelindeki hata ve işlem kayıtları</p>
         </div>
-        <button (click)="refresh()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm font-medium">
+        <button (click)="refresh()" class="px-4 py-2 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) transition-colors flex items-center gap-2 text-sm font-medium">
             <span class="material-icons text-sm">refresh</span> Yenile
         </button>
       </div>
 
       <!-- Filters -->
-      <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 mb-6 flex flex-wrap gap-4 items-end">
+      <div class="bg-(--ui-surface) p-4 rounded-xl border border-(--ui-border) mb-6 flex flex-wrap gap-4 items-end">
         
         <div class="flex-1 min-w-[180px]">
-          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Arama</label>
+          <label class="block text-xs font-medium text-(--ui-text) mb-1">Arama</label>
           <div class="relative">
-            <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
+            <span class="material-icons absolute left-3 top-2.5 text-(--ui-text-muted) text-sm">search</span>
             <input 
               type="text" 
               [(ngModel)]="searchTerm" 
               (ngModelChange)="onSearchChange($event)"
               placeholder="Mesaj veya Exception ara..." 
-              class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+              class="w-full pl-9 pr-4 py-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-(--ui-text) focus:ring-2 focus:ring-(--ui-brand) focus:border-(--ui-brand) outline-none transition-all text-sm"
             >
           </div>
         </div>
 
         <div class="w-44">
-          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Uygulama</label>
-          <select [(ngModel)]="selectedApplication" (change)="onFilterChange()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm outline-none">
+          <label class="block text-xs font-medium text-(--ui-text) mb-1">Uygulama</label>
+          <select [(ngModel)]="selectedApplication" (change)="onFilterChange()" class="w-full px-3 py-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-(--ui-text) focus:ring-2 focus:ring-(--ui-brand) text-sm outline-none">
             <option value="">Tüm Uygulamalar</option>
             <option *ngFor="let app of applications()" [value]="app">{{ app }}</option>
           </select>
         </div>
 
         <div class="w-36">
-          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Seviye</label>
-          <select [(ngModel)]="selectedLevel" (change)="onFilterChange()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm outline-none">
+          <label class="block text-xs font-medium text-(--ui-text) mb-1">Seviye</label>
+          <select [(ngModel)]="selectedLevel" (change)="onFilterChange()" class="w-full px-3 py-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-(--ui-text) focus:ring-2 focus:ring-(--ui-brand) text-sm outline-none">
             <option value="">Tümü</option>
             <option value="Information">Information</option>
             <option value="Warning">Warning</option>
@@ -60,11 +60,11 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
       </div>
 
       <!-- Log Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <div class="bg-(--ui-surface) rounded-xl border border-(--ui-border) overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <tr class="bg-(--ui-surface-muted) border-b border-(--ui-border) text-xs text-(--ui-text-muted)">
                 <th class="px-4 py-3 font-medium w-[140px]">Tarih</th>
                 <th class="px-4 py-3 font-medium w-[100px]">Seviye</th>
                 <th class="px-4 py-3 font-medium w-[120px]">Uygulama</th>
@@ -72,9 +72,9 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
                 <th class="px-4 py-3 font-medium w-[60px]"></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr *ngFor="let log of logs()" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            <tbody class="divide-y divide-(--ui-border)">
+              <tr *ngFor="let log of logs()" class="hover:bg-(--ui-surface-muted) transition-colors group">
+                <td class="px-4 py-3 text-xs text-(--ui-text-muted) whitespace-nowrap">
                   {{ log.timestamp | date:'dd.MM.yy HH:mm:ss' }}
                 </td>
                 <td class="px-4 py-3">
@@ -83,23 +83,23 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
                     {{ log.level }}
                   </span>
                 </td>
-                <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                <td class="px-4 py-3 text-xs text-(--ui-text-muted) whitespace-nowrap">
                   {{ log.application || '-' }}
                 </td>
-                <td class="px-4 py-3 text-gray-800 dark:text-gray-200 font-mono text-xs">
+                <td class="px-4 py-3 text-(--ui-text) font-mono text-xs">
                   <div class="truncate max-w-[400px] lg:max-w-[600px]" [title]="log.message">{{ log.message }}</div>
-                  <div *ngIf="log.exception" class="text-red-500 dark:text-red-400 text-[10px] mt-1 truncate max-w-[400px] lg:max-w-[600px] opacity-80">
+                  <div *ngIf="log.exception" class="text-(--ui-danger) text-[10px] mt-1 truncate max-w-[400px] lg:max-w-[600px] opacity-80">
                     {{ extractExceptionMessage(log.exception) }}
                   </div>
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <button (click)="openDetail(log)" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-xs font-medium">
+                  <button (click)="openDetail(log)" class="text-(--ui-brand-text) hover:text-(--ui-brand-text) text-xs font-medium">
                     Detay
                   </button>
                 </td>
               </tr>
               <tr *ngIf="logs().length === 0 && !loading()">
-                <td colspan="5" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
+                <td colspan="5" class="px-6 py-12 text-center text-(--ui-text-muted)">
                     <span class="material-icons text-4xl mb-2">history_toggle_off</span>
                     <p>Kayıt bulunamadı.</p>
                 </td>
@@ -109,17 +109,17 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
         </div>
 
         <!-- Pagination -->
-        <div class="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-left">
-                <span class="font-medium text-gray-700 dark:text-gray-300">{{ totalCount() }}</span> kayıttan 
-                <span class="font-medium text-gray-700 dark:text-gray-300">{{ getStartIndex() }}</span> - 
-                <span class="font-medium text-gray-700 dark:text-gray-300">{{ getEndIndex() }}</span> arası gösteriliyor
+        <div class="bg-(--ui-surface-muted) px-4 py-3 border-t border-(--ui-border) flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="text-xs text-(--ui-text-muted) text-center sm:text-left">
+                <span class="font-medium text-(--ui-text)">{{ totalCount() }}</span> kayıttan 
+                <span class="font-medium text-(--ui-text)">{{ getStartIndex() }}</span> - 
+                <span class="font-medium text-(--ui-text)">{{ getEndIndex() }}</span> arası gösteriliyor
             </div>
             <div class="flex items-center gap-2">
                 <button 
                   [disabled]="currentPage === 1"
                   (click)="changePage(currentPage - 1)"
-                  class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  class="p-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-(--ui-text) disabled:opacity-40 hover:bg-(--ui-surface-muted) transition-colors">
                   <span class="material-icons text-sm">chevron_left</span>
                 </button>
                 
@@ -128,28 +128,26 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
                   <ng-container *ngFor="let page of getVisiblePages()">
                     <button *ngIf="page !== '...'"
                       (click)="changePage(+page)"
-                      [class.bg-indigo-600]="currentPage === page"
+                      [class.bg-(--ui-brand)]="currentPage === page"
                       [class.text-white]="currentPage === page"
-                      [class.bg-white]="currentPage !== page"
-                      [class.dark:bg-gray-800]="currentPage !== page"
-                      [class.text-gray-700]="currentPage !== page"
-                      [class.dark:text-gray-300]="currentPage !== page"
-                      class="w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      [class.bg-(--ui-surface)]="currentPage !== page"
+                      [class.text-(--ui-text)]="currentPage !== page"
+                      class="w-8 h-8 rounded-lg border border-(--ui-border) text-xs font-medium hover:bg-(--ui-surface-muted) transition-colors">
                       {{ page }}
                     </button>
-                    <span *ngIf="page === '...'" class="px-1 text-gray-400">...</span>
+                    <span *ngIf="page === '...'" class="px-1 text-(--ui-text-muted)">...</span>
                   </ng-container>
                 </div>
                 
                 <button 
                   [disabled]="currentPage >= getTotalPages()"
                   (click)="changePage(currentPage + 1)"
-                  class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  class="p-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-(--ui-text) disabled:opacity-40 hover:bg-(--ui-surface-muted) transition-colors">
                   <span class="material-icons text-sm">chevron_right</span>
                 </button>
                 
-                <span class="text-xs text-gray-500 dark:text-gray-400 ml-2 hidden sm:inline">
-                  Sayfa <span class="font-medium text-gray-700 dark:text-gray-300">{{ currentPage }}</span> / <span class="font-medium text-gray-700 dark:text-gray-300">{{ getTotalPages() }}</span>
+                <span class="text-xs text-(--ui-text-muted) ml-2 hidden sm:inline">
+                  Sayfa <span class="font-medium text-(--ui-text)">{{ currentPage }}</span> / <span class="font-medium text-(--ui-text)">{{ getTotalPages() }}</span>
                 </span>
             </div>
         </div>
@@ -159,39 +157,39 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
     <!-- Detail Modal -->
     <div *ngIf="selectedLog" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" (click)="closeDetail()">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                <h3 class="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+        <div class="bg-(--ui-surface) rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
+            <div class="px-6 py-4 border-b border-(--ui-border) flex justify-between items-center bg-(--ui-surface-muted)">
+                <h3 class="font-bold text-(--ui-text) flex items-center gap-2">
                      <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getLevelClass(selectedLog.level)">{{ selectedLog.level }}</span>
                      Log Detayı
                 </h3>
-                <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <button (click)="closeDetail()" class="text-(--ui-text-muted) hover:text-(--ui-text-muted)">
                     <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="p-6 overflow-y-auto font-mono text-sm">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-xs text-gray-500 dark:text-gray-400">
-                    <div><strong class="text-gray-700 dark:text-gray-300">Tarih:</strong> {{ selectedLog.timestamp | date:'medium' }}</div>
-                    <div><strong class="text-gray-700 dark:text-gray-300">Uygulama:</strong> {{ selectedLog.application }}</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-xs text-(--ui-text-muted)">
+                    <div><strong class="text-(--ui-text)">Tarih:</strong> {{ selectedLog.timestamp | date:'medium' }}</div>
+                    <div><strong class="text-(--ui-text)">Uygulama:</strong> {{ selectedLog.application }}</div>
                 </div>
 
                 <div class="mb-4">
-                    <h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-2">Mesaj</h4>
-                    <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 break-words whitespace-pre-wrap">{{ selectedLog.message }}</div>
+                    <h4 class="text-xs font-bold text-(--ui-text) mb-2">Mesaj</h4>
+                    <div class="bg-(--ui-surface-muted) p-4 rounded border border-(--ui-border) text-(--ui-text) break-words whitespace-pre-wrap">{{ selectedLog.message }}</div>
                 </div>
 
                 <div *ngIf="selectedLog.exception" class="mb-4">
-                    <h4 class="text-xs font-bold text-red-700 dark:text-red-400 uppercase mb-2">Stack Trace / Exception</h4>
-                    <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 break-words whitespace-pre-wrap overflow-x-auto text-xs">{{ selectedLog.exception }}</div>
+                    <h4 class="text-xs font-bold text-(--ui-danger) mb-2">Stack Trace / Exception</h4>
+                    <div class="bg-(--ui-danger-soft) p-4 rounded border border-(--ui-danger-soft) text-(--ui-danger) break-words whitespace-pre-wrap overflow-x-auto text-xs">{{ selectedLog.exception }}</div>
                 </div>
 
                 <div *ngIf="selectedLog.properties" class="mb-4">
-                    <h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-2">Properties (JSON)</h4>
-                    <pre class="bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-x-auto">{{ formatJson(selectedLog.properties) }}</pre>
+                    <h4 class="text-xs font-bold text-(--ui-text) mb-2">Properties (JSON)</h4>
+                    <pre class="bg-(--ui-text) text-(--ui-text-muted) p-4 rounded text-xs overflow-x-auto">{{ formatJson(selectedLog.properties) }}</pre>
                 </div>
             </div>
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-right">
-                <button (click)="closeDetail()" class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-sm font-medium">Kapat</button>
+            <div class="p-4 border-t border-(--ui-border) bg-(--ui-surface-muted) text-right">
+                <button (click)="closeDetail()" class="px-4 py-2 bg-(--ui-surface) border border-(--ui-border) text-(--ui-text) rounded-lg hover:bg-(--ui-surface-muted) text-sm font-medium">Kapat</button>
             </div>
         </div>
     </div>
@@ -330,11 +328,11 @@ export class SystemLogsComponent implements OnInit {
 
   getLevelClass(level: string): string {
     switch (level) {
-      case 'Error': return 'bg-red-500/20 text-red-600 dark:text-red-400';
-      case 'Fatal': return 'bg-red-600/30 text-red-700 dark:text-red-300 font-bold';
-      case 'Warning': return 'bg-amber-500/20 text-amber-600 dark:text-amber-400';
-      case 'Information': return 'bg-blue-500/20 text-blue-600 dark:text-blue-400';
-      default: return 'bg-gray-500/20 text-gray-600 dark:text-gray-400';
+      case 'Error': return 'bg-(--ui-danger) text-(--ui-danger)';
+      case 'Fatal': return 'bg-(--ui-danger) text-(--ui-danger) font-bold';
+      case 'Warning': return 'bg-(--ui-warning) text-(--ui-warning)';
+      case 'Information': return 'bg-(--ui-brand) text-(--ui-brand-text)';
+      default: return 'bg-(--ui-text) text-(--ui-text-muted)';
     }
   }
 

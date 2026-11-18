@@ -56,14 +56,14 @@ interface PlanDraft {
     <main class="space-y-6" aria-labelledby="billing-plans-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-          <h1 id="billing-plans-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Planlar</h1>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Bir üründe hangi satış biçiminin olacağını planlar belirler: bireysel, öğretmen koltuğu ya da kurum planı açarsanız o satış başlar; planı kapatırsanız biter. Birden çok ürünün hakkını veren plan paket olur.</p>
+          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+          <h1 id="billing-plans-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Planlar</h1>
+          <p class="mt-2 text-sm text-(--ui-text-muted)">Bir üründe hangi satış biçiminin olacağını planlar belirler: bireysel, öğretmen koltuğu ya da kurum planı açarsanız o satış başlar; planı kapatırsanız biter. Birden çok ürünün hakkını veren plan paket olur.</p>
         </div>
         <button type="button" class="primary" (click)="start()" [disabled]="loading()" data-testid="new-plan">Yeni plan</button>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       @if (draft(); as plan) {
         <form (ngSubmit)="save()" class="form-card" data-testid="plan-form">
@@ -101,7 +101,7 @@ interface PlanDraft {
           <h3 class="mt-4">Verdiği haklar</h3>
           <p class="muted mb-2">"Alıcıya": planı satın alan hesap. "Koltuk sahibine": koltuğun verildiği her kullanıcı.</p>
           @for (group of plan.groups; track group.productName) {
-            <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">{{ group.productName }}</p>
+            <p class="mt-2 text-sm font-semibold text-(--ui-text)">{{ group.productName }}</p>
             <div class="entitlement-grid mt-1">
               @for (choice of group.choices; track choice.entitlementId) {
                 <div class="entitlement-row">
@@ -128,7 +128,7 @@ interface PlanDraft {
 
       <div class="data-card">
         <div class="mb-3 flex flex-wrap items-center gap-2">
-          <label class="text-sm text-gray-700 dark:text-gray-200" for="plan-product-filter">Ürün</label>
+          <label class="text-sm text-(--ui-text)" for="plan-product-filter">Ürün</label>
           <select id="plan-product-filter" [ngModel]="productFilter()" (ngModelChange)="productFilter.set($event)" name="planProductFilter">
             <option value="">Tüm ürünler</option>
             @for (product of products(); track product.id) { <option [value]="product.code">{{ product.name }}</option> }

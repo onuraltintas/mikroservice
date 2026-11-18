@@ -21,7 +21,7 @@ import { IdentityService } from '../../../core/services/identity.service';
         @if (loadingPolicy()) {
           <p class="mt-6 rounded-xl bg-[var(--ds-bg)] p-4 text-sm text-[var(--ds-muted)]" role="status">Ortak gizlilik ve bülten onay metinleri kontrol ediliyor…</p>
         } @else if (!policyAvailable()) {
-          <p class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100" role="status">{{ policyLoadFailed() ? 'Ortak gizlilik ve bülten onay metinleri şu anda kontrol edilemiyor. Bülten kaydı güvenli şekilde kapalı; lütfen daha sonra yeniden deneyin.' : 'Ortak gizlilik ve Koçluk bülteni onay metinleri yayımlanmamış. Metinler yayımlanana kadar bülten kaydı kapalıdır.' }} <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold underline">Gizlilik politikasını görüntüle</a>.</p>
+          <p class="mt-6 rounded-xl border border-(--ui-warning-soft) bg-(--ui-warning-soft) p-4 text-sm leading-6 text-(--ui-warning)" role="status">{{ policyLoadFailed() ? 'Ortak gizlilik ve bülten onay metinleri şu anda kontrol edilemiyor. Bülten kaydı güvenli şekilde kapalı; lütfen daha sonra yeniden deneyin.' : 'Ortak gizlilik ve Koçluk bülteni onay metinleri yayımlanmamış. Metinler yayımlanana kadar bülten kaydı kapalıdır.' }} <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold underline">Gizlilik politikasını görüntüle</a>.</p>
         } @else {
           <form class="mt-6 space-y-4" #newsletterForm="ngForm" (ngSubmit)="submit()">
             <label class="block text-sm font-medium text-[var(--ds-text)]">E-posta adresi
@@ -39,8 +39,8 @@ import { IdentityService } from '../../../core/services/identity.service';
           </form>
         }
 
-        @if (message()) { <p class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100" role="status">{{ message() }}</p> }
-        @if (error()) { <p class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200" role="alert">{{ error() }}</p> }
+        @if (message()) { <p class="mt-4 rounded-xl border border-(--ui-success-soft) bg-(--ui-success-soft) p-4 text-sm leading-6 text-(--ui-success)" role="status">{{ message() }}</p> }
+        @if (error()) { <p class="mt-4 rounded-xl border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm leading-6 text-(--ui-danger)" role="alert">{{ error() }}</p> }
       </section>
     </main>
   `,

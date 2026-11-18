@@ -2,8 +2,8 @@
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Bildirim Yönetimi</h1>
-            <p class="text-sm text-gray-500">Tüm sistem bildirimlerini görüntüleyin ve yönetin.</p>
+            <h1 class="text-2xl font-bold text-(--ui-text) mb-1">Bildirim Yönetimi</h1>
+            <p class="text-sm text-(--ui-text-muted)">Tüm sistem bildirimlerini görüntüleyin ve yönetin.</p>
         </div>
 
         <div class="flex items-center gap-2">
@@ -20,12 +20,12 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <div class="bg-white dark:bg-gray-900 p-4 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
+    <div class="bg-(--ui-surface) p-4 rounded-3xl border border-(--ui-border) shadow-sm mb-6">
         <div class="flex flex-col lg:flex-row items-center gap-4">
             <!-- Search Box -->
             <div class="relative w-full lg:flex-1">
                 <mat-form-field appearance="outline" class="w-full !pb-0 no-hint">
-                    <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
+                    <mat-icon matPrefix class="text-(--ui-text-muted) mr-2">search</mat-icon>
                     <input matInput placeholder="Bildirimlerde ara (başlık, mesaj...)" [value]="searchQuery()"
                         (input)="onSearchChange($event)">
                     <button type="button" *ngIf="searchQuery()" matSuffix mat-icon-button
@@ -42,14 +42,14 @@
                     <mat-select [value]="activeCategory()" (selectionChange)="setCategory($event.value)">
                         <mat-select-trigger>
                             <div class="flex items-center gap-2 pt-1" *ngIf="activeCategory()">
-                                <mat-icon class="scale-90 text-gray-500"
+                                <mat-icon class="scale-90 text-(--ui-text-muted)"
                                     [fontIcon]="getActiveCategoryIcon()"></mat-icon>
                                 <span class="text-sm font-medium">{{ getActiveCategoryLabel() }}</span>
                             </div>
                         </mat-select-trigger>
                         <mat-option *ngFor="let cat of categories()" [value]="cat.key">
                             <div class="flex items-center gap-2">
-                                <mat-icon class="scale-90 text-gray-500">{{cat.icon}}</mat-icon>
+                                <mat-icon class="scale-90 text-(--ui-text-muted)">{{cat.icon}}</mat-icon>
                                 <span>{{cat.label}}</span>
                             </div>
                         </mat-option>
@@ -57,20 +57,20 @@
                 </mat-form-field>
 
                 <!-- Status Toggle -->
-                <div class="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl flex items-center shrink-0 h-[52px]">
+                <div class="bg-(--ui-surface-muted) p-1 rounded-xl flex items-center shrink-0 h-[52px]">
                     <button class="px-4 h-full text-xs font-bold rounded-lg transition-all"
-                        [class.bg-white]="activeStatus() === 'all'" [class.text-indigo-600]="activeStatus() === 'all'"
-                        [class.shadow-sm]="activeStatus() === 'all'" [class.text-gray-500]="activeStatus() !== 'all'"
+                        [class.bg-(--ui-surface)]="activeStatus() === 'all'" [class.text-(--ui-brand-text)]="activeStatus() === 'all'"
+                        [class.shadow-sm]="activeStatus() === 'all'" [class.text-(--ui-text-muted)]="activeStatus() !== 'all'"
                         (click)="setStatus('all')">Tümü</button>
                     <button class="px-4 h-full text-xs font-bold rounded-lg transition-all"
-                        [class.bg-white]="activeStatus() === 'unread'"
-                        [class.text-indigo-600]="activeStatus() === 'unread'"
+                        [class.bg-(--ui-surface)]="activeStatus() === 'unread'"
+                        [class.text-(--ui-brand-text)]="activeStatus() === 'unread'"
                         [class.shadow-sm]="activeStatus() === 'unread'"
-                        [class.text-gray-500]="activeStatus() !== 'unread'"
+                        [class.text-(--ui-text-muted)]="activeStatus() !== 'unread'"
                         (click)="setStatus('unread')">Okunmamış</button>
                     <button class="px-4 h-full text-xs font-bold rounded-lg transition-all"
-                        [class.bg-white]="activeStatus() === 'read'" [class.text-indigo-600]="activeStatus() === 'read'"
-                        [class.shadow-sm]="activeStatus() === 'read'" [class.text-gray-500]="activeStatus() !== 'read'"
+                        [class.bg-(--ui-surface)]="activeStatus() === 'read'" [class.text-(--ui-brand-text)]="activeStatus() === 'read'"
+                        [class.shadow-sm]="activeStatus() === 'read'" [class.text-(--ui-text-muted)]="activeStatus() !== 'read'"
                         (click)="setStatus('read')">Okunmuş</button>
                 </div>
             </div>
@@ -79,7 +79,7 @@
 
     <!-- Table Section -->
     <div
-        class="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+        class="bg-(--ui-surface) rounded-[2rem] shadow-sm border border-(--ui-border) overflow-hidden">
         <table mat-table [dataSource]="filteredNotifications()" class="w-full !bg-transparent">
 
             <!-- Checkbox Column -->
@@ -102,8 +102,8 @@
                 <th mat-header-cell *matHeaderCellDef class="!w-12"></th>
                 <td mat-cell *matCellDef="let element">
                     <div *ngIf="!element.isRead" class="relative flex items-center justify-center">
-                        <div class="w-3 h-3 rounded-full bg-indigo-600 animate-ping absolute opacity-75"></div>
-                        <div class="w-3 h-3 rounded-full bg-indigo-600 relative"></div>
+                        <div class="w-3 h-3 rounded-full bg-(--ui-brand) animate-ping absolute opacity-75"></div>
+                        <div class="w-3 h-3 rounded-full bg-(--ui-brand) relative"></div>
                     </div>
                 </td>
             </ng-container>
@@ -114,23 +114,23 @@
                 <td mat-cell *matCellDef="let element">
                     <div class="flex gap-4 items-center py-4">
                         <div [ngClass]="{
-                            'bg-blue-100 text-blue-600': element.type === 'SupportRequest',
-                            'bg-orange-100 text-orange-600': element.type === 'System',
-                            'bg-green-100 text-green-600': element.type === 'Account' || element.type === 'Info'
+                            'bg-(--ui-brand-soft) text-(--ui-brand-text)': element.type === 'SupportRequest',
+                            'bg-(--ui-warning-soft) text-(--ui-warning)': element.type === 'System',
+                            'bg-(--ui-success-soft) text-(--ui-success)': element.type === 'Account' || element.type === 'Info'
                         }" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
                             <mat-icon>{{ element.type === 'SupportRequest' ? 'support_agent' : element.type ===
                                 'Account' ? 'person' : 'info' }}</mat-icon>
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <p class="text-gray-900 dark:text-white mb-0.5 font-bold"
+                                <p class="text-(--ui-text) mb-0.5 font-bold"
                                     [class.opacity-50]="element.isRead">
                                     {{element.title}}
                                 </p>
                                 <span *ngIf="!element.isRead"
-                                    class="px-2 py-0.5 rounded-full bg-indigo-600 text-[10px] text-white font-bold uppercase tracking-wider">YENİ</span>
+                                    class="px-2 py-0.5 rounded-full bg-(--ui-brand) text-[10px] text-(--ui-brand-contrast) font-bold">YENİ</span>
                             </div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1"
+                            <p class="text-sm text-(--ui-text-muted) line-clamp-1"
                                 [class.opacity-50]="element.isRead">
                                 {{element.message}}
                             </p>
@@ -142,8 +142,8 @@
             <!-- Date Column -->
             <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Tarih</th>
-                <td mat-cell *matCellDef="let element" class="text-sm" [class.text-indigo-600]="!element.isRead"
-                    [class.font-bold]="!element.isRead" [class.text-gray-400]="element.isRead">
+                <td mat-cell *matCellDef="let element" class="text-sm" [class.text-(--ui-brand-text)]="!element.isRead"
+                    [class.font-bold]="!element.isRead" [class.text-(--ui-text-muted)]="element.isRead">
                     {{formatTime(element.createdAt)}}
                 </td>
             </ng-container>
@@ -170,20 +170,20 @@
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"
-                class="!h-14 border-b border-gray-100 dark:border-gray-800"></tr>
+                class="!h-14 border-b border-(--ui-border)"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="viewDetail(row)"
-                class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0"
+                class="cursor-pointer hover:bg-(--ui-surface-muted) transition-colors border-b border-(--ui-border) last:border-0"
                 [style.background-color]="!row.isRead ? 'rgba(79, 70, 229, 0.05)' : 'transparent'"></tr>
         </table>
 
         <!-- Empty State -->
         <div *ngIf="filteredNotifications().length === 0" class="py-20 text-center">
             <div
-                class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <mat-icon class="!w-10 !h-10 !text-[40px] text-gray-300">notifications_off</mat-icon>
+                class="w-20 h-20 bg-(--ui-surface-muted) rounded-full flex items-center justify-center mx-auto mb-4">
+                <mat-icon class="!w-10 !h-10 !text-[40px] text-(--ui-text-muted)">notifications_off</mat-icon>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Bildirim Bulunamadı</h3>
-            <p class="text-gray-500">Seçtiğiniz filtrelere veya arama kriterine uygun bildirim bulunmuyor.</p>
+            <h3 class="text-lg font-bold text-(--ui-text) mb-1">Bildirim Bulunamadı</h3>
+            <p class="text-(--ui-text-muted)">Seçtiğiniz filtrelere veya arama kriterine uygun bildirim bulunmuyor.</p>
             <button mat-button color="primary" class="mt-4"
                 (click)="activeCategory.set('All'); activeStatus.set('all'); searchQuery.set('')">
                 Filtreleri Temizle

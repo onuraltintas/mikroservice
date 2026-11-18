@@ -1,5 +1,5 @@
-<div class="mt-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-  <button *ngIf="!expanded() && !netOnly" type="button" (click)="open()" class="text-sm font-semibold text-(--ui-brand-text) ">Okul / üniversite hedefini görüntüle</button>
+<div class="mt-4 rounded-xl border border-(--ui-border) p-4">
+  <button *ngIf="!expanded() && !netOnly" type="button" (click)="open()" class="text-sm font-semibold text-(--ui-brand-text)">Okul / üniversite hedefini görüntüle</button>
   <ng-container *ngIf="expanded()">
     <!-- E7 (#30): on Hedefim the student edits the target with the wizard's steps; this editor then shows only the net targets. -->
     <div *ngIf="!netOnly" class="flex flex-wrap items-center justify-between gap-3">
@@ -7,15 +7,15 @@
       <button type="button" (click)="open()" [disabled]="busy() || saving()" class="text-sm underline disabled:opacity-50">Yeniden yükle</button>
     </div>
     <p *ngIf="busy()" role="status" class="mt-2 text-sm">Yükleniyor…</p>
-    <p *ngIf="error()" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-300">{{ error() }}</p>
+    <p *ngIf="error()" role="alert" class="mt-2 text-sm text-(--ui-danger)">{{ error() }}</p>
     <button *ngIf="netOnly && error() && !target() && !busy()" type="button" (click)="open()" class="text-sm underline">Yeniden yükle</button>
-    <p *ngIf="success()" role="status" class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{{ success() }}</p>
+    <p *ngIf="success()" role="status" class="mt-2 text-sm text-(--ui-success)">{{ success() }}</p>
     <ng-container *ngIf="target() as current">
       <!-- Paket D (#9): a teacher's goal stays as it is when the exam changes; both sides see that it no longer matches. -->
-      <p *ngIf="current.examMismatch" role="status" data-testid="goal-exam-mismatch" class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">{{ staffStudentId ? 'Bu hedef, öğrencinin çalışma tercihlerindeki sınavla artık eşleşmiyor; hedefin güncellenmesi gerekiyor.' : current.canEdit ? 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini yeniden belirle.' : 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini öğretmenin belirledi; değiştirmek için öğretmenine yaz.' }}</p>
+      <p *ngIf="current.examMismatch" role="status" data-testid="goal-exam-mismatch" class="mt-2 rounded-lg bg-(--ui-warning-soft) p-3 text-sm text-(--ui-warning)">{{ staffStudentId ? 'Bu hedef, öğrencinin çalışma tercihlerindeki sınavla artık eşleşmiyor; hedefin güncellenmesi gerekiyor.' : current.canEdit ? 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini yeniden belirle.' : 'Bu hedef, çalışma tercihlerindeki sınavınla artık eşleşmiyor. Hedefini öğretmenin belirledi; değiştirmek için öğretmenine yaz.' }}</p>
       <section aria-label="Net hedefi" class="my-3 rounded-lg border p-3">
         <h4>Deneme net hedeflerin</h4>
-        <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-950"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{net(metric.targetNet)}} net</p></article>}</div><p>{{ netOnly ? 'Yalnız aynı sınavın denemeleriyle karşılaştırılır.' : 'Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.' }}</p>
+        <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-(--ui-success-soft) bg-(--ui-success-soft) p-4 shadow-sm"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{net(metric.targetNet)}} net</p></article>}</div><p>{{ netOnly ? 'Yalnız aynı sınavın denemeleriyle karşılaştırılır.' : 'Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.' }}</p>
         <p *ngIf="current.netTarget?.examCode && !current.netTargets?.length">{{current.netTarget?.examCode}} · {{net(current.netTarget?.targetNet)}} net</p>
         <ng-container *ngIf="current.canEdit">
           <button type="button" (click)="openNet()" [disabled]="saving() || busy()">Net hedefini düzenle</button>
@@ -27,27 +27,27 @@
         </ng-container>
       </section>
       <ng-container *ngIf="!netOnly">
-      <section class="my-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800" aria-label="Puan hedefi">
+      <section class="my-3 rounded-lg bg-(--ui-surface-muted) p-3" aria-label="Puan hedefi">
         <h4 class="text-sm font-semibold">Puan hedefi ve otomatik karşılaştırma</h4>
-        <p class="mt-2 text-xs text-slate-500">Aynı sınav türü ve puan ölçeğindeki dönem içi son sonuç kullanılır. Öğrenci beyanı ve öğretmen kaydı ayrı değerlendirilir. Kaydedilen ilerlemeniz değişmez; bu bir yerleşme tahmini değildir.</p>
-        <p *ngIf="current.scoreTarget?.subject" class="mt-2 text-xs text-amber-700 dark:text-amber-300">Ders hedefi, toplam sınav puanıyla otomatik karşılaştırılmaz.</p>
+        <p class="mt-2 text-xs text-(--ui-text-muted)">Aynı sınav türü ve puan ölçeğindeki dönem içi son sonuç kullanılır. Öğrenci beyanı ve öğretmen kaydı ayrı değerlendirilir. Kaydedilen ilerlemeniz değişmez; bu bir yerleşme tahmini değildir.</p>
+        <p *ngIf="current.scoreTarget?.subject" class="mt-2 text-xs text-(--ui-warning)">Ders hedefi, toplam sınav puanıyla otomatik karşılaştırılmaz.</p>
         <form *ngIf="current.canEdit; else readonlyScore" (ngSubmit)="saveScore()" class="mt-3">
           <fieldset [disabled]="busy() || saving() || stale()" class="grid gap-3 sm:grid-cols-3">
             <label class="text-sm">Sınav türü<select [(ngModel)]="examType" name="examType" required class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="">Seç</option><option *ngFor="let type of examTypes" [value]="type">{{ type | coachingLabel:'examType' }}</option></select></label>
             <label class="text-sm">Hedef puan<input type="number" [(ngModel)]="score" name="score" required min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
             <label class="text-sm">En yüksek puan (ölçek)<input type="number" [(ngModel)]="maxScore" name="maxScore" required min="0.01" max="999.99" step="0.01" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
-            <div class="flex flex-wrap gap-3 sm:col-span-3"><button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-white">Puan hedefini kaydet</button><button type="button" (click)="clearScore()" class="text-sm underline">Puan hedefini kaldır</button></div>
+            <div class="flex flex-wrap gap-3 sm:col-span-3"><button type="submit" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-(--ui-brand-contrast)">Puan hedefini kaydet</button><button type="button" (click)="clearScore()" class="text-sm underline">Puan hedefini kaldır</button></div>
           </fieldset>
         </form>
         <ng-template #readonlyScore><p class="mt-2 text-sm">Öğretmenin belirlediği puan hedefi: {{ current.scoreTarget?.targetScore ?? 'Belirtilmemiş' }} / {{ current.scoreTarget?.maxScore ?? 'Ölçek belirtilmemiş' }} · {{ current.scoreTarget?.examType ?? 'Sınav türü belirtilmemiş' }}</p></ng-template>
       </section>
-      <p class="mt-2 text-sm text-slate-500">{{ current.targetSchoolId ? 'Bir okul hedefi bağlı.' : current.targetUniversityProgramId ? 'Bir üniversite programı bağlı.' : 'Henüz okul veya üniversite programı bağlanmadı.' }}</p>
-      <div *ngIf="current.catalogTarget as linked" class="mt-2 rounded-lg bg-(--ui-brand-soft) p-3 ">
+      <p class="mt-2 text-sm text-(--ui-text-muted)">{{ current.targetSchoolId ? 'Bir okul hedefi bağlı.' : current.targetUniversityProgramId ? 'Bir üniversite programı bağlı.' : 'Henüz okul veya üniversite programı bağlanmadı.' }}</p>
+      <div *ngIf="current.catalogTarget as linked" class="mt-2 rounded-lg bg-(--ui-brand-soft) p-3">
         <p class="text-sm font-semibold">{{ linked.name }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ linked.detail }}</p>
-        <p *ngIf="!linked.isActive" class="mt-2 text-xs text-amber-700 dark:text-amber-300">Bu katalog kaydı pasif. Mevcut hedef bağlantın korunur; yeni seçim için aktif kayıtları kullan.</p>
+        <p class="mt-1 text-xs text-(--ui-text-muted)">{{ linked.detail }}</p>
+        <p *ngIf="!linked.isActive" class="mt-2 text-xs text-(--ui-warning)">Bu katalog kaydı pasif. Mevcut hedef bağlantın korunur; yeni seçim için aktif kayıtları kullan.</p>
       </div>
-      <p *ngIf="!current.canEdit" class="mt-2 text-sm text-slate-500">Bu hedefi öğretmen oluşturdu. Bağlantıyı yalnız yetkili öğretmen düzenleyebilir.</p>
+      <p *ngIf="!current.canEdit" class="mt-2 text-sm text-(--ui-text-muted)">Bu hedefi öğretmen oluşturdu. Bağlantıyı yalnız yetkili öğretmen düzenleyebilir.</p>
       <div *ngIf="current.canEdit" class="mt-3">
         <label *ngIf="!context" class="text-sm">Hedef türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" class="ml-2 rounded border p-2"><option value="school">LGS okulları</option><option value="program">YKS programları</option></select></label>
         <button *ngIf="current.targetSchoolId || current.targetUniversityProgramId" type="button" (click)="clear()" [disabled]="busy() || saving() || stale()" class="ml-2 rounded border p-2 text-sm">Hedef bağlantısını kaldır</button>

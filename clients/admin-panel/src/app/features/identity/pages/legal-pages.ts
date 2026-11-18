@@ -25,82 +25,81 @@ const CORE_LEGAL_DOCUMENTS: { slug: string; title: string; description: string }
     <main class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" aria-labelledby="legal-pages-title">
       <header class="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p class="text-sm font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">eduivme · Platform yönetimi</p>
-          <h1 id="legal-pages-title" class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">Ortak yasal sayfalar</h1>
-          <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">Ortak ve ürüne özel metinler tek Identity kaynağında yönetilir. Koçluk ve Hızlı Okuma yayımlanmış sürümleri buradan alır. Başlangıç metinleri yalnızca düzenleme taslağıdır; işletme bilgileri tamamlanıp hukuk danışmanınızca incelenmeden yayımlanamaz.</p>
+          <p class="text-sm font-semibold text-(--ui-brand-text)">eduivme · Platform yönetimi</p>
+          <h1 id="legal-pages-title" class="mt-2 text-2xl font-bold text-(--ui-text)">Ortak yasal sayfalar</h1>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-(--ui-text-muted)">Ortak ve ürüne özel metinler tek Identity kaynağında yönetilir. Koçluk ve Hızlı Okuma yayımlanmış sürümleri buradan alır. Başlangıç metinleri yalnızca düzenleme taslağıdır; işletme bilgileri tamamlanıp hukuk danışmanınızca incelenmeden yayımlanamaz.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button type="button" (click)="createStarterDrafts()" [disabled]="creatingStarterDrafts()" class="rounded-lg border border-indigo-300 px-4 py-2.5 text-sm font-semibold text-indigo-800 disabled:opacity-50 dark:border-indigo-800 dark:text-indigo-200">{{ creatingStarterDrafts() ? 'Taslaklar ekleniyor…' : 'Başlangıç taslaklarını ekle' }}</button>
-          <button type="button" (click)="startNewDocument()" class="rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Yeni belge</button>
+          <button type="button" (click)="createStarterDrafts()" [disabled]="creatingStarterDrafts()" class="rounded-lg border border-(--ui-brand) px-4 py-2.5 text-sm font-semibold text-(--ui-brand-text) disabled:opacity-50">{{ creatingStarterDrafts() ? 'Taslaklar ekleniyor…' : 'Başlangıç taslaklarını ekle' }}</button>
+          <button type="button" (click)="startNewDocument()" class="rounded-lg bg-(--ui-brand) px-4 py-2.5 text-sm font-semibold text-(--ui-brand-contrast) focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ui-brand)">Yeni belge</button>
         </div>
       </header>
 
-      @if (error()) { <p class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200" role="alert">{{ error() }}</p> }
-      @if (message()) { <p class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" role="status">{{ message() }}</p> }
+      @if (error()) { <p class="rounded-xl border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-3 text-sm text-(--ui-danger)" role="alert">{{ error() }}</p> }
+      @if (message()) { <p class="rounded-xl border border-(--ui-success-soft) bg-(--ui-success-soft) p-3 text-sm text-(--ui-success)" role="status">{{ message() }}</p> }
 
       <section class="grid gap-3 sm:grid-cols-2" aria-label="Düzenlenecek yasal sayfa seçimi">
         @for (document of documents(); track document.slug) {
           <button type="button" (click)="selectPage(document.slug)" [attr.aria-pressed]="selectedSlug() === document.slug"
-            class="rounded-2xl border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            [class.border-indigo-500]="selectedSlug() === document.slug" [class.bg-indigo-50]="selectedSlug() === document.slug"
-            [class.dark:bg-indigo-950]="selectedSlug() === document.slug" [class.border-slate-200]="selectedSlug() !== document.slug" [class.dark:border-slate-700]="selectedSlug() !== document.slug">
-            <span class="flex items-center justify-between gap-3"><strong class="text-slate-900 dark:text-white">{{ document.title }}</strong>
-              <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [class.bg-emerald-100]="!findPage(document.slug)?.isArchived && findPage(document.slug)?.isPublished" [class.text-emerald-800]="!findPage(document.slug)?.isArchived && findPage(document.slug)?.isPublished" [class.bg-amber-100]="findPage(document.slug)?.isArchived" [class.text-amber-800]="findPage(document.slug)?.isArchived" [class.bg-slate-100]="!findPage(document.slug)?.isArchived && !findPage(document.slug)?.isPublished" [class.text-slate-600]="!findPage(document.slug)?.isArchived && !findPage(document.slug)?.isPublished">
+            class="rounded-2xl border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ui-brand)"
+            [class.border-(--ui-brand)]="selectedSlug() === document.slug" [class.bg-(--ui-brand-soft)]="selectedSlug() === document.slug" [class.border-(--ui-border)]="selectedSlug() !== document.slug">
+            <span class="flex items-center justify-between gap-3"><strong class="text-(--ui-text)">{{ document.title }}</strong>
+              <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [class.bg-(--ui-success-soft)]="!findPage(document.slug)?.isArchived && findPage(document.slug)?.isPublished" [class.text-(--ui-success)]="!findPage(document.slug)?.isArchived && findPage(document.slug)?.isPublished" [class.bg-(--ui-warning-soft)]="findPage(document.slug)?.isArchived" [class.text-(--ui-warning)]="findPage(document.slug)?.isArchived" [class.bg-(--ui-surface-muted)]="!findPage(document.slug)?.isArchived && !findPage(document.slug)?.isPublished" [class.text-(--ui-text-muted)]="!findPage(document.slug)?.isArchived && !findPage(document.slug)?.isPublished">
                 {{ findPage(document.slug)?.isArchived ? 'Arşivde' : findPage(document.slug)?.isPublished ? 'Yayında' : 'Yayımlanmamış' }}
               </span>
             </span>
-            <span class="mt-2 block text-sm text-slate-600 dark:text-slate-300">{{ document.description }}</span>
-            @if (findPage(document.slug)) { <span class="mt-2 block text-xs text-slate-500">Sürüm {{ findPage(document.slug)?.version }}</span> }
+            <span class="mt-2 block text-sm text-(--ui-text-muted)">{{ document.description }}</span>
+            @if (findPage(document.slug)) { <span class="mt-2 block text-xs text-(--ui-text-muted)">Sürüm {{ findPage(document.slug)?.version }}</span> }
           </button>
         }
       </section>
 
       <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <form class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" (ngSubmit)="save()">
+        <form class="space-y-4 rounded-2xl border border-(--ui-border) bg-(--ui-surface) p-5 shadow-sm" (ngSubmit)="save()">
           @if (activePage()?.isArchived) {
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100" role="status">
+            <div class="rounded-xl border border-(--ui-warning-soft) bg-(--ui-warning-soft) p-4 text-sm leading-6 text-(--ui-warning)" role="status">
               <strong>Bu belge arşivde.</strong> Herkese açık sayfadan kaldırılmıştır; metin ve sürüm geçmişi saklanıyor. Geri yükleme belgeyi taslak olarak açar, otomatik yayımlamaz.
             </div>
-            <button type="button" class="rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50" (click)="restoreDocument()" [disabled]="restoring()">{{ restoring() ? 'Geri yükleniyor…' : 'Geri yükle (taslak)' }}</button>
+            <button type="button" class="rounded-lg bg-(--ui-brand) px-4 py-2.5 text-sm font-semibold text-(--ui-brand-contrast) disabled:opacity-50" (click)="restoreDocument()" [disabled]="restoring()">{{ restoring() ? 'Geri yükleniyor…' : 'Geri yükle (taslak)' }}</button>
           } @else {
             <fieldset class="space-y-4" [disabled]="archiving()">
-              <div><h2 class="text-lg font-semibold text-slate-900 dark:text-white">{{ creating() ? 'Yeni yasal belge' : selectedDocumentTitle() }}</h2><p class="mt-1 text-sm text-slate-500">Sayfa adresi: <code>/legal/{{ creating() ? (draftSlug() || '{slug}') : selectedSlug() }}</code></p></div>
+              <div><h2 class="text-lg font-semibold text-(--ui-text)">{{ creating() ? 'Yeni yasal belge' : selectedDocumentTitle() }}</h2><p class="mt-1 text-sm text-(--ui-text-muted)">Sayfa adresi: <code>/legal/{{ creating() ? (draftSlug() || '{slug}') : selectedSlug() }}</code></p></div>
               @if (creating()) {
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Belge adresi (slug)
-                  <input class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" name="slug" [ngModel]="draftSlug()" (ngModelChange)="draftSlug.set($event)" required maxlength="80" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="legal-slug-help" />
+                <label class="block text-sm font-medium text-(--ui-text)">Belge adresi (slug)
+                  <input class="mt-1 block w-full rounded-lg border border-(--ui-border) bg-(--ui-surface) px-3 py-2 text-sm" name="slug" [ngModel]="draftSlug()" (ngModelChange)="draftSlug.set($event)" required maxlength="80" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="legal-slug-help" />
                 </label>
-                <p id="legal-slug-help" class="-mt-3 text-xs leading-5 text-slate-500">Küçük İngilizce harf, rakam ve tek tire kullanın; ör. <code>cerez-politikasi</code>. Kayıttan sonra adres değiştirilemez.</p>
+                <p id="legal-slug-help" class="-mt-3 text-xs leading-5 text-(--ui-text-muted)">Küçük İngilizce harf, rakam ve tek tire kullanın; ör. <code>cerez-politikasi</code>. Kayıttan sonra adres değiştirilemez.</p>
               }
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Sayfa başlığı
-                <input class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" name="title" [ngModel]="title()" (ngModelChange)="title.set($event)" required maxlength="200" />
+              <label class="block text-sm font-medium text-(--ui-text)">Sayfa başlığı
+                <input class="mt-1 block w-full rounded-lg border border-(--ui-border) bg-(--ui-surface) px-3 py-2 text-sm" name="title" [ngModel]="title()" (ngModelChange)="title.set($event)" required maxlength="200" />
               </label>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Belge metni
-                <textarea class="mt-1 block min-h-80 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm leading-6 dark:border-slate-700 dark:bg-slate-950" name="content" [ngModel]="content()" (ngModelChange)="content.set($event)" required maxlength="200000" aria-describedby="legal-content-help"></textarea>
+              <label class="block text-sm font-medium text-(--ui-text)">Belge metni
+                <textarea class="mt-1 block min-h-80 w-full rounded-lg border border-(--ui-border) bg-(--ui-surface) px-3 py-2 font-mono text-sm leading-6" name="content" [ngModel]="content()" (ngModelChange)="content.set($event)" required maxlength="200000" aria-describedby="legal-content-help"></textarea>
               </label>
-              <p id="legal-content-help" class="text-xs leading-5 text-slate-500">Düz metin olarak saklanır ve gösterilir; HTML çalıştırılmaz. Boş veya taslak sayfalar herkese açık API'de yayımlanmış sayılmaz.</p>
-              <label class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+              <p id="legal-content-help" class="text-xs leading-5 text-(--ui-text-muted)">Düz metin olarak saklanır ve gösterilir; HTML çalıştırılmaz. Boş veya taslak sayfalar herkese açık API'de yayımlanmış sayılmaz.</p>
+              <label class="flex items-start gap-3 rounded-xl border border-(--ui-warning-soft) bg-(--ui-warning-soft) p-3 text-sm text-(--ui-warning)">
                 <input class="mt-1" type="checkbox" name="isPublished" [ngModel]="isPublished()" (ngModelChange)="isPublished.set($event)" />
                 <span><strong>Yayımla</strong><span class="mt-1 block">Yalnızca yetkili kişi tarafından onaylanmış ve güncel metni yayımlayın.</span></span>
               </label>
               <div class="flex flex-wrap items-center gap-3">
-                <button class="rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" type="submit" [disabled]="saving() || !title().trim() || !content().trim() || (creating() && !isValidDraftSlug())">{{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}</button>
-                @if (activePage()) { <span class="text-xs text-slate-500">Mevcut sürüm {{ activePage()?.version }}</span><button type="button" class="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-800 disabled:opacity-50 dark:border-red-800 dark:text-red-200" (click)="requestArchive()" [disabled]="archiving()">Belgeyi arşivle</button> }
+                <button class="rounded-lg bg-(--ui-brand) px-4 py-2.5 text-sm font-semibold text-(--ui-brand-contrast) disabled:cursor-not-allowed disabled:opacity-50" type="submit" [disabled]="saving() || !title().trim() || !content().trim() || (creating() && !isValidDraftSlug())">{{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}</button>
+                @if (activePage()) { <span class="text-xs text-(--ui-text-muted)">Mevcut sürüm {{ activePage()?.version }}</span><button type="button" class="rounded-lg border border-(--ui-danger) px-4 py-2.5 text-sm font-semibold text-(--ui-danger) disabled:opacity-50" (click)="requestArchive()" [disabled]="archiving()">Belgeyi arşivle</button> }
               </div>
               @if (archiveConfirmation()) {
-                <div class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950" role="alertdialog" aria-label="Belgeyi arşivlemeyi onayla">
-                  <p class="text-sm leading-6 text-red-900 dark:text-red-100">Belge yayından kaldırılacak. Metin ve geçmiş sürümleri korunacak; arşivden geri yüklenebilir.</p>
-                  <div class="mt-3 flex gap-2"><button type="button" class="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white" (click)="confirmArchive()">Evet, arşivle</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="archiveConfirmation.set(false)">Vazgeç</button></div>
+                <div class="rounded-xl border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4" role="alertdialog" aria-label="Belgeyi arşivlemeyi onayla">
+                  <p class="text-sm leading-6 text-(--ui-danger)">Belge yayından kaldırılacak. Metin ve geçmiş sürümleri korunacak; arşivden geri yüklenebilir.</p>
+                  <div class="mt-3 flex gap-2"><button type="button" class="rounded-lg bg-(--ui-danger-soft) px-3 py-2 text-sm font-semibold text-(--ui-danger)" (click)="confirmArchive()">Evet, arşivle</button><button type="button" class="rounded-lg border border-(--ui-border) px-3 py-2 text-sm font-semibold" (click)="archiveConfirmation.set(false)">Vazgeç</button></div>
                 </div>
               }
             </fieldset>
           }
         </form>
 
-        <aside class="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900" aria-labelledby="legal-revisions-title">
-          <h2 id="legal-revisions-title" class="text-lg font-semibold text-slate-900 dark:text-white">Sürüm geçmişi</h2>
-          @if (loadingRevisions()) { <p class="text-sm text-slate-500">Sürümler yükleniyor…</p> }
-          @else if (!revisions().length) { <p class="text-sm leading-6 text-slate-500">Henüz önceki bir sürüm yok. İlk kayıt etkin sürüm olarak saklanır.</p> }
-          @else { <ol class="space-y-3">@for (revision of revisions(); track revision.id) { <li><details class="rounded-lg border border-slate-200 p-3 dark:border-slate-700"><summary class="cursor-pointer text-sm font-medium">Sürüm {{ revision.version }}{{ revision.isArchived ? ' · Arşiv kaydı' : '' }} · {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</summary><p class="mt-2 text-xs font-semibold">{{ revision.title }}</p><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs leading-5 text-slate-600 dark:text-slate-300">{{ revision.content }}</pre></details></li> }</ol> }
+        <aside class="space-y-3 rounded-2xl border border-(--ui-border) bg-(--ui-surface) p-5 shadow-sm" aria-labelledby="legal-revisions-title">
+          <h2 id="legal-revisions-title" class="text-lg font-semibold text-(--ui-text)">Sürüm geçmişi</h2>
+          @if (loadingRevisions()) { <p class="text-sm text-(--ui-text-muted)">Sürümler yükleniyor…</p> }
+          @else if (!revisions().length) { <p class="text-sm leading-6 text-(--ui-text-muted)">Henüz önceki bir sürüm yok. İlk kayıt etkin sürüm olarak saklanır.</p> }
+          @else { <ol class="space-y-3">@for (revision of revisions(); track revision.id) { <li><details class="rounded-lg border border-(--ui-border) p-3"><summary class="cursor-pointer text-sm font-medium">Sürüm {{ revision.version }}{{ revision.isArchived ? ' · Arşiv kaydı' : '' }} · {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</summary><p class="mt-2 text-xs font-semibold">{{ revision.title }}</p><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs leading-5 text-(--ui-text-muted)">{{ revision.content }}</pre></details></li> }</ol> }
         </aside>
       </section>
     </main>

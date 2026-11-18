@@ -1,6 +1,6 @@
 .teacher-goals { margin-top: 18px; }
 .goals-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
-.goals-eyebrow { margin: 0 0 7px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: .15em; }
+.goals-eyebrow { margin: 0 0 7px; color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .goals-heading h3 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 24px; font-weight: 400; letter-spacing: -.03em; }
 .goals-heading p { margin: 6px 0 0; color: var(--ui-text-muted); font-size: 13px; }
 .goal-count { color: var(--ui-text); font-size: 13px; }
@@ -10,7 +10,7 @@
 .goal-form label { display: grid; min-width: 0; gap: 5px; color: var(--ui-text-muted); font-size: 13px; font-weight: 700; }
 .goal-form input, .goal-form select, .goal-form textarea { width: 100%; min-height: 36px; box-sizing: border-box; padding: 8px 9px; border: 1px solid var(--ui-border); border-radius: 8px; outline: none; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; }
 .goal-form textarea { resize: vertical; }
-.goal-form input:focus, .goal-form select:focus, .goal-form textarea:focus { border-color: var(--ui-border); box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.goal-form input:focus, .goal-form select:focus, .goal-form textarea:focus { border-color: var(--ui-border); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-text) 14%, transparent); }
 .goal-form input:disabled, .goal-form select:disabled { color: var(--ui-text); background: var(--ui-surface); }
 .goal-form-grid { display: grid; gap: 10px; }
 .three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -24,7 +24,7 @@
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .form-actions button { min-height: 36px; padding: 0 12px; border: 1px solid var(--ui-border); border-radius: 8px; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
 .cancel-edit { color: var(--ui-text); background: var(--ui-surface); }
-.save-goal { border-color: var(--ui-border) !important; color: #fff; background: var(--ui-brand); }
+.save-goal { border-color: var(--ui-border) !important; color: var(--ui-brand-contrast); background: var(--ui-brand); }
 .goals-list { display: grid; gap: 10px; }
 .goal-card { padding: 15px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-surface); }
 .goal-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -48,7 +48,7 @@
 .goals-success { border-color: var(--ui-border); color: var(--ui-success); background: var(--ui-brand-soft); }
 .student-lookup-warning { margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--ui-border); border-radius: 9px; color: var(--coaching-warning); background: var(--coaching-warm); font-size: 13px; }
 .goals-loading { display: grid; gap: 9px; }
-.goals-loading div { height: 86px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: goals-shimmer 1.4s linear infinite; }
+.goals-loading div { height: 86px; border-radius: 12px; background: var(--ui-surface-muted); background-size: 200% 100%; animation: goals-shimmer 1.4s linear infinite; }
 .load-goals-wrap { display: flex; justify-content: center; margin-top: 12px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .goal-target-editor { border: 0; padding: 0; margin: 0; min-width: 0; }

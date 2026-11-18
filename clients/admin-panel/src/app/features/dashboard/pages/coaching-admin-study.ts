@@ -18,10 +18,10 @@ interface RevisionPage { items: RevisionSummary[]; totalCount: number; pageNumbe
   @if(permitted()) {
     <section class="space-y-4 rounded-xl border p-4" aria-labelledby="admin-study-title">
       <h3 id="admin-study-title" class="text-lg font-semibold">Kişisel çalışma planı ve hedef incelemesi</h3>
-      <p class="text-sm text-gray-500">Salt okunur global yönetici incelemesi. Bu ekrandan öğrenci beyanı, plan geçmişi veya hedef sonuçları değiştirilemez.</p>
+      <p class="text-sm text-(--ui-text-muted)">Salt okunur global yönetici incelemesi. Bu ekrandan öğrenci beyanı, plan geçmişi veya hedef sonuçları değiştirilemez.</p>
       <h4 class="font-medium">Haftalık müsaitlik</h4>
       @if(availabilityLoading()) { <p role="status">Müsaitlik yükleniyor…</p> }
-      @if(availabilityError()) { <p role="alert" class="text-red-700">{{ availabilityError() }}</p> }
+      @if(availabilityError()) { <p role="alert" class="text-(--ui-danger)">{{ availabilityError() }}</p> }
       @else if(availability(); as value) {
         <p class="text-sm">Sürüm: {{ value.version }}</p>
         <ul class="text-sm">@for(window of value.windows; track $index) { <li>{{ dayLabel(window.day) }} · {{ time(window.startMinute) }}–{{ time(window.endMinute) }}</li> }</ul>
@@ -29,13 +29,13 @@ interface RevisionPage { items: RevisionSummary[]; totalCount: number; pageNumbe
       } @else if(!availabilityLoading()) { <p class="text-sm">Müsaitlik kaydı yok.</p> }
       <button type="button" (click)="loadAvailability()" [disabled]="availabilityLoading()" class="rounded border px-3 py-2 text-sm">Müsaitliği yenile</button>
       <h4 class="font-medium">Plan revizyonları ve geçmiş</h4>
-      <div class="flex flex-wrap gap-3"><label class="text-sm">Başlık ara<input [(ngModel)]="search" maxlength="100" class="ml-2 rounded border p-2 dark:bg-gray-800" /></label><label class="text-sm">Durum<select [(ngModel)]="status" class="ml-2 rounded border p-2 dark:bg-gray-800"><option value="">Tümü</option><option value="Draft">Taslak</option><option value="Active">Aktif</option><option value="Archived">Arşiv</option></select></label><button type="button" (click)="loadPlans()" class="rounded border px-3 py-2">Filtrele / yeniden dene</button></div>
+      <div class="flex flex-wrap gap-3"><label class="text-sm">Başlık ara<input [(ngModel)]="search" maxlength="100" class="ml-2 rounded border p-2" /></label><label class="text-sm">Durum<select [(ngModel)]="status" class="ml-2 rounded border p-2"><option value="">Tümü</option><option value="Draft">Taslak</option><option value="Active">Aktif</option><option value="Archived">Arşiv</option></select></label><button type="button" (click)="loadPlans()" class="rounded border px-3 py-2">Filtrele / yeniden dene</button></div>
       @if(loading()) { <p role="status">Plan geçmişi yükleniyor…</p> }
-      @if(error()) { <p role="alert" class="text-red-700">{{ error() }}</p> }
+      @if(error()) { <p role="alert" class="text-(--ui-danger)">{{ error() }}</p> }
       @if(plans(); as page) {
         <p class="text-sm">{{ page.totalCount }} revizyon · {{ page.pageNumber }}. sayfa</p>
         @if(!page.items.length) { <p class="text-sm">Bu filtrelerle plan revizyonu bulunamadı.</p> }
-        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr><th>Başlık</th><th>Revizyon</th><th>Durum / yöntem</th><th>Oluşturulma</th><th>İncele</th></tr></thead><tbody>@for(row of page.items; track row.id) { <tr class="border-t"><td class="p-2">{{ row.title }}<span class="block break-all text-xs text-gray-500">Plan: {{ row.planId }}</span></td><td>{{ row.revisionNumber }} (sürüm {{ row.version }})</td><td>{{ statusLabel(row.status) }} · {{ row.automaticAvailabilityVersion == null ? 'Manuel' : 'Otomatik' }}</td><td>{{ row.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td><button type="button" (click)="inspect(row.id)" class="rounded border px-2 py-1" [attr.aria-label]="row.title + ' revizyon ' + row.revisionNumber + ' görevlerini incele'">Görevler</button></td></tr> }</tbody></table></div>
+        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr><th>Başlık</th><th>Revizyon</th><th>Durum / yöntem</th><th>Oluşturulma</th><th>İncele</th></tr></thead><tbody>@for(row of page.items; track row.id) { <tr class="border-t"><td class="p-2">{{ row.title }}<span class="block break-all text-xs text-(--ui-text-muted)">Plan: {{ row.planId }}</span></td><td>{{ row.revisionNumber }} (sürüm {{ row.version }})</td><td>{{ statusLabel(row.status) }} · {{ row.automaticAvailabilityVersion == null ? 'Manuel' : 'Otomatik' }}</td><td>{{ row.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td><button type="button" (click)="inspect(row.id)" class="rounded border px-2 py-1" [attr.aria-label]="row.title + ' revizyon ' + row.revisionNumber + ' görevlerini incele'">Görevler</button></td></tr> }</tbody></table></div>
         <div class="flex gap-3"><button type="button" (click)="loadPlans(page.pageNumber - 1)" [disabled]="loading() || page.pageNumber <= 1" class="rounded border px-3 py-1">Önceki</button><button type="button" (click)="loadPlans(page.pageNumber + 1)" [disabled]="loading() || page.pageNumber * 25 >= page.totalCount" class="rounded border px-3 py-1">Sonraki</button></div>
       }
       @if(detailLoading()) { <p role="status">Revizyon görevleri yükleniyor…</p> }

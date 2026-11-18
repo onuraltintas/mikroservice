@@ -46,13 +46,13 @@ import { CoachingInstitutionStudent } from './coaching-institution.service';
       }
     </section>`,
   styles: [`
-    :host { display: block; } section { padding: 1.25rem; border: 1px solid #e2e7dd; border-radius: .8rem; background: #fff; }
-    p { color: #64716d; font-size: .8rem; line-height: 1.6; } .filters { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin: 1.25rem 0; }
-    label { display: grid; gap: .4rem; font-size: .8rem; } input, select, button { padding: .6rem .8rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: white; color: #355348; font: inherit; }
-    button { cursor: pointer; background: #f5f8f1; } button:disabled { opacity: .5; cursor: default; } .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: .75rem; }
-    .metrics div { padding: .9rem; border: 1px solid #e2e7dd; border-radius: .5rem; } dt { font-size: .75rem; color: #64716d; } dd { margin: .4rem 0 0; font-weight: 700; }
-    .table-scroll { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: .8rem; text-align: left; } th, td { padding: .75rem; border-bottom: 1px solid #e2e7dd; }
-    .pagination { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: 1rem; } [role=alert] { color: #9f1239; }
+    :host { display: block; } section { padding: 1.25rem; border: 1px solid var(--ui-border); border-radius: .8rem; background: var(--ui-surface); }
+    p { color: var(--ui-text-muted); font-size: .8rem; line-height: 1.6; } .filters { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin: 1.25rem 0; }
+    label { display: grid; gap: .4rem; font-size: .8rem; } input, select, button { padding: .6rem .8rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: white; color: var(--ui-success); font: inherit; }
+    button { cursor: pointer; background: var(--ui-surface-muted); } button:disabled { opacity: .5; cursor: default; } .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: .75rem; }
+    .metrics div { padding: .9rem; border: 1px solid var(--ui-border); border-radius: .5rem; } dt { font-size: .75rem; color: var(--ui-text-muted); } dd { margin: .4rem 0 0; font-weight: 700; }
+    .table-scroll { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: .8rem; text-align: left; } th, td { padding: .75rem; border-bottom: 1px solid var(--ui-border); }
+    .pagination { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: 1rem; } [role=alert] { color: var(--ui-danger); }
   `]
 })
 export class CoachingInstitutionAnalyticsComponent implements OnChanges {

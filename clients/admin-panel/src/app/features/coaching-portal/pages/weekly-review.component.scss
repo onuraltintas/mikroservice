@@ -3,7 +3,7 @@
 header, .week-picker, .decision-heading, .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 header, .decision-heading { justify-content: space-between; }
 h2 { font-size: 23px; font-weight: 750; line-height: 1.3; margin: 8px 0; } h3 { margin: 18px 0 10px; } p { line-height: 1.6; }
-.eyebrow { color: var(--ui-text-muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.eyebrow { color: var(--ui-text-muted); font-size: 10px; font-weight: 800; letter-spacing: 0; }
 .week-picker { margin: 20px 0 10px; align-items: end; }
 label { display: grid; gap: 7px; margin: 12px 0; font-size: 13px; }
 input, textarea, select, button { box-sizing: border-box; font: inherit; min-height: 40px; border: 1px solid var(--ui-border); border-radius: 7px; padding: 9px 12px; color: inherit; background: var(--ui-warning-soft); max-width: 100%; }

@@ -23,26 +23,26 @@ export const YKS_SCORE_TYPES: Record<string, string[]> = { TYT: ['TYT', 'SAY', '
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <fieldset class="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700" [disabled]="busy()">
+    <fieldset class="grid gap-3 rounded-xl border border-(--ui-border) p-4" [disabled]="busy()">
       <legend class="px-1 font-semibold">YKS kapsamı</legend>
-      <p class="text-sm text-gray-600 dark:text-gray-300">Konunun hangi YKS oturumunda, hangi puan türü ve testte sayıldığını seçin. Planlayıcı öğrencinin puan türüne göre yalnız bu kapsamdaki konuları önerir.</p>
-      @if (error()) { <p role="alert" class="rounded-lg bg-red-50 p-2 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">{{ error() }}</p> }
-      @if (message()) { <p role="status" class="rounded-lg bg-emerald-50 p-2 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">{{ message() }}</p> }
+      <p class="text-sm text-(--ui-text-muted)">Konunun hangi YKS oturumunda, hangi puan türü ve testte sayıldığını seçin. Planlayıcı öğrencinin puan türüne göre yalnız bu kapsamdaki konuları önerir.</p>
+      @if (error()) { <p role="alert" class="rounded-lg bg-(--ui-danger-soft) p-2 text-sm text-(--ui-danger)">{{ error() }}</p> }
+      @if (message()) { <p role="status" class="rounded-lg bg-(--ui-success-soft) p-2 text-sm text-(--ui-success)">{{ message() }}</p> }
       @if (loading()) { <p role="status" class="text-sm">Kapsam yükleniyor…</p> }
       @else {
-        @if (!drafts().length) { <p class="text-sm text-gray-600 dark:text-gray-300">Bu konu henüz hiçbir YKS kapsamında değil.</p> }
+        @if (!drafts().length) { <p class="text-sm text-(--ui-text-muted)">Bu konu henüz hiçbir YKS kapsamında değil.</p> }
         @for (scope of drafts(); track $index; let i = $index) {
-          <div class="grid gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:grid-cols-3" role="group" [attr.aria-label]="(i + 1) + '. YKS kapsamı'">
+          <div class="grid gap-2 rounded-lg border border-(--ui-border) p-3 sm:grid-cols-3" role="group" [attr.aria-label]="(i + 1) + '. YKS kapsamı'">
             <label class="grid min-w-0 gap-1 text-sm">Oturum
-              <select [name]="'yks-exam-' + i" [attr.name]="'yks-exam-' + i" [(ngModel)]="scope.examCode" (ngModelChange)="examChanged(scope)" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+              <select [name]="'yks-exam-' + i" [attr.name]="'yks-exam-' + i" [(ngModel)]="scope.examCode" (ngModelChange)="examChanged(scope)" class="w-full min-w-0 rounded-lg border p-2">
                 <option value="TYT">TYT</option><option value="AYT">AYT</option><option value="YDT">YDT</option>
               </select></label>
             <label class="grid min-w-0 gap-1 text-sm">Puan türü
-              <select [name]="'yks-score-' + i" [attr.name]="'yks-score-' + i" [(ngModel)]="scope.scoreType" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+              <select [name]="'yks-score-' + i" [attr.name]="'yks-score-' + i" [(ngModel)]="scope.scoreType" class="w-full min-w-0 rounded-lg border p-2">
                 @for (type of scoreTypes(scope.examCode); track type) { <option [value]="type">{{ scoreName(type) }}</option> }
               </select></label>
             <label class="grid min-w-0 gap-1 text-sm">Test
-              <select [name]="'yks-test-' + i" [attr.name]="'yks-test-' + i" [(ngModel)]="scope.testCode" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800">
+              <select [name]="'yks-test-' + i" [attr.name]="'yks-test-' + i" [(ngModel)]="scope.testCode" class="w-full min-w-0 rounded-lg border p-2">
                 @for (test of tests(scope.examCode); track test.code) { <option [value]="test.code">{{ test.label }}</option> }
               </select></label>
             @if (outcomes().length) {
@@ -59,8 +59,8 @@ export const YKS_SCORE_TYPES: Record<string, string[]> = { TYT: ['TYT', 'SAY', '
         }
         <button type="button" (click)="add()" class="justify-self-start rounded-lg border px-3 py-2 text-sm">Kapsam ekle</button>
         <label class="grid min-w-0 gap-1 text-sm font-medium">Değişiklik gerekçesi (5–500 karakter)
-          <input name="yks-reason" [(ngModel)]="reason" maxlength="500" class="w-full min-w-0 rounded-lg border p-2 dark:bg-gray-800"></label>
-        <button type="button" (click)="save()" [disabled]="reason.trim().length < 5" class="justify-self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">YKS kapsamını kaydet</button>
+          <input name="yks-reason" [(ngModel)]="reason" maxlength="500" class="w-full min-w-0 rounded-lg border p-2"></label>
+        <button type="button" (click)="save()" [disabled]="reason.trim().length < 5" class="justify-self-start rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-(--ui-brand-contrast) disabled:opacity-50">YKS kapsamını kaydet</button>
       }
     </fieldset>`
 })

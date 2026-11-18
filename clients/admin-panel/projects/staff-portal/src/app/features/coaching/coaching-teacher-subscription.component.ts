@@ -20,7 +20,7 @@ import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from '
     <section class="teacher-plan" aria-labelledby="teacher-plan-title">
       <header class="plan-heading">
         <div>
-          <p class="eyebrow">KOÇLUK · BAĞIMSIZ ÖĞRETMEN</p>
+          <p class="eyebrow">Koçluk, bağımsız öğretmen</p>
           <h2 id="teacher-plan-title">Öğretmen planım</h2>
           <p>Öğretmen planı, yalnızca Koçlukta size atanmış öğrenciler için koltuk sağlar. Kuruma bağlı öğretmenler kurum lisansını kullanır.</p>
         </div>
@@ -70,7 +70,7 @@ import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from '
     .plan-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
     .plan-heading h2 { margin: 0; font: 400 1.55rem var(--ui-font-body); }
     .plan-heading p:not(.eyebrow), .muted { color: var(--ui-text-muted); font-size: .875rem; line-height: 1.55; }
-    .eyebrow { margin: 0 0 .4rem; color: var(--ui-text-muted); font-size: .7rem; font-weight: 800; letter-spacing: .12em; }
+    .eyebrow { margin: 0 0 .4rem; color: var(--ui-text-muted); font-size: .7rem; font-weight: 800; letter-spacing: 0; }
     .card { padding: 1rem; border: 1px solid var(--ui-border); border-radius: .8rem; background: var(--ui-surface); }
     .card h3 { margin: 0 0 .8rem; font-size: 1rem; }
     .capacity { color: var(--ui-text); font-size: .9rem; }

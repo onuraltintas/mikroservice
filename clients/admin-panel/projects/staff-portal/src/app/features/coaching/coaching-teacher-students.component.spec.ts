@@ -235,7 +235,7 @@ describe('CoachingTeacherStudentsComponent', () => {
       items: [], pageNumber: 1, pageSize: 10, totalCount: 0, totalPages: 1
     });
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('ÖĞRENCİ RAPORU');
+    expect(fixture.nativeElement.textContent).toContain('öğrenci raporu');
 
     const backButton = fixture.nativeElement.querySelector('button[data-testid="back-to-roster"]') as HTMLButtonElement;
     backButton.click(); await vi.waitFor(()=>expect(fixture.componentInstance.selectedStudent()).toBeNull());

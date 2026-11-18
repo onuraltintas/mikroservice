@@ -28,15 +28,15 @@ import { PASSWORD_POLICY_SUMMARY, passwordRequirements } from '../../../core/val
     </div>
   `,
   styles: [`
-    .password-requirements { margin: 4px 0 8px; font-size: 13px; line-height: 1.5; color: var(--ds-muted, #4b5563); }
+    .password-requirements { margin: 4px 0 8px; font-size: 13px; line-height: 1.5; color: var(--ds-muted, var(--ui-text)); }
     .password-requirements__summary { margin: 0 0 4px; font-weight: 600; }
     .password-requirements__list { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; list-style: none; }
     .password-requirements__list li { display: inline-flex; gap: 4px; align-items: center; }
-    .password-requirements__list li.met { color: var(--ds-success, #047857); }
+    .password-requirements__list li.met { color: var(--ds-success, var(--ui-text)); }
     .password-requirements__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     /* Outside a brand frame (data-brand) the old colours stay; inside it the --ds-* tokens cover both themes. */
-    :host-context(.dark) .password-requirements { color: var(--ds-muted, #d1d5db); }
-    :host-context(.dark) .password-requirements__list li.met { color: var(--ds-success, #34d399); }
+    :host-context(.dark) .password-requirements { color: var(--ds-muted, var(--ui-text-muted)); }
+    :host-context(.dark) .password-requirements__list li.met { color: var(--ds-success, var(--ui-success)); }
   `],
 })
 export class PasswordRequirementsComponent {

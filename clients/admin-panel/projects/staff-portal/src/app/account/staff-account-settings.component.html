@@ -1,6 +1,6 @@
 <section class="account-panel" aria-labelledby="staff-account-title">
   <header class="account-heading">
-    <div><p class="eyebrow">PERSONEL PORTALI</p><h2 id="staff-account-title">Hesap ayarları</h2><p>Kimlik ve şifre bilgileri Identity üzerinden güncellenir; değişiklikler yetkili ürün oturumunuzla doğrulanır.</p></div>
+    <div><p class="eyebrow">Personel portalı</p><h2 id="staff-account-title">Hesap ayarları</h2><p>Kimlik ve şifre bilgileri Identity üzerinden güncellenir; değişiklikler yetkili ürün oturumunuzla doğrulanır.</p></div>
   </header>
   @if (successMessage()) { <p class="success" role="status">{{ successMessage() }}</p> }
   @if (errorMessage()) { <div class="notice error" role="alert">{{ errorMessage() }} <button type="button" (click)="loadProfile()">Tekrar dene</button></div> }
@@ -8,7 +8,7 @@
   @else if (profile(); as currentProfile) {
     <div class="account-grid">
       <section class="account-card" aria-labelledby="profile-heading">
-        <div><p class="eyebrow">KİMLİK</p><h3 id="profile-heading">Profil bilgileri</h3></div>
+        <div><p class="eyebrow">Kimlik</p><h3 id="profile-heading">Profil bilgileri</h3></div>
         <form (ngSubmit)="saveProfile()">
           <label><span>Ad</span><input name="firstName" [(ngModel)]="firstName" autocomplete="given-name" maxlength="50" required></label>
           <label><span>Soyad</span><input name="lastName" [(ngModel)]="lastName" autocomplete="family-name" maxlength="50" required></label>
@@ -20,7 +20,7 @@
       </section>
 
       <section class="account-card" aria-labelledby="password-heading">
-        <div><p class="eyebrow">GÜVENLİK</p><h3 id="password-heading">Şifre değiştir</h3></div>
+        <div><p class="eyebrow">Güvenlik</p><h3 id="password-heading">Şifre değiştir</h3></div>
         <form (ngSubmit)="changePassword()">
           <label><span>Mevcut şifre</span><input name="currentPassword" [(ngModel)]="currentPassword" type="password" autocomplete="current-password" required></label>
           <label><span>Yeni şifre</span><input name="newPassword" [(ngModel)]="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="staff-password-rules" required><app-password-requirements [password]="newPassword" describedById="staff-password-rules" /></label>

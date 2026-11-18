@@ -95,7 +95,7 @@ describe('LoginComponent MFA flow', () => {
   it('addresses the Coaching site with sen and the management panel with siz', async () => {
     const rejectUnconfirmed = { loginWithPassword: vi.fn().mockRejectedValue({ error: { code: 'Auth.EmailNotConfirmed' } }) };
     const coaching = createComponent(rejectUnconfirmed, 'sen');
-    expect(coaching.copy.welcome).toBe('Hoş geldin 👋');
+    expect(coaching.copy.welcome).toBe('Hoş geldin');
     expect(coaching.copy.loginIntro).toBe('Hesabına giriş yap.');
     expect(coaching.copy.noAccount).toBe('Hesabın yok mu?');
     expect(coaching.copy.signUp).toBe('Kayıt ol');

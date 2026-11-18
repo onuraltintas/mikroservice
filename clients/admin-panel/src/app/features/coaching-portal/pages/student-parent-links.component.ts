@@ -15,21 +15,21 @@ import { siteHref } from '../../../../../shared/eduivme-sites';
   standalone: true,
   imports: [CommonModule, CoachingDatePipe],
   template: `
-    <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="parent-links-heading">
+    <section class="rounded-2xl border border-(--ui-border) bg-(--ui-surface) p-5" aria-labelledby="parent-links-heading">
       <h2 id="parent-links-heading" class="font-semibold">Veli bağlantısı</h2>
-      <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Velin, senin onayınla çalışmanı, ödevlerini, seanslarını, denemelerini ve ücretlerini görebilir; hiçbir şeyi değiştiremez. Bağlantıyı istediğin zaman kaldırabilirsin.</p>
-      @if (error()) { <p role="alert" class="mt-3 text-sm text-red-700 dark:text-red-300">{{ error() }}</p> }
+      <p class="mt-1 text-sm text-(--ui-text-muted)">Velin, senin onayınla çalışmanı, ödevlerini, seanslarını, denemelerini ve ücretlerini görebilir; hiçbir şeyi değiştiremez. Bağlantıyı istediğin zaman kaldırabilirsin.</p>
+      @if (error()) { <p role="alert" class="mt-3 text-sm text-(--ui-danger)">{{ error() }}</p> }
       @for (link of links(); track link.id) {
-        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-800">
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-(--ui-border) pt-3 text-sm">
           <span><strong>{{ link.parentName }}</strong> · {{ relationshipLabel(link.relationship) }} · {{ link.status === 'Pending' ? 'onayını bekliyor' : (link.verifiedAt | coachingDate) + ' tarihinden beri bağlı' }}</span>
           <span class="flex gap-2">
-            @if (link.status === 'Pending') { <button type="button" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busy()" (click)="approve(link)">Onayla</button> }
-            <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 disabled:opacity-50 dark:border-slate-700" [disabled]="busy()" (click)="revoke(link)">{{ link.status === 'Pending' ? 'Reddet' : 'Bağlantıyı kaldır' }}</button>
+            @if (link.status === 'Pending') { <button type="button" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-(--ui-brand-contrast) disabled:opacity-50" [disabled]="busy()" (click)="approve(link)">Onayla</button> }
+            <button type="button" class="rounded-lg border border-(--ui-border) px-3 py-1 disabled:opacity-50" [disabled]="busy()" (click)="revoke(link)">{{ link.status === 'Pending' ? 'Reddet' : 'Bağlantıyı kaldır' }}</button>
           </span>
         </div>
       }
       @if (code(); as issued) {
-        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm ">Velinle paylaş: <strong class="font-mono text-lg tracking-widest" #codeText>{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu <a class="font-medium underline" data-testid="parent-site-link" [href]="parentSignUp">veli.maxkoc.com</a> adresinde girer; hesabı yoksa orada kayıt olur. Velin kodu girdiğinde isteği burada onaylarsın.</p>
+        <p class="mt-4 rounded-xl bg-(--ui-brand-soft) p-4 text-sm">Velinle paylaş: <strong class="font-mono text-lg" #codeText>{{ issued.code }}</strong><br>{{ note(issued.expiresAt) }} Velin kodu <a class="font-medium underline" data-testid="parent-site-link" [href]="parentSignUp">veli.maxkoc.com</a> adresinde girer; hesabı yoksa orada kayıt olur. Velin kodu girdiğinde isteği burada onaylarsın.</p>
         <!-- G5 (#45): copies the code (or selects it when the browser does not allow copying). -->
         <button type="button" class="mt-2 rounded-lg border border-(--ui-border) px-3 py-1 text-sm font-medium" [attr.aria-label]="'Veli kodunu kopyala: ' + issued.code" (click)="copyCode(issued.code, codeText)">Kopyala</button>
 
@@ -42,15 +42,15 @@ import { siteHref } from '../../../../../shared/eduivme-sites';
       <!-- G5 (#45), review L10: always present, so every "Kopyala" result is announced. -->
       <p class="mt-2 text-sm" role="status" aria-live="polite" data-testid="copy-status">{{ copyStatus() }}</p>
       @if (confirmReplace()) {
-        <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-700 dark:bg-amber-950" role="group" aria-labelledby="replace-code-text" data-testid="replace-code">
+        <div class="mt-4 rounded-xl border border-(--ui-warning) bg-(--ui-warning-soft) p-4 text-sm" role="group" aria-labelledby="replace-code-text" data-testid="replace-code">
           <p id="replace-code-text">Yeni kod oluşturursan eski kod hemen geçersiz olur. Velin eski kodu girerse bağlantı kurulamaz.</p>
           <span class="mt-2 flex gap-2">
-            <button type="button" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-white disabled:opacity-50" [disabled]="busy()" (click)="createCode()">Evet, yeni kod oluştur</button>
-            <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 disabled:opacity-50 dark:border-slate-700" [disabled]="busy()" (click)="confirmReplace.set(false)">Vazgeç</button>
+            <button type="button" class="rounded-lg bg-(--ui-brand) px-3 py-1 font-medium text-(--ui-brand-contrast) disabled:opacity-50" [disabled]="busy()" (click)="createCode()">Evet, yeni kod oluştur</button>
+            <button type="button" class="rounded-lg border border-(--ui-border) px-3 py-1 disabled:opacity-50" [disabled]="busy()" (click)="confirmReplace.set(false)">Vazgeç</button>
           </span>
         </div>
       } @else {
-        <button type="button" class="mt-4 rounded-lg border border-(--ui-border) px-4 py-2 text-sm font-medium text-(--ui-brand-text) disabled:opacity-50 " [disabled]="busy()" (click)="askCode()">{{ hasCode() ? 'Yeni kod oluştur' : 'Veli kodu oluştur' }}</button>
+        <button type="button" class="mt-4 rounded-lg border border-(--ui-border) px-4 py-2 text-sm font-medium text-(--ui-brand-text) disabled:opacity-50" [disabled]="busy()" (click)="askCode()">{{ hasCode() ? 'Yeni kod oluştur' : 'Veli kodu oluştur' }}</button>
       }
     </section>
   `

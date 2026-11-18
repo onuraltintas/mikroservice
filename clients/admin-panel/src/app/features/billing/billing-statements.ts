@@ -30,12 +30,12 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   template: `
     <main class="space-y-6" aria-labelledby="billing-statements-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-        <h1 id="billing-statements-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Banka ekstresi</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Bankadan indirdiğiniz hesap ekstresini (CSV ya da .xlsx) yükleyin. Açıklamasında ödeme kodu olan ve tutarı siparişle birebir tutan ödemeler eşleşir; ürünü "otomatik onay"da olanlar kendiliğinden onaylanır. Aynı ekstreyi yeniden yüklemek hiçbir satırı iki kez eklemez.</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <h1 id="billing-statements-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Banka ekstresi</h1>
+        <p class="mt-2 text-sm text-(--ui-text-muted)">Bankadan indirdiğiniz hesap ekstresini (CSV ya da .xlsx) yükleyin. Açıklamasında ödeme kodu olan ve tutarı siparişle birebir tutan ödemeler eşleşir; ürünü "otomatik onay"da olanlar kendiliğinden onaylanır. Aynı ekstreyi yeniden yüklemek hiçbir satırı iki kez eklemez.</p>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       <section class="form-card" aria-labelledby="upload-title">
         <h3 id="upload-title">Ekstre yükle</h3>
@@ -95,8 +95,8 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
       @if (result(); as done) {
         <section class="data-card" role="status" data-testid="import-result">
-          <h3 class="font-semibold text-gray-900 dark:text-white">{{ done.import.fileName }} yüklendi</h3>
-          <p class="mt-1 text-sm text-gray-700 dark:text-gray-200">
+          <h3 class="font-semibold text-(--ui-text)">{{ done.import.fileName }} yüklendi</h3>
+          <p class="mt-1 text-sm text-(--ui-text)">
             {{ done.import.rowCount }} gelen ödeme satırı: <strong>{{ done.import.addedCount }} yeni</strong>, {{ done.import.duplicateCount }} daha önce yüklenmiş.
             Yeni satırlardan <strong>{{ done.import.autoApprovedCount }}</strong> kendiliğinden onaylandı, <strong>{{ done.import.matchedCount }}</strong> onayınızı bekliyor,
             <strong>{{ unmatchedCount(done) }}</strong> eşleşmedi.
@@ -106,7 +106,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
       <section class="data-card" aria-labelledby="lines-title">
         <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
-          <h2 id="lines-title" class="text-lg font-semibold text-gray-900 dark:text-white">Banka hareketleri</h2>
+          <h2 id="lines-title" class="text-lg font-semibold text-(--ui-text)">Banka hareketleri</h2>
           <label class="filter">Durum
             <select [ngModel]="status()" (ngModelChange)="status.set($event); loadLines()" name="lineStatus">
               <option value="">Tümü</option>
@@ -151,7 +151,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
       </section>
 
       <section class="data-card" aria-labelledby="imports-title">
-        <h2 id="imports-title" class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Son yüklemeler</h2>
+        <h2 id="imports-title" class="mb-3 text-lg font-semibold text-(--ui-text)">Son yüklemeler</h2>
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>Yükleme</th><th>Banka</th><th>Dosya</th><th>Gelen satır</th><th>Yeni</th><th>Otomatik onay</th><th>Onay bekleyen</th></tr></thead>

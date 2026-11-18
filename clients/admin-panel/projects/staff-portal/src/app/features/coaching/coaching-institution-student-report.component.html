@@ -8,7 +8,7 @@
 
   <header class="report-identity">
     <div>
-      <p class="report-eyebrow">KOÇLUK · KURUM ÖĞRENCİ RAPORU</p>
+      <p class="report-eyebrow">Koçluk, kurum öğrenci raporu</p>
       <h2 id="student-report-title">{{ student.firstName }} {{ student.lastName }}</h2>
       <p class="student-context">
         {{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}
@@ -25,7 +25,7 @@
     @if (scoreVisible()) { <app-student-score-estimate [studentId]="student.userId" /> }
     <button class="study-toggle" type="button" (click)="toggleStudy()" [attr.aria-expanded]="studyVisible() && !briefMode()">Haftalık plan ve çalışma raporu</button>
     <button class="study-toggle" type="button" data-testid="open-session-brief" (click)="openSessionBrief()" [attr.aria-pressed]="studyVisible() && briefMode()">Seans hazırlık özeti</button>
-    <div class="section-heading"><div><p class="report-eyebrow">GENEL BAKIŞ</p><h3>İlerleme özeti</h3></div></div>
+    <div class="section-heading"><div><p class="report-eyebrow">Genel bakış</p><h3>İlerleme özeti</h3></div></div>
     @if (isDetailLoading()) {
       <p class="inline-status" role="status">Öğrenci özeti yükleniyor…</p>
     } @else if (detailError()) {
@@ -43,7 +43,7 @@
 
   <section class="history-panel" aria-labelledby="history-title">
     <header class="history-heading">
-      <div><p class="report-eyebrow">KAYIT DÖKÜMÜ</p><h3 id="history-title">Geçmiş kayıtlar</h3><p>Öğrencinin önceki kurumlarında oluşan Koçluk kayıtları da kapsanır.</p></div>
+      <div><p class="report-eyebrow">Kayıt dökümü</p><h3 id="history-title">Geçmiş kayıtlar</h3><p>Öğrencinin önceki kurumlarında oluşan Koçluk kayıtları da kapsanır.</p></div>
       <span class="history-scope">{{ historyTotalCount() }} kayıt · tüm Koçluk geçmişi</span>
     </header>
 

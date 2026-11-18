@@ -14,15 +14,15 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   template: `
     <main class="space-y-6" aria-labelledby="billing-overview-title">
       <header>
-        <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Abonelik ve Ödeme</p>
-        <h1 id="billing-overview-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Genel bakış</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Karar bekleyen işler, yakında biten abonelikler ve onaylanan ödemeler. Aylar Türkiye saatine göredir.</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <h1 id="billing-overview-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Genel bakış</h1>
+        <p class="mt-2 text-sm text-(--ui-text-muted)">Karar bekleyen işler, yakında biten abonelikler ve onaylanan ödemeler. Aylar Türkiye saatine göredir.</p>
       </header>
 
-      @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+      @if (error()) { <div role="alert" class="rounded-lg border border-(--ui-danger-soft) bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
 
       <div class="flex flex-wrap items-center gap-2">
-        <label class="text-sm text-gray-700 dark:text-gray-200" for="overview-product-filter">Ürün</label>
+        <label class="text-sm text-(--ui-text)" for="overview-product-filter">Ürün</label>
         <select id="overview-product-filter" [ngModel]="product()" (ngModelChange)="product.set($event); load()" name="overviewProduct">
           <option value="">Tüm ürünler</option>
           @for (item of products(); track item.id) { <option [value]="item.code">{{ item.name }}</option> }
@@ -59,7 +59,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
         </div>
 
         <div class="data-card">
-          <h2 class="mb-3 font-semibold text-gray-900 dark:text-white">14 gün içinde biten abonelikler</h2>
+          <h2 class="mb-3 font-semibold text-(--ui-text)">14 gün içinde biten abonelikler</h2>
           <div class="overflow-x-auto">
             <table class="data-table">
               <thead><tr><th>Hesap</th><th>Plan</th><th>Bitiş</th><th>Koltuk</th></tr></thead>

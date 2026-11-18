@@ -22,10 +22,10 @@
   :is(button, a.rounded-lg, a.rounded-full) { min-height: 44px; transition: background .18s, border-color .18s; }
   button:disabled { opacity: 1; cursor: not-allowed; background: var(--ui-surface-muted); color: var(--ui-text-muted); border-color: var(--ui-border); box-shadow: none; } .overflow-x-auto { max-width: 100%; overscroll-behavior-x: contain; }
   table { border-collapse: collapse; th, td { padding: 12px; border-bottom: 1px solid var(--ui-border); } th { color: var(--ui-text-muted); font-weight: 600; } }
-  .coaching-page-heading { margin-bottom: 24px; > p:first-child { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 1.4px; color: var(--ui-success); } h1 { margin: 6px 0 10px; } > p:last-child { max-width: 65ch; color: var(--ui-text-muted); font-size: 14px; } }
+  .coaching-page-heading { margin-bottom: 24px; > p:first-child { font-size: 11px; font-weight: 650; letter-spacing: 0; color: var(--ui-success); } h1 { margin: 6px 0 10px; } > p:last-child { max-width: 65ch; color: var(--ui-text-muted); font-size: 14px; } }
   .study-plans {
     aside.panel { align-self: start; max-height: calc(100dvh - 130px); overflow: auto; scrollbar-gutter: stable; }
-    .eyebrow { color: var(--ui-success); letter-spacing: 1.2px; font-size: 11px; }
+    .eyebrow { color: var(--ui-success); letter-spacing: 0; font-size: 11px; }
     .page-heading > div > p:last-child { color: var(--ui-text-muted); max-width: 65ch; }
     // T4: the student Planım styles its own controls (week strip, rows, sheet); this treatment stays for staff views.
     &:not(.student) button:not(.secondary):not(.plan-row):not(:where(.plan-calendar *)) { background: var(--ui-brand); color: var(--ui-brand-contrast); }
