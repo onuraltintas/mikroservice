@@ -35,7 +35,6 @@ import { AuthService } from '../../core/services/auth.service';
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
     .ns-wrap {
       min-height: 100vh;
