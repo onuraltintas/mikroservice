@@ -1,50 +1,33 @@
-<section class="blog-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>{{ content.title }}</h2>
-            <p>{{ content.subtitle }}</p>
-        </div>
-
-        <div class="blog-grid">
-            <mat-card *ngFor="let post of posts" class="blog-card" [routerLink]="['/blog', post.slug]">
-                <div class="image-container">
-                    <div class="image-placeholder" aria-hidden="true"></div>
-                    <img *ngIf="post.coverImageUrl" class="cover-image" [src]="post.coverImageUrl"
-                        [alt]="post.title" loading="lazy" decoding="async" referrerpolicy="no-referrer"
-                        (error)="hideBrokenCover($event)">
-                    <span class="category-badge" [ngClass]="getCategoryColor(getCategory(post.tags))">
-                        {{ getCategory(post.tags) }}
-                    </span>
-                </div>
-
-                <mat-card-content>
-                    <div class="metadata">
-                        <span>
-                            <mat-icon>calendar_today</mat-icon>
-                            {{ formatDate(post.publishedAt) }}
-                        </span>
-                        <span>
-                            <mat-icon>schedule</mat-icon>
-                            {{ getReadTime(post.content) }}
-                        </span>
-                    </div>
-
-                    <h3>{{ post.title }}</h3>
-                    <p>{{ post.summary }}</p>
-
-                    <div class="author">
-                        <div class="avatar">{{ getAuthorInitials(post.author) }}</div>
-                        <span>{{ post.author || 'Anonim' }}</span>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </div>
-
-        <div class="cta-button">
-            <button mat-stroked-button routerLink="/blog" class="view-all-btn">
-                {{ content.actionLabel || 'Tüm yazıları gör' }}
-                <mat-icon>arrow_forward</mat-icon>
-            </button>
-        </div>
+@if (posts.length) {
+<section class="blog-section" aria-labelledby="blog-title">
+  <div class="container">
+    <div class="section-head-row">
+      <div class="section-header">
+        <h2 id="blog-title">{{ content.title }}</h2>
+        <p>{{ content.subtitle }}</p>
+      </div>
+      <a routerLink="/blog" class="ds-link view-all-btn">{{ content.actionLabel || 'Tüm yazıları gör' }}</a>
     </div>
+
+    <div class="blog-grid">
+      @for (post of posts; track post.slug) {
+        <a class="blog-card" [routerLink]="['/blog', post.slug]">
+          <div class="image-container">
+            <div class="image-placeholder" aria-hidden="true"></div>
+            @if (post.coverImageUrl) {
+              <img class="cover-image" [src]="post.coverImageUrl" [alt]="post.title" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+                (error)="hideBrokenCover($event)">
+            }
+          </div>
+          <div class="blog-card__body">
+            <p class="metadata"><span class="category">{{ getCategory(post.tags) }}</span>, {{ formatDate(post.publishedAt) }}, {{ getReadTime(post.content) }}</p>
+            <h3>{{ post.title }}</h3>
+            <p class="summary">{{ post.summary }}</p>
+            <p class="author">{{ post.author || 'Master Hızlı Okuma' }}</p>
+          </div>
+        </a>
+      }
+    </div>
+  </div>
 </section>
+}

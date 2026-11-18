@@ -6,7 +6,6 @@ import { PlatformLegalPagesService } from '../../../core/services/platform-legal
 import { NewsletterCaptchaService } from '../../../core/services/newsletter-captcha.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -20,7 +19,6 @@ import { forkJoin } from 'rxjs';
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatButtonModule,
         MatIconModule,
     ],
     templateUrl: './newsletter-widget.component.html',

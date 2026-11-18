@@ -23,6 +23,7 @@ interface Category {
 
 @Component({
     selector: 'app-blog-list',
+    host: { 'data-brand': 'ho' },
     standalone: true,
     imports: [
         CommonModule,

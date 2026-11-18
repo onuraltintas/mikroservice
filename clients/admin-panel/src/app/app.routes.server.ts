@@ -28,6 +28,12 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    // Redesign 18.11.2026: "/" depends on the address (eduivme.com shows its own page, other hosts redirect), so it is
+    // decided in the browser; a prerendered "/" would be one fixed redirect for every host.
+    path: '',
+    renderMode: RenderMode.Client
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender
   }

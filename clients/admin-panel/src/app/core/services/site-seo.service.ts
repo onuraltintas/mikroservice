@@ -11,6 +11,8 @@ export interface SiteSeo {
   type?: 'website' | 'article';
   /** schema.org structured data (JSON-LD) for the page. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[] | null;
+  /** og:site_name; the maxkoç pages leave it out, eduivme.com passes 'eduivme'. */
+  siteName?: string;
 }
 
 export const SITE_NAME = 'maxkoç';
@@ -34,7 +36,7 @@ export class SiteSeoService {
     const image = this.absolute(seo.image?.trim() || DEFAULT_SITE_IMAGE);
     this.title.setTitle(seo.title);
     this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:site_name', content: SITE_NAME });
+    this.meta.updateTag({ property: 'og:site_name', content: seo.siteName ?? SITE_NAME });
     this.meta.updateTag({ property: 'og:locale', content: 'tr_TR' });
     this.meta.updateTag({ property: 'og:type', content: seo.type ?? 'website' });
     this.meta.updateTag({ property: 'og:title', content: seo.title });

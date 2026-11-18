@@ -13,29 +13,29 @@ import { IdentityService } from '../../../core/services/identity.service';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main class="mx-auto max-w-3xl px-4 py-10 sm:px-6" aria-labelledby="newsletter-title">
-      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-9">
-        <p class="text-xs font-bold uppercase tracking-[.14em] text-indigo-700 dark:text-indigo-300">maxkoç · Koçluk</p>
-        <h1 id="newsletter-title" class="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Koçluk bülteni</h1>
-        <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">Koçluk, hedef belirleme ve çalışma alışkanlıklarıyla ilgili duyuruları e-posta ile alın.</p>
+      <section class="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-6 shadow-sm sm:p-9">
+        <p class="text-sm font-semibold text-[var(--ds-link)]">maxkoç bülteni</p>
+        <h1 id="newsletter-title" class="mt-3 text-3xl font-semibold tracking-tight text-[var(--ds-text)]">Koçluk bülteni</h1>
+        <p class="mt-3 text-sm leading-6 text-[var(--ds-muted)]">Koçluk, hedef belirleme ve çalışma alışkanlıklarıyla ilgili duyuruları e-posta ile alın.</p>
 
         @if (loadingPolicy()) {
-          <p class="mt-6 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300" role="status">Ortak gizlilik ve bülten onay metinleri kontrol ediliyor…</p>
+          <p class="mt-6 rounded-xl bg-[var(--ds-bg)] p-4 text-sm text-[var(--ds-muted)]" role="status">Ortak gizlilik ve bülten onay metinleri kontrol ediliyor…</p>
         } @else if (!policyAvailable()) {
           <p class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100" role="status">{{ policyLoadFailed() ? 'Ortak gizlilik ve bülten onay metinleri şu anda kontrol edilemiyor. Bülten kaydı güvenli şekilde kapalı; lütfen daha sonra yeniden deneyin.' : 'Ortak gizlilik ve Koçluk bülteni onay metinleri yayımlanmamış. Metinler yayımlanana kadar bülten kaydı kapalıdır.' }} <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold underline">Gizlilik politikasını görüntüle</a>.</p>
         } @else {
           <form class="mt-6 space-y-4" #newsletterForm="ngForm" (ngSubmit)="submit()">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">E-posta adresi
-              <input class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm dark:border-slate-700 dark:bg-slate-950" type="email" name="email" autocomplete="email" required maxlength="320" [ngModel]="email()" (ngModelChange)="email.set($event)" />
+            <label class="block text-sm font-medium text-[var(--ds-text)]">E-posta adresi
+              <input class="mt-1 block w-full rounded-xl border border-[var(--ds-field)] bg-[var(--ds-surface)] px-3 py-3 text-sm" type="email" name="email" autocomplete="email" required maxlength="320" [ngModel]="email()" (ngModelChange)="email.set($event)" />
             </label>
             <div class="newsletter-honeypot" aria-hidden="true">
               <label for="coaching-newsletter-website">Web sitesi</label>
               <input id="coaching-newsletter-website" type="text" name="website" autocomplete="off" tabindex="-1" maxlength="500" [ngModel]="honeypot()" (ngModelChange)="honeypot.set($event)" />
             </div>
-            <label class="flex items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-700 dark:border-slate-700 dark:text-slate-200">
+            <label class="flex items-start gap-3 rounded-xl border border-[var(--ds-line)] p-4 text-sm leading-6 text-[var(--ds-text)]">
               <input class="mt-1" type="checkbox" name="consentGiven" required [ngModel]="consentGiven()" (ngModelChange)="consentGiven.set($event)" />
-              <span><a routerLink="/legal/coaching-newsletter-consent" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">Bülten onay metni</a> kapsamında Koçluk bültenini e-posta ile almayı kabul ediyorum. <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">Ortak gizlilik politikasını</a> okudum.</span>
+              <span><a routerLink="/legal/coaching-newsletter-consent" target="_blank" rel="noopener noreferrer" class="font-semibold text-[var(--ds-link)] underline">Bülten onay metni</a> kapsamında Koçluk bültenini e-posta ile almayı kabul ediyorum. <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold text-[var(--ds-link)] underline">Ortak gizlilik politikasını</a> okudum.</span>
             </label>
-            <button class="rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50" type="submit" [disabled]="newsletterForm.invalid || submitting()">{{ submitting() ? 'Gönderiliyor…' : 'Onay bağlantısı gönder' }}</button>
+            <button class="rounded-xl bg-[var(--ds-primary)] px-5 py-3 text-sm font-semibold text-[var(--ds-on-primary)] transition hover:bg-[var(--ds-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50" type="submit" [disabled]="newsletterForm.invalid || submitting()">{{ submitting() ? 'Gönderiliyor…' : 'Onay bağlantısı gönder' }}</button>
           </form>
         }
 

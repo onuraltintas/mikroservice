@@ -67,7 +67,7 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
             icon: metric.icon || 'insights',
             value: metric.value,
             label: metric.title,
-            evidence: [metric.description, metric.source, metric.period, `n=${metric.sampleSize}`].filter(Boolean).join(' · '),
+            evidence: [metric.description, metric.source, metric.period, `n=${metric.sampleSize}`].filter(Boolean).join(', '),
             target: 0,
             format: 'number'
           }));

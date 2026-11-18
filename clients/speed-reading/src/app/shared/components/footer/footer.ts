@@ -17,6 +17,7 @@ interface SocialLink {
 
 @Component({
   selector: 'app-footer',
+  host: { 'data-brand': 'ho' },
   standalone: true,
   imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: './footer.html',
@@ -53,6 +54,12 @@ export class FooterComponent implements OnInit {
   ];
 
   socialLinks: SocialLink[] = [];
+
+  /** The icon font is no longer loaded (fonts are self-hosted); the network's name is shown as text. */
+  socialLabel(icon: string): string {
+    const names: Record<string, string> = { instagram: 'Instagram', youtube: 'YouTube', twitter: 'X', 'x-twitter': 'X', facebook: 'Facebook', linkedin: 'LinkedIn', tiktok: 'TikTok' };
+    return names[icon] ?? icon;
+  }
 
   ngOnInit() {
     this.loadContent();

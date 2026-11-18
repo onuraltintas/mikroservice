@@ -1,10 +1,2 @@
-// Home component styles are now handled by individual section components
-// This file can remain empty or contain global overrides if needed
-
-:host {
-    display: block;
-    min-height: 100vh;
-    background: var(--ui-page);
-    color: var(--ui-text);
-    font-family: var(--ui-font-body);
-}
+// Hızlı Okuma tanıtım sayfası. Bölümler: sections/*; marka: data-brand="ho" (ev sahibi öğe).
+:host { display: block; min-height: 100vh; background: var(--ds-bg); color: var(--ds-text); font-family: var(--ds-font); }

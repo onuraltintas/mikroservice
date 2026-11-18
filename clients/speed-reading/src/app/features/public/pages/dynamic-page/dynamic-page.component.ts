@@ -10,6 +10,7 @@ import { SafeHtmlPipe } from '../../../../shared/pipes/safe-html.pipe';
 
 @Component({
     selector: 'app-dynamic-page',
+    host: { 'data-brand': 'ho' },
     standalone: true,
     imports: [
         CommonModule,
