@@ -88,8 +88,8 @@ public sealed class UserCreatedConsumerTests
             body.Should().Contain("token=one-time-setup-token");
             body.Should().Contain("email=student%40example.test");
             body.Should().Contain(speedReading ? "https://speed.example.test/auth/" : "https://app.example.test/auth/");
-            body.Should().Contain(speedReading ? "Master Hızlı Okuma" : "Eduİvme");
-            queue.Messages.Single().Subject.Should().Contain(speedReading ? "Master Hızlı Okuma" : "Eduİvme");
+            body.Should().Contain(speedReading ? "Master Hızlı Okuma" : role is "Student" or "Parent" ? "maxkoç" : "eduivme");
+            queue.Messages.Single().Subject.Should().Contain(speedReading ? "Master Hızlı Okuma" : role is "Student" or "Parent" ? "maxkoç" : "eduivme");
             body.Should().NotContain("TemporaryPassword");
             body.Should().NotContain("Pass:");
         }
@@ -126,7 +126,7 @@ public sealed class UserCreatedConsumerTests
             body.Should().Contain("token=one-time-setup-token");
             body.Should().Contain("email=student%40example.test");
             body.Should().Contain(speedReading ? "https://speed.example.test/auth/" : "https://app.example.test/auth/");
-            queue.Messages.Single().Subject.Should().Contain(speedReading ? "Master Hızlı Okuma" : "Eduİvme");
+            queue.Messages.Single().Subject.Should().Contain(speedReading ? "Master Hızlı Okuma" : role is "Student" or "Parent" ? "maxkoç" : "eduivme");
             notifications.Count.Should().Be(0, "the in-app notice comes from UserCreatedEvent");
         }
         finally

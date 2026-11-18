@@ -454,7 +454,7 @@ public sealed class AccountEmailChangeTests
 
         mail.Recipient.Should().Be("yeni@example.test");
         mail.Body.Should().Contain($"href='{string.Format(link, userId)}'");
-        mail.Body.Should().Contain("Eduİvme").And.NotContain("Hızlı Okuma").And.NotContain("<b>Kaya</b>");
+        mail.Body.Should().Contain(role is "Student" or "Parent" ? "maxkoç" : "eduivme").And.NotContain("Hızlı Okuma").And.NotContain("<b>Kaya</b>");
         mail.Subject.Should().Contain("E-posta");
     }
 
@@ -467,7 +467,7 @@ public sealed class AccountEmailChangeTests
         mail.Recipient.Should().Be("eski@example.test");
         mail.Body.Should().Contain("y***@example.test").And.NotContain("yeniadres@example.test");
         mail.Body.Should().Contain("https://onuraltintas.net/auth/support");
-        mail.Body.Should().Contain("Eduİvme").And.NotContain("Hızlı Okuma");
+        mail.Body.Should().Contain("maxkoç").And.NotContain("Hızlı Okuma");
     }
 
     private sealed record Mail(string Recipient, string Subject, string Body);

@@ -53,7 +53,7 @@ export class SiteSeoService {
   organization(): Record<string, unknown>[] {
     const origin = this.origin();
     return [
-      { '@context': 'https://schema.org', '@type': 'Organization', name: 'Eduİvme', url: `${origin}/coaching`, logo: `${origin}${DEFAULT_SITE_IMAGE}` },
+      { '@context': 'https://schema.org', '@type': 'Organization', name: 'eduivme', url: `${origin}/coaching`, logo: `${origin}${DEFAULT_SITE_IMAGE}` },
       { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: `${origin}/coaching`, inLanguage: 'tr-TR' }
     ];
   }

@@ -54,8 +54,8 @@ export class CoachingPublicFaqComponent implements OnInit {
       acceptedAnswer: { '@type': 'Answer', text: item.content.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/[#*_>`]/g, '').trim().slice(0, 1000) }
     }));
     this.seo.apply({
-      title: heading?.seoTitle || `${heading?.title || 'Sıkça sorulan sorular'} | Eduİvme Koçluk`,
-      description: heading?.seoDescription || heading?.summary || 'Eduİvme Koçluk hakkında sıkça sorulan sorular.',
+      title: heading?.seoTitle || `${heading?.title || 'Sıkça sorulan sorular'} | maxkoç`,
+      description: heading?.seoDescription || heading?.summary || 'maxkoç hakkında sıkça sorulan sorular.',
       path: '/coaching/faq',
       jsonLd: questions.length ? { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: questions } : null
     });

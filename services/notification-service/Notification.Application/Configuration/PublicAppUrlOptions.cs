@@ -211,7 +211,12 @@ public sealed class PublicAppUrlOptions
         GetApplicationName(role, null);
 
     public static string GetApplicationName(string? role, string? product) =>
-        IsSpeedReadingProduct(role, product) ? "Master Hızlı Okuma" : "Eduİvme";
+        IsSpeedReadingProduct(role, product) ? "Master Hızlı Okuma" : IsLearnerRole(role) ? "maxkoç" : "eduivme";
+
+    /// <summary>Brand decision 18.11.2026: Koçluk students and parents use maxkoç; teachers, institutions and managers eduivme.</summary>
+    private static bool IsLearnerRole(string? role) =>
+        string.Equals(role?.Trim(), "Student", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(role?.Trim(), "Parent", StringComparison.OrdinalIgnoreCase);
 
     public static string GetTemplateName(string baseName, string? role) =>
         GetTemplateName(baseName, role, null);
@@ -219,13 +224,17 @@ public sealed class PublicAppUrlOptions
     public static string GetTemplateName(string baseName, string? role, string? product) =>
         IsSpeedReadingProduct(role, product) ? $"SpeedReading_{baseName}" : baseName;
 
-    public static string ApplySpeedReadingBranding(string value, string? role) => ApplySpeedReadingBranding(value, role, null);
+    public static string ApplyBranding(string value, string? role) => ApplyBranding(value, role, null);
 
-    public static string ApplySpeedReadingBranding(string value, string? role, string? product)
+    /// <summary>Stored templates say "Eduİvme"; the recipient sees the name of the product they use.</summary>
+    public static string ApplyBranding(string value, string? role, string? product)
     {
         if (!IsSpeedReadingProduct(role, product))
         {
-            return value;
+            var name = GetApplicationName(role, product);
+            return value
+                .Replace("Eduİvme Koçluk", name, StringComparison.Ordinal)
+                .Replace("Eduİvme", name, StringComparison.Ordinal);
         }
 
         return value

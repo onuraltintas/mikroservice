@@ -25,7 +25,7 @@ const CORE_LEGAL_DOCUMENTS: { slug: string; title: string; description: string }
     <main class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" aria-labelledby="legal-pages-title">
       <header class="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p class="text-sm font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Eduİvme · Platform yönetimi</p>
+          <p class="text-sm font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">eduivme · Platform yönetimi</p>
           <h1 id="legal-pages-title" class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">Ortak yasal sayfalar</h1>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">Ortak ve ürüne özel metinler tek Identity kaynağında yönetilir. Koçluk ve Hızlı Okuma yayımlanmış sürümleri buradan alır. Başlangıç metinleri yalnızca düzenleme taslağıdır; işletme bilgileri tamamlanıp hukuk danışmanınızca incelenmeden yayımlanamaz.</p>
         </div>

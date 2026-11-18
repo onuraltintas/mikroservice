@@ -19,6 +19,7 @@ import { injectAuthCopy } from '../auth-voice';
 import { AuthRecaptchaService } from '../../../core/auth/auth-recaptcha.service';
 
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
+import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
     selector: 'app-login',
@@ -38,6 +39,7 @@ import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-
     styleUrl: './login.component.scss'
 })
 export class LoginComponent {
+  protected readonly brand = injectSiteBrand();
     private authService = inject(AuthService);
     private router = inject(Router);
     private toaster = inject(ToasterService);

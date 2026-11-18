@@ -62,12 +62,12 @@ public sealed class NotificationChannelPolicy(
         {
             if (!contacts.TryGetValue(userId, out var contact) || string.IsNullOrWhiteSpace(contact.Email)) continue;
             var greeting = string.IsNullOrWhiteSpace(contact.FirstName) ? "Merhaba," : $"Merhaba {EmailContent.Html(contact.FirstName)},";
-            var body = $"<h1>Eduİvme Koçluk</h1><p>{greeting}</p><p><strong>{EmailContent.Html(title)}</strong></p><p>{EmailContent.Html(message)}</p>"
-                + $"<p><a href=\"{EmailContent.Html(link)}\">Eduİvme'yi aç</a></p>"
+            var body = $"<h1>maxkoç</h1><p>{greeting}</p><p><strong>{EmailContent.Html(title)}</strong></p><p>{EmailContent.Html(message)}</p>"
+                + $"<p><a href=\"{EmailContent.Html(link)}\">maxkoç'u aç</a></p>"
                 + $"<p>Bu e-postayı \"{EmailContent.Html(category.Label)}\" bildirimlerin e-postayla da açık olduğu için alıyorsun. "
                 + "Ayarlar &gt; Bildirim tercihleri bölümünden kapatabilirsin.</p>";
             await mail.QueueAsync(MessageIds.Derive($"coaching-notification-email:{eventMessageId:N}:{userId:N}"), EmailConsumerType,
-                contact.Email.Trim(), $"Eduİvme Koçluk: {EmailContent.SubjectText(title)}", body, userId, ct);
+                contact.Email.Trim(), $"maxkoç: {EmailContent.SubjectText(title)}", body, userId, ct);
         }
     }
 
@@ -91,7 +91,7 @@ public sealed class NotificationChannelPolicy(
         IReadOnlyDictionary<Guid, RecipientContact> contacts, string title, string message, CancellationToken ct)
     {
         if (text is null) return;
-        var body = $"Eduİvme: {title}. {message}";
+        var body = $"maxkoç: {title}. {message}";
         foreach (var (userId, chosen) in plan)
         {
             if (!contacts.TryGetValue(userId, out var contact) || string.IsNullOrWhiteSpace(contact.Phone)) continue;

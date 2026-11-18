@@ -13,7 +13,7 @@ type NewsletterAction = 'confirm' | 'unsubscribe';
   template: `
     <main class="mx-auto max-w-2xl px-4 py-12 sm:px-6" aria-labelledby="newsletter-result-title">
       <section class="rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-10">
-        <p class="text-xs font-bold uppercase tracking-[.14em] text-indigo-700 dark:text-indigo-300">Eduİvme · Koçluk bülteni</p>
+        <p class="text-xs font-bold uppercase tracking-[.14em] text-indigo-700 dark:text-indigo-300">maxkoç bülteni</p>
         <h1 id="newsletter-result-title" class="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">{{ action() === 'confirm' ? 'E-posta adresini onayla' : 'Bülten aboneliğini iptal et' }}</h1>
         @if (!token()) {
           <p class="mt-4 text-sm leading-6 text-amber-800 dark:text-amber-200" role="status">Bağlantı eksik veya geçersiz. Lütfen e-postadaki tam bağlantıyı kullanın.</p>

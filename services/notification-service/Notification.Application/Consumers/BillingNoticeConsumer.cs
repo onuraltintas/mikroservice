@@ -17,7 +17,7 @@ public sealed class BillingNoticeConsumer(
     IEmailDeliveryQueue emailDeliveryQueue,
     IOptions<PublicAppUrlOptions> publicAppUrlOptions) : IConsumer<BillingNoticeV1>
 {
-    public const string Platform = "Eduİvme";
+    public const string Platform = "eduivme";
     public const string AdminOrdersPath = "/dashboard/billing/orders";
     public const string AdminWithdrawalsPath = "/dashboard/billing/withdrawals";
 
@@ -43,7 +43,7 @@ public sealed class BillingNoticeConsumer(
     public static string ProductName(IReadOnlyCollection<string>? codes) => codes is { Count: 1 }
         ? codes.Single() switch
         {
-            "coaching" => "Eduİvme Koçluk",
+            "coaching" => "maxkoç",
             "speed-reading" => "Master Hızlı Okuma",
             "course-management" => "Kurs Yönetimi",
             _ => Platform

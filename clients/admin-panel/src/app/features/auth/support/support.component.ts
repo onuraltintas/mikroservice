@@ -14,6 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { SupportService } from '../../../core/services/support.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { inject } from '@angular/core';
+import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
     selector: 'app-support',
@@ -35,6 +36,7 @@ import { inject } from '@angular/core';
     styleUrl: './support.component.scss'
 })
 export class SupportComponent {
+  protected readonly brand = injectSiteBrand();
     supportForm: FormGroup;
     isLoading = signal(false);
     isSubmitted = signal(false);

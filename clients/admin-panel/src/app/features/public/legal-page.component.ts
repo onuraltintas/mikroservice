@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IdentityService, PlatformLegalPageDto } from '../../core/services/identity.service';
 import { catchError, map, of, switchMap } from 'rxjs';
+import { injectSiteBrand } from '../../core/brand/site-brand';
 
 @Component({
   selector: 'app-platform-legal-page',
@@ -13,7 +14,7 @@ import { catchError, map, of, switchMap } from 'rxjs';
   template: `
     <main class="mx-auto min-h-screen max-w-4xl px-4 py-10 sm:px-6" aria-labelledby="legal-page-title">
       <header class="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
-        <a routerLink="/coaching" class="text-lg font-bold text-indigo-800 dark:text-indigo-200">Eduİvme</a>
+        <a routerLink="/coaching" class="text-lg font-bold text-indigo-800 dark:text-indigo-200">{{ brand.name }}</a>
         <nav class="flex gap-4 text-sm" aria-label="Yasal sayfalar"><a routerLink="/legal/privacy" class="text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300">Gizlilik</a><a routerLink="/legal/kvkk" class="text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300">KVKK</a></nav>
       </header>
 
@@ -37,6 +38,7 @@ import { catchError, map, of, switchMap } from 'rxjs';
   styles: [`:host { display: block; min-height: 100%; background: var(--ui-page, #f8fafc); }`]
 })
 export class PlatformLegalPageComponent implements OnInit {
+  protected readonly brand = injectSiteBrand();
   private readonly route = inject(ActivatedRoute);
   private readonly identity = inject(IdentityService);
   private readonly destroyRef = inject(DestroyRef);

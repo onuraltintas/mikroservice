@@ -67,7 +67,7 @@ public sealed class CoachingTextMessagingTests
         var row = (await f.Db.TextMessageDeliveries.AsNoTracking().ToListAsync()).Should().ContainSingle().Subject;
         row.Status.Should().Be(TextMessageStatus.Pending);
         row.Recipient.Should().Be("+905321234567");
-        row.Body.Should().StartWith("Eduİvme: Ada için haftalık özet"); row.Body.Length.Should().BeLessThanOrEqualTo(TextMessageQueue.MaxBodyLength);
+        row.Body.Should().StartWith("maxkoç: Ada için haftalık özet"); row.Body.Length.Should().BeLessThanOrEqualTo(TextMessageQueue.MaxBodyLength);
     }
 
     [Fact]

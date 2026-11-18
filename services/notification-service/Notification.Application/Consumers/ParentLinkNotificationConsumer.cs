@@ -34,7 +34,7 @@ public sealed class ParentLinkNotificationConsumer(
         var link = product == "speed-reading"
             ? publicAppUrlOptions.Value.ResolveBaseUrl(null, product) + m.LinkPath
             : publicAppUrlOptions.Value.CoachingLink(m.LinkPath);
-        var brand = product == "speed-reading" ? PublicAppUrlOptions.GetApplicationName(null, product) : "Eduİvme Koçluk";
+        var brand = product == "speed-reading" ? PublicAppUrlOptions.GetApplicationName(null, product) : "maxkoç";
         var greeting = string.IsNullOrWhiteSpace(m.RecipientFirstName) ? "Merhaba," : $"Merhaba {EmailContent.Html(m.RecipientFirstName.Trim())},";
         var body = $"<h1>{brand}</h1><p>{greeting}</p><p>{EmailContent.Html(text.Message)}</p>"
             + $"<p><a href=\"{EmailContent.Html(link)}\">{text.LinkText}</a></p>"

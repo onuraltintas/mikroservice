@@ -29,10 +29,10 @@ public sealed class UserEmailChangeRequestedConsumer(
         string subject, body;
         if (template is not null)
         {
-            subject = template.Subject
+            subject = PublicAppUrlOptions.ApplyBranding(template.Subject, message.Role, "coaching")
                 .Replace("{{FirstName}}", EmailContent.SubjectText(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.SubjectText(message.LastName));
-            body = template.Body
+            body = PublicAppUrlOptions.ApplyBranding(template.Body, message.Role, "coaching")
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{NewEmail}}", EmailContent.Html(message.NewEmail))
@@ -82,10 +82,10 @@ public sealed class UserEmailChangedConsumer(
         string subject, body;
         if (template is not null)
         {
-            subject = template.Subject
+            subject = PublicAppUrlOptions.ApplyBranding(template.Subject, message.Role, "coaching")
                 .Replace("{{FirstName}}", EmailContent.SubjectText(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.SubjectText(message.LastName));
-            body = template.Body
+            body = PublicAppUrlOptions.ApplyBranding(template.Body, message.Role, "coaching")
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{NewEmailMasked}}", EmailContent.Html(masked))

@@ -51,8 +51,8 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{ResetLink}}", resetLink);
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
+            subject = PublicAppUrlOptions.ApplyBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplyBranding(body, message.Role, message.Product);
         }
         else
         {

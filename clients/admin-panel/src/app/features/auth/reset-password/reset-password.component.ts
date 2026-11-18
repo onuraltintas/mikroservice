@@ -10,6 +10,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { injectAuthCopy } from '../auth-voice';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../../core/validators/password.validator';
+import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
     selector: 'app-reset-password',
@@ -26,6 +27,7 @@ import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../../core/validato
     styleUrl: './reset-password.component.scss'
 })
 export class ResetPasswordComponent implements OnInit {
+  protected readonly brand = injectSiteBrand();
     private identityService = inject(IdentityService);
     private toaster = inject(ToasterService);
     /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */

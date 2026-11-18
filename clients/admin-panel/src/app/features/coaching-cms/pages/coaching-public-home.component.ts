@@ -15,7 +15,7 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
       <section class="hero-panel overflow-hidden rounded-[2rem] px-6 py-10 text-white shadow-xl sm:px-10 sm:py-14 lg:px-14" aria-labelledby="coaching-home-title">
         <div class="hero-grid">
           <div class="relative z-10 max-w-2xl">
-            <p class="eyebrow text-indigo-100">{{ hero()?.eyebrow || 'Eduİvme · Öğrenci Koçluğu' }}</p>
+            <p class="eyebrow text-indigo-100">{{ hero()?.eyebrow || 'maxkoç · Öğrenci Koçluğu' }}</p>
             <h1 id="coaching-home-title" class="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">{{ hero()?.title || 'Hedefinden başla, adım adım ilerle.' }}</h1>
             <p class="mt-5 max-w-xl text-base leading-7 text-indigo-100 sm:text-lg">{{ hero()?.summary || 'Öğrenci, öğretmen ve kurumların hedefleri, çalışma planlarını ve ilerleme değerlendirmelerini tek bir koçluk alanında buluşturun.' }}</p>
             @if (hero()?.content) {
@@ -213,10 +213,10 @@ export class CoachingPublicHomeComponent implements OnInit {
       next: blocks => {
         const hero = blocks[0] ?? null;
         this.hero.set(hero);
-        this.seo.apply({ title: hero?.seoTitle || `${hero?.title || 'Öğrenci Koçluğu'} | Eduİvme`, description: hero?.seoDescription || hero?.summary,
+        this.seo.apply({ title: hero?.seoTitle || `${hero?.title || 'Öğrenci Koçluğu'} | maxkoç`, description: hero?.seoDescription || hero?.summary,
           path: '/coaching', jsonLd: this.seo.organization() });
       },
-      error: () => { this.hero.set(null); this.seo.apply({ title: 'Öğrenci Koçluğu | Eduİvme', path: '/coaching', jsonLd: this.seo.organization() }); }
+      error: () => { this.hero.set(null); this.seo.apply({ title: 'Öğrenci Koçluğu | maxkoç', path: '/coaching', jsonLd: this.seo.organization() }); }
     });
     this.loadSingleBlock('HomeAreaHeading', this.areaHeading);
     this.loadSingleBlock('HomeProcessHeading', this.processHeading);

@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ConfigurationService } from '../../../core/services/settings/configuration.service';
 import { catchError, of } from 'rxjs';
+import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
     selector: 'app-register',
@@ -13,6 +14,7 @@ import { catchError, of } from 'rxjs';
     styleUrl: './register.component.scss'
 })
 export class RegisterComponent implements OnInit {
+  protected readonly brand = injectSiteBrand();
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
 

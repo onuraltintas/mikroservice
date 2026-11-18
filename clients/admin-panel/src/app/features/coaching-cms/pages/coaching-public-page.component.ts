@@ -29,7 +29,7 @@ export class CoachingPublicPageComponent implements OnInit {
     this.route.paramMap.pipe(switchMap(params => this.service.getPublicCmsPage(params.get('slug') ?? ''))).subscribe({
       next: page => {
         this.page.set(page); this.error.set(null); this.loading.set(false);
-        this.seo.apply({ title: page.seoTitle || `${page.title} | Eduİvme Koçluk`, description: page.seoDescription || page.summary,
+        this.seo.apply({ title: page.seoTitle || `${page.title} | maxkoç`, description: page.seoDescription || page.summary,
           path: `/coaching/pages/${page.slug}`, jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: page.title,
             description: page.seoDescription || page.summary || undefined, inLanguage: 'tr-TR' } });
       },
