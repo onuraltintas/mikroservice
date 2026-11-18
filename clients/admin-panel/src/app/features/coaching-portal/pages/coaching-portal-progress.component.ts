@@ -221,7 +221,7 @@ export class CoachingPortalProgressComponent implements OnInit {
   }
 
   subjectScoreLabel(scores?: Record<string, number>) {
-    return scores ? Object.entries(scores).map(([subject, score]) => `${subject}: ${score}`).join(' · ') : '—';
+    return scores ? Object.entries(scores).map(([subject, score]) => `${subject}: ${score}`).join(', ') : '—';
   }
 
   loadMoreExams() {

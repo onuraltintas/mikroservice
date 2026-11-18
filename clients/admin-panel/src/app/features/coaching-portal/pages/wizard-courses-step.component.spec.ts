@@ -101,7 +101,7 @@ describe('WizardCoursesStepComponent', () => {
   it('lets a teacher only read the choices, in third person', async () => {
     const { el, c, save, done } = await setup(true);
     expect(el.querySelectorAll('input[type=radio]').length).toBe(0);
-    expect(el.textContent).toContain('Öncelik: Yüksek · Zorluk: Kolay');
+    expect(el.textContent).toContain('Öncelik: Yüksek, Zorluk: Kolay');
     expect(el.textContent).toContain('Bunları yalnız öğrenci değiştirebilir.');
     expect(el.querySelector('a')).toBeNull();
     c.next(); expect(save).not.toHaveBeenCalled(); expect(done).toHaveBeenCalled();

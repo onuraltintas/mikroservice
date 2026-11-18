@@ -20,7 +20,7 @@
       @for (day of weekView(); track day.label) {
         <div class="proposal-day" data-testid="proposal-day"><h4>{{ day.label }}</h4>
           @for (item of day.items; track item.slot.id) {
-            <p class="slot-line" [class.proposed]="item.isNew">{{ clock(item.slot.startMinute) }}–{{ clock(item.slot.startMinute + item.slot.durationMinutes) }} · {{ item.slot.lessonName }}@if (item.isNew) { <span class="badge">Yeni</span> }</p>
+            <p class="slot-line" [class.proposed]="item.isNew">{{ clock(item.slot.startMinute) }}–{{ clock(item.slot.startMinute + item.slot.durationMinutes) }}, {{ item.slot.lessonName }}@if (item.isNew) { <span class="badge">Yeni</span> }</p>
           }
         </div>
       } @empty {
@@ -31,7 +31,7 @@
         <h4>Derslere ayrılan süre</h4>
         <ul class="lesson-hours" data-testid="proposal-lessons">
           @for (lesson of view.lessons; track lesson.lessonId) {
-            <li>{{ lesson.lessonName }} · @if (lesson.noTime) { <strong>saat verilemedi</strong> } @else { haftada {{ hours(lesson.existingMinutes + lesson.proposedMinutes) }} saat }@if (lessonGap(lesson) > 0) { <span class="warning" data-testid="lesson-gap"> · {{ hours(lessonGap(lesson)) }} saat eksik</span> }</li>
+            <li>{{ lesson.lessonName }}, @if (lesson.noTime) { <strong>saat verilemedi</strong> } @else { haftada {{ hours(lesson.existingMinutes + lesson.proposedMinutes) }} saat }@if (lessonGap(lesson) > 0) { <span class="warning" data-testid="lesson-gap">, {{ hours(lessonGap(lesson)) }} saat eksik</span> }</li>
           }
         </ul>
       }
@@ -109,7 +109,7 @@
 
   @if (preview(); as p) {
     <section class="annual" data-testid="annual-summary" aria-labelledby="annual-title">
-      <h3 id="annual-title" tabindex="-1" #previewTitle>{{ staffStudentId ? 'Öğrencinin planı' : 'Planın' }} · {{ dayMonth(p.request.endDate) }} tarihine kadar</h3>
+      <h3 id="annual-title" tabindex="-1" #previewTitle>{{ staffStudentId ? 'Öğrencinin planı' : 'Planın' }}, {{ dayMonth(p.request.endDate) }} tarihine kadar</h3>
       <ul class="course-finish" data-testid="course-finish">
         @for (lesson of lessons(); track lesson.lessonId) {
           <li [class.late]="late(lesson)">
@@ -168,7 +168,7 @@
       @if (choices.focusTopics().length) {
         <ul class="chosen-topics" aria-label="Öne alınacak konular">
           @for (topic of choices.focusTopics(); track topic.topicId) {
-            <li>{{ topic.lessonName }} · {{ topic.topicName }} <button type="button" class="secondary small" (click)="removeTopic(topic.topicId)" [attr.aria-label]="topic.topicName + ' konusunu kaldır'">Kaldır</button></li>
+            <li>{{ topic.lessonName }}, {{ topic.topicName }} <button type="button" class="secondary small" (click)="removeTopic(topic.topicId)" [attr.aria-label]="topic.topicName + ' konusunu kaldır'">Kaldır</button></li>
           }
         </ul>
       }

@@ -3,7 +3,7 @@
     max-width: 87.5rem;
     margin: 0 auto;
     min-height: calc(100dvh - 64px);
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--ui-surface-muted);
 }
 
 .preview-banner {
@@ -12,10 +12,10 @@
     gap: 12px;
     padding: 16px 24px;
     margin-bottom: 16px;
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    background: var(--ui-brand);
     color: white;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 30%, transparent);
 
     mat-icon {
         font-size: 24px;
@@ -36,7 +36,7 @@
     padding: 24px;
     background: white;
     border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .back-button {
@@ -47,7 +47,7 @@
     font-size: 16px;
     font-weight: 500;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ui-text) 15%, transparent);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
 
@@ -65,7 +65,7 @@
 
     &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 20%, transparent);
 
         mat-icon {
             transform: translateX(-3px);
@@ -74,7 +74,7 @@
 
     &:active {
         transform: translateY(0);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 2px 6px color-mix(in srgb, var(--ui-text) 15%, transparent);
     }
 }
 
@@ -89,7 +89,7 @@
     gap: 12px;
     font-size: 32px;
     font-weight: 600;
-    color: #1976d2;
+    color: var(--ui-brand-text);
 }
 
 .page-header h1 mat-icon {
@@ -100,7 +100,7 @@
 
 .subtitle {
     margin: 8px 0 0 0;
-    color: #666;
+    color: var(--ui-text-muted);
     font-size: 16px;
 }
 
@@ -111,7 +111,7 @@
     padding: 16px;
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--ui-text) 10%, transparent);
     overflow-x: auto;
 }
 
@@ -127,11 +127,11 @@
 }
 
 .category-tabs button:hover {
-    background: #f5f5f5;
+    background: var(--ui-surface-muted);
 }
 
 .category-tabs button.active {
-    background: linear-gradient(135deg, #1976d2 0%, #2196F3 100%);
+    background: var(--ui-brand);
     color: white;
 }
 
@@ -149,7 +149,7 @@
 }
 
 .loading-container p {
-    color: #666;
+    color: var(--ui-text-muted);
     font-size: 16px;
 }
 
@@ -172,11 +172,11 @@
 
 .exercise-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--ui-text) 15%, transparent);
 }
 
 .exercise-card.featured {
-    border: 2px solid #4CAF50;
+    border: 2px solid var(--ui-success);
 }
 
 .card-header {
@@ -195,7 +195,7 @@
     right: -50%;
     width: 200%;
     height: 200%;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--ui-surface) 10%, transparent);
     transform: rotate(45deg);
 }
 
@@ -204,12 +204,12 @@
     width: 48px;
     height: 48px;
     color: white;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--ui-text) 20%, transparent));
     z-index: 1;
 }
 
 .difficulty-chip {
-    background: rgba(255, 255, 255, 0.9) !important;
+    background: color-mix(in srgb, var(--ui-surface) 90%, transparent) !important;
     font-weight: 600;
     z-index: 1;
 }
@@ -225,11 +225,11 @@ mat-card-content h3 {
     margin: 0 0 12px 0;
     font-size: 22px;
     font-weight: 600;
-    color: #333;
+    color: var(--ui-text);
 }
 
 .description {
-    color: #666;
+    color: var(--ui-text-muted);
     font-size: 15px;
     line-height: 1.6;
     margin-bottom: 16px;
@@ -241,14 +241,14 @@ mat-card-content h3 {
     gap: 16px;
     margin-bottom: 16px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--ui-border);
 }
 
 .meta-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #666;
+    color: var(--ui-text-muted);
     font-size: 14px;
 }
 
@@ -256,11 +256,11 @@ mat-card-content h3 {
     font-size: 18px;
     width: 18px;
     height: 18px;
-    color: #1976d2;
+    color: var(--ui-brand-text);
 }
 
 .benefits {
-    background: #f8f9fa;
+    background: var(--ui-surface);
     padding: 16px;
     border-radius: 8px;
     margin-top: auto;
@@ -270,7 +270,7 @@ mat-card-content h3 {
     margin: 0 0 12px 0;
     font-size: 14px;
     font-weight: 600;
-    color: #4CAF50;
+    color: var(--ui-success);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -293,7 +293,7 @@ mat-card-content h3 {
     padding-left: 20px;
     margin-bottom: 6px;
     font-size: 13px;
-    color: #555;
+    color: var(--ui-text);
     line-height: 1.5;
 }
 
@@ -301,7 +301,7 @@ mat-card-content h3 {
     content: '✓';
     position: absolute;
     left: 0;
-    color: #4CAF50;
+    color: var(--ui-success);
     font-weight: bold;
 }
 
@@ -310,7 +310,7 @@ mat-card-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--ui-border);
 }
 
 .start-button {
@@ -326,25 +326,25 @@ mat-card-actions {
     padding: 80px 20px;
     background: white;
     border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .empty-state mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
-    color: #ccc;
+    color: var(--ui-text-muted);
     margin-bottom: 16px;
 }
 
 .empty-state h3 {
     margin: 0 0 8px 0;
-    color: #333;
+    color: var(--ui-text);
     font-size: 24px;
 }
 
 .empty-state p {
-    color: #666;
+    color: var(--ui-text-muted);
     margin-bottom: 24px;
 }
 

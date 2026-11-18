@@ -240,12 +240,12 @@ describe('StudentLearningSetupComponent', () => {
 
   it('#26: a new score type that removes the own target asks in the page first, then confirms with "Yeni hedef seç"', async () => {
     const t = await purposeForm();
-    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi, Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
     t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
     expect(t.service.impact).toHaveBeenCalledWith({ purpose: 'Yks', primaryScoreType: 'EA', foreignLanguage: null });
     expect(t.service.save).not.toHaveBeenCalled();
     const ask = t.el.querySelector('[data-testid="target-impact"]')!;
-    expect(ask.textContent).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği) bu puan türüne uymuyor; kaydedersen kaldırılacak.');
+    expect(ask.textContent).toContain('Hedefin (Hacettepe Üniversitesi, Bilgisayar Mühendisliği) bu puan türüne uymuyor; kaydedersen kaldırılacak.');
     await t.click('Vazgeç');
     expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull(); expect(t.service.save).not.toHaveBeenCalled();
     expect(t.component.primaryScoreType).toBe('EA');
@@ -255,7 +255,7 @@ describe('StudentLearningSetupComponent', () => {
     const done = t.el.querySelector('[data-testid="setup-saved"]')!;
     expect(done.getAttribute('role')).toBe('status');
     expect(done.textContent).toContain('Sınavın kaydedildi.');
-    expect(done.textContent).toContain('Hedefinden kaldırıldı: Hacettepe Üniversitesi · Bilgisayar Mühendisliği');
+    expect(done.textContent).toContain('Hedefinden kaldırıldı: Hacettepe Üniversitesi, Bilgisayar Mühendisliği');
     expect(done.querySelector('a[href="/coaching-portal/welcome?step=target"]')!.textContent).toContain('Yeni hedef seç');
   });
 
@@ -284,7 +284,7 @@ describe('StudentLearningSetupComponent', () => {
 
   it('review: changing the form while the confirmation is open drops it, so a stale choice is never saved', async () => {
     const t = await purposeForm();
-    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi, Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
     t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
     expect(t.el.querySelector('[data-testid="target-impact"]')).not.toBeNull();
     const field = t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement;
@@ -310,14 +310,14 @@ describe('StudentLearningSetupComponent', () => {
       http.expectOne(r => r.url === fields && r.params.get('search') === search).flush({ data: rows }); await t.settle();
     };
     await find('hukuk', [{ name: 'Hukuk', scoreType: 'EA' }]);
-    await t.click('Hukuk · Eşit Ağırlık');
+    await t.click('Hukuk, Eşit Ağırlık');
     expect(t.component.primaryScoreType).toBe('EA');
     expect((t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement).value).toBe('EA');
     expect(t.el.querySelector('[data-testid="setup-field-note"]')!.textContent!.trim()).toBe('Bu bölüm Eşit Ağırlık puanla öğrenci alıyor; puan türün Eşit Ağırlık olarak seçildi.');
     expect(t.el.querySelector('[data-testid="setup-field-note"]')!.getAttribute('role')).toBe('status');
     expect(t.service.save).not.toHaveBeenCalled(); expect(t.service.impact).not.toHaveBeenCalled();
 
-    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi, Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
     await t.submit();
     expect(t.service.impact).toHaveBeenCalledWith({ purpose: 'Yks', primaryScoreType: 'EA', foreignLanguage: null });
     expect(t.el.querySelector('[data-testid="target-impact"]')!.textContent).toContain('bu puan türüne uymuyor');
@@ -325,7 +325,7 @@ describe('StudentLearningSetupComponent', () => {
 
     // A YDT programme sets Dil (the only language, English, comes with it); a choice in the list removes the note.
     await find('ingilizce', [{ name: 'İngilizce Öğretmenliği', scoreType: 'YDT' }]);
-    await t.click('İngilizce Öğretmenliği · Dil');
+    await t.click('İngilizce Öğretmenliği, Dil');
     expect(t.el.querySelector('[data-testid="target-impact"]')).toBeNull();
     expect([t.component.primaryScoreType, t.component.foreignLanguage]).toEqual(['DIL', 'English']);
     const field = t.el.querySelector('select[name="scoreType"]') as HTMLSelectElement;
@@ -382,7 +382,7 @@ describe('StudentLearningSetupComponent', () => {
     expect(el.querySelector('[data-testid="course-group-TYT"] [data-testid="course-row-tyt-mat"] input[name="difficulty-tyt-mat"]')).not.toBeNull();
     const advanced = row('ayt-mat').querySelector('details')!;
     expect(advanced.open).toBe(false);
-    expect(advanced.querySelector('summary')!.textContent).toContain('Gelişmiş · öncelik 2, zorluk 4');
+    expect(advanced.querySelector('summary')!.textContent).toContain('Gelişmiş, öncelik 2, zorluk 4');
     expect((row('ayt-mat').querySelector('input[name="difficulty-ayt-mat"]') as HTMLInputElement).value).toBe('4');
     // A lesson that is not chosen has no settings; choosing it adds them with the default priority.
     expect(row('tyt-fiz').querySelector('details')).toBeNull();
@@ -460,8 +460,8 @@ describe('StudentLearningSetupComponent', () => {
       .toEqual(['Sayısal', 'Eşit Ağırlık', 'Sözel', 'Dil', 'Yalnız TYT (önlisans)']);
     const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
     // G2 (#40): the wizard's list (no catalog session here: years up to four ahead, the nearest marked without a grade).
-    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2027 · tarih henüz açıklanmadı · önerilen',
-      '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
+    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2027, tarih henüz açıklanmadı, önerilen',
+      '2028, tarih henüz açıklanmadı', '2029, tarih henüz açıklanmadı', '2030, tarih henüz açıklanmadı']);
     expect(year.value).toBe('year:2027');
     year.value = 'year:2029'; year.dispatchEvent(new Event('change')); await t.settle();
     expect(t.component.targetExamYear).toBe(2029);
@@ -471,7 +471,7 @@ describe('StudentLearningSetupComponent', () => {
 
   it('#27 (E4 b): "Bilgileri yeniden yükle" drops a confirmation that is still open', async () => {
     const t = await purposeForm();
-    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi · Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
+    t.service.impact.mockReturnValue(of({ removedTargets: ['Hacettepe Üniversitesi, Bilgisayar Mühendisliği'], teacherGoalMismatch: false, diplomaGradeRemoved: null }));
     t.component.primaryScoreType = 'EA'; t.component.changed(); await t.submit();
     expect(t.el.querySelector('[data-testid="target-impact"]')).not.toBeNull();
     // F2 review: declining "vazgeç?" keeps the confirmation open.
@@ -502,7 +502,7 @@ describe('StudentLearningSetupComponent', () => {
     t.service.catalog.mockReturnValue(of(yksCatalog())); t.component.loadCatalog(); t.fixture.detectChanges(); await t.fixture.whenStable(); t.fixture.detectChanges();
     const el = t.fixture.nativeElement as HTMLElement;
     expect(Array.from(el.querySelectorAll('[data-testid^="course-group-"] h3')).map(x => x.textContent)).toEqual(['TYT', 'AYT']);
-    expect(Array.from(el.querySelectorAll('[data-testid="course-group-TYT"] label.check')).map(x => x.textContent!.trim())).toEqual(['Türkçe · 10 konu', 'Matematik · 15 konu']);
+    expect(Array.from(el.querySelectorAll('[data-testid="course-group-TYT"] label.check')).map(x => x.textContent!.trim())).toEqual(['Türkçe, 10 konu', 'Matematik, 15 konu']);
     // The courses with topics are ticked, but only as a suggestion: nothing is saved and leaving does not ask.
     expect(t.component.courses.map(x => x.lessonId).sort()).toEqual(['ayt-mat', 'tyt-mat', 'tyt-tr']);
     expect(el.querySelector('[data-testid="suggested-courses"]')!.textContent).toContain('Sınavına uygun dersleri');
@@ -570,8 +570,8 @@ describe('StudentLearningSetupComponent', () => {
     const t = await purposeForm({ ...yksView, context: old });
     const year = t.el.querySelector('select[name="examYear"]') as HTMLSelectElement;
     // The older saved year stays selectable before the list.
-    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2026', '2027 · tarih henüz açıklanmadı · önerilen',
-      '2028 · tarih henüz açıklanmadı', '2029 · tarih henüz açıklanmadı', '2030 · tarih henüz açıklanmadı']);
+    expect(Array.from(year.options).map(x => x.textContent!.trim())).toEqual(['Seç', '2026', '2027, tarih henüz açıklanmadı, önerilen',
+      '2028, tarih henüz açıklanmadı', '2029, tarih henüz açıklanmadı', '2030, tarih henüz açıklanmadı']);
     year.value = 'year:2027'; year.dispatchEvent(new Event('change')); await t.settle();
     await t.submit();
     // A new school year is a new scope: the courses are chosen again for the new curriculum.

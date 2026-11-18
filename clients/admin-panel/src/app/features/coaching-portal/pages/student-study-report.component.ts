@@ -41,7 +41,7 @@ import { CoachingPlanningPermissionService } from '../../../core/services/coachi
   template: `
     <section class="rounded-2xl border border-(--ui-border) bg-(--ui-surface) p-5" aria-labelledby="study-report-title">
       <h2 id="study-report-title" class="text-lg font-semibold">{{ adminStudentId || staffStudentId ? 'Öğrencinin çalışma planı raporu' : 'Çalışma planı raporum' }}</h2>
-      <p class="mt-2 text-sm text-(--ui-text-muted)">Öğrenci beyanı · Seçilen tarihlere planlanmış işlerin güncel durumu. Resmî ölçüm veya geçmiş tarihli durum görüntüsü değildir.</p>
+      <p class="mt-2 text-sm text-(--ui-text-muted)">Öğrenci beyanı, Seçilen tarihlere planlanmış işlerin güncel durumu. Resmî ölçüm veya geçmiş tarihli durum görüntüsü değildir.</p>
       <div class="my-4 flex flex-wrap items-end gap-3">
         <button type="button" (click)="useLastWeek()" [disabled]="busy()">Son iki haftayı karşılaştır</button>
         <label class="text-sm">Başlangıç<input class="mt-1 block rounded-lg border p-2" type="date" [(ngModel)]="fromDate" [disabled]="busy()"></label>
@@ -55,12 +55,12 @@ import { CoachingPlanningPermissionService } from '../../../core/services/coachi
         <p *ngIf="partialPlanEnd() as end" class="mt-2 text-sm" role="note" data-testid="partial-plan-note">{{ adminStudentId || staffStudentId ? 'Öğrencinin yayındaki planı' : 'Yayındaki planın' }} yalnız {{ end | date:'dd.MM.yyyy' }} tarihine kadar hazırlandı. Bu rapordaki plan rakamları o plana göredir; sınava kadar olan bütün konuları göstermez.</p>
         <p *ngIf="data.reason === 'NoScheduledTasks'" class="mt-3">Bu döneme planlanmış çalışma yok. Başarı oranı hesaplanmadı.</p>
         <p>Plan yükü planlanan tarihlere, kaydedilen süre ve sorular fiili çalışma günlerine göre hesaplanır.</p><p *ngIf="data.legacyDateActualMinutes != null">{{data.legacyDateActualMinutes}} dakika eski kaydın sabitlenmiş plan tarihine aittir; fiili tarihi bilinmiyor.</p><dl *ngIf="data.scheduledTasks > 0 || data.actualMinutes != null" class="mt-4 grid gap-4 sm:grid-cols-3">
-          <div><dt>Tamamlanan çalışma</dt><dd class="text-xl font-semibold">{{ data.completedTasks }} / {{ data.scheduledTasks }} · {{data.completionPercentage == null ? 'Oran yok' : '%' + data.completionPercentage}}</dd></div>
+          <div><dt>Tamamlanan çalışma</dt><dd class="text-xl font-semibold">{{ data.completedTasks }} / {{ data.scheduledTasks }}, {{data.completionPercentage == null ? 'Oran yok' : '%' + data.completionPercentage}}</dd></div>
           <div><dt>Planlanan süre</dt><dd class="text-xl font-semibold">{{ data.plannedMinutes }} dakika</dd></div>
           <div><dt>Kaydedilen süre</dt><dd class="text-xl font-semibold">{{ data.actualMinutes === null ? 'Henüz süre kaydı yok' : data.actualMinutes + ' dakika' }}</dd></div>
         </dl>
-        <p class="mt-3 text-sm">Planlanan soru: {{ data.plannedQuestions ?? 'Kayıt yok' }} · {{ data.plannedQuestionTasks ?? 0 }} / {{ data.scheduledTasks }} çalışmada sayı var</p>
-        <p class="mt-2 text-sm">Kaydedilen soru: {{ data.actualQuestions ?? 'Kayıt yok' }} · {{ data.actualQuestionTasks ?? 0 }} çalışmada bu dönem soru kaydı var</p>
+        <p class="mt-3 text-sm">Planlanan soru: {{ data.plannedQuestions ?? 'Kayıt yok' }}, {{ data.plannedQuestionTasks ?? 0 }} / {{ data.scheduledTasks }} çalışmada sayı var</p>
+        <p class="mt-2 text-sm">Kaydedilen soru: {{ data.actualQuestions ?? 'Kayıt yok' }}, {{ data.actualQuestionTasks ?? 0 }} çalışmada bu dönem soru kaydı var</p>
         @if (previousReport(); as previous) {
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Haftalar arası çalışma karşılaştırması</caption>
@@ -75,9 +75,9 @@ import { CoachingPlanningPermissionService } from '../../../core/services/coachi
         }
         <p class="mt-3 text-xs text-(--ui-text-muted)">Taslaklar ve arşivlenen planların tamamlanmamış işleri hesaba katılmaz. Tamamlanmış eski işler korunur.</p>
         <div *ngIf="data.topics.length" class="mt-4 overflow-x-auto">
-          <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Konu bazında çalışma · Öğrenci beyanı</caption>
+          <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Konu bazında çalışma, Öğrenci beyanı</caption>
             <thead><tr><th class="p-2">Konu</th><th class="p-2">Tamamlanan / planlanan</th><th class="p-2">Planlanan / kaydedilen dakika</th><th class="p-2">Planlanan / kaydedilen soru</th></tr></thead>
-            <tbody><tr *ngFor="let topic of data.topics" class="border-t"><td class="p-2">{{ topic.topicName ?? (topic.topicId ? 'Konu adı bulunamadı' : 'Kataloğa bağlanmamış çalışma') }}</td><td class="p-2">{{ topic.completedTasks }} / {{ topic.scheduledTasks }}</td><td class="p-2">{{ topic.plannedMinutes }} / {{ topic.actualMinutes ?? 'Kayıt yok' }}</td><td class="p-2">{{ topic.plannedQuestions ?? 'Kayıt yok' }} / {{ topic.actualQuestions ?? 'Kayıt yok' }}<br>Plan: {{ topic.plannedQuestionTasks ?? 0 }} / {{ topic.scheduledTasks }} iş · Kayıt: {{ topic.actualQuestionTasks ?? 0 }} / {{ topic.completedTasks }} iş</td></tr></tbody>
+            <tbody><tr *ngFor="let topic of data.topics" class="border-t"><td class="p-2">{{ topic.topicName ?? (topic.topicId ? 'Konu adı bulunamadı' : 'Kataloğa bağlanmamış çalışma') }}</td><td class="p-2">{{ topic.completedTasks }} / {{ topic.scheduledTasks }}</td><td class="p-2">{{ topic.plannedMinutes }} / {{ topic.actualMinutes ?? 'Kayıt yok' }}</td><td class="p-2">{{ topic.plannedQuestions ?? 'Kayıt yok' }} / {{ topic.actualQuestions ?? 'Kayıt yok' }}<br>Plan: {{ topic.plannedQuestionTasks ?? 0 }} / {{ topic.scheduledTasks }} iş, Kayıt: {{ topic.actualQuestionTasks ?? 0 }} / {{ topic.completedTasks }} iş</td></tr></tbody>
           </table>
         </div>
         @if (priorities().length) {
@@ -85,7 +85,7 @@ import { CoachingPlanningPermissionService } from '../../../core/services/coachi
           <p class="mt-2 text-xs text-(--ui-text-muted)">Girilen sonuçlardaki yanlış/boş soru oranına göre sıralanır. Kaynak ve sınav türü ayrı gösterilir.</p>
           <ul class="mt-2 space-y-2">
             @for (topic of priorities(); track $index) {
-              <li class="rounded-lg border p-3">{{ topic.lessonName ?? 'Ders' }} · {{ topic.topicName ?? 'Ders toplamı' }} · {{ sourceLabel(topic.source) }} · {{ topic.examType }}<br>
+              <li class="rounded-lg border p-3">{{ topic.lessonName ?? 'Ders' }}, {{ topic.topicName ?? 'Ders toplamı' }}, {{ sourceLabel(topic.source) }}, {{ topic.examType }}<br>
                 {{ topic.wrong + topic.empty }} yanlış/boş / {{ topic.questionCount }} soru</li>
             }
           </ul>
@@ -94,12 +94,12 @@ import { CoachingPlanningPermissionService } from '../../../core/services/coachi
         <p *ngIf="!data.examGroups?.length" class="mt-2 text-sm">Bu dönemde sınav sonucu yok; başarı ortalaması hesaplanmadı.</p>
         <p class="mt-2 text-xs text-(--ui-text-muted)">Kaynak, sınav türü ve puan ölçeği ayrı değerlendirilir. Ortalama, resmî sınav puanı veya yerleşme tahmini değildir.</p>
         <div *ngFor="let group of data.examGroups" class="mt-2 rounded-lg border p-3 text-sm">
-          {{ sourceLabel(group.source) }} · {{ group.examType }} · {{ group.maxScore }} puan ölçeği · {{ group.count }} sonuç · Ortalama %{{ group.averagePercentage }}
+          {{ sourceLabel(group.source) }}, {{ group.examType }}, {{ group.maxScore }} puan ölçeği, {{ group.count }} sonuç, Ortalama %{{ group.averagePercentage }}
         </div>
         <div *ngIf="data.lessonResults?.length" class="mt-4 overflow-x-auto">
           <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Ders / konu soru dağılımı</caption>
             <thead><tr><th class="p-2">Ders / konu</th><th class="p-2">Kaynak / tür</th><th class="p-2">Soru</th><th class="p-2">Doğru / yanlış / boş</th></tr></thead>
-            <tbody><tr *ngFor="let lesson of data.lessonResults" class="border-t"><td class="p-2">{{ lesson.lessonName ?? 'Ders adı bulunamadı' }} · {{ lesson.topicName ?? 'Ders toplamı' }}</td><td class="p-2">{{ sourceLabel(lesson.source) }} · {{ lesson.examType }}</td><td class="p-2">{{ lesson.questionCount }}</td><td class="p-2">{{ lesson.correct }} / {{ lesson.wrong }} / {{ lesson.empty }}</td></tr></tbody>
+            <tbody><tr *ngFor="let lesson of data.lessonResults" class="border-t"><td class="p-2">{{ lesson.lessonName ?? 'Ders adı bulunamadı' }}, {{ lesson.topicName ?? 'Ders toplamı' }}</td><td class="p-2">{{ sourceLabel(lesson.source) }}, {{ lesson.examType }}</td><td class="p-2">{{ lesson.questionCount }}</td><td class="p-2">{{ lesson.correct }} / {{ lesson.wrong }} / {{ lesson.empty }}</td></tr></tbody>
           </table>
         </div>
         <h3 class="mt-6 font-semibold">{{ adminStudentId || staffStudentId ? 'Öğrencinin güncel hedefleri' : 'Güncel hedeflerim' }}</h3>
@@ -109,17 +109,17 @@ import { CoachingPlanningPermissionService } from '../../../core/services/coachi
           <li *ngFor="let goal of data.goals" class="rounded-lg border p-3 text-sm">
             <h4 class="font-semibold">{{ goal.title }}</h4>
             <p class="mt-1 text-xs text-(--ui-text-muted)">{{ goal.source === 'TeacherSet' ? 'Öğretmenin belirlediği hedef' : 'Belirleyen kişi kaydedilmemiş' }}</p>
-            <p class="mt-2">Kaydedilen ilerleme: %{{ goal.recordedProgress }} · {{ goal.isCompleted ? 'Tamamlandı olarak işaretli' : 'Devam ediyor' }}</p>
+            <p class="mt-2">Kaydedilen ilerleme: %{{ goal.recordedProgress }}, {{ goal.isCompleted ? 'Tamamlandı olarak işaretli' : 'Devam ediyor' }}</p>
             <p *ngIf="goal.targetDate">Hedef tarihi: {{ goal.targetDate | date:'dd.MM.yyyy':'UTC' }}</p>
-            <p *ngIf="goal.targetScore !== null && goal.targetScore !== undefined">Hedef puanı: {{ goal.targetScore }}<span *ngIf="goal.targetExamType"> · {{ goal.targetExamType }}</span></p>
+            <p *ngIf="goal.targetScore !== null && goal.targetScore !== undefined">Hedef puanı: {{ goal.targetScore }}<span *ngIf="goal.targetExamType">, {{ goal.targetExamType }}</span></p>
             <p *ngIf="goal.targetSubject">Hedef ders: {{ goal.targetSubject }}</p>
             <div class="mt-3 rounded-lg bg-(--ui-brand-soft) p-3" *ngIf="goal.scoreAssessment as assessment">
               <h5 class="font-semibold">Otomatik puan karşılaştırması</h5>
               <p class="mt-1 text-xs text-(--ui-text-muted)">Dönemdeki son uyumlu sonuç / hedef puanı. Öğrenme artışı veya yerleşme olasılığı değildir; hedefi otomatik tamamlamaz.</p>
               <p *ngIf="!assessment.comparisons.length" class="mt-2">{{ scoreReason(assessment.reason) }}</p>
               <div *ngFor="let comparison of assessment.comparisons" class="mt-3">
-                <p>{{ sourceLabel(comparison.source) }} · {{ comparison.examDate | date:'dd.MM.yyyy':'UTC' }} · Sonuç: {{ comparison.score }} / {{ goal.targetMaxScore }}</p>
-                <p class="mt-1 font-semibold">Puan hedefine erişim: %{{ comparison.targetAttainmentPercentage }} · Kalan puan: {{ comparison.remainingScore }}</p>
+                <p>{{ sourceLabel(comparison.source) }}, {{ comparison.examDate | date:'dd.MM.yyyy':'UTC' }}, Sonuç: {{ comparison.score }} / {{ goal.targetMaxScore }}</p>
+                <p class="mt-1 font-semibold">Puan hedefine erişim: %{{ comparison.targetAttainmentPercentage }}, Kalan puan: {{ comparison.remainingScore }}</p>
                 <p *ngIf="comparison.targetReached" class="mt-1">Bu sonuçta puan hedefi karşılandı.</p>
               </div>
             </div>

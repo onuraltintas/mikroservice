@@ -546,12 +546,12 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
     await t.choose('educationStage', 'Ortaokul öğrencisiyim'); await t.choose('gradeLevel', '8. sınıf'); await t.submit();
     const impact = t.http.expectOne('/api/coaching/profiles/me/student/impact');
     expect(impact.request.body).toEqual({ educationStatus: 'Student', gradeLevel: 8 });
-    impact.flush({ data: { examNoLongerFits: true, exam: 'YKS', diplomaGradeRemoved: 85, target: 'Hacettepe Üniversitesi · Bilgisayar Mühendisliği' } }); await t.settle();
+    impact.flush({ data: { examNoLongerFits: true, exam: 'YKS', diplomaGradeRemoved: 85, target: 'Hacettepe Üniversitesi, Bilgisayar Mühendisliği' } }); await t.settle();
     const warning = t.el.querySelector('[data-testid="save-consequences"]')!.textContent!;
     expect(warning).toContain('kayıtlı okulun ve şuben silinecek');
     expect(warning).toContain('Diploma notun (85) silinecek');
     expect(warning).toContain('Seçili sınavın (YKS) bu sınıfa uymuyor');
-    expect(warning).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği)');
+    expect(warning).toContain('Hedefin (Hacettepe Üniversitesi, Bilgisayar Mühendisliği)');
     await t.click('[data-testid="save-consequences"]', 'Evet, kaydet');
     t.http.expectOne('/api/coaching/profiles/me/student').flush({ data: { ...twelfth, version: 8, gradeLevel: 8, diplomaGrade: null, schoolName: null, schoolCity: null, schoolType: null, classBranch: null } });
     await t.settle();
@@ -560,7 +560,7 @@ describe('Profilim feedback and warnings (E4 #23, #24)', () => {
     expect(done).toContain('Eğitim durumun: Ortaokul öğrencisiyim, 8. sınıf'); expect(done).toContain('Okulun ve şuben silindi');
     const notice = t.el.querySelector('[data-testid="grade-purpose-notice"]')!;
     expect(notice.querySelector('a[href="/coaching-portal/account/settings"]')).not.toBeNull();
-    expect(notice.textContent).toContain('Hedefin (Hacettepe Üniversitesi · Bilgisayar Mühendisliği) yeni sınavına uymazsa, sınavını değiştirdiğinde kaldırılır.');
+    expect(notice.textContent).toContain('Hedefin (Hacettepe Üniversitesi, Bilgisayar Mühendisliği) yeni sınavına uymazsa, sınavını değiştirdiğinde kaldırılır.');
   });
 
   it('review: while the confirmation is open the form cannot change, so the confirmed save is what was shown', async () => {

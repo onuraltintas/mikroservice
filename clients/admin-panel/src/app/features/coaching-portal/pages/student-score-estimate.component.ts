@@ -24,14 +24,14 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         @if (result.notice) { <p>{{ result.notice }}</p> }
         @for (item of result.estimates; track item.scoreType) {
           <div class="plan-row">
-            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})@if (item.margin) { · model payı ±{{ num(item.margin) }} }
+            <strong>{{ item.name }}: yaklaşık {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})@if (item.margin) {, model payı ±{{ num(item.margin) }} }
             <span class="badge" data-testid="estimate-approximate">{{ item.label ?? label }}</span>
             @if (result.goal?.scoreType === item.scoreType) { <span class="badge" data-testid="estimate-goal">Hedef puan türü</span> }
             @if (item.rankBest !== null && item.rankWorst !== null) {
               <br>Tahmini sıralama: {{ int(item.rankBest) }}–{{ int(item.rankWorst) }}
-              @if (item.percentile !== null) { · Yüzdelik dilim: %{{ num(item.percentile) }} }
+              @if (item.percentile !== null) {, Yüzdelik dilim: %{{ num(item.percentile) }} }
             }
-            <br><small>{{ item.modelYear }} verisiyle, son {{ item.examsUsed }} denemeye göre{{ item.includesDiplomaGrade ? ' · diploma notu dahil' : '' }}.</small>
+            <br><small>{{ item.modelYear }} verisiyle, son {{ item.examsUsed }} denemeye göre{{ item.includesDiplomaGrade ? ', diploma notu dahil' : '' }}.</small>
             @if (typeNote(item.scoreType); as note) { <br><small>{{ note }}</small> }
           </div>
         }
@@ -44,7 +44,7 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         }
         @for (item of result.languageScores ?? []; track item.examCode) {
           <div class="plan-row" data-testid="language-score">
-            <strong>{{ item.name }}: {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})@if (item.level) { · Seviye {{ item.level }} }
+            <strong>{{ item.name }}: {{ num(item.score) }} puan</strong> ({{ num(item.scoreLow) }}–{{ num(item.scoreHigh) }})@if (item.level) {, Seviye {{ item.level }} }
             <span class="badge">{{ item.label ?? exactLabel }}</span>
             @if (result.goal?.scoreType === item.examCode) { <span class="badge" data-testid="estimate-goal">Hedef sınav</span> }<br>
             <small>Son {{ item.examsUsed }} denemeye göre. Her doğru 1,25 puan; yanlışlar puanı düşürmez (ÖSYM'nin hesabı).</small>
@@ -57,9 +57,9 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
         @if (result.target; as target) {
           <p class="plan-row" data-testid="score-target">
             <strong>Hedef: {{ target.targetName }}</strong>
-            @if (target.targetScore !== null) { · {{ target.kind === 'score' || target.ownTargetScore ? 'hedef puanı' : 'taban puan' }} {{ num(target.targetScore) }} }
-            @if (target.targetRank !== null) { · başarı sırası {{ int(target.targetRank) }} }
-            @if (target.targetPercentile !== null) { · yüzdelik %{{ num(target.targetPercentile) }} }
+            @if (target.targetScore !== null) {, {{ target.kind === 'score' || target.ownTargetScore ? 'hedef puanı' : 'taban puan' }} {{ num(target.targetScore) }} }
+            @if (target.targetRank !== null) {, başarı sırası {{ int(target.targetRank) }} }
+            @if (target.targetPercentile !== null) {, yüzdelik %{{ num(target.targetPercentile) }} }
             <br>{{ targetText(target) }}
           </p>
         }

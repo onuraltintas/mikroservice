@@ -11,7 +11,7 @@
     <h1 id="ob-title">{{ mode() === 'target' ? 'Hedefini belirle' : 'Hesabını birlikte kuralım' }}</h1>
     @if (!loading() && !done() && mode() === 'wizard') {
       <div class="ob-progress">
-        <span id="ob-progress-label">Adım {{ step() }}/{{ stepCount }} · {{ stepTitle() }}</span>
+        <span id="ob-progress-label">Adım {{ step() }}/{{ stepCount }}, {{ stepTitle() }}</span>
         <div class="ob-bar" role="progressbar" aria-labelledby="ob-progress-label" aria-valuemin="1" [attr.aria-valuemax]="stepCount" [attr.aria-valuenow]="step()">
           <span [style.width.%]="(step() / stepCount) * 100"></span>
         </div>

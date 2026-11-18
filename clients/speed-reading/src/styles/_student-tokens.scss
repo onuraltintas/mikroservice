@@ -9,136 +9,107 @@
 // =============================================================================
 
 :root {
-  // ---------------------------------------------------------------------------
-  // PRIMARY — Indigo (konsantrasyon, güven, teknoloji)
-  // ---------------------------------------------------------------------------
-  --sp-primary:       var(--ui-brand);
-  --sp-primary-light: #818cf8;
-  --sp-primary-dark:  var(--ui-brand-strong);
-  --sp-primary-ghost: rgba(99, 102, 241, 0.12);
-  --sp-primary-ghost-hover: rgba(99, 102, 241, 0.18);
+  // Redesign 18.11.2026: Master Hızlı Okuma kimliği. <html data-brand="ho"> --ds-* değerlerini verir (açık ve koyu);
+  // buradaki adlar onlara bağlıdır. Kurallar: .claude/skills/eduivme-design (çam yeşili, turuncu odak çizgisi, Lexend).
 
-  // ---------------------------------------------------------------------------
-  // SUCCESS — Emerald (başarı, tamamlama, ilerleme)
-  // ---------------------------------------------------------------------------
-  --sp-success:       #10b981;
-  --sp-success-light: rgba(16, 185, 129, 0.12);
-  --sp-success-dark:  #059669;
-  --sp-success-text:  #065f46;
+  // PRIMARY: çam yeşili
+  --sp-primary:       var(--ds-primary);
+  --sp-primary-light: color-mix(in srgb, var(--ds-primary) 70%, var(--ds-surface));
+  --sp-primary-dark:  var(--ds-primary-hover);
+  --sp-primary-ghost: color-mix(in srgb, var(--ds-primary) 12%, transparent);
+  --sp-primary-ghost-hover: color-mix(in srgb, var(--ds-primary) 18%, transparent);
+  --sp-on-primary:    var(--ds-on-primary);
+  --sp-primary-hover: var(--ds-primary-hover);
 
-  // ---------------------------------------------------------------------------
-  // WARNING — Amber (dikkat, sıra, yarım tamamlanan)
-  // ---------------------------------------------------------------------------
-  --sp-warning:       #f59e0b;
-  --sp-warning-light: rgba(245, 158, 11, 0.12);
-  --sp-warning-dark:  #d97706;
-  --sp-warning-text:  #78350f;
+  // SUCCESS, WARNING, DANGER
+  --sp-success:       var(--ds-success);
+  --sp-success-light: var(--ds-success-soft);
+  --sp-success-dark:  var(--ds-success);
+  --sp-success-text:  var(--ds-success);
+  --sp-warning:       var(--ds-warning);
+  --sp-warning-light: var(--ds-warning-soft);
+  --sp-warning-dark:  var(--ds-warning);
+  --sp-warning-text:  var(--ds-warning);
+  --sp-danger:        var(--ds-danger);
+  --sp-danger-light:  var(--ds-danger-soft);
 
-  // ---------------------------------------------------------------------------
-  // DANGER — Rose
-  // ---------------------------------------------------------------------------
-  --sp-danger:        #f43f5e;
-  --sp-danger-light:  rgba(244, 63, 94, 0.12);
+  // GAMIFICATION: turuncu odak rengi yalnız işaret olarak; yazı rengi olarak kullanılmaz.
+  --sp-xp:            var(--ds-accent);
+  --sp-xp-light:      color-mix(in srgb, var(--ds-accent) 14%, transparent);
+  --sp-streak:        var(--ds-accent);
+  --sp-streak-light:  color-mix(in srgb, var(--ds-accent) 14%, transparent);
+  --sp-diamond:       var(--ds-primary);
+  --sp-platinum:      var(--ds-muted);
+  --sp-platinum-light: color-mix(in srgb, var(--ds-muted) 14%, transparent);
+  --sp-gold:          var(--ds-accent);
+  --sp-silver:        var(--ds-field);
+  --sp-bronze:        var(--ds-warning);
 
-  // ---------------------------------------------------------------------------
-  // GAMIFICATION — Altın, XP, Ödül
-  // ---------------------------------------------------------------------------
-  --sp-xp:            #eab308;
-  --sp-xp-light:      rgba(234, 179, 8, 0.15);
-  --sp-streak:        #f97316;
-  --sp-streak-light:  rgba(249, 115, 22, 0.12);
-  --sp-diamond:       #06b6d4;
-  --sp-platinum:      #8b5cf6;
-  --sp-platinum-light: rgba(139, 92, 246, 0.12);
-  --sp-gold:          #f59e0b;
-  --sp-silver:        #94a3b8;
-  --sp-bronze:        #b45309;
+  // SURFACE
+  --sp-surface:       var(--ds-surface);
+  --sp-surface-2:     var(--ds-bg);
+  --sp-surface-3:     var(--ds-soft);
+  --sp-surface-4:     var(--ds-line);
 
-  // ---------------------------------------------------------------------------
-  // SURFACE — Arka plan katmanları
-  // ---------------------------------------------------------------------------
-  --sp-surface:       var(--ui-surface);
-  --sp-surface-2:     var(--ui-page);    // sayfa arka planı
-  --sp-surface-3:     var(--ui-surface-muted);    // içe gömülü section
-  --sp-surface-4:     #e2e8f0;    // disabled state
-
-  // ---------------------------------------------------------------------------
   // BORDER
-  // ---------------------------------------------------------------------------
-  --sp-border:        var(--ui-border);
-  --sp-border-strong: #cbd5e1;
-  --sp-border-focus:  #6366f1;
+  --sp-border:        var(--ds-line);
+  --sp-border-strong: var(--ds-field);
+  --sp-border-focus:  var(--ds-focus);
 
-  // ---------------------------------------------------------------------------
   // TEXT
-  // ---------------------------------------------------------------------------
-  --sp-text-1:        var(--ui-text);    // başlık, birincil metin
-  --sp-text-2:        var(--ui-text-muted);    // ikincil metin, açıklama
-  --sp-text-3:        var(--ui-text-subtle);    // placeholder, devre dışı
-  --sp-text-inv:      #ffffff;    // koyu arka plan üzerindeki metin
+  --sp-text-1:        var(--ds-text);
+  --sp-text-2:        var(--ds-muted);
+  --sp-text-3:        var(--ds-muted);
+  --sp-text-inv:      var(--ds-surface);
 
-  // ---------------------------------------------------------------------------
-  // SIDEBAR
-  // ---------------------------------------------------------------------------
-  --sp-sidebar-bg:          #1e1b4b;   // koyu indigo — odaklanmayı destekler
-  --sp-sidebar-bg-end:      #2d2a6e;   // gradient son noktası
-  --sp-sidebar-hover:       rgba(255, 255, 255, 0.07);
-  --sp-sidebar-active:      rgba(99, 102, 241, 0.25);
-  --sp-sidebar-active-bar:  #818cf8;   // active indicator çubuğu
-  --sp-sidebar-text:        #e0e7ff;   // ana nav text
-  --sp-sidebar-text-muted:  rgba(224, 231, 255, 0.55);
-  --sp-sidebar-icon:        #a5b4fc;
+  // SIDEBAR: sayfanın üstünde saydam çam yeşili; seçili öğe beyaz, turuncu odak çizgili.
+  --sp-sidebar-bg:          var(--ds-nav);
+  --sp-sidebar-bg-end:      var(--ds-nav);
+  --sp-sidebar-hover:       color-mix(in srgb, var(--ds-surface) 60%, transparent);
+  --sp-sidebar-active:      var(--ds-surface);
+  --sp-sidebar-active-bar:  var(--ds-accent);
+  --sp-sidebar-text:        var(--ds-text);
+  --sp-sidebar-text-muted:  var(--ds-muted);
+  --sp-sidebar-icon:        var(--ds-primary);
   --sp-sidebar-width:       264px;
   --sp-sidebar-width-collapsed: 72px;
 
-  // ---------------------------------------------------------------------------
   // TYPOGRAPHY
-  // ---------------------------------------------------------------------------
-  --sp-font-sans:   var(--ui-font-body);
+  --sp-font-sans:   var(--ds-font);
   --sp-font-mono:   var(--ui-font-mono);
 
-  // ---------------------------------------------------------------------------
-  // BORDER RADIUS
-  // ---------------------------------------------------------------------------
-  --sp-radius-xs:   4px;
-  --sp-radius-sm:   var(--ui-radius-sm);
-  --sp-radius-md:   var(--ui-radius-md);
-  --sp-radius-lg:   var(--ui-radius-lg);
-  --sp-radius-xl:   var(--ui-radius-xl);
-  --sp-radius-2xl:  24px;
-  --sp-radius-card: 16px;
+  // BORDER RADIUS (Hızlı Okuma: 14 px, ana düğme tam yuvarlak)
+  --sp-radius-xs:   6px;
+  --sp-radius-sm:   10px;
+  --sp-radius-md:   var(--ds-radius-control);
+  --sp-radius-lg:   var(--ds-radius-control);
+  --sp-radius-xl:   var(--ds-radius);
+  --sp-radius-2xl:  var(--ds-radius);
+  --sp-radius-card: var(--ds-radius);
   --sp-radius-full: 9999px;
 
-  // ---------------------------------------------------------------------------
-  // SHADOWS
-  // ---------------------------------------------------------------------------
-  --sp-shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --sp-shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
-  --sp-shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-  --sp-shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
-  --sp-shadow-xl:   0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --sp-shadow-card: 0 1px 3px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.08);
-  --sp-shadow-hover:0 4px 6px rgb(0 0 0 / 0.06), 0 12px 24px rgb(0 0 0 / 0.1);
+  // SHADOWS: iki ince katman, çam yeşiline çalan (açık tema); koyu temada --ds-shadow yok.
+  --sp-shadow-xs:   0 1px 2px rgb(11 60 50 / 0.05);
+  --sp-shadow-sm:   var(--ds-shadow);
+  --sp-shadow-md:   var(--ds-shadow);
+  --sp-shadow-lg:   var(--ds-shadow);
+  --sp-shadow-xl:   0 20px 40px -24px rgb(11 60 50 / 0.35);
+  --sp-shadow-card: var(--ds-shadow);
+  --sp-shadow-hover: var(--ds-shadow);
   --sp-shadow-glow: 0 0 0 3px var(--sp-primary-ghost);
 
-  // ---------------------------------------------------------------------------
   // TRANSITIONS
-  // ---------------------------------------------------------------------------
   --sp-transition-fast:   var(--ui-transition-fast);
   --sp-transition-normal: var(--ui-transition-normal);
   --sp-transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
   --sp-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  // ---------------------------------------------------------------------------
   // LAYOUT
-  // ---------------------------------------------------------------------------
   --sp-header-height:    64px;
   --sp-content-max-width: 1280px;
   --sp-content-padding:  24px;
 
-  // ---------------------------------------------------------------------------
   // Z-INDEX STACK
-  // ---------------------------------------------------------------------------
   --sp-z-base:    1;
   --sp-z-card:    10;
   --sp-z-header:  100;
@@ -147,51 +118,13 @@
   --sp-z-toast:   1100;
 }
 
-// =============================================================================
-// DARK THEME
-// =============================================================================
+// Koyu tema: renkler --ds-* üzerinden kendiliğinden değişir; burada yalnız koyu zemine özgü olanlar.
 [data-sp-theme='dark'] {
-  // Surface — slate renk skalası
-  --sp-surface:         #0f172a;   // kart arka planı
-  --sp-surface-2:       #1e293b;   // sayfa arka planı
-  --sp-surface-3:       #334155;   // hover, içe gömülü section
-  --sp-surface-4:       #475569;   // disabled
-
-  // Border
-  --sp-border:          #1e293b;
-  --sp-border-strong:   #334155;
-
-  // Text
-  --sp-text-1:          #f1f5f9;
-  --sp-text-2:          #94a3b8;
-  --sp-text-3:          #8b9ab0;   // koyu zeminde en az 4.5:1
-  --sp-text-inv:        #0f172a;
-
-  // Primary — daha parlak göster
-  --sp-primary:         #818cf8;
-  --sp-primary-light:   #a5b4fc;
-  --sp-primary-dark:    #6366f1;
-  --sp-primary-ghost:   rgba(129, 140, 248, 0.15);
-  --sp-primary-ghost-hover: rgba(129, 140, 248, 0.22);
-  // Parlak indigo üzerinde beyaz yazı 4.5:1'i tutmuyor; dolu butonlar koyu yazı ve daha açık hover kullanır.
-  --sp-on-primary:      #0f172a;
-  --sp-primary-hover:   #a5b4fc;
-
-  // Başarı ve uyarı yazıları koyu zeminde okunur kalsın
-  --sp-warning-text:    #fcd34d;
-  --sp-success-text:    #6ee7b7;
-
-  // Shadows — daha güçlü (koyu zemin üzerinde)
-  --sp-shadow-card:     0 1px 3px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.4);
-  --sp-shadow-hover:    0 4px 6px rgb(0 0 0 / 0.3), 0 12px 24px rgb(0 0 0 / 0.5);
-
-  // Sidebar — daha koyu
-  --sp-sidebar-bg:      #020617;
-  --sp-sidebar-bg-end:  #0f172a;
-
-  // Scrollbar
-  --sp-scrollbar-track: #1e293b;
-  --sp-scrollbar-thumb: #334155;
+  --sp-shadow-card:     none;
+  --sp-shadow-hover:    none;
+  --sp-sidebar-hover:   color-mix(in srgb, var(--ds-surface) 70%, transparent);
+  --sp-scrollbar-track: var(--ds-bg);
+  --sp-scrollbar-thumb: var(--ds-line);
 }
 
 // =============================================================================

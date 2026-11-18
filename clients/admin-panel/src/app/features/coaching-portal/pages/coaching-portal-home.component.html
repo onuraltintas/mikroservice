@@ -10,7 +10,7 @@
         @if (v.exam; as exam) {
           <div class="fact" [attr.aria-label]="(exam.source === 'Estimated' ? 'Tahminen ' : '') + exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
             <strong>{{ exam.source === 'Estimated' ? '~' : '' }}{{ exam.daysLeft }}</strong>
-            <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name }}@if (exam.source === 'Estimated') { <span data-testid="exam-estimated"> · tahmini tarih</span> }</small></span>
+            <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name }}@if (exam.source === 'Estimated') { <span data-testid="exam-estimated">, tahmini tarih</span> }</small></span>
           </div>
         }
         <div class="fact streak" [class.is-on]="v.streak.currentStreak > 0">
@@ -120,7 +120,7 @@
               @if (card.note) { <small>{{ card.note }}</small> }
               @for (line of card.secondary; track line) { <small data-testid="home-goal-secondary">{{ line }}</small> }
               @if (v.goal; as goal) {
-                <small class="goal-net" data-testid="home-goal-net">{{ goal.remainingNet > 0 ? 'Hedefine ' + (goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }} · {{ goal.examCode }} son deneme {{ goal.latestNet | number: '1.0-2' }} / hedef {{ goal.targetNet | number: '1.0-2' }} net</small>
+                <small class="goal-net" data-testid="home-goal-net">{{ goal.remainingNet > 0 ? 'Hedefine ' + (goal.remainingNet | number: '1.0-2') + ' net kaldı' : 'Hedef netine ulaştın' }}, {{ goal.examCode }} son deneme {{ goal.latestNet | number: '1.0-2' }} / hedef {{ goal.targetNet | number: '1.0-2' }} net</small>
               }
             </a>
           }

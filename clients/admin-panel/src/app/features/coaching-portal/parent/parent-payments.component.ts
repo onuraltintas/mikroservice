@@ -40,8 +40,8 @@ const money = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
         <div class="cp-card" data-testid="parent-fees">
           <h3>Koçluk ücretleri</h3>
           @if (fees(); as account) {
-            <p class="cp-line">Kalan: <strong>{{ amount(account.balance) }} TL</strong>@if (account.overdueAmount > 0) { · <span class="cp-danger">Gecikmiş: <strong>{{ amount(account.overdueAmount) }} TL</strong></span> }</p>
-            @for (fee of account.agreements; track fee.id) { <p class="cp-muted">{{ fee.title }} · {{ amount(fee.totalAmount) }} TL</p> }
+            <p class="cp-line">Kalan: <strong>{{ amount(account.balance) }} TL</strong>@if (account.overdueAmount > 0) {, <span class="cp-danger">Gecikmiş: <strong>{{ amount(account.overdueAmount) }} TL</strong></span> }</p>
+            @for (fee of account.agreements; track fee.id) { <p class="cp-muted">{{ fee.title }}, {{ amount(fee.totalAmount) }} TL</p> }
           }
         </div>
       } @else if (sectionError()['fees']) { <p class="cp-muted">{{ sectionError()['fees'] }}</p> }

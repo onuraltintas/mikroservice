@@ -12,7 +12,7 @@
   margin: 20px 0;
 
   thead {
-    background: #667eea;
+    background: var(--ui-brand);
     color: white;
 
     th {
@@ -24,10 +24,10 @@
 
   tbody {
     tr {
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--ui-border);
 
       &:nth-child(even) {
-        background: #f9f9f9;
+        background: var(--ui-surface);
       }
 
       td {
@@ -36,7 +36,7 @@
 
       td:first-child {
         font-weight: 600;
-        color: #667eea;
+        color: var(--ui-brand-text);
         min-width: 150px;
       }
     }
@@ -50,28 +50,28 @@
   margin: 20px 0;
 
   .right-item {
-    background: #f5f7ff;
-    border-left: 4px solid #667eea;
+    background: var(--ui-brand-soft);
+    border-left: 4px solid var(--ui-brand);
     padding: 16px;
     border-radius: 4px;
 
     h4 {
       margin: 0 0 8px 0;
-      color: #667eea;
+      color: var(--ui-brand-text);
       font-size: 16px;
     }
 
     p {
       margin: 0;
       font-size: 14px;
-      color: #666;
+      color: var(--ui-text-muted);
     }
   }
 }
 
 .info-box {
-  background: #fff9e6;
-  border: 2px solid #ffc107;
+  background: var(--ui-warning-soft);
+  border: 2px solid var(--ui-warning);
   border-radius: 8px;
   padding: 20px;
   margin: 16px 0;
@@ -80,12 +80,12 @@
     margin: 8px 0;
 
     strong {
-      color: #ff9800;
+      color: var(--ui-warning);
     }
   }
 
   a {
-    color: #667eea;
+    color: var(--ui-brand-text);
     text-decoration: none;
     font-weight: 500;
 

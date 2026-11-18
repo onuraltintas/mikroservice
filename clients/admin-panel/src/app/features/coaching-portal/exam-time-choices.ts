@@ -4,15 +4,15 @@ import { EducationStage } from './coaching-education';
 /**
  * G2 (#40, user decision 07.11.2026): "Hangi oturuma hazırlanıyorsun?" in the first-login wizard and in Çalışma tercihlerim ›
  * Sınavım. One list for both: the upcoming catalog sessions of the exam, then a year-only choice for each following year up to
- * four years ahead that has no session yet ("2028 · tarih henüz açıklanmadı"). The year the grade points to is marked
+ * four years ahead that has no session yet ("2028, tarih henüz açıklanmadı"). The year the grade points to is marked
  * "önerilen" (YKS: 12th grade this school year's exam, 11th the next, …; LGS: 8th grade this year's, …); anyone else gets the
  * nearest one marked. The server accepts a year without a session and estimates its date where one is needed.
  */
 export const EXAM_CATALOG_CODES: Record<ExamLearningPurpose, string> = { Lgs: 'LGS', Yks: 'TYT', Ags: 'AGS', Yds: 'YDS', Yokdil: 'YOKDIL' };
 /** The furthest year offered: the school year's exam plus three (a 9th grader's YKS, a 5th grader's LGS). */
 export const EXAM_YEARS_AHEAD = 4;
-export const RECOMMENDED_SUFFIX = ' · önerilen';
-export const YEAR_ONLY_SUFFIX = ' · tarih henüz açıklanmadı';
+export const RECOMMENDED_SUFFIX = ', önerilen';
+export const YEAR_ONLY_SUFFIX = ', tarih henüz açıklanmadı';
 
 /** value: `session:<id>:<year>` or `year:<year>` (the wizard's answer format). */
 export interface ExamTimeChoice { value: string; label: string; year: number; sessionId: string | null; recommended: boolean }
@@ -25,10 +25,10 @@ export interface ExamTimeOptions {
   /** A saved year-only choice that is not in the list (an older choice): kept selectable (L6). */
   keepYear?: number | null;
 }
-export const NO_SESSION_SUFFIX = ' · oturum seçmedim';
+export const NO_SESSION_SUFFIX = ', oturum seçmedim';
 
 export function examDay(iso: string): string { return iso.split('-').reverse().join('.'); }
-const defaultLabel = (session: LearningExamSession) => `${session.label} · ${examDay(session.date)}`;
+const defaultLabel = (session: LearningExamSession) => `${session.label}, ${examDay(session.date)}`;
 
 /**
  * The exam year the grade points to; null when the education does not say (a graduate, a university student, an unknown grade).

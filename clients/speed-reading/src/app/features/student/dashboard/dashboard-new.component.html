@@ -94,7 +94,7 @@
           <h3>Önerilen program: {{ recommendation.templateName }}</h3>
           <p>{{ recommendation.totalDays }} günlük eğitim. Öneri, tamamladığın programın eğitim sonrası ölçümüne dayanır.</p>
           <p>{{ recommendation.reason }}</p>
-          <p>Son ölçüm: {{ recommendation.averageWpm | number:'1.0-0' }} kelime/dk · %{{ recommendation.comprehension | number:'1.0-1' }} anlama.
+          <p>Son ölçüm: {{ recommendation.averageWpm | number:'1.0-0' }} kelime/dk, %{{ recommendation.comprehension | number:'1.0-1' }} anlama.
             Eğitim başarısı: %{{ recommendation.trainingSuccessRate | number:'1.0-1' }}.</p>
           @if (recommendation.wpmDelta != null) { <p>Başlangıca göre hız değişimi: {{ recommendation.wpmDelta | number:'1.0-1' }} kelime/dk;
             anlama değişimi: {{ recommendation.comprehensionDelta | number:'1.0-1' }} puan.</p> }
@@ -165,7 +165,7 @@
               <div class="db-hero__badge">
                 <span class="material-icons">school</span>
                 <span>{{ programName() }}</span>
-                <span class="db-hero__badge-sep">·</span>
+                <span class="db-hero__badge-sep" aria-hidden="true"></span>
                 <span>Hafta {{ currentWeek() }}, Gün {{ currentDay() }}</span>
               </div>
             }

@@ -22,6 +22,6 @@ describe('authentication page voice', () => {
     for (const [key, text] of Object.entries(AUTH_COPY.sen)) expect(`${key}: ${text}`).not.toMatch(formal);
     expect(AUTH_COPY.sen.welcome).toBe('Hoş geldin');
     expect(AUTH_COPY.sen.signUp).toBe('Kayıt ol');
-    expect(AUTH_COPY.siz.welcome).toBe('Hoş Geldiniz 👋');
+    expect(AUTH_COPY.siz.welcome).toBe('Hoş geldiniz');
   });
 });

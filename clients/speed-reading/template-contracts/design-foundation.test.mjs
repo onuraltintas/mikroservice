@@ -75,7 +75,21 @@ test('panels carry their brand: maxkoç student portal, eduivme staff portal and
 test('panels use theme variables instead of Tailwind palette colours', () => {
   const { execFileSync } = require_();
   const out = execFileSync('grep', ['-rlE', '(bg|text|border)-(blue|indigo|purple|violet|slate|gray|emerald|green|red|amber|teal|orange|sky|cyan)-[0-9]{2,3}\\b',
-    'clients/admin-panel/src/app', 'clients/admin-panel/projects/staff-portal/src/app', '--include=*.html', '--include=*.ts'], { cwd: new URL('.', repo), encoding: 'utf8' }).trim().split('\n').filter(f => f && !f.endsWith('.spec.ts'));
+    'clients/admin-panel/src/app', 'clients/admin-panel/projects/staff-portal/src/app', 'clients/speed-reading/src/app', '--include=*.html', '--include=*.ts'], { cwd: new URL('.', repo), encoding: 'utf8' }).trim().split('\n').filter(f => f && !f.endsWith('.spec.ts'));
   assert.deepEqual(out, []);
 });
 function require_() { return { execFileSync: (cmd, args, opts) => { try { return execFileSync(cmd, args, opts); } catch (e) { return e.stdout ?? ''; } } }; }
+
+test('the reading app carries the Master Hızlı Okuma brand and its panel tokens point at it', () => {
+  assert.match(read('clients/speed-reading/src/index.html'), /<html lang="tr" data-brand="ho">/);
+  const tokens = read('clients/speed-reading/src/styles/_student-tokens.scss');
+  assert.match(tokens, /--sp-primary:\s+var\(--ds-primary\);/);
+  assert.match(tokens, /--sp-sidebar-bg:\s+var\(--ds-nav\);/);
+});
+
+test('the course student area carries the eduivme brand without fixed colours', () => {
+  assert.match(read('clients/course-management/src/index.html'), /<html lang="tr" data-brand="eduivme">/);
+  const styles = read('clients/course-management/src/styles.scss');
+  assert.match(styles, /@use '\.\.\/\.\.\/shared\/styles\/design-tokens';/);
+  assert.doesNotMatch(styles, /#[0-9a-fA-F]{3,8}\b/);
+});

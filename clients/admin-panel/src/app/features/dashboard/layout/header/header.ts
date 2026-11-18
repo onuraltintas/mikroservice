@@ -109,7 +109,7 @@ export class HeaderComponent implements OnInit {
     this.showUserMenu.set(false);
     const confirmed = await this.toaster.confirm(
       'Oturumunuzu sonlandırmak istediğinize emin misiniz?',
-      { title: 'Çıkış Yap', confirmText: 'Evet, Çıkış Yap', cancelText: 'İptal' }
+      { title: 'Çıkış yap', confirmText: 'Evet, Çıkış yap', cancelText: 'İptal' }
     );
 
     if (confirmed) {

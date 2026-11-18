@@ -72,7 +72,7 @@ describe('SidebarComponent', () => {
     });
 
     const component = TestBed.createComponent(SidebarComponent).componentInstance;
-    const userMenu = component.menuItems().find(item => item.label === 'Kullanıcı İşlemleri');
+    const userMenu = component.menuItems().find(item => item.label === 'Kullanıcı işlemleri');
 
     expect(userMenu?.children?.some((item: { route?: string }) => item.route === '/dashboard/identity/legal-pages')).toBe(true);
   });
@@ -89,7 +89,7 @@ describe('SidebarComponent', () => {
     });
 
     const component = TestBed.createComponent(SidebarComponent).componentInstance;
-    const userMenu = component.menuItems().find(item => item.label === 'Kullanıcı İşlemleri');
+    const userMenu = component.menuItems().find(item => item.label === 'Kullanıcı işlemleri');
 
     expect(userMenu?.children?.some((item: { route?: string }) => item.route === '/dashboard/identity/legal-pages')).toBe(false);
   });

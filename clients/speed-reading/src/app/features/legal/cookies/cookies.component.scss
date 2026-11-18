@@ -3,7 +3,7 @@
     margin: 0 auto;
     padding: 20px;
     min-height: 100vh;
-    background: #f5f5f5;
+    background: var(--ui-surface-muted);
 }
 
 .legal-header {
@@ -14,20 +14,20 @@
     padding: 20px 0;
 
     .back-button {
-        color: #667eea;
+        color: var(--ui-brand-text);
     }
 
     h1 {
         margin: 0;
         font-size: 32px;
         font-weight: 600;
-        color: #333;
+        color: var(--ui-text);
     }
 }
 
 .legal-card {
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .no-document {
@@ -37,13 +37,13 @@
     gap: 12px;
     padding: 48px 24px;
     text-align: center;
-    color: #5f6368;
+    color: var(--ui-text-muted);
 
     mat-icon {
         width: 40px;
         height: 40px;
         font-size: 40px;
-        color: #667eea;
+        color: var(--ui-brand-text);
     }
 
     h2,
@@ -52,29 +52,29 @@
     }
 
     h2 {
-        color: #333;
+        color: var(--ui-text);
         font-size: 22px;
     }
 }
 
 .legal-content {
     line-height: 1.8;
-    color: #333;
+    color: var(--ui-text);
 
     section {
         margin-bottom: 32px;
 
         h2 {
-            color: #667eea;
+            color: var(--ui-brand-text);
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 16px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid var(--ui-brand);
             padding-bottom: 8px;
         }
 
         h3 {
-            color: #555;
+            color: var(--ui-text);
             font-size: 18px;
             font-weight: 600;
             margin: 16px 0 12px 0;
@@ -95,7 +95,7 @@
         }
 
         a {
-            color: #667eea;
+            color: var(--ui-brand-text);
             text-decoration: none;
             font-weight: 500;
 
@@ -107,7 +107,7 @@
 
     .update-date {
         font-size: 14px;
-        color: #666;
+        color: var(--ui-text-muted);
         font-style: italic;
     }
 }
@@ -127,11 +127,11 @@
 .error {
     text-align: center;
     padding: 40px;
-    color: #666;
+    color: var(--ui-text-muted);
 }
 
 .error {
-    color: #f44336;
+    color: var(--ui-danger);
 }
 
 @media (max-width: 768px) {

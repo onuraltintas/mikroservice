@@ -79,11 +79,11 @@ import { RouterModule } from '@angular/router';
     // Variants
     .sp-btn--primary {
       background: var(--sp-primary);
-      color: var(--sp-on-primary, #fff);
-      box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+      color: var(--sp-on-primary, var(--ui-brand-contrast));
+      box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-text) 30%, transparent);
       &:hover:not(:disabled) {
         background: var(--sp-primary-hover, var(--sp-primary-dark));
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 40%, transparent);
         transform: translateY(-1px);
       }
     }
@@ -120,10 +120,10 @@ import { RouterModule } from '@angular/router';
 
     .sp-btn--danger {
       background: var(--sp-danger);
-      color: #fff;
+      color: var(--ui-brand-contrast);
       &:hover:not(:disabled) {
         filter: brightness(0.92);
-        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 30%, transparent);
       }
     }
 
@@ -146,7 +146,7 @@ import { RouterModule } from '@angular/router';
     .sp-btn__spinner {
       width: 16px;
       height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid color-mix(in srgb, var(--ui-border) 30%, transparent);
       border-top-color: currentColor;
       border-radius: 50%;
       animation: sp-spin 0.7s linear infinite;

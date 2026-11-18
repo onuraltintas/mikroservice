@@ -17,7 +17,7 @@
 .sp-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--ui-text) 50%, transparent);
   z-index: calc(var(--sp-z-sidebar) - 1);
   backdrop-filter: blur(2px);
   animation: sp-fade-overlay 150ms ease-out both;
@@ -64,12 +64,12 @@
   // Thin scrollbar
   & {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: color-mix(in srgb, var(--ui-surface) 10%, transparent) transparent;
   }
 
   &::-webkit-scrollbar        { width: 4px; }
   &::-webkit-scrollbar-track  { background: transparent; }
-  &::-webkit-scrollbar-thumb  { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
+  &::-webkit-scrollbar-thumb  { background: color-mix(in srgb, var(--ui-surface) 10%, transparent); border-radius: 2px; }
 }
 
 // Brand
@@ -85,7 +85,7 @@
   width: 40px;
   height: 40px;
   border-radius: var(--sp-radius-sm);
-  background: rgba(129, 140, 248, 0.15);
+  background: color-mix(in srgb, var(--ui-brand) 15%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +112,6 @@
   font-weight: 500;
   color: var(--sp-sidebar-text-muted);
   letter-spacing: 0.02em;
-  text-transform: uppercase;
   margin-top: 1px;
 }
 
@@ -192,10 +191,9 @@
 .sp-nav-item__badge {
   font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   background: var(--sp-primary);
-  color: #fff;
+  color: var(--ui-brand-contrast);
   padding: 2px 6px;
   border-radius: var(--sp-radius-full);
   flex-shrink: 0;
@@ -209,7 +207,7 @@
 
 .sp-sidebar__divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--ui-surface) 8%, transparent);
   margin-bottom: 12px;
 }
 
@@ -257,7 +255,7 @@
   font-family: var(--sp-font-sans);
   font-weight: 700;
   background: linear-gradient(135deg, var(--sp-primary) 0%, var(--sp-primary-light) 100%);
-  color: #fff;
+  color: var(--ui-brand-contrast);
   flex-shrink: 0;
   border: none;
   cursor: pointer;
@@ -277,7 +275,7 @@
   }
 
   &:hover {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-text) 30%, transparent);
   }
 }
 

@@ -32,7 +32,7 @@ const student: UserProfile = { id: 'student-1', email: 's@example.test', firstNa
   username: 's@example.test', roles: ['Student'], role: 'Student', permissions: [] };
 const istanbulToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
-// T2 (31.10.2026): the phone bar is Bugün · Planım · Ödevler · Gelişimim · Mesajlar; notifications live behind the bell.
+// T2 (31.10.2026): the phone bar is Bugün, Planım, Ödevler, Gelişimim, Mesajlar; notifications live behind the bell.
 describe('O1 bottom navigation', () => {
   async function layout(showAssignments = true, unread = 3, messages = 2) {
     TestBed.configureTestingModule({ imports: [CoachingPortalLayoutComponent], providers: [provideRouter([]),

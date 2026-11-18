@@ -45,7 +45,7 @@ for (const timedOut of [false, true]) {
     }
     await expect(page.getByText(question.questionText, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: /Okumanın yararları/ }).click();
-    const next = page.getByRole('button', { name: /Sonuçları Gör|Sonraki Soru/ });
+    const next = page.getByRole('button', { name: /Sonuçları Gör|Sonraki Soru/i });
     await next.click();
     await expect.poll(() => completed).toBe(1);
     await expect(page.getByText(/metne göz gezdirme süresi normal okuma hızı/)).toBeVisible();

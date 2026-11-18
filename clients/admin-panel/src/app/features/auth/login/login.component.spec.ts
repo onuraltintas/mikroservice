@@ -106,8 +106,8 @@ describe('LoginComponent MFA flow', () => {
 
     TestBed.resetTestingModule();
     const management = createComponent(rejectUnconfirmed, 'siz');
-    expect(management.copy.welcome).toBe('Hoş Geldiniz 👋');
-    expect(management.copy.signUp).toBe('Kayıt Olun');
+    expect(management.copy.welcome).toBe('Hoş geldiniz');
+    expect(management.copy.signUp).toBe('Kayıt olun');
     expect(management.googleButtonText).toBe('signin_with');
     management.email = 'admin@example.test'; management.password = 'x';
     await management.onSubmit(new Event('submit'));

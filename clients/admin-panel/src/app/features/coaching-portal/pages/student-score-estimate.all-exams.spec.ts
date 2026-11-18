@@ -12,7 +12,7 @@ const p1: ScoreTypeEstimate = { scoreType: 'P1', name: 'MEB-AGS P1', modelYear: 
 const lgs: ScoreTypeEstimate = { scoreType: 'LGS', name: 'LGS', modelYear: 2026, score: 433.3, scoreLow: 420, scoreHigh: 446.6, rank: null, rankBest: null,
   rankWorst: null, percentile: null, examsUsed: 1, lastExamDate: '2026-10-25T00:00:00Z', includesDiplomaGrade: false, group: 'LGS', label: 'Yaklaşık tahmin',
   margin: 13.3, scaleMin: 100, scaleMax: 500 };
-const agsNotComputed: ScoreTypeNotComputed = { scoreType: 'P2_IMAT', name: 'MEB-AGS P2 · İlköğretim Matematik', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 1,
+const agsNotComputed: ScoreTypeNotComputed = { scoreType: 'P2_IMAT', name: 'MEB-AGS P2, İlköğretim Matematik', modelYear: 2026, notComputedReason: 'minRawScore', examsUsed: 1,
   lastExamDate: '2026-10-25T00:00:00Z', minimumRawScore: 1, group: 'MEB-AGS',
   failedConditions: [{ anyOf: [{ code: 'MEV', name: 'Mevzuat', rawScore: 0.75 }] }, { anyOf: [{ code: 'OABT', name: 'ÖABT', rawScore: 0 }] }] };
 
@@ -45,10 +45,10 @@ describe('Paket B score estimates for every exam', () => {
 
   it('shows YDS as the exact practice score with its level, not as an approximation', () => {
     const { el, text } = setup({ estimates: [], target: null, notice: null, languageScores: [
-      { examCode: 'YDS_EN', name: 'YDS · İngilizce', score: 80, scoreLow: 77.5, scoreHigh: 82.5, examsUsed: 2, lastExamDate: '2026-10-25T00:00:00Z',
+      { examCode: 'YDS_EN', name: 'YDS, İngilizce', score: 80, scoreLow: 77.5, scoreHigh: 82.5, examsUsed: 2, lastExamDate: '2026-10-25T00:00:00Z',
         level: 'B', label: 'Deneme sonucuna göre', exact: true, scaleMax: 100 }] });
     const row = el.querySelector('[data-testid="language-score"]')!;
-    expect(row.textContent).toContain('YDS · İngilizce: 80 puan (77,5–82,5)');
+    expect(row.textContent).toContain('YDS, İngilizce: 80 puan (77,5–82,5)');
     expect(row.textContent).toContain('Seviye B');
     expect(row.textContent).toContain('Deneme sonucuna göre');
     expect(row.textContent).not.toContain('yaklaşık');

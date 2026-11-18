@@ -94,7 +94,7 @@ describe('the child plan of a week', () => {
     expect(days[0].label).toContain('16 Kasım');
   });
   it('writes the hour of a work and moves by whole weeks', () => {
-    expect(planClock(1020, 9)).toBe('17:00–17:09 · 9 dk');
+    expect(planClock(1020, 9)).toBe('17:00–17:09, 9 dk');
     expect(planClock(null, 30)).toBe('30 dk');
     expect(shiftWeek('2026-11-16', 1)).toBe('2026-11-23');
     expect(shiftWeek('2026-11-16', -1)).toBe('2026-11-09');

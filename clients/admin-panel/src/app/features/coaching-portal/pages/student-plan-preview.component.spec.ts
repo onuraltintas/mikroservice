@@ -51,7 +51,7 @@ describe('StudentPlanPreviewComponent', () => {
     expect(weekly.proposal).toHaveBeenCalledWith('Replace', null);
     expect(el.textContent).toContain('Pazartesi 17:00–19:00');
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
+    expect(lines).toEqual(['Pazartesi, 17:00, Fen Bilimleri (60 dk)', 'Pazartesi, 18:00, Matematik (60 dk)']);
     expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Takvimde düzenle');
     expect(weekly.save).not.toHaveBeenCalled();
     expect(el.querySelector('[data-testid="unplaced-notice"]')).toBeNull();
@@ -62,7 +62,7 @@ describe('StudentPlanPreviewComponent', () => {
     const oneHour: StudyAvailability = { ...mondayEvening, windows: [{ day: 'Monday', startMinute: 1020, endMinute: 1080 }] };
     const { component, el } = await setup(oneHour, [], proposalOf([card('p1', 'science', 'Fen Bilimleri', 1020)], ['math']));
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)']);
+    expect(lines).toEqual(['Pazartesi, 17:00, Fen Bilimleri (60 dk)']);
     const notice = el.querySelector('[data-testid="unplaced-notice"]');
     expect(notice?.textContent?.replace(/\s+/g, ' ')).toContain('Şu dersler için saat kalmadı: Matematik. Müsaitliğine saat ekle ya da ders sayısını azalt.');
     const edit = vi.fn(); component.editAvailability.subscribe(edit);
@@ -87,7 +87,7 @@ describe('StudentPlanPreviewComponent', () => {
     button(el, 'Müsaitliğime saat ekle')!.click(); expect(edit).toHaveBeenCalledOnce();
     button(el, 'Yeni öneri oluştur')!.click(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:00 · Matematik (60 dk)']);
+    expect(lines).toEqual(['Pazartesi, 17:00, Fen Bilimleri (60 dk)', 'Pazartesi, 18:00, Matematik (60 dk)']);
     expect(el.textContent).toContain('kayıtlı haftalık düzeninin yerine geçer');
     expect(weekly.save).not.toHaveBeenCalled();
     button(el, 'Kayıtlı düzenime dön')!.click(); fixture.detectChanges();
@@ -114,7 +114,7 @@ describe('StudentPlanPreviewComponent', () => {
     expect(weekly.proposal).not.toHaveBeenCalled();
     expect(engine.options).toHaveBeenCalledOnce();
     expect(engine.preview).toHaveBeenCalledOnce();
-    expect(el.textContent).toContain('Cuma · 18:00 · Matematik (60 dk)');
+    expect(el.textContent).toContain('Cuma, 18:00, Matematik (60 dk)');
     expect(el.textContent).toContain('Planı yayımla');
     expect(el.querySelector('a[href="/coaching-portal/plan/weekly"]')?.textContent).toContain('Takvimde düzenle');
     const page = fixture.debugElement.query(By.directive(StudentWeeklyOutcomePlanComponent)).componentInstance as StudentWeeklyOutcomePlanComponent;
@@ -149,7 +149,7 @@ describe('StudentPlanPreviewComponent', () => {
     fixture.componentRef.setInput('lessonIds', ['science']); fixture.detectChanges();
     expect(weekly.proposal).toHaveBeenCalledTimes(2);
     const lines = Array.from(el.querySelectorAll('[data-testid="preview-slot"]')).map(x => x.textContent?.replace(/\s+/g, ' ').trim());
-    expect(lines).toEqual(['Pazartesi · 17:00 · Fen Bilimleri (60 dk)', 'Pazartesi · 18:30 · Fen Bilimleri (60 dk)']);
+    expect(lines).toEqual(['Pazartesi, 17:00, Fen Bilimleri (60 dk)', 'Pazartesi, 18:30, Fen Bilimleri (60 dk)']);
   });
 
   it('shows the message when the proposal cannot be made', async () => {

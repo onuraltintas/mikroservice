@@ -361,9 +361,9 @@ export function prefill(view: OnboardingView): Answers {
     if (a.purpose === 'Ags') answers.oabtField = a.primaryScoreType ? { value: a.primaryScoreType, label: OABT_FIELDS[a.primaryScoreType] ?? a.primaryScoreType } : { value: 'none', label: 'ÖABT\'ye girmeyeceğim' };
     if (a.purpose === 'Yokdil' && a.primaryScoreType) answers.yokdilField = { value: a.primaryScoreType, label: YOKDIL_FIELDS[a.primaryScoreType] ?? a.primaryScoreType };
     const session = view.examSessions.find(x => x.id === a.targetExamSessionId);
-    if (session) answers.session = { value: `session:${session.id}:${session.date.slice(0, 4)}`, label: `${session.label} · ${day(session.date)}` };
+    if (session) answers.session = { value: `session:${session.id}:${session.date.slice(0, 4)}`, label: `${session.label}, ${day(session.date)}` };
     else if (a.targetExamYear && !a.targetExamSessionId && saved.has(2)) {
-      // G2 review (L6): said as Sınavım says it ("2028 · oturum seçmedim" once the catalog has that year's sessions).
+      // G2 review (L6): said as Sınavım says it ("2028, oturum seçmedim" once the catalog has that year's sessions).
       const own = view.examSessions.filter(x => x.examCode === EXAM_CATALOG_CODES[a.purpose as ExamLearningPurpose]);
       answers.session = { value: `year:${a.targetExamYear}`,
         label: keptYearLabel(a.targetExamYear, own, firstChoiceYear(a.purpose as ExamLearningPurpose, view.academicYearStart, view.examOpenYears)) };
@@ -422,7 +422,7 @@ export function staleParentCode(code: { expiresAt: string } | null | undefined, 
 export function targetLabel(t: { kind: string; name: string; minimumScore: number | null; scores: { scoreType: string; score: number }[] }): string {
   if (t.kind === 'score') return t.scores.map(x => `${SCORE_NAMES[x.scoreType] ?? t.name} ${formatScore(x.score)}`).join(', ');
   const own = t.scores[0]?.score;
-  const taban = t.minimumScore !== null ? ` · taban ${formatScore(t.minimumScore)}` : own !== undefined ? ` · hedef puanın ${formatScore(own)}` : '';
+  const taban = t.minimumScore !== null ? `, taban ${formatScore(t.minimumScore)}` : own !== undefined ? `, hedef puanın ${formatScore(own)}` : '';
   return `${t.name}${taban}`;
 }
 const SCORE_NAMES: Record<string, string> = { LGS: 'LGS', TYT: 'TYT', SAY: 'Sayısal', EA: 'Eşit Ağırlık', SOZ: 'Sözel', DIL: 'Dil', P1: 'P1', P2_16: 'P2-16', P2_17: 'P2-17',

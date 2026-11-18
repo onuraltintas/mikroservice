@@ -119,9 +119,9 @@ export function notComputedText(item: (Pick<ScoreTypeNotComputed, 'notComputedRe
   return item.minimumRawScore === 1 ? `${lead}: ${tests} en az 1 net gerekir.` : `${lead}: ${tests} en az 0,5 ham puan gerekir.`;
 }
 
-/** The ham puan of the tests named in the failing conditions, e.g. "Türkçe 0,25 · Temel Matematik 0". */
+/** The ham puan of the tests named in the failing conditions, e.g. "Türkçe 0,25, Temel Matematik 0". */
 export function rawScoresText(item: ScoreTypeNotComputed): string {
-  return item.failedConditions.flatMap(x => x.anyOf).map(x => `${x.name} ${x.rawScore.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`).join(' · ');
+  return item.failedConditions.flatMap(x => x.anyOf).map(x => `${x.name} ${x.rawScore.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`).join(', ');
 }
 
 /** YKS ranks are read from placement scores (with OBP); without the diploma grade they look worse than they are. */

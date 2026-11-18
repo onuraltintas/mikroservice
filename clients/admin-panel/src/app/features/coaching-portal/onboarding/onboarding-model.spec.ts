@@ -74,16 +74,16 @@ describe('first-login wizard flow (Paket C #3)', () => {
     // G2 (#40): the catalog session, then the later years without a date; an 8th grader's LGS is this school year's.
     const lgsSession = questions({ ...personal, purpose: a('Lgs') }, context).find(x => x.id === 'session')!;
     expect(lgsSession.prompt).toBe('Hangi oturuma hazırlanıyorsun?');
-    expect(lgsSession.choices).toEqual([{ value: 'session:lgs-27:2027', label: '2027 · 13.06.2027 · önerilen' },
-      { value: 'year:2028', label: '2028 · tarih henüz açıklanmadı' }, { value: 'year:2029', label: '2029 · tarih henüz açıklanmadı' },
-      { value: 'year:2030', label: '2030 · tarih henüz açıklanmadı' }]);
+    expect(lgsSession.choices).toEqual([{ value: 'session:lgs-27:2027', label: '2027, 13.06.2027, önerilen' },
+      { value: 'year:2028', label: '2028, tarih henüz açıklanmadı' }, { value: 'year:2029', label: '2029, tarih henüz açıklanmadı' },
+      { value: 'year:2030', label: '2030, tarih henüz açıklanmadı' }]);
     const seventh = questions({ ...personal, education: a('7'), purpose: a('Lgs') }, context).find(x => x.id === 'session')!;
     expect(seventh.choices!.filter(x => x.label.endsWith('önerilen')).map(x => x.value)).toEqual(['year:2028']);
     expect(examRequest({ ...personal, education: a('7'), purpose: a('Lgs'), session: a('year:2028') })).toMatchObject({ targetExamSessionId: null, targetExamYear: 2028 });
     const ydsYear = questions({ ...personal, purpose: a('Yds') }, context).find(x => x.id === 'session')!;
     expect(ydsYear.prompt).toBe('Hangi yıl sınava gireceksin?');
     expect(ydsYear.choices!.map(x => x.value)).toEqual(['year:2027', 'year:2028', 'year:2029', 'year:2030']);
-    expect(ydsYear.choices![0].label).toBe('2027 · tarih henüz açıklanmadı · önerilen');
+    expect(ydsYear.choices![0].label).toBe('2027, tarih henüz açıklanmadı, önerilen');
   });
 
   it('offers the right score types for a score-only target', () => {
@@ -131,7 +131,7 @@ describe('first-login wizard flow (Paket C #3)', () => {
         targetExamYear: 2027, diplomaGrade: null, diplomaGradeEstimated: false, targetLocked: true,
         target: { kind: 'school', targetId: 's1', name: 'Ankara Fen Lisesi', detail: null, minimumScore: 480, scoreYear: 2025, scoreType: 'LGS', scores: [], canEdit: false } } };
     const answers = prefill(view);
-    expect(answers.targetSaved!.label).toBe('Hedefini öğretmenin belirledi: Ankara Fen Lisesi · taban 480');
+    expect(answers.targetSaved!.label).toBe('Hedefini öğretmenin belirledi: Ankara Fen Lisesi, taban 480');
     expect(targetRequest(answers)).toEqual({ kind: 'none', targetId: null, scores: null });
   });
 
@@ -202,7 +202,7 @@ describe('first-login wizard flow (Paket C #3)', () => {
       target: { kind: 'school', targetId: 's1', name: 'Ankara Fen Lisesi', detail: 'Ankara / Çankaya', minimumScore: 480, scoreYear: 2025, scoreType: 'LGS', scores: [], canEdit: true } } });
     expect(currentStep(done, context)).toBe(7);
     expect(targetRequest(done)).toEqual({ kind: 'school', targetId: 's1', scores: null });
-    expect(summary(done, context).find(x => x.step === 3)!.lines).toEqual(['Hedef: Ankara Fen Lisesi · taban 480']);
+    expect(summary(done, context).find(x => x.step === 3)!.lines).toEqual(['Hedef: Ankara Fen Lisesi, taban 480']);
     // A step whose answers changed has a new signature, so it is sent again.
     expect(signature(change(done, 'targetSaved'), context, 3)).not.toBe(signature(done, context, 3));
   });
@@ -237,9 +237,9 @@ describe('first-login wizard flow (Paket C #3)', () => {
       answers: { birthDate: '2013-05-01', homeProvinceId: '06', homeCity: 'Ankara', homeDistrictId: '0601', homeDistrict: 'Çankaya', educationStatus: 'Student',
         gradeLevel: 7, graduationYear: null, schoolName: null, purpose: 'Lgs', primaryScoreType: null, foreignLanguage: null, targetExamSessionId: null,
         targetExamYear: 2028, diplomaGrade: null, diplomaGradeEstimated: false, target: null, targetLocked: false } }) as unknown as OnboardingView;
-    expect(prefill(view(context.sessions)).session).toMatchObject({ value: 'year:2028', label: '2028 · tarih henüz açıklanmadı' });
+    expect(prefill(view(context.sessions)).session).toMatchObject({ value: 'year:2028', label: '2028, tarih henüz açıklanmadı' });
     const lgs28 = { id: 'lgs-28', examCode: 'LGS', examName: 'LGS', date: '2028-06-11', label: '2028', applicationStart: null, applicationEnd: null };
-    expect(prefill(view([...context.sessions, lgs28])).session).toMatchObject({ value: 'year:2028', label: '2028 · oturum seçmedim' });
+    expect(prefill(view([...context.sessions, lgs28])).session).toMatchObject({ value: 'year:2028', label: '2028, oturum seçmedim' });
     const kept = questions({ ...personal, education: a('7'), purpose: a('Lgs') }, { ...context, sessions: [...context.sessions, lgs28],
       savedYear: { purpose: 'Lgs', year: 2028 } }).find(x => x.id === 'session')!;
     expect(kept.choices!.map(x => x.value)).toEqual(['session:lgs-27:2027', 'session:lgs-28:2028', 'year:2028', 'year:2029', 'year:2030']);

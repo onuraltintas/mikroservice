@@ -61,7 +61,7 @@ import { CommonModule } from '@angular/common';
     }
     :host(.sp-badge--solid) {
       background: var(--sp-primary);
-      color: #fff;
+      color: var(--ui-brand-contrast);
     }
 
     :host(.sp-badge--lg) {

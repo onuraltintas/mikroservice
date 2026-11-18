@@ -53,8 +53,8 @@
 }
 
 @keyframes sp-xp-glow {
-  0%, 100% { box-shadow: 0 0 4px rgba(234, 179, 8, 0.4); }
-  50%       { box-shadow: 0 0 12px rgba(234, 179, 8, 0.8), 0 0 24px rgba(234, 179, 8, 0.3); }
+  0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, var(--ui-text) 40%, transparent); }
+  50%       { box-shadow: 0 0 12px color-mix(in srgb, var(--ui-text) 80%, transparent), 0 0 24px color-mix(in srgb, var(--ui-text) 30%, transparent); }
 }
 
 // ── Sayfa Geçiş Animasyonu ────────────────────────────────────────────────────
@@ -107,7 +107,7 @@
   &__fill {
     height: 100%;
     border-radius: var(--sp-radius-full);
-    background: linear-gradient(90deg, var(--sp-xp) 0%, #fbbf24 100%);
+    background: var(--ui-warning);
     transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
     animation: sp-xp-glow 2s ease-in-out infinite;
 

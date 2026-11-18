@@ -93,7 +93,7 @@ import { productRoleLabel } from '../../../../core/services/user-product-roles';
                                 </div>
 
                                 <div class="group">
-                                    <label class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Telefon Numarası</label>
+                                    <label class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Telefon numarası</label>
                                     <div class="relative">
                                         <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
                                             <svg class="h-5 w-5 text-(--ui-text-muted)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

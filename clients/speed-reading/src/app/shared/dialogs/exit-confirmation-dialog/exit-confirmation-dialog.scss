@@ -5,7 +5,7 @@
   gap: 12px;
   font-size: 20px;
   font-weight: 600;
-  color: #212121 !important; // Koyu gri - görünürlük için
+  color: var(--ui-text) !important; // Koyu gri - görünürlük için
   margin: 0;
   padding: 20px 24px 16px;
 
@@ -57,7 +57,7 @@
   }
 
   .progress-info {
-    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+    background: var(--ui-brand-soft);
     border: 2px solid var(--primary-blue);
 
     mat-icon {
@@ -71,7 +71,7 @@
   }
 
   .warning-message {
-    background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+    background: var(--ui-warning-soft);
     border: 2px solid var(--warning-orange);
 
     mat-icon {
@@ -130,14 +130,14 @@
       background: var(--secondary-green);
       color: white;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 30%, transparent);
     }
   }
 
   .exit-button {
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 30%, transparent);
     }
   }
 }
@@ -207,11 +207,11 @@
 
   .exit-dialog-content {
     .progress-info {
-      background: linear-gradient(135deg, rgba(25, 118, 210, 0.2) 0%, rgba(25, 118, 210, 0.1) 100%);
+      background: color-mix(in srgb, var(--ui-brand) 20%, transparent);
     }
 
     .warning-message {
-      background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+      background: color-mix(in srgb, var(--ui-warning) 20%, transparent);
     }
   }
 }

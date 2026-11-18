@@ -33,8 +33,8 @@ describe('StudentStudyReportComponent', () => {
     http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: { ...weeklyData,
       completedTasks: 2, plannedQuestions: 25, actualQuestions: 0, plannedQuestionTasks: 1, actualQuestionTasks: 1 } });
     fixture.detectChanges(); await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('Planlanan soru: 25 · 1 / 2 çalışmada sayı var');
-    expect(fixture.nativeElement.textContent).toContain('Kaydedilen soru: 0 · 1 çalışmada bu dönem soru kaydı var');
+    expect(fixture.nativeElement.textContent).toContain('Planlanan soru: 25, 1 / 2 çalışmada sayı var');
+    expect(fixture.nativeElement.textContent).toContain('Kaydedilen soru: 0, 1 çalışmada bu dönem soru kaydı var');
     await component.load(); http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: weeklyData }); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Planlanan soru: Kayıt yok');
     expect(fixture.nativeElement.textContent).toContain('Kaydedilen soru: Kayıt yok');

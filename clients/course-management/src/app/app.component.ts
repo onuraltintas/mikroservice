@@ -148,7 +148,7 @@ export class AppComponent implements OnInit {
   }
   assignmentStatus(status: string, isLate: boolean): string {
     if (status === 'Pending') return 'Teslim bekleniyor';
-    if (status === 'Reviewed') return isLate ? 'Geç teslim · değerlendirildi' : 'Değerlendirildi';
+    if (status === 'Reviewed') return isLate ? 'Geç teslim, değerlendirildi' : 'Değerlendirildi';
     if (status === 'Late' || isLate) return 'Geç teslim';
     return 'Teslim edildi';
   }

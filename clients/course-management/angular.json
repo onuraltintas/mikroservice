@@ -14,7 +14,8 @@
             "browser": "src/main.ts",
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
-            "styles": ["src/styles.css"],
+            "styles": ["@fontsource/ibm-plex-sans/400.css", "@fontsource/ibm-plex-sans/500.css", "@fontsource/ibm-plex-sans/600.css", "src/styles.scss"],
+            "assets": [{ "glob": "**/*", "input": "public" }],
             "outputPath": "dist/course-management-student"
           },
           "configurations": {

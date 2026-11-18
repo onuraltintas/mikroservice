@@ -49,9 +49,9 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
               <span class="dot" aria-hidden="true"></span>
               <!-- Live test 16.11.2026 (#23): a notice that leads somewhere is a link; pressing it opens that place. -->
               @if (linkFor(item); as link) {
-                <a class="text open" [routerLink]="link.path" [queryParams]="link.query" [fragment]="link.fragment" (click)="closed.emit()"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }} · {{ item.createdAt | date:'HH:mm' }} · {{ link.label }} ›</small></a>
+                <a class="text open" [routerLink]="link.path" [queryParams]="link.query" [fragment]="link.fragment" (click)="closed.emit()"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }}, {{ item.createdAt | date:'HH:mm' }}, {{ link.label }} ›</small></a>
               } @else {
-                <span class="text"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }} · {{ item.createdAt | date:'HH:mm' }}</small></span>
+                <span class="text"><strong>{{ item.title }}</strong><small>{{ typeLabel(item.type) }}, {{ item.createdAt | date:'HH:mm' }}</small></span>
               }
               @if (!item.isRead) { <span class="sr-only">Okunmadı</span> }
             </li>

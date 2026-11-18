@@ -4,7 +4,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: color-mix(in srgb, var(--ui-text) 70%, transparent);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -21,7 +21,7 @@
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--ui-text) 30%, transparent);
   animation: slideUp 0.4s ease-out;
   color: white;
 }
@@ -51,7 +51,7 @@
 }
 
 .stats-section {
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
@@ -82,7 +82,7 @@
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
   border-radius: 12px;
   padding: 20px;
   text-align: center;
@@ -91,7 +91,7 @@
 
 .stat-card:hover {
   transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.25);
+  background: color-mix(in srgb, var(--ui-surface) 25%, transparent);
 }
 
 .stat-icon {
@@ -114,7 +114,7 @@
 }
 
 .recommendation-section {
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
@@ -128,7 +128,7 @@
 }
 
 .program-card {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
   border-radius: 12px;
   padding: 20px;
 }
@@ -158,7 +158,7 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   padding: 8px 12px;
   border-radius: 8px;
 }
@@ -173,10 +173,10 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   padding: 12px;
   border-radius: 8px;
-  border-left: 4px solid rgba(255, 255, 255, 0.5);
+  border-left: 4px solid color-mix(in srgb, var(--ui-border) 50%, transparent);
 }
 
 .recommendation-reason mat-icon {
@@ -193,7 +193,7 @@
 .max-level-section {
   text-align: center;
   padding: 40px 20px;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--ui-surface) 15%, transparent);
   border-radius: 16px;
   margin-bottom: 24px;
 }
@@ -202,7 +202,7 @@
   font-size: 80px;
   width: 80px;
   height: 80px;
-  color: #ffd700;
+  color: var(--ui-accent-text);
   margin-bottom: 16px;
 }
 
@@ -230,13 +230,13 @@
   font-size: 16px;
   font-weight: 600;
   background: white !important;
-  color: #667eea !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--ui-brand-text) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-text) 15%, transparent);
 }
 
 .start-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--ui-text) 20%, transparent);
 }
 
 .start-btn:disabled {
@@ -251,13 +251,13 @@
 
 .later-btn {
   color: white !important;
-  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  border: 2px solid color-mix(in srgb, var(--ui-border) 50%, transparent) !important;
   height: 48px;
   font-size: 16px;
 }
 
 .later-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: color-mix(in srgb, var(--ui-surface) 10%, transparent) !important;
   border-color: white !important;
 }
 

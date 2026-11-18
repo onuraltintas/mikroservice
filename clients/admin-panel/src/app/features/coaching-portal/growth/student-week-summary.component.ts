@@ -47,7 +47,7 @@ import { WeekBar, badgeProgress, formatDay, hours, weekBars } from './growth-mod
           } @else { <p class="cs-growth-muted">Şu an bekleyen bir haftalık değerlendirmen yok.</p> }
           <h3>Açık kararların @if (review.openDecisions) { <cs-status-chip [label]="'' + review.openDecisions" tone="brand" /> }</h3>
           @for (decision of review.decisions; track decision.id) {
-            <p class="cs-decision" [class.is-late]="decision.isOverdue"><strong>{{ decision.title }}</strong><small>{{ decision.isOverdue ? 'Süresi geçti · ' : '' }}{{ day(decision.dueOn) }}</small></p>
+            <p class="cs-decision" [class.is-late]="decision.isOverdue"><strong>{{ decision.title }}</strong><small>{{ decision.isOverdue ? 'Süresi geçti, ' : '' }}{{ day(decision.dueOn) }}</small></p>
           } @empty { <p class="cs-growth-muted">Açık kararın yok.</p> }
         } @else if (homeError()) { <p class="cs-growth-alert" role="alert">Haftalık değerlendirme yüklenemedi.</p> }
       </cs-card>
