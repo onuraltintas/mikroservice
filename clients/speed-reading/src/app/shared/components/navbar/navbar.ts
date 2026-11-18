@@ -2,7 +2,6 @@ import { Component, HostListener, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ViewportScroller } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LanguageService } from '../../../core/services/language.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -18,8 +17,9 @@ interface PublicNavLink {
 
 @Component({
   selector: 'app-navbar',
+  host: { 'data-brand': 'ho' },
   standalone: true,
-  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
 })

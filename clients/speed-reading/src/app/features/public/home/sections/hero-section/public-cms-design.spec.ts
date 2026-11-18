@@ -15,7 +15,7 @@ import { HeroSectionComponent } from './hero-section';
 class PublicCmsDesignHostComponent {}
 
 describe('Public CMS design system', () => {
-  it('uses the rounded, inset hero surface shared with the Coaching CMS', async () => {
+  it('uses the rounded, flat brand surface of the redesign (no gradient)', async () => {
     await TestBed.configureTestingModule({
       imports: [PublicCmsDesignHostComponent],
       providers: [provideRouter([])]
@@ -29,8 +29,9 @@ describe('Public CMS design system', () => {
     const contentGrid = fixture.nativeElement.querySelector('.hero-section .content-grid') as HTMLElement;
     const expectedColumns = window.matchMedia('(max-width: 64rem)').matches ? 1 : 2;
 
-    expect(parseFloat(heroStyle.borderRadius)).toBeGreaterThan(20);
-    expect(heroStyle.backgroundImage).toContain('linear-gradient');
+    expect(parseFloat(heroStyle.borderRadius)).toBeGreaterThanOrEqual(20);
+    // Redesign 18.11.2026 (SKILL.md): no gradient backgrounds.
+    expect(heroStyle.backgroundImage).toBe('none');
     expect(getComputedStyle(contentGrid).gridTemplateColumns.trim().split(/\s+/)).toHaveSize(expectedColumns);
   });
 });

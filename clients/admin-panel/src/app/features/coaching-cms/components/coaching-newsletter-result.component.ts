@@ -12,19 +12,19 @@ type NewsletterAction = 'confirm' | 'unsubscribe';
   imports: [CommonModule, RouterLink],
   template: `
     <main class="mx-auto max-w-2xl px-4 py-12 sm:px-6" aria-labelledby="newsletter-result-title">
-      <section class="rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-10">
-        <p class="text-xs font-bold uppercase tracking-[.14em] text-indigo-700 dark:text-indigo-300">maxkoç bülteni</p>
-        <h1 id="newsletter-result-title" class="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">{{ action() === 'confirm' ? 'E-posta adresini onayla' : 'Bülten aboneliğini iptal et' }}</h1>
+      <section class="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7 text-center shadow-sm sm:p-10">
+        <p class="text-sm font-semibold text-[var(--ds-link)]">maxkoç bülteni</p>
+        <h1 id="newsletter-result-title" class="mt-3 text-2xl font-semibold text-[var(--ds-text)]">{{ action() === 'confirm' ? 'E-posta adresini onayla' : 'Bülten aboneliğini iptal et' }}</h1>
         @if (!token()) {
           <p class="mt-4 text-sm leading-6 text-amber-800 dark:text-amber-200" role="status">Bağlantı eksik veya geçersiz. Lütfen e-postadaki tam bağlantıyı kullanın.</p>
         } @else if (message()) {
           <p class="mt-4 rounded-xl p-4 text-sm leading-6" [class.bg-emerald-50]="succeeded()" [class.text-emerald-900]="succeeded()" [class.dark:bg-emerald-950]="succeeded()" [class.dark:text-emerald-100]="succeeded()" [class.bg-amber-50]="!succeeded()" [class.text-amber-900]="!succeeded()" [class.dark:bg-amber-950]="!succeeded()" [class.dark:text-amber-100]="!succeeded()" role="status">{{ message() }}</p>
         } @else {
-          <p class="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ action() === 'confirm' ? 'Bülten aboneliğini başlatmak için e-posta adresinizi onaylayın.' : 'Koçluk bülteni e-postalarını artık almak istemiyorsanız aboneliğinizi iptal edin.' }}</p>
-          <button class="mt-6 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800 disabled:opacity-50" type="button" (click)="submit()" [disabled]="busy()">{{ busy() ? 'İşleniyor…' : action() === 'confirm' ? 'E-posta adresimi onayla' : 'Aboneliği iptal et' }}</button>
+          <p class="mt-4 text-sm leading-6 text-[var(--ds-muted)]">{{ action() === 'confirm' ? 'Bülten aboneliğini başlatmak için e-posta adresinizi onaylayın.' : 'Koçluk bülteni e-postalarını artık almak istemiyorsanız aboneliğinizi iptal edin.' }}</p>
+          <button class="mt-6 rounded-xl bg-[var(--ds-primary)] px-5 py-3 text-sm font-semibold text-[var(--ds-on-primary)] transition hover:bg-[var(--ds-primary-hover)] disabled:opacity-50" type="button" (click)="submit()" [disabled]="busy()">{{ busy() ? 'İşleniyor…' : action() === 'confirm' ? 'E-posta adresimi onayla' : 'Aboneliği iptal et' }}</button>
         }
         @if (error()) { <p class="mt-4 text-sm text-red-700 dark:text-red-300" role="alert">{{ error() }}</p> }
-        <a routerLink="/coaching" class="mt-6 inline-block text-sm font-semibold text-indigo-700 underline dark:text-indigo-300">Koçluk ana sayfasına dön</a>
+        <a routerLink="/coaching" class="mt-6 inline-block text-sm font-semibold text-[var(--ds-link)] underline">Koçluk ana sayfasına dön</a>
       </section>
     </main>
   `,

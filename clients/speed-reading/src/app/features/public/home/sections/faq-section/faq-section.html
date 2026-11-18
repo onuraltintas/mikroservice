@@ -1,30 +1,21 @@
-<section class="faq-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>{{ content.title }}</h2>
-            <p>{{ content.subtitle }}</p>
-        </div>
-
-        <mat-accordion *ngIf="content.items.length" class="faq-accordion">
-            <mat-expansion-panel *ngFor="let faq of content.items">
-                <mat-expansion-panel-header>
-                    <mat-panel-title>
-                        <div class="faq-header-content">
-                            <span class="category-badge">{{ faq.category }}</span>
-                            <span class="question-text">{{ faq.question }}</span>
-                        </div>
-                    </mat-panel-title>
-                </mat-expansion-panel-header>
-                <p>{{ faq.answer }}</p>
-            </mat-expansion-panel>
-        </mat-accordion>
-
-        <div class="view-all-container">
-            <a routerLink="/sss" class="view-all-btn">
-                <mat-icon>help_outline</mat-icon>
-                {{ content.actionLabel || 'Tüm soruları gör' }}
-                <mat-icon>arrow_forward</mat-icon>
-            </a>
-        </div>
+<section class="faq-section" aria-labelledby="faq-title">
+  <div class="container">
+    <div class="section-head-row">
+      <div class="section-header">
+        <h2 id="faq-title">{{ content.title }}</h2>
+        <p>{{ content.subtitle }}</p>
+      </div>
+      <a routerLink="/sss" class="ds-link view-all-btn">{{ content.actionLabel || 'Tüm soruları gör' }}</a>
     </div>
+    @if (content.items.length) {
+      <div class="faq-list">
+        @for (faq of content.items; track faq.question) {
+          <details>
+            <summary><span class="question-text">{{ faq.question }}</span>@if (faq.category) { <span class="category-badge">{{ faq.category }}</span> }</summary>
+            <p>{{ faq.answer }}</p>
+          </details>
+        }
+      </div>
+    }
+  </div>
 </section>

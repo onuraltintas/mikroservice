@@ -20,6 +20,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
 
 @Component({
     selector: 'app-contact',
+    host: { 'data-brand': 'ho' },
     standalone: true,
     imports: [
         CommonModule,

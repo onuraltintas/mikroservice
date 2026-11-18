@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
 import { DEFAULT_HOME_PAGE_CONTENT, HomeApproachContent, HomePageContent, HomeSectionHeading } from '../../home-page-content';
 
 type ApproachContent = HomeSectionHeading & { items: HomeApproachContent[] };
@@ -8,7 +7,7 @@ type ApproachContent = HomeSectionHeading & { items: HomeApproachContent[] };
 @Component({
   selector: 'app-testimonials-section',
   standalone: true,
-  imports: [CommonModule, MatCardModule],
+  imports: [CommonModule],
   templateUrl: './testimonials-section.html',
   styleUrl: './testimonials-section.scss'
 })

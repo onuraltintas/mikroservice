@@ -1,50 +1,43 @@
-<section class="pricing-section" id="fiyatlandirma">
-    <div class="container">
-        <div class="section-header">
-            <h2>{{ content.title }}</h2>
-            <p>{{ content.subtitle }}</p>
-        </div>
-
-        <div *ngIf="loading" class="loading-state">
-            <mat-spinner diameter="40"></mat-spinner>
-        </div>
-
-        <div *ngIf="!loading" class="pricing-grid">
-            <div class="pricing-card" *ngFor="let plan of plans" [class.popular]="isPopular(plan)">
-                <div class="popular-badge" *ngIf="isPopular(plan)">En Çok Tercih Edilen</div>
-
-                <div class="card-header">
-                    <h3>{{ plan.name }}</h3>
-                    <p class="plan-description">{{ plan.description }}</p>
-                    <div class="price">
-                        <span class="amount">{{ formatPrice(plan) }}</span>
-                        <span class="period" *ngIf="!plan.isContactOnly && getPeriod(plan)">{{ getPeriod(plan) }}</span>
-                    </div>
-                </div>
-
-                <div class="card-body">
-                    <ul class="features-list" *ngIf="plan.features && plan.features.length > 0">
-                        <li *ngFor="let feature of plan.features">
-                            <mat-icon>check_circle</mat-icon>
-                            {{ feature }}
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="card-footer">
-                    <a mat-flat-button [color]="isPopular(plan) ? 'primary' : ''"
-                        [routerLink]="plan.isContactOnly ? '/iletisim' : '/student/subscription'" class="cta-button">
-                        {{ plan.isContactOnly ? 'Fiyat için iletişime geçin' : 'Abone ol' }}
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div *ngIf="!loading && plans.length === 0" class="empty-state" role="status">
-            <mat-icon>inventory_2</mat-icon>
-            <h3>Planlar yakında burada</h3>
-            <p>Size uygun eğitim planını birlikte belirlemek için bizimle iletişime geçin.</p>
-            <a mat-stroked-button routerLink="/iletisim">İletişime Geç</a>
-        </div>
+<section class="pricing-section" id="fiyatlandirma" aria-labelledby="pricing-title">
+  <div class="container">
+    <div class="section-header">
+      <h2 id="pricing-title">{{ content.title }}</h2>
+      <p>{{ content.subtitle }}</p>
     </div>
+
+    @if (loading) {
+      <p class="loading-state" role="status"><span class="ds-spinner" aria-hidden="true"></span> Planlar yükleniyor</p>
+    } @else if (plans.length) {
+      <div class="pricing-grid">
+        @for (plan of plans; track plan.id) {
+          <article class="pricing-card" [class.popular]="isPopular(plan)">
+            @if (isPopular(plan)) { <p class="popular-badge">En çok tercih edilen</p> }
+            <h3>{{ plan.name }}</h3>
+            <p class="plan-description">{{ plan.description }}</p>
+            <p class="price">
+              <span class="amount">{{ formatPrice(plan) }}</span>
+              @if (!plan.isContactOnly && getPeriod(plan)) { <span class="period">{{ getPeriod(plan) }}</span> }
+            </p>
+            @if (plan.features && plan.features.length > 0) {
+              <ul class="features-list">
+                @for (feature of plan.features; track feature) {
+                  <li><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ feature }}</li>
+                }
+              </ul>
+            }
+            <a class="ds-btn ds-btn--block cta-button" [class.ds-btn--primary]="isPopular(plan)" [class.ds-btn--secondary]="!isPopular(plan)"
+              [routerLink]="plan.isContactOnly ? '/iletisim' : '/student/subscription'">
+              {{ plan.isContactOnly ? 'Fiyat için iletişime geç' : 'Abone ol' }}
+            </a>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="empty-state" role="status">
+        <h3>Planlar yakında burada</h3>
+        <p>Sana uygun planı birlikte belirlemek için bize yaz.</p>
+        <a class="ds-btn ds-btn--secondary" routerLink="/iletisim">İletişime geç</a>
+      </div>
+    }
+  </div>
 </section>

@@ -1,33 +1,36 @@
-<section class="testimonials-section">
-    <div class="container">
-        <ng-container *ngIf="showApproach">
-            <div class="section-header">
-                <h2>{{ content.title }}</h2>
-                <p>{{ content.subtitle }}</p>
-            </div>
+<section class="testimonials-section" aria-label="Nasıl çalışır">
+  <div class="container">
+    @if (showApproach) {
+      <div class="section-header">
+        <h2>{{ content.title }}</h2>
+        <p>{{ content.subtitle }}</p>
+      </div>
+      <ol class="approach-grid">
+        @for (item of content.items; track item.title; let index = $index) {
+          <li class="approach-card">
+            <span class="step-number">{{ index + 1 }}. adım</span>
+            @if (item.role) { <p class="eyebrow">{{ item.role }}</p> }
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </li>
+        }
+      </ol>
+    }
 
-            <div class="approach-grid">
-                <mat-card *ngFor="let item of content.items; let index = index" class="approach-card">
-                    <span class="step-number" aria-hidden="true">{{ index + 1 }}</span>
-                    <p class="eyebrow">{{ item.role }}</p>
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.description }}</p>
-                </mat-card>
-            </div>
-        </ng-container>
-
-        <ng-container *ngIf="showTestimonials && testimonialsContent.items.length">
-            <div class="section-header testimonial-heading">
-                <h2>{{ testimonialsContent.title }}</h2>
-                <p>{{ testimonialsContent.subtitle }}</p>
-            </div>
-            <div class="approach-grid">
-                <mat-card *ngFor="let item of testimonialsContent.items" class="approach-card testimonial-card">
-                    <p class="testimonial-rating" *ngIf="item.rating">Puan: {{ item.rating }}/5</p>
-                    <blockquote>{{ item.text }}</blockquote>
-                    <p class="testimonial-author">{{ item.name }}<span *ngIf="item.role"> · {{ item.role }}</span></p>
-                </mat-card>
-            </div>
-        </ng-container>
-    </div>
+    @if (showTestimonials && testimonialsContent.items.length) {
+      <div class="section-header testimonial-heading">
+        <h2>{{ testimonialsContent.title }}</h2>
+        <p>{{ testimonialsContent.subtitle }}</p>
+      </div>
+      <div class="quote-grid">
+        @for (item of testimonialsContent.items; track $index) {
+          <figure class="testimonial-card">
+            @if (item.rating) { <p class="testimonial-rating">Puan: {{ item.rating }}/5</p> }
+            <blockquote>{{ item.text }}</blockquote>
+            <figcaption class="testimonial-author">{{ item.name }}@if (item.role) {<span>, {{ item.role }}</span>}</figcaption>
+          </figure>
+        }
+      </div>
+    }
+  </div>
 </section>

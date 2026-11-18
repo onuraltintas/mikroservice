@@ -1,8 +1,4 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { SubscriptionService, SubscriptionPlan } from '../../../../../core/services/subscription.service';
 import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
@@ -10,7 +6,7 @@ import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-c
 @Component({
   selector: 'app-pricing-section',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './pricing-section.html',
   styleUrl: './pricing-section.scss'
 })

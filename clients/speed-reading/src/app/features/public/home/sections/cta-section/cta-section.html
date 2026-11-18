@@ -1,10 +1,14 @@
-<section class="cta-section">
-    <div class="container">
-        <h2>{{ content.title }}</h2>
+<section class="cta-section" aria-labelledby="cta-title">
+  <div class="container">
+    <div class="cta-panel">
+      <div class="cta-copy">
+        <h2 id="cta-title">{{ content.title }}</h2>
         <p>{{ content.subtitle }}</p>
-        <button mat-raised-button class="cta-button" (click)="startTrial()">
-            {{ content.actionLabel || 'Başla' }}
-        </button>
-        <p class="small-text">{{ content.smallText }}</p>
+      </div>
+      <div class="cta-action">
+        <button type="button" class="ds-btn ds-btn--large cta-button" (click)="startTrial()">{{ content.actionLabel || 'Başla' }}</button>
+        @if (content.smallText) { <p class="small-text">{{ content.smallText }}</p> }
+      </div>
     </div>
+  </div>
 </section>

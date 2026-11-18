@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,11 +15,11 @@ interface FaqItem {
 
 @Component({
     selector: 'app-faq-page',
+    host: { 'data-brand': 'ho' },
     standalone: true,
     imports: [CommonModule, MatExpansionModule, MatIconModule, NavbarComponent, FooterComponent],
     templateUrl: './faq-page.html',
-    styleUrl: './faq-page.scss',
-    encapsulation: ViewEncapsulation.None
+    styleUrl: './faq-page.scss'
 })
 export class FaqPageComponent implements OnInit {
     private cmsService = inject(PublicCmsService);
