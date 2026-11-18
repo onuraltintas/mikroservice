@@ -62,7 +62,7 @@ import { ParentPlanWeek, parentPlanDays, planClock, parentTaskState, shiftWeek, 
     ul li{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr) auto;gap:var(--coaching-space-3);align-items:baseline;min-width:0}
     .when{font-size:var(--coaching-text-sm);font-variant-numeric:tabular-nums;color:var(--ui-text-muted)}
     .what{display:grid;min-width:0}.what strong{font-weight:650;color:var(--ui-text);overflow-wrap:anywhere}.what small{color:var(--ui-text-muted);font-size:12px}
-    .state{font-size:12px;font-weight:650;color:var(--ui-text-muted);white-space:nowrap}.done .state{color:var(--ui-success, var(--ui-brand))}.state.late{color:var(--ui-danger, #b42318)}
+    .state{font-size:12px;font-weight:650;color:var(--ui-text-muted);white-space:nowrap}.done .state{color:var(--ui-success, var(--ui-brand))}.state.late{color:var(--ui-danger)}
     @media (max-width:600px){ul li{grid-template-columns:minmax(0,1fr) auto}.when{grid-column:1 / -1}}
   `]
 })
