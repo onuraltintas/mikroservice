@@ -59,7 +59,7 @@ public sealed class NotificationEmailInjectionTests
             "https://app.example.test/coaching-portal/profile", DateTime.UtcNow) { Product = "coaching" });
 
         var mail = queue.Single();
-        mail.Subject.Should().Contain("Koçluk").And.NotContain("Hızlı Okuma");
+        mail.Subject.Should().Be(type == "TeacherToInstitution" ? "eduivme daveti" : "maxkoç daveti");
         mail.Body.Should().Contain(type == "TeacherToInstitution" ? "eduivme" : "maxkoç").And.Contain(role).And.NotContain("Hızlı Okuma");
         mail.Body.Should().Contain("href='https://app.example.test/coaching-portal/profile'");
     }
