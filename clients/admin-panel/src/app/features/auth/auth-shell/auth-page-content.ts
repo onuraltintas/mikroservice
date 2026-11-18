@@ -4,10 +4,10 @@ import { EduivmeSite } from '../../../../../shared/eduivme-sites';
  * Redesign 18.11.2026 (tuval: "Giriş: maxkoç", "Giriş: eduivme"): each address gets its own sign-in page text.
  * maxkoç on the student and parent addresses, eduivme on the teacher, institution and management addresses.
  */
-export type LoginBrand = 'maxkoc' | 'eduivme';
+export type AuthBrand = 'maxkoc' | 'eduivme';
 
-export interface LoginPageContent {
-  brand: LoginBrand;
+export interface AuthPageContent {
+  brand: AuthBrand;
   brandName: string;
   brandNote: string;
   logo: string;
@@ -27,7 +27,7 @@ export interface LoginPageContent {
 const MAXKOC = { brand: 'maxkoc', brandName: 'maxkoç', logo: 'brand/maxkoc.svg' } as const;
 const EDUIVME = { brand: 'eduivme', brandName: 'eduivme', logo: 'brand/eduivme.svg' } as const;
 
-export const LOGIN_PAGES: Readonly<Record<EduivmeSite, LoginPageContent>> = {
+export const AUTH_PAGES: Readonly<Record<EduivmeSite, AuthPageContent>> = {
   student: {
     ...MAXKOC, brandNote: 'bir eduivme markası', visual: 'today', place: 'maxkoc.com',
     headline: 'Haftan seni bekliyor.',

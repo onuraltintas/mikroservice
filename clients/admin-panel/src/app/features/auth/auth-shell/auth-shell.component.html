@@ -1,0 +1,59 @@
+<div class="ds-auth" [attr.data-brand]="page.brand">
+  <section class="ds-auth__visual shell-visual" [class.shell-visual--dark]="page.brand === 'eduivme'"
+    [attr.aria-label]="page.brandName + ' hakkında'">
+    @if (page.brand === 'eduivme') {
+      <svg class="shell-visual__mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
+        <rect class="shell-visual__stem" x="210" y="300" width="130" height="420" rx="65"></rect>
+        <path class="shell-visual__arc" d="M150 200c40-80 120-120 190-108" fill="none" stroke-width="22" stroke-linecap="round"></path>
+        <circle class="shell-visual__dot" cx="370" cy="110" r="78"></circle>
+      </svg>
+      <span class="ds-auth__place">{{ page.place }}</span>
+    }
+    <div class="shell-visual__copy">
+      <h2 class="ds-auth__headline">{{ headline() ?? page.headline }}</h2>
+      <p class="ds-auth__sub">{{ sub() ?? page.sub }}</p>
+    </div>
+
+    <!-- Live test 13.11.2026: no invented testimonial; only what the product does is shown. -->
+    @if (points(); as list) {
+      <ul class="ds-auth__points" [attr.data-testid]="featuresTestId()">
+        @for (point of list; track point) { <li>{{ point }}</li> }
+      </ul>
+    } @else {
+      @switch (page.visual) {
+        @case ('today') {
+          <div class="ds-auth__sample" aria-hidden="true" [attr.data-testid]="featuresTestId()">
+            <span class="shell-sample__head"><strong>Bugün</strong><span>1 / 3 tamam</span></span>
+            <span class="shell-sample__row shell-sample__row--done"><span class="shell-chip shell-chip--math">Matematik</span><s>Üslü ifadeler</s></span>
+            <span class="shell-sample__row shell-sample__row--now"><span class="shell-chip shell-chip--turkish">Türkçe</span>Paragraf, 20 soru<span class="shell-sample__now">Şimdi</span></span>
+            <span class="shell-sample__row"><span class="shell-chip shell-chip--science">Fen</span>DNA tekrarı</span>
+          </div>
+        }
+        @case ('week') {
+          <div class="ds-auth__sample" aria-hidden="true" [attr.data-testid]="featuresTestId()">
+            <strong>Haftalık özet</strong>
+            <span class="shell-sample__line"><span>Çalışma</span><strong>9 sa 40 dk / 14 sa</strong></span>
+            <span class="shell-sample__bar"><span></span></span>
+            <span class="shell-sample__line"><span>Son deneme</span><strong>72 net</strong></span>
+            <span class="shell-sample__line"><span>Sıradaki görüşme</span><strong>Cuma 17:30</strong></span>
+          </div>
+        }
+        @default {
+          <ul class="ds-auth__points" [attr.data-testid]="featuresTestId()">
+            @for (point of page.points; track point) { <li>{{ point }}</li> }
+          </ul>
+        }
+      }
+    }
+  </section>
+
+  <main class="ds-auth__main">
+    <div class="ds-auth__panel" [class.shell-panel--wide]="wide()">
+      <a routerLink="/" class="ds-auth__brand">
+        <img [src]="page.logo" alt="" width="44" height="44">
+        <span><span class="ds-auth__brand-name">{{ page.brandName }}</span><span class="ds-auth__brand-note">{{ page.brandNote }}</span></span>
+      </a>
+      <ng-content />
+    </div>
+  </main>
+</div>

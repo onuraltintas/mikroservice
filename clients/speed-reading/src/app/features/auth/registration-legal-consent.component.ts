@@ -12,16 +12,16 @@ import { RegistrationLegalAcceptance } from '../../core/models/user.model';
   imports: [CommonModule, RouterLink],
   template: `
     <section class="consents-wrapper" aria-label="Yasal metinler ve kayıt onayları">
-      <strong>Yasal metinler</strong>
+      <h2 class="legal-title">Yasal metinler</h2>
       @if (loading()) {
-        <p role="status">Güncel yasal metinler yükleniyor…</p>
+        <p class="consent-hint" role="status">Güncel yasal metinler yükleniyor…</p>
       } @else if (error()) {
-        <p class="consent-hint" role="alert">{{ error() }} Kayıt, yayımlanmış güncel metinler olmadan tamamlanamaz.</p>
+        <p class="ds-alert ds-alert--warning" role="alert">{{ error() }} Kayıt, yayımlanmış güncel metinler olmadan tamamlanamaz.</p>
       } @else {
         @for (page of pages(); track page.slug) {
           <label class="legal-consent-row">
             <input type="checkbox" [checked]="isSelected(page.slug)" (change)="setSelected(page, $any($event.target).checked)" />
-            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer">{{ page.title }}</a>
+            <span><a class="ds-link" [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer">{{ page.title }}</a>
               {{ isTerms(page.slug) ? 'koşullarını kabul ediyorum.' : 'metnini okudum ve bilgilendirildim.' }}</span>
           </label>
         }
@@ -29,7 +29,14 @@ import { RegistrationLegalAcceptance } from '../../core/models/user.model';
       }
     </section>
   `,
-  styles: [`.legal-consent-row { display: flex; align-items: flex-start; gap: .6rem; line-height: 1.5; } .legal-consent-row input { margin-top: .25rem; } .legal-consent-row a { font-weight: 600; text-decoration: underline; }`]
+  styles: [`
+    .consents-wrapper { display: flex; flex-direction: column; gap: 10px; }
+    .legal-title { margin: 0; color: var(--ds-text); font-size: 15px; font-weight: 600; }
+    .legal-consent-row { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; color: var(--ds-text); font-size: 15px; line-height: 1.5; cursor: pointer; }
+    .legal-consent-row input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ds-primary); }
+    .consent-hint { margin: 0; color: var(--ds-muted); font-size: 13px; line-height: 1.5; }
+    .ds-alert { margin: 0; }
+  `]
 })
 export class RegistrationLegalConsentComponent implements OnInit {
   private readonly legalPages = inject(PlatformLegalPagesService);

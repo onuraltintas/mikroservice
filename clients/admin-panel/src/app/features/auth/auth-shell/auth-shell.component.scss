@@ -1,0 +1,29 @@
+// Giriş ve kayıt sayfalarının çerçevesi. Düzen ve ortak bileşenler: shared/styles/_design-components.scss.
+:host { display: block; }
+
+.shell-panel--wide { max-width: 560px; }
+.shell-visual__copy { display: flex; flex-direction: column; gap: 18px; }
+
+// eduivme: koyu zemin üstünde büyük "i" işareti.
+.shell-visual--dark { justify-content: space-between; }
+.shell-visual__mark { position: absolute; right: 8%; bottom: -180px; }
+.shell-visual__stem { fill: currentColor; opacity: 0.08; }
+.shell-visual__arc { stroke: var(--ds-accent); opacity: 0.45; }
+.shell-visual__dot { fill: var(--ds-accent); opacity: 0.9; }
+
+// maxkoç: örnek gün ve haftalık özet.
+.shell-sample__head, .shell-sample__line { display: flex; justify-content: space-between; gap: 12px; }
+.shell-sample__head span, .shell-sample__line > span { color: var(--ds-muted); font-size: 14px; font-weight: 500; }
+.shell-sample__line { font-size: 15px; }
+.shell-sample__row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--ds-radius-control); font-size: 15px; }
+.shell-sample__row--done { color: var(--ds-muted); }
+.shell-sample__row--now { background: var(--ds-soft); }
+.shell-sample__now { margin-left: auto; padding: 1px 7px; border-radius: 4px; background: var(--ds-accent); color: var(--ds-on-accent); font-size: 12px; font-weight: 700; }
+.shell-sample__bar { display: block; height: 8px; border-radius: 4px; background: var(--ds-line); overflow: hidden; }
+.shell-sample__bar span { display: block; width: 69%; height: 100%; background: var(--ds-primary); }
+
+// Ders etiketleri: --ds-math-* gibi değişkenler (açık ve koyu tema üreticide).
+.shell-chip { flex: none; padding: 2px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.shell-chip--math { background: var(--ds-math-bg); color: var(--ds-math-fg); }
+.shell-chip--turkish { background: var(--ds-turkish-bg); color: var(--ds-turkish-fg); }
+.shell-chip--science { background: var(--ds-science-bg); color: var(--ds-science-fg); }

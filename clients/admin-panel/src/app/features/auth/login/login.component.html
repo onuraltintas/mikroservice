@@ -1,60 +1,10 @@
+<!-- Redesign 18.11.2026 (tuval: "Giriş: maxkoç", "Giriş: eduivme"). Çerçeve: auth-shell; renkler --ds-* değişkenlerinden. -->
+<app-auth-shell>
 @if (googleRegistrationToken()) {
   <app-google-registration-consent product="coaching" [busy]="isLoading()" [error]="errorMessage() || ''"
     (confirm)="completeGoogleRegistration($event)" (cancel)="cancelGoogleRegistration()" />
 }
-<!-- Redesign 18.11.2026 (tuval: "Giriş: maxkoç", "Giriş: eduivme"). Renkler --ds-* değişkenlerinden gelir. -->
-<div [hidden]="!!googleRegistrationToken()">
-<div class="ds-auth" [attr.data-brand]="page.brand">
-
-  <section class="ds-auth__visual login-visual" [class.login-visual--dark]="page.brand === 'eduivme'"
-    [attr.aria-label]="page.brandName + ' hakkında'">
-    @if (page.brand === 'eduivme') {
-      <svg class="login-visual__mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
-        <rect class="login-visual__stem" x="210" y="300" width="130" height="420" rx="65"></rect>
-        <path class="login-visual__arc" d="M150 200c40-80 120-120 190-108" fill="none" stroke-width="22" stroke-linecap="round"></path>
-        <circle class="login-visual__dot" cx="370" cy="110" r="78"></circle>
-      </svg>
-      <span class="ds-auth__place">{{ page.place }}</span>
-    }
-    <div class="login-visual__copy">
-      <h2 class="ds-auth__headline">{{ page.headline }}</h2>
-      <p class="ds-auth__sub">{{ page.sub }}</p>
-    </div>
-
-    <!-- Live test 13.11.2026: no invented testimonial; only what the product does is shown. -->
-    @switch (page.visual) {
-      @case ('today') {
-        <div class="ds-auth__sample" aria-hidden="true" data-testid="login-features">
-          <span class="login-sample__head"><strong>Bugün</strong><span>1 / 3 tamam</span></span>
-          <span class="login-sample__row login-sample__row--done"><span class="login-chip login-chip--math">Matematik</span><s>Üslü ifadeler</s></span>
-          <span class="login-sample__row login-sample__row--now"><span class="login-chip login-chip--turkish">Türkçe</span>Paragraf, 20 soru<span class="login-sample__now">Şimdi</span></span>
-          <span class="login-sample__row"><span class="login-chip login-chip--science">Fen</span>DNA tekrarı</span>
-        </div>
-      }
-      @case ('week') {
-        <div class="ds-auth__sample" aria-hidden="true" data-testid="login-features">
-          <strong>Haftalık özet</strong>
-          <span class="login-sample__line"><span>Çalışma</span><strong>9 sa 40 dk / 14 sa</strong></span>
-          <span class="login-sample__bar"><span></span></span>
-          <span class="login-sample__line"><span>Son deneme</span><strong>72 net</strong></span>
-          <span class="login-sample__line"><span>Sıradaki görüşme</span><strong>Cuma 17:30</strong></span>
-        </div>
-      }
-      @default {
-        <ul class="ds-auth__points" data-testid="login-features">
-          @for (point of page.points; track point) { <li>{{ point }}</li> }
-        </ul>
-      }
-    }
-  </section>
-
-  <main class="ds-auth__main">
-    <div class="ds-auth__panel">
-      <a routerLink="/" class="ds-auth__brand">
-        <img [src]="page.logo" alt="" width="44" height="44">
-        <span><span class="ds-auth__brand-name">{{ page.brandName }}</span><span class="ds-auth__brand-note">{{ page.brandNote }}</span></span>
-      </a>
-
+<div class="ds-auth__form" [hidden]="!!googleRegistrationToken()">
       @if (mfaStage() === 'none') {
         <div class="ds-auth__heading">
           <h1 class="ds-auth__title" data-testid="login-welcome">{{ page.title }}</h1>
@@ -186,7 +136,5 @@
           <span><a routerLink="/auth/support" class="ds-link">Yardım ve destek</a></span>
         </div>
       }
-    </div>
-  </main>
 </div>
-</div>
+</app-auth-shell>

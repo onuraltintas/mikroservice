@@ -1,32 +1,18 @@
-<div class="verify-email-container">
-  <mat-card class="verify-email-card">
-    <mat-card-header>
-      <mat-card-title>E-posta Doğrulama</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (loading) {
-        <div class="loading-message">
-          <mat-spinner diameter="48"></mat-spinner>
-          <p>E-posta adresiniz doğrulanıyor...</p>
-        </div>
-      } @else if (success) {
-        <div class="success-message">
-          <mat-icon>check_circle</mat-icon>
-          <p>E-posta adresiniz başarıyla doğrulandı!</p>
-          <p>Giriş sayfasına yönlendiriliyorsunuz...</p>
-          <button mat-raised-button color="primary" routerLink="/auth/login" class="full-width">
-            Giriş Yap
-          </button>
-        </div>
-      } @else if (error) {
-        <div class="error-message">
-          <mat-icon>error</mat-icon>
-          <p>{{ error }}</p>
-          <button mat-raised-button color="primary" routerLink="/auth/login" class="full-width">
-            Giriş Sayfasına Dön
-          </button>
-        </div>
-      }
-    </mat-card-content>
-  </mat-card>
-</div>
+<!-- Redesign 18.11.2026. Çerçeve: registration-shell (Hızlı Okuma). -->
+<app-registration-shell mode="page">
+  <section class="ds-auth__form" aria-labelledby="verify-title">
+    <div class="ds-auth__heading"><h1 id="verify-title" class="ds-auth__title">E-posta doğrulama</h1></div>
+    @if (loading) {
+      <p class="verify-wait" role="status"><span class="ds-spinner" aria-hidden="true"></span>E-posta adresin doğrulanıyor…</p>
+    } @else if (success) {
+      <div class="verify-ok" role="status">
+        <strong>E-posta adresin doğrulandı.</strong>
+        <span>Giriş sayfasına yönlendiriliyorsun.</span>
+      </div>
+      <a routerLink="/auth/login" class="ds-btn ds-btn--primary ds-btn--large ds-btn--block">Giriş yap</a>
+    } @else if (error) {
+      <div class="ds-alert" role="alert">{{ error }}</div>
+      <a routerLink="/auth/login" class="ds-btn ds-btn--secondary ds-btn--large ds-btn--block">Giriş sayfasına dön</a>
+    }
+  </section>
+</app-registration-shell>

@@ -2,12 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { injectAuthCopy } from '../auth-voice';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
@@ -17,9 +15,7 @@ import { injectSiteBrand } from '../../../core/brand/site-brand';
         CommonModule,
         FormsModule,
         RouterModule,
-        MatIconModule,
-        MatButtonModule,
-        MatProgressSpinnerModule
+        AuthShellComponent
     ],
     templateUrl: './forgot-password.component.html',
     styleUrl: './forgot-password.component.scss'
@@ -30,6 +26,7 @@ export class ForgotPasswordComponent {
     /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */
     private readonly authCopy = injectAuthCopy();
     readonly copy = this.authCopy.copy;
+    readonly voice = this.authCopy.voice;
 
     email = '';
     isLoading = signal(false);

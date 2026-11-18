@@ -1,15 +1,15 @@
 import { Component, OnInit, signal, inject, PLATFORM_ID } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ConfigurationService } from '../../../core/services/settings/configuration.service';
 import { catchError, of } from 'rxjs';
 import { injectSiteBrand } from '../../../core/brand/site-brand';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
 @Component({
     selector: 'app-register',
     standalone: true,
-    imports: [CommonModule, RouterLink, MatIconModule],
+    imports: [CommonModule, RouterLink, AuthShellComponent],
     templateUrl: './register.component.html',
     styleUrl: './register.component.scss'
 })

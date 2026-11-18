@@ -1,192 +1,39 @@
-<div
-    class="min-h-screen w-full relative flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+<!-- Redesign 18.11.2026: kayıt türü seçimi. Çerçeve: auth-shell. -->
+<app-auth-shell [wide]="true">
+  <div class="ds-auth__heading">
+    <h1 class="ds-auth__title">Hoş geldin</h1>
+    <p class="ds-auth__lead">{{ brand.dative }} katılmak için sana uygun hesabı seç.</p>
+  </div>
 
-    <!-- Background Decoration -->
-    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/20 rounded-full blur-[120px]">
-        </div>
+  @if (isLoading()) {
+    <p class="choice-loading" role="status"><span class="ds-spinner" aria-hidden="true"></span> Kayıt seçenekleri yükleniyor</p>
+  } @else if (!isRegistrationAllowed()) {
+    <div class="ds-alert" role="alert">
+      <strong>Yeni kayıtlar şu an kapalı.</strong>
+      <span>Daha sonra yeniden dene ya da destek sayfasından bize yaz.</span>
     </div>
+  } @else {
+    <nav class="choices" aria-label="Hesap türü">
+      <a class="choice" routerLink="/auth/register/student">
+        <span class="choice__title">Öğrenci</span>
+        <span class="choice__text">Sınavına kadar haftalık çalışma planını kur; denemelerini ve ödevlerini takip et.</span>
+      </a>
+      <a class="choice" routerLink="/auth/register/parent">
+        <span class="choice__title">Veli</span>
+        <span class="choice__text">Çocuğunun onayıyla planını, denemelerini ve seanslarını izle.</span>
+      </a>
+      <a class="choice" routerLink="/auth/register/teacher">
+        <span class="choice__title">Öğretmen</span>
+        <span class="choice__text">Öğrencilerinin planını hazırla; ödev, deneme ve seanslarını yönet.</span>
+      </a>
+      <a class="choice" routerLink="/auth/register/institution">
+        <span class="choice__title">Kurum</span>
+        <span class="choice__text">Öğretmen ve öğrencilerini tek yerden yönet, raporları izle.</span>
+      </a>
+    </nav>
+  }
 
-    <div class="relative z-10 w-full max-w-7xl mx-auto">
-
-        <!-- Header Section -->
-        <div class="text-center mb-16">
-            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6">
-                <span class="block">{{ brand.dative }}</span>
-                <span
-                    class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 animate-gradient">Hoş geldin</span>
-            </h1>
-            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
-                Eğitim yolculuğuna başlamak için sana en uygun rolü seç.
-            </p>
-        </div>
-
-        <!-- Loader -->
-        <div *ngIf="isLoading()" class="flex justify-center my-20">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-
-        <!-- Registration Disabled Message -->
-        <div *ngIf="!isLoading() && !isRegistrationAllowed()"
-            class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-8 text-center max-w-2xl mx-auto my-10 animate-fade-in">
-            <mat-icon class="text-red-500 !w-16 !h-16 !text-[64px] mb-4">block</mat-icon>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Yeni Kayıtlar Kapalı</h2>
-            <p class="text-gray-600 dark:text-gray-300">
-                Şu an yeni üye kabul etmiyoruz. Daha sonra yeniden dene ya da bizimle iletişime geç.
-            </p>
-        </div>
-
-        <!-- Cards Container -->
-        <div *ngIf="!isLoading() && isRegistrationAllowed()"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4 md:px-0">
-
-            <!-- Student Card -->
-            <a routerLink="/auth/register/student"
-                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-blue-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
-                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg class="w-32 h-32 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
-                    </svg>
-                </div>
-
-                <div class="relative z-10">
-                    <div
-                        class="w-20 h-20 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
-                        <mat-icon class="!w-10 !h-10 !text-[40px]">school</mat-icon>
-                    </div>
-
-                    <h3
-                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors">
-                        Öğrenci</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
-                        Sınavına kadar haftalık çalışma planını kur; denemelerini, ödevlerini ve hedefini tek yerden takip et.
-                    </p>
-
-                    <div
-                        class="flex items-center text-blue-600 font-bold group-hover:translate-x-2 transition-transform">
-                        <span>Hemen Başla</span>
-                        <mat-icon class="ml-2">arrow_forward</mat-icon>
-                    </div>
-                </div>
-                <div
-                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
-                </div>
-            </a>
-
-            <!-- Parent Card -->
-            <a routerLink="/auth/register/parent"
-                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-teal-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
-                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg class="w-32 h-32 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M16 4c0-1.11-.89-2-2-2s-2 .89-2 2 .89 2 2 2 2-.89 2-2zM5 4c0-1.11-.89-2-2-2S1 .89 1 4s.89 2 2 2 2-.89 2-2zm7 3H2C.9 7 0 7.9 0 9v6h2v-6h1v11h2v-5h1v5h2V9h1v6h2V9c0-1.1-.9-2-2-2z" />
-                    </svg>
-                </div>
-
-                <div class="relative z-10">
-                    <div
-                        class="w-20 h-20 rounded-2xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
-                        <mat-icon class="!w-10 !h-10 !text-[40px]">family_restroom</mat-icon>
-                    </div>
-
-                    <h3
-                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-teal-600 transition-colors">
-                        Veli</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
-                        Çocuğunun onayıyla çalışma planını, denemelerini, ödevlerini ve seanslarını izle.
-                    </p>
-
-                    <div
-                        class="flex items-center text-teal-600 font-bold group-hover:translate-x-2 transition-transform">
-                        <span>Aramıza Katıl</span>
-                        <mat-icon class="ml-2">arrow_forward</mat-icon>
-                    </div>
-                </div>
-                <div
-                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-teal-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
-                </div>
-            </a>
-
-            <!-- Teacher Card -->
-            <a routerLink="/auth/register/teacher"
-                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-purple-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
-                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg class="w-32 h-32 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" />
-                    </svg>
-                </div>
-
-                <div class="relative z-10">
-                    <div
-                        class="w-20 h-20 rounded-2xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
-                        <mat-icon class="!w-10 !h-10 !text-[40px]">cast_for_education</mat-icon>
-                    </div>
-
-                    <h3
-                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-purple-600 transition-colors">
-                        Öğretmen</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
-                        Öğrencilerinin çalışma planını hazırla; ödev, deneme ve seanslarını yönet, gelişim raporlarını incele.
-                    </p>
-
-                    <div
-                        class="flex items-center text-purple-600 font-bold group-hover:translate-x-2 transition-transform">
-                        <span>Hesap Oluştur</span>
-                        <mat-icon class="ml-2">arrow_forward</mat-icon>
-                    </div>
-                </div>
-                <div
-                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
-                </div>
-            </a>
-
-            <!-- Institution Card -->
-            <a routerLink="/auth/register/institution"
-                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-orange-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
-                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg class="w-32 h-32 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z" />
-                    </svg>
-                </div>
-
-                <div class="relative z-10">
-                    <div
-                        class="w-20 h-20 rounded-2xl bg-orange-50 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
-                        <mat-icon class="!w-10 !h-10 !text-[40px]">domain</mat-icon>
-                    </div>
-
-                    <h3
-                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-orange-600 transition-colors">
-                        Kurum</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
-                        Öğretmen ve öğrencilerini tek yerden yönet; kontenjanını, kurum denemelerini ve raporlarını takip et.
-                    </p>
-
-                    <div
-                        class="flex items-center text-orange-600 font-bold group-hover:translate-x-2 transition-transform">
-                        <span>Kurumsal Başvuru</span>
-                        <mat-icon class="ml-2">arrow_forward</mat-icon>
-                    </div>
-                </div>
-                <div
-                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
-                </div>
-            </a>
-
-        </div>
-
-        <!-- Footer / Login Link -->
-        <div class="mt-20 text-center" data-testid="role-login-link">
-            <p class="text-gray-500 dark:text-gray-400 mb-2">Zaten hesabın var mı?</p>
-            <a routerLink="/auth/login"
-                class="inline-flex items-center px-8 py-3 rounded-full bg-white dark:bg-gray-800 border-2 border-transparent hover:border-blue-500 text-gray-900 dark:text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300">
-                <span>Giriş yap</span>
-                <mat-icon class="ml-2 text-blue-500">login</mat-icon>
-            </a>
-        </div>
-
-    </div>
-</div>
+  <p class="ds-auth__footer" data-testid="role-login-link">
+    <span>Zaten hesabın var mı? <a routerLink="/auth/login" class="ds-link">Giriş yap</a></span>
+  </p>
+</app-auth-shell>

@@ -1,79 +1,25 @@
-<div class="min-h-screen w-full flex bg-white dark:bg-gray-900">
+<!-- Redesign 18.11.2026: Öğretmen kaydı. Çerçeve: auth-shell; form alanları Angular Material, renkler --ds-* değişkenlerinden. -->
+<app-auth-shell [wide]="true" featuresTestId="register-features"
+  headline="Öğrencilerinle tek yerden çalış."
+  sub="Modern sınıf yönetimi araçları, performans analizleri ve dijital kaynaklarla eğitimde fark yarat."
+  [points]="['Öğrencilerinize ödev, hedef ve koçluk seansı', 'Deneme sonuçlarından net ve puan takibi', 'Öğrenci ve veliyle mesajlaşma']">
+  <div class="ds-auth__heading">
+    <a routerLink="/auth/register" class="ds-link ds-back-link">Hesap türünü değiştir</a>
+    <h1 class="ds-auth__title">Öğretmen hesabı oluştur</h1>
+    <p class="ds-auth__lead">Zaten hesabın var mı? <a routerLink="/auth/login" class="ds-link">Giriş yap</a></p>
+  </div>
 
-    <!-- Left Side: Visual & Inspiration (Desktop Only) -->
-    <div
-        class="hidden lg:flex w-5/12 bg-gradient-to-br from-purple-700 to-fuchsia-900 relative overflow-hidden p-12 flex-col justify-between text-white">
-
-        <!-- Decoration -->
-        <div class="absolute top-0 right-0 w-64 h-64 bg-purple-500 rounded-full blur-[100px] opacity-40"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500 rounded-full blur-[100px] opacity-40"></div>
-
-        <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-8 opacity-80">
-                <mat-icon>cast_for_education</mat-icon>
-                <span class="font-bold tracking-wider">eduivme</span>
-            </div>
-            <h1 class="text-5xl font-bold leading-tight mb-6">
-                İlham Ver,<br>Geleceği<br>İnşa Et.
-            </h1>
-            <p class="text-purple-100 text-lg max-w-md">
-                Modern sınıf yönetimi araçları, performans analizleri ve dijital kaynaklarla eğitimde fark yarat.
-            </p>
-        </div>
-
-        <!-- Live test 13.11.2026: an invented testimonial stood here. Only what the product does is listed. -->
-        <ul class="relative z-10 p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 space-y-2 text-sm" data-testid="register-features">
-            <li>Öğrencilerinize ödev, hedef ve koçluk seansı</li>
-            <li>Deneme sonuçlarından net ve puan takibi</li>
-            <li>Öğrenci ve veliyle mesajlaşma</li>
-        </ul>
-    </div>
-
-    <!-- Right Side: Form -->
-    <div class="w-full lg:w-7/12 overflow-y-auto h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
-
-        <!-- Mobile Header -->
-        <div
-            class="lg:hidden p-6 bg-purple-700 text-white flex items-center justify-between sticky top-0 z-20 shadow-md">
-            <div class="flex items-center gap-2">
-                <mat-icon>cast_for_education</mat-icon>
-                <span class="font-bold">Öğretmen Kaydı</span>
-            </div>
-            <a routerLink="/auth/register" class="text-white/80 hover:text-white">
-                <mat-icon>close</mat-icon>
-            </a>
-        </div>
-
-        <div class="flex-1 flex items-center justify-center p-6 sm:p-12 lg:p-24">
-            <div class="w-full max-w-md">
-
-                <!-- Back Button -->
-                <a routerLink="/auth/register"
-                    class="hidden lg:inline-flex items-center text-gray-400 hover:text-purple-600 mb-8 transition-colors text-sm font-medium">
-                    <mat-icon class="!w-4 !h-4 !text-[16px] mr-1">arrow_back</mat-icon>
-                    Geri Dön
-                </a>
-
-                <div class="mb-8">
-                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Öğretmen Hesabı 🎓</h2>
-                    <p class="text-gray-500 dark:text-gray-400">
-                        Zaten hesabın var mı?
-                        <a routerLink="/auth/login"
-                            class="text-purple-600 dark:text-purple-500 font-bold hover:underline">Giriş yap</a>
-                    </p>
-                </div>
-
-                <button mat-stroked-button type="button" class="mb-5" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+  <button type="button" class="ds-btn ds-btn--secondary ds-btn--block" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
                     {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
                 </button>
                 @if (joinExisting) { <app-existing-product-join product="coaching" account="teacher" /> }
                 @if (verifiedNotice(); as notice) {
                     <app-registration-success [title]="notice.title" [message]="notice.message" [loginQueryParams]="loginQueryParams" />
                 }
-                <form [style.display]="joinExisting || verifiedNotice() ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+                <form [style.display]="joinExisting || verifiedNotice() ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="ds-auth__form">
 
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="ds-form-row">
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Ad</mat-label>
                             <input matInput formControlName="firstName" placeholder="Adın">
@@ -90,32 +36,30 @@
                         <mat-label>Branş</mat-label>
                         <mat-select formControlName="branch" placeholder="Branşını seç">
                             <mat-option value="Mathematics">
-                                <mat-icon class="text-blue-500 mr-2">calculate</mat-icon> Matematik
+                                Matematik
                             </mat-option>
                             <mat-option value="Science">
-                                <mat-icon class="text-green-500 mr-2">science</mat-icon> Fen Bilimleri
+                                Fen Bilimleri
                             </mat-option>
                             <mat-option value="Turkish">
-                                <mat-icon class="text-red-500 mr-2">book</mat-icon> Türkçe
+                                Türkçe
                             </mat-option>
                             <mat-option value="English">
-                                <mat-icon class="text-indigo-500 mr-2">language</mat-icon> İngilizce
+                                İngilizce
                             </mat-option>
                             <mat-option value="Guidance">
-                                <mat-icon class="text-orange-500 mr-2">psychology</mat-icon> Rehberlik
+                                Rehberlik
                             </mat-option>
                             <mat-option value="Other">
-                                <mat-icon class="text-gray-500 mr-2">category</mat-icon> Diğer
+                                Diğer
                             </mat-option>
                         </mat-select>
-                        <mat-icon matPrefix class="text-gray-400 mr-2">school</mat-icon>
                         <mat-error>Branş seçimi zorunludur</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>E-posta Adresi</mat-label>
                         <input matInput type="email" formControlName="email">
-                        <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
                         <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta adresi zorunludur</mat-error>
                         <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi gir</mat-error>
                     </mat-form-field>
@@ -123,19 +67,17 @@
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Şifre</mat-label>
                         <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="new-password" maxlength="128" [attr.aria-describedby]="'password-rules'">
-                        <mat-icon matPrefix class="text-gray-400 mr-2">lock</mat-icon>
                         <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" aria-label="Parolayı göster veya gizle">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
                         <mat-error *ngIf="form.get('password')?.hasError('required')">Şifre zorunludur</mat-error>
                         <mat-error *ngIf="form.get('password')?.hasError('passwordStrength')">Şifre aşağıdaki kuralların hepsine uymalı.</mat-error>
                     </mat-form-field>
-                    <app-password-requirements class="block -mt-3 mb-2" [password]="form.get('password')?.value" describedById="password-rules" />
+                    <app-password-requirements class="ds-field__rules" [password]="form.get('password')?.value" describedById="password-rules" />
 
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Şifreyi Onayla</mat-label>
                         <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="confirmPassword">
-                        <mat-icon matPrefix class="text-gray-400 mr-2">lock_outline</mat-icon>
                         <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" aria-label="Parolayı tekrar göster veya gizle">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
@@ -150,26 +92,11 @@
                         (acceptancesChange)="legalAcceptances = $event"
                         (readinessChange)="legalReady = $event"></app-registration-legal-consent>
 
-                    <div *ngIf="errorMessage()"
-                        class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm flex items-start gap-3">
-                        <mat-icon class="text-red-500">error_outline</mat-icon>
-                        <span>{{ errorMessage() }}</span>
-                    </div>
+                    <div *ngIf="errorMessage()" class="ds-alert" role="alert">{{ errorMessage() }}</div>
 
-                    <button mat-flat-button color="primary" type="submit"
-                        class="!py-6 !text-lg !rounded-xl w-full !bg-purple-600 !shadow-lg !shadow-purple-200 hover:!shadow-purple-300 transition-all mt-4"
-                          [disabled]="form.invalid || !hasRequiredLegalAcceptances || isLoading()">
-                        <div class="flex items-center justify-center gap-2">
-                            <mat-spinner *ngIf="isLoading()" diameter="24" class="!stroke-white"></mat-spinner>
-                            <span *ngIf="!isLoading()">Öğretmen Kaydını Tamamla</span>
-                            <mat-icon *ngIf="!isLoading()">arrow_forward</mat-icon>
-                        </div>
+                    <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="form.invalid || !hasRequiredLegalAcceptances || isLoading()">
+                        @if (isLoading()) { <span class="ds-spinner" aria-hidden="true"></span><span>Hesap oluşturuluyor</span> } @else { Öğretmen Kaydını Tamamla }
                     </button>
 
                 </form>
-
-
-            </div>
-        </div>
-    </div>
-</div>
+</app-auth-shell>
