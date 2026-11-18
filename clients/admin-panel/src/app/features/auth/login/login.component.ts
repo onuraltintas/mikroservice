@@ -16,7 +16,8 @@ import { AuthRecaptchaService } from '../../../core/auth/auth-recaptcha.service'
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { injectSiteBrand } from '../../../core/brand/site-brand';
 import { siteForHost, siteHref } from '../../../../../shared/eduivme-sites';
-import { LOGIN_PAGES } from './login-page-content';
+import { AUTH_PAGES } from '../auth-shell/auth-page-content';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
 @Component({
     selector: 'app-login',
@@ -26,7 +27,8 @@ import { LOGIN_PAGES } from './login-page-content';
         FormsModule,
         RouterLink,
         GoogleSigninButtonModule,
-        GoogleRegistrationConsentComponent
+        GoogleRegistrationConsentComponent,
+        AuthShellComponent
     ],
     templateUrl: './login.component.html',
     styleUrl: './login.component.scss'
@@ -35,7 +37,7 @@ export class LoginComponent {
   protected readonly brand = injectSiteBrand();
     private readonly hostname = inject(DOCUMENT).location?.hostname;
     /** Redesign 18.11.2026: the page text follows the address; localhost and test hosts show the student page. */
-    protected readonly page = LOGIN_PAGES[siteForHost(this.hostname) ?? 'student'];
+    protected readonly page = AUTH_PAGES[siteForHost(this.hostname) ?? 'student'];
     protected readonly otherSiteHref = this.page.other ? siteHref(this.page.other.site, '/auth/login', this.hostname) : null;
     private authService = inject(AuthService);
     private router = inject(Router);

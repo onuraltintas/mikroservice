@@ -2,30 +2,24 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 import { getErrorMessage } from '../../../core/utils/error-message';
 import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 
+import { RegistrationShellComponent } from '../registration-shell.component';
+
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [PasswordRequirementsComponent, 
+  imports: [PasswordRequirementsComponent, RegistrationShellComponent,
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatIconModule
   ],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.scss'

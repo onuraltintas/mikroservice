@@ -2,14 +2,13 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { injectAuthCopy } from '../auth-voice';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../../core/validators/password.validator';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
+import { PasswordRequirementsComponent } from '../../../shared/components/password-requirements/password-requirements.component';
 import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
@@ -19,9 +18,8 @@ import { injectSiteBrand } from '../../../core/brand/site-brand';
         CommonModule,
         FormsModule,
         RouterModule,
-        MatIconModule,
-        MatButtonModule,
-        MatProgressSpinnerModule
+        AuthShellComponent,
+        PasswordRequirementsComponent
     ],
     templateUrl: './reset-password.component.html',
     styleUrl: './reset-password.component.scss'

@@ -18,24 +18,32 @@ const REQUIRED_SLUGS: Record<RegistrationProduct, string[]> = {
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <section class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950" aria-label="Yasal metinler ve kayıt onayları">
-      <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Yasal metinler</h2>
+    <section class="legal" aria-label="Yasal metinler ve kayıt onayları">
+      <h2 class="legal__title">Yasal metinler</h2>
       @if (loading()) {
-        <p class="text-sm text-slate-600 dark:text-slate-300" role="status">Güncel yasal metinler yükleniyor…</p>
+        <p class="legal__note" role="status">Güncel yasal metinler yükleniyor…</p>
       } @else if (error()) {
-        <p class="text-sm text-amber-900 dark:text-amber-200" role="alert">{{ error() }} Kayıt, yayımlanmış güncel metinler olmadan tamamlanamaz.</p>
+        <p class="ds-alert ds-alert--warning" role="alert">{{ error() }} Kayıt, yayımlanmış güncel metinler olmadan tamamlanamaz.</p>
       } @else {
         @for (page of pages(); track page.slug) {
-          <label class="flex items-start gap-3 text-sm leading-6 text-slate-700 dark:text-slate-200">
-            <input class="mt-1" type="checkbox" [checked]="isSelected(page.slug)" (change)="setSelected(page, $any($event.target).checked)" />
-            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">{{ page.title }}</a>
+          <label class="legal__item">
+            <input type="checkbox" [checked]="isSelected(page.slug)" (change)="setSelected(page, $any($event.target).checked)" />
+            <span><a [routerLink]="['/legal', page.slug]" target="_blank" rel="noopener noreferrer" class="ds-link">{{ page.title }}</a>
               {{ isTerms(page.slug) ? 'koşullarını kabul ediyorum.' : 'metnini okudum ve bilgilendirildim.' }}</span>
           </label>
         }
-        <p class="text-xs leading-5 text-slate-500" data-testid="legal-consent-note">{{ copy.legalNote }}</p>
+        <p class="legal__note" data-testid="legal-consent-note">{{ copy.legalNote }}</p>
       }
     </section>
-  `
+  `,
+  styles: [`
+    .legal { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius-control); background: var(--ds-bg); }
+    .legal__title { margin: 0; color: var(--ds-text); font-size: 15px; font-weight: 600; }
+    .legal__item { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; color: var(--ds-text); font-size: 15px; line-height: 1.5; cursor: pointer; }
+    .legal__item input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ds-primary); }
+    .legal__note { margin: 0; color: var(--ds-muted); font-size: 13px; line-height: 1.5; }
+    .ds-alert { margin: 0; }
+  `]
 })
 export class RegistrationLegalConsentComponent implements OnInit {
   private readonly identity = inject(IdentityService);

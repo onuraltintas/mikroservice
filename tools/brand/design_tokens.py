@@ -86,6 +86,32 @@ out.append('''// Eski bileşenler (--ui-*) marka kapsamı içinde yeni renkleri 
   --ui-success-soft: var(--ds-success-soft);
   --ui-font-body: var(--ds-font);
   --ui-font-display: var(--ds-font);
+  // Angular Material bileşenleri (form alanları, menüler, onay kutuları) aynı kimliği kullanır.
+  --mat-sys-primary: var(--ds-primary);
+  --mat-sys-on-primary: var(--ds-on-primary);
+  --mat-sys-primary-container: var(--ds-soft);
+  --mat-sys-on-primary-container: var(--ds-text);
+  --mat-sys-surface: var(--ds-surface);
+  --mat-sys-surface-container-lowest: var(--ds-surface);
+  --mat-sys-surface-container-low: var(--ds-surface);
+  --mat-sys-surface-container: var(--ds-surface);
+  --mat-sys-surface-container-high: var(--ds-surface);
+  --mat-sys-surface-container-highest: var(--ds-bg);
+  --mat-sys-on-surface: var(--ds-text);
+  --mat-sys-on-surface-variant: var(--ds-muted);
+  --mat-sys-outline: var(--ds-field);
+  --mat-sys-outline-variant: var(--ds-line);
+  --mat-sys-error: var(--ds-danger);
+  --mat-sys-body-large-font: var(--ds-font);
+  --mat-sys-body-medium-font: var(--ds-font);
+  --mat-sys-body-small-font: var(--ds-font);
+  --mat-sys-label-large-font: var(--ds-font);
+  --mat-sys-label-medium-font: var(--ds-font);
+  --mat-sys-label-small-font: var(--ds-font);
+  --mat-sys-title-medium-font: var(--ds-font);
+  --mat-form-field-outlined-container-shape: var(--ds-radius-control);
+  --mat-form-field-container-text-font: var(--ds-font);
+  --mat-form-field-outlined-label-text-font: var(--ds-font);
   font-family: var(--ds-font);
   color: var(--ds-text);
 }

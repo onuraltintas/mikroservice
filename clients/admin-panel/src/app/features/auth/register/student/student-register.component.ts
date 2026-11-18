@@ -11,11 +11,8 @@ import { getApiErrorMessage } from '../../../../core/http/api-error-message';
 import { AUTH_VOICE } from '../../auth-voice';
 import { PasswordRequirementsComponent } from '../../../../shared/components/password-requirements/password-requirements.component';
 
-import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment';
 import { SiteAnalyticsService } from '../../../../core/services/site-analytics.service';
@@ -24,6 +21,7 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
+import { AuthShellComponent } from '../../auth-shell/auth-shell.component';
 import { RegistrationSuccessComponent } from '../registration-success.component';
 import { RegistrationSuccessCopy, grantedNewProductAccess, readVerificationEmailOutcome, registrationSuccessCopy } from '../registration-outcome';
 
@@ -33,8 +31,8 @@ import { RegistrationSuccessCopy, grantedNewProductAccess, readVerificationEmail
     imports: [
         ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
-        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-        GoogleSigninButtonModule, RegistrationLegalConsentComponent, PasswordRequirementsComponent, RegistrationSuccessComponent
+        MatInputModule, MatIconModule,
+        GoogleSigninButtonModule, RegistrationLegalConsentComponent, PasswordRequirementsComponent, RegistrationSuccessComponent, AuthShellComponent
     ],
     templateUrl: './student-register.component.html'
 })

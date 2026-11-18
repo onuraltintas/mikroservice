@@ -13,7 +13,8 @@ type RegistrationAccount = 'student' | 'teacher' | 'institution';
 })
 export class RegistrationShellComponent {
   @Input() account: RegistrationAccount = 'student';
-  @Input() mode: 'register' | 'login' = 'register';
+  /** 'page': şifre, doğrulama ve davet sayfaları; başlığı sayfanın kendisi yazar. */
+  @Input() mode: 'register' | 'login' | 'page' = 'register';
   readonly accounts = [
     { value: 'student', label: 'Öğrenci', icon: 'menu_book', route: '/auth/register' },
     { value: 'teacher', label: 'Öğretmen', icon: 'school', route: '/auth/register-teacher' },
@@ -46,5 +47,5 @@ export class RegistrationShellComponent {
       benefits: ['Kurum üyelerini yönetme', 'Öğrenci gelişimini takip etme', 'Öğretmenlerle birlikte çalışma']
     }
   };
-  get copy() { return this.content[this.mode === 'login' ? 'login' : this.account]; }
+  get copy() { return this.content[this.mode === 'register' ? this.account : 'login']; }
 }

@@ -3,7 +3,7 @@
 
 
     <mat-card-content>
-      <div class="existing-account"><p>Zaten Koçluk hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+      <div class="existing-account"><p>maxkoç ya da başka bir eduivme hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
         {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
       </button></div>
       @if (joinExisting) { <app-existing-product-join product="speed-reading" account="student" /> }
@@ -85,27 +85,21 @@
         }
 
         <!-- Actions -->
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading || registerForm.invalid || !hasRequiredLegalAcceptances"
-          class="submit-btn full-width">
+        <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="loading || registerForm.invalid || !hasRequiredLegalAcceptances">
           @if (loading) {
-          <mat-spinner diameter="24"></mat-spinner>
+          <span class="ds-spinner" aria-hidden="true"></span>
           } @else {
           <span class="btn-content">
             Öğrenci hesabını oluştur
-            <mat-icon>arrow_forward</mat-icon>
           </span>
           }
         </button>
 
         <div class="divider">
-          <span>veya</span>
+          <span>ya da</span>
         </div>
 
         <div id="google-signup-button" class="google-btn-wrapper"></div>
-
-        <div class="login-redirect">
-          Hesabın var mı? <a routerLink="/auth/login">Giriş Yap</a>
-        </div>
 
       </form>
     </mat-card-content>

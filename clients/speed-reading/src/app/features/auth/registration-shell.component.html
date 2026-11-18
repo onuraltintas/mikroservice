@@ -25,10 +25,12 @@
         <img src="brand/master-hizli-okuma.svg" alt="" width="44" height="44">
         <span><span class="ds-auth__brand-name">Master Hızlı Okuma</span><span class="ds-auth__brand-note">bir eduivme markası</span></span>
       </a>
+      @if (mode !== 'page') {
       <header class="ds-auth__heading">
         <h1 class="ds-auth__title">{{ copy.title }}</h1>
         <p class="ds-auth__lead">{{ copy.description }}</p>
       </header>
+      }
       @if (mode === 'register') {
         <nav class="account-navigation" aria-label="Kayıt türü">
           @for (option of accounts; track option.value) {

@@ -33,7 +33,6 @@ import { RegistrationVerifiedComponent } from '../registration-verified.componen
     RegistrationShellComponent,
     CommonModule,
     ReactiveFormsModule,
-    RouterLink,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,

@@ -12,8 +12,11 @@ test('no invented testimonial or third-party portrait on the sign-in and registr
     'features/auth/register/institution/institution-register.component.html']) {
     const html = await read(app + page);
     assert.doesNotMatch(html, /pravatar|Ayşe Yılmaz|Zeynep Yılmaz|Emel Hanım|Mehmet Hoca|Atlas Okulları|%40 arttı|%60 azaldı|Binlerce ders/, page);
-    assert.match(html, /data-testid="(register|login)-features"/, page);
+    // Redesign 18.11.2026: the feature list lives in the shared auth-shell; each page names its test hook.
+    assert.match(html, /<app-auth-shell[^>]*>/, page);
+    if (page.includes('/register/')) assert.match(html, /featuresTestId="register-features"/, page);
   }
+  assert.match(await read(app + 'features/auth/auth-shell/auth-shell.component.html'), /\[attr\.data-testid\]="featuresTestId\(\)"/);
 });
 
 test('an institution teacher cannot invite a student outside the institution, and the student sees who invites', async () => {
