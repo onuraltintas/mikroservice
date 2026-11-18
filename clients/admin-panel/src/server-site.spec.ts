@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { CachedFetcher, buildRobots, buildSitemap, cmsPreviewTarget, enrichHead, publicOrigin } from './server-site';
+import { CachedFetcher, applyBrand, brandForHost, buildRobots, buildSitemap, cmsPreviewTarget, enrichHead, publicOrigin } from './server-site';
 
 const allowed = ['eduivme.com', 'maxkoc.com', 'localhost'];
 
@@ -73,5 +73,22 @@ describe('server site helpers (O11)', () => {
     expect(await failing.json('http://api/sitemap')).toBeNull();
     const notFound = new CachedFetcher(60_000, 1000, (async () => new Response('{}', { status: 404 })) as unknown as typeof fetch);
     expect(await notFound.json('http://api/x')).toBeNull();
+  });
+
+  it('gives maxkoç addresses their own icons and preview defaults, every other address eduivme', () => {
+    expect(brandForHost('maxkoc.com')).toBe('maxkoc');
+    expect(brandForHost('veli.maxkoc.com:443')).toBe('maxkoc');
+    expect(brandForHost('ogretmen.eduivme.com')).toBe('eduivme');
+    expect(brandForHost('localhost:4000')).toBe('eduivme');
+    const shell = '<head><title>eduivme</title><meta property="og:site_name" content="eduivme"><meta property="og:image" content="/brand/og-eduivme.png">'
+      + '<link rel="icon" type="image/svg+xml" href="brand/eduivme.svg"><link rel="icon" href="brand/eduivme.ico" sizes="32x32"><link rel="apple-touch-icon" href="brand/eduivme-180.png"></head>';
+    expect(applyBrand(shell, 'eduivme')).toBe(shell);
+    const maxkoc = applyBrand(shell, 'maxkoc');
+    expect(maxkoc).toContain('href="brand/maxkoc.svg"');
+    expect(maxkoc).toContain('href="brand/maxkoc.ico"');
+    expect(maxkoc).toContain('href="brand/maxkoc-180.png"');
+    expect(maxkoc).toContain('content="/brand/og-maxkoc.png"');
+    expect(maxkoc).toContain('<title>maxkoç</title>');
+    expect(maxkoc).not.toContain('eduivme');
   });
 });

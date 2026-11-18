@@ -12,6 +12,27 @@ const GA_ID_PATTERN = /^G-[A-Z0-9]{4,15}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const STATIC_PATHS = ['/coaching', '/coaching/faq', '/coaching/blog', '/coaching/newsletter'];
 // Alan adı planı (18.11.2026): the public Coaching pages live on maxkoc.com.
+/** Brand decision 18.11.2026: maxkoç is the Koçluk product (students and parents); every other address is eduivme. */
+export type SiteBrand = 'maxkoc' | 'eduivme';
+export const SITE_BRAND_NAME: Readonly<Record<SiteBrand, string>> = { maxkoc: 'maxkoç', eduivme: 'eduivme' };
+
+export function brandForHost(host: string | undefined): SiteBrand {
+  const site = siteForHost((host ?? '').split(':')[0]);
+  return site === 'student' || site === 'parent' ? 'maxkoc' : 'eduivme';
+}
+
+/** The shell carries the eduivme icons and preview defaults; a maxkoç address gets its own. */
+export function applyBrand(html: string, brand: SiteBrand): string {
+  if (brand === 'eduivme') return html;
+  return html
+    .replace(/(href=")\/?brand\/eduivme(\.svg|\.ico|-180\.png)"/g, '$1brand/maxkoc$2"')
+    .replace('<meta property="og:image" content="/brand/og-eduivme.png">', '<meta property="og:image" content="/brand/og-maxkoc.png">')
+    .replace('<meta property="og:site_name" content="eduivme">', '<meta property="og:site_name" content="maxkoç">')
+    .replace('<meta property="og:title" content="eduivme">', '<meta property="og:title" content="maxkoç">')
+    .replace('<meta name="theme-color" content="#1C2430">', '<meta name="theme-color" content="#1F4E8C">')
+    .replace('<title>eduivme</title>', '<title>maxkoç</title>');
+}
+
 export const DEFAULT_PUBLIC_ORIGIN = 'https://maxkoc.com';
 
 /** https origin of a request host the server accepts; anything else falls back to the main site. */
@@ -62,7 +83,8 @@ export function cmsPreviewTarget(path: string): { kind: 'blog' | 'pages'; slug: 
  * Adds to the HTML head: the GA4 measurement id the browser reads (only a valid id), and the Open Graph / Twitter tags
  * of a CMS page or post replacing the site-wide defaults. Everything is escaped.
  */
-export function enrichHead(html: string, options: { gaMeasurementId?: string | null; preview?: SocialPreview | null }): string {
+export function enrichHead(html: string, options: { gaMeasurementId?: string | null; preview?: SocialPreview | null; brand?: SiteBrand }): string {
+  html = applyBrand(html, options.brand ?? 'eduivme');
   let head = '';
   const ga = options.gaMeasurementId?.trim() ?? '';
   if (GA_ID_PATTERN.test(ga)) head += `<meta name="eduivme-ga4-id" content="${ga}">`;
@@ -74,7 +96,7 @@ export function enrichHead(html: string, options: { gaMeasurementId?: string | n
     const tags: [string, string, string | null][] = [
       ['name', 'description', preview.description], ['property', 'og:type', preview.type], ['property', 'og:title', preview.title],
       ['property', 'og:description', preview.description], ['property', 'og:url', preview.url], ['property', 'og:image', preview.image],
-      ['property', 'og:site_name', 'Eduİvme Koçluk'], ['property', 'og:locale', 'tr_TR'], ['name', 'twitter:card', 'summary_large_image'],
+      ['property', 'og:site_name', SITE_BRAND_NAME[options.brand ?? 'eduivme']], ['property', 'og:locale', 'tr_TR'], ['name', 'twitter:card', 'summary_large_image'],
       ['name', 'twitter:title', preview.title], ['name', 'twitter:description', preview.description], ['name', 'twitter:image', preview.image]
     ];
     for (const [attribute, key, value] of tags) if (value) head += `<meta ${attribute}="${key}" content="${escapeHtml(value)}">`;

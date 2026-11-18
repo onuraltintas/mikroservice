@@ -59,6 +59,6 @@ export class HomeComponent implements OnInit {
             url: window.location.href,
             type: 'website'
         });
-        this.seoService.generateStructuredData('Organization', { name: 'ONAL Yazılım ve Otomasyon' });
+        this.seoService.generateStructuredData('Organization', { name: 'eduivme' });
     }
 }

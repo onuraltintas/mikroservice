@@ -13,9 +13,9 @@ export interface SiteSeo {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[] | null;
 }
 
-export const SITE_NAME = 'Eduİvme Koçluk';
+export const SITE_NAME = 'maxkoç';
 export const DEFAULT_SITE_DESCRIPTION = 'Öğrenci, öğretmen ve kurumlar için koçluk platformu: hedefler, çalışma planları, deneme takibi ve ilerleme raporları tek yerde.';
-export const DEFAULT_SITE_IMAGE = '/og-coaching.png';
+export const DEFAULT_SITE_IMAGE = '/brand/og-maxkoc.png';
 
 /**
  * Roadmap O11: title, description, social previews (Open Graph and Twitter), canonical link and structured data for

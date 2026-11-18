@@ -8,8 +8,8 @@
   }
   <button *ngIf="menuOpen()" class="coaching-scrim" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"></button>
   <aside id="coaching-navigation" class="coaching-sidebar" [cdkTrapFocus]="menuOpen()" [cdkTrapFocusAutoCapture]="menuOpen()" [attr.role]="menuOpen() ? 'dialog' : null" [attr.aria-modal]="menuOpen() ? true : null" [attr.aria-label]="isParent() ? 'Veli paneli' : 'Öğrenci çalışma alanı'">
-    <a [routerLink]="isParent() ? '/coaching-portal/parent' : '/coaching-portal'" class="coaching-brand" [attr.aria-label]="isParent() ? 'eduivme Veli paneli ana sayfa' : 'eduivme Öğrenci Koçluğu ana sayfa'" (click)="closeMenu()">
-      <span class="brand-symbol">E<span></span></span><span><strong>eduivme<span>.</span></strong><small>{{ isParent() ? 'Veli paneli' : 'Öğrenci Koçluğu' }}</small></span>
+    <a [routerLink]="isParent() ? '/coaching-portal/parent' : '/coaching-portal'" class="coaching-brand" [attr.aria-label]="isParent() ? 'maxkoç Veli paneli ana sayfa' : 'maxkoç Öğrenci Koçluğu ana sayfa'" (click)="closeMenu()">
+      <img class="brand-symbol" src="brand/maxkoc.svg" alt="" width="42" height="42"><span><strong>maxkoç</strong><small>{{ isParent() ? 'Veli paneli' : 'Öğrenci Koçluğu' }}</small></span>
     </a>
     <button class="coaching-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"><app-coaching-icon name="close" /></button>
     <nav aria-label="Veli menüsü" class="coaching-navigation" *ngIf="isParent()">

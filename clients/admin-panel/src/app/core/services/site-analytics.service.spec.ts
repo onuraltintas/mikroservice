@@ -88,7 +88,7 @@ describe('SiteSeoService (O11)', () => {
     expect(document.title).toBe('LGS rehberi | Eduİvme Koçluk');
     expect(document.querySelector('meta[property="og:type"]')?.getAttribute('content')).toBe('article');
     expect(document.querySelector('meta[property="og:url"]')?.getAttribute('content')).toMatch(/\/coaching\/blog\/lgs$/);
-    expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toMatch(/\/og-coaching\.png$/);
+    expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toMatch(/\/brand\/og-maxkoc\.png$/);
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toMatch(/\/coaching\/blog\/lgs$/);
     const script = document.getElementById('site-jsonld')!;
     expect(script.textContent).not.toContain('</script>');

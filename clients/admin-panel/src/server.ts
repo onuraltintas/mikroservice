@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import { googleAuthOpenerPolicy, resolveServerAllowedHosts, serverTrustProxyHeaders } from './server-config';
-import { CachedFetcher, SitemapEntry, SocialPreview, buildRobots, buildSitemap, cmsPreviewTarget, enrichHead, publicOrigin } from './server-site';
+import { CachedFetcher, SITE_BRAND_NAME, SitemapEntry, SocialPreview, brandForHost, buildRobots, buildSitemap, cmsPreviewTarget, enrichHead, publicOrigin } from './server-site';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -31,6 +31,13 @@ const gaMeasurementId = process.env['GA4_MEASUREMENT_ID'] ?? '';
 const sitemapFetcher = new CachedFetcher(60 * 60 * 1000, 3000);
 const previewFetcher = new CachedFetcher(10 * 60 * 1000, 1500);
 const requestOrigin = (req: express.Request) => publicOrigin(req.get('x-forwarded-host') ?? req.get('host'), allowedHosts);
+const requestBrand = (req: express.Request) => brandForHost(req.get('x-forwarded-host') ?? req.get('host'));
+
+// Browsers ask every address for /favicon.ico: maxkoç addresses answer with the maxkoç icon, the others with eduivme's.
+app.get('/favicon.ico', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(join(browserDistFolder, 'brand', `${requestBrand(req)}.ico`));
+});
 
 app.get('/robots.txt', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -50,8 +57,9 @@ async function socialPreview(req: express.Request): Promise<SocialPreview | null
     seoDescription?: string | null; coverImageUrl?: string | null }>(`${siteApiOrigin}/api/coaching/cms/${target.kind}/${target.slug}`);
   if (!entry) return null;
   const origin = requestOrigin(req);
-  const image = entry.coverImageUrl && /^\/api\/coaching\/cms\/media\/[0-9a-f-]{36}$/i.test(entry.coverImageUrl) ? `${origin}${entry.coverImageUrl}` : `${origin}/og-coaching.png`;
-  return { title: entry.seoTitle || `${entry.title} | Eduİvme Koçluk`, description: entry.seoDescription || entry.summary || null,
+  const brand = requestBrand(req);
+  const image = entry.coverImageUrl && /^\/api\/coaching\/cms\/media\/[0-9a-f-]{36}$/i.test(entry.coverImageUrl) ? `${origin}${entry.coverImageUrl}` : `${origin}/brand/og-${brand}.png`;
+  return { title: entry.seoTitle || `${entry.title} | ${SITE_BRAND_NAME[brand]}`, description: entry.seoDescription || entry.summary || null,
     url: `${origin}/coaching/${target.kind}/${target.slug}`, image, type: target.kind === 'blog' ? 'article' : 'website' };
 }
 
@@ -97,10 +105,10 @@ app.use((req, res, next) => {
       // Live test 16.11.2026 (#46): an address no route was prepared for answered "Cannot GET …" on a white page. The
       // application's own shell is sent instead (status 404); in the browser its router shows the "sayfa bulunamadı" page.
       if (!response) return res.status(404).sendFile(join(browserDistFolder, 'index.csr.html'), { headers: { 'Cache-Control': 'no-store' } }, error => { if (error) next(); });
-      if (!(response.headers.get('content-type') ?? '').includes('text/html') || (!gaMeasurementId && !cmsPreviewTarget(req.path))) {
+      if (!(response.headers.get('content-type') ?? '').includes('text/html')) {
         return writeResponseToNodeResponse(response, res);
       }
-      const html = enrichHead(await response.text(), { gaMeasurementId, preview: await socialPreview(req) });
+      const html = enrichHead(await response.text(), { gaMeasurementId, preview: await socialPreview(req), brand: requestBrand(req) });
       const headers = new Headers(response.headers);
       headers.delete('content-length');
       return writeResponseToNodeResponse(new Response(html, { status: response.status, statusText: response.statusText, headers }), res);
