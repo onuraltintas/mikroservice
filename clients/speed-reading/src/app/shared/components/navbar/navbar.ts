@@ -31,9 +31,9 @@ export class NavbarComponent implements OnInit {
   private languageService = inject(LanguageService);
   private readonly auth = inject(AuthService);
   /**
-   * Live test #58 (user decision 17.11.2026): a signed-in visitor is offered their panel instead of "Giriş Yap".
+   * Live test #58 (user decision 17.11.2026): a signed-in visitor is offered their panel instead of "Giriş yap".
    * 18.11.2026: the offer follows the session (the stored user), not the short-lived access token. On a page left
-   * open longer than the token lives the button used to fall back to "Giriş Yap"; the panel's guard renews the token.
+   * open longer than the token lives the button used to fall back to "Giriş yap"; the panel's guard renews the token.
    */
   get panelLink(): string | null {
     if (!this.auth.currentUserValue) return null;

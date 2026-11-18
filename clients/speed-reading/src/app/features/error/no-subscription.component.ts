@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="ns-icon">
           <span class="material-icons">workspace_premium</span>
         </div>
-        <h1 class="ns-title">Abonelik Gerekli</h1>
+        <h1 class="ns-title">Abonelik gerekli</h1>
         <p class="ns-desc">
           Hızlı Okuma'yı kullanmak için etkin bir aboneliğin olmalı.
           Planlara göz atıp hemen başlayabilirsin.
@@ -24,7 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
           </a>
           <button class="ns-btn ns-btn--outline" (click)="logout()">
             <span class="material-icons">logout</span>
-            Çıkış Yap
+            Çıkış yap
           </button>
         </div>
         <p class="ns-footer">

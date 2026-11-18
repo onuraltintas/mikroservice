@@ -14,7 +14,7 @@
         <p>{{ error }}</p>
         <button class="ep-btn ep-btn--primary" (click)="goBack()">
             <span class="material-icons">arrow_back</span>
-            Geri Dön
+            Geri dön
         </button>
     </div>
 
@@ -581,7 +581,7 @@
         </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency' && engine.engineType !== 'skimming'">
             <span class="material-icons">menu_book</span>
-            <span>Metni kendi hızında oku. Okuma bitince "{{ isFreeReadingPractice() ? 'Okumayı Bitir' : 'Okudum' }}" düğmesine bas.</span>
+            <span>Metni kendi hızında oku. Okuma bitince "{{ isFreeReadingPractice() ? 'Okumayı bitir' : 'Okudum' }}" düğmesine bas.</span>
         </div>
         <div class="reading-instruction free-reading-guidance" *ngIf="isFreeReadingPractice() && !engineState.isPaused">
             <span class="material-icons">info</span>
@@ -624,7 +624,7 @@
 
             <button class="complete-reading-btn" (click)="completeReading()" [disabled]="!canCompleteReading()">
                 <span class="material-icons">done</span>
-                {{ engine.engineType === 'skimming' ? 'İncelemeyi bitir, Sorulara geç' : comprehensionQuestions.length ? 'Okudum, Sorulara Geç' : 'Okumayı Bitir' }}
+                {{ engine.engineType === 'skimming' ? 'İncelemeyi bitir, Sorulara geç' : comprehensionQuestions.length ? 'Okudum, Sorulara Geç' : 'Okumayı bitir' }}
             </button>
         </div>
     </div>
@@ -1013,11 +1013,11 @@
                 Cevabı Gönder
             </button>
 
-            <!-- Sonraki Soru butonu - feedback varken -->
+            <!-- Sonraki soru butonu - feedback varken -->
             <button class="ep-btn ep-btn--primary" color="accent" class="next-question-btn" *ngIf="questionFeedback"
                 (click)="goToNextRegressionQuestion()">
                 <span class="material-icons">arrow_forward</span>
-                Sonraki Soru
+                Sonraki soru
             </button>
         </div>
     </div>
@@ -1101,7 +1101,7 @@
             <button class="btn-primary" [class.question-action-pending]="!questionFeedback"
                 [disabled]="!questionFeedback" (click)="nextQuestion()">
                 <span class="material-icons">{{ isLastQuestion() ? 'done_all' : 'arrow_forward' }}</span>
-                {{ isLastQuestion() ? 'Sonuçları Gör' : 'Sonraki Soru' }}
+                {{ isLastQuestion() ? 'Sonuçları Gör' : 'Sonraki soru' }}
             </button>
         </div>
     </div>
@@ -1253,7 +1253,7 @@
             <!-- Next Button -->
             <button class="ep-btn ep-btn--primary next-question-btn" *ngIf="isSubvocShowingFeedback()"
                 [disabled]="questionSubmissionPending || engineState.isPaused" (click)="nextSubvocQuestion()">
-                <span>{{ (getSubvocCurrentQuestionIndex() + 1) >= getSubvocQuestionCount() ? 'Tamamla' : 'Sonraki Soru'
+                <span>{{ (getSubvocCurrentQuestionIndex() + 1) >= getSubvocQuestionCount() ? 'Tamamla' : 'Sonraki soru'
                     }}</span>
                 <span class="material-icons">arrow_forward</span>
             </button>
@@ -1405,7 +1405,7 @@
             <button class="ep-btn ep-btn--primary next-question-btn" *ngIf="isVisualizationShowingFeedback()"
                 [disabled]="isVisualizationAnswerPending() || engineState.isPaused" (click)="nextVisualizationQuestion()">
                 <span>{{ getVisualizationQuestionProgress().current >= getVisualizationQuestionProgress().total ?
-                    'Sonraki Sahne' : 'Sonraki Soru' }}</span>
+                    'Sonraki Sahne' : 'Sonraki soru' }}</span>
                 <span class="material-icons">arrow_forward</span>
             </button>
 
@@ -1665,7 +1665,7 @@
                     </div>
 
                     <div class="answer-reveal" *ngIf="!isVocabAnswerCorrect()">
-                        <p>Doğru Cevap: <strong>{{ getVocabCorrectAnswer() }}</strong></p>
+                        <p>Doğru cevap: <strong>{{ getVocabCorrectAnswer() }}</strong></p>
                         <p class="correct-definition">{{ getVocabCurrentWord().definition }}</p>
                     </div>
 
@@ -1963,14 +1963,14 @@
                     <span class="material-icons">quiz</span>
                     <div class="result-value">{{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions
                         }}</div>
-                    <div class="result-label">Doğru Cevap</div>
+                    <div class="result-label">Doğru cevap</div>
                 </div>
 
                 <!-- Total Time -->
                 <div class="result-box time-box">
                     <span class="material-icons">schedule</span>
                     <div class="result-value">{{ formatTimeFromSeconds(result?.details?.totalTimeSpent) }}</div>
-                    <div class="result-label">Toplam Süre</div>
+                    <div class="result-label">Toplam süre</div>
                 </div>
 
 
@@ -2065,14 +2065,14 @@
                     <span class="material-icons">quiz</span>
                     <div class="result-value">{{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions
                         }}</div>
-                    <div class="result-label">Doğru Cevap</div>
+                    <div class="result-label">Doğru cevap</div>
                 </div>
 
                 <!-- Total Time (Exam Simulation) -->
                 <div class="result-box time-box" *ngIf="result?.details?.totalTimeSpent !== undefined">
                     <span class="material-icons">schedule</span>
                     <div class="result-value">{{ result?.details?.totalTimeSpent | number:'1.0-1' }} sn</div>
-                    <div class="result-label">{{ engine?.engineType === 'reading_comprehension' ? 'Soruları yanıtlama süresi' : 'Toplam Süre' }}</div>
+                    <div class="result-label">{{ engine?.engineType === 'reading_comprehension' ? 'Soruları yanıtlama süresi' : 'Toplam süre' }}</div>
                 </div>
 
                 <div class="result-box time-box" *ngIf="engine?.engineType === 'reading_comprehension'">
@@ -2195,7 +2195,7 @@
                 </button>
                 <button class="btn-secondary" (click)="resetExercise()" *ngIf="!isAssessmentMode">
                     <span class="material-icons">refresh</span>
-                    Tekrar Dene
+                    Tekrar dene
                 </button>
             </div>
         </div>
@@ -2214,7 +2214,7 @@
                 </button>
                 <button class="btn-exit" (click)="confirmExit()" [disabled]="isDiscardingSession">
                     <span class="material-icons">exit_to_app</span>
-                    {{ isDiscardingSession ? 'Siliniyor…' : 'Çıkış Yap' }}
+                    {{ isDiscardingSession ? 'Siliniyor…' : 'Çıkış yap' }}
                 </button>
             </div>
         </div>

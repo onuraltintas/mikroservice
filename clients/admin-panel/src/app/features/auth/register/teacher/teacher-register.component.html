@@ -76,7 +76,7 @@
                     <app-password-requirements class="ds-field__rules" [password]="form.get('password')?.value" describedById="password-rules" />
 
                     <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Şifreyi Onayla</mat-label>
+                        <mat-label>Şifreyi onayla</mat-label>
                         <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="confirmPassword">
                         <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" aria-label="Parolayı tekrar göster veya gizle">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>

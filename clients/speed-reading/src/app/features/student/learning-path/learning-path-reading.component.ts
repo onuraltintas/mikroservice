@@ -38,7 +38,7 @@ interface ReadingStart {
         <h1>{{ reading.title }}</h1>
         @if (stage === 'text') {
           <article class="reading-text">{{ reading.content }}</article>
-          <button class="primary" (click)="finishReading()">Okumayı Bitir, Sorulara Geç</button>
+          <button class="primary" (click)="finishReading()">Okumayı bitir, Sorulara Geç</button>
         } @else if (stage === 'questions') {
           <p>Metni okudun. Şimdi soruları yanıtla.</p>
           @for (question of reading.questions; track question.id; let i = $index) {

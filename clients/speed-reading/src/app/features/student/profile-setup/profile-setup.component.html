@@ -16,7 +16,7 @@
           1
         }
       </div>
-      <span class="ps-step__label">Kişisel Bilgiler</span>
+      <span class="ps-step__label">Kişisel bilgiler</span>
     </div>
 
     <div class="ps-step__line" [class.ps-step__line--done]="currentStep() > 1"></div>
@@ -43,7 +43,7 @@
   <!-- ── Kart ─────────────────────────────────────────────────────────── -->
   <div class="ps-card">
 
-    <!-- ── Adım 1: Kişisel Bilgiler ─────────────────────────────────── -->
+    <!-- ── Adım 1: Kişisel bilgiler ─────────────────────────────────── -->
     @if (currentStep() === 1) {
       <form [formGroup]="basicInfoForm" class="ps-step-content" novalidate>
 
@@ -77,7 +77,7 @@
             <div class="ps-info-card">
               <span class="material-icons ps-info-card__icon">groups</span>
               <div>
-                <span class="ps-info-card__label">Yaş Grubu</span>
+                <span class="ps-info-card__label">Yaş grubu</span>
                 <span class="ps-info-card__value">{{ getAgeGroupText(calculatedAgeGroup) }}</span>
               </div>
               <span class="ps-info-card__check material-icons">check_circle</span>
@@ -176,10 +176,10 @@
           <div class="ps-summary-card">
             <div class="ps-summary-card__header">
               <span class="material-icons">person</span>
-              <h3>Kişisel Bilgiler</h3>
+              <h3>Kişisel bilgiler</h3>
             </div>
             <div class="ps-summary-row">
-              <span>Yaş Grubu</span>
+              <span>Yaş grubu</span>
               <span>{{ getAgeGroupText(calculatedAgeGroup) }}</span>
             </div>
           </div>
@@ -198,7 +198,7 @@
               <span class="ps-summary-row__hl">%{{ goalsForm.value.targetComprehension }}</span>
             </div>
             <div class="ps-summary-row">
-              <span>Günlük Hedef</span>
+              <span>Günlük hedef</span>
               <span class="ps-summary-row__hl">{{ goalsForm.value.dailyGoalMinutes }} dk</span>
             </div>
           </div>

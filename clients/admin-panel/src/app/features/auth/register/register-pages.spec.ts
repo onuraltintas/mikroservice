@@ -61,7 +61,7 @@ describe('sign-up pages', () => {
       const login = [...el.querySelectorAll('a[href="/auth/login"]')];
       expect(login).toHaveLength(1);
       expect(login[0].textContent?.trim()).toBe('Giriş yap');
-      // "Geri Dön" and ✕ still lead back to role selection.
+      // "Geri dön" and ✕ still lead back to role selection.
       expect(el.querySelector('a[href="/auth/register"]')).not.toBeNull();
     });
   }

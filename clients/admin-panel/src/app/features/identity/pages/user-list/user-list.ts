@@ -95,7 +95,7 @@ export class UserListComponent {
   ];
 
   roleOptions = signal<{ value: string, label: string }[]>([
-    { value: '', label: 'Tüm Roller' },
+    { value: '', label: 'Tüm roller' },
     ...this.defaultRoles
   ]);
 
@@ -112,14 +112,14 @@ export class UserListComponent {
           this.defaultRoles.forEach(r => mergedMap.set(r.value, r));
           dynamicRoles.forEach(r => mergedMap.set(r.value, r));
 
-          this.roleOptions.set([{ value: '', label: 'Tüm Roller' }, ...Array.from(mergedMap.values())]);
+          this.roleOptions.set([{ value: '', label: 'Tüm roller' }, ...Array.from(mergedMap.values())]);
         } else {
-          this.roleOptions.set([{ value: '', label: 'Tüm Roller' }, ...this.defaultRoles]);
+          this.roleOptions.set([{ value: '', label: 'Tüm roller' }, ...this.defaultRoles]);
         }
       },
       error: (err) => {
         console.error('Failed to load roles', err);
-        this.roleOptions.set([{ value: '', label: 'Tüm Roller' }, ...this.defaultRoles]);
+        this.roleOptions.set([{ value: '', label: 'Tüm roller' }, ...this.defaultRoles]);
       }
     });
   }

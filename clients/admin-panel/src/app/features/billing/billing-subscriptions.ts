@@ -33,7 +33,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
             </label>
             <label>{{ grantsInstitution() ? 'Kurum kimliği' : 'Kullanıcı kimliği' }}
               <input [(ngModel)]="form.holderId" name="grantHolder" required placeholder="00000000-0000-0000-0000-000000000000" />
-              <span class="muted">{{ grantsInstitution() ? 'Kullanıcı İşlemleri › Kurumlar listesinde kurumun altındaki "Kimliği kopyala".' : 'Kullanıcılar listesinde kullanıcının Detay penceresindeki "Kimlik numarası".' }}</span>
+              <span class="muted">{{ grantsInstitution() ? 'Kullanıcı işlemleri › Kurumlar listesinde kurumun altındaki "Kimliği kopyala".' : 'Kullanıcılar listesinde kullanıcının Detay penceresindeki "Kimlik numarası".' }}</span>
             </label>
             <label>{{ grantsInstitution() ? 'Kurumun adı' : 'Adı ve soyadı' }}
               <input [(ngModel)]="form.displayName" name="grantName" required maxlength="200" />

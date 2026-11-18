@@ -182,7 +182,7 @@ export class AdaptiveTextService {
       'LevelMatch': 'Seviye Uyumu',
       'CategoryPreference': 'Kategori Tercihi',
       'Freshness': 'Yenilik',
-      'SuccessRate': 'Başarı Oranı',
+      'SuccessRate': 'Başarı oranı',
       'WordCount': 'Kelime Sayısı'
     };
     return translations[name] || name;
