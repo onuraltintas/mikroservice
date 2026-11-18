@@ -58,8 +58,8 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
                 .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
                 .Replace("{{LastName}}", EmailContent.Html(message.LastName))
                 .Replace("{{VerificationLink}}", verificationLink);
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
+            subject = PublicAppUrlOptions.ApplyBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplyBranding(body, message.Role, message.Product);
         }
         else
         {

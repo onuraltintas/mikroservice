@@ -49,3 +49,14 @@ export function siteStartUrl(site: EduivmeSite): string {
 export function siteHref(target: EduivmeSite, path: string, hostname: string | null | undefined): string {
   return siteForHost(hostname) === null ? path : EDUIVME_SITE_URLS[target] + path;
 }
+
+/** Brand decision 18.11.2026: maxkoç on the student and parent addresses, eduivme everywhere else (and on localhost). */
+export type SiteBrandName = 'maxkoç' | 'eduivme';
+export function brandNameForHost(hostname: string | null | undefined): SiteBrandName {
+  const site = siteForHost(hostname);
+  return site === 'student' || site === 'parent' ? 'maxkoç' : 'eduivme';
+}
+/** The brand with the Turkish dative ending: "maxkoç'a", "eduivme'ye". */
+export function brandDative(name: SiteBrandName): string {
+  return name === 'maxkoç' ? "maxkoç'a" : "eduivme'ye";
+}

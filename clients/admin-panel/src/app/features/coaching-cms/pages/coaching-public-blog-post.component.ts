@@ -35,12 +35,12 @@ export class CoachingPublicBlogPostComponent implements OnInit {
         this.post.set(post); this.error.set(null); this.loading.set(false);
         const published = post.publishedAt || post.scheduledPublishAt || post.createdAt;
         const image = this.isCoachingMediaUrl(post.coverImageUrl) ? post.coverImageUrl : null;
-        this.seo.apply({ title: post.seoTitle || `${post.title} | Eduİvme Koçluk`, description: post.seoDescription || post.summary,
+        this.seo.apply({ title: post.seoTitle || `${post.title} | maxkoç`, description: post.seoDescription || post.summary,
           path: `/coaching/blog/${post.slug}`, image, type: 'article', jsonLd: {
             '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title, description: post.seoDescription || post.summary || undefined,
             datePublished: published, dateModified: post.updatedAt || published, inLanguage: 'tr-TR',
-            author: post.author ? { '@type': 'Person', name: post.author } : { '@type': 'Organization', name: 'Eduİvme' },
-            publisher: { '@type': 'Organization', name: 'Eduİvme' }, mainEntityOfPage: this.seo.absolute(`/coaching/blog/${post.slug}`),
+            author: post.author ? { '@type': 'Person', name: post.author } : { '@type': 'Organization', name: 'eduivme' },
+            publisher: { '@type': 'Organization', name: 'eduivme' }, mainEntityOfPage: this.seo.absolute(`/coaching/blog/${post.slug}`),
             ...(image ? { image: this.seo.absolute(image) } : {}) } });
       },
       error: () => { this.post.set(null); this.error.set('Yayınlanan Koçluk yazısı bulunamadı.'); this.loading.set(false); }

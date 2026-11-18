@@ -28,7 +28,7 @@ public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
         var message = context.Message;
         
         var coaching = string.Equals(message.Product, "coaching", StringComparison.OrdinalIgnoreCase);
-        var product = coaching ? "Eduİvme Koçluk" : "Master Hızlı Okuma";
+        var product = coaching ? (message.InvitationType == "TeacherToInstitution" ? "eduivme" : "maxkoç") : "Master Hızlı Okuma";
         var subject = $"{product} daveti";
         // Inviter address and message are typed by users; the link must point at the platform.
         var link = EmailContent.Html(EmailContent.PlatformLink(
@@ -38,9 +38,9 @@ public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
         var invitation = coaching
             ? message.InvitationType switch
             {
-                "StudentToInstitution" => "seni Eduİvme Koçluk'ta kurumuna öğrenci olarak davet etti.",
-                "TeacherToInstitution" => "sizi Eduİvme Koçluk'ta kurumuna öğretmen olarak davet etti.",
-                _ => "seni Eduİvme Koçluk'ta öğrencisi olarak davet etti."
+                "StudentToInstitution" => "seni maxkoç'ta kurumuna öğrenci olarak davet etti.",
+                "TeacherToInstitution" => "sizi eduivme'de kurumuna öğretmen olarak davet etti.",
+                _ => "seni maxkoç'ta öğrencisi olarak davet etti."
             }
             : "sizi Master Hızlı Okuma çalışma alanına davet etti.";
         var body = $@"

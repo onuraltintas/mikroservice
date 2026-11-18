@@ -69,7 +69,7 @@ public sealed class CoachingCalendarSubscriptionService(CoachingDbContext db, IC
             feed.LastUsedAt = Now;
             await db.SaveChangesAsync(ct);
         }
-        return CalendarFeedFormatter.Format(sessions, "Eduİvme Koçluk");
+        return CalendarFeedFormatter.Format(sessions, "maxkoç");
     }
 
     /// <summary>

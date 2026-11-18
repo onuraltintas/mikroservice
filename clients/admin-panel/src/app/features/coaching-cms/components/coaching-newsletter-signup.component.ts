@@ -14,7 +14,7 @@ import { IdentityService } from '../../../core/services/identity.service';
   template: `
     <main class="mx-auto max-w-3xl px-4 py-10 sm:px-6" aria-labelledby="newsletter-title">
       <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-9">
-        <p class="text-xs font-bold uppercase tracking-[.14em] text-indigo-700 dark:text-indigo-300">Eduİvme · Koçluk</p>
+        <p class="text-xs font-bold uppercase tracking-[.14em] text-indigo-700 dark:text-indigo-300">maxkoç · Koçluk</p>
         <h1 id="newsletter-title" class="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Koçluk bülteni</h1>
         <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">Koçluk, hedef belirleme ve çalışma alışkanlıklarıyla ilgili duyuruları e-posta ile alın.</p>
 

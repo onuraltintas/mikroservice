@@ -51,8 +51,8 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
                 .Replace("{{Email}}", EmailContent.Html(message.Email))
                 .Replace("{{LoginLink}}", _publicAppUrlOptions.BuildLoginLink(message.Role, message.Product))
                 .Replace("http://localhost:4200/auth/login", _publicAppUrlOptions.BuildLoginLink(message.Role, message.Product));
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
+            subject = PublicAppUrlOptions.ApplyBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplyBranding(body, message.Role, message.Product);
         }
         else
         {

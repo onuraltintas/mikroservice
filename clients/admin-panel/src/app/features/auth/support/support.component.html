@@ -10,7 +10,7 @@
         class="relative z-10 w-full px-6 py-4 flex items-center justify-between border-b border-gray-200/50 dark:border-gray-800/50 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md">
         <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
             <mat-icon class="text-blue-600">school</mat-icon>
-            <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Eduİvme</span>
+            <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">{{ brand.name }}</span>
         </div>
         <a routerLink="/auth/login" mat-stroked-button color="primary" class="!rounded-full">
             Giriş Ekranına Dön
@@ -158,6 +158,6 @@
     </main>
 
     <footer class="relative z-10 w-full px-6 py-8 text-center text-sm text-gray-400">
-        &copy; 2026 Eduİvme. Tüm hakları saklıdır.
+        &copy; 2026 {{ brand.name }}. Tüm hakları saklıdır.
     </footer>
 </div>

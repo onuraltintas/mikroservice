@@ -20,7 +20,7 @@ public sealed class CoachingParentWeeklySummaryConsumer(
     IOptions<PublicAppUrlOptions> publicAppUrlOptions,
     INotificationChannelPolicy? channels = null) : IConsumer<CoachingParentWeeklySummaryV1>, IConsumer<CoachingParentWeeklySummaryV2>
 {
-    private const string Product = "Eduİvme";
+    private const string Product = "maxkoç";
     private const string Type = "ParentWeeklySummary";
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
 

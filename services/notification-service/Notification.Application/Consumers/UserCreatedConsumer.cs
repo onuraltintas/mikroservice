@@ -119,7 +119,7 @@ internal static class AccountSetupEmail
             .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
             .Replace("{{PasswordSetupTokenExpiresAt}}", TurkeyTime.Format(passwordSetupTokenExpiresAt) + " (Türkiye saati)")
             .Replace("{{Email}}", EmailContent.Html(email));
-        return (PublicAppUrlOptions.ApplySpeedReadingBranding(subject, role, product),
-            PublicAppUrlOptions.ApplySpeedReadingBranding(body, role, product));
+        return (PublicAppUrlOptions.ApplyBranding(subject, role, product),
+            PublicAppUrlOptions.ApplyBranding(body, role, product));
     }
 }

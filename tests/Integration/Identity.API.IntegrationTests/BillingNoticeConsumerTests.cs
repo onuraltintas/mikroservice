@@ -26,7 +26,7 @@ public sealed class BillingNoticeConsumerTests
             await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 3);
 
             var approved = mail.Messages.Single(x => x.Recipient == "ada@example.test");
-            approved.Subject.Should().Be("Eduİvme Koçluk: Ödemen onaylandı");
+            approved.Subject.Should().Be("maxkoç: Ödemen onaylandı");
             approved.Body.Should().Contain("TEST Aylık").And.Contain("https://app.example.test/coaching-portal/account/payments");
             approved.SubjectUserId.Should().Be(student);
             var rejected = mail.Messages.Single(x => x.Recipient == "okur@example.test");
@@ -34,7 +34,7 @@ public sealed class BillingNoticeConsumerTests
             rejected.Body.Should().Contain("EDU-7K4Q2M").And.Contain("/student/subscription")
                 .And.Contain("&lt;b&gt;gelmedi&lt;/b&gt;").And.NotContain("<b>gelmedi</b>");
             var bundle = mail.Messages.Single(x => x.Recipient == "paket@example.test");
-            bundle.Subject.Should().StartWith("Eduİvme:").And.Contain("sona eriyor");
+            bundle.Subject.Should().StartWith("eduivme:").And.Contain("sona eriyor");
             System.Net.WebUtility.HtmlDecode(bundle.Body).Should().Contain("koltuk verdiğin kullanıcıların erişimi de kapanır");
         }
         finally { await harness.Stop(); await provider.DisposeAsync(); }

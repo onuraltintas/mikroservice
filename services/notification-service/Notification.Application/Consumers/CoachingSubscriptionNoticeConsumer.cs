@@ -17,7 +17,7 @@ public sealed class CoachingSubscriptionNoticeConsumer(
     IOptions<PublicAppUrlOptions> publicAppUrlOptions,
     IOptions<CoachingNoticeOptions> noticeOptions) : IConsumer<CoachingSubscriptionNoticeV1>
 {
-    private const string Product = "Eduİvme Koçluk";
+    private const string Product = "maxkoç";
 
     public async Task Consume(ConsumeContext<CoachingSubscriptionNoticeV1> context)
     {

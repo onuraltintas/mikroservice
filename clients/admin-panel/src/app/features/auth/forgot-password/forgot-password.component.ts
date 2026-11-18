@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
 import { getApiErrorMessage } from '../../../core/http/api-error-message';
 import { injectAuthCopy } from '../auth-voice';
+import { injectSiteBrand } from '../../../core/brand/site-brand';
 
 @Component({
     selector: 'app-forgot-password',
@@ -24,6 +25,7 @@ import { injectAuthCopy } from '../auth-voice';
     styleUrl: './forgot-password.component.scss'
 })
 export class ForgotPasswordComponent {
+  protected readonly brand = injectSiteBrand();
     private identityService = inject(IdentityService);
     /** Paket F #12: "sen" on the Coaching site, "siz" on the management panel (eduivme.com). */
     private readonly authCopy = injectAuthCopy();

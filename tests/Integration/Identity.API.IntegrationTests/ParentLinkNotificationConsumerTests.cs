@@ -33,7 +33,7 @@ public sealed class ParentLinkNotificationConsumerTests
             inApp.Message.Should().Contain("Ayşe <b>Veli</b>").And.Contain("onay");
             var email = mail.Messages.Single();
             (email.Recipient, email.SubjectUserId).Should().Be(("ada@example.test", message.RecipientUserId));
-            email.Subject.Should().Be("Eduİvme Koçluk: Velin bağlantı isteği gönderdi");
+            email.Subject.Should().Be("maxkoç: Velin bağlantı isteği gönderdi");
             email.Body.Should().Contain("Merhaba Ada,").And.Contain("Ayşe &lt;b&gt;Veli&lt;/b&gt;").And.NotContain("<b>Veli</b>")
                 .And.Contain("href=\"https://app.example.test/coaching-portal/account/settings/profile\"");
         }

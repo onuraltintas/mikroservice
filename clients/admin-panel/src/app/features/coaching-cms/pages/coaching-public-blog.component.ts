@@ -38,7 +38,7 @@ export class CoachingPublicBlogComponent implements OnInit {
       next: blocks => {
         const heading = blocks[0] ?? null;
         this.heading.set(heading);
-        this.seo.apply({ title: heading?.seoTitle || `${heading?.title || 'Koçluk yazıları'} | Eduİvme Koçluk`,
+        this.seo.apply({ title: heading?.seoTitle || `${heading?.title || 'Koçluk yazıları'} | maxkoç`,
           description: heading?.seoDescription || heading?.summary || 'LGS, YKS ve planlı çalışma üzerine koçluk yazıları.', path: '/coaching/blog' });
       },
       error: () => this.heading.set(null)

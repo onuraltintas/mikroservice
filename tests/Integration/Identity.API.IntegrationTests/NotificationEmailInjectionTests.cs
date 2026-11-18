@@ -59,8 +59,8 @@ public sealed class NotificationEmailInjectionTests
             "https://app.example.test/coaching-portal/profile", DateTime.UtcNow) { Product = "coaching" });
 
         var mail = queue.Single();
-        mail.Subject.Should().Contain("Koçluk").And.NotContain("Hızlı Okuma");
-        mail.Body.Should().Contain("Eduİvme Koçluk").And.Contain(role).And.NotContain("Hızlı Okuma");
+        mail.Subject.Should().Be(type == "TeacherToInstitution" ? "eduivme daveti" : "maxkoç daveti");
+        mail.Body.Should().Contain(type == "TeacherToInstitution" ? "eduivme" : "maxkoç").And.Contain(role).And.NotContain("Hızlı Okuma");
         mail.Body.Should().Contain("href='https://app.example.test/coaching-portal/profile'");
     }
 
@@ -69,11 +69,11 @@ public sealed class NotificationEmailInjectionTests
     // Second review H1: the link must open a page that exists. The Coaching site (admin-panel, PublicApp:BaseUrl)
     // verifies at /auth/confirm-email?userId=…&token=…; the speed-reading app at /auth/verify-email?token=…&userId=….
     [Theory]
-    [InlineData("Student", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
-    [InlineData("Teacher", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
-    [InlineData("InstitutionAdmin", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
-    [InlineData("Parent", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
-    [InlineData("Coach", null, "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "Eduİvme")]
+    [InlineData("Student", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "maxkoç")]
+    [InlineData("Teacher", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "eduivme")]
+    [InlineData("InstitutionAdmin", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "eduivme")]
+    [InlineData("Parent", "coaching", "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "maxkoç")]
+    [InlineData("Coach", null, "Auth_VerifyEmail", "https://app.example.test/auth/confirm-email?userId={0}&token=token", "eduivme")]
     [InlineData("Student", "speed-reading", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
     [InlineData("Student", null, "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
     [InlineData("Student", "unknown-product", "SpeedReading_Auth_VerifyEmail", "https://speed.example.test/auth/verify-email?token=token&userId={0}", "Master Hızlı Okuma")]
@@ -90,7 +90,7 @@ public sealed class NotificationEmailInjectionTests
             if (withTemplate) mail.Subject.Should().Be($"Doğrula - {appName}");
             else mail.Subject.Should().Contain(appName);
             mail.Body.Should().Contain(appName);
-            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
+            if (appName != "Master Hızlı Okuma") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
         }
     }
 
@@ -115,7 +115,7 @@ public sealed class NotificationEmailInjectionTests
     }
 
     [Theory]
-    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "SpeedReading_Auth_VerifyEmail", "https://onuraltintas.net/auth/confirm-email?userId={0}&token={1}", "Eduİvme")]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "SpeedReading_Auth_VerifyEmail", "https://onuraltintas.net/auth/confirm-email?userId={0}&token={1}", "maxkoç")]
     [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading, "speed-reading", "Auth_VerifyEmail", "https://masterhizliokuma.com/auth/verify-email?token={1}&userId={0}", "Master Hızlı Okuma")]
     public async Task ResentVerificationEmail_IsTheProductsEmailWithItsWorkingLink(
         Identity.Domain.Enums.PlatformProduct product, string requested, string otherTemplate, string link, string appName)
@@ -135,11 +135,11 @@ public sealed class NotificationEmailInjectionTests
         mail.Body.Should().Contain($"href='{string.Format(link, user.Id, user.EmailVerificationToken)}'");
         mail.Subject.Should().Contain(appName);
         mail.Body.Should().NotContain("yanlış");
-        if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
+        if (appName != "Master Hızlı Okuma") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
     }
 
     [Theory]
-    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "Auth_ForgotPassword", "https://onuraltintas.net/auth/reset-password?token=", "Eduİvme")]
+    [InlineData(Identity.Domain.Enums.PlatformProduct.Coaching, "coaching", "Auth_ForgotPassword", "https://onuraltintas.net/auth/reset-password?token=", "maxkoç")]
     [InlineData(Identity.Domain.Enums.PlatformProduct.SpeedReading, "speed-reading", "SpeedReading_Auth_ForgotPassword", "https://masterhizliokuma.com/auth/reset-password?token=", "Master Hızlı Okuma")]
     public async Task ForgotPasswordEmail_IsTheProductsEmailWithItsWorkingLink(
         Identity.Domain.Enums.PlatformProduct product, string requested, string template, string link, string appName)
@@ -160,7 +160,7 @@ public sealed class NotificationEmailInjectionTests
             mail.Body.Should().Contain($"href='{link}");
             mail.Body.Should().Contain("&email=hesap%40example.test'");
             mail.Body.Should().Contain(appName);
-            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
+            if (appName != "Master Hızlı Okuma") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma").And.NotContain("masterhizliokuma");
         }
     }
 
@@ -263,8 +263,8 @@ public sealed class NotificationEmailInjectionTests
 
     // Third review N2: the welcome e-mail after verification follows the product; null keeps the role.
     [Theory]
-    [InlineData("Student", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
-    [InlineData("Parent", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "Eduİvme")]
+    [InlineData("Student", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "maxkoç")]
+    [InlineData("Parent", "coaching", "Auth_Welcome", "https://app.example.test/auth/login", "maxkoç")]
     [InlineData("Student", "speed-reading", "SpeedReading_Auth_Welcome", "https://speed.example.test/auth/login", "Master Hızlı Okuma")]
     [InlineData("Student", null, "SpeedReading_Auth_Welcome", "https://speed.example.test/auth/login", "Master Hızlı Okuma")]
     public async Task WelcomeEmail_UsesTheProductTemplateLoginLinkAndName(string role, string? product, string template, string login, string appName)
@@ -278,7 +278,7 @@ public sealed class NotificationEmailInjectionTests
             mail.Body.Should().Contain($"href='{login}'");
             mail.Body.Should().Contain(appName);
             if (withTemplate) mail.Subject.Should().Be($"Hoş geldin - {appName}");
-            if (appName == "Eduİvme") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
+            if (appName != "Master Hızlı Okuma") (mail.Subject + mail.Body).Should().NotContain("Hızlı Okuma");
         }
     }
 

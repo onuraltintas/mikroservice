@@ -37,7 +37,7 @@ public class EmailService : IEmailService
         var fromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") 
                         ?? _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "noreply@eduivme.com";
         var fromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME") 
-                      ?? _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "Eduİvme";
+                      ?? _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "eduivme";
         email.From.Add(new MailboxAddress(fromName, fromEmail));
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;
