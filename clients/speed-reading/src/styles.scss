@@ -1373,3 +1373,21 @@ button[mat-flat-button] {
 // - Sadece utility class'lar eklenir, Angular Material bozulmaz
 // - Sadece src/app/features/student/** dosyaları taranır
 // =============================================================================
+
+/* Self-hosted icon font (@fontsource/material-icons, loaded from angular.json): the class rules that
+   Google's icon stylesheet used to provide. No font or stylesheet is fetched from Google. */
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
