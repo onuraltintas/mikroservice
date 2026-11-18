@@ -19,12 +19,13 @@ export class RegistrationShellComponent {
     { value: 'teacher', label: 'Öğretmen', icon: 'school', route: '/auth/register-teacher' },
     { value: 'institution', label: 'Kurum', icon: 'domain', route: '/auth/register-school' }
   ];
+  /** Redesign 18.11.2026 (tuval: "Giriş: Master Hızlı Okuma"): sol taraf ürünü anlatır, sağda form. */
   readonly content = {
     login: {
-      title: 'Tekrar hoş geldin.', description: 'Okuma yolculuğuna kaldığın yerden devam et.',
-      headline: 'Her gün, bir adım ileri.',
-      introduction: 'Çalışmalarına dön, ilerlemeni gör ve hedeflerine yaklaş.',
-      benefits: ['Programına kaldığın yerden devam et', 'Okuma gelişimini takip et', 'Öğrenci, öğretmen ve kurum erişimi']
+      title: 'Giriş yap', description: 'Hesabınla ya da Google ile devam et.',
+      headline: 'Kaldığın yerden devam et.',
+      introduction: 'Bugünkü egzersizlerin, okuma hızın ve anlaman seni bekliyor.',
+      benefits: [] as string[]
     },
     student: {
       title: 'Öğrenci hesabını oluştur', description: 'Okuma yolculuğun için ilk adımı at.',

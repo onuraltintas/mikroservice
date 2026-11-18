@@ -1,27 +1,15 @@
-@use '../registration-form';
+// Hızlı Okuma giriş formu. Ortak bileşenler: shared/styles/_design-components.scss; kabuk: registration-shell.
+.login-body { display: flex; flex-direction: column; gap: 18px; }
+app-google-registration-consent { display: block; }
+.ds-field__error:empty { display: none; }
+.google-button { display: flex; justify-content: center; min-height: 44px; }
+.mfa-title { margin: 0; color: var(--ds-text); font-size: 22px; font-weight: 600; line-height: 1.3; }
+.mfa-hint { margin: 0; color: var(--ds-muted); font-size: 15px; line-height: 1.6; }
 
-.login-card { margin-top: 1.5rem; }
-app-google-registration-consent { display: block; margin-top: 1.5rem; }
-.remember-forgot-row { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin: -.2rem 0 .3rem; }
-.forgot-link { color: var(--ui-brand); font-size: .8rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; min-height: 2.75rem; display: inline-flex; align-items: center; }
-button[type='submit'], .mfa-login-panel > button:first-of-type { min-height: 3.2rem; border-radius: .75rem; font-weight: 750; background: var(--ui-brand) !important; color: var(--ui-brand-contrast) !important; }
-button[type='submit']:disabled { background: var(--ui-surface-muted) !important; color: var(--ui-text-subtle) !important; }
-.google-button { display: flex; justify-content: center; min-height: 2.75rem; }
-.register-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-top: .5rem; }
-.register-options > p { grid-column: 1 / -1; color: var(--ui-text-muted); font-size: .8rem; line-height: 1.6; margin: 0 0 .4rem; }
-.register-option { display: flex; align-items: center; justify-content: space-between; gap: .3rem; padding: .75rem; border: 1px solid var(--ui-border); border-radius: .75rem; color: var(--ui-text-muted); text-decoration: none; min-height: 2.75rem; }
-.register-option span { display: grid; gap: .35rem; }
-.register-option strong { font-size: .79rem; }
-.register-option small { color: var(--ui-text-subtle); font-size: .68rem; line-height: 1.5; }
-.register-option mat-icon { width: 1rem; height: 1rem; font-size: 1rem; flex-shrink: 0; }
-.register-option:hover { border-color: var(--ui-brand); background: var(--ui-brand-soft); }
-a:focus-visible, button:focus-visible { outline: 3px solid var(--ui-brand); outline-offset: 3px; }
-.verification-warning { padding: 1rem; border: 1px solid var(--ui-warning); border-radius: .75rem; background: var(--ui-warning-soft); color: var(--ui-warning); font-size: .8rem; line-height: 1.6; }
-.verification-warning p { margin: 0 0 .75rem; }
-.verification-warning button { white-space: normal; height: auto; min-height: 2.75rem; }
-.mfa-login-panel { display: flex; flex-direction: column; gap: 1rem; }
-.mfa-login-panel h2 { margin: 0; color: var(--ui-text); font-size: 1.2rem; line-height: 1.4; }
-.mfa-login-panel p { margin: 0; color: var(--ui-text-muted); font-size: .9rem; line-height: 1.6; }
-.mfa-recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; padding: 1rem; border-radius: .75rem; background: var(--ui-brand-soft); }
-.mfa-recovery-codes code, .mfa-secret { color: var(--ui-text-muted); font-size: .8rem; overflow-wrap: anywhere; }
-@media (max-width: 34rem) { .remember-forgot-row { align-items: flex-start; flex-direction: column; gap: 0; } .register-options { grid-template-columns: 1fr; } .register-option span { gap: .15rem; } }
+.register-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.register-options h2 { grid-column: 1 / -1; margin: 0 0 2px; color: var(--ds-muted); font-size: 15px; font-weight: 500; line-height: 1.5; }
+.register-option { display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 12px; border: 1.5px solid var(--ds-line); border-radius: var(--ds-radius-control); color: var(--ds-text); text-decoration: none; }
+.register-option strong { font-size: 15px; font-weight: 600; }
+.register-option small { color: var(--ds-muted); font-size: 13px; line-height: 1.4; }
+.register-option:hover { border-color: var(--ds-primary); background: var(--ds-soft); }
+@media (max-width: 34rem) { .register-options { grid-template-columns: 1fr; } }

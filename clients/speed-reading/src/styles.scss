@@ -18,6 +18,8 @@
 @use 'styles/player-shell';
 @use '../../shared/styles/platform-tokens';
 @use '../../shared/styles/platform-components';
+@use '../../shared/styles/design-tokens';
+@use '../../shared/styles/design-components';
 
 // Import Quill Styles
 @import 'quill/dist/quill.core.css';

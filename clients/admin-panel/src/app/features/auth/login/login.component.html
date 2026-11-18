@@ -2,247 +2,191 @@
   <app-google-registration-consent product="coaching" [busy]="isLoading()" [error]="errorMessage() || ''"
     (confirm)="completeGoogleRegistration($event)" (cancel)="cancelGoogleRegistration()" />
 }
+<!-- Redesign 18.11.2026 (tuval: "Giriş: maxkoç", "Giriş: eduivme"). Renkler --ds-* değişkenlerinden gelir. -->
 <div [hidden]="!!googleRegistrationToken()">
-<div
-    class="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+<div class="ds-auth" [attr.data-brand]="page.brand">
 
-    <!-- Background Decoration (Global) -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-400/10 rounded-full blur-[120px]">
-        </div>
+  <section class="ds-auth__visual login-visual" [class.login-visual--dark]="page.brand === 'eduivme'"
+    [attr.aria-label]="page.brandName + ' hakkında'">
+    @if (page.brand === 'eduivme') {
+      <svg class="login-visual__mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
+        <rect class="login-visual__stem" x="210" y="300" width="130" height="420" rx="65"></rect>
+        <path class="login-visual__arc" d="M150 200c40-80 120-120 190-108" fill="none" stroke-width="22" stroke-linecap="round"></path>
+        <circle class="login-visual__dot" cx="370" cy="110" r="78"></circle>
+      </svg>
+      <span class="ds-auth__place">{{ page.place }}</span>
+    }
+    <div class="login-visual__copy">
+      <h2 class="ds-auth__headline">{{ page.headline }}</h2>
+      <p class="ds-auth__sub">{{ page.sub }}</p>
     </div>
 
-    <!-- MAIN CARD CONTAINER (Centered box containing both blue side and form side) -->
-    <div
-        class="w-full max-w-[1100px] h-auto min-h-[600px] bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10 border border-gray-100 dark:border-gray-700">
+    <!-- Live test 13.11.2026: no invented testimonial; only what the product does is shown. -->
+    @switch (page.visual) {
+      @case ('today') {
+        <div class="ds-auth__sample" aria-hidden="true" data-testid="login-features">
+          <span class="login-sample__head"><strong>Bugün</strong><span>1 / 3 tamam</span></span>
+          <span class="login-sample__row login-sample__row--done"><span class="login-chip login-chip--math">Matematik</span><s>Üslü ifadeler</s></span>
+          <span class="login-sample__row login-sample__row--now"><span class="login-chip login-chip--turkish">Türkçe</span>Paragraf, 20 soru<span class="login-sample__now">Şimdi</span></span>
+          <span class="login-sample__row"><span class="login-chip login-chip--science">Fen</span>DNA tekrarı</span>
+        </div>
+      }
+      @case ('week') {
+        <div class="ds-auth__sample" aria-hidden="true" data-testid="login-features">
+          <strong>Haftalık özet</strong>
+          <span class="login-sample__line"><span>Çalışma</span><strong>9 sa 40 dk / 14 sa</strong></span>
+          <span class="login-sample__bar"><span></span></span>
+          <span class="login-sample__line"><span>Son deneme</span><strong>72 net</strong></span>
+          <span class="login-sample__line"><span>Sıradaki görüşme</span><strong>Cuma 17:30</strong></span>
+        </div>
+      }
+      @default {
+        <ul class="ds-auth__points" data-testid="login-features">
+          @for (point of page.points; track point) { <li>{{ point }}</li> }
+        </ul>
+      }
+    }
+  </section>
 
-        <!-- LEFT SIDE: BLUE BRANDING (Now part of the card) -->
-        <div class="hidden lg:flex w-1/2 relative bg-blue-600 flex-col justify-between p-12 overflow-hidden">
+  <main class="ds-auth__main">
+    <div class="ds-auth__panel">
+      <a routerLink="/" class="ds-auth__brand">
+        <img [src]="page.logo" alt="" width="44" height="44">
+        <span><span class="ds-auth__brand-name">{{ page.brandName }}</span><span class="ds-auth__brand-note">{{ page.brandNote }}</span></span>
+      </a>
 
-            <!-- Abstract Background inside the card -->
-            <div class="absolute inset-0">
-                <div
-                    class="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-blue-500 rounded-full blur-[100px] opacity-60">
-                </div>
-                <div
-                    class="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-indigo-600 rounded-full blur-[100px] opacity-60">
-                </div>
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90 backdrop-blur-sm"></div>
-                <div class="absolute inset-0 opacity-10 auth-background-pattern">
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="relative z-10 h-full flex flex-col justify-between">
-                <div class="flex items-center gap-3">
-                    <div
-                        class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center shadow-md ring-1 ring-white/30">
-                        <mat-icon class="!text-white">school</mat-icon>
-                    </div>
-                    <span class="text-xl font-bold text-white tracking-wide">{{ brand.name }}</span>
-                </div>
-
-                <div>
-                    <h2 class="text-4xl font-extrabold text-white leading-tight mb-4">
-                        Eğitimin Geleceğini <br>
-                        <span class="text-blue-200">Birlikte Şekillendirelim.</span>
-                    </h2>
-                    <p class="text-blue-100/90 text-lg">
-                        {{ copy.brandIntro }}
-                    </p>
-                </div>
-
-                <!-- Live test 13.11.2026: an invented testimonial stood here. Only what the product does is listed. -->
-                <ul class="mt-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 space-y-2 text-white/90 text-sm" data-testid="login-features">
-                    <li>Haftalık çalışma planı ve sınava kalan süre</li>
-                    <li>Deneme, ödev ve hedef takibi</li>
-                    <li>Öğretmen, kurum ve veli için ortak görünüm</li>
-                </ul>
-            </div>
+      @if (mfaStage() === 'none') {
+        <div class="ds-auth__heading">
+          <h1 class="ds-auth__title" data-testid="login-welcome">{{ page.title }}</h1>
+          <p class="ds-auth__lead">{{ page.lead }}</p>
         </div>
 
-        <!-- RIGHT SIDE: LOGIN FORM -->
-        <div
-            class="w-full lg:w-1/2 bg-white dark:bg-gray-800 p-6 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
+        <form class="ds-auth__form" (submit)="onSubmit($event)" [attr.aria-busy]="isLoading()">
+          <div class="ds-field">
+            <label class="ds-field__label" for="login-email">E-posta adresi</label>
+            <input id="login-email" class="ds-input" type="email" [(ngModel)]="email" name="email" autocomplete="username"
+              placeholder="ornek@eposta.com" required>
+          </div>
 
-            <div class="flex lg:hidden items-center gap-2 mb-8 text-blue-600">
-                <mat-icon>school</mat-icon>
-                <span class="text-xl font-bold text-gray-900 dark:text-white">{{ brand.name }}</span>
+          <div class="ds-field">
+            <span class="ds-field__row">
+              <label for="login-password">Şifre</label>
+              <a routerLink="/auth/forgot-password" class="ds-link">Şifremi unuttum</a>
+            </span>
+            <span class="ds-input-wrap">
+              <input id="login-password" class="ds-input" [type]="hidePassword() ? 'password' : 'text'" [(ngModel)]="password"
+                name="password" (focus)="prepareSignIn()" (input)="prepareSignIn()" autocomplete="current-password" required>
+              <button type="button" class="ds-input-action" (click)="togglePasswordVisibility()"
+                [attr.aria-label]="hidePassword() ? 'Şifreyi göster' : 'Şifreyi gizle'" [attr.aria-pressed]="!hidePassword()">
+                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"></path>
+                  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                  @if (!hidePassword()) { <path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> }
+                </svg>
+              </button>
+            </span>
+          </div>
+
+          <label class="ds-check">
+            <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe">
+            Beni hatırla
+          </label>
+
+          <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="submit" [disabled]="isLoading() || !email || !password">
+            @if (isLoading()) { <span class="ds-spinner" aria-hidden="true"></span><span>Giriş yapılıyor</span> }
+            @else { Giriş yap }
+          </button>
+
+          <div class="ds-divider">ya da</div>
+
+          <div class="login-google">
+            <asl-google-signin-button type="standard" size="large" [text]="googleButtonText" [width]="320"></asl-google-signin-button>
+          </div>
+        </form>
+      }
+
+      @if (mfaStage() === 'setup' || mfaStage() === 'verify') {
+        <section class="ds-auth__form" aria-labelledby="mfa-title">
+          <div class="ds-auth__heading">
+            <h1 id="mfa-title" class="ds-auth__title">{{ mfaStage() === 'setup' ? copy.mfaSetupTitle : 'Doğrulama kodu' }}</h1>
+            <p class="ds-auth__lead">{{ mfaStage() === 'setup' ? copy.mfaSetupHint : copy.mfaVerifyHint }}</p>
+          </div>
+
+          @if (mfaStage() === 'setup') {
+            <div class="ds-field">
+              <span class="ds-field__label">Kurulum anahtarı</span>
+              <code class="ds-code">{{ mfaSecret() }}</code>
             </div>
+          }
 
-            <div class="mb-8">
-                <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-2" data-testid="login-welcome">{{ copy.welcome }}</h3>
-                <p class="text-gray-500 dark:text-gray-400">{{ copy.loginIntro }}</p>
-            </div>
+          <div class="ds-field">
+            <label class="ds-field__label" for="mfa-code">Altı haneli kod</label>
+            <input id="mfa-code" class="ds-input ds-input--code" name="mfaCode" inputmode="numeric" autocomplete="one-time-code"
+              maxlength="6" pattern="[0-9]{6}" [(ngModel)]="mfaCode">
+          </div>
 
-            <form *ngIf="mfaStage() === 'none'" (submit)="onSubmit($event)" class="flex flex-col gap-6">
+          <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="button" (click)="submitMfa()"
+            [disabled]="isLoading() || mfaCode.length !== 6">
+            @if (isLoading()) { <span class="ds-spinner" aria-hidden="true"></span><span>Doğrulanıyor</span> }
+            @else { Doğrula ve devam et }
+          </button>
 
-                <!-- Email -->
-                <div class="group">
-                    <label
-                        class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">E-Posta</label>
-                    <div class="relative">
-                        <input type="email" [(ngModel)]="email" name="email"
-                            class="w-full px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all pl-12 text-lg text-gray-900 dark:text-white font-medium"
-                            placeholder="mail@okul.com" required>
-                        <mat-icon
-                            class="absolute left-4 top-4 text-gray-400 group-hover:text-blue-500 transition-colors transform scale-110">email</mat-icon>
-                    </div>
-                </div>
+          @if (mfaStage() === 'verify') {
+            <details class="login-recovery">
+              <summary class="ds-link">Kurtarma kodu kullan</summary>
+              <div class="ds-field">
+                <label class="ds-field__label" for="mfa-recovery">Tek kullanımlık kurtarma kodu</label>
+                <input id="mfa-recovery" class="ds-input" name="mfaRecoveryCode" autocomplete="one-time-code" [(ngModel)]="mfaRecoveryCode">
+              </div>
+              <button class="ds-btn ds-btn--secondary ds-btn--block" type="button" (click)="submitRecoveryCode()"
+                [disabled]="isLoading() || !mfaRecoveryCode.trim()">Kurtarma koduyla doğrula</button>
+            </details>
+          }
+        </section>
+      }
 
-                <!-- Password -->
-                <div class="group">
-                    <div class="flex justify-between items-center mb-2 ml-1">
-                        <label class="block text-base font-medium text-gray-700 dark:text-gray-300">Şifre</label>
-                    </div>
-                    <div class="relative">
-                        <input [type]="hidePassword() ? 'password' : 'text'" [(ngModel)]="password" name="password" (focus)="prepareSignIn()" (input)="prepareSignIn()"
-                            class="w-full px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all pl-12 pr-12 text-lg text-gray-900 dark:text-white font-medium"
-                            placeholder="••••••••" required>
-                        <mat-icon
-                            class="absolute left-4 top-4 text-gray-400 group-hover:text-blue-500 transition-colors transform scale-110">lock</mat-icon>
-                        <button type="button" (click)="togglePasswordVisibility()"
-                            class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 cursor-pointer transform scale-110">
-                            <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
-                        </button>
-                    </div>
-                </div>
+      @if (mfaStage() === 'recovery') {
+        <section class="ds-auth__form" aria-labelledby="recovery-title">
+          <div class="ds-auth__heading">
+            <h1 id="recovery-title" class="ds-auth__title">{{ copy.recoveryTitle }}</h1>
+          </div>
+          <p class="ds-alert ds-alert--warning">{{ copy.recoveryHint }}</p>
+          <ul class="ds-code-list" aria-label="Tek kullanımlık kurtarma kodları">
+            @for (code of recoveryCodes(); track code) { <li>{{ code }}</li> }
+          </ul>
+          <button class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" type="button" (click)="finishMfaEnrollment()">Kodları kaydettim, devam et</button>
+        </section>
+      }
 
-                <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between px-1">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <div class="relative w-5 h-5 flex items-center justify-center">
-                            <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" class="peer sr-only">
-                            <div
-                                class="absolute inset-0 w-full h-full border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:border-blue-600 transition-all bg-white dark:bg-gray-800">
-                            </div>
-                            <div
-                                class="absolute inset-0 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-opacity">
-                                <mat-icon
-                                    class="text-blue-600 text-[18px] font-bold w-full h-full flex items-center justify-center">check</mat-icon>
-                            </div>
-                        </div>
-                        <span
-                            class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">Beni
-                            Hatırla</span>
-                    </label>
-
-                    <a routerLink="/auth/forgot-password"
-                        class="text-sm font-semibold text-blue-600 hover:text-blue-700">Şifremi Unuttum?</a>
-                </div>
-
-                <button mat-flat-button color="primary" type="submit" [disabled]="isLoading() || !email || !password"
-                    class="!py-4 !rounded-xl !text-lg !font-bold w-full shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all mt-2">
-                    <div class="flex items-center justify-center gap-2">
-                        <mat-spinner *ngIf="isLoading()" diameter="24" color="accent" class="mr-2"></mat-spinner>
-                        <span *ngIf="!isLoading()">Giriş Yap</span>
-                    </div>
-                </button>
-
-                <div class="flex items-center gap-4 my-2">
-                    <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
-                    <span class="text-xs text-gray-400 font-medium uppercase">veya</span>
-                    <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
-                </div>
-
-                <div class="w-full flex justify-center overflow-x-hidden google-btn-wrapper">
-                    <asl-google-signin-button type="standard" size="large" [text]="googleButtonText" [width]="320"></asl-google-signin-button>
-                </div>
-
-            </form>
-
-            <section *ngIf="mfaStage() === 'setup' || mfaStage() === 'verify'"
-                class="flex flex-col gap-5" aria-labelledby="mfa-title">
-                <div>
-                    <h4 id="mfa-title" class="text-xl font-bold text-gray-900 dark:text-white">
-                        {{ mfaStage() === 'setup' ? copy.mfaSetupTitle : 'Doğrulama Kodu' }}
-                    </h4>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        {{ mfaStage() === 'setup' ? copy.mfaSetupHint : copy.mfaVerifyHint }}
-                    </p>
-                </div>
-
-                <div *ngIf="mfaStage() === 'setup'"
-                    class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-                    <span class="block text-xs font-semibold uppercase text-blue-700 dark:text-blue-300">Kurulum anahtarı</span>
-                    <code class="mt-2 block break-all text-base font-bold tracking-wider text-gray-900 dark:text-white">{{ mfaSecret() }}</code>
-                </div>
-
-                <div>
-                    <label for="mfa-code" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Altı haneli kod
-                    </label>
-                    <input id="mfa-code" name="mfaCode" inputmode="numeric" autocomplete="one-time-code"
-                        maxlength="6" pattern="[0-9]{6}" [(ngModel)]="mfaCode"
-                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-center text-2xl font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white">
-                </div>
-
-                <button mat-flat-button color="primary" type="button" (click)="submitMfa()"
-                    [disabled]="isLoading() || mfaCode.length !== 6" class="!py-4 !rounded-xl !font-bold">
-                    <mat-spinner *ngIf="isLoading()" diameter="22"></mat-spinner>
-                    <span *ngIf="!isLoading()">Doğrula ve Devam Et</span>
-                </button>
-
-                <details *ngIf="mfaStage() === 'verify'" class="text-sm text-gray-600 dark:text-gray-300">
-                    <summary class="cursor-pointer font-semibold text-blue-600">Kurtarma kodu kullan</summary>
-                    <label for="mfa-recovery" class="mt-4 mb-2 block">Tek kullanımlık kurtarma kodu</label>
-                    <input id="mfa-recovery" name="mfaRecoveryCode" autocomplete="one-time-code"
-                        [(ngModel)]="mfaRecoveryCode"
-                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 uppercase dark:border-gray-600 dark:bg-gray-700/50">
-                    <button mat-stroked-button type="button" (click)="submitRecoveryCode()"
-                        [disabled]="isLoading() || !mfaRecoveryCode.trim()" class="mt-3 w-full">
-                        Kurtarma Koduyla Doğrula
-                    </button>
-                </details>
-            </section>
-
-            <section *ngIf="mfaStage() === 'recovery'" class="flex flex-col gap-5" aria-labelledby="recovery-title">
-                <div>
-                    <h4 id="recovery-title" class="text-xl font-bold text-gray-900 dark:text-white">{{ copy.recoveryTitle }}</h4>
-                    <p class="mt-2 text-sm text-amber-700 dark:text-amber-300">
-                        {{ copy.recoveryHint }}
-                    </p>
-                </div>
-                <ul class="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700"
-                    aria-label="Tek kullanımlık kurtarma kodları">
-                    <li *ngFor="let code of recoveryCodes()" class="select-all text-center">{{ code }}</li>
-                </ul>
-                <button mat-flat-button color="primary" type="button" (click)="finishMfaEnrollment()"
-                    class="!py-4 !rounded-xl !font-bold">Kodları Kaydettim, Devam Et</button>
-            </section>
-
-            <div *ngIf="errorMessage()"
-                class="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 flex flex-col gap-2 relative overflow-hidden">
-                <div class="flex items-center gap-3">
-                    <mat-icon>error_outline</mat-icon>
-                    <span class="text-sm font-medium">{{ errorMessage() }}</span>
-                </div>
-                <!-- Resend Verification Link -->
-                <div *ngIf="showResendLink()" class="pl-9 mt-1">
-                    <button type="button" (click)="resendVerification()" [disabled]="resendingEmail()"
-                        class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2">
-                        <mat-spinner *ngIf="resendingEmail()" diameter="16"></mat-spinner>
-                        <span>Tekrar doğrulama e-postası gönder</span>
-                    </button>
-                </div>
-
-                <!-- Support Link for Inactive Users -->
-                <div *ngIf="showSupportLink()" class="pl-9 mt-1">
-                    <button type="button" (click)="navigateToSupport()"
-                        class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 bg-transparent border-none p-0 cursor-pointer">
-                        <span>Yardım ve Destek Al</span>
-                        <mat-icon class="!w-4 !h-4 !text-[16px]">open_in_new</mat-icon>
-                    </button>
-                </div>
-            </div>
-
-            <div class="mt-auto pt-8 text-center text-sm text-gray-500 dark:text-gray-400" data-testid="login-signup">
-                {{ copy.noAccount }}
-                <a routerLink="/auth/register" class="font-bold text-blue-600 hover:text-blue-700 cursor-pointer">{{ copy.signUp }}</a>
-            </div>
-
+      @if (errorMessage()) {
+        <div class="ds-alert" role="alert">
+          <span>{{ errorMessage() }}</span>
+          @if (showResendLink()) {
+            <button type="button" class="ds-btn ds-btn--quiet" (click)="resendVerification()" [disabled]="resendingEmail()">
+              @if (resendingEmail()) { <span class="ds-spinner" aria-hidden="true"></span> }
+              Doğrulama e-postasını yeniden gönder
+            </button>
+          }
+          @if (showSupportLink()) {
+            <button type="button" class="ds-btn ds-btn--quiet" (click)="navigateToSupport()">Yardım ve destek al</button>
+          }
         </div>
+      }
+
+      @if (mfaStage() === 'none') {
+        <div class="ds-auth__footer" data-testid="login-signup">
+          @if (page.signUp; as signUp) {
+            <span>{{ signUp.lead }} <a [routerLink]="signUp.path" class="ds-link">{{ signUp.label }}</a></span>
+          } @else if (page.signUpNote) {
+            <span>{{ page.signUpNote }}</span>
+          }
+          @if (page.other && otherSiteHref) {
+            <span>{{ page.other.lead }} <a [href]="otherSiteHref" class="ds-link">{{ page.other.label }}</a></span>
+          }
+          <span><a routerLink="/auth/support" class="ds-link">Yardım ve destek</a></span>
+        </div>
+      }
     </div>
+  </main>
 </div>
 </div>
