@@ -369,8 +369,7 @@ $bg-color: var(--sp-surface-2);
   margin-bottom: 24px;
   color: var(--ui-brand-contrast);
   border-radius: 28px;
-  background: color-mix(in srgb, var(--ui-surface) 18%, transparent)
-    linear-gradient(135deg, var(--sp-primary-dark), var(--sp-primary) 62%, #7c3aed);
+  background: var(--sp-primary);
   box-shadow: 0 22px 55px color-mix(in srgb, var(--ui-text) 22%, transparent);
 
   &::after {

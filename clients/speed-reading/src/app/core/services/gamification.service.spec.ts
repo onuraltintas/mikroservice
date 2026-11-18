@@ -10,7 +10,7 @@ describe('GamificationService tiers', () => {
     const service = TestBed.inject(GamificationService);
     for (const level of [16, 20, 21, 35, 120]) {
       expect(service.getTierName(level)).toBe('Master Okuyucu');
-      expect(service.getTierIcon(level)).toBe('📕');
+      expect(service.getTierIcon(level)).toBe('workspace_premium');
       expect(service.getTierColor(level)).toBe('#FFD700');
     }
     expect(service.getTierName(1)).toBe('Başlangıç Okuyucu');

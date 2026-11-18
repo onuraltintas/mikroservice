@@ -147,7 +147,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
         name: type.displayName || type.name,
         route: '', // Handled by click
         icon: type.iconName || 'fitness_center',
-        color: type.colorCode ? `linear-gradient(135deg, ${type.colorCode} 0%, #444 100%)` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'var(--ds-primary)',
         description: type.description || 'Egzersiz açıklaması bulunamadı.',
         difficulty: groupExercises.length > 1 ? '1-' + groupExercises[groupExercises.length - 1].difficultyLevel : groupExercises[0].difficultyLevel.toString(),
         category: displayCategory,

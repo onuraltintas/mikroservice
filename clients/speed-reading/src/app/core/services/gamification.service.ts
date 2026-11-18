@@ -100,11 +100,11 @@ export class GamificationService {
   getTierIcon(level: number): string {
     const tier = this.tierOf(level);
     switch (tier) {
-      case 1: return '📖';
-      case 2: return '📗';
-      case 3: return '📘';
-      case 4: return '📕';
-      default: return '📖';
+      case 1: return 'menu_book';
+      case 2: return 'auto_stories';
+      case 3: return 'local_library';
+      case 4: return 'workspace_premium';
+      default: return 'menu_book';
     }
   }
 
@@ -115,15 +115,6 @@ export class GamificationService {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return mins > 0 ? `${hours} saat ${mins} dakika` : `${hours} saat`;
-  }
-
-  getStreakIcon(streak: number): string {
-    if (streak >= 100) return '🔥🔥🔥🔥🔥';
-    if (streak >= 30) return '🔥🔥🔥🔥';
-    if (streak >= 14) return '🔥🔥🔥';
-    if (streak >= 7) return '🔥🔥';
-    if (streak >= 3) return '🔥';
-    return '⚪';
   }
 
   getTierText(tier: string): string {
