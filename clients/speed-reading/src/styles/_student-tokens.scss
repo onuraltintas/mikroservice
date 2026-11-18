@@ -164,7 +164,7 @@
   // Text
   --sp-text-1:          #f1f5f9;
   --sp-text-2:          #94a3b8;
-  --sp-text-3:          #475569;
+  --sp-text-3:          #8b9ab0;   // koyu zeminde en az 4.5:1
   --sp-text-inv:        #0f172a;
 
   // Primary — daha parlak göster
@@ -177,7 +177,8 @@
   --sp-on-primary:      #0f172a;
   --sp-primary-hover:   #a5b4fc;
 
-  // Başarı mesajı yazısı koyu zeminde okunur kalsın
+  // Başarı ve uyarı yazıları koyu zeminde okunur kalsın
+  --sp-warning-text:    #fcd34d;
   --sp-success-text:    #6ee7b7;
 
   // Shadows — daha güçlü (koyu zemin üzerinde)

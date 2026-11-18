@@ -5,6 +5,9 @@
 }
 
 mat-card {
+  background: var(--sp-surface);
+  color: var(--sp-text-1);
+
   mat-card-header {
     position: relative;
     padding-bottom: 16px;
@@ -21,19 +24,20 @@ mat-card {
       gap: 12px;
       font-size: 24px;
       margin-left: 40px;
+      color: var(--sp-text-1);
 
       mat-icon {
         font-size: 28px;
         width: 28px;
         height: 28px;
-        color: #1976d2;
+        color: var(--sp-primary);
       }
     }
 
     mat-card-subtitle {
       margin-left: 52px;
       margin-top: 8px;
-      color: #666;
+      color: var(--sp-text-2);
     }
   }
 
@@ -43,7 +47,7 @@ mat-card {
 
   mat-card-actions {
     padding: 16px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--sp-border);
   }
 }
 
@@ -57,7 +61,7 @@ mat-card {
 
   p {
     margin: 0;
-    color: #666;
+    color: var(--sp-text-2);
     font-size: 16px;
   }
 }
@@ -72,7 +76,7 @@ mat-card {
   display: flex;
   gap: 24px;
   padding: 16px;
-  background: #f5f5f5;
+  background: var(--sp-surface-3);
   border-radius: 8px;
   flex-wrap: wrap;
 
@@ -83,7 +87,7 @@ mat-card {
 
     .action-label {
       font-weight: 500;
-      color: #666;
+      color: var(--sp-text-2);
       margin-right: 4px;
     }
 
@@ -111,9 +115,9 @@ mat-card {
       font-size: 32px;
       width: 32px;
       height: 32px;
-      color: #1976d2;
+      color: var(--sp-primary);
 
-      &.group-icon-assignment { color: #1976d2; }
+      &.group-icon-assignment { color: var(--sp-primary); }
       &.group-icon-emoji_events { color: #f57c00; }
       &.group-icon-check_circle { color: #388e3c; }
       &.group-icon-assessment { color: #7b1fa2; }
@@ -127,13 +131,13 @@ mat-card {
         margin: 0 0 4px 0;
         font-size: 18px;
         font-weight: 500;
-        color: #333;
+        color: var(--sp-text-1);
       }
 
       p {
         margin: 0;
         font-size: 14px;
-        color: #666;
+        color: var(--sp-text-2);
       }
     }
   }
@@ -149,14 +153,14 @@ mat-card {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    background: #f9f9f9;
+    background: var(--sp-surface-3);
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--sp-border);
     transition: all 0.2s ease;
 
     &:hover {
-      background: #f0f0f0;
-      border-color: #ccc;
+      background: var(--sp-surface-3);
+      border-color: var(--sp-border-strong);
     }
 
     .notification-info {
@@ -173,19 +177,19 @@ mat-card {
           font-size: 20px;
           width: 20px;
           height: 20px;
-          color: #1976d2;
+          color: var(--sp-primary);
         }
 
         strong {
           font-size: 15px;
-          color: #333;
+          color: var(--sp-text-1);
         }
       }
 
       .notification-description {
         margin: 0;
         font-size: 13px;
-        color: #666;
+        color: var(--sp-text-2);
         padding-left: 28px;
         line-height: 1.4;
       }
@@ -219,12 +223,12 @@ mat-card {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: #e3f2fd;
+  background: var(--sp-primary-ghost);
   border-radius: 8px;
   border-left: 4px solid #1976d2;
 
   mat-icon {
-    color: #1976d2;
+    color: var(--sp-primary);
     font-size: 24px;
     width: 24px;
     height: 24px;
@@ -238,7 +242,7 @@ mat-card {
     p {
       margin: 0 0 8px 0;
       font-size: 14px;
-      color: #555;
+      color: var(--sp-text-2);
       line-height: 1.5;
 
       &:last-child {
@@ -246,7 +250,7 @@ mat-card {
       }
 
       strong {
-        color: #1976d2;
+        color: var(--sp-primary);
       }
     }
   }
