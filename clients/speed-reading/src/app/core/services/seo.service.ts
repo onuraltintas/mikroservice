@@ -27,7 +27,7 @@ export class SeoService {
         title: 'Master Hızlı Okuma | Hız ve Anlamayı Birlikte Geliştirin',
         description: 'Başlangıç düzeyinizi ölçün, size uygun çalışmalarla ilerleyin ve hız ile anlama gelişiminizi birlikte görün.',
         keywords: 'hızlı okuma, okuduğunu anlama, okuma egzersizleri, kişisel öğrenme planı',
-        image: '/brand/onal-mark.svg',
+        image: '/brand/og-master-hizli-okuma.png',
         type: 'website'
     };
 
@@ -129,10 +129,10 @@ export class SeoService {
                     },
                     publisher: {
                         '@type': 'Organization',
-                        name: 'ONAL Yazılım ve Otomasyon',
+                        name: 'eduivme',
                         logo: {
                             '@type': 'ImageObject',
-                            url: '/brand/onal-mark.svg'
+                            url: '/brand/master-hizli-okuma.svg'
                         }
                     },
                     datePublished: data.publishedTime,
@@ -154,9 +154,9 @@ export class SeoService {
                 structuredData = {
                     ...structuredData,
                     '@type': 'Organization',
-                    name: data.name || 'ONAL Yazılım ve Otomasyon',
+                    name: data.name || 'eduivme',
                     url: 'https://masterhizliokuma.com',
-                    logo: '/brand/onal-mark.svg',
+                    logo: '/brand/master-hizli-okuma.svg',
                     sameAs: [
                         // Add social media URLs
                     ]

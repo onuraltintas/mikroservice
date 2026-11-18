@@ -11,7 +11,7 @@
 .ob-head { position: sticky; top: 0; z-index: 2; background: var(--ob-bg); padding-block: .75rem .5rem; }
 .ob-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; }
 .ob-exit { display: flex; gap: 1rem; }
-.ob-brand { margin: 0; font-size: .85rem; color: var(--ob-muted); strong { color: var(--ob-text); } span { color: var(--ob-brand); } }
+.ob-brand { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .85rem; color: var(--ob-muted); strong { color: var(--ob-text); } span { color: var(--ob-brand); } }
 h1 { margin: .25rem 0 .5rem; font-size: 1.35rem; }
 .ob-progress { display: grid; gap: .35rem; font-size: .85rem; color: var(--ob-muted); }
 .ob-bar { height: .45rem; border-radius: 999px; background: var(--ob-border); overflow: hidden;
