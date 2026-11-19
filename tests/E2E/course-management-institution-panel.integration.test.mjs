@@ -12,10 +12,10 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const secret = 'course-management-institution-panel-test-secret-0123456789012345';
 const connectionString = process.env.COURSE_MANAGEMENT_TEST_CONNECTION_STRING;
 
-function token(product, sub, role) {
+function token(product, sub, role, extra = {}) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const payload = encode({ iss: 'course-tests', aud: 'course-tests', sub, platform_product: product,
-    exp: Math.floor(Date.now() / 1000) + 300, 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': role });
+    exp: Math.floor(Date.now() / 1000) + 300, 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': role, ...extra });
   const content = `${encode({ alg: 'HS256', typ: 'JWT' })}.${payload}`;
   return `${content}.${createHmac('sha256', secret).update(content).digest('base64url')}`;
 }
@@ -202,6 +202,45 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal((await call(`${ws}/students/${studentB}/email-mute`, teacher, 'PUT', { muted: false })).status, 404);
     const testEmail = await call(`${ws}/email-settings/test`, owner, 'POST', { kind: 1, email: 'sahip@example.test' });
     assert.equal(testEmail.status, 202);
+
+    // Support access: the platform sees no records until the owner approves a named administrator's request.
+    const adminId = randomUUID();
+    const admin = token('coaching', adminId, 'SystemAdmin', { amr: 'mfa' });
+    const adminWithoutMfa = token('coaching', adminId, 'SystemAdmin');
+    const adminBase = `/admin/workspaces/${workspaceId}`;
+    const listed = await (await call(`/admin/workspaces?query=TEST%20Kurs`, admin)).json();
+    assert.ok(listed.items.some(item => item.id === workspaceId && item.activeStudentCount === 2 && item.teacherCount === 1));
+    const summary = await (await call(adminBase, admin)).json();
+    assert.equal(summary.email.switchedOn, true);
+    assert.equal(summary.email.optedOutAddresses, 1);
+    assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'no grant, no records');
+    assert.equal((await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'kısa' })).status, 400);
+    const requested = await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Taksit listesi yanlış görünüyor.' });
+    assert.equal(requested.status, 201, await requested.clone().text());
+    const grantId = (await requested.json()).id;
+    assert.equal((await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST İkinci talep gönderilmez.' })).status, 409);
+    assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'a request is not access');
+
+    const ownerView = await (await call(`${ws}/support-access`, owner)).json();
+    assert.equal(ownerView.grants[0].status, 'Requested');
+    assert.equal((await call(`${ws}/support-access/${grantId}/approve`, teacher, 'POST', { hours: 1, sections: [1] })).status, 404);
+    assert.equal((await call(`${ws}/support-access/${grantId}/approve`, owner, 'POST', { hours: 5, sections: [1] })).status, 400);
+    const approved = await call(`${ws}/support-access/${grantId}/approve`, owner, 'POST', { hours: 1, sections: [1] });
+    assert.equal(approved.status, 200, await approved.clone().text());
+    assert.deepEqual((await approved.json()).sections, ['Students']);
+
+    const students = await call(`${adminBase}/support/students`, admin);
+    assert.equal(students.status, 200);
+    assert.equal((await students.json()).length, 2);
+    assert.equal((await call(`${adminBase}/support/students`, adminWithoutMfa)).status, 404, 'support access needs a second factor');
+    assert.equal((await call(`${adminBase}/support/finance`, admin)).status, 404, 'only the approved sections open');
+    assert.equal((await call(`${adminBase}/support/students`, token('coaching', randomUUID(), 'SystemAdmin', { amr: 'mfa' }))).status, 404,
+      'the grant belongs to the administrator who asked');
+    const logs = (await (await call(`${ws}/support-access`, owner)).json()).logs;
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0].section, 'Students');
+    assert.equal((await call(`${ws}/support-access/${grantId}/end`, owner, 'POST')).status, 200);
+    assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'ended means closed');
   } finally {
     child.kill();
   }

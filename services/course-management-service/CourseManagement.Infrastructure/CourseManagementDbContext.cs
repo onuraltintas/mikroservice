@@ -29,6 +29,8 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<MakeupCredit> MakeupCredits => Set<MakeupCredit>();
     public DbSet<CourseAssignment> Assignments => Set<CourseAssignment>();
+    public DbSet<SupportAccessGrant> SupportAccessGrants => Set<SupportAccessGrant>();
+    public DbSet<SupportAccessLog> SupportAccessLogs => Set<SupportAccessLog>();
     public DbSet<WorkspaceEmailSettings> EmailSettings => Set<WorkspaceEmailSettings>();
     public DbSet<CourseEmail> Emails => Set<CourseEmail>();
     public DbSet<CourseEmailOptOut> EmailOptOuts => Set<CourseEmailOptOut>();
@@ -224,6 +226,26 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasOne<Course>().WithMany().HasForeignKey(assignment => assignment.CourseId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<CourseGroup>().WithMany().HasForeignKey(assignment => assignment.GroupId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<StudentRecord>().WithMany().HasForeignKey(assignment => assignment.StudentId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<SupportAccessGrant>(entity =>
+        {
+            entity.ToTable("SupportAccessGrants");
+            entity.HasKey(grant => grant.Id);
+            entity.Property(grant => grant.Reason).HasMaxLength(SupportAccessGrant.MaxReasonLength);
+            entity.Property(grant => grant.EndReason).HasMaxLength(40);
+            entity.Property(grant => grant.Status).IsConcurrencyToken();
+            entity.HasIndex(grant => new { grant.WorkspaceId, grant.RequestedAt });
+            entity.HasIndex(grant => new { grant.WorkspaceId, grant.AdminUserId }).IsUnique()
+                .HasFilter("\"Status\" <> 3");
+            entity.HasOne<Workspace>().WithMany().HasForeignKey(grant => grant.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<SupportAccessLog>(entity =>
+        {
+            entity.ToTable("SupportAccessLogs");
+            entity.HasKey(log => log.Id);
+            entity.Property(log => log.What).HasMaxLength(200);
+            entity.HasIndex(log => new { log.WorkspaceId, log.OccurredAt });
+            entity.HasOne<SupportAccessGrant>().WithMany().HasForeignKey(log => log.GrantId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<WorkspaceEmailSettings>(entity =>
         {

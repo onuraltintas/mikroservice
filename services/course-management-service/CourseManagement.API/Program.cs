@@ -196,6 +196,7 @@ api.MapLearningEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
 api.MapCourseEmailEndpoints(app);
+app.MapSupportAccessEndpoints(api);
 app.Run();
 
 public sealed record UpdateProfileRequest(string DisplayName);
