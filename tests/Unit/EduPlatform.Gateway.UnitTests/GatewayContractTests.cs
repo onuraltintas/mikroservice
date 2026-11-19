@@ -183,6 +183,35 @@ public sealed class GatewayContractTests
         (await EchoResponse.ReadAsync(signedInResponse)).Cluster.Should().Be("billing");
     }
 
+    // eduivme.com (19.11.2026): visitors read the site without signing in; editing it needs a signed-in user (the
+    // service itself admits only the system admin).
+    [Fact]
+    public async Task The_eduivme_site_is_public_and_its_admin_needs_a_signed_in_user()
+    {
+        await using var gateway = _fixture.CreateGateway();
+        using var client = gateway.CreateClient();
+
+        using var home = new HttpRequestMessage(HttpMethod.Get, "/api/site/home");
+        home.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var homeResponse = await client.SendAsync(home);
+        homeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await EchoResponse.ReadAsync(homeResponse)).Cluster.Should().Be("site");
+
+        using var anonymous = new HttpRequestMessage(HttpMethod.Get, "/api/site-admin/entries");
+        anonymous.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var anonymousResponse = await client.SendAsync(anonymous);
+        anonymousResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        using var signedIn = new HttpRequestMessage(HttpMethod.Get, "/api/site-admin/entries");
+        signedIn.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            GatewayFactory.CreateToken(Guid.NewGuid().ToString(), roles: ["SystemAdmin"]));
+        signedIn.Headers.Add(GatewayFactory.TestRemoteIpHeader, GatewayFactory.RandomClientIp());
+        using var signedInResponse = await client.SendAsync(signedIn);
+        signedInResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await EchoResponse.ReadAsync(signedInResponse)).Cluster.Should().Be("site");
+    }
+
     [Fact]
     public async Task Other_routes_and_the_service_list_are_unchanged_when_course_management_is_disabled()
     {
@@ -202,7 +231,7 @@ public sealed class GatewayContractTests
         using var listResponse = await client.SendAsync(list);
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var services = await listResponse.Content.ReadFromJsonAsync<string[]>();
-        services.Should().BeEquivalentTo(["identity", "coaching", "notification", "speed-reading", "billing"]);
+        services.Should().BeEquivalentTo(["identity", "coaching", "notification", "speed-reading", "billing", "site"]);
     }
 
     [Fact]

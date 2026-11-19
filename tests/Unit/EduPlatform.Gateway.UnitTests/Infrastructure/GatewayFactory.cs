@@ -28,7 +28,8 @@ public sealed class GatewayFactory : WebApplicationFactory<Program>
         "notification-cluster",
         "speed-reading-cluster",
         "course-management-cluster",
-        "billing-cluster"
+        "billing-cluster",
+        "site-cluster"
     ];
 
     private readonly string _backendBaseAddress;
