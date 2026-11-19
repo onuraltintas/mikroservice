@@ -24,7 +24,8 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
     { category: 'system', label: 'Sistem', description: 'Sistem ayarları, operasyon kayıtları ve yönetici oturum MFA\'sı' },
     { category: 'speed-reading', label: 'Hızlı okuma', description: 'Katalog, program ve ilerleme yönetimi' },
     { category: 'coaching', label: 'Koçluk', description: 'Atama, oturum, sınav ve hedef yönetimi' },
-    { category: 'cms', label: 'CMS ve iletişim', description: 'Sayfa, medya, e-posta ve destek yönetimi' }
+    { category: 'cms', label: 'CMS ve iletişim', description: 'Sayfa, medya, e-posta ve destek yönetimi' },
+    { category: 'course-management', label: 'maxkampüs (Kurs Yönetimi)', description: 'Kurum kayıtlarına destek için bakma ve düzeltme' }
 ];
 
 @Component({

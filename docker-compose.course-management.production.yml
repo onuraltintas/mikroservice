@@ -70,6 +70,13 @@ services:
       identity-service:
         condition: service_started
     restart: unless-stopped
+    healthcheck:
+      # The runtime image has no curl/wget; bash's /dev/tcp is enough. The Host header must be an allowed host.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: course-management-service\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     networks:
       - edu-network
 

@@ -30,7 +30,7 @@ const PROBLEMS: Record<string, string> = {
 };
 
 /**
- * Corrections under a support grant the owner opened with corrections allowed (19.11.2026): contact details, attendance,
+ * eduivme support's corrections (19.11.2026; no owner approval since the user's decision): contact details, attendance,
  * one lesson's time, switching an e-mail kind off. Each one is logged for the owner; students and guardians are not told.
  */
 @Component({
@@ -39,7 +39,7 @@ const PROBLEMS: Record<string, string> = {
   imports: [FormsModule],
   template: `
     <section class="changes" [attr.aria-label]="'Düzeltme: ' + title()">
-      <p class="note">Kurum düzeltme izni verdi. Yaptığınız her değişiklik önce ve sonra değeriyle kurumun kaydına geçer; öğrenci ve velilere bildirim gitmez. Para kayıtları değiştirilemez.</p>
+      <p class="note">Yaptığınız her değişiklik önce ve sonra değeriyle kurumun kaydına geçer; öğrenci ve velilere bildirim gitmez. Para kayıtları değiştirilemez.</p>
       @if (message()) { <p class="ok" role="status">{{ message() }}</p> }
       @if (problem()) { <p class="alert" role="alert">{{ problem() }}</p> }
 
@@ -196,7 +196,8 @@ export class CourseManagementSupportChangesComponent {
         this.busy.set(false);
         const code = response?.error?.code as string | undefined;
         this.problem.set((code && PROBLEMS[code]) ?? (response?.status === 404
-          ? 'Düzeltme yapılamadı: erişim kapanmış, bu bölümde düzeltme izni yok ya da oturumunuz iki adımlı doğrulamayla açılmamış.'
+          ? 'Kayıt bulunamadı. Bölümü yeniden açıp deneyin.'
+          : response?.status === 403 ? 'Düzeltme için iki adımlı doğrulama gerekiyor. Oturumu iki adımlı doğrulamayla yeniden açın.'
           : 'Düzeltme kaydedilemedi. Bilgileri kontrol edip yeniden deneyin.'));
       }
     });

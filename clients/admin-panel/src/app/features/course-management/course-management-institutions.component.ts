@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { CourseManagementSupportChangesComponent } from './course-management-support-changes.component';
@@ -6,7 +6,6 @@ import {
   CourseManagementAdminWorkspaceDetail,
   CourseManagementAdminWorkspaceRow,
   CourseManagementInstitutionsService,
-  CourseManagementSupportGrant,
   SupportSection
 } from './course-management-admin.service';
 
@@ -24,9 +23,9 @@ const COLUMN_LABELS: Record<string, string> = {
 };
 
 /**
- * Kurumlar (19.11.2026): every institution with counts only. A named administrator can ask for time-limited access;
- * the institution's owner approves it in their panel, chooses the sections, whether corrections are allowed, and can end
- * it. Every look and every change is logged.
+ * Kurumlar (19.11.2026): every institution with counts, and support's view and corrections of its records. No owner
+ * approval is needed (user decision, 19.11.2026); the second factor follows the administrators' MFA policy, and every
+ * look and change shows in the institution's support record.
  */
 @Component({
   selector: 'app-course-management-institutions',
@@ -92,52 +91,35 @@ const COLUMN_LABELS: Record<string, string> = {
             <div><dt>Son 30 günde teslim edilemeyen</dt><dd class="num">{{ detail.email.undeliveredLast30Days }}</dd></div>
           </dl>
 
-          <h4>Destek erişimi</h4>
-          @if (activeGrant(); as grant) {
-            <div class="banner" role="status">
-              <strong>Destek erişimi açık: {{ grant.allowsChanges ? 'görüntüleme ve düzeltme' : 'yalnız görüntüleme' }}, {{ remaining(grant) }} kaldı.</strong>
-              Kurumun açtığı bölümler: {{ sectionNames(grant) }}. Her bakış ve her değişiklik kuruma kayıt olarak görünür.
-            </div>
-            <div class="actions">
-              @for (section of grant.sections; track section) {
-                <button type="button" (click)="view(detail.id, section)" [disabled]="sectionLoading()">{{ label(section) }}</button>
-              }
-              <button type="button" class="quiet" (click)="end(detail.id, grant.id)">Erişimi kapat</button>
-            </div>
-            @if (sectionError()) {
-              <p class="alert" role="alert">Bu bölüm açılamadı. Erişimin süresi dolmuş, kurum kapatmış ya da oturumunuz iki adımlı doğrulamayla açılmamış olabilir.</p>
+          <h4>Kurumun kayıtları</h4>
+          <p class="note">Destek için kurumun kayıtlarını açabilir ve küçük düzeltmeler yapabilirsiniz. Her bakış ve her değişiklik kurumun ekranında "Destek kaydı" olarak görünür. İki adımlı doğrulama, Sistem ayarlarındaki "maxkampüs (Kurs Yönetimi)" MFA politikasına göre istenir.</p>
+          <div class="actions">
+            @for (section of sections; track section) {
+              <button type="button" (click)="view(detail.id, section)" [disabled]="sectionLoading()" [attr.aria-pressed]="shownSection() === section">{{ label(section) }}</button>
             }
-            @if (grant.allowsChanges && shownSection(); as section) {
-              @if (section !== 'Finance') {
-                <app-course-management-support-changes [workspaceId]="detail.id" [section]="section" [data]="shownData()"
-                  (changed)="view(detail.id, section)" />
-              } @else { <p class="banner">Tahsilat kayıtlarını yalnız kurum değiştirebilir.</p> }
-            }
-            @for (table of tables(); track table.title) {
-              <div class="scroll">
-                <table>
-                  <caption>{{ table.title }}</caption>
-                  <thead><tr>@for (column of table.columns; track column) { <th scope="col">{{ column }}</th> }</tr></thead>
-                  <tbody>@for (row of table.rows; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> }</tbody>
-                </table>
-              </div>
-            }
-          } @else if (pendingGrant(); as grant) {
-            <p class="banner" role="status">Talebiniz {{ dateTime(grant.requestedAt) }} tarihinde kuruma gitti; kurum sahibinin onayı bekleniyor.</p>
-          } @else {
-            <form class="request" (ngSubmit)="request(detail.id)">
-              <label for="support-reason">Neden bakmanız gerekiyor? Kurum sahibi bunu görecek.</label>
-              <textarea id="support-reason" name="reason" rows="3" maxlength="500" [(ngModel)]="reason"></textarea>
-              @if (requestError()) { <p class="alert" role="alert">{{ requestError() }}</p> }
-              <button type="submit" [disabled]="reason.trim().length < 10">Kurumdan erişim iste</button>
-            </form>
+          </div>
+          @if (sectionError()) { <p class="alert" role="alert">{{ sectionError() }}</p> }
+          @if (shownSection(); as section) {
+            @if (section !== 'Finance') {
+              <app-course-management-support-changes [workspaceId]="detail.id" [section]="section" [data]="shownData()"
+                (changed)="view(detail.id, section)" />
+            } @else { <p class="banner">Tahsilat kayıtlarını yalnız kurum değiştirebilir.</p> }
           }
-          @if (pastGrants().length) {
+          @for (table of tables(); track table.title) {
+            <div class="scroll">
+              <table>
+                <caption>{{ table.title }}</caption>
+                <thead><tr>@for (column of table.columns; track column) { <th scope="col">{{ column }}</th> }</tr></thead>
+                <tbody>@for (row of table.rows; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> }</tbody>
+              </table>
+            </div>
+          }
+          @if (detail.supportLog.length) {
             <details>
-              <summary>Önceki erişimler</summary>
+              <summary>Bu kurumdaki son destek işlemleri</summary>
               <ul>
-                @for (grant of pastGrants(); track grant.id) {
-                  <li>{{ dateTime(grant.requestedAt) }}: {{ endLabel(grant) }}</li>
+                @for (entry of detail.supportLog; track $index) {
+                  <li>{{ dateTime(entry.occurredAt) }}: {{ entry.what }}@if (entry.isChange && entry.after) { ({{ entry.before ? entry.before + ' → ' : '' }}{{ entry.after }}) }</li>
                 }
               </ul>
             </details>
@@ -173,9 +155,9 @@ const COLUMN_LABELS: Record<string, string> = {
     .detail { margin-top: 24px; border-top: 1px solid var(--ds-line, #E1E4E9); padding-top: 20px; }
     .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 0; }
     .facts div { display: flex; flex-direction: column; gap: 2px; } dt { font-size: 14px; color: var(--ds-muted, #555F6D); } dd { margin: 0; font-weight: 600; }
+    .note { margin: 0 0 12px; color: var(--ds-muted, #555F6D); max-width: 75ch; }
     .banner { margin: 0 0 12px; padding: 12px 14px; border-radius: 8px; background: var(--ds-warning-soft, #FDF0D5); color: var(--ds-text, #1C2430); line-height: 1.5; }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .request { display: flex; flex-direction: column; gap: 8px; max-width: 640px; } .request label { font-size: 14px; }
     .alert { color: var(--ds-danger, #B42318); }
     details { margin-top: 16px; } summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -192,16 +174,11 @@ export class CourseManagementInstitutionsComponent implements OnInit {
   readonly selected = signal<CourseManagementAdminWorkspaceDetail | null>(null);
   readonly tables = signal<SupportTable[]>([]);
   readonly sectionLoading = signal(false);
-  readonly sectionError = signal(false);
-  readonly requestError = signal('');
+  readonly sectionError = signal('');
+  readonly sections: SupportSection[] = ['Students', 'Schedule', 'Finance', 'Settings'];
   readonly shownSection = signal<SupportSection | null>(null);
   readonly shownData = signal<unknown>(null);
   query = '';
-  reason = '';
-
-  readonly activeGrant = computed(() => this.selected()?.supportAccess.find(grant => grant.status === 'Active') ?? null);
-  readonly pendingGrant = computed(() => this.selected()?.supportAccess.find(grant => grant.status === 'Requested') ?? null);
-  readonly pastGrants = computed(() => this.selected()?.supportAccess.filter(grant => grant.status === 'Ended') ?? []);
 
   ngOnInit(): void { this.load(0); }
 
@@ -217,50 +194,31 @@ export class CourseManagementInstitutionsComponent implements OnInit {
   open(id: string): void {
     this.tables.set([]);
     this.shownSection.set(null);
-    this.sectionError.set(false);
-    this.requestError.set('');
+    this.sectionError.set('');
     this.service.detail(id).subscribe({ next: detail => this.selected.set(detail), error: () => this.error.set(true) });
-  }
-
-  request(id: string): void {
-    this.requestError.set('');
-    this.service.requestAccess(id, this.reason.trim()).subscribe({
-      next: () => { this.reason = ''; this.open(id); },
-      error: response => this.requestError.set(response?.status === 409
-        ? 'Bu kurum için açık bir talebiniz ya da erişiminiz zaten var.'
-        : 'Talep gönderilemedi. Nedeni 10–500 karakter olarak yazın.')
-    });
-  }
-
-  end(id: string, grantId: string): void {
-    this.service.endAccess(id, grantId).subscribe({ next: () => this.open(id) });
   }
 
   view(id: string, section: SupportSection): void {
     this.sectionLoading.set(true);
-    this.sectionError.set(false);
+    this.sectionError.set('');
     this.service.section(id, section).pipe(finalize(() => this.sectionLoading.set(false))).subscribe({
       next: data => { this.tables.set(toTables(SECTION_LABELS[section], data)); this.shownSection.set(section); this.shownData.set(data); },
-      error: () => { this.tables.set([]); this.shownSection.set(null); this.sectionError.set(true); }
+      error: response => {
+        this.tables.set([]); this.shownSection.set(null);
+        this.sectionError.set(response?.status === 403
+          ? 'Bu bölüm iki adımlı doğrulama istiyor. Oturumu iki adımlı doğrulamayla yeniden açın.'
+          : 'Bu bölüm açılamadı. Sayfayı yenileyip yeniden deneyin.');
+      }
     });
   }
 
   label(section: SupportSection): string { return SECTION_LABELS[section]; }
-  sectionNames(grant: CourseManagementSupportGrant): string { return grant.sections.map(item => SECTION_LABELS[item]).join(', '); }
   typeLabel(type: string): string { return type === 'Institution' ? 'Kurum' : 'Bağımsız öğretmen'; }
   date(value: string): string { return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium' }).format(new Date(value)); }
   dateTime(value: string): string {
     return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
   }
-  remaining(grant: CourseManagementSupportGrant): string {
-    const minutes = Math.max(0, Math.round((new Date(grant.expiresAt ?? 0).getTime() - Date.now()) / 60000));
-    return minutes >= 60 ? `${Math.floor(minutes / 60)} saat ${minutes % 60} dakika` : `${minutes} dakika`;
-  }
-  endLabel(grant: CourseManagementSupportGrant): string {
-    return {
-      Declined: 'kurum reddetti', Expired: 'süresi doldu', EndedByOwner: 'kurum kapattı', EndedBySupport: 'siz kapattınız'
-    }[grant.endReason ?? ''] ?? 'kapandı';
-  }
+
 }
 
 /** Turns a support view (a list, or an object of lists) into simple tables for reading. */

@@ -34,19 +34,16 @@ test('institution panel: switched-off student portal and files, teacher homework
   const base = `http://127.0.0.1:${await freePort()}`;
   // Stand-ins for Identity (the owner's address for support notices) and the notification service (delivery results).
   const internalKey = 'course-management-test-internal-key-0123456789';
-  const identityCalls = [];
   const deliveryCalls = [];
+  // The administrators' MFA policy for Kurs Yönetimi, as Identity would answer it; the test switches it.
+  let mfaMode = 'mutations';
   const stub = createHttpServer(async (request, response) => {
     let body = '';
     for await (const chunk of request) body += chunk;
     const json = body ? JSON.parse(body) : {};
     const reply = value => { response.writeHead(200, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(value)); };
     if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(401); response.end(); return; }
-    if (request.url === '/api/internal/coaching/accounts') {
-      identityCalls.push(json.userIds);
-      return reply({ accounts: json.userIds.map(userId => ({ userId, firstName: 'TEST', lastName: 'Sahip', email: 'sahip@example.test',
-        isActive: true })) });
-    }
+    if (request.url === '/api/internal/mfa-policy/course-management') return reply({ mode: mfaMode });
     if (request.url === '/api/internal/notifications/email/status') {
       deliveryCalls.push(json);
       // Every institution e-mail bounced in this test.
@@ -287,7 +284,8 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(teacherView.items[0].overdueAmount, null);
     assert.equal((await call(`${ws}/students/search?take=500`, owner)).status, 400);
 
-    // Support access: the platform sees no records until the owner approves a named administrator's request.
+    // Support (user decision 19.11.2026): no owner approval; the second factor follows the administrators' MFA policy,
+    // and every look and change is in the institution's support record.
     const adminId = randomUUID();
     const admin = token('coaching', adminId, 'SystemAdmin', { amr: 'mfa' });
     const adminWithoutMfa = token('coaching', adminId, 'SystemAdmin');
@@ -297,43 +295,30 @@ test('institution panel: switched-off student portal and files, teacher homework
     const summary = await (await call(adminBase, admin)).json();
     assert.equal(summary.email.switchedOn, true);
     assert.equal(summary.email.optedOutAddresses, 1);
-    assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'no grant, no records');
-    assert.equal((await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'kısa' })).status, 400);
-    const requested = await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Taksit listesi yanlış görünüyor.' });
-    assert.equal(requested.status, 201, await requested.clone().text());
-    const grantId = (await requested.json()).id;
-    // The owner is e-mailed when support asks, when access opens and when it ends (19.11.2026).
-    const ownerAsked = async count => {
-      for (let attempt = 0; attempt < 40 && identityCalls.filter(ids => ids.includes(ownerId)).length < count; attempt++)
-        await new Promise(done => setTimeout(done, 250));
-      return identityCalls.filter(ids => ids.includes(ownerId)).length;
-    };
-    assert.equal(await ownerAsked(1), 1, 'the owner is told of the request');
-    assert.equal((await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST İkinci talep gönderilmez.' })).status, 409);
-    assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'a request is not access');
+    assert.equal((await call(`/admin/workspaces/${randomUUID()}/support/students`, admin)).status, 404, 'unknown institution');
+    assert.equal((await call(`${adminBase}/support/students`, owner)).status, 403, 'only administrators');
 
-    const ownerView = await (await call(`${ws}/support-access`, owner)).json();
-    assert.equal(ownerView.grants[0].status, 'Requested');
-    assert.equal((await call(`${ws}/support-access/${grantId}/approve`, teacher, 'POST', { hours: 1, sections: [1] })).status, 404);
-    assert.equal((await call(`${ws}/support-access/${grantId}/approve`, owner, 'POST', { hours: 5, sections: [1] })).status, 400);
-    const approved = await call(`${ws}/support-access/${grantId}/approve`, owner, 'POST', { hours: 1, sections: [1] });
-    assert.equal(approved.status, 200, await approved.clone().text());
-    assert.deepEqual((await approved.json()).sections, ['Students']);
-
+    mfaMode = 'required';
+    const blocked = await call(`${adminBase}/support/students`, adminWithoutMfa);
+    assert.equal(blocked.status, 403, 'every operation asks for the second factor when the policy says so');
+    assert.equal((await blocked.json()).code, 'Auth.MfaRequired');
     const students = await call(`${adminBase}/support/students`, admin);
-    assert.equal(students.status, 200);
+    assert.equal(students.status, 200, 'no grant is needed');
     assert.equal((await students.json()).length, 2);
-    assert.equal((await call(`${adminBase}/support/students`, adminWithoutMfa)).status, 404, 'support access needs a second factor');
-    assert.equal((await call(`${adminBase}/support/finance`, admin)).status, 404, 'only the approved sections open');
-    assert.equal((await call(`${adminBase}/support/students`, token('coaching', randomUUID(), 'SystemAdmin', { amr: 'mfa' }))).status, 404,
-      'the grant belongs to the administrator who asked');
-    const logs = (await (await call(`${ws}/support-access`, owner)).json()).logs;
-    assert.equal(logs.length, 1);
-    assert.equal(logs[0].section, 'Students');
-    assert.equal((await call(`${ws}/support-access/${grantId}/end`, owner, 'POST')).status, 200);
-    assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'ended means closed');
-    assert.equal(await ownerAsked(3), 3, 'and of the opening and the end, once each');
 
+    mfaMode = 'mutations';
+    assert.equal((await call(`${adminBase}/support/finance`, adminWithoutMfa)).status, 200, 'looking needs no second factor in "changes only"');
+    const unprotectedChange = await call(`${adminBase}/support/students/${studentA}`, adminWithoutMfa, 'PUT',
+      { displayName: 'TEST Ayşe Y', email: null, phoneNumber: null });
+    assert.equal(unprotectedChange.status, 403, 'a change still does');
+
+    mfaMode = 'disabled';
+    assert.equal((await call(`${adminBase}/support/settings`, adminWithoutMfa)).status, 200, 'policy off: no second factor at all');
+    mfaMode = 'mutations';
+
+    const looks = (await (await call(`${ws}/support-access`, owner)).json()).logs.filter(item => !item.isChange);
+    assert.deepEqual(looks.map(item => item.section).sort(), ['Finance', 'Settings', 'Students']);
+    assert.equal((await call(`${ws}/support-access`, teacher)).status, 404, 'the support record is the owner\'s');
 
     // Delivery is read back: the stand-in says every address bounced, and the sending record shows it.
     const bounced = await waitFor(row => row.id === homework.id && row.delivery === 'Failed', 'delivery result');
@@ -341,20 +326,9 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.ok(deliveryCalls.every(item => item.consumerType === 'CourseManagementEmailConsumer'));
     assert.equal((await (await call(adminBase, admin)).json()).email.undeliveredLast30Days, 1);
 
-    // Corrections: only with the owner's "düzeltme de yapabilsin", only in the opened sections, and they tell no one.
+    // Corrections: no grant needed, and they tell no one.
     const lessonRules = { ...settings(true), rules: [...settings(true).rules, { kind: 5, enabled: true, audience: 3, note: null }] };
     assert.equal((await call(settingsPath, owner, 'PUT', lessonRules)).status, 200);
-    const viewOnly = await (await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Yalnız bakmam gerekiyor.' })).json();
-    await call(`${ws}/support-access/${viewOnly.id}/approve`, owner, 'POST', { hours: 1, sections: [1, 2] });
-    assert.equal((await call(`${adminBase}/support/students/${studentA}`, admin, 'PUT', { displayName: 'TEST Ayşe Y', email: null, phoneNumber: null })).status,
-      404, 'a view-only grant changes nothing');
-    await call(`${ws}/support-access/${viewOnly.id}/end`, owner, 'POST');
-
-    const fixing = await (await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Yoklama ve iletişim düzeltmesi.' })).json();
-    const fixGrant = await call(`${ws}/support-access/${fixing.id}/approve`, owner, 'POST', { hours: 1, sections: [1, 2, 8], allowChanges: true });
-    assert.equal((await fixGrant.json()).allowsChanges, true);
-    assert.equal((await call(`${adminBase}/support/students/${studentA}`, adminWithoutMfa, 'PUT',
-      { displayName: 'TEST Ayşe Yılmaz', email: null, phoneNumber: null })).status, 404, 'corrections need a second factor too');
     const fixedStudent = await call(`${adminBase}/support/students/${studentA}`, admin, 'PUT',
       { displayName: 'TEST Ayşe Yılmaz', email: 'ayse@example.test', phoneNumber: null });
     assert.equal(fixedStudent.status, 200, await fixedStudent.clone().text());

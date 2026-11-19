@@ -101,6 +101,21 @@ public sealed class SupportAccessChangesTests
     }
 
     [Fact]
+    public void Support_entries_need_no_grant_since_the_owner_approval_was_dropped()
+    {
+        var studentId = Guid.NewGuid();
+        var look = SupportAccessLog.View(WorkspaceId, AdminId, SupportAccessSections.Finance, "Tahsilat", Now);
+        var change = SupportAccessLog.Change(WorkspaceId, AdminId, SupportAccessSections.Schedule, "Yoklama düzeltildi", studentId, "Absent", "Present", Now);
+
+        Assert.Null(look.GrantId);
+        Assert.False(look.IsChange);
+        Assert.Null(change.GrantId);
+        Assert.True(change.IsChange);
+        Assert.Equal(("Absent", "Present"), (change.Before, change.After));
+        Assert.Throws<ArgumentException>(() => SupportAccessLog.View(Guid.Empty, AdminId, SupportAccessSections.Students, "x", Now));
+    }
+
+    [Fact]
     public void Delivery_is_recorded_from_every_address_s_answer()
     {
         CourseEmail Sent(params string[] to)

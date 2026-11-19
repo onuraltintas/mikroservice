@@ -44,6 +44,9 @@ builder.Services.AddScoped<ICourseManagementAccountErasureService>(services =>
 builder.Services.AddHttpClient<ICourseManagementLegalHoldStatusProvider, IdentityCourseManagementErasureReadinessProvider>();
 builder.Services.AddHttpClient<IdentityAccountLookup>(client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddHttpClient<NotificationDeliveryClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
+// The administrators' MFA policy for Kurs Yönetimi support (Identity; fails closed).
+builder.Services.AddHttpClient<EduPlatform.Shared.Security.Authorization.IMfaPolicyStore, EduPlatform.Shared.Security.Authorization.MfaPolicyStore>(
+    client => client.Timeout = TimeSpan.FromSeconds(3));
 builder.Services.AddSingleton(TimeProvider.System);
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? builder.Configuration["RabbitMQ:Host"];
 var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") ?? builder.Configuration["RabbitMQ:Username"];

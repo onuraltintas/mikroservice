@@ -80,11 +80,6 @@ public static class OverviewEndpoints
                 };
             }
 
-            var pendingSupport = owner && await db.SupportAccessGrants.AnyAsync(item => item.WorkspaceId == workspaceId
-                && item.Status == SupportAccessStatus.Requested, ct);
-            var activeSupport = owner && (await db.SupportAccessGrants.AsNoTracking().Where(item => item.WorkspaceId == workspaceId
-                && item.Status == SupportAccessStatus.Active).ToListAsync(ct)).Any(item => item.IsActive(now));
-
             return Results.Ok(new
             {
                 today, role = owner ? "Owner" : "Teacher",
@@ -95,8 +90,7 @@ public static class OverviewEndpoints
                     status = item.Status == nameof(LessonSessionStatus.Scheduled) && item.StartsAt <= now && item.EndsAt > now ? "InProgress" : item.Status
                 }),
                 lessonsWaitingForAttendance = waiting,
-                finance, emails,
-                supportAccess = owner ? new { pendingRequest = pendingSupport, active = activeSupport } : null
+                finance, emails
             });
         }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
     }

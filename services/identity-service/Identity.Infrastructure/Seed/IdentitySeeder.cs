@@ -194,7 +194,8 @@ public static class IdentitySeeder
                 [MfaOperationCategories.System] = "Sistem ayarları ve operasyon kayıtlarında MFA kapsamı.",
                 [MfaOperationCategories.SpeedReading] = "Hızlı okuma yönetim işlemlerinde MFA kapsamı.",
                 [MfaOperationCategories.Coaching] = "Koçluk yönetim işlemlerinde MFA kapsamı.",
-                [MfaOperationCategories.Cms] = "CMS ve iletişim yönetim işlemlerinde MFA kapsamı."
+                [MfaOperationCategories.Cms] = "CMS ve iletişim yönetim işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.CourseManagement] = "maxkampüs (Kurs Yönetimi) destek işlemlerinde MFA kapsamı: kurum kayıtlarına bakma ve düzeltme."
             };
 
             foreach (var (category, description) in mfaCategoryDescriptions)

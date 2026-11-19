@@ -151,13 +151,17 @@ public enum SupportAccessNotice
     Ended = 3
 }
 
-/// <summary>One look at an institution's data under a support grant; the owner sees these.</summary>
+/// <summary>
+/// One look at, or one correction of, an institution's data by eduivme support; the owner sees these.
+/// Since 19.11.2026 (user decision) support needs no grant: <see cref="GrantId"/> is set only on entries made under the
+/// earlier owner-approved grants.
+/// </summary>
 public sealed class SupportAccessLog
 {
     private SupportAccessLog() { }
 
     public Guid Id { get; private set; }
-    public Guid GrantId { get; private set; }
+    public Guid? GrantId { get; private set; }
     public Guid WorkspaceId { get; private set; }
     public Guid AdminUserId { get; private set; }
     public SupportAccessSections Section { get; private set; }
@@ -171,16 +175,35 @@ public sealed class SupportAccessLog
     public string? Before { get; private set; }
     public string? After { get; private set; }
 
-    public static SupportAccessLog Create(SupportAccessGrant grant, SupportAccessSections section, string what, DateTimeOffset now) => new()
+    public static SupportAccessLog Create(SupportAccessGrant grant, SupportAccessSections section, string what, DateTimeOffset now)
     {
-        Id = Guid.NewGuid(), GrantId = grant.Id, WorkspaceId = grant.WorkspaceId, AdminUserId = grant.AdminUserId,
-        Section = section, What = Cut(what, 200), OccurredAt = now.ToUniversalTime()
-    };
+        var log = View(grant.WorkspaceId, grant.AdminUserId, section, what, now);
+        log.GrantId = grant.Id;
+        return log;
+    }
+
+    public static SupportAccessLog View(Guid workspaceId, Guid adminUserId, SupportAccessSections section, string what, DateTimeOffset now)
+    {
+        if (workspaceId == Guid.Empty || adminUserId == Guid.Empty) throw new ArgumentException("Workspace and administrator are required.");
+        return new SupportAccessLog
+        {
+            Id = Guid.NewGuid(), WorkspaceId = workspaceId, AdminUserId = adminUserId,
+            Section = section, What = Cut(what, 200), OccurredAt = now.ToUniversalTime()
+        };
+    }
 
     public static SupportAccessLog Change(SupportAccessGrant grant, SupportAccessSections section, string what, Guid targetId,
         string? before, string? after, DateTimeOffset now)
     {
-        var log = Create(grant, section, what, now);
+        var log = Change(grant.WorkspaceId, grant.AdminUserId, section, what, targetId, before, after, now);
+        log.GrantId = grant.Id;
+        return log;
+    }
+
+    public static SupportAccessLog Change(Guid workspaceId, Guid adminUserId, SupportAccessSections section, string what, Guid targetId,
+        string? before, string? after, DateTimeOffset now)
+    {
+        var log = View(workspaceId, adminUserId, section, what, now);
         log.IsChange = true;
         log.TargetId = targetId;
         log.Before = before is null ? null : Cut(before, 200);

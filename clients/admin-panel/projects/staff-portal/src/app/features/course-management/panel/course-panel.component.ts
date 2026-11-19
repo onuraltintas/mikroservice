@@ -61,15 +61,11 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
           }
         </nav>
         <main>
-          @if (supportPending()) {
-            <p class="banner" role="status">eduivme destek ekibi kurum kayıtlarınıza bakmak için izin istedi.
-              <a href="#ayarlar?bolum=destek" (click)="go('settings', $event, 'bolum=destek')">İsteği görüntüleyin</a></p>
-          }
           @if (state.readOnly()) {
             <p class="banner" role="status">Kurum salt okunur: kayıtları görebilir ve dışa aktarabilirsiniz, değişiklik yapamazsınız.</p>
           }
           @switch (section()) {
-            @case ('overview') { <course-overview-section (navigate)="go($event)" (support)="supportPending.set($event)" /> }
+            @case ('overview') { <course-overview-section (navigate)="go($event)" /> }
             @case ('students') { <course-students-section /> }
             @case ('courses') { <course-courses-section /> }
             @case ('calendar') { <course-calendar-section (navigate)="go($event)" /> }
@@ -119,7 +115,6 @@ export class CoursePanelComponent implements OnInit {
   readonly workspaces = signal<CourseWorkspace[]>([]);
   readonly pending = signal<PendingCourseInvitation[]>([]);
   readonly section = signal<PanelSection>('overview');
-  readonly supportPending = signal(false);
   readonly visibleSections = computed(() => SECTIONS.filter(item => this.state.isOwner() || !item.ownerOnly));
   displayName = '';
   workspaceName = '';

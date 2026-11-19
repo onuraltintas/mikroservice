@@ -2,12 +2,14 @@ using System.Data;
 using System.Security.Claims;
 using CourseManagement.Domain;
 using CourseManagement.Infrastructure;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagement.API;
 
 /// <summary>
-/// Corrections under a support grant the owner opened with "düzeltme de yapılabilir" (19.11.2026). A short, fixed list:
+/// eduivme support's corrections of an institution's records (19.11.2026; no owner approval since the user's decision,
+/// second factor by the administrators' MFA policy for Kurs Yönetimi). A short, fixed list:
 /// a student's or guardian's contact details, a student's attendance, a single lesson's time, switching an e-mail kind
 /// off. None of them tells students or guardians anything (no e-mail, no notice), money records are never touched, and
 /// each one is written to the support log with what it was and what it became (codes and field names, no personal data).
@@ -20,10 +22,11 @@ public static class SupportChangeEndpoints
             .RequireAuthorization("CourseManagementAdmin");
 
         admin.MapPut("/students/{studentId:guid}", async (Guid workspaceId, Guid studentId, SupportContactRequest request,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            ClaimsPrincipal user, CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await SupportAccessEndpoints.ChangeGrantAsync(db, workspaceId, user, SupportAccessSections.Students, ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await SupportAccessEndpoints.SupportActorAsync(db, mfa, workspaceId, user, change: true, ct);
+            if (gate.Problem is not null) return gate.Problem;
+            var adminId = gate.AdminId!.Value;
             if (!ValidContact(request)) return Results.BadRequest(new { code = "Student.InvalidInput" });
             var student = await db.Students.SingleOrDefaultAsync(item => item.Id == studentId && item.WorkspaceId == workspaceId, ct);
             if (student is null) return Results.NotFound();
@@ -32,18 +35,19 @@ public static class SupportChangeEndpoints
             try { student.Update(request.DisplayName!, request.Email, request.PhoneNumber); }
             catch (ArgumentException) { return Results.BadRequest(new { code = "Student.InvalidInput" }); }
             var now = DateTimeOffset.UtcNow;
-            db.SupportAccessLogs.Add(SupportAccessLog.Change(grant, SupportAccessSections.Students, "Öğrenci iletişim bilgisi düzeltildi",
+            db.SupportAccessLogs.Add(SupportAccessLog.Change(workspaceId, adminId, SupportAccessSections.Students, "Öğrenci iletişim bilgisi düzeltildi",
                 student.Id, null, string.Join(", ", changed), now));
-            AssignmentEndpoints.AddAudit(db, workspaceId, grant.AdminUserId, student.Id, "Support.Student.Updated");
+            AssignmentEndpoints.AddAudit(db, workspaceId, adminId, student.Id, "Support.Student.Updated");
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { student.Id, student.DisplayName, student.Email, student.PhoneNumber });
         });
 
         admin.MapPut("/guardians/{guardianId:guid}", async (Guid workspaceId, Guid guardianId, SupportContactRequest request,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            ClaimsPrincipal user, CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await SupportAccessEndpoints.ChangeGrantAsync(db, workspaceId, user, SupportAccessSections.Students, ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await SupportAccessEndpoints.SupportActorAsync(db, mfa, workspaceId, user, change: true, ct);
+            if (gate.Problem is not null) return gate.Problem;
+            var adminId = gate.AdminId!.Value;
             if (!ValidContact(request)) return Results.BadRequest(new { code = "Guardian.InvalidInput" });
             var guardian = await db.Guardians.SingleOrDefaultAsync(item => item.Id == guardianId && item.WorkspaceId == workspaceId, ct);
             if (guardian is null) return Results.NotFound();
@@ -51,19 +55,20 @@ public static class SupportChangeEndpoints
             if (changed.Length == 0) return Results.Ok(new { guardian.Id, guardian.DisplayName, guardian.Email, guardian.PhoneNumber });
             try { guardian.Update(request.DisplayName!, request.Email, request.PhoneNumber); }
             catch (ArgumentException) { return Results.BadRequest(new { code = "Guardian.InvalidInput" }); }
-            db.SupportAccessLogs.Add(SupportAccessLog.Change(grant, SupportAccessSections.Students, "Veli iletişim bilgisi düzeltildi",
+            db.SupportAccessLogs.Add(SupportAccessLog.Change(workspaceId, adminId, SupportAccessSections.Students, "Veli iletişim bilgisi düzeltildi",
                 guardian.Id, null, string.Join(", ", changed), DateTimeOffset.UtcNow));
-            AssignmentEndpoints.AddAudit(db, workspaceId, grant.AdminUserId, guardian.Id, "Support.Guardian.Updated");
+            AssignmentEndpoints.AddAudit(db, workspaceId, adminId, guardian.Id, "Support.Guardian.Updated");
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { guardian.Id, guardian.DisplayName, guardian.Email, guardian.PhoneNumber });
         });
 
         // Attendance of a lesson that has begun, also after it was completed, unless the lesson already charged a fee.
         admin.MapPut("/lessons/{lessonId:guid}/students/{studentId:guid}/attendance", async (Guid workspaceId, Guid lessonId,
-            Guid studentId, UpdateLessonAttendanceRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            Guid studentId, UpdateLessonAttendanceRequest request, ClaimsPrincipal user, CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await SupportAccessEndpoints.ChangeGrantAsync(db, workspaceId, user, SupportAccessSections.Schedule, ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await SupportAccessEndpoints.SupportActorAsync(db, mfa, workspaceId, user, change: true, ct);
+            if (gate.Problem is not null) return gate.Problem;
+            var adminId = gate.AdminId!.Value;
             if (!Enum.IsDefined(typeof(LessonAttendanceStatus), request.Status)) return Results.BadRequest(new { code = "Attendance.InvalidStatus" });
             var status = (LessonAttendanceStatus)request.Status;
             try
@@ -87,13 +92,13 @@ public static class SupportChangeEndpoints
                 // Marked by the administrator, who is not a member: the absence e-mail is not sent for it.
                 if (attendance is null)
                 {
-                    attendance = AttendanceRecord.Create(Guid.NewGuid(), workspaceId, lessonId, studentId, status, grant.AdminUserId, now);
+                    attendance = AttendanceRecord.Create(Guid.NewGuid(), workspaceId, lessonId, studentId, status, adminId, now);
                     db.AttendanceRecords.Add(attendance);
                 }
-                else attendance.UpdateStatus(status, grant.AdminUserId, now);
-                db.SupportAccessLogs.Add(SupportAccessLog.Change(grant, SupportAccessSections.Schedule, "Yoklama düzeltildi", studentId,
+                else attendance.UpdateStatus(status, adminId, now);
+                db.SupportAccessLogs.Add(SupportAccessLog.Change(workspaceId, adminId, SupportAccessSections.Schedule, "Yoklama düzeltildi", studentId,
                     before ?? "Yok", status.ToString(), now));
-                AssignmentEndpoints.AddAudit(db, workspaceId, grant.AdminUserId, attendance.Id, "Support.Attendance.Updated");
+                AssignmentEndpoints.AddAudit(db, workspaceId, adminId, attendance.Id, "Support.Attendance.Updated");
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
                 return Results.Ok(new { lessonId, studentId, status = status.ToString() });
@@ -106,10 +111,11 @@ public static class SupportChangeEndpoints
 
         // A single future lesson's time, with the same clash checks the institution's own move has.
         admin.MapPut("/lessons/{lessonId:guid}/schedule", async (Guid workspaceId, Guid lessonId, RescheduleLessonRequest request,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            ClaimsPrincipal user, CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await SupportAccessEndpoints.ChangeGrantAsync(db, workspaceId, user, SupportAccessSections.Schedule, ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await SupportAccessEndpoints.SupportActorAsync(db, mfa, workspaceId, user, change: true, ct);
+            if (gate.Problem is not null) return gate.Problem;
+            var adminId = gate.AdminId!.Value;
             var startsAt = request.StartsAt.ToUniversalTime();
             var endsAt = request.EndsAt.ToUniversalTime();
             var now = DateTimeOffset.UtcNow;
@@ -161,8 +167,8 @@ public static class SupportChangeEndpoints
                 var before = CourseEmailContent.When(lesson.StartsAt);
                 lesson.Reschedule(startsAt, endsAt, roomId);
                 // Audit under its own name: the lesson-change e-mail is not sent for a support correction.
-                AssignmentEndpoints.AddAudit(db, workspaceId, grant.AdminUserId, lesson.Id, "Support.LessonSession.Rescheduled");
-                db.SupportAccessLogs.Add(SupportAccessLog.Change(grant, SupportAccessSections.Schedule, "Ders saati düzeltildi", lesson.Id,
+                AssignmentEndpoints.AddAudit(db, workspaceId, adminId, lesson.Id, "Support.LessonSession.Rescheduled");
+                db.SupportAccessLogs.Add(SupportAccessLog.Change(workspaceId, adminId, SupportAccessSections.Schedule, "Ders saati düzeltildi", lesson.Id,
                     before, CourseEmailContent.When(startsAt), now));
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
@@ -176,17 +182,18 @@ public static class SupportChangeEndpoints
 
         // Switching an e-mail kind off (e.g. it goes to the wrong people). Switching on needs the owner's consent.
         admin.MapPost("/settings/email/{kind}/off", async (Guid workspaceId, CourseEmailKind kind, ClaimsPrincipal user,
-            CourseManagementDbContext db, CancellationToken ct) =>
+            CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await SupportAccessEndpoints.ChangeGrantAsync(db, workspaceId, user, SupportAccessSections.Settings, ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await SupportAccessEndpoints.SupportActorAsync(db, mfa, workspaceId, user, change: true, ct);
+            if (gate.Problem is not null) return gate.Problem;
+            var adminId = gate.AdminId!.Value;
             if (!Enum.IsDefined(kind)) return Results.BadRequest(new { code = "EmailSettings.UnknownKind" });
             var settings = await db.EmailSettings.SingleOrDefaultAsync(item => item.WorkspaceId == workspaceId, ct);
             var now = DateTimeOffset.UtcNow;
             if (settings is null || !settings.SwitchOff(kind, now)) return Results.Ok(new { kind = kind.ToString(), enabled = false });
-            db.SupportAccessLogs.Add(SupportAccessLog.Change(grant, SupportAccessSections.Settings, "E-posta bildirimi kapatıldı",
+            db.SupportAccessLogs.Add(SupportAccessLog.Change(workspaceId, adminId, SupportAccessSections.Settings, "E-posta bildirimi kapatıldı",
                 workspaceId, kind.ToString(), "Kapalı", now));
-            AssignmentEndpoints.AddAudit(db, workspaceId, grant.AdminUserId, workspaceId, "Support.EmailSettings.SwitchedOff");
+            AssignmentEndpoints.AddAudit(db, workspaceId, adminId, workspaceId, "Support.EmailSettings.SwitchedOff");
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { kind = kind.ToString(), enabled = false });
         });

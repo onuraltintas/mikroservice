@@ -14,8 +14,6 @@ const KINDS: Record<string, { title: string; when: string }> = {
   WeeklySchedule: { title: 'Haftalık program', when: 'Pazar 18.00, gelecek haftanın dersleri' },
   PaymentReceived: { title: 'Ödeme alındı', when: 'Ödeme kaydedilince (makbuz yerine geçmez)' }
 };
-const SECTIONS = [{ value: 1, key: 'Students', label: 'Öğrenciler' }, { value: 2, key: 'Schedule', label: 'Takvim ve yoklama' },
-  { value: 4, key: 'Finance', label: 'Tahsilat' }, { value: 8, key: 'Settings', label: 'Ayarlar' }];
 
 /** Ayarlar: e-mails (with consent, preview, test and the sending record), branches and rooms, support access, plan, profile. */
 @Component({
@@ -132,35 +130,13 @@ const SECTIONS = [{ value: 1, key: 'Students', label: 'Öğrenciler' }, { value:
       }
       @case ('support') {
         <section class="card card-pad stack" style="gap: 14px">
-          <h2>Destek erişimi</h2>
-          <p class="muted" style="margin: 0">eduivme kurum kayıtlarınızı görmez. Destek için bakmamız gerekirse izin isteriz; siz süreyi ve bölümleri seçersiniz, istediğiniz an kapatırsınız. İsterseniz düzeltme de yapmamıza izin verebilirsiniz. Her bakış ve her değişiklik aşağıda listelenir; istek, açılış ve kapanışta size e-posta gelir.</p>
-          @for (grant of support()?.grants ?? []; track grant.id) {
-            <div class="card card-pad stack" style="gap: 10px">
-              <div class="actions" style="justify-content: space-between"><strong>{{ grantTitle(grant.status) }}</strong>
-                <span class="muted">{{ dateTime(grant.requestedAt) }}</span></div>
-              <p style="margin: 0">Neden: {{ grant.reason }}</p>
-              @if (grant.status === 'Requested' && !state.readOnly()) {
-                <div class="form-grid">
-                  <label class="field">Süre<select [(ngModel)]="approveHours"><option [ngValue]="1">1 saat</option><option [ngValue]="24">24 saat</option><option [ngValue]="72">3 gün</option><option [ngValue]="168">7 gün</option></select></label>
-                </div>
-                <fieldset class="days"><legend>Hangi bölümler</legend>
-                  @for (item of sections; track item.value) { <label class="check"><input type="checkbox" [(ngModel)]="approveSections[item.value]">{{ item.label }}</label> }</fieldset>
-                <label class="check" style="align-items: flex-start"><input type="checkbox" [(ngModel)]="approveChanges">
-                  <span><strong>Düzeltme de yapabilsin.</strong> <span class="muted">Seçtiğiniz bölümlerde: öğrenci ve veli iletişim bilgisi, yoklama, tek bir dersin saati, bir e-posta bildirimini kapatma. Para kayıtlarına dokunulmaz; öğrenci ve velilere bildirim gitmez. İşaretlemezseniz yalnız görüntüleme.</span></span></label>
-                <div class="actions"><button type="button" class="btn" (click)="approve(grant.id)" [disabled]="busy() || !anySection()">İzin ver</button>
-                  <button type="button" class="btn-secondary" (click)="decline(grant.id)" [disabled]="busy()">Reddet</button></div>
-              } @else if (grant.status === 'Active') {
-                <p class="banner" style="margin: 0">Açık ({{ grant.allowsChanges ? 'görüntüleme ve düzeltme' : 'yalnız görüntüleme' }}): {{ sectionNames(grant.sections) }}, {{ grant.expiresAt ? dateTime(grant.expiresAt) : '' }} tarihine kadar.</p>
-                <div><button type="button" class="btn-secondary" (click)="endGrant(grant.id)" [disabled]="busy()">Erişimi şimdi kapat</button></div>
-              } @else { <p class="muted" style="margin: 0">{{ endText(grant.endReason) }}</p> }
-            </div>
-          } @empty { <p class="empty">Destek erişimi istenmedi.</p> }
+          <h2>Destek kaydı</h2>
+          <p class="muted" style="margin: 0">eduivme destek ekibi, bir sorunu çözmek için kayıtlarınıza bakabilir ve küçük düzeltmeler yapabilir: öğrenci ve veli iletişim bilgisi, yoklama, tek bir dersin saati, bir e-posta bildirimini kapatma. Para kayıtlarına dokunmaz; öğrenci ve velilere bildirim gitmez. Yapılan her bakış ve değişiklik burada listelenir.</p>
           @if (support()?.logs?.length) {
-            <h3>Bakış ve değişiklik kaydı</h3>
             <ul>@for (log of support()!.logs; track $index) {
-              <li>{{ dateTime(log.occurredAt) }}: @if (log.isChange) { <strong>{{ log.what }}</strong>@if (log.target) {, {{ log.target }}}@if (log.after) {: {{ change(log.before, log.after) }}} } @else { {{ log.what }} }</li>
+              <li>{{ dateTime(log.occurredAt) }}: @if (log.isChange) { <strong>{{ log.what }}</strong>@if (log.target) {, {{ log.target }}}@if (log.after) {: {{ change(log.before, log.after) }}} } @else { {{ log.what }} görüntülendi }</li>
             }</ul>
-          }
+          } @else { <p class="empty">Destek ekibi kayıtlarınıza bakmadı.</p> }
         </section>
       }
       @case ('plan') {
@@ -200,11 +176,10 @@ export class SettingsSectionComponent {
   private readonly api = inject(CoursePanelApi);
   private readonly service = inject(CourseManagementService);
   readonly kinds = KINDS;
-  readonly sections = SECTIONS;
   readonly hours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
   readonly tabs: { id: Tab; label: string; slug: string }[] = [
     { id: 'emails', label: 'E-posta bildirimleri', slug: 'eposta' }, { id: 'branches', label: 'Şube ve derslik', slug: 'subeler' },
-    { id: 'support', label: 'Destek erişimi', slug: 'destek' }, { id: 'plan', label: 'Abonelik', slug: 'abonelik' }, { id: 'profile', label: 'Profilim', slug: 'profil' }];
+    { id: 'support', label: 'Destek kaydı', slug: 'destek' }, { id: 'plan', label: 'Abonelik', slug: 'abonelik' }, { id: 'profile', label: 'Profilim', slug: 'profil' }];
   readonly tab = signal<Tab>('emails');
   readonly email = signal<PanelEmailSettings | null>(null);
   readonly preview = signal<PanelEmailPreview | null>(null);
@@ -218,7 +193,6 @@ export class SettingsSectionComponent {
   readonly dateTime = formatDateTime;
   consent = false; testEmail = ''; logSkip = 0;
   branchName = ''; roomBranchId = ''; roomName = ''; roomCapacity: number | null = null;
-  approveHours = 24; approveSections: Record<number, boolean> = { 1: true }; approveChanges = false;
   displayName = '';
 
   constructor() {
@@ -298,29 +272,12 @@ export class SettingsSectionComponent {
     }, 'Derslik eklendi.');
   }
 
-  anySection(): boolean { return SECTIONS.some(item => this.approveSections[item.value]); }
-  grantTitle(status: string): string { return status === 'Requested' ? 'İzin isteği bekliyor' : status === 'Active' ? 'Destek erişimi açık' : 'Kapandı'; }
   change(before: string | null, after: string): string {
     const labels: Record<string, string> = { Present: 'geldi', Absent: 'gelmedi', Late: 'geç geldi', Excused: 'izinli', Yok: 'yoklama yok', Kapalı: 'kapalı',
       Absence: 'devamsızlık', HomeworkNotDone: 'yapılmayan ödev', InstallmentReminder: 'taksit hatırlatma', InstallmentOverdue: 'geciken taksit',
       LessonChanged: 'ders değişikliği', WeeklySchedule: 'haftalık program', PaymentReceived: 'ödeme alındı' };
     const name = (value: string) => labels[value] ?? value;
     return before ? `${name(before)} → ${name(after)}` : name(after);
-  }
-  sectionNames(keys: string[]): string { return keys.map(key => SECTIONS.find(item => item.key === key)?.label ?? key).join(', '); }
-  endText(reason: string | null): string {
-    return ({ Declined: 'Reddettiniz.', Expired: 'Süresi doldu.', EndedByOwner: 'Siz kapattınız.', EndedBySupport: 'Destek ekibi kapattı.' } as Record<string, string>)[reason ?? ''] ?? 'Kapandı.';
-  }
-  approve(grantId: string): Promise<void> {
-    const sections = SECTIONS.filter(item => this.approveSections[item.value]).map(item => item.value);
-    return this.act(async () => { await this.api.approveSupport(this.state.id(), grantId, this.approveHours, sections, this.approveChanges); this.approveChanges = false; this.support.set(await this.api.support(this.state.id())); },
-      'İzin verildi. İstediğiniz an kapatabilirsiniz.');
-  }
-  decline(grantId: string): Promise<void> {
-    return this.act(async () => { await this.api.declineSupport(this.state.id(), grantId); this.support.set(await this.api.support(this.state.id())); }, 'İstek reddedildi.');
-  }
-  endGrant(grantId: string): Promise<void> {
-    return this.act(async () => { await this.api.endSupport(this.state.id(), grantId); this.support.set(await this.api.support(this.state.id())); }, 'Destek erişimi kapatıldı.');
   }
   saveProfile(): Promise<void> {
     return this.act(async () => { await this.service.saveProfile(this.displayName.trim()); await this.state.refreshLists(); }, 'Adınız kaydedildi.');
