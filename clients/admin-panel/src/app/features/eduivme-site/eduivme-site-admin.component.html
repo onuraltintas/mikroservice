@@ -1,0 +1,213 @@
+<main class="site-admin" aria-labelledby="site-admin-title">
+  <header class="site-admin__head">
+    <div>
+      <p class="site-admin__eyebrow">eduivme sitesi</p>
+      <h1 id="site-admin-title">{{ viewInfo().label }}</h1>
+      <p class="site-admin__lead">{{ viewInfo().description }}</p>
+    </div>
+    <a class="ds-btn ds-btn--secondary" href="https://eduivme.com" target="_blank" rel="noopener">Siteyi aç<span class="ds-visually-hidden"> (yeni sekmede)</span></a>
+  </header>
+
+  @if (loading() && !entries().length) {
+    <p class="site-admin__muted" role="status"><span class="ds-spinner" aria-hidden="true"></span> İçerik yükleniyor</p>
+  } @else if (loadError()) {
+    <div class="ds-alert" role="alert"><p>{{ loadError() }}</p><button type="button" class="ds-btn ds-btn--secondary" (click)="load()">Yeniden dene</button></div>
+  } @else if (view() === 'media') {
+    <section class="card" aria-labelledby="upload-title">
+      <h2 id="upload-title">Görsel yükle</h2>
+      <p class="site-admin__muted">PNG, JPEG ya da WebP; en çok 2 MB. Yüklenen görseli giriş bölümünde, ürün kartlarında ve ürün sayfalarında seçebilirsiniz.</p>
+      <div class="form-row">
+        <label class="field"><span>Görsel</span><input type="file" accept="image/png,image/jpeg,image/webp" (change)="pickFile($event)"></label>
+        <label class="field"><span>Görselin açıklaması (ekran okuyucular için)</span><input [(ngModel)]="uploadAlt" name="uploadAlt" maxlength="500"></label>
+      </div>
+      @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+      <button type="button" class="ds-btn ds-btn--primary" (click)="upload()">Yükle</button>
+    </section>
+    <section class="card" aria-labelledby="media-title">
+      <h2 id="media-title">Görseller</h2>
+      @if (!media().length) { <p class="site-admin__muted">Henüz görsel yok. Yukarıdan ilk görseli yükleyin.</p> }
+      <ul class="media-grid">
+        @for (item of media(); track item.id) {
+          <li class="media-item">
+            <img [src]="item.url" [alt]="item.altText || ''" loading="lazy">
+            <span class="media-item__name">{{ item.fileName }}</span>
+            <span class="site-admin__muted">{{ size(item.sizeBytes) }}{{ item.altText ? ', ' + item.altText : '' }}</span>
+            <button type="button" class="ds-btn ds-btn--quiet" (click)="deleteMedia(item)">Sil<span class="ds-visually-hidden"> ({{ item.fileName }})</span></button>
+          </li>
+        }
+      </ul>
+    </section>
+  } @else {
+    @if (view() === 'pages') {
+      <section class="card pages" aria-labelledby="pages-title">
+        <div class="group__head">
+          <h2 id="pages-title">Ürün sayfaları</h2>
+          <button type="button" class="ds-btn ds-btn--secondary" (click)="addPage()">Yeni ürün sayfası</button>
+        </div>
+        @if (!pages().length) { <p class="site-admin__muted">Henüz ürün sayfası yok. "Yeni ürün sayfası" ile ilkini oluşturun.</p> }
+        <ul class="page-list">
+          @for (page of pages(); track page.id) {
+            <li>
+              <button type="button" class="page-tab" [attr.aria-pressed]="selectedPage() === page.slug" (click)="selectPage(page.slug!)">
+                <strong>{{ page.title }}</strong><span>eduivme.com/urunler/{{ page.slug }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+        @if (pageEntry(selectedPage()); as page) {
+          <div class="row">
+            <span class="row__main"><strong>Sayfanın üst kısmı</strong><span class="site-admin__muted">{{ page.subtitle || page.title }}</span></span>
+            <span class="pill pill--{{ state(page).tone }}">{{ state(page).label }}</span>
+            <button type="button" class="ds-btn ds-btn--quiet" (click)="edit(page)">Düzenle</button>
+          </div>
+        }
+      </section>
+    }
+
+    <div class="layout">
+      <div class="groups">
+        @for (group of groups(); track group.kind + group.group) {
+          <section class="card" [attr.aria-label]="group.title">
+            <div class="group__head">
+              <h2>{{ group.title }}</h2>
+              @if (group.canAdd) { <button type="button" class="ds-btn ds-btn--secondary" (click)="add(group)">Ekle</button> }
+            </div>
+            @if (!group.entries.length) { <p class="site-admin__muted">Henüz içerik yok. "Ekle" ile ekleyin; boş bölümler sitede görünmez.</p> }
+            <ul>
+              @for (entry of group.entries; track entry.id; let first = $first; let last = $last) {
+                <li class="row" [class.row--active]="draft()?.id === entry.id">
+                  <span class="row__main">
+                    <strong>{{ entry.kind === 'section' ? sectionLabel(entry) : entry.title }}</strong>
+                    <span class="site-admin__muted">{{ entry.kind === 'section' ? entry.title : (entry.subtitle || entry.body) }}</span>
+                  </span>
+                  <span class="pill pill--{{ state(entry).tone }}">{{ state(entry).label }}</span>
+                  @if (group.ordered) {
+                    <span class="row__order">
+                      <button type="button" class="icon-button" [disabled]="first" (click)="move(group, entry, -1)" [attr.aria-label]="entry.title + ' yukarı taşı'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+                      <button type="button" class="icon-button" [disabled]="last" (click)="move(group, entry, 1)" [attr.aria-label]="entry.title + ' aşağı taşı'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+                    </span>
+                  }
+                  <button type="button" class="ds-btn ds-btn--quiet" (click)="edit(entry)">Düzenle<span class="ds-visually-hidden"> ({{ entry.title }})</span></button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      @if (draft(); as d) {
+        <form class="card editor" (ngSubmit)="save()" aria-labelledby="editor-title">
+          <div class="group__head">
+            <h2 id="editor-title">{{ d.id ? form()!.label + ' düzenle' : 'Yeni ' + form()!.label.toLocaleLowerCase('tr') }}</h2>
+            <button type="button" class="icon-button" (click)="closeEditor()" aria-label="Düzenlemeyi kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+
+          @if (has('slug')) {
+            @if (d.kind === 'section') {
+              <label class="field"><span>Bölüm</span>
+                <select [(ngModel)]="d.slug" name="slug">@for (option of sectionChoices(); track option.slug) {<option [ngValue]="option.slug">{{ option.label }}</option>}</select>
+              </label>
+            } @else {
+              <label class="field"><span>Sayfa adresi</span><span class="field__hint">eduivme.com/urunler/{{ d.slug || 'adres' }}. Küçük harf, rakam ve tire.</span>
+                <input [(ngModel)]="d.slug" name="slug" maxlength="80" required pattern="[a-z0-9]+(-[a-z0-9]+)*"></label>
+            }
+            @if (error('slug')) { <p class="field__error">{{ error('slug') }}</p> }
+          }
+
+          <label class="field"><span>{{ form()!.titleLabel }}</span><input [(ngModel)]="d.title" name="title" maxlength="200" required></label>
+          @if (error('title')) { <p class="field__error">{{ error('title') }}</p> }
+
+          @if (has('subtitle')) {
+            <label class="field"><span>{{ form()!.subtitleLabel }}</span><input [(ngModel)]="d.subtitle" name="subtitle" maxlength="500"></label>
+          }
+          @if (has('body')) {
+            <label class="field"><span>{{ form()!.bodyLabel }}</span><textarea [(ngModel)]="d.body" name="body" rows="4" maxlength="4000"></textarea></label>
+            @if (error('body')) { <p class="field__error">{{ error('body') }}</p> }
+          }
+          @if (has('highlights')) {
+            <label class="field"><span>Öne çıkanlar</span><span class="field__hint">Her satıra bir madde; en çok 6.</span><textarea [(ngModel)]="d.highlightsText" name="highlights" rows="4"></textarea></label>
+            @if (error('highlights')) { <p class="field__error">{{ error('highlights') }}</p> }
+          }
+          @if (has('brand')) {
+            <fieldset class="field"><legend>Marka rengi ve simgesi</legend>
+              <div class="choices">@for (option of brands; track option.value) {<label class="choice"><input type="radio" name="brand" [value]="option.value" [(ngModel)]="d.brand"> {{ option.label }}</label>}</div>
+            </fieldset>
+          }
+          @if (has('icon')) {
+            <label class="field"><span>Simge</span><select [(ngModel)]="d.icon" name="icon">@for (option of icons; track option.value) {<option [ngValue]="option.value">{{ option.label }}</option>}</select></label>
+          }
+          @if (has('link')) {
+            <fieldset class="field"><legend>{{ form()!.linkLabel }}</legend>
+              <span class="field__hint">Adres https:// ile (başka site) ya da / ile (eduivme.com içinde, örnek: /urunler/kurs-yonetimi) başlar. Sayfa içindeki bir bölüm için # kullanın.</span>
+              <div class="form-row">
+                <label class="field"><span>Yazı</span><input [(ngModel)]="d.linkLabel" name="linkLabel" maxlength="80"></label>
+                <label class="field"><span>Adres</span><input [(ngModel)]="d.linkUrl" name="linkUrl" maxlength="500" inputmode="url"></label>
+              </div>
+              @if (error('linkUrl')) { <p class="field__error">{{ error('linkUrl') }}</p> }
+            </fieldset>
+          }
+          @if (has('secondaryLink')) {
+            <fieldset class="field"><legend>İkinci düğme</legend>
+              <div class="form-row">
+                <label class="field"><span>Yazı</span><input [(ngModel)]="d.secondaryLinkLabel" name="secondaryLinkLabel" maxlength="80"></label>
+                <label class="field"><span>Adres</span><input [(ngModel)]="d.secondaryLinkUrl" name="secondaryLinkUrl" maxlength="500" inputmode="url"></label>
+              </div>
+              @if (error('secondaryLinkUrl')) { <p class="field__error">{{ error('secondaryLinkUrl') }}</p> }
+            </fieldset>
+          }
+          @if (has('image')) {
+            <label class="field"><span>Görsel</span><span class="field__hint">Seçilmezse markanın simgesi ya da hazır çizim kullanılır. Görselleri "Görseller" bölümünden yükleyin.</span>
+              <select [(ngModel)]="d.imageId" name="imageId"><option [ngValue]="null">Görsel yok</option>@for (item of media(); track item.id) {<option [ngValue]="item.id">{{ item.fileName }}</option>}</select>
+            </label>
+            @if (imageUrl(d.imageId); as url) { <img class="editor__preview" [src]="url" alt=""> }
+          }
+          @if (has('cta')) {
+            <fieldset class="field"><legend>Sayfa sonundaki çağrı</legend>
+              <span class="field__hint">Başlık boşsa bu bölüm görünmez. Düğme olarak ana düğme kullanılır.</span>
+              <label class="field"><span>Başlık</span><input [(ngModel)]="d.ctaTitle" name="ctaTitle" maxlength="200"></label>
+              <label class="field"><span>Metin</span><input [(ngModel)]="d.ctaBody" name="ctaBody" maxlength="500"></label>
+            </fieldset>
+          }
+          @if (has('seo')) {
+            <fieldset class="field"><legend>Arama motorları</legend>
+              <label class="field"><span>Sayfa başlığı</span><input [(ngModel)]="d.seoTitle" name="seoTitle" maxlength="120"></label>
+              <label class="field"><span>Açıklama</span><textarea [(ngModel)]="d.seoDescription" name="seoDescription" rows="2" maxlength="500"></textarea></label>
+            </fieldset>
+          }
+
+          <fieldset class="field"><legend>Yayın</legend>
+            <label class="choice"><input type="checkbox" [(ngModel)]="d.isPublished" name="isPublished"> Sitede yayında</label>
+            <label class="field"><span>Yayın zamanı (isteğe bağlı)</span><span class="field__hint">Boşsa hemen yayınlanır.</span><input type="datetime-local" [(ngModel)]="d.publishAtLocal" name="publishAtLocal"></label>
+          </fieldset>
+
+          @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+
+          <div class="editor__actions">
+            <button type="submit" class="ds-btn ds-btn--primary" [disabled]="saving()">{{ saving() ? 'Kaydediliyor' : (d.id ? 'Kaydet' : 'Ekle') }}</button>
+            <button type="button" class="ds-btn ds-btn--secondary" (click)="closeEditor()">Vazgeç</button>
+            @if (d.id) {
+              <button type="button" class="ds-btn ds-btn--quiet" (click)="showRevisions()">Sürüm geçmişi</button>
+              @if (d.kind !== 'site' && d.kind !== 'hero') {
+                <button type="button" class="ds-btn ds-btn--quiet editor__delete" (click)="remove()">{{ confirmDelete() ? (d.kind === 'page' ? 'Sayfayı ve bölümlerini sil' : 'Silmeyi onayla') : 'Sil' }}</button>
+              }
+            }
+          </div>
+          @if (confirmDelete()) { <p class="site-admin__muted" role="status">Silinen içerik geri getirilemez. Yalnız sitede gizlemek için "Sitede yayında" kutusunu kaldırın.</p> }
+
+          @if (revisions(); as list) {
+            <section class="revisions" aria-labelledby="revisions-title">
+              <h3 id="revisions-title">Sürüm geçmişi</h3>
+              @if (!list.length) { <p class="site-admin__muted">Bu içerik henüz hiç değiştirilmedi.</p> }
+              <ul>
+                @for (revision of list; track revision.id) {
+                  <li class="row"><span class="row__main"><strong>{{ revision.version }}. sürüm</strong><span class="site-admin__muted">{{ revision.title }}, {{ revision.createdAt.slice(0, 16).replace('T', ' ') }}</span></span>
+                    <button type="button" class="ds-btn ds-btn--quiet" (click)="restore(revision)">Geri yükle</button></li>
+                }
+              </ul>
+            </section>
+          }
+        </form>
+      }
+    </div>
+  }
+</main>

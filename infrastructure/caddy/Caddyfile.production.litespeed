@@ -238,6 +238,14 @@ admin.eduivme.com:80 {
 		redir https://ogretmen.eduivme.com{uri} 302
 	}
 
+	# The site's own content and images (site-service, no sign-in) are read on eduivme.com itself.
+	@siteContent path /api/site/*
+	handle @siteContent {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
 	@management path /auth /auth/* /dashboard /dashboard/* /other-site /api /api/* /hubs /hubs/*
 	handle @management {
 		redir https://admin.eduivme.com{uri} 302

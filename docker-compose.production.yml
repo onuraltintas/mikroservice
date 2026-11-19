@@ -318,6 +318,19 @@ services:
     networks:
       - edu-network
 
+  # eduivme.com content; the database lives on the same PostgreSQL server (POSTGRES_DB_SITE, default eduivme_site).
+  site-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/site-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+
+  site-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/site-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      OTEL_SERVICE_NAME: EduPlatform.Site
+    restart: unless-stopped
+
   api-gateway:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/api-gateway:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:

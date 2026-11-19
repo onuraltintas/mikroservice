@@ -291,6 +291,8 @@ jobs:
             project: services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
           - name: billing
             project: services/billing-service/Billing.API/Billing.API.csproj
+          - name: site
+            project: services/site-service/Site.API/Site.API.csproj
           - name: gateway
             project: services/api-gateway/EduPlatform.Gateway.csproj
     steps:
@@ -431,6 +433,35 @@ jobs:
         with:
           name: billing-test-results
           path: tests/Integration/Billing.IntegrationTests/TestResults/
+          if-no-files-found: warn
+
+  site-tests:
+    name: eduivme site content and host tests
+    runs-on: ubuntu-latest
+    needs: [source-safety, dotnet]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore site test project
+        run: dotnet restore tests/Integration/Site.IntegrationTests/Site.IntegrationTests.csproj
+
+      - name: Run site tests
+        run: >-
+          dotnet test tests/Integration/Site.IntegrationTests/Site.IntegrationTests.csproj
+          --configuration Release --no-restore --logger "trx;LogFileName=site-tests.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-test-results
+          path: tests/Integration/Site.IntegrationTests/TestResults/
           if-no-files-found: warn
 
   course-management-messaging-integration:
@@ -636,6 +667,7 @@ jobs:
           dotnet restore services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
           dotnet restore services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
           dotnet restore services/billing-service/Billing.API/Billing.API.csproj
+          dotnet restore services/site-service/Site.API/Site.API.csproj
 
       - name: Fail when EF models have unapplied changes
         shell: bash
@@ -666,6 +698,10 @@ jobs:
           "$ef" migrations has-pending-model-changes \
             --project services/billing-service/Billing.Infrastructure/Billing.Infrastructure.csproj \
             --startup-project services/billing-service/Billing.Infrastructure/Billing.Infrastructure.csproj \
+            --configuration Release
+          "$ef" migrations has-pending-model-changes \
+            --project services/site-service/Site.Infrastructure/Site.Infrastructure.csproj \
+            --startup-project services/site-service/Site.Infrastructure/Site.Infrastructure.csproj \
             --configuration Release
 
   gateway-smoke:
@@ -780,6 +816,8 @@ jobs:
             node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); if (config.services["billing-service"] || config.services["api-gateway"].environment.Billing__Enabled) throw new Error("Production must not run Billing without its overlay.");'
           docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.billing.production.yml config --format json |
             node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); const service=config.services["billing-service"]; if (!service || service.environment.ASPNETCORE_ENVIRONMENT!=="Production" || !service.depends_on["billing-migrations"] || config.services["api-gateway"].environment.Billing__Enabled!=="true") throw new Error("The Billing production overlay is incomplete.");'
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.production.yml config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); const service=config.services["site-service"]; if (!service || service.environment.ASPNETCORE_ENVIRONMENT!=="Production" || !service.depends_on["site-migrations"] || config.services["api-gateway"].environment["ReverseProxy__Clusters__site-cluster__Destinations__destination1__Address"]!=="http://site-service:8080") throw new Error("The eduivme site service is not wired for production.");'
 
       - name: Validate staging VPS configuration
         env:
@@ -892,6 +930,7 @@ jobs:
             services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
             services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
             services/billing-service/Billing.API/Billing.API.csproj
+            services/site-service/Site.API/Site.API.csproj
             services/api-gateway/EduPlatform.Gateway.csproj
           )
           for project in "${projects[@]}"; do
@@ -908,7 +947,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, course-management-postgres-smoke, billing-tests, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend, coaching-development-regression]
+    needs: [dotnet, tests, course-management-postgres-smoke, billing-tests, site-tests, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend, coaching-development-regression]
     strategy:
       fail-fast: false
       matrix:
@@ -931,6 +970,9 @@ jobs:
           - name: billing
             context: .
             dockerfile: services/billing-service/Dockerfile
+          - name: site
+            context: .
+            dockerfile: services/site-service/Dockerfile
           - name: gateway
             context: .
             dockerfile: services/api-gateway/Dockerfile

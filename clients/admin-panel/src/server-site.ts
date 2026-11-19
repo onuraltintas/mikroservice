@@ -42,7 +42,16 @@ export function publicOrigin(host: string | undefined, allowedHosts: readonly st
   return name === 'localhost' || name === '127.0.0.1' ? `http://${(host ?? '').trim().toLowerCase()}` : `https://${name}`;
 }
 
+/** eduivme.com and www.eduivme.com: the parent brand's own site (19.11.2026), not one of the panel addresses. */
+export function isEduivmeSiteHost(hostname: string | null | undefined): boolean {
+  return /^(www\.)?eduivme\.com$/i.test((hostname ?? '').trim().replace(/\.$/, ''));
+}
+
 export function buildRobots(origin: string): string {
+  // eduivme.com: its home page and product pages are public; the addresses it forwards are not.
+  if (isEduivmeSiteHost(new URL(origin).hostname)) {
+    return ['User-agent: *', 'Allow: /', 'Disallow: /api', 'Disallow: /auth', 'Disallow: /dashboard', `Sitemap: ${origin}/sitemap.xml`, ''].join('\n');
+  }
   // Canlı test B5 (18.11.2026): the public Coaching pages live on maxkoc.com only; the parent, teacher, institution
   // and management addresses have nothing for search engines.
   const site = siteForHost(new URL(origin).hostname);
@@ -71,6 +80,24 @@ export function buildSitemap(origin: string, entries: readonly SitemapEntry[]): 
   }
   const body = urls.map(url => `  <url><loc>${escapeXml(url.loc)}</loc>${url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : ''}</url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+/** eduivme.com's sitemap: the home page and the published product pages (site-service). */
+export function buildEduivmeSitemap(origin: string, pages: readonly { slug: string; lastModified: string }[]): string {
+  const urls: { loc: string; lastmod?: string }[] = [{ loc: `${origin}/` }];
+  for (const page of pages) {
+    if (!SLUG_PATTERN.test(page.slug)) continue;
+    const date = new Date(page.lastModified);
+    urls.push({ loc: `${origin}/urunler/${page.slug}`, lastmod: Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 10) });
+  }
+  const body = urls.map(url => `  <url><loc>${escapeXml(url.loc)}</loc>${url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : ''}</url>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+/** The eduivme.com product page a URL shows, for link previews: `/urunler/{slug}`. */
+export function productPagePreviewTarget(path: string): string | null {
+  const match = /^\/urunler\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(path);
+  return match ? match[1] : null;
 }
 
 /** The CMS item a public URL shows, for link previews: `/coaching/blog/{slug}` or `/coaching/pages/{slug}`. */

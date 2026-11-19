@@ -21,9 +21,9 @@ ROOT = Path(__file__).resolve().parents[2]
 ADMIN = ROOT / 'clients/admin-panel/public'
 STAFF = ROOT / 'clients/admin-panel/projects/staff-portal/public'
 READING = ROOT / 'clients/speed-reading/public'
-BG = {'edu': '#1C2430', 'koc': '#1F4E8C', 'ho': '#0B7A64'}
-NAME = {'edu': 'eduivme', 'koc': 'maxkoç', 'ho': 'Master Hızlı Okuma'}
-SLUG = {'edu': 'eduivme', 'koc': 'maxkoc', 'ho': 'master-hizli-okuma'}
+BG = {'edu': '#1C2430', 'koc': '#1F4E8C', 'ho': '#0B7A64', 'km': '#3A2E14'}
+NAME = {'edu': 'eduivme', 'koc': 'maxkoç', 'ho': 'Master Hızlı Okuma', 'km': 'Kurs Yönetimi'}
+SLUG = {'edu': 'eduivme', 'koc': 'maxkoc', 'ho': 'master-hizli-okuma', 'km': 'kurs-yonetimi'}
 
 
 def svg(kind: str, maskable: bool = False) -> str:
@@ -69,6 +69,8 @@ def icons() -> None:
         png(svg(kind, maskable=True), 512, ADMIN / f'brand/{SLUG[kind]}-512.png')
         ico(kind, ADMIN / f'brand/{SLUG[kind]}.ico')
     ico('edu', ADMIN / 'favicon.ico')
+    # Kurs Yönetimi has no site of its own yet; its mark is shown on eduivme.com.
+    write(ADMIN / 'brand/kurs-yonetimi.svg', svg('km'))
     write(STAFF / 'brand/eduivme.svg', svg('edu'))
     ico('edu', STAFF / 'favicon.ico')
 

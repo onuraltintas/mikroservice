@@ -12,7 +12,7 @@ case "$tag" in *[!0-9a-f]*) echo "Tag must be a lowercase hexadecimal commit id"
 cd "${EDUIVME_DIR:-/opt/eduivme}"
 repo=$(sed -n 's/^PRODUCTION_IMAGE_REPOSITORY=//p' .env | tr -d '"' | tail -n 1)
 case "$repo" in ghcr.io/*) ;; *) echo "PRODUCTION_IMAGE_REPOSITORY in .env must point to ghcr.io" >&2; exit 3 ;; esac
-services="identity-service coaching-service speed-reading-service notification-service billing-service api-gateway speed-reading-frontend admin-panel staff-portal"
+services="identity-service coaching-service speed-reading-service notification-service billing-service site-service api-gateway speed-reading-frontend admin-panel staff-portal"
 # shellcheck disable=SC2086
 RELEASE_TAG="$tag" docker compose --env-file .env -p "${EDUIVME_PROJECT:-eduivme-production}" -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.production.litespeed.yml -f docker-compose.billing.production.yml pull --quiet $services
 status=0
