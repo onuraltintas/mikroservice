@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using CourseManagement.Domain;
 using CourseManagement.Infrastructure;
@@ -180,7 +179,11 @@ public static class CourseEmailEndpoints
         <body><main><h1>{{Html(title)}}</h1><p>{{Html(message)}}</p>{{form}}</main></body></html>
         """, "text/html; charset=utf-8");
 
-    private static string Html(string value) => WebUtility.HtmlEncode(value);
+    // Turkish letters stay readable in the page source; markup characters are still encoded.
+    private static readonly System.Text.Encodings.Web.HtmlEncoder PageEncoder =
+        System.Text.Encodings.Web.HtmlEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
+
+    private static string Html(string value) => PageEncoder.Encode(value);
 
     private static Task<bool> IsOwner(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user, CancellationToken ct)
     {
