@@ -33,7 +33,7 @@ public static class FinanceListEndpoints
                     installment.Label, installment.Amount, installment.DueOn, IsLessonCharge = installment.SourceLessonId != null,
                     Paid = db.PaymentAllocations.Where(item => item.InstallmentId == installment.Id).Sum(item => (decimal?)item.Amount) ?? 0m
                 };
-            if (courseId is Guid course) rows = rows.Where(item => item.CourseId == course);
+            if (courseId is Guid chosenCourse) rows = rows.Where(item => item.CourseId == chosenCourse);
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = $"%{q.Trim().Replace("%", "").Replace("_", "")}%";
