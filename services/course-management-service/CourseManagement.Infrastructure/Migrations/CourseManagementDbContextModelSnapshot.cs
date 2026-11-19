@@ -1356,7 +1356,7 @@ namespace CourseManagement.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("GrantId")
+                    b.Property<Guid?>("GrantId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsChange")
@@ -1382,6 +1382,8 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GrantId");
+
+                    b.HasIndex("WorkspaceId", "AdminUserId");
 
                     b.HasIndex("WorkspaceId", "OccurredAt");
 
@@ -2351,8 +2353,7 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.HasOne("CourseManagement.Domain.SupportAccessGrant", null)
                         .WithMany()
                         .HasForeignKey("GrantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("CourseManagement.Domain.TeacherAvailabilityWindow", b =>
