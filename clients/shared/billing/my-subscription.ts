@@ -1,6 +1,7 @@
 // "Aboneliğim": the one subscription and payment page every product shows (billing service, stage 6).
 // Framework-free on purpose: this folder is compiled by each client application, which wraps the controller, the
 // template and the styles below in a thin component of its own.
+import { trMoney, trNumber } from '../utils/tr-number';
 
 export type BuyerType = 'Individual' | 'Teacher' | 'Institution';
 export type OrderStatus = 'Pending' | 'Paid' | 'Rejected' | 'Expired' | 'Withdrawn' | 'Cancelled';
@@ -72,7 +73,7 @@ export type BillingVoice = 'sen' | 'siz';
 
 export interface BillingTexts {
   loading: string; loadFailed: string; open: string; noActive: string; nameLabel: string; writeCode: string;
-  paidPrefix: string; paidSuffix: string; docsHint: string; contactPlan: string; pendingPlan: string;
+  paidPrefix: string; paidSuffix: string; docsHint: string; contactPlan: string; pendingPlan: string; activePlan: string;
   withdrawPrefix: string; withdrawSuffix: string; tryFree: string; trialName: string; contractName: string;
   paidNotice: string; cancelledNotice: string; withdrawalNotice: string; retry: string;
   orderNotice: (code: string) => string; seatOrderNotice: (code: string) => string; trialNotice: (days: number) => string;
@@ -85,7 +86,7 @@ export const BILLING_TEXTS: Record<BillingVoice, BillingTexts> = {
     open: 'Bu ürün şu anda abonelik gerektirmiyor; hesabınla kullanabilirsin.', noActive: 'Etkin bir aboneliğin yok.',
     nameLabel: 'Adın ve soyadın (sözleşmede yer alır)', writeCode: 'yaz',
     paidPrefix: 'Ödemeni', paidSuffix: 'tarihinde bildirdin.', docsHint: 'Sözleşme metinleri için adını ve soyadını yaz.',
-    contactPlan: 'Bu plan için bizimle iletişime geç.', pendingPlan: 'Bu plan için bekleyen bir siparişin var.',
+    contactPlan: 'Bu plan için bizimle iletişime geç.', pendingPlan: 'Bu plan için bekleyen bir siparişin var.', activePlan: 'Bu planda aboneliğin etkin.',
     withdrawPrefix: 'Cayma hakkını', withdrawSuffix: 'tarihine kadar kullanabilirsin. Talebin kabul edilirse aboneliğin sona erer ve ödediğin tutar iade edilir.',
     tryFree: 'gün ücretsiz dene', trialName: 'Ücretsiz deneme için adını ve soyadını yaz.', contractName: 'Sözleşme için adını ve soyadını yaz.',
     paidNotice: 'Ödeme bildirimin alındı. Onaylandığında aboneliğin başlar ve sana haber veririz.', cancelledNotice: 'Siparişten vazgeçtin.',
@@ -100,7 +101,7 @@ export const BILLING_TEXTS: Record<BillingVoice, BillingTexts> = {
     open: 'Bu ürün şu anda abonelik gerektirmiyor; hesabınızla kullanabilirsiniz.', noActive: 'Etkin bir aboneliğiniz yok.',
     nameLabel: 'Adınız ve soyadınız (sözleşmede yer alır)', writeCode: 'yazın',
     paidPrefix: 'Ödemenizi', paidSuffix: 'tarihinde bildirdiniz.', docsHint: 'Sözleşme metinleri için adınızı ve soyadınızı yazın.',
-    contactPlan: 'Bu plan için bizimle iletişime geçin.', pendingPlan: 'Bu plan için bekleyen bir siparişiniz var.',
+    contactPlan: 'Bu plan için bizimle iletişime geçin.', pendingPlan: 'Bu plan için bekleyen bir siparişiniz var.', activePlan: 'Bu planda aboneliğiniz etkin.',
     withdrawPrefix: 'Cayma hakkınızı', withdrawSuffix: 'tarihine kadar kullanabilirsiniz. Talebiniz kabul edilirse aboneliğiniz sona erer ve ödediğiniz tutar iade edilir.',
     tryFree: 'gün ücretsiz deneyin', trialName: 'Ücretsiz deneme için adınızı ve soyadınızı yazın.', contractName: 'Sözleşme için adınızı ve soyadınızı yazın.',
     paidNotice: 'Ödeme bildiriminiz alındı. Onaylandığında aboneliğiniz başlar ve size haber veririz.', cancelledNotice: 'Siparişten vazgeçtiniz.',
@@ -121,7 +122,7 @@ export function billingOrderStatus(order: Pick<BillingOrder, 'status' | 'paidDec
 }
 export function billingWithdrawalStatus(status: WithdrawalStatus, voice: BillingVoice = 'sen'): string { return BILLING_TEXTS[voice].withdrawal[status] ?? status; }
 export function billingMoney(value: number, currency = 'TRY'): string {
-  return `${new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} ${currency === 'TRY' ? 'TL' : currency}`;
+  return currency === 'TRY' ? trMoney(value) : `${trNumber(value, 2, 2)} ${currency}`;
 }
 export function billingDate(value: string | null | undefined): string {
   if (!value) return '';
@@ -241,6 +242,10 @@ export class MySubscriptionController {
   get price(): number { return this.quote?.amount ?? this.plan?.price ?? 0; }
   organizationName(subscription: BillingSubscription): string | null {
     return this.organizations.find(item => item.subscriptions.some(sub => sub.id === subscription.id))?.name ?? null;
+  }
+  /** Live test 19.11.2026 (A14): an active subscription for this plan offers no second purchase. */
+  hasActiveFor(plan: BillingPlan, now = Date.now()): boolean {
+    return this.subscriptions.some(item => item.planId === plan.id && item.status === 'Active' && new Date(item.endsAt).getTime() > now);
   }
   hasPendingFor(plan: BillingPlan): boolean { return this.pending.some(order => order.planId === plan.id && order.kind === 'Subscription'); }
   canWithdraw(order: BillingOrder): boolean {
@@ -668,6 +673,8 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
               <ul>@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul>
               @if (plan.isContactOnly) {
                 <p class="bill-muted">{{ c.t.contactPlan }}</p>
+              } @else if (c.hasActiveFor(plan)) {
+                <p class="bill-muted">{{ c.t.activePlan }}</p>
               } @else if (c.hasPendingFor(plan)) {
                 <p class="bill-muted">{{ c.t.pendingPlan }}</p>
               } @else {
@@ -732,15 +739,15 @@ export const MY_SUBSCRIPTION_STYLES = `
 .bill-muted { color: var(--bill-muted, #5b6577); font-size: .875rem; }
 .bill-row { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; align-items: center; padding: .625rem 0; border-top: 1px solid var(--bill-border, #d7dce5); }
 .bill-row:first-of-type { border-top: 0; }
-.bill-tag { display: inline-block; margin-left: .375rem; padding: .0625rem .5rem; border-radius: 999px; font-size: .75rem; background: #eef1f6; color: #36405a; }
+.bill-tag { display: inline-block; margin-left: .375rem; padding: .0625rem .5rem; border-radius: 999px; font-size: .75rem; background: var(--bill-soft, #eef1f6); color: var(--bill-text, #36405a); }
 .bill-tag--ok { background: #dcf5e6; color: #14532d; }
 .bill-plan .bill-tag { justify-self: start; margin-left: 0; }
 .bill-alert { padding: .75rem 1rem; border-radius: .5rem; }
 .bill-alert--ok { background: #dcf5e6; color: #14532d; }
 .bill-alert--error { background: #fde8e8; color: #7f1d1d; }
-.bill-btn { min-height: 2.75rem; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid var(--bill-border, #b9c1cf); background: #fff; color: inherit; font: inherit; cursor: pointer; }
+.bill-btn { min-height: 2.75rem; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid var(--bill-border, #b9c1cf); background: var(--bill-surface, #fff); color: inherit; font: inherit; cursor: pointer; }
 .bill-btn:disabled { opacity: .55; cursor: not-allowed; }
-.bill-btn--primary { background: var(--bill-accent, #1d4ed8); border-color: var(--bill-accent, #1d4ed8); color: #fff; }
+.bill-btn--primary { background: var(--bill-accent, #1d4ed8); border-color: var(--bill-accent, #1d4ed8); color: var(--bill-on-accent, #fff); }
 .bill-btn:focus-visible, .bill-copy:focus-visible, .bill-link:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
 .bill-copy, .bill-link { min-height: 2.75rem; margin-left: .5rem; padding: .25rem .5rem; border: 0; background: none; color: var(--bill-accent, #1d4ed8); text-decoration: underline; font: inherit; cursor: pointer; }
 .bill-link { margin-left: 0; margin-right: .75rem; }
@@ -758,6 +765,6 @@ export const MY_SUBSCRIPTION_STYLES = `
 .bill-plan { border: 1px solid var(--bill-border, #d7dce5); border-radius: .625rem; padding: 1rem; display: grid; gap: .375rem; align-content: start; }
 .bill-plan ul { margin: 0; padding-left: 1.125rem; }
 .bill-price { font-size: 1.25rem; font-weight: 600; margin: 0; }
-.bill-doc pre, .bill-doc-text { white-space: pre-wrap; max-height: 18rem; overflow: auto; padding: .75rem; border: 1px solid var(--bill-border, #d7dce5); border-radius: .5rem; font: inherit; font-size: .875rem; background: #f7f8fb; }
+.bill-doc pre, .bill-doc-text { white-space: pre-wrap; max-height: 18rem; overflow: auto; padding: .75rem; border: 1px solid var(--bill-border, #d7dce5); border-radius: .5rem; font: inherit; font-size: .875rem; background: var(--bill-soft, #f7f8fb); }
 @media (max-width: 30rem) { .bill-pay { grid-template-columns: 1fr; } .bill-btn { width: 100%; } }
 `;

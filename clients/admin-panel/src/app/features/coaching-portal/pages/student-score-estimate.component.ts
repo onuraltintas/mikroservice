@@ -1,4 +1,5 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { trNumber } from '../../../../../../shared/utils/tr-number';
 import { FormsModule } from '@angular/forms';
 import { GoalCardComponent } from '../growth/goal-card.component';
 import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, rawScoresText, scoreGroup, scoreTypeNote, P3_NOTE } from '../../../core/services/coaching-score-estimate.service';
@@ -130,7 +131,8 @@ export class StudentScoreEstimateComponent implements OnInit {
     return `Hedef sıralamaya yaklaşık ${this.int(target.rankGap ?? 0)} kişi kaldı.`;
   }
 
-  num(value: number): string { return value.toLocaleString('tr-TR', { maximumFractionDigits: 2 }); }
+  /** Live test 19.11.2026 (C1): the shared Turkish formatting and rounding. */
+  num(value: number): string { return trNumber(value, 2); }
   int(value: number): string { return Math.round(value).toLocaleString('tr-TR'); }
 
   private get key() { return `${DIPLOMA_KEY}.${this.studentId ?? 'me'}`; }

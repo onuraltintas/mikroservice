@@ -108,7 +108,7 @@
                 <div class="badges-container">
                     <div class="info-badge level">
                         <span class="material-icons">signal_cellular_alt</span>
-                        <span>Seviye {{ exercise?.difficultyLevel }}</span>
+                        <span>Program seviyesi {{ exercise?.difficultyLevel }}</span>
                     </div>
                     <div class="info-badge config">
                         <span class="material-icons">settings</span>
@@ -235,11 +235,11 @@
         <div class="game-stats">
             <div class="stat">
                 <span class="label">Skor</span>
-                <span class="value">%{{ engineState.score }}</span>
+                <span class="value">{{ pct(engineState.score) }}</span>
             </div>
             <div class="stat">
                 <span class="label">Doğruluk</span>
-                <span class="value">%{{ engineState.accuracy }}</span>
+                <span class="value">{{ pct(engineState.accuracy) }}</span>
             </div>
             <div class="stat">
                 <span class="label">Hatalar</span>
@@ -1726,13 +1726,13 @@
                             <small *ngIf="result?.details?.benchmarks">Uygulama referansı: {{ formatTime(result?.details?.benchmarks?.intermediate || 0) }} — bilimsel norm değildir.</small>
                         </div>
                         <div class="schulte-summary__stat-grid">
-                            <div><strong>{{ result?.score }}</strong><span>Skor</span></div>
+                            <div><strong>{{ num(result?.score) }}</strong><span>Skor</span></div>
                             <div><strong>%{{ result?.accuracy | number:'1.0-0' }}</strong><span>Doğruluk</span></div>
                             <div><strong>{{ result?.errors }}</strong><span>Hata</span></div>
                         </div>
                         <div class="schulte-summary__rewards" *ngIf="sessionResult?.xpGained || sessionResult?.leveledUp">
                             <span *ngIf="sessionResult?.xpGained">+{{ sessionResult?.xpGained }} XP</span>
-                            <span *ngIf="sessionResult?.leveledUp">Seviye {{ sessionResult?.newLevel }}</span>
+                            <span *ngIf="sessionResult?.leveledUp">XP seviyesi {{ sessionResult?.newLevel }}</span>
                         </div>
                     </div>
 
@@ -1810,7 +1810,7 @@
             <!-- Main Stats Row - Hide for exam_simulation and reading exercises -->
             <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'grid_interaction' && engine?.engineType !== 'reading_comprehension'">
                 <div class="stat-card primary">
-                    <div class="stat-value">{{ result?.score }}</div>
+                    <div class="stat-value">{{ num(result?.score) }}</div>
                     <div class="stat-label">Skor</div>
                 </div>
                 <div class="stat-card">
@@ -1897,7 +1897,7 @@
                     <div class="stat-card"><div class="stat-value">%{{ getExpansionDistancePercent(target.targetDistance) | number:'1.0-1' }}</div><div class="stat-label">Hedef uzaklık</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.targetRounds }}</div><div class="stat-label">Hedef uzaklıktaki tur</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.targetCorrectRounds }}</div><div class="stat-label">Hedef uzaklıkta doğru tur</div></div>
-                    <div class="stat-card"><div class="stat-value">{{ target.targetAccuracy == null ? 'Ölçülmedi' : '%' + target.targetAccuracy }}</div><div class="stat-label">Hedef uzaklıkta doğruluk</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetAccuracy == null ? 'Ölçülmedi' : pct(target.targetAccuracy) }}</div><div class="stat-label">Hedef uzaklıkta doğruluk</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.shortestCorrectDisplayDurationMs == null ? 'Ölçülmedi' : ((target.shortestCorrectDisplayDurationMs / 1000 | number:'1.2-2') + ' sn') }}</div><div class="stat-label">Hedefte doğru yanıtlanan en kısa gösterim</div></div>
                 </div>
             </ng-container>
@@ -1964,7 +1964,7 @@
                 </div>
                 <div class="level-up" *ngIf="sessionResult?.leveledUp">
                     <span class="material-icons">stars</span>
-                    <span>Seviye {{ sessionResult?.newLevel }} oldun!</span>
+                    <span>XP seviyen {{ sessionResult?.newLevel }} oldu.</span>
                 </div>
             </div>
 

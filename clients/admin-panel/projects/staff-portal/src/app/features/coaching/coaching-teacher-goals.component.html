@@ -121,7 +121,7 @@
             @if (goal.targetExamType) { <div><dt>Hedef sınav</dt><dd>{{ goalExamTypeLabel(goal.targetExamType) }}</dd></div> }
             @if (goal.targetSubject) { <div><dt>Hedef ders</dt><dd>{{ goal.targetSubject }}</dd></div> }
           </dl>
-          <div class="progress-label"><span>İlerleme</span><strong>{{ goal.progress }}%</strong></div>
+          <div class="progress-label"><span>İlerleme</span><strong>%{{ goal.progress }}</strong></div>
           <div class="progress-track" role="progressbar" [attr.aria-valuenow]="goal.progress" aria-valuemin="0" aria-valuemax="100">
             <div class="progress-value" [style.width.%]="progressWidth(goal.progress)"></div>
           </div>

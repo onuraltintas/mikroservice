@@ -30,7 +30,7 @@
                     <span class="material-icons">trending_up</span>
                 </div>
                 <div class="metric-content">
-                    <div class="metric-value">{{ report()?.comprehensionDataAvailable ? (report()?.averageComprehension || 0).toFixed(1) + '%' : 'Veri yok' }}</div>
+                    <div class="metric-value">{{ report()?.comprehensionDataAvailable ? pct(report()?.averageComprehension, 1) : 'Ölçülmedi' }}</div>
                     <div class="metric-label">Ortalama Kavrama</div>
                     <div class="metric-trend">Genel skor</div>
                 </div>
@@ -85,14 +85,14 @@
         </div>
 
         <div class="stat-card"
-            title="Seviye atlamak için: Son 10 okumada hedef hız ve anlamayı geçmeli, en az 15 egzersiz yapmalısın.">
+            title="Program seviyesi atlamak için: Son 10 okumada hedef hız ve anlamayı geçmeli, en az 15 egzersiz yapmalısın.">
             <div class="stat-header">
                 <span class="material-icons stat-icon comprehension">psychology</span>
-                <span class="stat-title">Seviye</span>
+                <span class="stat-title">Program seviyesi</span>
             </div>
             <div class="stat-value">{{ report()?.currentLevel || 1 }}</div>
             <div class="stat-footer">
-                <span class="stat-change">Mevcut seviyeniz</span>
+                <span class="stat-change">Şu anki program seviyen</span>
             </div>
         </div>
     </div>

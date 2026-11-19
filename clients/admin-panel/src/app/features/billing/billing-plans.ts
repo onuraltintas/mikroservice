@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { CurrencyNamePipe } from './currency-name.pipe';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
@@ -51,7 +52,7 @@ interface PlanDraft {
 @Component({
   selector: 'app-billing-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CurrencyNamePipe, CommonModule, FormsModule],
   template: `
     <main class="space-y-6" aria-labelledby="billing-plans-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
@@ -142,7 +143,7 @@ interface PlanDraft {
                 <tr>
                   <td><strong>{{ plan.name }}</strong>@if (plan.trialDays) { <div class="muted">{{ plan.trialDays }} gün deneme</div> }</td>
                   <td>{{ buyerLabel(plan.buyerType) }}</td>
-                  <td>{{ plan.isContactOnly ? 'İletişime geçin' : (plan.price | number:'1.2-2') + ' ' + plan.currency }}</td>
+                  <td>{{ plan.isContactOnly ? 'İletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (plan.currency | currencyName) }}</td>
                   <td>{{ plan.durationDays }} gün</td>
                   <td>{{ plan.seatCount ?? '—' }}@if (plan.extraSeatPrice) { <div class="muted">ek koltuk {{ plan.extraSeatPrice | number:'1.2-2' }}</div> }</td>
                   <td>{{ productNames(plan) }}@if (plan.productCodes.length > 1) { <div><span class="badge">Paket</span></div> }</td>

@@ -60,7 +60,7 @@ describe('CoachingTeacherGoalsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('LGS hazırlığı');
     expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
     expect(fixture.nativeElement.textContent).toContain('Sınav hazırlığı');
-    expect(fixture.nativeElement.textContent).toContain('65%');
+    expect(fixture.nativeElement.textContent).toContain('%65');
   });
 
   it('maps API enum categories to their real values when editing a goal', () => {

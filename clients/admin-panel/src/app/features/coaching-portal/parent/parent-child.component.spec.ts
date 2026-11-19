@@ -47,6 +47,7 @@ function parentServiceMock(overrides: Record<string, unknown> = {}) {
     getAccess: vi.fn(() => of({ hasAccess: true, enforcementEnabled: true, planName: 'Bireysel', status: 'Active', accessUntil: '2026-12-01T00:00:00Z',
       subscriptions: [{ id: 'sub-1', status: 'Active', endDate: '2026-12-01T00:00:00Z', plan: { name: 'Bireysel aylık' } }] })),
     getSpeedReadingOverview: vi.fn(() => of(readingOverview)),
+    getSpeedReadingSubscription: vi.fn(() => of({ requireSubscription: true, hasAccess: false, accessUntil: null, known: true })),
     ...overrides
   };
 }
@@ -275,5 +276,35 @@ describe('ParentPaymentsComponent', () => {
   it('says so when the subscription cannot be read', () => {
     const fixture = setup(parentServiceMock({ getAccess: vi.fn(() => throwError(() => new Error('x'))) }));
     expect(fixture.nativeElement.textContent).toContain('Abonelik bilgisi yüklenemedi.');
+  });
+});
+
+// Live test 19.11.2026 (A15): the Hızlı okuma tab shows the child's subscription, as the Koçluk tab does.
+describe('ParentSpeedReadingTabComponent subscription', () => {
+  function setup(subscription: object) {
+    TestBed.configureTestingModule({ imports: [ParentSpeedReadingTabComponent], providers: parentProviders(parentServiceMock({
+      getSpeedReadingSubscription: vi.fn(() => of(subscription)) })) });
+    const fixture = TestBed.createComponent(ParentSpeedReadingTabComponent);
+    fixture.componentRef.setInput('studentId', 'child-1'); fixture.componentRef.setInput('childName', 'Elif Yılmaz');
+    fixture.detectChanges(); return fixture;
+  }
+
+  it('shows a running subscription with its end date', () => {
+    const fixture = setup({ requireSubscription: true, hasAccess: true, accessUntil: '2027-11-19T00:00:00Z', known: true });
+    const section = fixture.nativeElement.querySelector('[data-testid=parent-reading-subscription]') as HTMLElement;
+    expect(section.textContent).toContain('Hızlı Okuma aboneliği');
+    expect(section.textContent).toContain('Etkin'); expect(section.textContent).toContain('tarihine kadar');
+    expect(section.querySelector('form')).toBeNull();
+  });
+
+  it('says where it is bought when the child has none', () => {
+    const fixture = setup({ requireSubscription: true, hasAccess: false, accessUntil: null, known: true });
+    const text = fixture.nativeElement.querySelector('[data-testid=parent-reading-subscription]').textContent as string;
+    expect(text).toContain('etkin bir Hızlı Okuma aboneliği yok'); expect(text).toContain('ödeme kodunu');
+  });
+
+  it('says no payment is needed when the product asks for none', () => {
+    const fixture = setup({ requireSubscription: false, hasAccess: true, accessUntil: null, known: true });
+    expect(fixture.nativeElement.querySelector('[data-testid=parent-reading-subscription]').textContent).toContain('bir ödeme yapılması gerekmiyor');
   });
 });

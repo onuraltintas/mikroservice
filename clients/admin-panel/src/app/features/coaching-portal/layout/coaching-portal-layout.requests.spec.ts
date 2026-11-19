@@ -57,7 +57,8 @@ describe('CoachingPortalLayoutComponent requests', () => {
     http.expectOne(UNREAD).flush({ count: 0 });
     await router.navigateByUrl('/coaching-portal/plan');
     expect(http.match(NAVIGATION).length).toBe(1);
-    expect(http.match(UNREAD).length).toBe(1);
+    // Live test 19.11.2026 (C8): the unread count answered a moment ago is reused on the next page.
+    expect(http.match(UNREAD).length).toBe(0);
     await router.navigateByUrl('/coaching-portal/plan?plan=p1');
     http.expectNone(NAVIGATION); http.expectNone(UNREAD);
   });

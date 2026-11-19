@@ -57,7 +57,7 @@ describe('Abonelik ve Ödeme: orders and subscriptions', () => {
     const row = element.querySelector('[data-testid="order-EDU-AAA111"]')!;
     expect(row.textContent).toContain('Deneme Öğrenci');
     expect(row.textContent).toContain('EDU-AAA111');
-    expect(row.textContent).toMatch(/200[.,]00 TRY/);
+    expect(row.textContent).toMatch(/200[.,]00 TL/);
     expect(row.textContent).toContain('Master Hızlı Okuma');
     expect(row.textContent).toContain('"Gönderdim"');
     expect(row.textContent).toContain('Dekontu aç');
@@ -74,7 +74,7 @@ describe('Abonelik ve Ödeme: orders and subscriptions', () => {
     expect(billing.approveOrder).not.toHaveBeenCalled();
     const form = element.querySelector('[data-testid="review-form"]')!;
     expect(form.textContent).toContain('EDU-AAA111');
-    expect(form.textContent).toMatch(/200[.,]00 TRY/);
+    expect(form.textContent).toMatch(/200[.,]00 TL/);
     component.confirm();
     expect(billing.approveOrder).toHaveBeenCalledWith('aaa111');
     expect(toaster.success).toHaveBeenCalledWith('Ödeme onaylandı; abonelik açıldı.');

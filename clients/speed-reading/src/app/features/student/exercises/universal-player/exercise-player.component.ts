@@ -6,6 +6,7 @@
  */
 
 import { awaitsServerResult, examCorrectAnswer, focusSummary, resultPerformanceLevel, scanningResultMessage, serverErrorCount } from './result-display';
+import { trNumber, trPercent } from '../../../../../../../shared/utils/tr-number';
 import { exerciseDisplayName, exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -2430,6 +2431,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   // Helper to get target WPM from config
+  /** Live test 19.11.2026 (C1): whole-number scores and "%86", with a Turkish decimal comma. */
+  num(value: number | null | undefined): string { return trNumber(value); }
+  pct(value: number | null | undefined): string { return trPercent(value); }
+
   getTargetWpm(): number {
     if (this.engine?.engineType === 'skimming') return 0;
     // Check config for target WPM

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { CurrencyNamePipe } from './currency-name.pipe';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -13,7 +14,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 @Component({
   selector: 'app-billing-withdrawals',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CurrencyNamePipe, CommonModule, FormsModule],
   template: `
     <main class="space-y-6" aria-labelledby="billing-withdrawals-title">
       <header>
@@ -40,7 +41,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
                 <tr [attr.data-testid]="'withdrawal-' + row.paymentCode">
                   <td><strong>{{ row.accountName }}</strong><div class="muted">{{ row.accountEmail || '—' }}</div></td>
                   <td>{{ row.planName }}<div class="muted font-mono">{{ row.paymentCode }}</div></td>
-                  <td class="nowrap"><strong>{{ row.amount | number:'1.2-2' }} {{ row.currency }}</strong></td>
+                  <td class="nowrap"><strong>{{ row.amount | number:'1.2-2' }} {{ row.currency | currencyName }}</strong></td>
                   <td>{{ row.requestedAt | date:'dd.MM.yyyy HH:mm' }}@if (row.reason) { <div class="muted">"{{ row.reason }}"</div> }</td>
                   <td><span class="badge" [class.on]="row.status === 'Approved'" [class.off]="row.status === 'Rejected'">{{ label(row.status) }}</span>
                     @if (row.reviewNote) { <div class="muted note">{{ row.reviewNote }}</div> }</td>
@@ -54,7 +55,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
                     <tr class="review-row"><td colspan="6">
                       <form (ngSubmit)="confirm()" class="review" data-testid="withdrawal-review">
                         @if (current.approve) {
-                          <p>Kabul edilince {{ row.accountName }} için {{ row.planName }} erişimi sona erer. <strong>{{ row.amount | number:'1.2-2' }} {{ row.currency }}</strong> tutarını alıcının hesabına bankadan siz iade edeceksiniz.</p>
+                          <p>Kabul edilince {{ row.accountName }} için {{ row.planName }} erişimi sona erer. <strong>{{ row.amount | number:'1.2-2' }} {{ row.currency | currencyName }}</strong> tutarını alıcının hesabına bankadan siz iade edeceksiniz.</p>
                           <label>Alıcıya not <span class="muted">(isteğe bağlı)</span><textarea [(ngModel)]="current.note" name="withdrawalNote" maxlength="1000"></textarea></label>
                         } @else {
                           <label>Ret gerekçesi (alıcı görür)<textarea [(ngModel)]="current.note" name="withdrawalNote" required minlength="5" maxlength="1000"></textarea></label>

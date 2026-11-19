@@ -84,6 +84,12 @@ export class CoachingParentService {
     return this.http.get<unknown>(`${this.api}/speed-reading/parents/me/children/${encodeURIComponent(studentId)}/overview`).pipe(map(unwrap<ParentSpeedReadingOverview>));
   }
 
+  /** Live test 19.11.2026 (A15): the child's Hızlı Okuma subscription, as the Koçluk tab shows Koçluk's. */
+  getSpeedReadingSubscription(studentId: string): Observable<ParentSpeedReadingSubscription> {
+    return this.http.get<unknown>(`${this.api}/speed-reading/parents/me/children/${encodeURIComponent(studentId)}/subscription`)
+      .pipe(map(unwrap<ParentSpeedReadingSubscription>));
+  }
+
   /** The weekly summary e-mail lives in the notification preferences (category ParentSummary). */
   getWeeklyEmail(): Observable<ParentWeeklyEmail | null> {
     return this.http.get<{ data: (Partial<ParentWeeklyEmail> & { category: string })[] }>(`${this.api}/notifications/preferences`).pipe(map(r => {
@@ -114,4 +120,11 @@ export const PARENT_PAGE_SIZE = 10;
 const WEEKLY_SUMMARY = 'ParentSummary';
 function unwrap<T>(response: unknown): T {
   return (response && typeof response === 'object' && !Array.isArray(response) && 'data' in response ? (response as { data: T }).data : response) as T;
+}
+
+export interface ParentSpeedReadingSubscription {
+  requireSubscription: boolean;
+  hasAccess: boolean;
+  accessUntil: string | null;
+  known: boolean;
 }

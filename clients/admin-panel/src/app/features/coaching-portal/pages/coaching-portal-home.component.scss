@@ -42,6 +42,12 @@
   border-radius: var(--coaching-radius-pill); background: var(--ui-surface); color: var(--ui-brand-text); font-weight: 800; text-decoration: none;
   &:hover { background: var(--ui-brand-soft); }
   &:focus-visible { outline: 3px solid var(--ui-brand-contrast); outline-offset: 3px; }
+// Live test 19.11.2026 (C6): in the dark theme the next step is a plain dark surface, not a light blue block.
+:host-context(.dark) .next {
+  background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-border); box-shadow: none;
+  &::after { display: none; }
+}
+:host-context(.dark) .next-action { background: var(--ui-brand); color: var(--ui-brand-contrast); &:hover { background: var(--ui-brand); } }
 }
 
 .setup {

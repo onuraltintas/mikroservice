@@ -17,7 +17,10 @@ describe('CoachingMessagesUnreadService', () => {
     expect(requests[0].cancelled).toBe(false);
     requests[0].flush({ count: 4 });
     expect(service.count()).toBe(4);
+    // Live test 19.11.2026 (C8): a page change right after an answer reuses it; a minute later it asks again.
     service.refresh();
+    http.expectNone('/api/coaching/messages/unread-count');
+    service.refresh({}, Date.now() + CoachingMessagesUnreadService.MinimumIntervalMs + 1);
     http.expectOne('/api/coaching/messages/unread-count').flush({ count: 0 });
     expect(service.count()).toBe(0);
   });
@@ -38,7 +41,8 @@ describe('CoachingMessagesUnreadService', () => {
     const service = TestBed.inject(CoachingMessagesUnreadService);
     const http = TestBed.inject(HttpTestingController);
     service.refresh(); http.expectOne('/api/coaching/messages/unread-count').flush({ count: 7 });
-    service.refresh(); const late = http.expectOne('/api/coaching/messages/unread-count');
+    service.refresh({}, Date.now() + CoachingMessagesUnreadService.MinimumIntervalMs + 1);
+    const late = http.expectOne('/api/coaching/messages/unread-count');
     service.refresh({ reset: true });
     expect(service.count()).toBe(0);
     expect(late.cancelled).toBe(true);

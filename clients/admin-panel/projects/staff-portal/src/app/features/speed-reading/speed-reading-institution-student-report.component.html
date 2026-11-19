@@ -80,7 +80,7 @@
           @if (data.readingSpeed.averageWpm > 0) {
             <span class="change-pill"
               >{{ data.readingSpeed.improvementRate > 0 ? '+' : ''
-              }}{{ formatNumber(data.readingSpeed.improvementRate, 1) }}%</span
+              }}%{{ formatNumber(data.readingSpeed.improvementRate, 1) }}</span
             >
           } @else {
             <span class="no-data-pill">Veri yok</span>
@@ -117,7 +117,7 @@
           @if (data.comprehension.totalQuestionsAttempted > 0) {
             <span class="change-pill"
               >{{ data.comprehension.improvementRate > 0 ? '+' : ''
-              }}{{ formatNumber(data.comprehension.improvementRate, 1) }}%</span
+              }}%{{ formatNumber(data.comprehension.improvementRate, 1) }}</span
             >
           } @else {
             <span class="no-data-pill">Veri yok</span>
@@ -127,7 +127,7 @@
           <p class="benchmark-line">
             {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
             <strong>{{ data.comprehension.benchmark.institutionDataAvailable !== false ? formatNumber(data.comprehension.benchmark.institutionAverage) + '%' : 'Veri yok' }}</strong> ·
-            Öğrenci <strong>{{ formatNumber(data.comprehension.averageComprehension) }}%</strong>
+            Öğrenci <strong>%{{ formatNumber(data.comprehension.averageComprehension) }}</strong>
           </p>
           <p class="performance-level">{{ reportLabel(data.comprehension.benchmark.performanceLevel) }}</p>
           <div class="areas-grid">
@@ -177,7 +177,7 @@
             ><strong>{{ formatNumber(data.activity.studyTime.totalMinutes) }}</strong> dakika</span
           >
           <span
-            ><strong>{{ formatNumber(data.activity.studyTime.consistency) }}%</strong>
+            ><strong>%{{ formatNumber(data.activity.studyTime.consistency) }}</strong>
             devamlılık</span
           >
           <span

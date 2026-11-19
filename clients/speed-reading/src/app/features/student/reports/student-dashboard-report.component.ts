@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { MeasuredProgress, MeasuredProgressService } from '../../../core/services/measured-progress.service';
+import { trPercent } from '../../../../../../shared/utils/tr-number';
 import { StudentDashboardReport } from '../../../core/models/report.model';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -74,6 +75,8 @@ export class StudentDashboardReportComponent implements OnInit {
     });
 
   }
+
+  pct(value: number | null | undefined, decimals = 0): string { return trPercent(value, decimals); }
 
   // Transform pie chart data - pie charts need {name, value} format
   pieChartData = computed(() => {

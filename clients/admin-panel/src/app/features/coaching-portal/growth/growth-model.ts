@@ -1,4 +1,5 @@
 import { StudentExamOverviewItem, StudentExamSource, StudentExamSubject, StudentExamTrend } from '../../../core/services/coaching-student-exam-overview.service';
+import { trNumber } from '../../../../../../shared/utils/tr-number';
 import { ESTIMATE_LABEL, EXACT_LABEL, P3_NOTE, ScoreEstimate, notComputedText, scoreGroup } from '../../../core/services/coaching-score-estimate.service';
 import { possessive } from '../parent/parent-model';
 import { CsTone } from '../ui';
@@ -8,7 +9,9 @@ import { CsTone } from '../ui';
  * weekly bars and badge progress. Kept free of Angular so the numbers can be tested on their own.
  */
 
-const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
+// Live test 19.11.2026 (C1): one rounding rule everywhere; how far a target is ("30 puan kaldı") is a whole number.
+const decimal = { format: (value: number) => trNumber(value, 2) };
+const points = (value: number) => trNumber(value);
 const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 const shortDate = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' });
 export const formatNet = (value: number) => decimal.format(value);
@@ -201,7 +204,7 @@ export function homeGoalCard(estimate: ScoreEstimate | null, childName: string |
   if (status === 'borderline' && now)
     return card('estimate', `Hedef, tahmini puan aralığının içinde (${decimal.format(now.scoreLow)}–${decimal.format(now.scoreHigh)}): ${childName ? 'sınırda' : 'sınırdasın'}.`, label, status);
   if (target.scoreGap !== null && target.scoreGap > 0)
-    return card('estimate', `${you} ${exact ? '' : 'yaklaşık '}${decimal.format(target.scoreGap)} puan kaldı`, label, 'below');
+    return card('estimate', `${you} ${exact ? '' : 'yaklaşık '}${points(target.scoreGap)} puan kaldı`, label, 'below');
   if (target.rankGap !== null && target.rankGap > 0)
     return card('estimate', `Hedef sıralamaya yaklaşık ${whole.format(target.rankGap)} kişi kaldı`, label, 'below');
   return card('estimate', 'Hedefe olan farkı henüz hesaplayamıyoruz.', label, null);
@@ -226,7 +229,7 @@ function scoreLine(estimate: ScoreEstimate, gap: NonNullable<ScoreEstimate['targ
   const status = gap.status ?? (gap.reached ? 'reached' : 'below');
   if (status === 'reached') return `${name}: ${childName ? 'hedef puan geçildi' : 'hedef puanını geçtin'}`;
   if (status === 'borderline') return `${name}: ${childName ? 'sınırda' : 'sınırdasın'}`;
-  return `${name} hedefine ${isExact(gap.scoreType) ? '' : 'yaklaşık '}${decimal.format(gap.scoreGap ?? 0)} puan kaldı`;
+  return `${name} hedefine ${isExact(gap.scoreType) ? '' : 'yaklaşık '}${points(gap.scoreGap ?? 0)} puan kaldı`;
 }
 
 function share(value: number, goal: number) { return goal > 0 && value > 0 ? Math.round(Math.min(1, value / goal) * 100) : 0; }

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { currencyName } from './currency-name.pipe';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -113,5 +114,5 @@ export class BillingOverviewComponent implements OnInit {
     });
   }
 
-  currency(data: BillingOverview): string { return data.currency === 'TRY' ? 'TL' : data.currency; }
+  currency(data: BillingOverview): string { return currencyName(data.currency); }
 }

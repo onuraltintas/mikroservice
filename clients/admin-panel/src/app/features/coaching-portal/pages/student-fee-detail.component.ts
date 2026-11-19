@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { trMoney } from '../../../../../../shared/utils/tr-number';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -67,7 +68,6 @@ export class StudentFeeDetailComponent implements OnInit {
   readonly payments = signal<CoachingPaymentPage | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
-  private readonly currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
 
   async ngOnInit(): Promise<void> {
     this.loading.set(true);
@@ -81,5 +81,5 @@ export class StudentFeeDetailComponent implements OnInit {
     catch { this.error.set('Ödemeler yüklenemedi. Yeniden dene.'); }
   }
 
-  money(value: number): string { return this.currency.format(value); }
+  money(value: number): string { return trMoney(value); }
 }

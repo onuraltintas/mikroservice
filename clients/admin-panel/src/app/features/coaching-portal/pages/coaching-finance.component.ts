@@ -1,4 +1,5 @@
 import { coachingFeedback, coachingToaster } from '../coaching-feedback';
+import { trMoney } from '../../../../../../shared/utils/tr-number';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
@@ -217,7 +218,7 @@ export class CoachingFinanceComponent implements OnChanges, OnInit, OnDestroy {
   private money(value: number | null): boolean { return value !== null && Number.isFinite(value) && value >= 0.01 && value <= 999999999.99 && /^\d+(?:\.\d{1,2})?$/.test(String(value)); }
   private validDate(value: string): boolean { const date = new Date(`${value}T00:00:00Z`); return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && value.slice(0, 4) !== '0000'; }
   today(): string { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
-  currency(value: number): string { return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value); }
+  currency(value: number): string { return trMoney(value); }
   paymentMethod(value: CoachingPaymentMethod): string { return value === 'Cash' ? 'Nakit' : 'Banka havalesi'; }
   private readonly feedback = coachingFeedback(this.notice, this.error);
 }

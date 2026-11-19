@@ -13,7 +13,8 @@ import { AuthService } from '../../core/auth/auth.service';
   selector: 'app-my-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: MY_SUBSCRIPTION_TEMPLATE,
-  styles: [MY_SUBSCRIPTION_STYLES]
+  // Live test 19.11.2026 (C6): the panel takes the product's own colours, light and dark (green buttons in Hızlı Okuma).
+  styles: [`:host { --bill-accent: var(--ui-brand); --bill-on-accent: var(--ui-brand-contrast); --bill-surface: var(--ui-surface); --bill-soft: var(--ui-surface-muted); --bill-text: var(--ui-text); --bill-muted: var(--ui-text-muted); --bill-border: var(--ui-border); }`, MY_SUBSCRIPTION_STYLES]
 })
 export class MySubscriptionComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
