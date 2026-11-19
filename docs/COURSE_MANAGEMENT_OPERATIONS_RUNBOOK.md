@@ -1,5 +1,8 @@
 # Kurs Yönetimi üretim işletim rehberi (taslak)
 
+> **19.11.2026 — ilk sürüm yalnız kurum paneli.** Öğrenci uygulaması ve ödev dosyaları kapalı (`CourseManagement:Features:StudentPortal`, `CourseManagement:Features:AssignmentAttachments`, varsayılan `false`). Bu yüzden `docker-compose.course-management.production.yml` artık ClamAV çalıştırmaz; dosyalar açılacaksa `docker-compose.course-management.attachments.production.yml` bu dosyanın arkasına eklenir (kendi ClamAV 1.5.4'ü, en çok 1,5 GiB RAM). Öğrenci ve velilere e-postalar `CourseEmailWorker` ile gider; çıkış bağlantısının anahtarı `INTERNAL_SERVICE_API_KEY`'den türetilir (ayrı sır gerekmez), bağlantının adresi `COURSE_MANAGEMENT_PUBLIC_URL` (varsayılan `https://kurum.eduivme.com`). Aşağıdaki ClamAV anlatımı dosyalar açıkken geçerlidir.
+
+
 Tarih: 14 Ekim 2026. Durum: taslak; üretim işletimi veya yayın onayı değildir.
 
 Bu rehber, Kurs Yönetimi API'sinin veritabanı geçişi, yedekleme, geri yükleme ve sürüm geri alma adımlarını toplar. Üretim sağlayıcısı, yedekleme sıklığı ve saklama süresi, şifreleme anahtar yönetimi, RPO/RTO, hedef yük ve destek sınırı henüz onaylanmadı. Bu kararlar verilmeden aşağıdaki adımlar bir üretim prosedürü olarak kullanılmamalıdır.

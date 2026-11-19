@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import {
   CourseManagementAdminOverview,
   CourseManagementAdminService,
+  CourseManagementInstitutionsService,
   CourseManagementAdminSubscriptionItem
 } from './course-management-admin.service';
 import { CourseManagementAdminComponent } from './course-management-admin.component';
@@ -48,7 +49,8 @@ describe('CourseManagementAdminComponent', () => {
     service = { getOverview, getSubscriptions, getSubscriptionAudit, assignSubscription };
     await TestBed.configureTestingModule({
       imports: [CourseManagementAdminComponent],
-      providers: [{ provide: CourseManagementAdminService, useValue: service }]
+      providers: [{ provide: CourseManagementAdminService, useValue: service },
+        { provide: CourseManagementInstitutionsService, useValue: { list: vi.fn(() => of({ total: 0, items: [] })) } }]
     }).compileComponents();
     fixture = TestBed.createComponent(CourseManagementAdminComponent);
     fixture.detectChanges();

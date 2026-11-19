@@ -116,6 +116,9 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         modelBuilder.Entity<EmailTemplate>().HasIndex(x => x.TemplateName).IsUnique();
 
         modelBuilder.Entity<EmailDelivery>().HasKey(x => x.Id);
+        modelBuilder.Entity<EmailDelivery>().Property(x => x.SenderName).HasMaxLength(120);
+        modelBuilder.Entity<EmailDelivery>().Property(x => x.ReplyTo).HasMaxLength(320);
+        modelBuilder.Entity<EmailDelivery>().Property(x => x.UnsubscribeUrl).HasMaxLength(1000);
         modelBuilder.Entity<EmailDelivery>()
             .HasIndex(x => new { x.MessageId, x.ConsumerType })
             .IsUnique();

@@ -46,7 +46,9 @@ test('billing runs only through its own compose overlays', () => {
   assert.match(read('.github/workflows/production-images.yml'), /name: billing-service, context: \., dockerfile: services\/billing-service\/Dockerfile/);
   const pull = read('infrastructure/scripts/pull-release-images.sh');
   assert.match(pull, /services="[^"]*\bbilling-service\b/);
-  assert.match(pull, /-f docker-compose\.billing\.production\.yml pull/);
+  // 19.11.2026: the overlays are collected in a variable so Kurs Yönetimi can join only where it is configured.
+  assert.match(pull, /overlays="[^"]*-f docker-compose\.billing\.production\.yml"/);
+  assert.match(pull, /\$overlays pull/);
   const unit = read('infrastructure/systemd/eduivme-production.service');
   assert.equal(unit.match(/-f \/opt\/eduivme\/docker-compose\.billing\.production\.yml /g)?.length, 3, 'config, up and stop all use the overlay');
 

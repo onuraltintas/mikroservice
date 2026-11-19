@@ -161,6 +161,11 @@ public sealed class CourseManagementAccountErasureService(
         foreach (var student in students)
             student.AnonymizeIdentity();
 
+        // The sending record names the student's and guardians' addresses; it goes with the student.
+        var emails = await context.Emails.Where(email => studentIds.Contains(email.StudentId)).ToListAsync(cancellationToken);
+        context.Emails.RemoveRange(emails);
+        deletedRecordCount += emails.Count;
+
         var legacyMappings = await context.LegacyStudentImports
             .Where(mapping => studentIds.Contains(mapping.StudentRecordId))
             .ToListAsync(cancellationToken);

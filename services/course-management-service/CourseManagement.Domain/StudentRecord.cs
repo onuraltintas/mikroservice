@@ -12,6 +12,8 @@ public sealed class StudentRecord
     public string? PhoneNumber { get; private set; }
     public bool IsActive { get; private set; } = true;
     public DateTimeOffset CreatedAt { get; private set; }
+    /// <summary>The institution stopped e-mails about this student (to the student and the guardians).</summary>
+    public bool EmailsMuted { get; private set; }
 
     public static StudentRecord Create(Guid id, Guid workspaceId, string displayName, string? email, string? phoneNumber, DateTimeOffset now)
     {
@@ -41,6 +43,8 @@ public sealed class StudentRecord
     }
 
     public void SetActive(bool isActive) => IsActive = isActive;
+
+    public void SetEmailsMuted(bool muted) => EmailsMuted = muted;
 
     public void AnonymizeIdentity()
     {

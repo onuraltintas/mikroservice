@@ -99,7 +99,7 @@
 
         @defer (when auth.activeProduct() === 'course-management' && activeWorkspaceRole) {
           @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
-            <staff-course-management-workspace [role]="courseRole" />
+            <staff-course-panel [role]="courseRole" />
           }
         }
 

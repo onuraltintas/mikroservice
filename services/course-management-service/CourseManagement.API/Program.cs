@@ -42,6 +42,7 @@ builder.Services.AddScoped<CourseManagementAccountErasureService>();
 builder.Services.AddScoped<ICourseManagementAccountErasureService>(services =>
     services.GetRequiredService<CourseManagementAccountErasureService>());
 builder.Services.AddHttpClient<ICourseManagementLegalHoldStatusProvider, IdentityCourseManagementErasureReadinessProvider>();
+builder.Services.AddHttpClient<IdentityAccountLookup>(client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddSingleton(TimeProvider.System);
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? builder.Configuration["RabbitMQ:Host"];
 var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") ?? builder.Configuration["RabbitMQ:Username"];
@@ -84,9 +85,13 @@ builder.Services.AddMassTransit(x =>
         x.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
     }
 });
+var features = builder.Configuration.GetSection(CourseManagementFeatures.SectionName).Get<CourseManagementFeatures>()
+    ?? new CourseManagementFeatures();
+builder.Services.AddSingleton(features);
 var attachmentOptions = builder.Configuration.GetSection(CourseAssignmentAttachmentStorageOptions.SectionName)
     .Get<CourseAssignmentAttachmentStorageOptions>() ?? new CourseAssignmentAttachmentStorageOptions();
-if (builder.Environment.IsProduction())
+// Uploads are the only use of the scanner and the storage root; without them nothing is stored or scanned.
+if (builder.Environment.IsProduction() && features.AssignmentAttachments)
 {
     var configuredRoot = builder.Configuration[$"{CourseAssignmentAttachmentStorageOptions.SectionName}:RootPath"];
     if (string.IsNullOrWhiteSpace(configuredRoot) || !Path.IsPathFullyQualified(attachmentOptions.RootPath))
@@ -111,6 +116,27 @@ builder.Services.AddSingleton<ICourseAssignmentAttachmentScanner>(attachmentOpti
     : new DevelopmentCourseAssignmentAttachmentScanner());
 builder.Services.AddHostedService<CourseAssignmentAttachmentCleanupService>();
 builder.Services.AddHostedService<CourseManagementReminderWorker>();
+// E-mails to students and guardians (19.11.2026): settings, sending record and unsubscribe links.
+var emailOptions = builder.Configuration.GetSection(CourseEmailOptions.SectionName).Get<CourseEmailOptions>() ?? new CourseEmailOptions();
+if (builder.Environment.IsProduction() && emailOptions.UnsubscribeKey == CourseEmailOptions.DevelopmentKey)
+{
+    // No separate secret to provision: the link key is derived from the internal service key the service already needs.
+    var internalKey = Environment.GetEnvironmentVariable("INTERNAL_SERVICE_API_KEY") ?? builder.Configuration["INTERNAL_SERVICE_API_KEY"];
+    if (string.IsNullOrWhiteSpace(internalKey) || internalKey.Length < 32)
+        throw new InvalidOperationException("Production Course Management e-mails need an unsubscribe key or INTERNAL_SERVICE_API_KEY (32+ characters).");
+    emailOptions = new CourseEmailOptions
+    {
+        PublicBaseUrl = emailOptions.PublicBaseUrl, DelayMinutes = emailOptions.DelayMinutes, PollingSeconds = emailOptions.PollingSeconds,
+        UnsubscribeKey = CourseEmailOptions.DeriveKey(internalKey)
+    };
+}
+if (emailOptions.UnsubscribeKey.Length < 32)
+    throw new InvalidOperationException("The Course Management unsubscribe key needs at least 32 characters.");
+if (!Uri.TryCreate(emailOptions.PublicBaseUrl, UriKind.Absolute, out var emailBase) || emailBase.Scheme != Uri.UriSchemeHttps
+        && !builder.Environment.IsDevelopment())
+    throw new InvalidOperationException("Course Management e-mail links need an absolute https base address.");
+builder.Services.AddSingleton(emailOptions);
+builder.Services.AddHostedService<CourseEmailWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddAuthorization(options =>
 {
@@ -131,6 +157,7 @@ builder.Services.AddHealthChecks().AddDbContextCheck<CourseManagementDbContext>(
 
 var app = builder.Build();
 app.UseMiddleware<CourseManagementOperationMetricsMiddleware>();
+app.UseCourseManagementFeatureGate(features);
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -180,6 +207,11 @@ api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
+api.MapCourseEmailEndpoints(app);
+app.MapSupportAccessEndpoints(api);
+api.MapOverviewEndpoints();
+api.MapStudentSearchEndpoints();
+api.MapFinanceListEndpoints();
 app.Run();
 
 public sealed record UpdateProfileRequest(string DisplayName);

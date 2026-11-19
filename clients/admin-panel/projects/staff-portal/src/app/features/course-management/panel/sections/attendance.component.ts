@@ -1,0 +1,247 @@
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { CourseAssignment, CourseLesson, CourseManagementService } from '../../course-management.service';
+import { CompletionMark, CoursePanelApi, PanelCompletion } from '../panel-api.service';
+import { CoursePanelState, formatDateTime, formatTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+
+const DAY_MS = 86_400_000;
+const ATTENDANCE = [
+  { value: 1, key: 'Present', label: 'Geldi', tone: 'ok' },
+  { value: 2, key: 'Absent', label: 'Gelmedi', tone: 'bad' },
+  { value: 4, key: 'Late', label: 'Geç', tone: 'warn' },
+  { value: 3, key: 'Excused', label: 'İzinli', tone: 'soft' }
+] as const;
+const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; label: string; tone: string }[] = [
+  { value: 1, key: 'Done', label: 'Yaptı', tone: 'ok' },
+  { value: 2, key: 'Partial', label: 'Eksik', tone: 'warn' },
+  { value: 3, key: 'NotDone', label: 'Yapmadı', tone: 'bad' }
+];
+
+/**
+ * Yoklama ve ödev: pick a lesson (today's, or one still waiting), mark each student with one tap, mark last lesson's
+ * homework, and give the next one. Built for a phone in class: big targets, one screen, no files.
+ */
+@Component({
+  selector: 'course-attendance-section',
+  standalone: true,
+  imports: [FormsModule],
+  styleUrl: '../panel.scss',
+  template: `
+    <header class="page-head">
+      <div><h1>Yoklama ve ödev</h1><p>Derste her öğrenci için bir dokunuş.</p></div>
+      <label class="field" style="min-width: 260px">Ders<select [ngModel]="lessonId()" (ngModelChange)="choose($event)">
+        @for (lesson of choices(); track lesson.id) { <option [value]="lesson.id">{{ lessonTitle(lesson) }}</option> }
+        @if (!choices().length) { <option value="">Son 7 günde ders yok</option> }</select></label>
+    </header>
+    @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+    @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+    @if (lesson(); as current) {
+      <div class="stack">
+        <section class="card" aria-labelledby="attendance-title">
+          <div class="card-head">
+            <div><h2 id="attendance-title">{{ current.groupName ?? current.courseName }}</h2>
+              <p class="muted" style="margin: 2px 0 0">{{ current.courseName }}, {{ dateTime(current.startsAt) }}–{{ time(current.endsAt) }}{{ current.roomName ? ', ' + current.roomName : '' }}</p></div>
+            <span class="badge" [class.ok]="markedCount(current) === activeStudents(current).length">{{ markedCount(current) }} / {{ activeStudents(current).length }} işaretlendi</span>
+          </div>
+          @if (!started(current)) { <p class="banner" style="margin: 0 20px 16px">Ders henüz başlamadı. Yoklama ders saatinde açılır.</p> }
+          @if (current.status !== 'Scheduled') { <p class="banner" style="margin: 0 20px 16px">Ders {{ current.status === 'Completed' ? 'tamamlandı' : 'iptal edildi' }}; yoklama değiştirilemez.</p> }
+          <ul class="people">
+            @for (student of activeStudents(current); track student.studentId) {
+              <li>
+                <span class="name">{{ student.displayName }}</span>
+                <div class="segmented" role="radiogroup" [attr.aria-label]="student.displayName + ' yoklama'">
+                  @for (option of attendance; track option.value) {
+                    <button type="button" role="radio" [class]="option.tone" [attr.aria-checked]="student.attendanceStatus === option.key"
+                      [disabled]="!editable(current) || busy()" (click)="mark(current, student.studentId, option.value)">{{ option.label }}</button>
+                  }
+                </div>
+              </li>
+            } @empty { <li class="empty">Bu derste öğrenci yok.</li> }
+          </ul>
+          @if (editable(current)) {
+            <div class="actions" style="padding: 12px 20px 18px">
+              <button type="button" class="btn-secondary" (click)="restPresent(current)" [disabled]="busy() || markedCount(current) === activeStudents(current).length">Kalanlar geldi</button>
+              <button type="button" class="btn" (click)="complete(current)" [disabled]="busy() || markedCount(current) < activeStudents(current).length">Dersi tamamla</button>
+            </div>
+          }
+        </section>
+
+        <section class="card" aria-labelledby="homework-check-title">
+          <div class="card-head"><h2 id="homework-check-title">{{ previousHomework() ? 'Ödev: ' + previousHomework()!.title : 'Ödev kontrolü' }}</h2>
+            @if (previousHomework(); as homework) { <span class="muted num">Teslim {{ dateTime(homework.dueAt) }}</span> }</div>
+          @if (previousHomework()) {
+            <ul class="people">
+              @for (row of completions(); track row.studentId) {
+                <li>
+                  <span class="name">{{ row.studentName }}</span>
+                  <div class="segmented" role="radiogroup" [attr.aria-label]="row.studentName + ' ödev'">
+                    @for (option of homework; track option.value) {
+                      <button type="button" role="radio" [class]="option.tone" [attr.aria-checked]="row.completion === option.key"
+                        [disabled]="state.readOnly() || busy()" (click)="markHomework(row, option.value)">{{ option.label }}</button>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+            <p class="muted" style="margin: 0; padding: 0 20px 16px; font-size: 14px">Kurum açtıysa "yapmadı" ve "eksik" işaretleri velilere e-postayla bildirilir.</p>
+          } @else { <p class="empty">Bu grup için kontrol edilecek ödev yok.</p> }
+        </section>
+
+        @if (!state.readOnly()) {
+          <form class="card card-pad stack" style="gap: 14px" (ngSubmit)="giveHomework(current)" aria-labelledby="homework-new-title">
+            <h2 id="homework-new-title">Bu dersin ödevi</h2>
+            <div class="form-grid">
+              <label class="field">Ödev<input name="title" [(ngModel)]="title" maxlength="160" placeholder="Kesirler, sayfa 46–50"></label>
+              <label class="field">Teslim<input name="due" type="date" [(ngModel)]="dueOn"></label>
+            </div>
+            <label class="field">Açıklama<textarea name="instructions" [(ngModel)]="instructions" maxlength="4000" placeholder="İsteğe bağlı"></textarea></label>
+            <p class="muted" style="margin: 0; font-size: 14px">Ödevi bir sonraki derste bu ekrandan "yaptı, eksik, yapmadı" diye işaretlersiniz.</p>
+            <div><button type="submit" class="btn" [disabled]="busy() || !title.trim() || !dueOn">Ödevi kaydet</button></div>
+          </form>
+        }
+      </div>
+    } @else if (!error()) { <p class="empty">Son yedi günde ve bugün ders yok. Takvimden ders planlayabilirsiniz.</p> }
+  `,
+  styles: `
+    .people { list-style: none; margin: 0; padding: 0; }
+    .people li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--ds-line); }
+    .name { font-weight: 600; min-width: 160px; }
+    .segmented button { min-width: 72px; min-height: 44px; }
+    @media (max-width: 600px) { .people li { flex-direction: column; align-items: stretch; } .segmented { display: grid; grid-template-columns: repeat(4, 1fr); } }
+  `
+})
+export class AttendanceSectionComponent {
+  readonly state = inject(CoursePanelState);
+  private readonly api = inject(CoursePanelApi);
+  private readonly service = inject(CourseManagementService);
+  readonly attendance = ATTENDANCE;
+  readonly homework = HOMEWORK;
+  readonly time = formatTime;
+  readonly dateTime = formatDateTime;
+  readonly lessons = signal<CourseLesson[]>([]);
+  readonly lessonId = signal('');
+  readonly assignments = signal<CourseAssignment[]>([]);
+  readonly completions = signal<PanelCompletion[]>([]);
+  readonly busy = signal(false);
+  readonly error = signal('');
+  readonly notice = signal('');
+  title = ''; instructions = ''; dueOn = '';
+
+  readonly choices = computed(() => {
+    const now = Date.now();
+    return this.lessons().filter(lesson => new Date(lesson.startsAt).getTime() <= now + 12 * 3_600_000)
+      .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+  });
+  readonly lesson = computed(() => this.lessons().find(item => item.id === this.lessonId()) ?? null);
+  /** The latest homework of this lesson's group (or student) given before this lesson started. */
+  readonly previousHomework = computed(() => {
+    const current = this.lesson();
+    if (!current) return null;
+    const studentIds = new Set(current.students.map(item => item.studentId));
+    return this.assignments().filter(item => item.courseId === current.courseId
+        && (current.groupId ? item.groupId === current.groupId : !!item.studentId && studentIds.has(item.studentId))
+        && new Date(item.createdAt) < new Date(current.startsAt))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null;
+  });
+
+  constructor() {
+    const wanted = readHashQuery().get('ders');
+    effect(() => { this.state.id(); this.state.version(); untracked(() => void this.load(wanted)); });
+    effect(() => { const homework = this.previousHomework(); untracked(() => void this.loadCompletions(homework)); });
+  }
+
+  async load(wanted: string | null): Promise<void> {
+    const id = this.state.id();
+    if (!id) return;
+    try {
+      const now = Date.now();
+      const [lessons, assignments] = await Promise.all([
+        this.api.lessons(id, new Date(now - 7 * DAY_MS), new Date(now + DAY_MS)),
+        this.service.getAssignments(id)
+      ]);
+      const mine = this.state.isOwner() ? lessons : lessons.filter(item => item.teacherUserId === this.state.myUserId());
+      this.lessons.set(mine);
+      this.assignments.set(assignments);
+      const keep = this.lessonId() || wanted;
+      const pick = mine.find(item => item.id === keep) ?? this.bestLesson();
+      this.lessonId.set(pick?.id ?? '');
+      this.error.set('');
+    } catch (error) { this.error.set(problemText(error, 'Dersler yüklenemedi.')); }
+  }
+
+  /** Now running, else the latest one that ended without attendance, else the latest. */
+  private bestLesson(): CourseLesson | undefined {
+    const now = Date.now();
+    const list = this.choices();
+    return list.find(item => item.status === 'Scheduled' && new Date(item.startsAt).getTime() <= now && new Date(item.endsAt).getTime() > now)
+      ?? list.find(item => item.status === 'Scheduled' && new Date(item.endsAt).getTime() <= now && item.students.some(s => !s.attendanceStatus))
+      ?? list[0];
+  }
+
+  choose(id: string): void { this.lessonId.set(id); writeHashQuery('yoklama', { ders: id }); }
+  lessonTitle(lesson: CourseLesson): string { return `${formatDateTime(lesson.startsAt)}, ${lesson.groupName ?? lesson.courseName}`; }
+  activeStudents(lesson: CourseLesson) { return lesson.students.filter(item => item.isActive !== false); }
+  markedCount(lesson: CourseLesson): number { return this.activeStudents(lesson).filter(item => item.attendanceStatus).length; }
+  started(lesson: CourseLesson): boolean { return new Date(lesson.startsAt).getTime() <= Date.now(); }
+  editable(lesson: CourseLesson): boolean { return lesson.status === 'Scheduled' && this.started(lesson) && !this.state.readOnly(); }
+
+  private patch(lessonId: string, studentId: string, status: string): void {
+    this.lessons.update(list => list.map(item => item.id !== lessonId ? item
+      : { ...item, students: item.students.map(student => student.studentId === studentId ? { ...student, attendanceStatus: status } : student) }));
+  }
+
+  async mark(lesson: CourseLesson, studentId: string, value: number): Promise<void> {
+    const key = ATTENDANCE.find(item => item.value === value)!.key;
+    const before = lesson.students.find(item => item.studentId === studentId)?.attendanceStatus ?? null;
+    this.patch(lesson.id, studentId, key);
+    try { await this.service.markAttendance(this.state.id(), lesson.id, studentId, value); this.error.set(''); }
+    catch (error) { this.patch(lesson.id, studentId, before as string); this.error.set(problemText(error)); }
+  }
+
+  async restPresent(lesson: CourseLesson): Promise<void> {
+    this.busy.set(true);
+    try {
+      for (const student of this.activeStudents(lesson).filter(item => !item.attendanceStatus)) await this.mark(lesson, student.studentId, 1);
+    } finally { this.busy.set(false); }
+  }
+
+  async complete(lesson: CourseLesson): Promise<void> {
+    this.busy.set(true);
+    try {
+      await this.service.completeLesson(this.state.id(), lesson.id);
+      this.lessons.update(list => list.map(item => item.id === lesson.id ? { ...item, status: 'Completed' } : item));
+      this.notice.set('Ders tamamlandı.');
+      this.state.changed();
+    } catch (error) { this.error.set(problemText(error)); }
+    finally { this.busy.set(false); }
+  }
+
+  private async loadCompletions(homework: CourseAssignment | null): Promise<void> {
+    if (!homework) { this.completions.set([]); return; }
+    try { this.completions.set(await this.api.completions(this.state.id(), homework.id)); }
+    catch { this.completions.set([]); }
+  }
+
+  async markHomework(row: PanelCompletion, value: CompletionMark): Promise<void> {
+    const homework = this.previousHomework();
+    if (!homework) return;
+    const key = HOMEWORK.find(item => item.value === value)!.key;
+    const next: CompletionMark = row.completion === key ? 0 : value; // tapping the chosen mark again clears it
+    try { this.completions.set(await this.api.markCompletions(this.state.id(), homework.id, [{ studentId: row.studentId, completion: next, note: null }])); }
+    catch (error) { this.error.set(problemText(error)); }
+  }
+
+  async giveHomework(lesson: CourseLesson): Promise<void> {
+    this.busy.set(true);
+    try {
+      const single = !lesson.groupId && lesson.students.length === 1 ? lesson.students[0].studentId : null;
+      await this.service.createAssignment(this.state.id(), { id: crypto.randomUUID(), courseId: lesson.courseId,
+        groupId: lesson.groupId, studentId: lesson.groupId ? null : single, title: this.title.trim(),
+        instructions: this.instructions.trim() || null, dueAt: new Date(`${this.dueOn}T18:00:00+03:00`).toISOString() });
+      this.title = ''; this.instructions = ''; this.dueOn = '';
+      this.notice.set('Ödev kaydedildi. Bir sonraki derste işaretleyebilirsiniz.');
+      this.assignments.set(await this.service.getAssignments(this.state.id()));
+    } catch (error) { this.error.set(problemText(error)); }
+    finally { this.busy.set(false); }
+  }
+}
