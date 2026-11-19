@@ -1,0 +1,251 @@
+{
+ "version": "v2",
+ "purpose": "Seviye 3: iş, ekonomi ve akademik terimler Çocuk'tan ayrılır; Çocuk için yaşa uygun kelimeler eklenir.",
+ "adultOnlyCategories": [
+  "Ekonomi",
+  "Insan Kaynaklari",
+  "Is Dunyasi",
+  "İş Dünyası",
+  "Yonetim",
+  "Hukuk"
+ ],
+ "childKeepCategories": [
+  "Cografya"
+ ],
+ "childKeepWords": [
+  [
+   "Tarih",
+   "Anıt"
+  ],
+  [
+   "Tarih",
+   "Demokrasi"
+  ],
+  [
+   "Tarih",
+   "Taht"
+  ],
+  [
+   "Edebiyat",
+   "Destan"
+  ],
+  [
+   "Sosyal",
+   "Adalet"
+  ],
+  [
+   "Bilim",
+   "Astronomi"
+  ],
+  [
+   "Bilim",
+   "Kütleçekimi"
+  ],
+  [
+   "Toplum",
+   "Kültür"
+  ]
+ ],
+ "words": [
+  {
+   "id": "a9e00000-0000-4000-8130-000000000001",
+   "word": "Pusula",
+   "definition": "Yön bulmaya yarayan, iğnesi hep kuzeyi gösteren araçtır.",
+   "category": "Coğrafya",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000002",
+   "word": "Buzul",
+   "definition": "Kutuplarda ve yüksek dağlarda biriken büyük buz kütlesidir.",
+   "category": "Coğrafya",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000003",
+   "word": "Şelale",
+   "definition": "Yüksek bir yerden aşağıya dökülen akarsudur.",
+   "category": "Coğrafya",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000004",
+   "word": "Mağara",
+   "definition": "Kayaların içinde doğal olarak oluşmuş derin oyuktur.",
+   "category": "Coğrafya",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000005",
+   "word": "Gezegen",
+   "definition": "Bir yıldızın çevresinde dönen büyük gök cismidir.",
+   "category": "Bilim",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000006",
+   "word": "Termometre",
+   "definition": "Sıcaklığı ölçmeye yarayan araçtır.",
+   "category": "Bilim",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000007",
+   "word": "Mikroskop",
+   "definition": "Gözle görülemeyecek kadar küçük şeyleri büyüterek gösteren araçtır.",
+   "category": "Bilim",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000008",
+   "word": "Hasat",
+   "definition": "Olgunlaşan ürünlerin tarladan ya da bahçeden toplanmasıdır.",
+   "category": "Doğa",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000009",
+   "word": "Fidan",
+   "definition": "Yeni dikilmiş genç ağaçtır.",
+   "category": "Doğa",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000010",
+   "word": "Kovan",
+   "definition": "Arıların içinde yaşayıp bal yaptığı yuvadır.",
+   "category": "Doğa",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000011",
+   "word": "Göçmen kuş",
+   "definition": "Mevsim değişince sıcak yerlere uçan kuştur.",
+   "category": "Doğa",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000012",
+   "word": "Kervan",
+   "definition": "Yük taşıyan hayvanlardan ve yolculardan oluşan topluluktur.",
+   "category": "Tarih",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000013",
+   "word": "Kâşif",
+   "definition": "Bilinmeyen yerleri bulmak için yolculuğa çıkan kişidir.",
+   "category": "Tarih",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000014",
+   "word": "Müze",
+   "definition": "Tarihî ve sanat eserlerinin sergilendiği yerdir.",
+   "category": "Kültür",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000015",
+   "word": "Arşiv",
+   "definition": "Eski belge ve kayıtların saklandığı yerdir.",
+   "category": "Genel",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000016",
+   "word": "Tasarruf",
+   "definition": "Parayı ya da bir kaynağı gereksiz yere harcamadan saklamaktır.",
+   "category": "Genel",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000017",
+   "word": "Gönüllü",
+   "definition": "Bir işi karşılık beklemeden isteyerek yapan kişidir.",
+   "category": "Toplum",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000018",
+   "word": "Yardımlaşma",
+   "definition": "İnsanların zor zamanda birbirine destek olmasıdır.",
+   "category": "Toplum",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000019",
+   "word": "Saygı",
+   "definition": "Başkalarının duygularına ve haklarına önem vermektir.",
+   "category": "Kişilik",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000020",
+   "word": "Dürüstlük",
+   "definition": "Doğruyu söylemek ve hile yapmamaktır.",
+   "category": "Kişilik",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000021",
+   "word": "Bilmece",
+   "definition": "Cevabı düşünülerek bulunan eğlenceli sorudur.",
+   "category": "Edebiyat",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000022",
+   "word": "Efsane",
+   "definition": "Halk arasında anlatılan, olağanüstü olaylar içeren eski öyküdür.",
+   "category": "Edebiyat",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000023",
+   "word": "Ninni",
+   "definition": "Bebekleri uyutmak için söylenen yumuşak ezgili şarkıdır.",
+   "category": "Kültür",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000024",
+   "word": "Sergi",
+   "definition": "Eserlerin insanlara gösterilmek için bir yerde düzenlenmesidir.",
+   "category": "Sanat",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8130-000000000025",
+   "word": "Heykel",
+   "definition": "Taş, metal ya da kilden yapılan üç boyutlu sanat eseridir.",
+   "category": "Sanat",
+   "level": 3,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  }
+ ]
+}

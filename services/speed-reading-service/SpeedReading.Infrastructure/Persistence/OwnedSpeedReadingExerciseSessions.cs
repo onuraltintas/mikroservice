@@ -3305,13 +3305,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             if (state.Pool.Length == 0) state.Pool = [.. TachistoscopeContent.DefaultWords];
             if (type == "phrase")
             {
-                // Random pairs fixed for this session by a stored seed; every length in the adaptive range is covered.
+                // Live test 19.11.2026: meaningful phrases from TachistoscopePhrases instead of random word pairs; the
+                // session's order is fixed by a stored seed and every length in the adaptive range is covered.
                 var phraseLength = state.TargetLength;
                 var minimum = ReadPositiveInt(adaptive, "minLength") ?? phraseLength;
                 var maximum = Math.Max(minimum, ReadPositiveInt(adaptive, "maxLength") ?? phraseLength);
                 state.ContentSeed = Random.Shared.Next();
-                var phrases = TachistoscopeContent.BuildPhrasePool(state.Pool, state.ContentSeed.Value, minimum, maximum);
-                state.Pool = phrases.Length > 0 ? phrases : state.Pool;
+                state.Pool = TachistoscopePhrases.Pool(state.ContentSeed.Value, minimum, maximum);
+                state.Source = "phrase_list";
             }
         }
         if (state.Pool.Length > 0)

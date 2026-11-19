@@ -30,7 +30,7 @@ public sealed class TachistoscopeWordListTests
     private static string Config(string type, int length, int minLength, int maxLength, int? maxVocabularyLevel) =>
         $$$"""{"engineType":"text_stream","engineConfig":{"mode":"tachistoscope","content":{"type":"{{{type}}}","count":20,"length":{{{length}}}{{{(maxVocabularyLevel is { } cap ? $",\"maxVocabularyLevel\":{cap}" : "")}}}},"timing":{"durationMs":400,"intervalMs":500},"adaptive":{"enabled":true,"minLength":{{{minLength}}},"maxLength":{{{maxLength}}},"minDurationMs":250,"maxDurationMs":1500}},"difficultyLevel":5}""";
 
-    private static async Task<string[]> StartPool(string configuration)
+    private static async Task<string[]> StartPool(string configuration, string expectedSource = "vocabulary_items")
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -47,7 +47,7 @@ public sealed class TachistoscopeWordListTests
         var started = await service.StartAsync(Guid.NewGuid(), new() { ExerciseId = exercise.Id });
         var session = await db.ExerciseSessions.AsNoTracking().SingleAsync(item => item.Id == started.SessionId);
         var state = JsonDocument.Parse(session.SessionDataJson).RootElement.GetProperty("tachistoscope");
-        state.GetProperty("source").GetString().Should().Be("vocabulary_items");
+        state.GetProperty("source").GetString().Should().Be(expectedSource);
         return state.GetProperty("pool").EnumerateArray().Select(item => item.GetString()!).ToArray();
     }
 
@@ -65,9 +65,11 @@ public sealed class TachistoscopeWordListTests
     [Fact]
     public async Task Phrases_are_built_only_from_everyday_words_without_excluded_ones()
     {
-        var pool = await StartPool(Config("phrase", 12, 10, 16, 2));
+        // Live test 19.11.2026: phrases come from the meaningful phrase list, not from random vocabulary pairs.
+        var pool = await StartPool(Config("phrase", 12, 10, 16, 2), "phrase_list");
         pool.Should().NotBeEmpty();
-        pool.SelectMany(phrase => phrase.Split(' ')).Should().OnlyContain(word => Everyday.Contains(word));
+        pool.Should().OnlyContain(phrase => TachistoscopePhrases.All.Contains(phrase) && phrase.Length >= 10 && phrase.Length <= 16);
+        pool.SelectMany(phrase => phrase.Split(' ')).Should().NotContain(word => TachistoscopeWordExclusions.IsExcluded(word));
     }
 
     [Fact]

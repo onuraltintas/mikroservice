@@ -1,6 +1,7 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { TextStreamEngine } from './text-stream.engine';
+import { TACHISTOSCOPE_PHRASES } from './tachistoscope-phrases';
 
 describe('Tachistoscope runtime', () => {
   it('keeps the selected digit count at both duration bounds only in previews', fakeAsync(() => {
@@ -101,26 +102,15 @@ describe('Tachistoscope runtime', () => {
     expect(engine.getCurrentDuration()).toBe(500);
     engine.destroy();
   }));
-  it('pairs preview phrases randomly instead of with their list neighbour', () => {
-    const words: string[] = (TextStreamEngine as any).WORD_POOL;
-    const neighbours = new Set(words.map((word, index) => word + ' ' + words[(index + 1) % words.length]));
-    let adjacent = 0;
-    let total = 0;
-    for (let run = 0; run < 5; run++) {
-      const { engine } = create({ content: { type: 'phrase', count: 3 }, adaptive: { enabled: false } });
+  // Live test 19.11.2026: the preview shows meaningful phrases ("sıcak çorba"), not random pairs ("Futbol Top").
+  it('takes preview phrases from the meaningful phrase list only', () => {
+    for (let run = 0; run < 3; run++) {
+      const { engine } = create({ content: { type: 'phrase', length: 10, count: 3 }, adaptive: { enabled: true, minLength: 6, maxLength: 16 } });
       const pool: string[] = (engine as any).contentPool;
-      expect(pool.length).toBeGreaterThan(20);
-      for (const phrase of pool) {
-        const [first, second] = phrase.split(' ');
-        expect(words).toContain(first);
-        expect(words).toContain(second);
-        expect(first).not.toBe(second);
-        total++;
-        if (neighbours.has(phrase)) adjacent++;
-      }
+      expect(pool.length).toBe(TACHISTOSCOPE_PHRASES.length);
+      for (const phrase of pool) expect(TACHISTOSCOPE_PHRASES).toContain(phrase);
       engine.destroy();
     }
-    expect(adjacent / total).toBeLessThan(0.1);
   });
   it('builds local preview phrases near the configured length', () => {
     const { engine } = create({ content: { type: 'phrase', length: 10, count: 3 }, adaptive: { enabled: true, minLength: 8, maxLength: 12 } });

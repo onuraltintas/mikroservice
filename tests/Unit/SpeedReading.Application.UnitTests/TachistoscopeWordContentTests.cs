@@ -92,7 +92,7 @@ public sealed class TachistoscopeWordContentTests
     }
 
     [Fact]
-    public async Task Phrase_level_uses_random_seeded_pairs_near_every_length_in_range()
+    public async Task Phrase_level_uses_meaningful_phrases_for_every_length_in_range()
     {
         var (db, service, exercises) = await Arrange();
         await using var _ = db;
@@ -100,20 +100,17 @@ public sealed class TachistoscopeWordContentTests
         var started = await service.StartAsync(student, new() { ExerciseId = exercises[5] });
         var state = await State(db, started.SessionId);
         state.GetProperty("contentType").GetString().Should().Be("phrase");
+        state.GetProperty("source").GetString().Should().Be("phrase_list");
         var pool = state.GetProperty("pool").EnumerateArray().Select(item => item.GetString()!).ToArray();
-        var vocabulary = Vocabulary();
-        var index = vocabulary.Select((word, position) => (word, position)).ToDictionary(item => item.word, item => item.position);
 
-        pool.Should().OnlyContain(phrase => phrase.Split(' ').Length == 2
-            && index.ContainsKey(phrase.Split(' ')[0]) && index.ContainsKey(phrase.Split(' ')[1]));
+        // Live test 19.11.2026: no random word pairs; only phrases from the list, each length of the range covered.
+        pool.Should().OnlyContain(phrase => TachistoscopePhrases.All.Contains(phrase));
         for (var length = 10; length <= 16; length++)
             pool.Count(phrase => phrase.Length == length).Should().BeGreaterThanOrEqualTo(10, $"length {length} is in the adaptive range");
-        var neighbours = pool.Count(phrase => index[phrase.Split(' ')[1]] - index[phrase.Split(' ')[0]] == 1);
-        neighbours.Should().BeLessThan(pool.Length / 10, "pairs are random, not alphabetical neighbours");
 
-        // The pairing is reproducible from the stored seed and differs between sessions.
+        // The order is reproducible from the stored seed and differs between sessions.
         var seed = state.GetProperty("contentSeed").GetInt32();
-        TachistoscopeContent.BuildPhrasePool(vocabulary, seed, 10, 16).Should().Equal(pool);
+        TachistoscopePhrases.Pool(seed, 10, 16).Should().Equal(pool);
         var other = await service.StartAsync(Guid.NewGuid(), new() { ExerciseId = exercises[5] });
         var otherPool = (await State(db, other.SessionId)).GetProperty("pool").EnumerateArray().Select(item => item.GetString()!).ToArray();
         otherPool.Should().NotEqual(pool);
@@ -122,18 +119,20 @@ public sealed class TachistoscopeWordContentTests
         presented.IsValid.Should().BeTrue(presented.Message);
         var stimulus = presented.FeedbackData!.Value.GetProperty("stimulus").GetString()!;
         stimulus.Length.Should().Be(12);
-        stimulus.Split(' ').Should().HaveCount(2);
+        TachistoscopePhrases.All.Should().Contain(stimulus);
     }
 
     [Fact]
-    public void The_phrase_pool_is_deterministic_for_a_seed_and_skips_identical_pairs()
+    public void The_phrase_list_is_plain_two_word_turkish_and_covers_every_level_5_length()
     {
-        var words = new[] { "ev", "su", "göz", "kapı", "masa", "kalem", "kitap", "pencere" };
-        var first = TachistoscopeContent.BuildPhrasePool(words, 7, 6, 10);
-        first.Should().Equal(TachistoscopeContent.BuildPhrasePool(words, 7, 6, 10));
-        first.Should().OnlyHaveUniqueItems();
-        first.Should().OnlyContain(phrase => phrase.Split(' ')[0] != phrase.Split(' ')[1]);
-        for (var length = 6; length <= 10; length++) first.Should().Contain(phrase => phrase.Length == length);
-        TachistoscopeContent.BuildPhrasePool(["ev"], 7, 6, 10).Should().BeEmpty();
+        TachistoscopePhrases.All.Should().OnlyHaveUniqueItems();
+        TachistoscopePhrases.All.Should().OnlyContain(phrase => phrase.Split(' ').Length == 2
+            && phrase.All(character => char.IsLetter(character) || character == ' ')
+            && !phrase.Split(' ').Any(TachistoscopeWordExclusions.IsExcluded));
+        for (var length = TachistoscopePhrases.MinimumLength; length <= TachistoscopePhrases.MaximumLength; length++)
+            TachistoscopePhrases.All.Count(phrase => phrase.Length == length).Should().BeGreaterThanOrEqualTo(12, $"length {length}");
+        TachistoscopePhrases.Pool(7, 6, 10).Should().Equal(TachistoscopePhrases.Pool(7, 6, 10));
+        TachistoscopePhrases.Pool(7, 6, 10).Should().OnlyContain(phrase => phrase.Length >= 6 && phrase.Length <= 10);
+        TachistoscopePhrases.Pool(7, 40, 50).Should().HaveCount(TachistoscopePhrases.All.Count);
     }
 }

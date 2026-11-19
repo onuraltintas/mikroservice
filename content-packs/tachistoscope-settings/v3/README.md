@@ -14,6 +14,9 @@ süre sınırları (`minDurationMs`/`maxDurationMs`) değişmez.
 - Seviye 3–4: kelime (`vocabulary_items`, yalnız seviye 1–2 günlük kelimeler, yaş etiketi boş ya da öğrencinin yaşı; aşağıdaki kelime listesine bakın).
 - Seviye 5: iki kelimelik kelime grubu. Kelimeler her oturumda rastgele eşleştirilir; eşleştirme
   oturumda saklanan bir tohumla sabittir (alfabetik komşu çiftler kullanılmaz).
+  **19.11.2026 güncellemesi:** Rastgele eşleştirme anlamsız ikililer üretiyordu ("Futbol Top"). Seviye 5 artık
+  `TachistoscopePhrases` listesindeki anlamlı ikilileri gösterir (her yaşa uygun, 6–16 karakterin her uzunluğu için
+  en az 12 ikili). Oturumdaki sıra yine saklanan tohumla sabittir.
 
 Uzunluk harf sayısıdır; kelime grubunda aradaki boşluk da sayılır.
 
