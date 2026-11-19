@@ -36,7 +36,7 @@ type Stage = 'form' | 'verify' | 'setup' | 'recovery-codes';
           </form>
           <p class="ds-divider">ya da</p>
           <mk-google-button (token)="google($event)" />
-          <div class="ds-auth__footer"><p>Hesabınız yok mu? <a class="ds-link" routerLink="/kayit">Kurumunuzu açın</a></p></div>
+          <div class="ds-auth__footer"><span>Hesabınız yok mu? <a class="ds-link" routerLink="/kayit">Kurumunuzu açın</a></span></div>
         }
         @case ('verify') {
           <div class="ds-auth__heading"><h1 class="ds-auth__title">Girişinizi doğrulayın</h1>

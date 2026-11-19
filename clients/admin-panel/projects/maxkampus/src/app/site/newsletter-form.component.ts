@@ -30,7 +30,7 @@ import { problemText } from '../core/problem';
     .nl__row { display: flex; flex-wrap: wrap; gap: 8px; }
     .nl__row .ds-input { flex: 1 1 220px; }
     .nl__consent { align-items: flex-start; font-size: 14px; line-height: 1.5; }
-    .nl__consent input { margin-top: 2px; }
+    .nl__consent input { flex: none; margin-top: 2px; }
   `
 })
 export class NewsletterFormComponent {

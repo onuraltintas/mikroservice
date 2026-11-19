@@ -73,7 +73,7 @@ import { SiteLinkComponent } from './site-link.component';
           <mk-newsletter-form source="footer" headingId="footer-newsletter" inputId="footer-newsletter-email" />
         </section>
       </div>
-      <p class="mk-wrap foot__copy">© {{ year }} maxkampüs, bir eduivme markası.</p>
+      <div class="mk-wrap"><p class="foot__copy">© {{ year }} maxkampüs, bir eduivme markası.</p></div>
     </footer>
   `,
   styles: `

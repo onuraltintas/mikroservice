@@ -54,7 +54,7 @@ import { Seo } from '../core/seo';
     h1 { margin: 0 0 12px; font-size: clamp(30px, 4vw, 40px); }
     .form { display: flex; flex-direction: column; gap: 14px; }
     .textarea { padding-top: 12px; min-height: 140px; resize: vertical; font: inherit; }
-    .consent { align-items: flex-start; font-size: 14px; line-height: 1.5; } .consent input { margin-top: 2px; }
+    .consent { align-items: flex-start; font-size: 14px; line-height: 1.5; } .consent input { flex: none; margin-top: 2px; }
     .small { margin: 0; font-size: 13px; }
   `
 })

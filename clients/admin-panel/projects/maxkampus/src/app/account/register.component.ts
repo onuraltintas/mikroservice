@@ -56,8 +56,8 @@ export function passwordLooksValid(value: string): boolean {
         <p class="ds-divider">ya da</p>
         <mk-google-button (token)="google($event)" />
         @if (error()) { <p class="ds-alert" role="alert">{{ error() }}</p> }
-        <div class="ds-auth__footer"><p>Hesabınız var mı? <a class="ds-link" routerLink="/giris">Giriş yapın</a></p>
-          <p>Öğretmen daveti mi aldınız? E-postadaki bağlantıyı açın.</p></div>
+        <div class="ds-auth__footer"><span>Hesabınız var mı? <a class="ds-link" routerLink="/giris">Giriş yapın</a></span>
+          <span>Öğretmen daveti mi aldınız? E-postadaki bağlantıyı açın.</span></div>
       } @else {
         <div class="ds-auth__heading">
           @if (kind() !== 'invited') { <button type="button" class="ds-btn ds-btn--quiet ds-back-link" (click)="kind.set(null)">Hesap türünü değiştir</button> }
@@ -108,7 +108,7 @@ export function passwordLooksValid(value: string): boolean {
     .kinds { display: grid; gap: 12px; }
     .kind { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-height: 72px; padding: 16px 18px; border: 1.5px solid var(--ds-line); border-radius: 12px; background: var(--ds-surface); color: var(--ds-text); font: inherit; text-align: left; cursor: pointer; }
     .kind:hover { border-color: var(--ds-primary); } .kind strong { font-size: 17px; } .kind span { color: var(--ds-muted); font-size: 14px; }
-    .optin { align-items: flex-start; font-size: 14px; line-height: 1.5; } .optin input { margin-top: 2px; }
+    .optin { align-items: flex-start; font-size: 14px; line-height: 1.5; } .optin input { flex: none; margin-top: 2px; }
     .tips { margin: 0; padding-left: 20px; }
   `
 })

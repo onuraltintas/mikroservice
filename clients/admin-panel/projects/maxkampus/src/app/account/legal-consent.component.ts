@@ -20,14 +20,14 @@ export const MAXKAMPUS_LEGAL_SLUGS = ['kvkk', 'privacy', 'course-management-term
         @for (page of pages(); track page.slug) {
           <label class="ds-check item"><input type="checkbox" [checked]="selected.has(page.slug)" (change)="toggle(page, $any($event.target).checked)">
             <span><a [routerLink]="['/yasal', page.slug]" target="_blank" rel="noopener">{{ page.title }}</a>
-              {{ page.slug === 'course-management-terms' ? 'koşullarını kabul ediyorum.' : 'metnini okudum.' }}</span></label>
+              {{ page.slug === 'course-management-terms' ? 'metnini kabul ediyorum.' : 'metnini okudum.' }}</span></label>
         }
       }
     </fieldset>
   `,
   styles: `
     .legal { padding-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
-    .item { align-items: flex-start; font-size: 14px; line-height: 1.5; } .item input { margin-top: 2px; }
+    .item { align-items: flex-start; font-size: 14px; line-height: 1.5; } .item input { flex: none; margin-top: 2px; }
   `
 })
 export class LegalConsentComponent implements OnInit {

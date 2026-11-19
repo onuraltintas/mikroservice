@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { isInternalLink } from '../core/text';
 
@@ -6,12 +7,14 @@ import { isInternalLink } from '../core/text';
 @Component({
   selector: 'mk-site-link',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, NgTemplateOutlet],
+  // Projected content goes to one place only, so both links show it through a template.
   template: `
+    <ng-template #label><ng-content /></ng-template>
     @if (internal()) {
-      <a [routerLink]="path()" [fragment]="fragment()" [class]="cls()"><ng-content /></a>
+      <a [routerLink]="path()" [fragment]="fragment()" [class]="cls()"><ng-container [ngTemplateOutlet]="label" /></a>
     } @else {
-      <a [href]="href()" [class]="cls()" rel="noopener"><ng-content /></a>
+      <a [href]="href()" [class]="cls()" rel="noopener"><ng-container [ngTemplateOutlet]="label" /></a>
     }
   `,
   styles: `:host { display: contents; }`
