@@ -241,8 +241,13 @@ test('student application is separate and does not import another product', () =
   assert.doesNotMatch(source, /admin-panel|speed-reading|coaching-portal/);
 });
 
-test('Course Management production overlay owns a pinned malware scanner', () => {
-  const overlay = read('docker-compose.course-management.production.yml');
+test('Course Management homework files run only with their own pinned malware scanner', () => {
+  // First release (19.11.2026): files are off and the base overlay runs no scanner.
+  const base = read('docker-compose.course-management.production.yml');
+  assert.doesNotMatch(base, /clamav/i, 'The institution-panel release runs no virus scanner.');
+  assert.doesNotMatch(base, /AssignmentAttachments/, 'Homework files stay off unless the attachments overlay is added.');
+  const overlay = read('docker-compose.course-management.attachments.production.yml');
+  assert.match(overlay, /CourseManagement__Features__AssignmentAttachments: "true"/);
   assert.match(overlay, /course-management-clamav:\r?\n\s+image: clamav\/clamav:1\.5\.4/,
     'Course Management must use its own security-patched scanner image.');
   assert.match(overlay, /CourseManagement__AssignmentAttachments__ClamAvHost: course-management-clamav/,

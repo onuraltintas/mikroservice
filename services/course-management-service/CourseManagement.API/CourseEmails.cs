@@ -22,6 +22,12 @@ public sealed class CourseEmailOptions
     /// <summary>How long a mark may still be corrected before anyone is told (absence, homework, lesson change, payment).</summary>
     public int DelayMinutes { get; init; } = 10;
     public int PollingSeconds { get; init; } = 60;
+
+    public static string DeriveKey(string secret)
+    {
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes("course-management-email-unsubscribe-v1")));
+    }
 }
 
 /// <summary>Signed, link-only unsubscribe: the address holder needs no account.</summary>

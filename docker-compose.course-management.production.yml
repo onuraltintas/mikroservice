@@ -1,7 +1,9 @@
 # Optional production overlay for Course Management.
-# Use with docker-compose.yml and docker-compose.production.yml. The database
-# volumes hold Course Management attachments and scanner signatures. Provision
-# a dedicated database and least-privilege role before running its migration job.
+# Use with docker-compose.yml and docker-compose.production.yml. Provision a
+# dedicated database and least-privilege role before running its migration job.
+# First release (19.11.2026): an institution panel only. Homework files and the
+# student application are off, so no virus scanner runs; to turn files on, add
+# docker-compose.course-management.attachments.production.yml after this file.
 services:
   # An account erasure waits for Course Management's answer only where it runs.
   identity-service:
@@ -29,33 +31,6 @@ services:
     networks:
       - edu-network
 
-  course-management-clamav:
-    image: clamav/clamav:1.5.4
-    environment:
-      CLAMD_CONF_MaxScanSize: 10M
-      CLAMD_CONF_MaxFileSize: 10M
-      CLAMD_CONF_StreamMaxLength: 10M
-      CLAMD_CONF_ConcurrentDatabaseReload: "no"
-      CLAMD_CONF_MaxThreads: "4"
-      CLAMD_CONF_MaxQueue: "16"
-      CLAMAV_NO_MILTERD: "true"
-      FRESHCLAM_CHECKS: "1"
-    mem_limit: 1536m
-    cpus: "1.0"
-    pids_limit: 128
-    restart: unless-stopped
-    expose:
-      - "3310"
-    volumes:
-      - course_management_clamav_data:/var/lib/clamav
-    networks:
-      - edu-network
-    healthcheck:
-      test: [ "CMD-SHELL", "clamdscan --ping 3 || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-
   course-management-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/course-management-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:
@@ -81,13 +56,9 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: ${COURSE_MANAGEMENT_OTLP_ENDPOINT:-}
       OTEL_SERVICE_NAME: EduPlatform.CourseManagement
       OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
-      CourseManagement__AssignmentAttachments__RootPath: /var/lib/course-management/attachments
-      CourseManagement__AssignmentAttachments__ScannerProvider: ClamAv
-      CourseManagement__AssignmentAttachments__ClamAvHost: course-management-clamav
-      CourseManagement__AssignmentAttachments__ClamAvPort: 3310
+      # Institution e-mails: unsubscribe links open on the institution portal's address.
+      CourseManagement__Email__PublicBaseUrl: ${COURSE_MANAGEMENT_PUBLIC_URL:-https://kurum.eduivme.com}
       AllowedHosts: ${COURSE_MANAGEMENT_ALLOWED_HOSTS:?COURSE_MANAGEMENT_ALLOWED_HOSTS must be set}
-    volumes:
-      - course_management_assignment_attachments:/var/lib/course-management/attachments
     depends_on:
       course-management-migrations:
         condition: service_completed_successfully
@@ -97,8 +68,6 @@ services:
         condition: service_healthy
       identity-service:
         condition: service_started
-      course-management-clamav:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - edu-network
@@ -110,7 +79,3 @@ services:
     depends_on:
       course-management-service:
         condition: service_started
-
-volumes:
-  course_management_assignment_attachments:
-  course_management_clamav_data:

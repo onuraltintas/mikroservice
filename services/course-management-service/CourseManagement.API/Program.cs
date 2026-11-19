@@ -117,9 +117,20 @@ builder.Services.AddHostedService<CourseAssignmentAttachmentCleanupService>();
 builder.Services.AddHostedService<CourseManagementReminderWorker>();
 // E-mails to students and guardians (19.11.2026): settings, sending record and unsubscribe links.
 var emailOptions = builder.Configuration.GetSection(CourseEmailOptions.SectionName).Get<CourseEmailOptions>() ?? new CourseEmailOptions();
-if (builder.Environment.IsProduction() && (emailOptions.UnsubscribeKey == CourseEmailOptions.DevelopmentKey
-        || emailOptions.UnsubscribeKey.Length < 32))
-    throw new InvalidOperationException("Production Course Management e-mails require their own unsubscribe key (32+ characters).");
+if (builder.Environment.IsProduction() && emailOptions.UnsubscribeKey == CourseEmailOptions.DevelopmentKey)
+{
+    // No separate secret to provision: the link key is derived from the internal service key the service already needs.
+    var internalKey = Environment.GetEnvironmentVariable("INTERNAL_SERVICE_API_KEY") ?? builder.Configuration["INTERNAL_SERVICE_API_KEY"];
+    if (string.IsNullOrWhiteSpace(internalKey) || internalKey.Length < 32)
+        throw new InvalidOperationException("Production Course Management e-mails need an unsubscribe key or INTERNAL_SERVICE_API_KEY (32+ characters).");
+    emailOptions = new CourseEmailOptions
+    {
+        PublicBaseUrl = emailOptions.PublicBaseUrl, DelayMinutes = emailOptions.DelayMinutes, PollingSeconds = emailOptions.PollingSeconds,
+        UnsubscribeKey = CourseEmailOptions.DeriveKey(internalKey)
+    };
+}
+if (emailOptions.UnsubscribeKey.Length < 32)
+    throw new InvalidOperationException("The Course Management unsubscribe key needs at least 32 characters.");
 if (!Uri.TryCreate(emailOptions.PublicBaseUrl, UriKind.Absolute, out var emailBase) || emailBase.Scheme != Uri.UriSchemeHttps
         && !builder.Environment.IsDevelopment())
     throw new InvalidOperationException("Course Management e-mail links need an absolute https base address.");

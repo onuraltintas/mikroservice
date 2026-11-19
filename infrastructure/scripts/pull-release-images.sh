@@ -13,8 +13,14 @@ cd "${EDUIVME_DIR:-/opt/eduivme}"
 repo=$(sed -n 's/^PRODUCTION_IMAGE_REPOSITORY=//p' .env | tr -d '"' | tail -n 1)
 case "$repo" in ghcr.io/*) ;; *) echo "PRODUCTION_IMAGE_REPOSITORY in .env must point to ghcr.io" >&2; exit 3 ;; esac
 services="identity-service coaching-service speed-reading-service notification-service billing-service site-service api-gateway speed-reading-frontend admin-panel staff-portal"
+# Kurs Yönetimi (19.11.2026) runs only where its database is configured; until then its image is not pulled.
+overlays="-f docker-compose.yml -f docker-compose.production.yml -f docker-compose.production.litespeed.yml -f docker-compose.billing.production.yml"
+if grep -q '^COURSE_MANAGEMENT_CONNECTION_STRING=' .env; then
+  services="$services course-management-service"
+  overlays="$overlays -f docker-compose.course-management.production.yml"
+fi
 # shellcheck disable=SC2086
-RELEASE_TAG="$tag" docker compose --env-file .env -p "${EDUIVME_PROJECT:-eduivme-production}" -f docker-compose.yml -f docker-compose.production.yml -f docker-compose.production.litespeed.yml -f docker-compose.billing.production.yml pull --quiet $services
+RELEASE_TAG="$tag" docker compose --env-file .env -p "${EDUIVME_PROJECT:-eduivme-production}" $overlays pull --quiet $services
 status=0
 for name in $services; do
   image="$repo/$name:$tag"
@@ -24,5 +30,5 @@ for name in $services; do
   case "$revision" in "$tag"*) ;; *) echo "WRONG COMMIT $image ($revision)" >&2; status=1; continue ;; esac
   echo "OK $image $(docker image inspect "$image" --format '{{.Id}}' | cut -c8-19) $revision"
 done
-[ "$status" -eq 0 ] && echo "PASS: all 9 images for $tag are present" || echo "FAIL: do not switch containers" >&2
+[ "$status" -eq 0 ] && echo "PASS: all $(echo $services | wc -w) images for $tag are present" || echo "FAIL: do not switch containers" >&2
 exit "$status"

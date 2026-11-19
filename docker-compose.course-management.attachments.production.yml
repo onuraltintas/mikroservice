@@ -1,0 +1,48 @@
+# Homework files for Course Management (off in the first release, 19.11.2026).
+# Add after docker-compose.course-management.production.yml. Files are scanned by
+# Course Management's own pinned ClamAV (up to 1.5 GiB RAM); the shared scanner of
+# the other products is not used.
+services:
+  course-management-clamav:
+    image: clamav/clamav:1.5.4
+    environment:
+      CLAMD_CONF_MaxScanSize: 10M
+      CLAMD_CONF_MaxFileSize: 10M
+      CLAMD_CONF_StreamMaxLength: 10M
+      CLAMD_CONF_ConcurrentDatabaseReload: "no"
+      CLAMD_CONF_MaxThreads: "4"
+      CLAMD_CONF_MaxQueue: "16"
+      CLAMAV_NO_MILTERD: "true"
+      FRESHCLAM_CHECKS: "1"
+    mem_limit: 1536m
+    cpus: "1.0"
+    pids_limit: 128
+    restart: unless-stopped
+    expose:
+      - "3310"
+    volumes:
+      - course_management_clamav_data:/var/lib/clamav
+    networks:
+      - edu-network
+    healthcheck:
+      test: [ "CMD-SHELL", "clamdscan --ping 3 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  course-management-service:
+    environment:
+      CourseManagement__Features__AssignmentAttachments: "true"
+      CourseManagement__AssignmentAttachments__RootPath: /var/lib/course-management/attachments
+      CourseManagement__AssignmentAttachments__ScannerProvider: ClamAv
+      CourseManagement__AssignmentAttachments__ClamAvHost: course-management-clamav
+      CourseManagement__AssignmentAttachments__ClamAvPort: 3310
+    volumes:
+      - course_management_assignment_attachments:/var/lib/course-management/attachments
+    depends_on:
+      course-management-clamav:
+        condition: service_healthy
+
+volumes:
+  course_management_assignment_attachments:
+  course_management_clamav_data:

@@ -88,6 +88,7 @@ jobs:
           - { name: notification-service, context: ., dockerfile: services/notification-service/Dockerfile }
           - { name: billing-service, context: ., dockerfile: services/billing-service/Dockerfile }
           - { name: site-service, context: ., dockerfile: services/site-service/Dockerfile }
+          - { name: course-management-service, context: ., dockerfile: services/course-management-service/Dockerfile }
           - { name: api-gateway, context: ., dockerfile: services/api-gateway/Dockerfile }
           - { name: speed-reading-frontend, context: ./clients, dockerfile: speed-reading/Dockerfile }
           - { name: admin-panel, context: ./clients, dockerfile: admin-panel/Dockerfile }
