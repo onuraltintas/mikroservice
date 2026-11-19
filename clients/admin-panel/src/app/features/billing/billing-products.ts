@@ -14,7 +14,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
 interface ProductDraft { id: string | null; code: string; name: string; isActive: boolean; sortOrder: number; }
 interface EntitlementDraft { id: string | null; productId: string; productCode: string; key: string; name: string; hasLimit: boolean; }
-interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; }
+interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales: boolean; }
 
 /**
  * "Abonelik ve Ödeme › Ürünler ve haklar": what is sold, the access keys each product understands, and the two
@@ -77,9 +77,14 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
                   <label class="check mt-1"><input type="radio" [(ngModel)]="settings.bankTransferApproval" [name]="'approval-' + product.id" value="Automatic" /> Otomatik: banka hareketiyle tam eşleşen ödeme kendiliğinden onaylanır</label>
                   <p class="muted mt-2">Otomatik onay yalnız ödeme kodu ve tutar birebir tuttuğunda çalışır; eşleşmeyenler yine kuyruğa düşer.</p>
                 </fieldset>
+                <fieldset>
+                  <legend>Satış türü</legend>
+                  <label class="check"><input type="radio" [(ngModel)]="settings.businessSales" [name]="'sales-' + product.id" [value]="false" /> Tüketiciye satış: ön bilgilendirme formu, mesafeli satış sözleşmesi ve 14 gün cayma</label>
+                  <label class="check mt-1"><input type="radio" [(ngModel)]="settings.businessSales" [name]="'sales-' + product.id" [value]="true" /> Kurumsal satış: kurumsal abonelik sözleşmesi, cayma ve iade yok</label>
+                </fieldset>
               </div>
               <div class="form-actions">
-                <span class="muted">Kayıtlı: {{ product.requireSubscription ? 'abonelik isteniyor' : 'abonelik istenmiyor' }} · {{ product.bankTransferApproval === 'Automatic' ? 'otomatik onay' : 'elle onay' }}</span>
+                <span class="muted">Kayıtlı: {{ product.requireSubscription ? 'abonelik isteniyor' : 'abonelik istenmiyor' }}, {{ product.bankTransferApproval === 'Automatic' ? 'otomatik onay' : 'elle onay' }}, {{ product.businessSales ? 'kurumsal satış' : 'tüketiciye satış' }}</span>
                 <button type="submit" class="primary" [disabled]="saving() || !settingsChanged(product)">Ayarları kaydet</button>
               </div>
             </form>
@@ -161,7 +166,8 @@ export class BillingProductsComponent implements OnInit {
 
   settingsChanged(product: BillingProduct): boolean {
     const draft = this.settingsDrafts()[product.id];
-    return !!draft && (draft.requireSubscription !== product.requireSubscription || draft.bankTransferApproval !== product.bankTransferApproval);
+    return !!draft && (draft.requireSubscription !== product.requireSubscription || draft.bankTransferApproval !== product.bankTransferApproval
+      || draft.businessSales !== !!product.businessSales);
   }
 
   saveSettings(product: BillingProduct): void {
@@ -232,6 +238,6 @@ export class BillingProductsComponent implements OnInit {
   private apply(products: BillingProduct[]): void {
     this.products.set(products);
     this.settingsDrafts.set(Object.fromEntries(products.map(product =>
-      [product.id, { requireSubscription: product.requireSubscription, bankTransferApproval: product.bankTransferApproval }])));
+      [product.id, { requireSubscription: product.requireSubscription, bankTransferApproval: product.bankTransferApproval, businessSales: !!product.businessSales }])));
   }
 }

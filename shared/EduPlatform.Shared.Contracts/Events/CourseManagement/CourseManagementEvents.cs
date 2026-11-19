@@ -75,7 +75,12 @@ public sealed record CourseManagementOwnerEmailRequestedV1(
     string Title,
     IReadOnlyList<string> Paragraphs,
     string LinkUrl,
-    string LinkText);
+    string LinkText,
+    /// <summary>
+    /// When RecipientEmail is empty: the user whose address the notification service looks up in
+    /// Identity (a workspace owner; Course Management keeps no e-mail addresses of owners).
+    /// </summary>
+    Guid? RecipientUserId = null);
 
 /// <summary>
 /// maxkampus.com registration (19.11.2026): Identity opened an account for an institution owner ("institution") or a

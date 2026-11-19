@@ -21,6 +21,8 @@ export interface LegalAcceptance { slug: string; version: number; }
 export interface BillingCatalogPlan {
   id: string; name: string; description: string; buyerType: string; price: number; currency: string; durationDays: number; seatCount: number | null;
   isContactOnly: boolean; isPublic: boolean; isActive: boolean; sortOrder: number; features: string[];
+  /** null: the price includes taxes; a rate: the price is net and VAT is added. */
+  vatRate?: number | null; priceWithVat?: number;
 }
 export interface BillingCatalog { productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean; plans: BillingCatalogPlan[]; }
 export interface MyBilling {

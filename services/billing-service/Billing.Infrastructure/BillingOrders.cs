@@ -38,9 +38,10 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             ?? throw new BusinessRuleException("Billing.PlanNotFound", "Plan bulunamadı.");
         var offer = await OfferAsync(plan, user, cancellationToken);
         var buyerName = BuyerName(request.BuyerName);
-        if (!string.Equals(request.DocumentsVersion?.Trim(), SalesDocumentTexts.Version, StringComparison.Ordinal))
-            throw new BusinessRuleException("Billing.DocumentsNotAccepted",
-                "Devam etmek için ön bilgilendirme formunu ve mesafeli satış sözleşmesini onaylayın.");
+        if (!string.Equals(request.DocumentsVersion?.Trim(), SalesDocumentTexts.VersionFor(offer.Business), StringComparison.Ordinal))
+            throw new BusinessRuleException("Billing.DocumentsNotAccepted", offer.Business
+                ? "Devam etmek için kurumsal abonelik sözleşmesini onaylayın."
+                : "Devam etmek için ön bilgilendirme formunu ve mesafeli satış sözleşmesini onaylayın.");
 
         var now = Now;
         // A coupon is counted and taken in one step: its row stays locked until the order is stored.
@@ -57,9 +58,10 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         }
 
         var (discount, couponCode) = await CouponAsync(request.CouponCode, plan, account.Id, now, true, cancellationToken);
-        var amount = plan.Price - discount;
+        var net = plan.Price - discount;
+        var vat = BillingRules.Vat(net, plan.VatRate);
         var contractName = institution is null ? buyerName : $"{institution.Name} (yetkili: {buyerName})";
-        var documents = SalesDocumentTexts.Render(Terms(offer, plan, contractName, user.Email, amount, now));
+        var documents = SalesDocumentTexts.Render(Terms(offer, plan, contractName, user.Email, net, now));
         var order = new Order
         {
             Id = Guid.NewGuid(),
@@ -73,7 +75,9 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             ListPrice = plan.Price,
             CouponCode = couponCode,
             Discount = discount,
-            Amount = amount,
+            VatRate = plan.VatRate,
+            VatAmount = vat,
+            Amount = net + vat,
             Currency = plan.Currency,
             DurationDays = plan.DurationDays,
             SeatCount = plan.SeatCount,
@@ -190,7 +194,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                 .OrderByDescending(item => item.CreatedAt).ToListAsync(cancellationToken), cancellationToken))
             .Where(item => item.ProductCodes.Contains(product.Code)).ToArray();
         return new MyBilling(product.Code, product.Name, product.RequireSubscription, await SalesOpenAsync(cancellationToken),
-            await GrantsAsync(userId, product.Id, now, cancellationToken), subscriptions, pending);
+            await GrantsAsync(userId, product.Id, now, cancellationToken), subscriptions, pending, product.BusinessSales);
     }
 
     // ---- Admin --------------------------------------------------------------------------------------------------------
@@ -414,7 +418,20 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
     {
         var product = await ActiveProductAsync(productCode, cancellationToken);
         if (product is null) return null;
-        return new ProductAccess(product.Code, product.RequireSubscription, await GrantsAsync(userId, product.Id, Now, cancellationToken));
+        return new ProductAccess(product.Code, product.RequireSubscription, await GrantsAsync(userId, product.Id, Now, cancellationToken),
+            await LastEndsAtAsync(userId, product.Code, cancellationToken));
+    }
+
+    /// <summary>
+    /// The latest end of the user's own subscriptions that gave this product: running, over or ended early (an early end
+    /// moves a subscription's end to that moment, so the date is when the access really stopped).
+    /// </summary>
+    private async Task<DateTime?> LastEndsAtAsync(Guid userId, string productCode, CancellationToken cancellationToken)
+    {
+        var subscriptions = await db.Subscriptions.AsNoTracking().Where(item => item.BeneficiaryUserId == userId)
+            .Select(item => new { item.EndsAt, item.EntitlementsJson }).ToListAsync(cancellationToken);
+        var ends = subscriptions.Where(item => ProductCodes(item.EntitlementsJson).Contains(productCode)).Select(item => item.EndsAt).ToArray();
+        return ends.Length == 0 ? null : ends.Max();
     }
 
     public async Task<int> ExpirePendingOrdersAsync(CancellationToken cancellationToken = default)
@@ -437,7 +454,8 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
 
     // ---- Rules --------------------------------------------------------------------------------------------------------
 
-    private sealed record Offer(Seller Seller, IReadOnlyList<OrderEntitlement> Entitlements, IReadOnlyList<string> ProductNames);
+    /// <summary>What a plan sells; <see cref="Business"/> when every product of it is sold to businesses.</summary>
+    private sealed record Offer(Seller Seller, IReadOnlyList<OrderEntitlement> Entitlements, IReadOnlyList<string> ProductNames, bool Business);
 
     /// <summary>Everything that must hold before a plan can be ordered; throws what is missing in the buyer's language.</summary>
     private async Task<Offer> OfferAsync(Plan plan, BillingUser user, CancellationToken cancellationToken)
@@ -463,7 +481,8 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             throw new BusinessRuleException("Billing.SalesClosed", "Satın alma şu anda kapalı. Lütfen daha sonra tekrar deneyin.");
         return new Offer(seller,
             rows.Select(row => new OrderEntitlement(row.entitlement.Id, row.entitlement.Key, row.product.Code, row.link.Holder, row.link.LimitValue)).ToArray(),
-            rows.Select(row => row.product.Name).Distinct().ToArray());
+            rows.Select(row => row.product.Name).Distinct().ToArray(),
+            rows.All(row => row.product.BusinessSales));
     }
 
     private async Task<string> AccountNameAsync(Guid accountId, CancellationToken cancellationToken) =>
@@ -591,8 +610,13 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         await db.Sellers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == Seller.SingleId, cancellationToken) is { IsComplete: true }
         && await db.BankAccounts.AnyAsync(item => item.IsActive, cancellationToken);
 
-    private static SalesTerms Terms(Offer offer, Plan plan, string buyerName, string? email, decimal amount, DateTime date) =>
-        new(offer.Seller, buyerName, email, plan.Name, offer.ProductNames, plan.DurationDays, amount, plan.Currency, date);
+    /// <summary>The documents' terms for a net amount: VAT is added when the plan's price is net.</summary>
+    private static SalesTerms Terms(Offer offer, Plan plan, string buyerName, string? email, decimal net, DateTime date)
+    {
+        var vat = BillingRules.Vat(net, plan.VatRate);
+        return new(offer.Seller, buyerName, email, plan.Name, offer.ProductNames, plan.DurationDays, net + vat, plan.Currency, date,
+            plan.VatRate, vat, offer.Business);
+    }
 
     private static string BuyerName(string? value)
     {
@@ -758,9 +782,14 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
             hasReceipt, order.ReviewedAt, order.ReviewNote, order.DocumentsVersion, order.Kind, order.ExtraSeats, order.ListPrice, order.Discount,
             order.CouponCode, withdrawal,
             // Withdrawal is open for a paid order until 14 days after its approval, unless one is already waiting or accepted.
-            order is { Status: OrderStatus.Paid, ReviewedAt: { } approvedAt } && withdrawal is null or WithdrawalStatus.Rejected
+            // A business sale has none.
+            !IsBusinessSale(order) && order is { Status: OrderStatus.Paid, ReviewedAt: { } approvedAt } && withdrawal is null or WithdrawalStatus.Rejected
                 && ExtrasRules.WithdrawalDeadline(approvedAt) is var deadline && (now is null || deadline > now) ? deadline : null,
-            hasInvoice);
+            hasInvoice, order.VatRate, order.VatAmount);
+
+    /// <summary>The buyer accepted the business documents: no withdrawal (cayma).</summary>
+    internal static bool IsBusinessSale(Order order) =>
+        string.Equals(order.DocumentsVersion, SalesDocumentTexts.BusinessVersion, StringComparison.Ordinal);
 
     private static SubscriptionView View(Subscription subscription, DateTime now) =>
         new(subscription.Id, subscription.PlanId, subscription.PlanName, ProductCodes(subscription.EntitlementsJson), subscription.Status,

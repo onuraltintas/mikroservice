@@ -657,6 +657,14 @@ namespace Billing.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal?>("VatRate")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CouponCode");
@@ -836,6 +844,10 @@ namespace Billing.Infrastructure.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("VatRate")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IsActive", "IsPublic", "SortOrder");
@@ -884,6 +896,9 @@ namespace Billing.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<bool>("BusinessSales")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -924,6 +939,7 @@ namespace Billing.Infrastructure.Migrations
                         {
                             Id = new Guid("b1110000-0000-4000-8000-000000000001"),
                             BankTransferApproval = "Manual",
+                            BusinessSales = false,
                             Code = "coaching",
                             CreatedAt = new DateTime(2026, 11, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -935,6 +951,7 @@ namespace Billing.Infrastructure.Migrations
                         {
                             Id = new Guid("b1110000-0000-4000-8000-000000000002"),
                             BankTransferApproval = "Manual",
+                            BusinessSales = false,
                             Code = "speed-reading",
                             CreatedAt = new DateTime(2026, 11, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -946,6 +963,7 @@ namespace Billing.Infrastructure.Migrations
                         {
                             Id = new Guid("b1110000-0000-4000-8000-000000000003"),
                             BankTransferApproval = "Manual",
+                            BusinessSales = true,
                             Code = "course-management",
                             CreatedAt = new DateTime(2026, 11, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,

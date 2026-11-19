@@ -96,6 +96,24 @@ public sealed class WorkspaceBillingPlans(
         }
     }
 
+    /// <summary>
+    /// For data retention: billing's answer about the owner, asked now and never taken from the cache. Null when billing
+    /// does not know the product. Throws when billing cannot be asked; retention then does nothing for this owner.
+    /// </summary>
+    public async Task<BillingProductAccessResponse?> GetFreshAccessAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
+    {
+        if (!Enabled) throw new InvalidOperationException("The billing service is not enabled in this deployment.");
+        if (string.IsNullOrWhiteSpace(serviceApiKey)) throw new InvalidOperationException("Internal service API key is not configured.");
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/internal/billing/v1/entitlements?userId={ownerUserId:D}&product={BillingProductCodes.CourseManagement}");
+        request.Headers.Add("X-Internal-Service-Key", serviceApiKey);
+        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<BillingProductAccessResponse>(cancellationToken: cancellationToken)
+            ?? throw new HttpRequestException("The billing service returned an empty answer.");
+    }
+
     public async Task<WorkspaceBillingPlan> GetForWorkspaceAsync(CourseManagementDbContext db, Guid workspaceId,
         CancellationToken cancellationToken = default)
     {

@@ -11,9 +11,11 @@ export interface BillingPlan {
   id: string; name: string; description: string; buyerType: BuyerType; price: number; currency: string; durationDays: number;
   trialDays: number; seatCount: number | null; extraSeatPrice: number | null; isContactOnly: boolean; features: string[];
   productCodes: string[];
+  /** null: the price includes taxes; a rate: the price is net and VAT at this percentage is added (maxkampüs). */
+  vatRate?: number | null; priceWithVat?: number;
 }
 export interface BillingBankAccount { bankName: string; accountHolder: string; iban: string; ibanFormatted: string; instructions: string | null }
-export interface BillingCatalog { productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean; plans: BillingPlan[]; bankAccounts: BillingBankAccount[] }
+export interface BillingCatalog { productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean; plans: BillingPlan[]; bankAccounts: BillingBankAccount[]; businessSales?: boolean }
 export interface BillingSubscription {
   id: string; planId: string; planName: string; productCodes: string[]; status: 'Active' | 'Cancelled'; startsAt: string; endsAt: string;
   isCurrent: boolean; seatCount: number | null;
@@ -24,14 +26,24 @@ export interface BillingOrder {
   payerNote: string | null; hasReceipt: boolean; reviewedAt: string | null; reviewNote: string | null; documentsVersion: string;
   kind: 'Subscription' | 'ExtraSeats'; extraSeats: number | null; listPrice: number; discount: number; couponCode: string | null;
   withdrawal: WithdrawalStatus | null; withdrawUntil: string | null; hasInvoice: boolean;
+  vatRate?: number | null; vatAmount?: number;
 }
 export interface MyBilling {
   productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean;
   entitlements: { key: string; limitValue: number | null; endsAt: string }[]; subscriptions: BillingSubscription[]; pendingOrders: BillingOrder[];
 }
 export interface BillingOrganization { id: string; name: string; subscriptions: BillingSubscription[]; pendingOrders: BillingOrder[] }
-export interface SalesDocuments { version: string; preInformation: string; distanceSales: string }
-export interface CouponQuote { code: string; listPrice: number; discount: number; amount: number; currency: string }
+/** business: the business subscription information form and contract (maxkampüs), not the consumer documents. */
+export interface SalesDocuments { version: string; preInformation: string; distanceSales: string; business?: boolean }
+export interface CouponQuote { code: string; listPrice: number; discount: number; amount: number; currency: string; vatRate?: number | null; vatAmount?: number }
+
+/** Net, VAT and total of a plan, after a coupon; vat is 0 and net equals total when the price includes taxes. */
+export function billingBreakdown(plan: BillingPlan, quote: CouponQuote | null): { net: number; vat: number; total: number; rate: number | null } {
+  const rate = plan.vatRate ?? null;
+  const net = quote ? quote.listPrice - quote.discount : plan.price;
+  const vat = quote ? quote.vatAmount ?? 0 : rate === null ? 0 : Math.round(net * rate) / 100;
+  return { net, vat, total: quote ? quote.amount : net + vat, rate };
+}
 export interface SeatPool {
   subscriptionId: string; planName: string; endsAt: string; capacity: number; used: number; extraSeats: number; extraSeatsUntil: string | null;
   extraSeatPrice: number | null; seats: { userId: string; isSuspended: boolean; assignedAt: string; isCovered: boolean }[];
@@ -239,7 +251,14 @@ export class MySubscriptionController {
   get plans(): BillingPlan[] { return billingPlansFor(this.catalog?.plans ?? [], this.options.roles, this.organizations.length > 0, this.options.individualPlans ?? true); }
   get canBuy(): boolean { return !!this.me?.salesOpen && !!this.catalog?.salesOpen; }
   get bankAccounts(): BillingBankAccount[] { return this.catalog?.bankAccounts ?? []; }
-  get price(): number { return this.quote?.amount ?? this.plan?.price ?? 0; }
+  get price(): number { return this.quote?.amount ?? this.plan?.priceWithVat ?? this.plan?.price ?? 0; }
+  breakdown(plan: BillingPlan): { net: number; vat: number; total: number; rate: number | null } { return billingBreakdown(plan, this.quote); }
+  /** The names of the two documents and the acceptance sentence, for consumer or business sales. */
+  documentNames(documents: SalesDocuments | null): { first: string; second: string; accept: string } {
+    return documents?.business
+      ? { first: 'Kurumsal abonelik bilgi formu', second: 'Kurumsal abonelik sözleşmesi', accept: 'Kurumsal abonelik bilgi formunu ve sözleşmesini okudum, kurum adına kabul ediyorum.' }
+      : { first: 'Ön bilgilendirme formu', second: 'Mesafeli satış sözleşmesi', accept: 'Ön bilgilendirme formunu ve mesafeli satış sözleşmesini okudum, kabul ediyorum.' };
+  }
   organizationName(subscription: BillingSubscription): string | null {
     return this.organizations.find(item => item.subscriptions.some(sub => sub.id === subscription.id))?.name ?? null;
   }
@@ -571,7 +590,8 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         <dl class="bill-pay">
           <dt>Ödenecek tutar</dt>
           <dd><strong>{{ c.money(order.amount, order.currency) }}</strong>
-            <button type="button" class="bill-copy" (click)="c.copy(order.amount.toFixed(2))">Kopyala</button></dd>
+            <button type="button" class="bill-copy" (click)="c.copy(order.amount.toFixed(2))">Kopyala</button>
+            @if (order.vatRate != null) { <span class="bill-muted">%{{ order.vatRate }} KDV ({{ c.money(order.vatAmount ?? 0, order.currency) }}) dahil</span> }</dd>
           <dt>Ödeme kodu</dt>
           <dd><strong class="bill-code">{{ order.paymentCode }}</strong>
             <button type="button" class="bill-copy" (click)="c.copy(order.paymentCode)">{{ c.copied === order.paymentCode ? 'Kopyalandı' : 'Kopyala' }}</button></dd>
@@ -615,8 +635,17 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         <p>{{ c.duration(plan.durationDays) }} ·
           @if (c.quote; as quote) {
             <s>{{ c.money(quote.listPrice, quote.currency) }}</s> <strong>{{ c.money(quote.amount, quote.currency) }}</strong> ({{ quote.code }})
-          } @else { <strong>{{ c.money(plan.price, plan.currency) }}</strong> }
+          } @else { <strong>{{ c.money(c.breakdown(plan).total, plan.currency) }}</strong> }
         </p>
+        @if (c.breakdown(plan); as total) {
+          @if (total.rate !== null) {
+            <dl class="bill-sum">
+              <dt>Net tutar</dt><dd>{{ c.money(total.net, plan.currency) }}</dd>
+              <dt>KDV (%{{ total.rate }})</dt><dd>{{ c.money(total.vat, plan.currency) }}</dd>
+              <dt>Ödenecek toplam</dt><dd><strong>{{ c.money(total.total, plan.currency) }}</strong></dd>
+            </dl>
+          }
+        }
         <div class="bill-form">
           <label>{{ c.t.nameLabel }}
             <input type="text" maxlength="200" autocomplete="name" [value]="c.buyerName"
@@ -642,13 +671,13 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         </div>
         <p class="bill-muted">Havaleyi kim yaparsa yapsın, açıklamaya ödeme kodunun yazılması yeterlidir.</p>
         @if (c.documents; as documents) {
-          <button type="button" class="bill-link" (click)="c.show('pre')">Ön bilgilendirme formu</button>
-          <button type="button" class="bill-link" (click)="c.show('sales')">Mesafeli satış sözleşmesi</button>
+          <button type="button" class="bill-link" (click)="c.show('pre')">{{ c.documentNames(documents).first }}</button>
+          <button type="button" class="bill-link" (click)="c.show('sales')">{{ c.documentNames(documents).second }}</button>
           @if (c.shownDocument) {
             <pre class="bill-doc-text" tabindex="0">{{ c.shownDocument === 'pre' ? documents.preInformation : documents.distanceSales }}</pre>
           }
           <label class="bill-check"><input type="checkbox" [checked]="c.accepted" (change)="c.accept($any($event.target).checked)" />
-            Ön bilgilendirme formunu ve mesafeli satış sözleşmesini okudum, kabul ediyorum.</label>
+            {{ c.documentNames(documents).accept }}</label>
         } @else {
           <p class="bill-muted">{{ c.t.docsHint }}</p>
         }
@@ -667,7 +696,11 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
               <h3>{{ plan.name }}</h3>
               @if (plan.productCodes.length > 1) { <span class="bill-tag bill-tag--ok">Paket</span> }
               <p class="bill-price">{{ plan.isContactOnly ? 'Teklif alın' : c.money(plan.price, plan.currency) }}
+                @if (plan.vatRate != null && !plan.isContactOnly) { <span class="bill-muted">+ KDV</span> }
                 <span class="bill-muted">/ {{ c.duration(plan.durationDays) }}</span></p>
+              @if (plan.vatRate != null && !plan.isContactOnly) {
+                <p class="bill-muted">KDV dahil {{ c.money(plan.priceWithVat ?? plan.price, plan.currency) }}</p>
+              }
               @if (plan.description) { <p>{{ plan.description }}</p> }
               @if (plan.seatCount) { <p class="bill-muted">{{ plan.seatCount }} koltuk</p> }
               <ul>@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul>
@@ -765,6 +798,9 @@ export const MY_SUBSCRIPTION_STYLES = `
 .bill-plan { border: 1px solid var(--bill-border, #d7dce5); border-radius: .625rem; padding: 1rem; display: grid; gap: .375rem; align-content: start; }
 .bill-plan ul { margin: 0; padding-left: 1.125rem; }
 .bill-price { font-size: 1.25rem; font-weight: 600; margin: 0; }
+.bill-sum { display: grid; grid-template-columns: max-content max-content; gap: 4px 16px; margin: 8px 0 12px; }
+.bill-sum dt { color: var(--bill-muted, inherit); }
+.bill-sum dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .bill-doc pre, .bill-doc-text { white-space: pre-wrap; max-height: 18rem; overflow: auto; padding: .75rem; border: 1px solid var(--bill-border, #d7dce5); border-radius: .5rem; font: inherit; font-size: .875rem; background: var(--bill-soft, #f7f8fb); }
 @media (max-width: 30rem) { .bill-pay { grid-template-columns: 1fr; } .bill-btn { width: 100%; } }
 `;

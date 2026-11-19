@@ -8,6 +8,7 @@ import { CourseManagementLegacyImportService, LegacyInstitutionCategory, LegacyI
 
 const courseAuditActionLabels: Record<string, string> = {
   'Workspace.Created': 'Çalışma alanı oluşturuldu',
+  'Retention.ContentPurged': 'Saklama süresi dolduğu için panel verileri silindi',
   'Subscription.Assigned': 'Platform planı atandı',
   'Subscription.Updated': 'Platform planı güncellendi',
   'Invitation.Created': 'Davet oluşturuldu',

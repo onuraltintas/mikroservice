@@ -73,6 +73,7 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
             entity.Property(item => item.BuyerType).HasConversion<string>().HasMaxLength(20);
             entity.Property(item => item.Price).HasPrecision(12, 2);
+            entity.Property(item => item.VatRate).HasPrecision(5, 2);
             entity.Property(item => item.ExtraSeatPrice).HasPrecision(12, 2);
             entity.Property(item => item.Currency).HasMaxLength(3).IsRequired();
             entity.Property(item => item.FeaturesJson).HasColumnType("jsonb").IsRequired();
@@ -140,6 +141,8 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             entity.HasOne<Subscription>().WithMany().HasForeignKey(item => item.SubscriptionId).OnDelete(DeleteBehavior.Restrict);
             entity.Property(item => item.ListPrice).HasPrecision(12, 2);
             entity.Property(item => item.Discount).HasPrecision(12, 2);
+            entity.Property(item => item.VatRate).HasPrecision(5, 2);
+            entity.Property(item => item.VatAmount).HasPrecision(12, 2);
             entity.Property(item => item.Amount).HasPrecision(12, 2);
             entity.Property(item => item.Currency).HasMaxLength(3).IsRequired();
             entity.Property(item => item.EntitlementsJson).HasColumnType("jsonb").IsRequired();
@@ -335,7 +338,7 @@ public static class BillingSeed
     [
         new() { Id = Coaching, Code = "coaching", Name = "Eduİvme Koçluk", SortOrder = 1, CreatedAt = SeededAt },
         new() { Id = SpeedReading, Code = "speed-reading", Name = "Master Hızlı Okuma", SortOrder = 2, CreatedAt = SeededAt },
-        new() { Id = CourseManagement, Code = "course-management", Name = "Kurs Yönetimi", SortOrder = 3, CreatedAt = SeededAt }
+        new() { Id = CourseManagement, Code = "course-management", Name = "Kurs Yönetimi", SortOrder = 3, BusinessSales = true, CreatedAt = SeededAt }
     ];
 
     public static Entitlement[] Entitlements =>

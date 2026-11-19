@@ -18,10 +18,12 @@ export interface BillingProduct {
   isActive: boolean;
   sortOrder: number;
   entitlements: BillingEntitlement[];
+  /** Sold to businesses (maxkampüs): business subscription contract, no withdrawal. */
+  businessSales?: boolean;
 }
 
 export interface BillingProductRequest { code: string; name: string; isActive: boolean; sortOrder: number; }
-export interface BillingProductSettingsRequest { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; }
+export interface BillingProductSettingsRequest { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales?: boolean; }
 export interface BillingEntitlementRequest { key: string; name: string; hasLimit: boolean; }
 
 export interface BillingPlanEntitlement {
@@ -51,6 +53,9 @@ export interface BillingPlan {
   features: string[];
   entitlements: BillingPlanEntitlement[];
   productCodes: string[];
+  /** null: the price includes taxes; a rate: the price is net and VAT at this percentage is added. */
+  vatRate?: number | null;
+  priceWithVat?: number;
 }
 
 export interface BillingPlanRequest {
@@ -68,6 +73,7 @@ export interface BillingPlanRequest {
   sortOrder: number;
   features: string[];
   entitlements: { entitlementId: string; holder: EntitlementHolder; limitValue: number | null }[];
+  vatRate?: number | null;
 }
 
 export interface BillingSeller {
@@ -135,6 +141,8 @@ export interface BillingOrder {
   withdrawal?: WithdrawalStatus | null;
   withdrawUntil?: string | null;
   hasInvoice?: boolean;
+  vatRate?: number | null;
+  vatAmount?: number;
 }
 
 export interface BillingAdminOrder {

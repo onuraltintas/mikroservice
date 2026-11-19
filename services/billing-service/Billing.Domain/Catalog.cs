@@ -37,6 +37,11 @@ public sealed class Product
     /// <summary>Off: everybody with an account uses the product and nothing is sold. On: an entitlement is needed.</summary>
     public bool RequireSubscription { get; set; }
     public BankTransferApproval BankTransferApproval { get; set; }
+    /// <summary>
+    /// Sold to businesses (maxkampüs, user decision 20.11.2026): buyers read a business subscription contract instead of
+    /// the consumer pre-information form and distance-sales contract, and there is no withdrawal (cayma).
+    /// </summary>
+    public bool BusinessSales { get; set; }
     public bool IsActive { get; set; } = true;
     public int SortOrder { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -67,6 +72,11 @@ public sealed class Plan
     public string Description { get; set; } = string.Empty;
     public BuyerType BuyerType { get; set; }
     public decimal Price { get; set; }
+    /// <summary>
+    /// Null: <see cref="Price"/> is what the buyer pays, taxes included (Koçluk, Hızlı Okuma). A rate (e.g. 20): the price
+    /// is net and VAT at this percentage is added to every order of the plan (user decision 20.11.2026).
+    /// </summary>
+    public decimal? VatRate { get; set; }
     public string Currency { get; set; } = BillingRules.DefaultCurrency;
     public int DurationDays { get; set; }
     /// <summary>Free trial days offered once per account; 0 = none. Not for institution plans.</summary>

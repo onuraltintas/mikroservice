@@ -69,7 +69,8 @@ public sealed class BillingExtras(BillingDbContext db, BillingOrders orders, Tim
         var (discount, code) = await orders.CouponAsync(request.Code, plan, accountId, Now, false, cancellationToken);
         return code is null
             ? throw new BusinessRuleException("Billing.CouponInvalid", "Kupon kodunu yazın.")
-            : new CouponQuote(code, plan.Price, discount, plan.Price - discount, plan.Currency);
+            : new CouponQuote(code, plan.Price, discount, plan.Price - discount + BillingRules.Vat(plan.Price - discount, plan.VatRate), plan.Currency,
+                plan.VatRate, BillingRules.Vat(plan.Price - discount, plan.VatRate));
     }
 
     private async Task<IReadOnlyList<CouponView>> ViewsAsync(IReadOnlyList<Coupon> coupons, CancellationToken cancellationToken)
@@ -135,6 +136,8 @@ public sealed class BillingExtras(BillingDbContext db, BillingOrders orders, Tim
         var now = Now;
         if (order.Status != OrderStatus.Paid || order.ReviewedAt is not { } approvedAt)
             throw new BusinessRuleException("Billing.WithdrawalInvalid", "Cayma hakkı yalnız onaylanmış bir ödeme için kullanılabilir.");
+        if (BillingOrders.IsBusinessSale(order))
+            throw new BusinessRuleException("Billing.WithdrawalNotOffered", "Kurumsal aboneliklerde cayma hakkı yoktur; ödenen bedel iade edilmez.");
         if (ExtrasRules.WithdrawalDeadline(approvedAt) <= now)
             throw new BusinessRuleException("Billing.WithdrawalExpired", "Cayma süresi (ödemenin onayından sonra 14 gün) doldu.");
         if (await db.Withdrawals.AnyAsync(item => item.OrderId == order.Id && item.Status != WithdrawalStatus.Rejected, cancellationToken))

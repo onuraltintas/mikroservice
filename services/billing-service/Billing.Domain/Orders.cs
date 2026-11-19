@@ -97,6 +97,11 @@ public sealed class Order
     /// <summary>The coupon the discount comes from; its use is counted while the order waits or is paid.</summary>
     public string? CouponCode { get; set; }
     public decimal Discount { get; set; }
+    /// <summary>The plan's VAT rate when the order was opened; null when the price already included taxes.</summary>
+    public decimal? VatRate { get; set; }
+    /// <summary>VAT on the net amount (list price less discount); 0 when <see cref="VatRate"/> is null.</summary>
+    public decimal VatAmount { get; set; }
+    /// <summary>What the buyer transfers: net amount plus VAT.</summary>
     public decimal Amount { get; set; }
     public string Currency { get; set; } = BillingRules.DefaultCurrency;
     public int DurationDays { get; set; }

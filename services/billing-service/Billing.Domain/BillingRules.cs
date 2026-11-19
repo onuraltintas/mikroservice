@@ -55,6 +55,16 @@ public static partial class BillingRules
     }
 
     /// <summary>Null when the plan is sound; otherwise what is wrong, in the admin's language.</summary>
+    public const decimal MaxVatRate = 100m;
+
+    /// <summary>VAT on a net amount, to the kuruş; 0 when the price already includes taxes.</summary>
+    public static decimal Vat(decimal net, decimal? rate) =>
+        rate is { } percent ? Math.Round(net * percent / 100m, 2, MidpointRounding.AwayFromZero) : 0m;
+
+    public static string? VatRateProblem(decimal? rate) =>
+        rate is { } percent && (percent <= 0 || percent > MaxVatRate || decimal.Round(percent, 2) != percent)
+            ? "KDV oranı 0'dan büyük, en çok 100 ve en çok iki ondalıklı olmalıdır." : null;
+
     public static string? PlanProblem(BuyerType buyerType, decimal price, int durationDays, int trialDays, int? seatCount, decimal? extraSeatPrice, bool isContactOnly)
     {
         if (price < 0 || price > MaxPrice) return "Fiyat 0 ile 1.000.000 arasında olmalıdır.";
