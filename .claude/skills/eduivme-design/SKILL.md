@@ -15,7 +15,7 @@ Kaynak: kullanıcı kararları (18.11.2026) ve tasarım tuvali "Öğrenci panell
 - Üç işaret de noktası yukarı sıçrayan küçük "i"yi paylaşır. Ürünü zemin rengi ve "i"nin altındaki küçük çizgi ayırır:
   - maxkoç: fosforlu kalem çizgisi.
   - Hızlı Okuma: okunan satır ve odak çizgisi.
-- Alt markalarda (maxkoç, Master Hızlı Okuma, maxkampüs) "eduivme" yalnız sayfanın en altındaki tek satırda geçer: "maxkoç bir eduivme markasıdır. © 2026 ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır." (maxkampüs: "© 2026 maxkampüs, bir eduivme markası.") Logonun yanında, başlıklarda, sekme başlığında ve plan açıklamalarında geçmez; logonun altındaki küçük satır panelin ya da sayfanın adıdır ("Öğrenci paneli", "Veli paneli", "Öğrenci koçluğu"). ONAL logolarda yer almaz. (Kullanıcı kararı, 19.11.2026.)
+- Alt markalarda (maxkoç, Master Hızlı Okuma, maxkampüs) "eduivme" yalnız sayfanın en altındaki tek satırda geçer: "maxkoç bir eduivme markasıdır. © 2026 ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır." (Master Hızlı Okuma: "Master Hızlı Okuma bir eduivme markasıdır. © 2026 ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır."; maxkampüs: "© 2026 maxkampüs, bir eduivme markası.") Logonun yanında, başlıklarda, sekme başlığında ve plan açıklamalarında geçmez; logonun altındaki küçük satır panelin ya da sayfanın adıdır ("Öğrenci paneli", "Veli paneli", "Öğrenci koçluğu"). ONAL logolarda yer almaz. (Kullanıcı kararı, 19.11.2026.)
 - İşaretler `tools/brand/marks.py` içinde; dosyaları `python3 tools/brand/build.py` üretir. Simgeyi elle çizme; üreticiyi değiştir.
 - Adres → marka: `maxkoc.com` ve `veli.maxkoc.com` maxkoç; diğer adresler eduivme (`brandForHost`, `applyBrand`).
 
