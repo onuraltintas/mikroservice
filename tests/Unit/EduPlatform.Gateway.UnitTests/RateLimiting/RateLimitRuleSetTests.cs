@@ -43,6 +43,8 @@ public sealed class RateLimitRuleSetTests
     [InlineData("/api/support/submit", "POST", "support-submit", 10, 60)]
     [InlineData("/api/speed-reading/cms/contact", "POST", "speed-reading-public-write", 8, 600)]
     [InlineData("/api/speed-reading/cms/newsletter/subscribe", "POST", "speed-reading-public-write", 8, 600)]
+    [InlineData("/api/site/sites/maxkampus/contact", "POST", "site-public-write", 8, 600)]
+    [InlineData("/api/site/sites/maxkampus/newsletter/confirm", "POST", "site-public-write", 8, 600)]
     [InlineData("/api/coaching/cms/newsletter/subscriptions", "POST", "coaching-newsletter-public-write", 8, 600)]
     [InlineData("/api/calendar/feed/0123456789abcdef.ics", "GET", "coaching-calendar-feed", 60, 60)]
     [InlineData("/api/calendar/feed/0123456789abcdef.ics", "HEAD", "coaching-calendar-feed", 60, 60)]
