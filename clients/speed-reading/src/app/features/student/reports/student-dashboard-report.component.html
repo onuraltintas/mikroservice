@@ -67,9 +67,9 @@
                 <span class="material-icons stat-icon speed">speed</span>
                 <span class="stat-title">Okuma Hızı</span>
             </div>
-            <div class="stat-value">{{ (report()?.currentWPM || 0) > 0 ? report()?.currentWPM : 'Veri yok' }}</div>
+            <div class="stat-value">{{ readingSpeed() ?? 'Ölçülmedi' }}</div>
             <div class="stat-footer">
-                <span class="stat-change">Kelime/Dakika</span>
+                <span class="stat-change">kelime/dk, son ölçüm</span>
             </div>
         </div>
 
@@ -78,9 +78,9 @@
                 <span class="material-icons stat-icon comprehension">school</span>
                 <span class="stat-title">Anlama Oranı</span>
             </div>
-            <div class="stat-value">{{ report()?.comprehensionDataAvailable ? '%' + (report()?.averageComprehension || 0).toFixed(0) : 'Veri yok' }}</div>
+            <div class="stat-value">{{ comprehension() !== null ? '%' + comprehension() : 'Ölçülmedi' }}</div>
             <div class="stat-footer">
-                <span class="stat-change">Genel Başarı</span>
+                <span class="stat-change">Metin sorularında</span>
             </div>
         </div>
 

@@ -2124,6 +2124,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.GroupingDisplayPaceWpm = explicitWpm.HasValue ? Math.Clamp(explicitWpm.Value, 20, 1500)
                 : duration.HasValue ? Math.Clamp(60000m * state.GroupingChunkSize /
                     (Math.Clamp(duration.Value, 1, 10000) + delay), 20, 1500) : 200;
+            // Live test 19.11.2026 (C7): the pacer never starts below the student's measured reading speed
+            // (average of the last five measured text readings).
+            if (!isAssessmentMode && state.ExerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase))
+            {
+                var measuredWpm = await MeasuredReadingSpeedAsync(studentId, cancellationToken);
+                if (measuredWpm > state.GroupingDisplayPaceWpm)
+                    state.GroupingDisplayPaceWpm = Math.Clamp(Math.Round(measuredWpm, 0), 20, 1500);
+            }
             state.ReadingMinimumMs = (int)Math.Ceiling(state.Words.Length * 60000m / state.GroupingDisplayPaceWpm);
             state.ReadingMaximumMs = (ReadPositiveInt(timing, "timeLimitSec")
                 ?? ReadPositiveInt(rootTiming, "timeLimitSec") ?? 0) * 1000;
@@ -3422,6 +3430,20 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         && state.EngineType is not ("word_highlight" or "text_stream" or "text_fade" or "regression_reduction" or "scan_find" or "scanning" or "skimming")
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
+
+    private async Task<decimal> MeasuredReadingSpeedAsync(Guid studentId, CancellationToken cancellationToken)
+    {
+        if (studentId == Guid.Empty)
+            return 0;
+        // Only measured readings of a whole text (placement test included); other exercise types do not measure reading speed.
+        var latest = await db.ReadingSessions.AsNoTracking()
+            .Where(item => item.UserId == studentId && item.IsMeasured && !item.IsRejected && item.CalculatedWpm > 0)
+            .OrderByDescending(item => item.CompletedAt)
+            .Take(5)
+            .Select(item => (decimal)item.CalculatedWpm)
+            .ToListAsync(cancellationToken);
+        return latest.Count == 0 ? 0 : latest.Average();
+    }
 
     private static bool IsPacedHighlight(SessionState state) =>
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "word_highlight"

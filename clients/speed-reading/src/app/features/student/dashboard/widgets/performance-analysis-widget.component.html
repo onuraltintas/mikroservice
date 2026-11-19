@@ -41,12 +41,18 @@
             transform="rotate(-90 25 25)"/>
         </svg>
         <div class="pa-card__body">
-          <span class="pa-card__value">{{ data.readingSpeed.current | number:'1.0-0' }}<small>kdk</small></span>
+          @if (data.readingSpeed.measured) {
+            <span class="pa-card__value">{{ data.readingSpeed.current | number:'1.0-0' }}<small>kelime/dk</small></span>
+          } @else {
+            <span class="pa-card__value pa-card__value--empty">Ölçülmedi</span>
+          }
           <span class="pa-card__label">Okuma Hızı</span>
+          @if (data.readingSpeed.measured) {
           <span class="pa-card__trend" [class.up]="data.readingSpeed.trend==='up'" [class.down]="data.readingSpeed.trend==='down'">
             <span class="material-icons">{{ getTrendIcon(data.readingSpeed.trend) }}</span>
             {{ data.readingSpeed.change !== 0 ? (data.readingSpeed.change > 0 ? '+' : '') + data.readingSpeed.change + '%' : 'Sabit' }}
           </span>
+          }
         </div>
       </div>
 
@@ -60,9 +66,15 @@
             transform="rotate(-90 25 25)"/>
         </svg>
         <div class="pa-card__body">
-          <span class="pa-card__value">{{ data.comprehension.current }}<small>%</small></span>
+          @if (data.comprehension.measured) {
+            <span class="pa-card__value"><small>%</small>{{ data.comprehension.current }}</span>
+          } @else {
+            <span class="pa-card__value pa-card__value--empty">Ölçülmedi</span>
+          }
           <span class="pa-card__label">Anlama</span>
-          <span class="pa-card__sub-label">{{ data.comprehension.percentage >= 80 ? 'Çok iyi' : data.comprehension.percentage >= 60 ? 'İyi' : 'Gelişiyor' }}</span>
+          @if (data.comprehension.measured) {
+            <span class="pa-card__sub-label">{{ data.comprehension.percentage >= 80 ? 'Çok iyi' : data.comprehension.percentage >= 60 ? 'İyi' : 'Gelişiyor' }}</span>
+          }
         </div>
       </div>
 
@@ -76,7 +88,11 @@
             transform="rotate(-90 25 25)"/>
         </svg>
         <div class="pa-card__body">
-          <span class="pa-card__value">{{ data.eyeMovement.current }}<small>%</small></span>
+          @if (data.eyeMovement.measured) {
+            <span class="pa-card__value"><small>%</small>{{ data.eyeMovement.current }}</span>
+          } @else {
+            <span class="pa-card__value pa-card__value--empty">Ölçülmedi</span>
+          }
           <span class="pa-card__label">Göz Hareketi</span>
         </div>
       </div>
@@ -91,7 +107,11 @@
             transform="rotate(-90 25 25)"/>
         </svg>
         <div class="pa-card__body">
-          <span class="pa-card__value">{{ data.concentration.current }}<small>%</small></span>
+          @if (data.concentration.measured) {
+            <span class="pa-card__value"><small>%</small>{{ data.concentration.current }}</span>
+          } @else {
+            <span class="pa-card__value pa-card__value--empty">Ölçülmedi</span>
+          }
           <span class="pa-card__label">Konsantrasyon</span>
         </div>
       </div>
