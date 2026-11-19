@@ -13,7 +13,7 @@ public static class EmailProduct
     public static string? Resolve(User user, string? requested)
     {
         if (PlatformProductExtensions.TryParseRouteValue(requested, out var product)
-            && product is PlatformProduct.Coaching or PlatformProduct.SpeedReading
+            && product is PlatformProduct.Coaching or PlatformProduct.SpeedReading or PlatformProduct.CourseManagement
             && user.HasProductAccess(product))
             return product.ToRouteValue();
         var products = new[] { PlatformProduct.Coaching, PlatformProduct.SpeedReading }.Where(user.HasProductAccess).ToArray();
@@ -26,7 +26,10 @@ public static class EmailProduct
         Identity.Domain.Enums.UserRole.Teacher.ToString(),
         Identity.Domain.Enums.UserRole.Parent.ToString(),
         Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(),
-        Identity.Domain.Enums.UserRole.InstitutionOwner.ToString()
+        Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(),
+        // maxkampüs (maxkampus.com): its links follow the product, not the role.
+        "CourseInstitutionOwner",
+        "CourseTeacher"
     ];
 
     /// <summary>

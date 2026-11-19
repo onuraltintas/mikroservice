@@ -11,7 +11,7 @@ import { draftFrom, emptyDraft, publishState, requestFrom } from './eduivme-site
 
 function entry(overrides: Partial<SiteEntry>): SiteEntry {
   return {
-    id: 'id', kind: 'product', group: '', slug: null, title: 'Ürün', subtitle: null, body: '', highlights: [], brand: 'eduivme', icon: null,
+    id: 'id', site: 'eduivme', endsAt: null, kind: 'product', group: '', slug: null, title: 'Ürün', subtitle: null, body: '', highlights: [], brand: 'eduivme', icon: null,
     linkLabel: null, linkUrl: null, secondaryLinkLabel: null, secondaryLinkUrl: null, imageId: null, imageUrl: null, ctaTitle: null, ctaBody: null,
     seoTitle: null, seoDescription: null, sortOrder: 10, isPublished: true, publishAt: null, version: 1,
     createdAt: '2026-11-19T06:00:00Z', updatedAt: '2026-11-19T06:00:00Z', ...overrides
@@ -42,6 +42,67 @@ describe('eduivme sitesi form rules', () => {
     expect(publishState(entry({}), now).label).toBe('Yayında');
     expect(publishState(entry({ publishAt: '2026-11-20T06:00:00Z' }), now).label).toBe('Zamanlandı');
     expect(publishState(entry({ isPublished: false }), now).label).toBe('Yayında değil');
+    expect(publishState(entry({ endsAt: '2026-11-19T05:00:00Z' }), now).label).toBe('Süresi bitti');
+  });
+
+  it('sends a maxkampüs notice with its site, audience and end', () => {
+    const draft = emptyDraft('notice', '', 10, null, 'maxkampus');
+    Object.assign(draft, { title: 'Bakım', body: 'Pazar 02.00', endsAtLocal: '2026-11-30T10:00' });
+    const request = requestFrom(draft);
+    expect(request).toMatchObject({ site: 'maxkampus', kind: 'notice', audience: 'all', brand: null });
+    expect(request.endsAt).toBe(new Date('2026-11-30T10:00').toISOString());
+  });
+});
+
+describe('maxkampüs site content', () => {
+  const toaster = { success: vi.fn(), error: vi.fn() };
+
+  function setup(view: string) {
+    TestBed.configureTestingModule({
+      imports: [EduivmeSiteAdminComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { paramMap: new BehaviorSubject(convertToParamMap({ view })), snapshot: { data: { site: 'maxkampus' } } } },
+        { provide: ToasterService, useValue: toaster }]
+    });
+    const fixture = TestBed.createComponent(EduivmeSiteAdminComponent);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    return { fixture, component: fixture.componentInstance, http };
+  }
+
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('reads only maxkampus.com entries and lists blog posts newest first', async () => {
+    const { fixture, component, http } = setup('blog');
+    http.expectOne('/api/site-admin/entries?site=maxkampus').flush([
+      entry({ id: 'a', site: 'maxkampus', kind: 'post', slug: 'eski', title: 'Eski yazı', publishAt: '2026-11-01T06:00:00Z', category: 'Veli' }),
+      entry({ id: 'b', site: 'maxkampus', kind: 'post', slug: 'yeni', title: 'Yeni yazı', publishAt: '2026-11-18T06:00:00Z' })
+    ]);
+    http.expectOne('/api/site-admin/media').flush([]);
+    await new Promise(resolve => setTimeout(resolve));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('maxkampüs sitesi');
+    expect(component.groups()[0].entries.map(item => item.id)).toEqual(['b', 'a']);
+    expect(component.groups()[0].ordered).toBe(false);
+
+    component.add(component.groups()[0]);
+    expect(component.draft()).toMatchObject({ site: 'maxkampus', kind: 'post', brand: null });
+    expect(component.slugHint('post', 'ders-programi')).toBe('maxkampus.com/blog/ders-programi');
+  });
+
+  it('describes billing plans of Kurs Yönetimi on the pricing page', async () => {
+    const { component, http } = setup('plans');
+    http.expectOne('/api/site-admin/entries?site=maxkampus').flush([]);
+    http.expectOne('/api/site-admin/media').flush([]);
+    await new Promise(resolve => setTimeout(resolve));
+    http.expectOne('/api/billing/v1/admin/plans').flush([
+      { id: 'p1', name: 'Kurum 50', productCodes: ['course-management'], sortOrder: 10 },
+      { id: 'p2', name: 'Koçluk', productCodes: ['coaching'], sortOrder: 5 }
+    ]);
+    await new Promise(resolve => setTimeout(resolve));
+    expect(component.plans().map(plan => plan.name)).toEqual(['Kurum 50']);
+    component.add(component.groups()[0]);
+    expect(component.draft()).toMatchObject({ kind: 'plan', slug: 'p1' });
   });
 });
 

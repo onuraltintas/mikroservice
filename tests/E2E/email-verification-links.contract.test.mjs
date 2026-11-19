@@ -111,6 +111,25 @@ test('password reset links open reset-password pages that read token and email',
   }
 });
 
+// maxkampüs (19.11.2026): Kurs Yönetimi's account e-mails open maxkampus.com's own pages, which read the same names.
+test('maxkampus.com verification and reset links open its pages with the names they read', () => {
+  const routes = read('clients/admin-panel/projects/maxkampus/src/app/app.routes.ts');
+  const recovery = read('clients/admin-panel/projects/maxkampus/src/app/account/recovery.component.ts');
+  const verify = constant('CourseManagementVerificationPath');
+  const reset = constant('CourseManagementResetPath');
+  assert.match(routes, new RegExp(`path: '${verify.slice(1)}'[\\s\\S]{0,160}VerifyEmailComponent`));
+  assert.match(routes, new RegExp(`path: '${reset.slice(1)}'[\\s\\S]{0,160}ResetComponent`));
+  assert.deepEqual(queryNames(linkTemplate('CourseManagementVerificationPath')), ['token', 'userId']);
+  assert.deepEqual(queryNames(linkTemplate('CourseManagementResetPath')), ['email', 'token']);
+  const verifyClass = recovery.slice(recovery.indexOf('class VerifyEmailComponent'));
+  assert.match(verifyClass, /readonly userId = input/);
+  assert.match(verifyClass, /readonly token = input/);
+  const resetClass = recovery.slice(recovery.indexOf('class ResetComponent'), recovery.indexOf('class VerifyEmailComponent'));
+  assert.match(resetClass, /readonly token = input/);
+  assert.match(resetClass, /readonly email = input/);
+  assert.match(routes, new RegExp(`path: '${constant('CourseManagementLoginPath').slice(1)}'`));
+});
+
 test('production sends speed-reading links to masterhizliokuma.com', () => {
   const compose = read('docker-compose.production.yml');
   const defaults = [...compose.matchAll(/\$\{SPEED_READING_PUBLIC_BASE_URL:-([^}]+)\}/g)].map(m => m[1]);

@@ -76,3 +76,16 @@ public sealed record CourseManagementOwnerEmailRequestedV1(
     IReadOnlyList<string> Paragraphs,
     string LinkUrl,
     string LinkText);
+
+/// <summary>
+/// maxkampus.com registration (19.11.2026): Identity opened an account for an institution owner ("institution") or a
+/// teacher who gives private lessons ("teacher"); Course Management opens the workspace under the name the person
+/// gave. The workspace id is chosen by Identity so a repeated message opens nothing twice.
+/// </summary>
+public sealed record CourseManagementWorkspaceRequestedV1(
+    Guid UserId,
+    Guid WorkspaceId,
+    string WorkspaceName,
+    string Kind,
+    string DisplayName,
+    DateTimeOffset RequestedAt);

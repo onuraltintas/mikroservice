@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /panel
+Disallow: /plan
+Disallow: /giris
+Disallow: /kayit
+Disallow: /davet/
+Disallow: /sifremi-unuttum
+Disallow: /sifre-yenile
+Disallow: /eposta-dogrula
+Disallow: /bulten/
+Disallow: /api/
+Sitemap: https://maxkampus.com/sitemap.xml

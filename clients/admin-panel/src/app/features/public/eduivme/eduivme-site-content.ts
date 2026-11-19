@@ -14,7 +14,7 @@ function entry(kind: SitePublicEntry['kind'], title: string, body: string, extra
 
 const SITE = entry('site', 'eduivme', 'Öğrenciler, veliler, öğretmenler ve kurumlar için eğitim ürünleri.', {
   seoTitle: 'eduivme: öğrenmenin her adımı için eğitim ürünleri',
-  seoDescription: 'maxkoç öğrenci koçluğu, Master Hızlı Okuma ve Kurs Yönetimi: öğrenciler, veliler, öğretmenler ve kurumlar için eduivme ürünleri.'
+  seoDescription: 'maxkoç öğrenci koçluğu, Master Hızlı Okuma ve maxkampüs kurs yönetimi: öğrenciler, veliler, öğretmenler ve kurumlar için eduivme ürünleri.'
 });
 
 export const DEFAULT_HOME: SiteHomeView = {
@@ -36,8 +36,8 @@ export const DEFAULT_HOME: SiteHomeView = {
       slug: 'master-hizli-okuma', brand: 'ho', subtitle: 'Okuma hızı ve anlama', linkLabel: 'masterhizliokuma.com', linkUrl: 'https://masterhizliokuma.com',
       highlights: ['İlkokuldan yetişkine her seviye için', 'Günde birkaç dakikalık egzersizler', 'İlerleme grafikleri ve rozetler']
     }),
-    entry('product', 'Kurs Yönetimi', 'Dersler, gruplar, yoklama, ödevler ve öğrenci ödemeleri tek yerde. Öğrenciler derslerini ve ödevlerini kendi alanından izler.', {
-      slug: 'kurs-yonetimi', brand: 'km', subtitle: 'Kurs ve özel ders yönetimi', linkLabel: 'Ürün sayfasına git', linkUrl: '/urunler/kurs-yonetimi',
+    entry('product', 'maxkampüs', 'Kurslar, dershaneler ve özel ders veren öğretmenler için ders programı, yoklama, ödevler ve öğrenci ödemeleri tek yerde.', {
+      slug: 'kurs-yonetimi', brand: 'km', subtitle: 'Kurs ve özel ders yönetimi', linkLabel: 'maxkampus.com', linkUrl: 'https://maxkampus.com',
       highlights: ['Haftalık ders programı ve yoklama', 'Ödev verme ve değerlendirme', 'Taksit ve paket takibi']
     })
   ],
@@ -48,54 +48,15 @@ export const DEFAULT_HOME: SiteHomeView = {
     entry('audience', 'Kurum', 'Öğretmenlerinizi ve öğrencilerinizi tek panelden yönetin.', { icon: 'building', linkLabel: 'Kurum girişi', linkUrl: 'https://kurum.eduivme.com/auth/login' })
   ],
   faqs: [
-    entry('faq', 'eduivme nedir?', 'eduivme; maxkoç, Master Hızlı Okuma ve Kurs Yönetimi ürünlerinin çatı markasıdır. Her ürünün kendi sitesi ve kendi girişi vardır.'),
-    entry('faq', 'Hangi ürün bana uygun?', 'Düzenli bir çalışma planı ve koç desteği istiyorsanız maxkoç, okuma hızınızı ve anlamanızı geliştirmek istiyorsanız Master Hızlı Okuma, kurs ya da özel ders veriyorsanız Kurs Yönetimi size göre. Ürünleri birlikte de kullanabilirsiniz.'),
+    entry('faq', 'eduivme nedir?', 'eduivme; maxkoç, Master Hızlı Okuma ve maxkampüs ürünlerinin çatı markasıdır. Her ürünün kendi sitesi ve kendi girişi vardır.'),
+    entry('faq', 'Hangi ürün bana uygun?', 'Düzenli bir çalışma planı ve koç desteği istiyorsanız maxkoç, okuma hızınızı ve anlamanızı geliştirmek istiyorsanız Master Hızlı Okuma, kurs ya da özel ders veriyorsanız maxkampüs size göre. Ürünleri birlikte de kullanabilirsiniz.'),
     entry('faq', 'Öğretmen ya da kurum olarak nasıl başlarım?', 'Öğretmen girişinden ya da kurum girişinden hesap açın. Hesabınız açıldıktan sonra öğrencilerinizi davet eder, ödev ve programlarını oradan yönetirsiniz.'),
     entry('faq', 'Kişisel verilerim nasıl korunuyor?', 'Kişisel verilerin hangi amaçla ve nasıl işlendiği KVKK aydınlatma metninde ve gizlilik politikasında anlatılır. maxkoç\'ta veli, öğrencinin yalnız izin verdiği bilgileri görür.')
   ]
 };
 
-export const DEFAULT_PAGES: Record<string, SitePageView> = {
-  'kurs-yonetimi': {
-    site: SITE,
-    page: entry('page', 'Kurs Yönetimi', 'Ders programı, yoklama, ödevler ve öğrenci ödemeleri bir arada. Öğretmenleriniz derslerine, öğrencileriniz kendi alanlarına odaklanır.', {
-      slug: 'kurs-yonetimi', brand: 'km', subtitle: 'Kursunuzu tek ekrandan yönetin.',
-      linkLabel: 'Hemen başla', linkUrl: 'https://ogretmen.eduivme.com/auth/register/teacher',
-      secondaryLinkLabel: 'Giriş yap', secondaryLinkUrl: 'https://ogretmen.eduivme.com/auth/login',
-      ctaTitle: 'Kursunuzu bugün kurun.', ctaBody: 'Hesap açmak ücretsiz.',
-      seoTitle: 'Kurs Yönetimi: ders programı, yoklama, ödev ve ödeme takibi | eduivme',
-      seoDescription: 'Kurslar, dershaneler ve özel ders veren öğretmenler için ders programı, yoklama, ödev ve öğrenci ödemeleri tek yerde.'
-    }),
-    sections: [
-      entry('section', 'Neler yapabilirsiniz', 'Kursun günlük işleri için gereken her şey, ayrı ayrı araçlara gerek kalmadan.', { slug: 'features' }),
-      entry('section', 'Kimler için', '', { slug: 'audiences' }),
-      entry('section', 'Nasıl başlanır', 'Kurulum birkaç dakika sürer.', { slug: 'steps' }),
-      entry('section', 'Sık sorulanlar', '', { slug: 'faq' })
-    ],
-    features: [
-      entry('feature', 'Ders programı', 'Tek seferlik dersler ve haftalık seriler. Öğretmen ve derslik çakışmaları kayıttan önce yakalanır.', { icon: 'calendar' }),
-      entry('feature', 'Yoklama ve telafi', 'Her derste yoklama alın; kaçan dersler için telafi hakkı tanımlayın.', { icon: 'check' }),
-      entry('feature', 'Ödevler', 'Bir öğrenciye ya da gruba ödev verin, dosya ekleyin, teslimleri değerlendirin.', { icon: 'assignment' }),
-      entry('feature', 'Öğrenci ödemeleri', 'Nakit ve havale tahsilatı, taksit ve ders paketi takibi; gecikenler tek listede.', { icon: 'payment' }),
-      entry('feature', 'Şube ve derslikler', 'Birden çok şube ve derslik; kapasite derse göre denetlenir.', { icon: 'building' }),
-      entry('feature', 'Öğrenci alanı', 'Öğrenci derslerini, yoklamasını, ödevlerini ve bakiyesini kendi ekranından görür.', { icon: 'person' })
-    ],
-    audiences: [
-      entry('audience', 'Kurslar ve dershaneler', 'Birden çok öğretmen, grup ve şube. Kurum yöneticisi bütün dersleri, yoklamaları ve tahsilatları görür.', { icon: 'building' }),
-      entry('audience', 'Özel ders veren öğretmenler', 'Bire bir ve küçük grup dersleri, ders paketleri ve ödevler; tek kişilik bir çalışma alanı.', { icon: 'person' })
-    ],
-    steps: [
-      entry('step', 'Hesap açın', 'Kurum ya da özel ders veren öğretmen olarak ücretsiz kaydolun.'),
-      entry('step', 'Kursunuzu kurun', 'Derslerinizi, gruplarınızı ve ders programınızı ekleyin.'),
-      entry('step', 'Öğrencilerinizi davet edin', 'Öğrenciler davetle katılır; derslerini ve ödevlerini kendi alanından izler.')
-    ],
-    faqs: [
-      entry('faq', 'Kurs Yönetimi kimler için?', 'Kurslar, dershaneler, etüt merkezleri ve özel ders veren öğretmenler için. Tek öğretmenle de, birden çok şubeyle de kullanılabilir.'),
-      entry('faq', 'Öğrencilerin hesap açması gerekiyor mu?', 'Hayır. Öğrencilerinizi hesap açmadan da kaydedebilir, derslerini ve yoklamalarını tutabilirsiniz. Ödevlerini ve programlarını kendileri görmek isteyen öğrenciler, gönderdiğiniz davetle hesap açar.'),
-      entry('faq', 'Ödemeleri sistem üzerinden alabilir miyim?', 'Nakit ya da havale ile aldığınız ödemeleri kaydedersiniz; taksitler, ders paketleri ve geciken ödemeler otomatik izlenir. Öğrenci kendi bakiyesini görür. Kartla çevrim içi ödeme şu an yok.')
-    ]
-  }
-};
+/** Product pages of eduivme.com when site-service cannot be reached. Kurs Yönetimi moved to maxkampus.com (19.11.2026). */
+export const DEFAULT_PAGES: Record<string, SitePageView> = {};
 
 /** The mark file and the colour scope of each brand a card can carry. */
 export const BRAND_MARKS: Record<SiteBrand, { mark: string; scope: 'eduivme' | 'maxkoc' | 'ho' }> = {
@@ -122,7 +83,8 @@ export const SITE_ICON_PATHS: Record<SiteIcon, string> = {
   users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M22 21a7 7 0 0 0-4-6.3',
   target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
   bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
-  school: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6'
+  school: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6',
+  mail: 'M3 5h18v14H3zM3 7l9 6 9-6'
 };
 
 /** The colour scope each audience card uses, so the four cards are told apart (and also by their icon and title). */

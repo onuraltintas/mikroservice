@@ -27,6 +27,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly ILogger<GoogleLoginCommandHandler> _logger;
 
     private readonly IInstitutionRepository _institutions;
+    private readonly IRoleRepository? _roles;
+    private readonly TimeProvider _timeProvider;
 
     public GoogleLoginCommandHandler(
         IGoogleAuthService googleAuthService,
@@ -40,9 +42,13 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         ILogger<GoogleLoginCommandHandler> logger,
         IRegistrationLegalConsentService registrationLegalConsentService,
         IPublishEndpoint profileEvents,
-        IInstitutionRepository institutions)
+        IInstitutionRepository institutions,
+        IRoleRepository? roles = null,
+        TimeProvider? timeProvider = null)
     {
         _institutions = institutions;
+        _roles = roles;
+        _timeProvider = timeProvider ?? TimeProvider.System;
         _googleAuthService = googleAuthService;
         _userRepository = userRepository;
         _tokenService = tokenService;
@@ -112,6 +118,21 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     return Result.Failure<LoginResponse>(legalValidation.Error);
                 if (legalValidation.IsSuccess)
                     acceptedLegalPages = legalValidation.Value;
+            }
+
+            // maxkampus.com: a new Google account first fills in the registration form (kind, phone, workspace name).
+            string? courseRoleName = null;
+            string? coursePhone = null;
+            string? courseWorkspace = null;
+            if (request.Product == PlatformProduct.CourseManagement)
+            {
+                courseRoleName = Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.RoleFor(request.Signup?.Kind);
+                coursePhone = Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.NormalizePhone(request.Signup?.Phone);
+                courseWorkspace = request.Signup is null ? null : Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration
+                    .WorkspaceName(request.Signup.Kind, request.Signup.WorkspaceName, googleUser.FirstName, googleUser.LastName);
+                if (courseRoleName is null || coursePhone is null || courseWorkspace is null || _roles is null)
+                    return Result.Failure<LoginResponse>(new Error("Auth.CourseManagementDetailsRequired",
+                        "Kaydı tamamlamak için hesap türünü, kurumunuzun adını ve telefonunuzu yazın."));
             }
 
             // 2b. Auto-Register User
@@ -281,10 +302,17 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                 {
                     _logger.LogInformation("Google Login: Setting up profile/roles for new user {UserId}", userId);
                     
-                    // Assign Role: Student (Default)
+                    // Assign Role: Student (Default); maxkampüs: the owner or teacher role the form chose.
+                    if (courseRoleName is not null
+                        && await Identity.Application.Commands.RegisterCourseManagement.CourseManagementRoles.EnsureAsync(_roles!, courseRoleName, cancellationToken) is null)
+                    {
+                        await CompensateProvisionedUserAsync(userId);
+                        return Result.Failure<LoginResponse>(new Error("Identity.RoleNotFound", "Katılım rolü şu anda kullanılamıyor."));
+                    }
+                    if (courseRoleName is not null) await _unitOfWork.SaveChangesAsync(cancellationToken);
                     var roleResult = await _identityService.AssignRoleForProductAsync(
                         userId,
-                        Identity.Domain.Enums.UserRole.Student.ToString(),
+                        courseRoleName ?? Identity.Domain.Enums.UserRole.Student.ToString(),
                         request.Product!.Value,
                         cancellationToken,
                         UserProductAccessSource.GoogleRegistration);
@@ -298,6 +326,22 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     if (request.Product == PlatformProduct.Coaching)
                     {
                         await _profileEvents.Publish(new CoachingProfileProvisioningRequested(userId, "Student", DateTime.UtcNow), cancellationToken);
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    }
+
+                    if (courseRoleName is not null)
+                    {
+                        var registered = await _userRepository.GetByIdAsync(userId, cancellationToken);
+                        if (registered is not null)
+                        {
+                            registered.SetPhoneNumber(coursePhone!);
+                            user = registered;
+                        }
+                        if (Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.OpensWorkspace(request.Signup!.Kind))
+                        await _profileEvents.Publish(new EduPlatform.Shared.Contracts.Events.CourseManagement.CourseManagementWorkspaceRequestedV1(
+                            userId,
+                            Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.WorkspaceIdFor(userId),
+                            courseWorkspace!, request.Signup!.Kind, $"{user.FirstName} {user.LastName}".Trim(), _timeProvider.GetUtcNow()), cancellationToken);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
                     }
 

@@ -12,6 +12,7 @@ using Identity.Application.Commands.RevokeToken;
 using Identity.Application.Commands.OpenCourseManagementSession;
 using Identity.Application.Services;
 using System.Security.Claims;
+using Identity.Application.Commands.RegisterCourseManagement;
 
 namespace Identity.API.Controllers;
 
@@ -65,6 +66,67 @@ public sealed class CourseManagementAuthController(IMediator mediator, IWebHostE
         {
             return Conflict(new { code = "CourseJoin.ConcurrentChange", message = "Katılım başka bir istekte güncellendi. Lütfen yeniden deneyin." });
         }
+    }
+
+    /// <summary>maxkampus.com registration: a new account, or an eduivme account joining with its own password.</summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterCourseManagementCommand command, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+        if (result.IsSuccess) return Ok(result.Value);
+        return result.Error.Code == "Identity.UserExists" ? Conflict(result.Error) : BadRequest(result.Error);
+    }
+
+    /// <summary>
+    /// "Google ile devam et" on maxkampus.com. An account with maxkampüs signs in; a new Google account gets a short-lived
+    /// registration token and fills in the form (kind, workspace, phone, consents) before anything is created.
+    /// </summary>
+    [HttpPost("google")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Google([FromBody] GoogleLoginRequest? request, [FromServices] GoogleRegistrationPendingStore pending,
+        CancellationToken cancellationToken)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
+            return BadRequest(new { code = "Auth.InvalidToken", message = "Google ID Token is required." });
+        var result = await mediator.Send(new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(
+            request.IdToken!, GetClientIpAddress(), PlatformProduct.CourseManagement, null, request.Utm), cancellationToken);
+        if (result.IsFailure)
+        {
+            if (result.Error.Code is "Auth.LegalAcceptanceRequired" or "Auth.CourseManagementDetailsRequired")
+                return Ok(await pending.CreateAsync(request.IdToken!, PlatformProduct.CourseManagement));
+            return BadRequest(result.Error);
+        }
+        if (result.Value.RequiresMfa) return Ok(result.Value);
+        return Ok(RefreshTokenCookiePolicy.IssueCourseManagement(Response, result.Value, !environment.IsDevelopment()));
+    }
+
+    [HttpPost("google-register-complete")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CompleteGoogleRegistration([FromBody] CourseManagementGoogleRegistrationRequest request,
+        [FromServices] GoogleRegistrationPendingStore pending,
+        [FromServices] Identity.Application.LegalPages.IRegistrationLegalConsentService consent,
+        CancellationToken cancellationToken)
+    {
+        if (CourseManagementRegistration.RoleFor(request.Kind) is null)
+            return BadRequest(new { code = "Validation.Kind", message = "\"Kurumum var\" ya da \"Özel ders veriyorum\" seçeneklerinden birini seçin." });
+        if (CourseManagementRegistration.NormalizePhone(request.Phone) is null)
+            return BadRequest(new { code = "Validation.Phone", message = "Telefon numaranızı yazın (örnek: 0532 123 45 67)." });
+        if (request.Kind == CourseManagementRegistration.InstitutionKind && CourseManagementRegistration.WorkspaceName(request.Kind, request.WorkspaceName, "", "") is null)
+            return BadRequest(new { code = "Validation.WorkspaceName", message = "Kurumunuzun adını yazın (en çok 200 karakter)." });
+        // Consents are checked before the token is spent, so a missing tick can be corrected without a new Google sign-in.
+        var validation = await consent.ValidateAsync(PlatformProduct.CourseManagement, request.LegalAcceptances, cancellationToken);
+        if (validation.IsFailure) return BadRequest(validation.Error);
+        var idToken = await pending.ConsumeAsync(request.RegistrationToken, PlatformProduct.CourseManagement);
+        if (idToken is null)
+            return BadRequest(new { code = "Auth.GoogleRegistrationExpired", message = "Kayıt işleminizin süresi doldu. Lütfen Google ile tekrar devam edin." });
+
+        var result = await mediator.Send(new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(
+            idToken, GetClientIpAddress(), PlatformProduct.CourseManagement, request.LegalAcceptances, request.Utm,
+            new CourseManagementSignup(request.Kind!, request.Phone!, request.WorkspaceName)), cancellationToken);
+        if (result.IsFailure) return BadRequest(result.Error);
+        if (result.Value.RequiresMfa) return Ok(result.Value);
+        return Ok(RefreshTokenCookiePolicy.IssueCourseManagement(Response, result.Value, !environment.IsDevelopment()));
     }
 
     [HttpPost("login")]
@@ -209,3 +271,11 @@ public sealed class CourseManagementAuthController(IMediator mediator, IWebHostE
 
     private static bool IsSixDigitCode(string code) => code.Length == 6 && code.All(char.IsAsciiDigit);
 }
+
+public sealed record CourseManagementGoogleRegistrationRequest(
+    [param: System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 64)] string RegistrationToken,
+    string? Kind,
+    string? Phone,
+    string? WorkspaceName,
+    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances,
+    Identity.Application.Registration.RegistrationUtm? Utm = null);

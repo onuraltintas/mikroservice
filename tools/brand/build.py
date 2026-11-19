@@ -21,8 +21,9 @@ ROOT = Path(__file__).resolve().parents[2]
 ADMIN = ROOT / 'clients/admin-panel/public'
 STAFF = ROOT / 'clients/admin-panel/projects/staff-portal/public'
 READING = ROOT / 'clients/speed-reading/public'
+MAXKAMPUS = ROOT / 'clients/admin-panel/projects/maxkampus/public'
 BG = {'edu': '#1C2430', 'koc': '#1F4E8C', 'ho': '#0B7A64', 'km': '#3A2E14'}
-NAME = {'edu': 'eduivme', 'koc': 'maxkoç', 'ho': 'Master Hızlı Okuma', 'km': 'Kurs Yönetimi'}
+NAME = {'edu': 'eduivme', 'koc': 'maxkoç', 'ho': 'Master Hızlı Okuma', 'km': 'maxkampüs'}
 SLUG = {'edu': 'eduivme', 'koc': 'maxkoc', 'ho': 'master-hizli-okuma', 'km': 'kurs-yonetimi'}
 
 
@@ -69,8 +70,9 @@ def icons() -> None:
         png(svg(kind, maskable=True), 512, ADMIN / f'brand/{SLUG[kind]}-512.png')
         ico(kind, ADMIN / f'brand/{SLUG[kind]}.ico')
     ico('edu', ADMIN / 'favicon.ico')
-    # Kurs Yönetimi has no site of its own yet; its mark is shown on eduivme.com.
+    # maxkampüs (Kurs Yönetimi, maxkampus.com since 19.11.2026): its card on eduivme.com and its own site.
     write(ADMIN / 'brand/kurs-yonetimi.svg', svg('km'))
+    maxkampus_icons()
     write(STAFF / 'brand/eduivme.svg', svg('edu'))
     ico('edu', STAFF / 'favicon.ico')
 
@@ -82,6 +84,14 @@ def icons() -> None:
     png(svg('ho'), 180, READING / 'assets/icons/apple-touch-icon.png')
     for size in (72, 96, 128, 144, 152, 192, 384, 512):
         png(svg('ho', maskable=True), size, READING / f'icons/icon-{size}x{size}.png')
+
+
+def maxkampus_icons() -> None:
+    write(MAXKAMPUS / 'brand/maxkampus.svg', svg('km'))
+    png(svg('km'), 180, MAXKAMPUS / 'brand/maxkampus-180.png')
+    png(svg('km', maskable=True), 192, MAXKAMPUS / 'brand/maxkampus-192.png')
+    png(svg('km', maskable=True), 512, MAXKAMPUS / 'brand/maxkampus-512.png')
+    ico('km', MAXKAMPUS / 'favicon.ico')
 
 
 SOCIAL = Path(__file__).parent / 'social.html'

@@ -88,8 +88,9 @@ builder.Services.AddOptions<PublicAppUrlOptions>()
         options => PublicAppUrlOptions.IsValidOptionalForEnvironment(options.StaffPortalUrl, builder.Environment.IsProduction())
             && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.InstitutionPortalUrl, builder.Environment.IsProduction())
             && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.ParentBaseUrl, builder.Environment.IsProduction())
-            && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.AdminPanelUrl, builder.Environment.IsProduction()),
-        "PublicApp:StaffPortalUrl, InstitutionPortalUrl, ParentBaseUrl and AdminPanelUrl must be empty or absolute https URLs in production.")
+            && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.AdminPanelUrl, builder.Environment.IsProduction())
+            && PublicAppUrlOptions.IsValidOptionalForEnvironment(options.CourseManagementBaseUrl, builder.Environment.IsProduction()),
+        "PublicApp:StaffPortalUrl, InstitutionPortalUrl, ParentBaseUrl, AdminPanelUrl and CourseManagementBaseUrl must be empty or absolute https URLs in production.")
     .ValidateOnStart();
 
 // Add services

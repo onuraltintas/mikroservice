@@ -4,17 +4,19 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
-import { EduivmeSiteService, SiteEntry, SiteKind, SiteMedia, SiteRevision } from '../../core/services/eduivme-site.service';
+import { BillingAdminService, BillingPlan } from '../../core/services/billing-admin.service';
+import { EduivmeSiteService, SiteEntry, SiteKey, SiteKind, SiteMedia, SiteRevision } from '../../core/services/eduivme-site.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import {
-  BRAND_OPTIONS, HOME_SECTIONS, ICON_OPTIONS, PAGE_SECTIONS, SITE_ADMIN_VIEWS, SITE_KIND_FORMS, SiteAdminView, SiteDraft, SiteField,
-  draftFrom, emptyDraft, publishState, requestFrom
+  BRAND_OPTIONS, ICON_OPTIONS, MAXKAMPUS_ADMIN_VIEWS, MENU_PLACES, NOTICE_AUDIENCES, SITE_ADMIN_VIEWS, SITE_INFO, SiteAdminView, SiteDraft,
+  SiteField, draftFrom, emptyDraft, formFor, publishState, requestFrom, sectionsFor
 } from './eduivme-site-fields';
 
 interface SiteGroup { title: string; kind: SiteKind; group: string; entries: SiteEntry[]; ordered: boolean; canAdd: boolean; }
 
 /**
- * Yönetim paneli › eduivme sitesi (19.11.2026): every word of eduivme.com is edited here. The entries live in
+ * Yönetim paneli › eduivme sitesi and maxkampüs (Kurs Yönetimi) › Site içeriği: every word of eduivme.com and
+ * maxkampus.com is edited here (the route's data says which site). The entries live in
  * site-service; a change is on the site within a minute (the site's answers are cached for 60 seconds).
  */
 @Component({
@@ -37,9 +39,15 @@ export class EduivmeSiteAdminComponent implements OnInit {
   private readonly api = inject(EduivmeSiteService);
   private readonly toaster = inject(ToasterService);
   private readonly route = inject(ActivatedRoute);
+  private readonly billing = inject(BillingAdminService);
 
-  readonly views = SITE_ADMIN_VIEWS;
-  readonly forms = SITE_KIND_FORMS;
+  readonly site: SiteKey = this.route.snapshot?.data?.['site'] === 'maxkampus' ? 'maxkampus' : 'eduivme';
+  readonly siteInfo = SITE_INFO[this.site];
+  readonly views = this.site === 'maxkampus' ? MAXKAMPUS_ADMIN_VIEWS : SITE_ADMIN_VIEWS;
+  readonly audiences = NOTICE_AUDIENCES;
+  readonly menuPlaces = MENU_PLACES;
+  /** The course-management plans of billing, for the pricing page's notes. */
+  readonly plans = signal<BillingPlan[]>([]);
   readonly brands = BRAND_OPTIONS;
   readonly icons = ICON_OPTIONS;
   readonly view = toSignal(this.route.paramMap.pipe(map(params => (params.get('view') ?? 'home') as SiteAdminView)), { initialValue: 'home' as SiteAdminView });
@@ -59,18 +67,33 @@ export class EduivmeSiteAdminComponent implements OnInit {
   uploadAlt = '';
   uploadFile: File | null = null;
 
-  readonly pages = computed(() => this.entries().filter(item => item.kind === 'page' && item.group === '').sort(bySort));
+  readonly pages = computed(() => this.site === 'eduivme' ? this.entries().filter(item => item.kind === 'page' && item.group === '').sort(bySort) : []);
   readonly groups = computed<SiteGroup[]>(() => {
     const view = this.view();
     const all = this.entries();
     const of = (kind: SiteKind, group: string) => all.filter(item => item.kind === kind && item.group === group).sort(bySort);
-    const make = (title: string, kind: SiteKind, group: string): SiteGroup => {
-      const list = of(kind, group);
-      const form = SITE_KIND_FORMS[kind];
-      const sections = group === '' ? HOME_SECTIONS : PAGE_SECTIONS;
+    const make = (title: string, kind: SiteKind, group: string, filter?: (entry: SiteEntry) => boolean): SiteGroup => {
+      const list = of(kind, group).filter(filter ?? (() => true));
+      const form = formFor(kind, this.site);
+      const sections = sectionsFor(this.site, group);
       const canAdd = form.single ? list.length === 0 : kind === 'section' ? list.length < sections.length : true;
-      return { title, kind, group, entries: list, ordered: !form.single && kind !== 'section', canAdd };
+      // Blog posts are ordered by date, not by hand.
+      return { title, kind, group, entries: list, ordered: !form.single && kind !== 'section' && kind !== 'post', canAdd };
     };
+    if (this.site === 'maxkampus') {
+      switch (view) {
+        case 'home': return [make('Site ayarları', 'site', ''), make('Giriş bölümü', 'hero', ''), make('Bölüm başlıkları', 'section', '')];
+        case 'features': return [make('Özellikler', 'feature', ''), make('Nasıl başlanır adımları', 'step', '')];
+        case 'reviews': return [make('Müşteri yorumları', 'review', '')];
+        case 'faq': return [make('Sorular', 'faq', '')];
+        case 'blog': return [{ ...make('Yazılar', 'post', ''), entries: of('post', '').sort(byDate) }];
+        case 'pages': return [make('Sayfalar', 'page', '')];
+        case 'plans': return [make('Plan açıklamaları', 'plan', '')];
+        case 'menus': return [make('Üst menü', 'menu', '', item => item.category === 'header'), make('Alt bilgi', 'menu', '', item => item.category === 'footer')];
+        case 'notices': return [make('Panel duyuruları', 'notice', '')];
+        default: return [];
+      }
+    }
     switch (view) {
       case 'home': return [make('Site ayarları', 'site', ''), make('Giriş bölümü', 'hero', ''), make('Bölüm başlıkları', 'section', '')];
       case 'products': return [make('Ürün kartları', 'product', '')];
@@ -92,7 +115,11 @@ export class EduivmeSiteAdminComponent implements OnInit {
     this.loading.set(true);
     this.loadError.set('');
     try {
-      const [entries, media] = await Promise.all([firstValueFrom(this.api.getEntries()), firstValueFrom(this.api.getMedia())]);
+      const [entries, media] = await Promise.all([firstValueFrom(this.api.getEntries(undefined, this.site)), firstValueFrom(this.api.getMedia())]);
+      if (this.site === 'maxkampus' && this.view() === 'plans') {
+        const plans = await firstValueFrom(this.billing.getPlans()).catch(() => [] as BillingPlan[]);
+        this.plans.set(plans.filter(plan => plan.productCodes.includes('course-management')).sort((a, b) => a.sortOrder - b.sortOrder));
+      }
       this.entries.set(entries);
       this.media.set(media);
       if (!this.selectedPage() || !entries.some(item => item.kind === 'page' && item.slug === this.selectedPage())) {
@@ -108,11 +135,22 @@ export class EduivmeSiteAdminComponent implements OnInit {
   // ---- Lists ----
 
   state(entry: SiteEntry) { return publishState(entry); }
-  kindLabel(kind: SiteKind): string { return SITE_KIND_FORMS[kind].label; }
+  kindLabel(kind: SiteKind): string { return formFor(kind, this.site).label; }
   sectionLabel(entry: SiteEntry): string {
-    const list = entry.group === '' ? HOME_SECTIONS : PAGE_SECTIONS;
-    return list.find(item => item.slug === entry.slug)?.label ?? entry.slug ?? '';
+    return sectionsFor(this.site, entry.group).find(item => item.slug === entry.slug)?.label ?? entry.slug ?? '';
   }
+  /** What a list row shows under the title. */
+  rowDetail(entry: SiteEntry): string {
+    switch (entry.kind) {
+      case 'section': return entry.title;
+      case 'menu': return entry.linkUrl ?? '';
+      case 'notice': return (this.audiences.find(item => item.value === entry.audience)?.label ?? '') + (entry.endsAt ? `, ${this.revisionTime(entry.endsAt)} tarihine kadar` : '');
+      case 'post': return [entry.category, entry.publishAt ? this.revisionTime(entry.publishAt) : null].filter(Boolean).join(', ');
+      case 'plan': return this.planName(entry.slug) + (entry.category === 'featured' ? ', en çok tercih edilen' : '');
+      default: return entry.subtitle || entry.body;
+    }
+  }
+  planName(id: string | null): string { return this.plans().find(plan => plan.id === id)?.name ?? 'Plan bulunamadı'; }
   pageEntry(slug: string | null): SiteEntry | undefined { return this.pages().find(page => page.slug === slug); }
   selectPage(slug: string): void { this.selectedPage.set(slug); this.closeEditor(); }
 
@@ -123,10 +161,15 @@ export class EduivmeSiteAdminComponent implements OnInit {
 
   add(group: SiteGroup): void {
     const last = group.entries.at(-1)?.sortOrder ?? 0;
-    const draft = emptyDraft(group.kind, group.group, last + 10);
+    const draft = emptyDraft(group.kind, group.group, last + 10, null, this.site);
     if (group.kind === 'section') {
       const used = new Set(group.entries.map(item => item.slug));
-      draft.slug = (group.group === '' ? HOME_SECTIONS : PAGE_SECTIONS).find(item => !used.has(item.slug))?.slug ?? null;
+      draft.slug = sectionsFor(this.site, group.group).find(item => !used.has(item.slug))?.slug ?? null;
+    }
+    if (group.kind === 'menu') draft.category = group.title === 'Alt bilgi' ? 'footer' : 'header';
+    if (group.kind === 'plan') {
+      const used = new Set(group.entries.map(item => item.slug));
+      draft.slug = this.plans().find(plan => !used.has(plan.id))?.id ?? null;
     }
     this.draft.set(draft);
     this.resetFormState();
@@ -134,7 +177,7 @@ export class EduivmeSiteAdminComponent implements OnInit {
 
   addPage(): void {
     const last = this.pages().at(-1)?.sortOrder ?? 0;
-    this.draft.set(emptyDraft('page', '', last + 10));
+    this.draft.set(emptyDraft('page', '', last + 10, null, this.site));
     this.resetFormState();
   }
 
@@ -154,12 +197,24 @@ export class EduivmeSiteAdminComponent implements OnInit {
 
   // ---- Editor ----
 
-  has(field: SiteField): boolean { return !!this.draft() && SITE_KIND_FORMS[this.draft()!.kind].fields.includes(field); }
-  form() { const draft = this.draft(); return draft ? SITE_KIND_FORMS[draft.kind] : null; }
+  has(field: SiteField): boolean { return !!this.draft() && formFor(this.draft()!.kind, this.site).fields.includes(field); }
+  form() { const draft = this.draft(); return draft ? formFor(draft.kind, this.site) : null; }
+  /** Where a page or post of this site is read. */
+  slugHint(kind: SiteKind, slug: string | null): string {
+    const host = this.siteInfo.host;
+    if (kind === 'post') return `${host}/blog/${slug || 'adres'}`;
+    return this.site === 'maxkampus' ? `${host}/sayfa/${slug || 'adres'}` : `${host}/urunler/${slug || 'adres'}`;
+  }
+  /** Plans not yet described, plus the one being edited. */
+  planChoices(): BillingPlan[] {
+    const draft = this.draft();
+    const used = new Set(this.entries().filter(item => item.kind === 'plan' && item.id !== draft?.id).map(item => item.slug));
+    return this.plans().filter(plan => !used.has(plan.id));
+  }
   sectionChoices(): { slug: string; label: string }[] {
     const draft = this.draft();
     if (!draft) return [];
-    const list = draft.group === '' ? HOME_SECTIONS : PAGE_SECTIONS;
+    const list = sectionsFor(this.site, draft.group);
     const used = new Set(this.entries().filter(item => item.kind === 'section' && item.group === draft.group && item.id !== draft.id).map(item => item.slug));
     return list.filter(item => !used.has(item.slug));
   }
@@ -292,3 +347,5 @@ export class EduivmeSiteAdminComponent implements OnInit {
 }
 
 function bySort(a: SiteEntry, b: SiteEntry): number { return a.sortOrder - b.sortOrder || a.createdAt.localeCompare(b.createdAt); }
+/** Newest first, as the blog shows them. */
+function byDate(a: SiteEntry, b: SiteEntry): number { return (b.publishAt ?? b.createdAt).localeCompare(a.publishAt ?? a.createdAt); }

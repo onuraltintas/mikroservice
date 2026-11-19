@@ -66,11 +66,34 @@ export const DASHBOARD_ROUTES: Routes = [
         data: { role: 'SystemAdmin' },
         loadComponent: () => import('../billing/billing-settings').then(m => m.BillingSettingsComponent)
     },
+    // maxkampüs (Kurs Yönetimi), 19.11.2026: the product moved to maxkampus.com; its institutions, site, contact messages
+    // and newsletter are managed under one menu. The old address leads to the overview.
+    { path: 'course-management', pathMatch: 'full', redirectTo: 'maxkampus/overview' },
+    { path: 'maxkampus', pathMatch: 'full', redirectTo: 'maxkampus/overview' },
     {
-        path: 'course-management',
+        path: 'maxkampus/overview',
         canActivate: [permissionGuard],
         data: { role: 'SystemAdmin' },
         loadComponent: () => import('../course-management/course-management-admin.component').then(m => m.CourseManagementAdminComponent)
+    },
+    { path: 'maxkampus/site', pathMatch: 'full', redirectTo: 'maxkampus/site/home' },
+    {
+        path: 'maxkampus/site/:view',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin', site: 'maxkampus' },
+        loadComponent: () => import('../eduivme-site/eduivme-site-admin.component').then(m => m.EduivmeSiteAdminComponent)
+    },
+    {
+        path: 'maxkampus/messages',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin', inbox: 'messages' },
+        loadComponent: () => import('../maxkampus/maxkampus-inbox.component').then(m => m.MaxkampusInboxComponent)
+    },
+    {
+        path: 'maxkampus/subscribers',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin', inbox: 'subscribers' },
+        loadComponent: () => import('../maxkampus/maxkampus-inbox.component').then(m => m.MaxkampusInboxComponent)
     },
     {
         path: 'coaching/curriculum',

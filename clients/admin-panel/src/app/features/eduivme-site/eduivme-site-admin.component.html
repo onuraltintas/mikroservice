@@ -1,11 +1,11 @@
 <main class="site-admin" aria-labelledby="site-admin-title">
   <header class="site-admin__head">
     <div>
-      <p class="site-admin__eyebrow">eduivme sitesi</p>
+      <p class="site-admin__eyebrow">{{ siteInfo.name }}</p>
       <h1 id="site-admin-title">{{ viewInfo().label }}</h1>
       <p class="site-admin__lead">{{ viewInfo().description }}</p>
     </div>
-    <a class="ds-btn ds-btn--secondary" href="https://eduivme.com" target="_blank" rel="noopener">Siteyi aç<span class="ds-visually-hidden"> (yeni sekmede)</span></a>
+    <a class="ds-btn ds-btn--secondary" [href]="siteInfo.url" target="_blank" rel="noopener">Siteyi aç<span class="ds-visually-hidden"> (yeni sekmede)</span></a>
   </header>
 
   @if (loading() && !entries().length) {
@@ -15,7 +15,7 @@
   } @else if (view() === 'media') {
     <section class="card" aria-labelledby="upload-title">
       <h2 id="upload-title">Görsel yükle</h2>
-      <p class="site-admin__muted">PNG, JPEG ya da WebP; en çok 2 MB. Yüklenen görseli giriş bölümünde, ürün kartlarında ve ürün sayfalarında seçebilirsiniz.</p>
+      <p class="site-admin__muted">PNG, JPEG ya da WebP; en çok 2 MB. Yüklenen görseli giriş bölümünde, kartlarda, yazılarda ve sayfalarda seçebilirsiniz. Görseller eduivme.com ve maxkampus.com için ortaktır.</p>
       <div class="form-row">
         <label class="field"><span>Görsel</span><input type="file" accept="image/png,image/jpeg,image/webp" (change)="pickFile($event)"></label>
         <label class="field"><span>Görselin açıklaması (ekran okuyucular için)</span><input [(ngModel)]="uploadAlt" name="uploadAlt" maxlength="500"></label>
@@ -72,13 +72,15 @@
               <h2>{{ group.title }}</h2>
               @if (group.canAdd) { <button type="button" class="ds-btn ds-btn--secondary" (click)="add(group)">Ekle</button> }
             </div>
-            @if (!group.entries.length) { <p class="site-admin__muted">Henüz içerik yok. "Ekle" ile ekleyin; boş bölümler sitede görünmez.</p> }
+            @if (!group.entries.length) {
+              <p class="site-admin__muted">{{ group.kind === 'plan' && !plans().length ? 'Kurs Yönetimi için henüz plan yok. Planları Abonelik ve Ödeme › Planlar ekranında ekleyin; burada yalnız açıklamaları yazılır.' : 'Henüz içerik yok. "Ekle" ile ekleyin; boş bölümler sitede görünmez.' }}</p>
+            }
             <ul>
               @for (entry of group.entries; track entry.id; let first = $first; let last = $last) {
                 <li class="row" [class.row--active]="draft()?.id === entry.id">
                   <span class="row__main">
                     <strong>{{ entry.kind === 'section' ? sectionLabel(entry) : entry.title }}</strong>
-                    <span class="site-admin__muted">{{ entry.kind === 'section' ? entry.title : (entry.subtitle || entry.body) }}</span>
+                    <span class="site-admin__muted">{{ rowDetail(entry) }}</span>
                   </span>
                   <span class="pill pill--{{ state(entry).tone }}">{{ state(entry).label }}</span>
                   @if (group.ordered) {
@@ -108,10 +110,28 @@
                 <select [(ngModel)]="d.slug" name="slug">@for (option of sectionChoices(); track option.slug) {<option [ngValue]="option.slug">{{ option.label }}</option>}</select>
               </label>
             } @else {
-              <label class="field"><span>Sayfa adresi</span><span class="field__hint">eduivme.com/urunler/{{ d.slug || 'adres' }}. Küçük harf, rakam ve tire.</span>
+              <label class="field"><span>{{ d.kind === 'post' ? 'Yazının adresi' : 'Sayfa adresi' }}</span><span class="field__hint">{{ slugHint(d.kind, d.slug) }}. Küçük harf, rakam ve tire.</span>
                 <input [(ngModel)]="d.slug" name="slug" maxlength="80" required pattern="[a-z0-9]+(-[a-z0-9]+)*"></label>
             }
             @if (error('slug')) { <p class="field__error">{{ error('slug') }}</p> }
+          }
+
+          @if (has('plan')) {
+            <label class="field"><span>Plan</span><span class="field__hint">Fiyat ve süre plandan okunur.</span>
+              <select [(ngModel)]="d.slug" name="planId">@for (plan of planChoices(); track plan.id) {<option [ngValue]="plan.id">{{ plan.name }}</option>}</select></label>
+            @if (error('slug')) { <p class="field__error">{{ error('slug') }}</p> }
+          }
+          @if (has('menuPlace')) {
+            <fieldset class="field"><legend>Yeri</legend>
+              <div class="choices">@for (option of menuPlaces; track option.value) {<label class="choice"><input type="radio" name="menuPlace" [value]="option.value" [(ngModel)]="d.category"> {{ option.label }}</label>}</div>
+            </fieldset>
+            @if (error('category')) { <p class="field__error">{{ error('category') }}</p> }
+          }
+          @if (has('audience')) {
+            <fieldset class="field"><legend>Kime gösterilsin</legend>
+              <div class="choices">@for (option of audiences; track option.value) {<label class="choice"><input type="radio" name="audience" [value]="option.value" [(ngModel)]="d.audience"> {{ option.label }}</label>}</div>
+            </fieldset>
+            @if (error('audience')) { <p class="field__error">{{ error('audience') }}</p> }
           }
 
           <label class="field"><span>{{ form()!.titleLabel }}</span><input [(ngModel)]="d.title" name="title" maxlength="200" required></label>
@@ -121,12 +141,23 @@
             <label class="field"><span>{{ form()!.subtitleLabel }}</span><input [(ngModel)]="d.subtitle" name="subtitle" maxlength="500"></label>
           }
           @if (has('body')) {
-            <label class="field"><span>{{ form()!.bodyLabel }}</span><textarea [(ngModel)]="d.body" name="body" rows="4" maxlength="4000"></textarea></label>
+            <label class="field"><span>{{ form()!.bodyLabel }}</span>
+              @if (form()!.long) { <span class="field__hint">Paragrafları boş satırla ayırın. Ara başlık için satırı ## ile başlatın.</span> }
+              <textarea [(ngModel)]="d.body" name="body" [rows]="form()!.long ? 18 : 4" [attr.maxlength]="form()!.long ? 40000 : 4000"></textarea></label>
             @if (error('body')) { <p class="field__error">{{ error('body') }}</p> }
           }
           @if (has('highlights')) {
             <label class="field"><span>Öne çıkanlar</span><span class="field__hint">Her satıra bir madde; en çok 6.</span><textarea [(ngModel)]="d.highlightsText" name="highlights" rows="4"></textarea></label>
             @if (error('highlights')) { <p class="field__error">{{ error('highlights') }}</p> }
+          }
+          @if (has('category') && d.kind === 'post') {
+            <label class="field"><span>Konu</span><span class="field__hint">Blogda konuya göre süzmek için (örnek: Veli iletişimi).</span><input [(ngModel)]="d.category" name="category" maxlength="60"></label>
+          }
+          @if (has('category') && d.kind === 'plan') {
+            <label class="choice"><input type="checkbox" [ngModel]="d.category === 'featured'" (ngModelChange)="update({ category: $event ? 'featured' : null })" name="featured"> En çok tercih edilen olarak işaretle</label>
+          }
+          @if (has('author')) {
+            <label class="field"><span>Yazar</span><input [(ngModel)]="d.author" name="author" maxlength="120"></label>
           }
           @if (has('brand')) {
             <fieldset class="field"><legend>Marka rengi ve simgesi</legend>
@@ -138,7 +169,7 @@
           }
           @if (has('link')) {
             <fieldset class="field"><legend>{{ form()!.linkLabel }}</legend>
-              <span class="field__hint">Adres https:// ile (başka site) ya da / ile (eduivme.com içinde, örnek: /urunler/kurs-yonetimi) başlar. Sayfa içindeki bir bölüm için # kullanın.</span>
+              <span class="field__hint">Adres https:// ile (başka site) ya da / ile ({{ siteInfo.host }} içinde, örnek: {{ site === 'maxkampus' ? '/fiyatlar' : '/urunler/kurs-yonetimi' }}) başlar. Sayfa içindeki bir bölüm için # kullanın.</span>
               <div class="form-row">
                 <label class="field"><span>Yazı</span><input [(ngModel)]="d.linkLabel" name="linkLabel" maxlength="80"></label>
                 <label class="field"><span>Adres</span><input [(ngModel)]="d.linkUrl" name="linkUrl" maxlength="500" inputmode="url"></label>
@@ -178,6 +209,10 @@
           <fieldset class="field"><legend>Yayın</legend>
             <label class="choice"><input type="checkbox" [(ngModel)]="d.isPublished" name="isPublished"> Sitede yayında</label>
             <label class="field"><span>Yayın zamanı (isteğe bağlı)</span><span class="field__hint">Boşsa hemen yayınlanır.</span><input type="datetime-local" [(ngModel)]="d.publishAtLocal" name="publishAtLocal"></label>
+            @if (has('endsAt')) {
+              <label class="field"><span>Bitiş zamanı (isteğe bağlı)</span><span class="field__hint">Bu zamandan sonra duyuru görünmez.</span><input type="datetime-local" [(ngModel)]="d.endsAtLocal" name="endsAtLocal"></label>
+              @if (error('endsAt')) { <p class="field__error">{{ error('endsAt') }}</p> }
+            }
           </fieldset>
 
           @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }

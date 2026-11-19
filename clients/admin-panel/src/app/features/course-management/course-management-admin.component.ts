@@ -18,8 +18,9 @@ import {
     <section class="course-admin" aria-labelledby="course-admin-title">
       <header class="page-header">
         <div>
-          <h1 id="course-admin-title">Kurs Yönetimi</h1>
-          <p>Kurumlar, planlar ve kurumun onayıyla açılan destek erişimi.</p>
+          <p class="eyebrow">maxkampüs (Kurs Yönetimi)</p>
+          <h1 id="course-admin-title">Genel bakış ve kurumlar</h1>
+          <p>Kurumlar, planlar ve destek için bakma ve düzeltme. Her bakış ve değişiklik kurumun panelinde listelenir.</p>
         </div>
         <button type="button" (click)="load()" [disabled]="loading()">Yenile</button>
       </header>

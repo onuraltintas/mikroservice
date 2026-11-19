@@ -138,18 +138,27 @@ jobs:
           set -o pipefail
           npm test -- --project staff-portal --watch=false --progress=false 2>&1 | tee "$RUNNER_TEMP/staff-portal-unit-tests.log"
 
+      - name: Run maxkampus unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test -- --project maxkampus --watch=false --progress=false 2>&1 | tee "$RUNNER_TEMP/maxkampus-unit-tests.log"
+
       - name: Report failed frontend tests
         # Job logs are not always reachable from review tooling; failing tests and unhandled errors are repeated as
         # annotations (logged "API Error" noise from passing tests is ignored).
         if: failure()
         shell: bash
-        run: node ../../tools/ci/report-failed-tests.mjs "$RUNNER_TEMP"/frontend-unit-tests.log "$RUNNER_TEMP"/staff-portal-unit-tests.log
+        run: node ../../tools/ci/report-failed-tests.mjs "$RUNNER_TEMP"/frontend-unit-tests.log "$RUNNER_TEMP"/staff-portal-unit-tests.log "$RUNNER_TEMP"/maxkampus-unit-tests.log
 
       - name: Build browser and SSR bundles
         run: npm run build
 
       - name: Build the separate staff portal bundle
         run: npm run build -- --project staff-portal --configuration production --base-href /staff/
+
+      - name: Build the maxkampus.com bundle
+        run: npm run build -- --project maxkampus --configuration production
 
       - name: Build the separate Course Management student application
         run: |
@@ -552,6 +561,7 @@ jobs:
           grep -q '20261119144458_V1SeriesPatterns' artifacts/course-management/course-management-idempotent.sql
           grep -q '20261119155139_V1SupportChanges' artifacts/course-management/course-management-idempotent.sql
           grep -q '20261119172337_V1SupportWithoutGrant' artifacts/course-management/course-management-idempotent.sql
+          grep -q '20261119184335_V1TeacherEmailInvitations' artifacts/course-management/course-management-idempotent.sql
 
       - name: Upload Course Management migration SQL for review
         uses: actions/upload-artifact@v4
@@ -996,6 +1006,9 @@ jobs:
           - name: staff-portal
             context: clients
             dockerfile: clients/admin-panel/Dockerfile.staff-portal
+          - name: maxkampus
+            context: clients
+            dockerfile: clients/admin-panel/Dockerfile.maxkampus
     steps:
       - name: Checkout
         uses: actions/checkout@v4

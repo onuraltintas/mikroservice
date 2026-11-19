@@ -16,6 +16,7 @@
 #   ogretmen.eduivme.com  teachers (staff portal)
 #   kurum.eduivme.com     institution managers (staff portal)
 #   admin.eduivme.com     management panel
+#   maxkampus.com         maxkampüs (Kurs Yönetimi): its site, sign-in and institution panel (19.11.2026)
 # eduivme.com shows the parent brand page (catch-all block below). The old Coaching domain is closed.
 
 www.maxkoc.com:80 {
@@ -162,6 +163,46 @@ ogretmen.eduivme.com:80, kurum.eduivme.com:80 {
 	}
 }
 
+www.maxkampus.com:80 {
+	redir https://maxkampus.com{uri} 301
+}
+
+# maxkampüs (19.11.2026): the site, accounts and the institution panel are one app (maxkampus); /api goes to the
+# gateway. The sitemap is written by site-service. The old staff-portal addresses of Kurs Yönetimi lead here.
+maxkampus.com:80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	route {
+		@sitemap path /sitemap.xml
+		rewrite @sitemap /api/site/sites/maxkampus/sitemap.xml
+
+		@api path /api/*
+		reverse_proxy @api api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@health path /health /health/*
+		reverse_proxy @health api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@staffElsewhere path /staff /staff/*
+		redir @staffElsewhere https://ogretmen.eduivme.com{uri} 302
+
+		@management path /dashboard /dashboard/*
+		redir @management https://admin.eduivme.com{uri} 302
+
+		reverse_proxy maxkampus:8080
+	}
+}
+
 admin.eduivme.com:80 {
 	encode gzip zstd
 	header {
@@ -236,6 +277,12 @@ admin.eduivme.com:80 {
 	@staff path /staff /staff/*
 	handle @staff {
 		redir https://ogretmen.eduivme.com{uri} 302
+	}
+
+	# Kurs Yönetimi's product page moved to its own site (maxkampüs, 19.11.2026).
+	@courseManagementPage path /urunler/kurs-yonetimi /urunler/kurs-yonetimi/*
+	handle @courseManagementPage {
+		redir https://maxkampus.com 301
 	}
 
 	# The site's own content and images (site-service, no sign-in) are read on eduivme.com itself.

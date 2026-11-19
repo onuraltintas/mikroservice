@@ -22,11 +22,14 @@ if (migrationOnly)
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<SiteDbContext>();
     await migrationDb.Database.MigrateAsync();
     var written = await SiteSeed.EnsureAsync(migrationDb, TimeProvider.System);
-    Console.WriteLine(written > 0 ? $"eduivme site: {written} first entries written." : "eduivme site: content already present.");
+    Console.WriteLine(written > 0 ? $"sites: {written} first entries written." : "sites: content already present.");
     return;
 }
 
 builder.Services.AddScoped<SiteContent>();
+builder.Services.AddScoped<SiteForms>();
+builder.Services.AddHttpClient<SiteIntegrations>(client => client.Timeout = TimeSpan.FromSeconds(10));
+if (!builder.Environment.IsEnvironment("Testing")) builder.Services.AddHostedService<SiteRetention>();
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Site");
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddAuthorization(options =>

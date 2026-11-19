@@ -17,6 +17,9 @@ public sealed class InternalCaptchaController(IAuthRecaptchaVerifier verifier) :
     public static readonly IReadOnlySet<string> AllowedActions = new HashSet<string>(StringComparer.Ordinal)
     {
         "support_submit",
+        // maxkampus.com's contact form and newsletter (site-service).
+        "site_contact",
+        "newsletter_subscribe",
     };
 
     [HttpPost("verify")]

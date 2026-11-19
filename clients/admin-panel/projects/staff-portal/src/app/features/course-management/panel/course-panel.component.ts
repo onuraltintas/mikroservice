@@ -42,13 +42,13 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
   `,
   template: `
     @if (loading()) {
-      <p class="empty" role="status">Kurs Yönetimi açılıyor…</p>
+      <p class="empty" role="status">maxkampüs açılıyor…</p>
     } @else if (state.workspace(); as workspace) {
       <div class="shell">
-        <nav class="side" aria-label="Kurs Yönetimi">
+        <nav class="side" aria-label="maxkampüs">
           <div class="brand">
             <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#3A2E14"></rect><rect x="27" y="27" width="10" height="20" rx="5" fill="#FFFFFF"></rect><path d="M24 20c3-6 9-9 14-8" fill="none" stroke="#F2B33D" stroke-width="2.5" stroke-linecap="round" opacity="0.6"></path><circle cx="40" cy="14" r="6.5" fill="#F2B33D"></circle><rect x="18" y="50" width="7" height="4" rx="2" fill="#F2B33D"></rect><rect x="28.5" y="50" width="7" height="4" rx="2" fill="#F2B33D"></rect><rect x="39" y="50" width="7" height="4" rx="2" fill="#F2B33D" opacity="0.45"></rect></svg>
-            <div><strong>Kurs Yönetimi</strong><span>{{ workspace.name }}</span></div>
+            <div><strong>maxkampüs</strong><span>{{ workspace.name }}</span></div>
           </div>
           @if (workspaces().length > 1) {
             <label class="sr-only" for="course-workspace">Çalışma alanı</label>
@@ -83,7 +83,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
       </div>
     } @else {
       <section class="card setup" aria-labelledby="course-setup-title">
-        <h1 id="course-setup-title">{{ role === 'institution' ? 'Kurumunuzu açın' : 'Kurs Yönetimi' }}</h1>
+        <h1 id="course-setup-title">{{ role === 'institution' ? 'Kurumunuzu açın' : 'maxkampüs' }}</h1>
         @if (pending().length) {
           <h2>Bekleyen davetleriniz</h2>
           @for (invitation of pending(); track invitation.id) {
@@ -133,7 +133,7 @@ export class CoursePanelComponent implements OnInit {
       } catch { /* no profile yet: asked on the setup card */ }
       await this.loadWorkspaces();
     } catch (error) {
-      this.error.set(problemText(error, 'Kurs Yönetimi açılamadı. Sayfayı yenileyin.'));
+      this.error.set(problemText(error, 'maxkampüs açılamadı. Sayfayı yenileyin.'));
     } finally {
       this.loading.set(false);
     }

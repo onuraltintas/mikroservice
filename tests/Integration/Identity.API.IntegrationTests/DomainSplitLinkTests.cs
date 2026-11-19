@@ -17,8 +17,25 @@ public class DomainSplitLinkTests
         SpeedReadingBaseUrl = "https://masterhizliokuma.com",
         StaffPortalUrl = "https://ogretmen.eduivme.com/staff",
         InstitutionPortalUrl = "https://kurum.eduivme.com/staff/",
-        AdminPanelUrl = "https://admin.eduivme.com"
+        AdminPanelUrl = "https://admin.eduivme.com",
+        CourseManagementBaseUrl = "https://maxkampus.com"
     };
+
+    // maxkampüs (19.11.2026): account e-mails of Kurs Yönetimi open maxkampus.com's own pages, whatever the role.
+    [Fact]
+    public void CourseManagementLinksOpenMaxkampus()
+    {
+        var options = Production();
+        var id = Guid.NewGuid();
+        options.BuildEmailVerificationLink(id, "t", "CourseInstitutionOwner", "course-management").Should().Be($"https://maxkampus.com/eposta-dogrula?userId={id}&token=t");
+        options.BuildPasswordResetLink("t", "kurum@example.test", "CourseTeacher", "course-management").Should().StartWith("https://maxkampus.com/sifre-yenile?token=t&email=");
+        options.BuildLoginLink("CourseInstitutionOwner", "course-management").Should().Be("https://maxkampus.com/giris");
+        PublicAppUrlOptions.GetApplicationName("CourseInstitutionOwner", "course-management").Should().Be("maxkampüs");
+        PublicAppUrlOptions.IsKnownProduct("course-management").Should().BeTrue();
+        // Without the address set, the old behaviour stays: management links open the admin panel.
+        new PublicAppUrlOptions { BaseUrl = "https://maxkoc.com", AdminPanelUrl = "https://admin.eduivme.com" }
+            .BuildLoginLink("CourseInstitutionOwner", "course-management").Should().Be("https://admin.eduivme.com/auth/login");
+    }
 
     [Fact]
     public void ParentLinksOpenTheParentAddress()

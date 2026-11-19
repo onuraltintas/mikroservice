@@ -65,6 +65,8 @@ public sealed class CourseEmailLinksTests
         Assert.Equal("https://kurum.eduivme.com/staff/#ayarlar?bolum=destek",
             CourseManagementOwnerEmailConsumer.SafeLink("https://kurum.eduivme.com/staff/#ayarlar?bolum=destek"));
         Assert.Null(CourseManagementOwnerEmailConsumer.SafeLink("https://eduivme.com.example.test/x"));
+        Assert.NotNull(CourseManagementOwnerEmailConsumer.SafeLink("https://maxkampus.com/davet/abc"));
+        Assert.Null(CourseManagementOwnerEmailConsumer.SafeLink("https://maxkampus.com.example.test/davet/abc"));
         Assert.Null(CourseManagementOwnerEmailConsumer.SafeLink("http://kurum.eduivme.com/"));
     }
 }

@@ -13,6 +13,8 @@ public static class RegistrationLegalConsentPolicy
     {
         PlatformProduct.Coaching => true,
         PlatformProduct.SpeedReading => false,
+        // maxkampus.com: a Google sign-up goes through the same form as a password sign-up, consents included.
+        PlatformProduct.CourseManagement => true,
         _ => throw new ArgumentOutOfRangeException(nameof(product), product, "Unsupported platform product.")
     };
 
@@ -20,6 +22,7 @@ public static class RegistrationLegalConsentPolicy
     {
         PlatformProduct.Coaching => [.. SharedRequiredSlugs, "coaching-terms"],
         PlatformProduct.SpeedReading => [.. SharedRequiredSlugs, "speed-reading-terms"],
+        PlatformProduct.CourseManagement => [.. SharedRequiredSlugs, "course-management-terms"],
         _ => throw new ArgumentOutOfRangeException(nameof(product), product, "Unsupported platform product.")
     };
 

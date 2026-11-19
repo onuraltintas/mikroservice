@@ -587,7 +587,7 @@ test('course teacher creates a profile, independent workspace and targeted invit
     await page.getByLabel('Adınız').fill('Öğretmen adı');
     await page.getByLabel('Özel ders alanının adı').fill('Matematik özel ders');
     await page.getByRole('button', { name: 'Özel ders alanını aç', exact: true }).click();
-    await page.getByRole('navigation', { name: 'Kurs Yönetimi' }).waitFor();
+    await page.getByRole('navigation', { name: 'maxkampüs' }).waitFor();
     await page.getByRole('link', { name: 'Önceki ekran' }).click();
     await page.getByText('Öğretmen Plus', { exact: true }).waitFor();
     await page.getByText('Etkin öğrenci: 0 / 25', { exact: true }).waitFor();

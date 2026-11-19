@@ -99,6 +99,9 @@
 
         @defer (when auth.activeProduct() === 'course-management' && activeWorkspaceRole) {
           @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
+            <!-- maxkampüs (19.11.2026): Kurs Yönetimi has its own address; this panel stays for the move. -->
+            <p class="migration-note moved-note" role="status">Kurs Yönetimi artık <strong>maxkampüs</strong>: kurum paneliniz
+              <a href="https://maxkampus.com/panel">maxkampus.com</a> adresinde. Aynı e-posta ve şifreyle giriş yapın.</p>
             <staff-course-panel [role]="courseRole" />
           }
         }
@@ -224,7 +227,7 @@
             </button>
             @if (courseManagementOffered) {
               <button type="button" [class.selected]="selectedProduct === 'course-management'" [attr.aria-pressed]="selectedProduct === 'course-management'" (click)="selectedProduct = 'course-management'">
-                <img src="brand/eduivme.svg" alt="" width="32" height="32"><span><strong>Kurs Yönetimi</strong><small>Yetkili pilot hesaplar</small></span>
+                <img src="brand/eduivme.svg" alt="" width="32" height="32"><span><strong>maxkampüs</strong><small>Kurs Yönetimi, maxkampus.com</small></span>
               </button>
             }
           </div>

@@ -13,6 +13,7 @@ const CORE_LEGAL_DOCUMENTS: { slug: string; title: string; description: string }
   { slug: 'cookies', title: 'Çerez politikası', description: 'Servislerin ortak çerez bilgilendirmesi.' },
   { slug: 'coaching-terms', title: 'Koçluk kullanım koşulları', description: 'Yalnızca Koçluk servisi için kullanım koşulları.' },
   { slug: 'speed-reading-terms', title: 'Hızlı Okuma kullanım koşulları', description: 'Yalnızca Hızlı Okuma servisi için kullanım koşulları.' },
+  { slug: 'course-management-terms', title: 'maxkampüs kullanım ve abonelik koşulları', description: 'maxkampus.com kaydında kabul edilen koşullar; destek erişimi maddesi burada. Yayımlanmadan maxkampüs kaydı açılmaz.' },
   { slug: 'coaching-newsletter-consent', title: 'Koçluk bülteni onay metni', description: 'Koçluk bülten kaydında gösterilen ve sürümü kanıtlanan onay bildirimi.' },
   { slug: 'speed-reading-newsletter-consent', title: 'Hızlı Okuma bülteni onay metni', description: 'Hızlı Okuma bülten kaydında gösterilen ve sürümü kanıtlanan onay bildirimi.' }
 ];

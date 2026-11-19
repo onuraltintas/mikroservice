@@ -136,6 +136,7 @@ services:
       - AuthRecaptcha__AllowedHostnames__0=${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_0:-admin.eduivme.com}
       - AuthRecaptcha__AllowedHostnames__1=${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_1:-maxkoc.com}
       - AuthRecaptcha__AllowedHostnames__2=${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_2:-masterhizliokuma.com}
+      - AuthRecaptcha__AllowedHostnames__3=${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_6:-maxkampus.com}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
       - PublicApp__BaseUrl=${PUBLIC_APP_BASE_URL:?PUBLIC_APP_BASE_URL must be set}
       - SpeedReadingPublicApp__BaseUrl=${SPEED_READING_PUBLIC_BASE_URL:-http://localhost:4200}
@@ -413,6 +414,7 @@ services:
       - PublicApp__SpeedReadingBaseUrl=${SPEED_READING_PUBLIC_BASE_URL:-http://localhost:4200}
       - PublicApp__StaffPortalUrl=${PUBLIC_STAFF_PORTAL_URL:-}
       - PublicApp__AdminPanelUrl=${PUBLIC_ADMIN_PANEL_URL:-}
+      - PublicApp__CourseManagementBaseUrl=${COURSE_MANAGEMENT_PUBLIC_URL:-}
       - CoachingNotices__AdminAlertEmail=${COACHING_ADMIN_ALERT_EMAIL:-}
       - TextMessaging__Enabled=${TEXT_MESSAGING_ENABLED:-false}
       - TextMessaging__Provider=${TEXT_MESSAGING_PROVIDER:-}
@@ -499,6 +501,11 @@ services:
       - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - AllowedHosts=site-service
+      # The contact form and the newsletter (maxkampus.com): Identity checks the robot test, notification sends the e-mail.
+      - Services__IdentityService=http://identity-service:8080
+      - Services__NotificationService=http://notification-service:8080
+      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+      - Site__MaxkampusPublicUrl=${COURSE_MANAGEMENT_PUBLIC_URL:-http://localhost:4300}
     depends_on:
       site-migrations:
         condition: service_completed_successfully

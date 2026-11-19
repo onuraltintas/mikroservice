@@ -59,6 +59,8 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<CourseManagementErasureAssessmentRequestedConsumer>();
     x.AddConsumer<CourseManagementErasureExecutionRequestedConsumer>();
+    // maxkampus.com registration: the workspace the new owner named (19.11.2026).
+    x.AddConsumer<CourseManagementWorkspaceRequestedConsumer>();
     x.AddEntityFrameworkOutbox<CourseManagementDbContext>(options =>
     {
         options.UsePostgres();
@@ -207,6 +209,8 @@ api.MapGet("/me/workspaces", async (ClaimsPrincipal user, ICourseManagementStore
         institutionCategory = workspace.InstitutionCategory?.ToString() }));
 });
 app.MapWorkspaceEndpoints(api);
+// Teachers invited by e-mail address (maxkampus.com/davet).
+api.MapTeacherInvitationEndpoints(app);
 api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
 api.MapFinanceEndpoints();
