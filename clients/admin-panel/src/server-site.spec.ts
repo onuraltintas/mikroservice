@@ -115,3 +115,18 @@ describe('eduivme.com (19.11.2026)', () => {
     expect(productPagePreviewTarget('/urunler/../x')).toBeNull();
   });
 });
+
+describe('CachedFetcher answer shapes (live check 19.11.2026)', () => {
+  it('reads both the Coaching { data } wrapper and site-service\'s bare answers', async () => {
+    const answers: Record<string, unknown> = {
+      'http://x/coaching': { data: [{ slug: 'a' }] },
+      'http://x/site-sitemap': [{ slug: 'kurs-yonetimi', lastModified: '2026-11-19T06:00:00Z' }],
+      'http://x/site-page': { page: { title: 'Kurs Yönetimi' } }
+    };
+    const fetcher = (async (url: string) => new Response(JSON.stringify(answers[url]), { status: 200 })) as unknown as typeof fetch;
+    const cached = new CachedFetcher(60_000, 1000, fetcher);
+    expect(await cached.json('http://x/coaching')).toEqual([{ slug: 'a' }]);
+    expect(await cached.json('http://x/site-sitemap')).toEqual([{ slug: 'kurs-yonetimi', lastModified: '2026-11-19T06:00:00Z' }]);
+    expect(await cached.json('http://x/site-page')).toEqual({ page: { title: 'Kurs Yönetimi' } });
+  });
+});

@@ -15,6 +15,7 @@ ARG RELEASE_TAG=dev
 # Assemble the image as root; the files stay root-owned and world-readable.
 USER root
 COPY speed-reading/nginx.conf /etc/nginx/conf.d/default.conf
+COPY speed-reading/nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY speed-reading/build-release.txt /tmp/build-release.txt
 COPY --from=build /workspace/clients/speed-reading/dist/speed-reading-frontend/browser /usr/share/nginx/html
 # Angular only changes ngsw.json for an application release. Versioning the
