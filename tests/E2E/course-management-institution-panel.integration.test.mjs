@@ -237,6 +237,16 @@ test('institution panel: switched-off student portal and files, teacher homework
     const members = await (await call(`${ws}/members`, owner)).json();
     assert.equal(members.find(member => member.userId === teacherId).displayName, 'TEST Öğretmen');
 
+    // Tahsilat lists: payments with filters, debts by state; owner only.
+    const payments = await (await call(`${ws}/finance/payments?method=1&q=mehmet`, owner)).json();
+    assert.equal(payments.total, 1);
+    assert.equal(payments.sum, 100);
+    assert.equal((await (await call(`${ws}/finance/payments?method=2`, owner)).json()).total, 0);
+    assert.equal((await call(`${ws}/finance/payments`, teacher)).status, 404);
+    const debts = await (await call(`${ws}/finance/installments?status=overdue`, owner)).json();
+    assert.equal(debts.total, 0);
+    assert.equal((await call(`${ws}/finance/installments?status=nope`, owner)).status, 400);
+
     // The student list: search, filters and pages; a teacher sees no contact details or money.
     const search = (query, bearer = owner) => call(`${ws}/students/search?${query}`, bearer).then(response => response.json());
     assert.equal((await search('q=mehmet')).total, 1);
