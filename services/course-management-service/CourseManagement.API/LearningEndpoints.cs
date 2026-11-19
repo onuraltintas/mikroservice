@@ -463,7 +463,7 @@ public static class LearningEndpoints
             if (!await CanManageWorkspace(db, workspaceId, userId, ct)) return Results.NotFound();
             var rangeStart = (from ?? DateTimeOffset.UtcNow).ToUniversalTime();
             var rangeEnd = (to ?? rangeStart.AddDays(30)).ToUniversalTime();
-            if (rangeEnd <= rangeStart || rangeEnd - rangeStart > TimeSpan.FromDays(180))
+            if (rangeEnd <= rangeStart || rangeEnd - rangeStart > TimeSpan.FromDays(LessonSeries.MaxSpanDays + 1))
                 return Results.BadRequest(new { code = "Lesson.InvalidRange" });
             if (skip is < 0 || take is < 1 or > 500) return Results.BadRequest(new { code = "Lesson.InvalidPage" });
             var pageSkip = skip ?? 0;
@@ -753,7 +753,8 @@ public static class LearningEndpoints
                     groupName = courseGroup == null ? null : courseGroup.Name,
                     item.RoomId, roomName = courseRoom == null ? null : courseRoom.Name,
                     branchName = courseBranch == null ? null : courseBranch.Name, item.TeacherUserId, item.TimeZoneId,
-                    item.StartsOn, item.EndsOn, item.StartTime, item.DurationMinutes, item.DaysOfWeekMask }).Take(200).ToListAsync(ct);
+                    item.StartsOn, item.EndsOn, item.StartTime, item.DurationMinutes, item.DaysOfWeekMask,
+                    item.RepeatEveryWeeks, item.MonthlyWeekOfMonth }).Take(200).ToListAsync(ct);
             var seriesIds = series.Select(item => item.Id).ToList();
             var occurrences = await db.LessonSessions.AsNoTracking().Where(lesson => lesson.WorkspaceId == workspaceId
                     && lesson.SeriesId != null && seriesIds.Contains(lesson.SeriesId.Value)
@@ -767,6 +768,7 @@ public static class LearningEndpoints
                 item.Id, item.CourseId, item.courseName, item.GroupId, item.groupName, item.TeacherUserId,
                 item.RoomId, item.roomName, item.branchName,
                 item.TimeZoneId, item.StartsOn, item.EndsOn, item.StartTime, item.DurationMinutes, item.DaysOfWeekMask,
+                item.RepeatEveryWeeks, item.MonthlyWeekOfMonth,
                 nextStartsAt = occurrenceBySeries[item.Id].NextStartsAt,
                 remainingSessions = occurrenceBySeries[item.Id].RemainingSessions
             }));
@@ -793,7 +795,7 @@ public static class LearningEndpoints
                 if (series is null) return Results.NotFound();
                 var isOwner = await IsOwner(db, workspaceId, userId, ct);
                 if (!isOwner && series.TeacherUserId != userId) return Results.NotFound();
-                if (endsOn < series.StartsOn || endsOn.DayNumber - series.StartsOn.DayNumber > 180)
+                if (endsOn < series.StartsOn || endsOn.DayNumber - series.StartsOn.DayNumber > LessonSeries.MaxSpanDays)
                     return Results.BadRequest(new { code = "LessonSeries.InvalidSchedule" });
                 var ownerUserId = await db.Workspaces.Where(item => item.Id == workspaceId)
                     .Select(item => item.OwnerUserId).SingleAsync(ct);
@@ -844,7 +846,7 @@ public static class LearningEndpoints
                     updatedSchedule = LessonSeries.Create(series.Id, series.WorkspaceId, series.CourseId,
                         series.GroupId, series.StudentId, series.TeacherUserId, CourseManagementTime.ZoneId,
                         scheduleStartsOn, endsOn, startTime, request.DurationMinutes, request.DaysOfWeekMask,
-                        now, request.RoomId);
+                        now, request.RoomId, series.RepeatEveryWeeks, series.MonthlyWeekOfMonth, series.StartsOn);
                     occurrences = updatedSchedule.Expand(timeZone).Where(item => item.StartsAt > now).ToArray();
                 }
                 catch (InvalidOperationException)
@@ -1045,7 +1047,7 @@ public static class LearningEndpoints
                 || !DateOnly.TryParseExact(request.EndsOn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endsOn)
                 || !TimeOnly.TryParseExact(request.StartTime, ["HH:mm", "HH:mm:ss"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var startTime)
                 || request.DurationMinutes is < 1 or > 480 || request.DaysOfWeekMask is < 1 or > 127
-                || endsOn < startsOn || endsOn.DayNumber - startsOn.DayNumber > 180)
+                || endsOn < startsOn || endsOn.DayNumber - startsOn.DayNumber > LessonSeries.MaxSpanDays)
                 return Results.BadRequest(new { code = "LessonSeries.InvalidInput" });
 
             // E3 #34: a weekly series is in Türkiye time; a zone sent by an older client is ignored.
@@ -1061,7 +1063,8 @@ public static class LearningEndpoints
             {
                 series = LessonSeries.Create(request.Id, workspaceId, request.CourseId, request.GroupId, request.StudentId,
                     request.TeacherUserId, CourseManagementTime.ZoneId, startsOn, endsOn, startTime,
-                    request.DurationMinutes, request.DaysOfWeekMask, now, request.RoomId);
+                    request.DurationMinutes, request.DaysOfWeekMask, now, request.RoomId,
+                    request.RepeatEveryWeeks ?? 1, request.MonthlyWeekOfMonth);
                 occurrences = series.Expand(timeZone).Where(occurrence => occurrence.StartsAt > now).ToArray();
             }
             catch (ArgumentException)
@@ -1125,45 +1128,55 @@ public static class LearningEndpoints
                     .Where(existing => existing.WorkspaceId == workspaceId && existing.Status == LessonSessionStatus.Scheduled
                         && existing.TeacherUserId == request.TeacherUserId && existing.StartsAt < latestEnd && existing.EndsAt > earliestStart)
                     .Select(existing => new { existing.StartsAt, existing.EndsAt }).ToListAsync(ct);
-                if (occurrences.Any(occurrence => teacherSessions.Any(existing => existing.StartsAt < occurrence.EndsAt
-                    && occurrence.StartsAt < existing.EndsAt)))
-                    return Results.Conflict(new { code = "Lesson.TeacherConflict" });
-
                 var teacherTimeOff = await db.TeacherTimeOffs.AsNoTracking()
                     .Where(item => item.WorkspaceId == workspaceId && item.TeacherUserId == request.TeacherUserId
                         && item.StartsAt < latestEnd && item.EndsAt > earliestStart)
                     .Select(item => new { item.StartsAt, item.EndsAt }).ToListAsync(ct);
-                if (occurrences.Any(occurrence => teacherTimeOff.Any(item => item.StartsAt < occurrence.EndsAt
-                    && occurrence.StartsAt < item.EndsAt)))
-                    return Results.Conflict(new { code = "Availability.TimeOffConflict" });
-
                 var availabilityWindows = await db.TeacherAvailabilityWindows.AsNoTracking()
                     .Where(item => item.WorkspaceId == workspaceId && item.TeacherUserId == request.TeacherUserId)
                     .ToListAsync(ct);
-                if (occurrences.Any(occurrence => !FitsTeacherAvailability(occurrence, availabilityWindows)))
-                    return Results.Conflict(new { code = "Availability.OutsideWorkingHours" });
-
                 var studentSessions = await (from participant in db.LessonParticipants.AsNoTracking()
                     join existing in db.LessonSessions.AsNoTracking() on participant.LessonSessionId equals existing.Id
                     where participant.WorkspaceId == workspaceId && participant.IsActive && studentIds.Contains(participant.StudentId)
                         && existing.WorkspaceId == workspaceId && existing.Status == LessonSessionStatus.Scheduled
                         && existing.StartsAt < latestEnd && existing.EndsAt > earliestStart
                     select new { existing.StartsAt, existing.EndsAt }).ToListAsync(ct);
-                if (occurrences.Any(occurrence => studentSessions.Any(existing => existing.StartsAt < occurrence.EndsAt
-                    && occurrence.StartsAt < existing.EndsAt)))
-                    return Results.Conflict(new { code = "Lesson.StudentConflict" });
+                var roomSessions = room is null ? [] : await db.LessonSessions.AsNoTracking()
+                    .Where(existing => existing.WorkspaceId == workspaceId && existing.RoomId == room.Id
+                        && existing.Status == LessonSessionStatus.Scheduled
+                        && existing.StartsAt < latestEnd && existing.EndsAt > earliestStart)
+                    .Select(existing => new { existing.StartsAt, existing.EndsAt }).ToListAsync(ct);
 
-                if (room is not null)
+                // Every occurrence is checked on its own, so a long series can be previewed and its clashes skipped (19.11.2026).
+                string[] Conflicts((DateTimeOffset StartsAt, DateTimeOffset EndsAt) occurrence)
                 {
-                    var roomSessions = await db.LessonSessions.AsNoTracking()
-                        .Where(existing => existing.WorkspaceId == workspaceId && existing.RoomId == room.Id
-                            && existing.Status == LessonSessionStatus.Scheduled
-                            && existing.StartsAt < latestEnd && existing.EndsAt > earliestStart)
-                        .Select(existing => new { existing.StartsAt, existing.EndsAt }).ToListAsync(ct);
-                    if (occurrences.Any(occurrence => roomSessions.Any(existing => existing.StartsAt < occurrence.EndsAt
-                        && occurrence.StartsAt < existing.EndsAt)))
-                        return Results.Conflict(new { code = "Room.Conflict" });
+                    var found = new List<string>();
+                    if (teacherSessions.Any(existing => existing.StartsAt < occurrence.EndsAt && occurrence.StartsAt < existing.EndsAt))
+                        found.Add("Lesson.TeacherConflict");
+                    if (teacherTimeOff.Any(item => item.StartsAt < occurrence.EndsAt && occurrence.StartsAt < item.EndsAt))
+                        found.Add("Availability.TimeOffConflict");
+                    if (!FitsTeacherAvailability(occurrence, availabilityWindows)) found.Add("Availability.OutsideWorkingHours");
+                    if (studentSessions.Any(existing => existing.StartsAt < occurrence.EndsAt && occurrence.StartsAt < existing.EndsAt))
+                        found.Add("Lesson.StudentConflict");
+                    if (roomSessions.Any(existing => existing.StartsAt < occurrence.EndsAt && occurrence.StartsAt < existing.EndsAt))
+                        found.Add("Room.Conflict");
+                    return [.. found];
                 }
+                var checkedOccurrences = occurrences.Select(occurrence => (occurrence, conflicts: Conflicts(occurrence))).ToArray();
+                if (request.Preview)
+                    return Results.Ok(new
+                    {
+                        sessionCount = checkedOccurrences.Length,
+                        conflictCount = checkedOccurrences.Count(item => item.conflicts.Length > 0),
+                        occurrences = checkedOccurrences.Select(item => new
+                            { item.occurrence.StartsAt, item.occurrence.EndsAt, conflicts = item.conflicts })
+                    });
+                var firstConflict = checkedOccurrences.FirstOrDefault(item => item.conflicts.Length > 0);
+                if (firstConflict.conflicts is { Length: > 0 } && !request.SkipConflicts)
+                    return Results.Conflict(new { code = firstConflict.conflicts[0] });
+                var skippedCount = checkedOccurrences.Count(item => item.conflicts.Length > 0);
+                occurrences = checkedOccurrences.Where(item => item.conflicts.Length == 0).Select(item => item.occurrence).ToArray();
+                if (occurrences.Count == 0) return Results.Conflict(new { code = "LessonSeries.AllOccurrencesConflict" });
 
                 db.LessonSeries.Add(series);
                 var sessions = occurrences.Select(occurrence => LessonSession.Create(Guid.NewGuid(), workspaceId,
@@ -1183,7 +1196,7 @@ public static class LearningEndpoints
                 AddAudit(db, workspaceId, userId, series.Id, "LessonSeries.Created");
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
-                return Results.Ok(new { seriesId = series.Id, sessionsCreated = sessions.Length });
+                return Results.Ok(new { seriesId = series.Id, sessionsCreated = sessions.Length, sessionsSkipped = skippedCount });
             }
             catch (Exception exception) when (IsSerializationFailure(exception))
             {
@@ -2004,7 +2017,8 @@ public sealed record CreateLessonSessionRequest(Guid Id, Guid CourseId, Guid? Gr
     DateTimeOffset StartsAt, DateTimeOffset EndsAt, Guid? RoomId = null, Guid? MakeupCreditId = null);
 public sealed record RescheduleLessonRequest(DateTimeOffset StartsAt, DateTimeOffset EndsAt, Guid? RoomId);
 public sealed record CreateLessonSeriesRequest(Guid Id, Guid CourseId, Guid? GroupId, Guid? StudentId, Guid TeacherUserId,
-    string? TimeZoneId, string StartsOn, string EndsOn, string StartTime, int DurationMinutes, int DaysOfWeekMask, Guid? RoomId = null);
+    string? TimeZoneId, string StartsOn, string EndsOn, string StartTime, int DurationMinutes, int DaysOfWeekMask, Guid? RoomId = null,
+    int? RepeatEveryWeeks = null, int? MonthlyWeekOfMonth = null, bool Preview = false, bool SkipConflicts = false);
 public sealed record UpdateLessonSeriesScheduleRequest(string EndsOn, string StartTime, int DurationMinutes,
     int DaysOfWeekMask, Guid? RoomId);
 public sealed record CreateTeacherTimeOffRequest(Guid Id, Guid TeacherUserId, DateTimeOffset StartsAt, DateTimeOffset EndsAt, string? Reason);

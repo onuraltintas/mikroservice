@@ -203,6 +203,29 @@ test('institution panel: switched-off student portal and files, teacher homework
     const testEmail = await call(`${ws}/email-settings/test`, owner, 'POST', { kind: 1, email: 'sahip@example.test' });
     assert.equal(testEmail.status, 202);
 
+    // A series is previewed with its clashes and saved without them (19.11.2026).
+    const pad = value => String(value).padStart(2, '0');
+    const turkeyDay = offset => { const day = new Date(Date.now() + 3 * 3600000 + offset * 86400000);
+      return `${day.getUTCFullYear()}-${pad(day.getUTCMonth() + 1)}-${pad(day.getUTCDate())}`; };
+    const seriesBody = extra => ({ id: randomUUID(), courseId, groupId, studentId: null, teacherUserId: teacherId, timeZoneId: null,
+      startsOn: turkeyDay(1), endsOn: turkeyDay(7), startTime: '15:00', durationMinutes: 60, daysOfWeekMask: 127, roomId: null, ...extra });
+    const seriesPreview = await (await call(`${ws}/lesson-series`, owner, 'POST', seriesBody({ preview: true }))).json();
+    assert.equal(seriesPreview.sessionCount, 7);
+    assert.equal(seriesPreview.conflictCount, 0);
+    const clash = await call(`${ws}/lessons`, owner, 'POST', { id: randomUUID(), courseId, groupId, studentId: null, teacherUserId: teacherId,
+      startsAt: `${turkeyDay(2)}T15:30:00+03:00`, endsAt: `${turkeyDay(2)}T16:00:00+03:00` });
+    assert.equal(clash.status, 201, await clash.clone().text());
+    const clashing = await (await call(`${ws}/lesson-series`, owner, 'POST', seriesBody({ preview: true }))).json();
+    assert.equal(clashing.conflictCount, 1);
+    assert.deepEqual(clashing.occurrences.find(item => item.conflicts.length).conflicts, ['Lesson.TeacherConflict', 'Lesson.StudentConflict']);
+    assert.equal((await call(`${ws}/lesson-series`, owner, 'POST', seriesBody({}))).status, 409, 'a clash stops a plain save');
+    const savedSeries = await (await call(`${ws}/lesson-series`, owner, 'POST', seriesBody({ skipConflicts: true }))).json();
+    assert.equal(savedSeries.sessionsCreated, 6);
+    assert.equal(savedSeries.sessionsSkipped, 1);
+    const monthly = await (await call(`${ws}/lesson-series`, owner, 'POST', seriesBody({ preview: true, startTime: '18:00',
+      endsOn: turkeyDay(120), daysOfWeekMask: 1, monthlyWeekOfMonth: 1 }))).json();
+    assert.ok(monthly.sessionCount >= 3 && monthly.sessionCount <= 5, 'the first Monday of about four months');
+
     // The first page: the owner sees money and e-mails, the teacher only their own lessons.
     const ownerOverview = await (await call(`${ws}/overview`, owner)).json();
     assert.equal(ownerOverview.role, 'Owner');
