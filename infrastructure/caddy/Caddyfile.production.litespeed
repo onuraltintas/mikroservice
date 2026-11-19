@@ -279,6 +279,12 @@ admin.eduivme.com:80 {
 		redir https://ogretmen.eduivme.com{uri} 302
 	}
 
+	# Kurs Yönetimi's product page moved to its own site (maxkampüs, 19.11.2026).
+	@courseManagementPage path /urunler/kurs-yonetimi /urunler/kurs-yonetimi/*
+	handle @courseManagementPage {
+		redir https://maxkampus.com 301
+	}
+
 	# The site's own content and images (site-service, no sign-in) are read on eduivme.com itself.
 	@siteContent path /api/site/*
 	handle @siteContent {

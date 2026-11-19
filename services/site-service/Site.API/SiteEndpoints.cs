@@ -77,6 +77,21 @@ public static class SiteEndpoints
             Cache(http, 300);
             return Results.Ok(await content.GetMaxkampusSitemapAsync(cancellationToken));
         });
+        // maxkampus.com/sitemap.xml (Caddy rewrites it here): the fixed pages, content pages and blog posts.
+        sites.MapGet("/sitemap.xml", async (string siteKey, HttpContext http, SiteContent content, IConfiguration configuration, CancellationToken cancellationToken) =>
+        {
+            Cache(http, 3600);
+            var origin = (configuration["Site:MaxkampusPublicUrl"] ?? "https://maxkampus.com").TrimEnd('/');
+            var items = await content.GetMaxkampusSitemapAsync(cancellationToken);
+            var fixedPages = new[] { "/", "/fiyatlar", "/blog", "/iletisim" };
+            var builder = new System.Text.StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+            foreach (var path in fixedPages) builder.Append($"  <url><loc>{System.Security.SecurityElement.Escape(origin + path)}</loc></url>\n");
+            // The contact and pricing pages are kept as entries for their text; their address is the fixed one above.
+            foreach (var item in items.Where(item => item.Path is not ("/sayfa/iletisim" or "/sayfa/fiyatlar")))
+                builder.Append($"  <url><loc>{System.Security.SecurityElement.Escape(origin + item.Path)}</loc><lastmod>{item.LastModified:yyyy-MM-dd}</lastmod></url>\n");
+            builder.Append("</urlset>\n");
+            return Results.Text(builder.ToString(), "application/xml; charset=utf-8");
+        });
         sites.MapPost("/contact", async (string siteKey, ContactRequest request, SiteForms forms, CancellationToken cancellationToken) =>
         {
             await forms.SendContactAsync(siteKey, request, cancellationToken);

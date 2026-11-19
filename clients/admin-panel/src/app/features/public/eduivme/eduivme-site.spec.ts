@@ -29,7 +29,7 @@ describe('eduivme.com', () => {
     const page: HTMLElement = fixture.nativeElement;
     expect(page.querySelector('h1')?.textContent).toContain('Panelden gelen başlık');
     const cards = Array.from(page.querySelectorAll<HTMLAnchorElement>('a.product'));
-    expect(cards.map(card => card.getAttribute('href'))).toEqual(['https://maxkoc.com', 'https://masterhizliokuma.com', '/urunler/kurs-yonetimi']);
+    expect(cards.map(card => card.getAttribute('href'))).toEqual(['https://maxkoc.com', 'https://masterhizliokuma.com', 'https://maxkampus.com']);
     expect(cards.map(card => card.getAttribute('data-brand'))).toEqual(['maxkoc', 'ho', 'eduivme']);
     expect(page.querySelector('[data-brand="eduivme"]')).not.toBeNull();
     expect(page.textContent).toContain('ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır.');

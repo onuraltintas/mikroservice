@@ -154,6 +154,12 @@ public sealed class SiteApiTests : IAsyncLifetime
         Assert.Contains(sitemap!, item => item.Path == "/sayfa/iletisim");
         Assert.DoesNotContain(sitemap!, item => item.Path == "/blog/taslak-yazi");
 
+        var xml = await client.GetStringAsync("/api/site/sites/maxkampus/sitemap.xml");
+        Assert.Contains("<loc>https://maxkampus.com/blog/veliyle-iletisim</loc>", xml);
+        Assert.Contains("<loc>https://maxkampus.com/fiyatlar</loc>", xml);
+        Assert.DoesNotContain("/sayfa/iletisim", xml);
+        Assert.DoesNotContain("taslak-yazi", xml);
+
         var duplicate = await admin.PostAsJsonAsync("/api/site-admin/entries", Post("veliyle-iletisim", "Aynı adres", "Veli", null));
         Assert.Equal(HttpStatusCode.BadRequest, duplicate.StatusCode);
     }
