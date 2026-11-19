@@ -77,6 +77,7 @@ services:
       AuthRecaptcha__AllowedHostnames__3: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_3:-veli.maxkoc.com}
       AuthRecaptcha__AllowedHostnames__4: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_4:-ogretmen.eduivme.com}
       AuthRecaptcha__AllowedHostnames__5: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_5:-kurum.eduivme.com}
+      AuthRecaptcha__AllowedHostnames__6: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_6:-maxkampus.com}
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
@@ -329,6 +330,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       OTEL_SERVICE_NAME: EduPlatform.Site
+      INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
+      Site__MaxkampusPublicUrl: ${COURSE_MANAGEMENT_PUBLIC_URL:-https://maxkampus.com}
     restart: unless-stopped
 
   api-gateway:

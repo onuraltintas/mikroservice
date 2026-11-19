@@ -209,6 +209,8 @@ public sealed class NotificationSupportAccessTests
     [Theory]
     [InlineData("support_submit", true, true)]
     [InlineData("support_submit", false, false)]
+    [InlineData("site_contact", true, true)]
+    [InlineData("newsletter_subscribe", true, true)]
     [InlineData("auth_login", true, null)]
     [InlineData(null, true, null)]
     public async Task IdentityCaptchaEndpoint_VerifiesOnlyAllowedActions(string? action, bool verifierAnswer, bool? accepted)
