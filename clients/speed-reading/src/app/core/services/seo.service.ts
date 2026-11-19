@@ -129,7 +129,7 @@ export class SeoService {
                     },
                     publisher: {
                         '@type': 'Organization',
-                        name: 'eduivme',
+                        name: 'Master Hızlı Okuma',
                         logo: {
                             '@type': 'ImageObject',
                             url: '/brand/master-hizli-okuma.svg'
@@ -154,7 +154,7 @@ export class SeoService {
                 structuredData = {
                     ...structuredData,
                     '@type': 'Organization',
-                    name: data.name || 'eduivme',
+                    name: data.name || 'Master Hızlı Okuma',
                     url: 'https://masterhizliokuma.com',
                     logo: '/brand/master-hizli-okuma.svg',
                     sameAs: [
