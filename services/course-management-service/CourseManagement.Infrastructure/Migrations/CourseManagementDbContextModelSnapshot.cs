@@ -17,7 +17,7 @@ namespace CourseManagement.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -238,6 +238,19 @@ namespace CourseManagement.Infrastructure.Migrations
 
                     b.Property<Guid>("AssignmentId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Completion")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("CompletionMarkedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CompletionMarkedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CompletionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");

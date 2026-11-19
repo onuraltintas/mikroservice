@@ -9,7 +9,7 @@ public sealed class CourseManagementFeatures
 {
     public const string SectionName = "CourseManagement:Features";
 
-    /// <summary>Student application, student invitations and the participation endpoints.</summary>
+    /// <summary>Student application and student invitations. Teachers still accept invitations through /participation.</summary>
     public bool StudentPortal { get; init; }
 
     /// <summary>Homework file uploads and downloads (needs a virus scanner in production).</summary>
@@ -19,7 +19,6 @@ public sealed class CourseManagementFeatures
 
     private static readonly string[] StudentPortalPaths =
     [
-        Prefix + "/participation",
         Prefix + "/me/courses",
         Prefix + "/me/lessons",
         Prefix + "/me/attendance",

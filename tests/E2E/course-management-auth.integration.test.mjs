@@ -104,6 +104,8 @@ test('live API enforces product and subject boundaries before database access', 
   const child = spawn('dotnet', [resolve(root, 'services/course-management-service/CourseManagement.API/bin/Debug/net10.0/CourseManagement.API.dll')], {
     cwd: root, stdio: process.env.COURSE_MANAGEMENT_TEST_API_LOG === '1' ? 'inherit' : 'ignore', env: { ...process.env,
       ASPNETCORE_URLS: base, ASPNETCORE_ENVIRONMENT: 'Development',
+      // These suites cover the student portal and homework files, which are off by default.
+      CourseManagement__Features__StudentPortal: 'true', CourseManagement__Features__AssignmentAttachments: 'true',
       JWT_SECRET: secret, JWT_ISSUER: 'course-tests', JWT_AUDIENCE: 'course-tests',
       CourseManagement__AssignmentAttachments__RootPath: attachmentRoot,
       CourseManagement__AssignmentAttachments__ScannerProvider: 'ClamAv',

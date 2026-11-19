@@ -42,6 +42,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL API isolation tests failed.' }
     node --test (Join-Path $PSScriptRoot 'course-management-subscription-access.integration.test.mjs')
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL subscription access tests failed.' }
+    node --test (Join-Path $PSScriptRoot 'course-management-institution-panel.integration.test.mjs')
+    if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL institution panel tests failed.' }
     $sourceAttachmentFiles = @(Get-ChildItem -LiteralPath $attachmentRoot -Recurse -File)
     if ($sourceAttachmentFiles.Count -eq 0) { throw 'Course Management E2E did not leave a test attachment to snapshot.' }
     $attachmentKeysQuery = 'SELECT "StorageKey" FROM "CourseAssignmentAttachments" ORDER BY "StorageKey";'
