@@ -105,7 +105,9 @@ public sealed class NotificationEndpointWiringTests
              // E5 (#22): the e-mail change link to the new address and the notice to the old one.
              "user-email-change-requested", "user-email-changed",
              // Billing service: one queue for every product's order, withdrawal, invoice and expiry e-mails.
-             "billing-notice"],
+             "billing-notice",
+             // Kurs Yönetimi (19.11.2026): an institution's e-mails to its students and guardians.
+             "course-management-institution-email"],
             "five update notifications were registered without a queue; realtime pushes now run after commit; " +
             "the password-setup e-mail no longer rides on user-created");
     }
