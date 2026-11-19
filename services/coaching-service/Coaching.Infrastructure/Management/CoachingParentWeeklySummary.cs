@@ -16,8 +16,9 @@ namespace Coaching.Infrastructure.Management;
 /// Roadmap Y7: from Sunday 18:00 until Monday ends (in the student's own time zone, CoachingStudentZone) each verified parent
 /// gets one summary of their child's week (Monday–Sunday). A reminder receipt keeps it to one per parent, child and week.
 /// V3 (parent panel): one e-mail with two optional sections. Koçluk (planned and completed study, assignments due, sessions,
-/// latest exam) only when the child uses Coaching, left it visible to the parent and has something for the week; Hızlı okuma
-/// from the speed-reading service only when the child uses speed reading and left it visible. No section, no e-mail.
+/// latest exam) only when the child uses Coaching, left it visible to the parent and has something for the week, or the e-mail
+/// goes out for Hızlı okuma anyway; Hızlı okuma from the speed-reading service only when the child uses speed reading and left it
+/// visible. No section, no e-mail.
 /// </summary>
 public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, ICoachingParentDirectory parents,
     ICoachingEventPublisher events, TimeProvider clock, ISpeedReadingParentSummaryClient? speedReading = null,
@@ -95,6 +96,10 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
                 var section = reading is null ? null : new CoachingParentWeeklySpeedReadingSection(reading.Minutes, reading.ActiveDays,
                     reading.ExercisesCompleted, reading.LatestWpm, reading.WpmChange, reading.AverageComprehension, reading.ProgramDay,
                     reading.ProgramTotalDays, reading.BadgesEarnedThisWeek);
+                // Live test 19.11.2026 (B11): when the e-mail goes out for Hızlı okuma anyway, a child who uses Koçluk also gets
+                // a Koçluk section, even for a quiet week ("Bu hafta planlanmış çalışma yoktu."), so the summary never reads as if
+                // the child had no Koçluk. A Koçluk-only child with nothing to say still gets no e-mail.
+                if (coaching is null && section is not null && recipient.WantsCoaching) coaching = EmptyCoachingWeek;
                 db.CoachingReminderReceipts.Add(receipt);
                 var publish = coaching is not null || section is not null;
                 if (publish)
@@ -113,6 +118,8 @@ public sealed class CoachingParentWeeklySummaryProcessor(CoachingDbContext db, I
             }
         });
     }
+
+    private static readonly CoachingParentWeeklyCoachingSection EmptyCoachingWeek = new(0, 0, 0, 0, 0, 0, 0, 0, null, null);
 
     private async Task<CoachingParentWeeklyCoachingSection?> SummarizeCoachingAsync(Guid student, Week week, DateTime now, CancellationToken ct)
     {

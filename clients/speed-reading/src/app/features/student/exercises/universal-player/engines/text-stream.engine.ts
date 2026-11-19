@@ -11,6 +11,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { TACHISTOSCOPE_PHRASES } from './tachistoscope-phrases';
 import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 import { AssessmentBlockProtocol, assessmentBlockValue, readAssessmentBlockProtocol } from './assessment-block-protocol';
 
@@ -324,49 +325,22 @@ export class TextStreamEngine implements BaseEngine {
         }
         this.stimuli = this.stimuli.slice(0, count);
         this.contentPool = type === 'phrase'
-            ? TextStreamEngine.buildPhrasePool(TextStreamEngine.WORD_POOL, this.phraseLengthRange.min, this.phraseLengthRange.max)
+            ? TextStreamEngine.buildPhrasePool(this.phraseLengthRange.min, this.phraseLengthRange.max)
             : [...TextStreamEngine.WORD_POOL];
     }
 
     /**
-     * Random two-word phrases for the local preview, mirroring TachistoscopeContent.BuildPhrasePool on the
-     * server: words are paired at random (not with their list neighbour) and each length in the adaptive
-     * range gets its own share of pairs. Built once per run, so the pool stays the same during the preview.
+     * Phrases of the length range for the local preview, from the same list the server uses (TachistoscopePhrases),
+     * in a random order built once per run. Falls back to the whole list if no phrase fits the range.
      */
-    static buildPhrasePool(words: readonly string[], minLength: number, maxLength: number, random: () => number = Math.random): string[] {
-        const distinct = [...new Set(words.map(word => word.trim()).filter(Boolean))].sort();
-        if (distinct.length < 2) return [];
-        const pick = (length: number) => Math.floor(random() * length);
-        const shuffled = [...distinct];
-        for (let index = shuffled.length - 1; index > 0; index--) {
-            const swap = pick(index + 1);
-            [shuffled[index], shuffled[swap]] = [shuffled[swap], shuffled[index]];
+    static buildPhrasePool(minLength: number, maxLength: number, random: () => number = Math.random): string[] {
+        const inRange = TACHISTOSCOPE_PHRASES.filter(phrase => phrase.length >= minLength && phrase.length <= maxLength);
+        const pool = inRange.length ? [...inRange] : [...TACHISTOSCOPE_PHRASES];
+        for (let index = pool.length - 1; index > 0; index--) {
+            const swap = Math.floor(random() * (index + 1));
+            [pool[index], pool[swap]] = [pool[swap], pool[index]];
         }
-        const phrases: string[] = [];
-        const seen = new Set<string>();
-        const add = (first: string, second: string) => {
-            if (first.toLocaleLowerCase('tr-TR') === second.toLocaleLowerCase('tr-TR')) return false;
-            const phrase = first + ' ' + second;
-            if (seen.has(phrase)) return false;
-            seen.add(phrase); phrases.push(phrase);
-            return true;
-        };
-        for (let index = 0; index < Math.min(300, shuffled.length); index++) add(shuffled[index], shuffled[(index + 1) % shuffled.length]);
-        const byLength = new Map<number, string[]>();
-        for (const word of shuffled) byLength.set(word.length, [...(byLength.get(word.length) ?? []), word]);
-        for (let length = Math.max(3, minLength); length <= maxLength; length++) {
-            const combinations = [...byLength.keys()].filter(first => byLength.has(length - 1 - first))
-                .sort((a, b) => a - b).map(first => [first, length - 1 - first]);
-            if (!combinations.length) continue;
-            let count = phrases.filter(phrase => phrase.length === length).length;
-            for (let attempt = 0; count < 24 && attempt < 24 * 20; attempt++) {
-                const [first, second] = combinations[pick(combinations.length)];
-                const firstWords = byLength.get(first)!;
-                const secondWords = byLength.get(second)!;
-                if (add(firstWords[pick(firstWords.length)], secondWords[pick(secondWords.length)])) count++;
-            }
-        }
-        return phrases;
+        return pool;
     }
 
     private shuffleArray<T>(array: T[]): T[] {

@@ -154,13 +154,14 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
             return id;
         }
         var both = Student(); var hidden = Student(); var srOnly = Guid.NewGuid(); var srQuiet = Guid.NewGuid(); var srHidden = Student();
-        var noCoaching = Student();
+        var noCoaching = Student(); var quietCoaching = Guid.NewGuid();
         await pg.Db.SaveChangesAsync();
         var speedReading = new SpeedReading();
         speedReading.Weeks[both] = new(95, 4, 12, 260m, 25m, 78.5m, 9, 21, 1);
         speedReading.Weeks[hidden] = new(40, 2, 5, 210m, null, 70m, null, null, 0);
         speedReading.Weeks[srOnly] = new(30, 1, 3, null, null, null, 3, 21, 0);
         speedReading.Weeks[srHidden] = new(30, 1, 3, null, null, null, 3, 21, 0);
+        speedReading.Weeks[quietCoaching] = new(0, 0, 0, null, null, null, 1, 28, 0);
         CoachingParentSummaryRecipient R(Guid student, bool coachingVisible, bool speedReadingVisible, bool hasCoaching, bool hasSpeedReading) =>
             new(Guid.NewGuid(), $"{student:N}@example.test", "Veli", student, "Öğrenci", coachingVisible, speedReadingVisible, hasCoaching, hasSpeedReading);
         var rows = new[]
@@ -171,6 +172,7 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
             R(srQuiet, true, true, false, true),       // speed-reading service has nothing (204): no e-mail
             R(srHidden, true, false, true, true),      // speed reading hidden: Coaching only
             R(noCoaching, true, true, false, false),   // the child's Coaching access ended: no e-mail
+            R(quietCoaching, true, true, true, true),  // B11: a quiet Koçluk week still has its section next to Hızlı okuma
         };
         var events = new Publisher();
 
@@ -178,14 +180,15 @@ public sealed class CoachingParentWeeklySummaryPostgresTests
         await Run(pg, new Parents(rows), events, At(Monday.AddDays(6), 21), speedReading);
 
         var byStudent = events.Summaries.ToDictionary(x => x.StudentUserId);
-        Assert.Equal(new[] { both, hidden, srOnly, srHidden }.Order(), byStudent.Keys.Order());
+        Assert.Equal(new[] { both, hidden, srOnly, srHidden, quietCoaching }.Order(), byStudent.Keys.Order());
+        Assert.Equal(new CoachingParentWeeklyCoachingSection(0, 0, 0, 0, 0, 0, 0, 0, null, null), byStudent[quietCoaching].Coaching);
         Assert.NotNull(byStudent[both].Coaching);
         Assert.Equal(new CoachingParentWeeklySpeedReadingSection(95, 4, 12, 260m, 25m, 78.5m, 9, 21, 1), byStudent[both].SpeedReading);
         Assert.Null(byStudent[hidden].Coaching); Assert.Equal(40, byStudent[hidden].SpeedReading!.Minutes);
         Assert.Null(byStudent[srOnly].Coaching); Assert.Equal(3, byStudent[srOnly].SpeedReading!.ProgramDay);
         Assert.NotNull(byStudent[srHidden].Coaching); Assert.Null(byStudent[srHidden].SpeedReading);
         // Speed reading is asked once per child and week, only where it is used and visible, with the child's own week.
-        Assert.Equal(new[] { both, hidden, srOnly, srQuiet }.Order(), speedReading.Calls.Select(x => x.Student).Order());
+        Assert.Equal(new[] { both, hidden, srOnly, srQuiet, quietCoaching }.Order(), speedReading.Calls.Select(x => x.Student).Order());
         Assert.All(speedReading.Calls, call => Assert.Equal(Monday, call.WeekStart));
     }
 
