@@ -24,6 +24,19 @@ describe('SidebarComponent', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   // Coaching audit K3 (31.10.2026): the old parent–student page had no gateway route; parents link through the parent panel.
+  it('gives every menu item and sub-item an icon (a missing icon rendered the text "undefined")', () => {
+    const profile = signal({ roles: ['SystemAdmin'], permissions: Object.values(ADMIN_PERMISSIONS) as string[] });
+    TestBed.configureTestingModule({ imports: [SidebarComponent], providers: [
+      { provide: AuthService, useValue: { userProfile: profile, hasPermission: () => true } },
+      { provide: ToasterService, useValue: { confirm: vi.fn() } },
+      { provide: LayoutService, useValue: { isSidebarCollapsed: signal(false), toggleSidebar: vi.fn() } }
+    ] });
+    const component = TestBed.createComponent(SidebarComponent).componentInstance;
+    const items = component.menuItems().flatMap(menu => [menu, ...(menu.children ?? [])]) as { label: string; icon?: string }[];
+    expect(items.some(item => item.label === 'Bülten aboneleri')).toBe(true);
+    expect(items.filter(item => !item.icon?.startsWith('<svg')).map(item => item.label)).toEqual([]);
+  });
+
   it('no longer offers the removed parent–student relationships page', () => {
     const profile = signal({ roles: ['SystemAdmin'], permissions: Object.values(ADMIN_PERMISSIONS) as string[] });
     TestBed.configureTestingModule({ imports: [SidebarComponent], providers: [
