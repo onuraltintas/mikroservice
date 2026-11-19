@@ -1,4 +1,5 @@
 using CourseManagement.API;
+using CourseManagement.Domain;
 using Notification.Application.Consumers;
 
 namespace CourseManagement.IntegrationTests;
