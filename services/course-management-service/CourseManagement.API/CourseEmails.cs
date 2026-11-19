@@ -106,16 +106,7 @@ public sealed class CourseEmailWorker(IServiceScopeFactory scopeFactory, CourseE
             await CourseEmailSender.SendDueAsync(scope.ServiceProvider.GetRequiredService<CourseManagementDbContext>(),
                 scope.ServiceProvider.GetRequiredService<IPublishEndpoint>(), options, clock.GetUtcNow(), ct,
                 scope.ServiceProvider.GetService<WorkspaceBillingPlans>());
-        // Each of these is on its own: a missing identity or notification answer must not stop the institution e-mails.
-        try
-        {
-            await using var scope = scopeFactory.CreateAsyncScope();
-            await SupportAccessNotices.SendDueAsync(scope.ServiceProvider.GetRequiredService<CourseManagementDbContext>(),
-                scope.ServiceProvider.GetRequiredService<IPublishEndpoint>(), scope.ServiceProvider.GetRequiredService<IdentityAccountLookup>(),
-                options, clock.GetUtcNow(), ct);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException || !ct.IsCancellationRequested)
-        { logger.LogWarning(exception, "Support access notices could not be sent this time."); }
+        // On its own: a missing notification answer must not stop the institution e-mails.
         if (clock.GetUtcNow() - lastDeliveryCheck >= TimeSpan.FromSeconds(Math.Clamp(options.DeliveryCheckSeconds, 1, 3600)))
         {
             try
@@ -167,7 +158,7 @@ public static class CourseEmailCollector
                 where attendance.WorkspaceId == workspaceId && attendance.Status == LessonAttendanceStatus.Absent
                     && attendance.MarkedAt >= since && attendance.MarkedAt <= settled
                     // A support correction tells no one.
-                    && !db.SupportAccessGrants.Any(grant => grant.WorkspaceId == workspaceId && grant.AdminUserId == attendance.MarkedByUserId)
+                    && !db.SupportAccessLogs.Any(log => log.WorkspaceId == workspaceId && log.AdminUserId == attendance.MarkedByUserId && log.IsChange)
                 select new { attendance.StudentId, attendance.LessonSessionId, lesson.StartsAt }).ToListAsync(ct);
             foreach (var group in absences.GroupBy(item => (item.StudentId, Day: TurkeyDate(item.StartsAt))))
                 await GatherAsync(db, workspaceId, CourseEmailKind.Absence, group.Key.StudentId, $"absence:{group.Key.StudentId:N}:{group.Key.Day:yyyyMMdd}",

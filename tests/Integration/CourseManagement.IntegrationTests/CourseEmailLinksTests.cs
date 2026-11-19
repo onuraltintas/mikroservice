@@ -60,21 +60,8 @@ public sealed class CourseEmailLinksTests
     }
 
     [Fact]
-    public void Owner_notices_say_what_support_may_do_and_link_only_to_eduivme()
+    public void Owner_e_mails_link_only_to_eduivme_addresses()
     {
-        var grant = SupportAccessGrant.Request(WorkspaceId, Guid.NewGuid(), "Yoklama yanlış girilmiş, bakmamız gerekiyor.",
-            new DateTimeOffset(2026, 11, 20, 9, 0, 0, TimeSpan.Zero));
-        var asked = SupportAccessNotices.Text(SupportAccessNotice.Requested, grant, "TEST Kurs");
-        Assert.Contains(asked.Paragraphs, line => line.Contains("Yoklama yanlış girilmiş"));
-
-        grant.Approve(Guid.NewGuid(), 24, SupportAccessSections.Schedule | SupportAccessSections.Students, allowChanges: true,
-            new DateTimeOffset(2026, 11, 20, 9, 0, 0, TimeSpan.Zero));
-        var opened = SupportAccessNotices.Text(SupportAccessNotice.Started, grant, "TEST Kurs");
-        Assert.Contains(opened.Paragraphs, line => line.Contains("öğrenciler, takvim ve yoklama"));
-        Assert.Contains(opened.Paragraphs, line => line.Contains("düzeltme de yapabilir"));
-        Assert.NotEqual(SupportAccessNotices.NoticeId(grant.Id, SupportAccessNotice.Requested),
-            SupportAccessNotices.NoticeId(grant.Id, SupportAccessNotice.Started));
-
         Assert.Equal("https://kurum.eduivme.com/staff/#ayarlar?bolum=destek",
             CourseManagementOwnerEmailConsumer.SafeLink("https://kurum.eduivme.com/staff/#ayarlar?bolum=destek"));
         Assert.Null(CourseManagementOwnerEmailConsumer.SafeLink("https://eduivme.com.example.test/x"));

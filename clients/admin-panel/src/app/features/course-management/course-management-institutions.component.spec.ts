@@ -6,16 +6,13 @@ import { CourseManagementInstitutionsComponent, toTables } from './course-manage
 describe('CourseManagementInstitutionsComponent', () => {
   const row = { id: 'w1', name: 'TEST Kurs', type: 'Institution' as const, createdAt: '2026-11-01T09:00:00Z',
     teacherCount: 2, activeStudentCount: 14, lastActivityAt: null, isReadOnly: false };
-  const detail = (supportAccess: CourseManagementAdminWorkspaceDetail['supportAccess']): CourseManagementAdminWorkspaceDetail => ({
+  const detail = (): CourseManagementAdminWorkspaceDetail => ({
     id: 'w1', name: 'TEST Kurs', type: 'Institution', createdAt: '2026-11-01T09:00:00Z', isReadOnly: false,
     teacherCount: 2, activeStudentCount: 14, courseCount: 3, lessonsLast30Days: 40,
     email: { switchedOn: true, sentLast30Days: 12, recipientsLast30Days: 15, skippedLast30Days: 2, optedOutAddresses: 1, undeliveredLast30Days: 0 },
-    supportAccess
+    supportLog: [{ adminUserId: 'a1', section: 'Schedule', what: 'Yoklama düzeltildi', isChange: true, before: 'Absent', after: 'Present',
+      occurredAt: '2026-11-19T09:00:00Z' }]
   });
-  const grant = (status: 'Requested' | 'Active' | 'Ended') => ({ id: 'g1', workspaceId: 'w1', adminUserId: 'a1',
-    reason: 'TEST neden yazıldı', status, sections: status === 'Active' ? ['Students' as const] : [], durationHours: 24,
-    requestedAt: '2026-11-19T09:00:00Z', approvedAt: null, expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
-    endedAt: null, endReason: status === 'Ended' ? 'Declined' : null, allowsChanges: false });
 
   async function create(service: Partial<Record<keyof CourseManagementInstitutionsService, ReturnType<typeof vi.fn>>>) {
     await TestBed.configureTestingModule({
@@ -27,37 +24,42 @@ describe('CourseManagementInstitutionsComponent', () => {
     return fixture;
   }
 
-  it('lists institutions with counts and asks for access with a reason', async () => {
-    const requestAccess = vi.fn(() => of(grant('Requested')));
-    const fixture = await create({ detail: vi.fn(() => of(detail([]))), requestAccess });
+  it('opens every section without asking the institution and shows the support record', async () => {
+    const section = vi.fn(() => of([{ id: 's1', displayName: 'TEST Ayşe', email: null, phoneNumber: null, guardians: [] }]));
+    const fixture = await create({ detail: vi.fn(() => of(detail())), section });
     expect(fixture.nativeElement.textContent).toContain('TEST Kurs');
 
     fixture.componentInstance.open('w1');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Kurumdan erişim iste');
-    fixture.componentInstance.reason = 'Taksit listesine bakmamız gerekiyor';
-    fixture.componentInstance.request('w1');
-    expect(requestAccess).toHaveBeenCalledWith('w1', 'Taksit listesine bakmamız gerekiyor');
-  });
-
-  it('shows the waiting request and, once approved, only the opened sections', async () => {
-    const detailFn = vi.fn(() => of(detail([grant('Requested')])));
-    const fixture = await create({ detail: detailFn });
-    fixture.componentInstance.open('w1');
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('onayı bekleniyor');
-
-    detailFn.mockReturnValue(of(detail([grant('Active')])));
-    fixture.componentInstance.open('w1');
-    fixture.detectChanges();
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('.actions button')).map(item => (item as HTMLElement).textContent?.trim());
-    expect(buttons).toEqual(['Öğrenciler', 'Erişimi kapat']);
-    expect(fixture.nativeElement.textContent).toContain('yalnız görüntüleme');
+    expect(buttons).toEqual(['Öğrenciler', 'Takvim ve yoklama', 'Tahsilat', 'Ayarlar']);
+    expect(fixture.nativeElement.textContent).not.toContain('erişim iste');
+    expect(fixture.nativeElement.textContent).toContain('Bu kurumdaki son destek işlemleri');
+
+    fixture.componentInstance.view('w1', 'Students');
+    fixture.detectChanges();
+    expect(section).toHaveBeenCalledWith('w1', 'Students');
+    expect(fixture.nativeElement.querySelector('app-course-management-support-changes')).not.toBeNull();
   });
 
-  it('says plainly when a section cannot be opened', async () => {
-    const fixture = await create({ detail: vi.fn(() => of(detail([grant('Active')]))), section: vi.fn(() => throwError(() => ({ status: 404 }))) });
+  it('keeps money records with the institution', async () => {
+    const fixture = await create({ detail: vi.fn(() => of(detail())), section: vi.fn(() => of({ openInstallments: [], payments: [] })) });
     fixture.componentInstance.open('w1');
+    fixture.componentInstance.view('w1', 'Finance');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-course-management-support-changes')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Tahsilat kayıtlarını yalnız kurum değiştirebilir');
+  });
+
+  it('says plainly when the second factor is needed or a section cannot be opened', async () => {
+    const section = vi.fn(() => throwError(() => ({ status: 403 })));
+    const fixture = await create({ detail: vi.fn(() => of(detail())), section });
+    fixture.componentInstance.open('w1');
+    fixture.componentInstance.view('w1', 'Students');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('iki adımlı doğrulama istiyor');
+
+    section.mockReturnValue(throwError(() => ({ status: 500 })));
     fixture.componentInstance.view('w1', 'Students');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Bu bölüm açılamadı');

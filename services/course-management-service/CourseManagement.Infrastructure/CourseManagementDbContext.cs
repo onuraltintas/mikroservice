@@ -247,6 +247,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.Property(log => log.Before).HasMaxLength(200);
             entity.Property(log => log.After).HasMaxLength(200);
             entity.HasIndex(log => new { log.WorkspaceId, log.OccurredAt });
+            entity.HasIndex(log => new { log.WorkspaceId, log.AdminUserId });
             entity.HasOne<SupportAccessGrant>().WithMany().HasForeignKey(log => log.GrantId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<WorkspaceEmailSettings>(entity =>

@@ -99,7 +99,6 @@ const EMAIL_KINDS: Record<string, string> = {
 })
 export class OverviewSectionComponent implements OnInit {
   @Output() readonly navigate = new EventEmitter<PanelSection>();
-  @Output() readonly support = new EventEmitter<boolean>();
   readonly state = inject(CoursePanelState);
   private readonly api = inject(CoursePanelApi);
   readonly data = signal<PanelOverview | null>(null);
@@ -118,7 +117,6 @@ export class OverviewSectionComponent implements OnInit {
     try {
       const view = await this.api.overview(id);
       this.data.set(view);
-      this.support.emit(view.supportAccess?.pendingRequest ?? false);
     } catch (error) { this.error.set(problemText(error, 'Genel bakış yüklenemedi.')); }
   }
 

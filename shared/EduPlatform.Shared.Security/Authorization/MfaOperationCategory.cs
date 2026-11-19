@@ -14,6 +14,8 @@ public static class MfaOperationCategories
     public const string SpeedReading = "speed-reading";
     public const string Coaching = "coaching";
     public const string Cms = "cms";
+    /// <summary>Kurs Yönetimi (maxkampüs): support's view and corrections of an institution's records (19.11.2026).</summary>
+    public const string CourseManagement = "course-management";
 
     public static IReadOnlyList<string> All { get; } =
     [
@@ -23,7 +25,8 @@ public static class MfaOperationCategories
         System,
         SpeedReading,
         Coaching,
-        Cms
+        Cms,
+        CourseManagement
     ];
 
     public static bool IsKnown(string? category) =>

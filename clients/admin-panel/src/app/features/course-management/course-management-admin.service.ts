@@ -80,21 +80,18 @@ export interface CourseManagementAdminWorkspaceRow {
 
 export type SupportSection = 'Students' | 'Schedule' | 'Finance' | 'Settings';
 
-export interface CourseManagementSupportGrant {
-  id: string; workspaceId: string; adminUserId: string; reason: string;
-  status: 'Requested' | 'Active' | 'Ended'; sections: SupportSection[]; durationHours: number;
-  requestedAt: string; approvedAt: string | null; expiresAt: string | null; endedAt: string | null; endReason: string | null;
-  allowsChanges: boolean;
+export interface CourseManagementSupportLogEntry {
+  adminUserId: string; section: SupportSection; what: string; isChange: boolean; before: string | null; after: string | null; occurredAt: string;
 }
 
 export interface CourseManagementAdminWorkspaceDetail {
   id: string; name: string; type: 'Institution' | 'IndependentTeacher'; createdAt: string; isReadOnly: boolean;
   teacherCount: number; activeStudentCount: number; courseCount: number; lessonsLast30Days: number;
   email: { switchedOn: boolean; sentLast30Days: number; recipientsLast30Days: number; skippedLast30Days: number; optedOutAddresses: number; undeliveredLast30Days: number };
-  supportAccess: CourseManagementSupportGrant[];
+  supportLog: CourseManagementSupportLogEntry[];
 }
 
-/** Institutions and owner-approved support access (19.11.2026). */
+/** Institutions and eduivme support's view and corrections of their records (no owner approval since 19.11.2026). */
 @Injectable({ providedIn: 'root' })
 export class CourseManagementInstitutionsService {
   private readonly http = inject(HttpClient);
@@ -105,12 +102,6 @@ export class CourseManagementInstitutionsService {
     return this.http.get<{ total: number; items: CourseManagementAdminWorkspaceRow[] }>(`${this.url}?skip=${skip}&take=${take}${search}`);
   }
   detail(id: string) { return this.http.get<CourseManagementAdminWorkspaceDetail>(`${this.url}/${id}`); }
-  requestAccess(id: string, reason: string) {
-    return this.http.post<CourseManagementSupportGrant>(`${this.url}/${id}/support-access`, { reason });
-  }
-  endAccess(id: string, grantId: string) {
-    return this.http.post<CourseManagementSupportGrant>(`${this.url}/${id}/support-access/${grantId}/end`, {});
-  }
   section(id: string, section: SupportSection) {
     const path = { Students: 'students', Schedule: 'lessons', Finance: 'finance', Settings: 'settings' }[section];
     return this.http.get<unknown>(`${this.url}/${id}/support/${path}`);

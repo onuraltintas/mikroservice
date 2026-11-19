@@ -2,14 +2,14 @@ using System.Security.Claims;
 using CourseManagement.Domain;
 using CourseManagement.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using EduPlatform.Shared.Security.Authorization;
 
 namespace CourseManagement.API;
 
 /// <summary>
-/// The platform's view of institutions (19.11.2026): a list and a summary without personal records, and time-limited
-/// support access that the owner approves (see <see cref="SupportAccessGrant"/>); corrections are in
-/// <see cref="SupportChangeEndpoints"/>.
+/// The platform's view of institutions (19.11.2026): a list and a summary, and support's view of an institution's records.
+/// Support needs no grant from the owner (user decision, 19.11.2026), only a second factor; every look is logged for the
+/// owner. Corrections are in <see cref="SupportChangeEndpoints"/>.
 /// </summary>
 public static class SupportAccessEndpoints
 {
@@ -48,8 +48,6 @@ public static class SupportAccessEndpoints
                 .GroupBy(item => item.Status).Select(group => new { Status = group.Key, Count = group.Count(), People = group.Sum(item => item.RecipientCount) })
                 .ToListAsync(ct);
             var settings = await db.EmailSettings.AsNoTracking().SingleOrDefaultAsync(item => item.WorkspaceId == workspaceId, ct);
-            var grants = await db.SupportAccessGrants.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
-                .OrderByDescending(item => item.RequestedAt).Take(20).ToListAsync(ct);
             var now = DateTimeOffset.UtcNow;
             return Results.Ok(new
             {
@@ -71,52 +69,19 @@ public static class SupportAccessEndpoints
                     undeliveredLast30Days = await db.Emails.CountAsync(item => item.WorkspaceId == workspaceId && item.ProcessedAt >= since
                         && (item.Delivery == CourseEmailDelivery.Failed || item.Delivery == CourseEmailDelivery.PartlyFailed), ct)
                 },
-                supportAccess = grants.Select(grant => GrantView(grant, now)).ToArray()
+                supportLog = await db.SupportAccessLogs.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
+                    .OrderByDescending(item => item.OccurredAt).Take(30)
+                    .Select(item => new { item.AdminUserId, section = item.Section.ToString(), item.What, item.IsChange, item.Before, item.After, item.OccurredAt })
+                    .ToListAsync(ct)
             });
         });
 
-        admin.MapPost("/workspaces/{workspaceId:guid}/support-access", async (Guid workspaceId, RequestSupportAccessRequest request,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
-        {
-            if (!await db.Workspaces.AnyAsync(item => item.Id == workspaceId, ct)) return Results.NotFound();
-            var adminId = AssignmentEndpoints.UserId(user);
-            var now = DateTimeOffset.UtcNow;
-            var open = await db.SupportAccessGrants.Where(item => item.WorkspaceId == workspaceId && item.AdminUserId == adminId
-                && item.Status != SupportAccessStatus.Ended).ToListAsync(ct);
-            foreach (var grant in open.Where(grant => grant.Status == SupportAccessStatus.Active && !grant.IsActive(now)))
-                grant.End("Expired", now);
-            var stillOpen = open.FirstOrDefault(grant => grant.Status != SupportAccessStatus.Ended);
-            if (stillOpen is not null) return Results.Conflict(new { code = "SupportAccess.AlreadyOpen", grant = GrantView(stillOpen, now) });
-            SupportAccessGrant created;
-            try { created = SupportAccessGrant.Request(workspaceId, adminId, request.Reason ?? string.Empty, now); }
-            catch (ArgumentException) { return Results.BadRequest(new { code = "SupportAccess.ReasonRequired" }); }
-            db.SupportAccessGrants.Add(created);
-            AssignmentEndpoints.AddAudit(db, workspaceId, adminId, created.Id, "SupportAccess.Requested");
-            try { await db.SaveChangesAsync(ct); }
-            catch (DbUpdateException exception) when (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-            { return Results.Conflict(new { code = "SupportAccess.AlreadyOpen" }); }
-            return Results.Created($"/api/course-management/v1/admin/workspaces/{workspaceId}/support-access/{created.Id}", GrantView(created, now));
-        });
-
-        admin.MapPost("/workspaces/{workspaceId:guid}/support-access/{grantId:guid}/end", async (Guid workspaceId, Guid grantId,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
-        {
-            var adminId = AssignmentEndpoints.UserId(user);
-            var grant = await db.SupportAccessGrants.SingleOrDefaultAsync(item => item.Id == grantId && item.WorkspaceId == workspaceId
-                && item.AdminUserId == adminId, ct);
-            if (grant is null) return Results.NotFound();
-            grant.End("EndedBySupport", DateTimeOffset.UtcNow);
-            AssignmentEndpoints.AddAudit(db, workspaceId, adminId, grant.Id, "SupportAccess.Ended");
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(GrantView(grant, DateTimeOffset.UtcNow));
-        });
-
-        // Read-only views under an approved grant. Each call is logged for the owner.
+        // Views of an institution's records for support (no grant since 19.11.2026; second factor required). Each call is logged for the owner.
         admin.MapGet("/workspaces/{workspaceId:guid}/support/students", async (Guid workspaceId, ClaimsPrincipal user,
-            CourseManagementDbContext db, CancellationToken ct) =>
+            CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await OpenGrantAsync(db, workspaceId, user, SupportAccessSections.Students, "Öğrenci listesi", ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await OpenGrantAsync(db, mfa, workspaceId, user, SupportAccessSections.Students, "Öğrenci listesi", ct);
+            if (gate.Problem is not null) return gate.Problem;
             var students = await db.Students.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
                 .OrderByDescending(item => item.IsActive).ThenBy(item => item.DisplayName).Take(500)
                 .Select(item => new { item.Id, item.DisplayName, item.Email, item.PhoneNumber, item.IsActive, item.EmailsMuted,
@@ -133,11 +98,11 @@ public static class SupportAccessEndpoints
         });
 
         admin.MapGet("/workspaces/{workspaceId:guid}/support/lessons", async (Guid workspaceId, DateOnly? from, int? days,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+            ClaimsPrincipal user, CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
             if (days is < 1 or > 31) return Results.BadRequest(new { code = "SupportAccess.InvalidRange" });
-            var grant = await OpenGrantAsync(db, workspaceId, user, SupportAccessSections.Schedule, "Takvim ve yoklama", ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await OpenGrantAsync(db, mfa, workspaceId, user, SupportAccessSections.Schedule, "Takvim ve yoklama", ct);
+            if (gate.Problem is not null) return gate.Problem;
             var startDay = from ?? CourseEmailCollector.TurkeyDate(DateTimeOffset.UtcNow).AddDays(-7);
             var start = new DateTimeOffset(startDay.ToDateTime(TimeOnly.MinValue), CourseManagementTime.Turkey.GetUtcOffset(startDay.ToDateTime(TimeOnly.MinValue))).ToUniversalTime();
             var end = start.AddDays(days ?? 14);
@@ -161,10 +126,10 @@ public static class SupportAccessEndpoints
         });
 
         admin.MapGet("/workspaces/{workspaceId:guid}/support/finance", async (Guid workspaceId, ClaimsPrincipal user,
-            CourseManagementDbContext db, CancellationToken ct) =>
+            CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await OpenGrantAsync(db, workspaceId, user, SupportAccessSections.Finance, "Tahsilat", ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await OpenGrantAsync(db, mfa, workspaceId, user, SupportAccessSections.Finance, "Tahsilat", ct);
+            if (gate.Problem is not null) return gate.Problem;
             var open = await CourseEmailContent.OpenInstallmentsAsync(db, workspaceId, query => query, ct);
             var names = await db.Students.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
                 .ToDictionaryAsync(item => item.Id, item => item.DisplayName, ct);
@@ -183,10 +148,10 @@ public static class SupportAccessEndpoints
         });
 
         admin.MapGet("/workspaces/{workspaceId:guid}/support/settings", async (Guid workspaceId, ClaimsPrincipal user,
-            CourseManagementDbContext db, CancellationToken ct) =>
+            CourseManagementDbContext db, IMfaPolicyStore mfa, CancellationToken ct) =>
         {
-            var grant = await OpenGrantAsync(db, workspaceId, user, SupportAccessSections.Settings, "Ayarlar", ct);
-            if (grant is null) return Results.NotFound();
+            var gate = await OpenGrantAsync(db, mfa, workspaceId, user, SupportAccessSections.Settings, "Ayarlar", ct);
+            if (gate.Problem is not null) return gate.Problem;
             var settings = await db.EmailSettings.AsNoTracking().SingleOrDefaultAsync(item => item.WorkspaceId == workspaceId, ct)
                 ?? WorkspaceEmailSettings.CreateDefault(workspaceId, DateTimeOffset.UtcNow);
             return Results.Ok(new
@@ -203,14 +168,11 @@ public static class SupportAccessEndpoints
             });
         });
 
-        // The owner's side: requests, decisions, the history and every look.
+        // The owner's side: every look and every correction eduivme support made.
         api.MapGet("/workspaces/{workspaceId:guid}/support-access", async (Guid workspaceId, ClaimsPrincipal user,
             CourseManagementDbContext db, CancellationToken ct) =>
         {
             if (!await IsOwner(db, workspaceId, user, ct)) return Results.NotFound();
-            var now = DateTimeOffset.UtcNow;
-            var grants = await db.SupportAccessGrants.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
-                .OrderByDescending(item => item.RequestedAt).Take(50).ToListAsync(ct);
             var rows = await db.SupportAccessLogs.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
                 .OrderByDescending(item => item.OccurredAt).Take(200).ToListAsync(ct);
             // Names are read now, so an erased student or guardian stays erased here too.
@@ -227,79 +189,38 @@ public static class SupportAccessEndpoints
                 target = item.TargetId is { } id ? names.GetValueOrDefault(id) ?? lessonNames.GetValueOrDefault(id) : null,
                 item.Before, item.After
             });
-            return Results.Ok(new { grants = grants.Select(grant => GrantView(grant, now)), logs });
+            return Results.Ok(new { logs });
         }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
 
-        api.MapPost("/workspaces/{workspaceId:guid}/support-access/{grantId:guid}/approve", async (Guid workspaceId, Guid grantId,
-            ApproveSupportAccessRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
-        {
-            if (!await IsOwner(db, workspaceId, user, ct)) return Results.NotFound();
-            var grant = await db.SupportAccessGrants.SingleOrDefaultAsync(item => item.Id == grantId && item.WorkspaceId == workspaceId, ct);
-            if (grant is null) return Results.NotFound();
-            var sections = (request.Sections ?? []).Aggregate(SupportAccessSections.None, (all, item) => all | item);
-            var now = DateTimeOffset.UtcNow;
-            try { grant.Approve(AssignmentEndpoints.UserId(user), request.Hours, sections, request.AllowChanges, now); }
-            catch (InvalidOperationException) { return Results.Conflict(new { code = "SupportAccess.NotRequested" }); }
-            catch (ArgumentException) { return Results.BadRequest(new { code = "SupportAccess.InvalidChoice" }); }
-            AssignmentEndpoints.AddAudit(db, workspaceId, AssignmentEndpoints.UserId(user), grant.Id,
-                request.AllowChanges ? "SupportAccess.ApprovedWithChanges" : "SupportAccess.Approved");
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(GrantView(grant, now));
-        }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
-
-        api.MapPost("/workspaces/{workspaceId:guid}/support-access/{grantId:guid}/decline", async (Guid workspaceId, Guid grantId,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
-        {
-            if (!await IsOwner(db, workspaceId, user, ct)) return Results.NotFound();
-            var grant = await db.SupportAccessGrants.SingleOrDefaultAsync(item => item.Id == grantId && item.WorkspaceId == workspaceId, ct);
-            if (grant is null) return Results.NotFound();
-            try { grant.Decline(AssignmentEndpoints.UserId(user), DateTimeOffset.UtcNow); }
-            catch (InvalidOperationException) { return Results.Conflict(new { code = "SupportAccess.NotRequested" }); }
-            AssignmentEndpoints.AddAudit(db, workspaceId, AssignmentEndpoints.UserId(user), grant.Id, "SupportAccess.Declined");
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(GrantView(grant, DateTimeOffset.UtcNow));
-        }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
-
-        api.MapPost("/workspaces/{workspaceId:guid}/support-access/{grantId:guid}/end", async (Guid workspaceId, Guid grantId,
-            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
-        {
-            if (!await IsOwner(db, workspaceId, user, ct)) return Results.NotFound();
-            var grant = await db.SupportAccessGrants.SingleOrDefaultAsync(item => item.Id == grantId && item.WorkspaceId == workspaceId, ct);
-            if (grant is null) return Results.NotFound();
-            grant.End("EndedByOwner", DateTimeOffset.UtcNow);
-            AssignmentEndpoints.AddAudit(db, workspaceId, AssignmentEndpoints.UserId(user), grant.Id, "SupportAccess.Ended");
-            await db.SaveChangesAsync(ct);
-            return Results.Ok(GrantView(grant, DateTimeOffset.UtcNow));
-        }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
     }
 
-    /// <summary>The caller's active grant that opens the section, after logging the look; null answers 404.</summary>
-    private static async Task<SupportAccessGrant?> OpenGrantAsync(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user,
-        SupportAccessSections section, string what, CancellationToken ct)
+    /// <summary>
+    /// eduivme support may open an institution's records without the owner's approval (user decision, 19.11.2026), so that
+    /// a user is never left alone with a mistake. Whether a second factor is needed comes from the administrators' MFA
+    /// policy for <see cref="MfaOperationCategories.CourseManagement"/> (every operation, changes only, or off; Identity
+    /// unreachable means required). Every look is logged for the owner.
+    /// </summary>
+    private static async Task<SupportGate> OpenGrantAsync(CourseManagementDbContext db, IMfaPolicyStore mfa, Guid workspaceId,
+        ClaimsPrincipal user, SupportAccessSections section, string what, CancellationToken ct)
     {
-        // Support access needs a second factor on this sign-in, not only an administrator's password.
-        if (!string.Equals(user.FindFirstValue("amr"), "mfa", StringComparison.Ordinal)) return null;
-        var adminId = AssignmentEndpoints.UserId(user);
-        var now = DateTimeOffset.UtcNow;
-        var grants = await db.SupportAccessGrants.Where(item => item.WorkspaceId == workspaceId && item.AdminUserId == adminId
-            && item.Status == SupportAccessStatus.Active).ToListAsync(ct);
-        var grant = grants.FirstOrDefault(item => item.Opens(section, adminId, now));
-        if (grant is null) return null;
-        db.SupportAccessLogs.Add(SupportAccessLog.Create(grant, section, what, now));
+        var gate = await SupportActorAsync(db, mfa, workspaceId, user, change: false, ct);
+        if (gate.AdminId is not { } adminId) return gate;
+        db.SupportAccessLogs.Add(SupportAccessLog.View(workspaceId, adminId, section, what, DateTimeOffset.UtcNow));
         await db.SaveChangesAsync(ct);
-        return grant;
+        return gate;
     }
 
-    /// <summary>The caller's active grant that allows corrections in the section (second factor required); null answers 404.</summary>
-    internal static async Task<SupportAccessGrant?> ChangeGrantAsync(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user,
-        SupportAccessSections section, CancellationToken ct)
+    /// <summary>The administrator looking or correcting, or the answer to give (404 unknown institution, 403 second factor).</summary>
+    internal static async Task<SupportGate> SupportActorAsync(CourseManagementDbContext db, IMfaPolicyStore mfa, Guid workspaceId,
+        ClaimsPrincipal user, bool change, CancellationToken ct)
     {
-        if (!string.Equals(user.FindFirstValue("amr"), "mfa", StringComparison.Ordinal)) return null;
-        var adminId = AssignmentEndpoints.UserId(user);
-        var now = DateTimeOffset.UtcNow;
-        var grants = await db.SupportAccessGrants.Where(item => item.WorkspaceId == workspaceId && item.AdminUserId == adminId
-            && item.Status == SupportAccessStatus.Active).ToListAsync(ct);
-        return grants.FirstOrDefault(item => item.OpensForChange(section, adminId, now));
+        if (!await db.Workspaces.AnyAsync(item => item.Id == workspaceId, ct)) return new SupportGate(null, Results.NotFound());
+        var mode = await mfa.GetModeAsync(MfaOperationCategories.CourseManagement, ct);
+        var needsMfa = !string.Equals(mode, MfaPolicyModes.Disabled, StringComparison.OrdinalIgnoreCase)
+            && (change || !string.Equals(mode, MfaPolicyModes.MutationsOnly, StringComparison.OrdinalIgnoreCase));
+        if (needsMfa && !string.Equals(user.FindFirstValue("amr"), "mfa", StringComparison.Ordinal))
+            return new SupportGate(null, Results.Json(new { code = "Auth.MfaRequired" }, statusCode: StatusCodes.Status403Forbidden));
+        return new SupportGate(AssignmentEndpoints.UserId(user), null);
     }
 
     private static Task<bool> IsOwner(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user, CancellationToken ct)
@@ -308,19 +229,9 @@ public static class SupportAccessEndpoints
         return db.Workspaces.AnyAsync(item => item.Id == workspaceId && item.OwnerUserId == userId, ct);
     }
 
-    private static SupportGrantView GrantView(SupportAccessGrant grant, DateTimeOffset now) => new(grant.Id, grant.WorkspaceId,
-        grant.AdminUserId, grant.Reason, grant.Status == SupportAccessStatus.Active && !grant.IsActive(now) ? "Ended" : grant.Status.ToString(),
-        Enum.GetValues<SupportAccessSections>().Where(item => item != SupportAccessSections.None && grant.Sections.HasFlag(item))
-            .Select(item => item.ToString()).ToArray(),
-        grant.DurationHours, grant.RequestedAt, grant.ApprovedAt, grant.ExpiresAt,
-        grant.Status == SupportAccessStatus.Active && !grant.IsActive(now) ? grant.ExpiresAt : grant.EndedAt,
-        grant.Status == SupportAccessStatus.Active && !grant.IsActive(now) ? "Expired" : grant.EndReason, grant.AllowsChanges);
 }
 
 public sealed record AdminWorkspaceRow(Guid Id, string Name, string Type, DateTimeOffset CreatedAt, int TeacherCount,
     int ActiveStudentCount, DateTimeOffset? LastActivityAt, bool IsReadOnly);
-public sealed record RequestSupportAccessRequest(string? Reason);
-public sealed record ApproveSupportAccessRequest(int Hours, SupportAccessSections[]? Sections, bool AllowChanges = false);
-public sealed record SupportGrantView(Guid Id, Guid WorkspaceId, Guid AdminUserId, string Reason, string Status, string[] Sections,
-    int DurationHours, DateTimeOffset RequestedAt, DateTimeOffset? ApprovedAt, DateTimeOffset? ExpiresAt, DateTimeOffset? EndedAt,
-    string? EndReason, bool AllowsChanges);
+
+public sealed record SupportGate(Guid? AdminId, IResult? Problem);
