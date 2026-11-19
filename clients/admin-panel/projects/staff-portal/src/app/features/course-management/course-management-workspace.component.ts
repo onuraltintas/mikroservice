@@ -61,6 +61,8 @@ const courseAuditActionLabels: Record<string, string> = {
   'Finance.LessonCharged': 'Ders ücreti tahakkuk etti',
   'Finance.PackageConsumed': 'Paket hakkı tüketildi',
   'Assignment.Created': 'Ödev oluşturuldu',
+  'Assignment.Changed': 'Ödev düzeltildi',
+  'Assignment.Deleted': 'Ödev geri alındı',
   'Assignment.Reviewed': 'Ödev değerlendirildi',
   'Assignment.MaterialUploaded': 'Ödev dosyası yüklendi',
   'Assignment.FileSubmitted': 'Ödev dosyası teslim edildi',

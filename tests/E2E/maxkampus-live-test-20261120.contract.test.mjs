@@ -45,3 +45,26 @@ test('no course-management screen opens the browser confirm, alert or prompt box
   ];
   for (const path of files) assert.doesNotMatch(read(path), /(?:window|globalThis)\.(?:confirm|alert|prompt)\b/, path);
 });
+
+// B1–B5: calendar and attendance.
+test('the calendar does not offer past hours, widens to early lessons and edits a series', () => {
+  const calendar = read(`${panel}/panel/sections/calendar.component.ts`);
+  assert.match(calendar, /\[disabled\]="state\.readOnly\(\) \|\| isPastSlot\(day\.iso, hour\)"/);
+  assert.match(calendar, /readonly hours = computed\(/);
+  assert.match(calendar, /\(click\)="openSeriesEdit\(lesson\)">Seriyi düzenle</);
+  assert.match(calendar, /updateLessonSeriesSchedule\(id, series\.id/);
+  assert.match(calendar, /problemText\(\{ error: \{ code: 'Lesson\.InvalidTime' \} \}\)/);
+});
+
+test('"Dersi tamamla" waits for the end of the lesson and saved homework can be corrected or taken back', () => {
+  const attendance = read(`${panel}/panel/sections/attendance.component.ts`);
+  assert.match(attendance, /\[disabled\]="busy\(\) \|\| !ended\(current\)/);
+  assert.match(attendance, /bitince tamamlayabilirsiniz/);
+  assert.match(attendance, /readonly givenHomework = computed/);
+  assert.match(attendance, /reviseAssignment\(/);
+  assert.match(attendance, /deleteAssignment\(/);
+  const api = read('services/course-management-service/CourseManagement.API/AssignmentEndpoints.cs');
+  assert.match(api, /MapPut\("\/workspaces\/\{workspaceId:guid\}\/assignments\/\{assignmentId:guid\}"/);
+  assert.match(api, /MapDelete\("\/workspaces\/\{workspaceId:guid\}\/assignments\/\{assignmentId:guid\}"/);
+  assert.match(api, /code = "Assignment\.InUse"/);
+});

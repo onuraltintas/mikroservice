@@ -312,6 +312,12 @@ export class CourseManagementService {
   }) {
     return firstValueFrom(this.http.post<CourseAssignment>(`${this.base}/workspaces/${workspaceId}/assignments`, assignment));
   }
+  reviseAssignment(workspaceId: string, assignmentId: string, change: { title: string; instructions: string | null; dueAt: string }) {
+    return firstValueFrom(this.http.put<CourseAssignment>(`${this.base}/workspaces/${workspaceId}/assignments/${assignmentId}`, change));
+  }
+  deleteAssignment(workspaceId: string, assignmentId: string) {
+    return firstValueFrom(this.http.delete<void>(`${this.base}/workspaces/${workspaceId}/assignments/${assignmentId}`));
+  }
   getAssignmentSubmissions(workspaceId: string, assignmentId: string) {
     return firstValueFrom(this.http.get<CourseAssignmentSubmission[]>(
       `${this.base}/workspaces/${workspaceId}/assignments/${assignmentId}/submissions`));

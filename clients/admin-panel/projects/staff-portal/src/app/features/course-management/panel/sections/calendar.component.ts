@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Output, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CourseLesson, CourseManagementService } from '../../course-management.service';
+import { CourseLesson, CourseLessonSeries, CourseManagementService } from '../../course-management.service';
 import { CoursePanelApi, PanelStudentRow, SeriesPreview, SeriesRequest } from '../panel-api.service';
 import { CoursePanelState, PanelSection, formatDateTime, formatTime, hashUrl, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 import { PanelConfirm } from '../panel-confirm';
@@ -62,19 +62,19 @@ type Editor = {
         }
       </div>
     }
-    <p class="muted hint-line">Boş bir saate tıklayın ya da sağ tıklayın; derslere sağ tıklayınca yoklama, taşıma ve iptal seçenekleri çıkar.</p>
+    <p class="muted hint-line">Boş bir saate tıklayın ya da sağ tıklayın. Bir derse tıklayınca yoklama, taşıma ve iptal seçenekleri çıkar; tekrarlayan derslerin saati "Seriyi düzenle" ile değişir.</p>
     <section class="card cal-wrap" aria-label="Haftalık takvim">
       <div class="cal">
         <div class="corner"></div>
         @for (day of days(); track day.iso) {
           <div class="day-head" [class.is-today]="day.iso === todayIso()">{{ day.label }}</div>
         }
-        <div class="times">@for (hour of hours; track hour) { <div class="time num">{{ pad(hour) }}.00</div> }</div>
+        <div class="times">@for (hour of hours(); track hour) { <div class="time num">{{ pad(hour) }}.00</div> }</div>
         @for (day of days(); track day.iso) {
           <div class="day-col" [class.is-today]="day.iso === todayIso()">
-            @for (hour of hours; track hour) {
-              <button type="button" class="slot" [disabled]="state.readOnly()"
-                [attr.aria-label]="day.long + ' ' + pad(hour) + '.00, ders ekle'"
+            @for (hour of hours(); track hour) {
+              <button type="button" class="slot" [disabled]="state.readOnly() || isPastSlot(day.iso, hour)"
+                [attr.aria-label]="day.long + ' ' + pad(hour) + '.00' + (isPastSlot(day.iso, hour) ? ', geçmiş saat' : ', ders ekle')"
                 (click)="openEditor('single', day.iso, pad(hour) + ':00')"
                 (contextmenu)="openMenu($event, day.iso, pad(hour) + ':00', null)"></button>
             }
@@ -101,6 +101,7 @@ type Editor = {
             <button type="button" role="menuitem" (click)="takeAttendance()">Yoklama al</button>
             @if (!state.readOnly() && !lesson.seriesId && isFuture(lesson)) { <button type="button" role="menuitem" (click)="openMove(lesson)">Taşı</button> }
             @if (!state.readOnly() && isFuture(lesson)) { <button type="button" role="menuitem" (click)="cancel(lesson)">Bu dersi iptal et</button> }
+            @if (!state.readOnly() && lesson.seriesId && isFuture(lesson)) { <button type="button" role="menuitem" (click)="openSeriesEdit(lesson)">Seriyi düzenle</button> }
             @if (!state.readOnly() && lesson.seriesId && isFuture(lesson)) { <button type="button" role="menuitem" (click)="cancelSeries(lesson)">Serinin kalan derslerini iptal et</button> }
           } @else { <p class="muted menu-title">{{ lesson.status === 'Cancelled' ? 'İptal edildi' : 'Tamamlandı' }}</p> }
         } @else {
@@ -115,8 +116,11 @@ type Editor = {
     @if (editor(); as form) {
       <div class="dialog-backdrop" (click)="closeEditor()">
         <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="lesson-editor-title" (click)="$event.stopPropagation()" (keydown.escape)="closeEditor()">
-          <h2 id="lesson-editor-title">{{ form.kind === 'timeoff' ? 'Öğretmen izni ekle' : form.kind === 'series' ? 'Tekrarlayan ders ekle' : moving() ? 'Dersi taşı' : 'Ders ekle' }}</h2>
-          @if (form.kind !== 'timeoff' && !moving()) {
+          <h2 id="lesson-editor-title">{{ form.kind === 'timeoff' ? 'Öğretmen izni ekle' : editingSeries() ? 'Seriyi düzenle' : form.kind === 'series' ? 'Tekrarlayan ders ekle' : moving() ? 'Dersi taşı' : 'Ders ekle' }}</h2>
+          @if (editingSeries(); as series) {
+            <p class="muted" style="margin: 0">{{ series.courseName }}{{ series.groupName ? ', ' + series.groupName : '' }}. Değişiklik bugünden sonraki derslere uygulanır; geçmiş dersler ve yoklamalar değişmez.</p>
+          }
+          @if (form.kind !== 'timeoff' && !moving() && !editingSeries()) {
             <div class="tabs" role="tablist" aria-label="Ders türü">
               <button type="button" role="tab" [attr.aria-selected]="form.kind === 'single'" (click)="form.kind = 'single'; preview.set(null)">Tek ders</button>
               <button type="button" role="tab" [attr.aria-selected]="form.kind === 'series'" (click)="form.kind = 'series'; preview.set(null)">Tekrarlayan</button>
@@ -124,7 +128,7 @@ type Editor = {
           }
           @if (editorError()) { <p class="alert" role="alert">{{ editorError() }}</p> }
           <div class="form-grid">
-            @if (form.kind !== 'timeoff' && !moving()) {
+            @if (form.kind !== 'timeoff' && !moving() && !editingSeries()) {
               <label class="field">Kurs<select [(ngModel)]="form.courseId" (ngModelChange)="form.groupId = ''; preview.set(null)"><option value="">Kurs seçin</option>
                 @for (course of state.courses(); track course.id) { <option [value]="course.id">{{ course.name }}</option> }</select></label>
               <label class="field">Kimlere<select [(ngModel)]="form.target" (ngModelChange)="preview.set(null)"><option value="group">Bir gruba</option><option value="student">Tek öğrenciye (birebir)</option></select></label>
@@ -136,7 +140,7 @@ type Editor = {
                   <datalist id="lesson-students">@for (student of studentOptions(); track student.id) { <option [value]="student.displayName"></option> }</datalist></label>
               }
             }
-            @if (state.isOwner() && !moving()) {
+            @if (state.isOwner() && !moving() && !editingSeries()) {
               <label class="field">Öğretmen<select [(ngModel)]="form.teacherUserId" (ngModelChange)="preview.set(null)">
                 @for (teacher of state.teachers(); track teacher.userId) { <option [value]="teacher.userId">{{ state.teacherName(teacher.userId) }}</option> }</select></label>
             }
@@ -144,7 +148,9 @@ type Editor = {
               <label class="field">Derslik<select [(ngModel)]="form.roomId" (ngModelChange)="preview.set(null)"><option value="">Seçilmedi</option>
                 @for (room of state.rooms(); track room.id) { <option [value]="room.id">{{ room.branchName }}, {{ room.name }}</option> }</select></label>
             }
-            <label class="field">{{ form.kind === 'series' ? 'Başlangıç günü' : 'Gün' }}<input type="date" [(ngModel)]="form.day" (ngModelChange)="dayChanged(form)"></label>
+            @if (!editingSeries()) {
+              <label class="field">{{ form.kind === 'series' ? 'Başlangıç günü' : 'Gün' }}<input type="date" [(ngModel)]="form.day" [min]="todayIso()" (ngModelChange)="dayChanged(form)"></label>
+            }
             <label class="field">{{ form.kind === 'timeoff' ? 'Başlangıç saati' : 'Saat' }}<input type="time" step="300" [(ngModel)]="form.time" (ngModelChange)="preview.set(null)"></label>
             @if (form.kind === 'timeoff') {
               <label class="field">Bitiş saati<input type="time" step="300" [(ngModel)]="form.endTime"></label>
@@ -161,6 +167,7 @@ type Editor = {
               }
             </fieldset>
             <div class="form-grid">
+              @if (!editingSeries()) {
               <label class="field">Tekrar<select [(ngModel)]="form.repeat" (ngModelChange)="repeatChanged(form)">
                 <option value="weekly">Her hafta</option><option value="biweekly">İki haftada bir</option><option value="monthly">Ayda bir</option></select></label>
               @if (form.repeat === 'monthly') {
@@ -170,6 +177,7 @@ type Editor = {
               }
               <label class="field">Ne kadar sürsün<select [(ngModel)]="form.span" (ngModelChange)="spanChanged(form)">
                 <option value="month">1 ay</option><option value="quarter">3 ay</option><option value="term">Dönem sonuna kadar</option><option value="year">1 yıl</option><option value="custom">Bitiş tarihi seçeceğim</option></select></label>
+              }
               <label class="field">Son ders en geç<input type="date" [(ngModel)]="form.endsOn" (ngModelChange)="form.span = 'custom'; preview.set(null)" [max]="maxEnd(form)"></label>
             </div>
             @if (preview(); as checked) {
@@ -188,7 +196,7 @@ type Editor = {
           }
           <div class="dialog-actions">
             <button type="button" class="btn-secondary" (click)="closeEditor()">Vazgeç</button>
-            @if (form.kind === 'series' && !preview()) {
+            @if (form.kind === 'series' && !preview() && !editingSeries()) {
               <button type="button" class="btn" (click)="check(form)" [disabled]="busy() || !ready(form)">Dersleri göster</button>
             } @else {
               <button type="button" class="btn" (click)="saveEditor(form)" [disabled]="busy() || !ready(form) || (form.kind === 'series' && !!preview()?.conflictCount && !skipConflicts)">
@@ -235,7 +243,6 @@ export class CalendarSectionComponent {
   private readonly confirm = inject(PanelConfirm);
   private readonly api = inject(CoursePanelApi);
   private readonly service = inject(CourseManagementService);
-  readonly hours = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, index) => FIRST_HOUR + index);
   readonly weekdays = WEEKDAYS;
   readonly durations = [30, 40, 45, 50, 60, 80, 90, 120, 150, 180];
   readonly pad = pad;
@@ -246,6 +253,16 @@ export class CalendarSectionComponent {
   readonly menu = signal<Menu | null>(null);
   readonly editor = signal<Editor | null>(null);
   readonly moving = signal<CourseLesson | null>(null);
+  /** The repeating lesson whose time, days, room or end is being changed ("Seriyi düzenle"). */
+  readonly editingSeries = signal<CourseLessonSeries | null>(null);
+  /** 08–22, widened to the earliest and latest lesson of the week so a 02:30 lesson is not drawn at 08.00. */
+  readonly hours = computed(() => {
+    const starts = this.lessons().map(lesson => Math.floor(this.minutes(lesson.startsAt) / 60));
+    const ends = this.lessons().map(lesson => Math.ceil(this.minutes(lesson.endsAt) / 60) || 24);
+    const first = Math.min(FIRST_HOUR, ...starts);
+    const last = Math.max(LAST_HOUR, ...ends.map(hour => Math.min(hour, 24)));
+    return Array.from({ length: last - first }, (_, index) => first + index);
+  });
   readonly preview = signal<SeriesPreview | null>(null);
   readonly studentOptions = signal<PanelStudentRow[]>([]);
   readonly busy = signal(false);
@@ -302,7 +319,9 @@ export class CalendarSectionComponent {
       && (!this.roomFilter || lesson.roomId === this.roomFilter));
   }
   private minutes(value: string): number { const d = new Date(new Date(value).getTime() + TR_OFFSET); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
-  top(lesson: CourseLesson): number { return Math.max(0, (this.minutes(lesson.startsAt) - FIRST_HOUR * 60) * HOUR_PX / 60); }
+  top(lesson: CourseLesson): number { return Math.max(0, (this.minutes(lesson.startsAt) - this.hours()[0] * 60) * HOUR_PX / 60); }
+  /** A lesson cannot start in the past (the API answers Lesson.InvalidTime), so past hours are not offered. */
+  isPastSlot(day: string, hour: number): boolean { return instant(day, `${pad(hour)}:00`).getTime() <= Date.now(); }
   height(lesson: CourseLesson): number {
     return Math.max(28, (new Date(lesson.endsAt).getTime() - new Date(lesson.startsAt).getTime()) / 60000 * HOUR_PX / 60 - 2);
   }
@@ -355,7 +374,27 @@ export class CalendarSectionComponent {
     this.moving.set(lesson);
   }
 
-  closeEditor(): void { this.editor.set(null); this.moving.set(null); this.preview.set(null); }
+  closeEditor(): void { this.editor.set(null); this.moving.set(null); this.preview.set(null); this.editingSeries.set(null); }
+
+  async openSeriesEdit(lesson: CourseLesson): Promise<void> {
+    this.menu.set(null);
+    if (!lesson.seriesId) return;
+    try {
+      const series = (await this.service.getLessonSeries(this.state.id())).find(item => item.id === lesson.seriesId);
+      if (!series) { this.error.set('Seri bulunamadı; sayfayı yenileyin.'); return; }
+      this.openEditor('series', this.todayIso(), series.startTime.slice(0, 5));
+      this.editingSeries.set(series);
+      const form = this.editor()!;
+      form.courseId = series.courseId;
+      form.groupId = series.groupId ?? '';
+      form.teacherUserId = series.teacherUserId;
+      form.roomId = series.roomId ?? '';
+      form.duration = series.durationMinutes;
+      form.days = Array.from({ length: 7 }, (_, index) => (series.daysOfWeekMask & (1 << index)) !== 0);
+      form.endsOn = series.endsOn;
+      form.span = 'custom';
+    } catch (error) { this.error.set(problemText(error)); }
+  }
 
   groupsFor(courseId: string) { return this.state.groups().filter(group => group.courseId === courseId); }
   groupPicked(form: Editor): void {
@@ -397,6 +436,7 @@ export class CalendarSectionComponent {
   }
 
   ready(form: Editor): boolean {
+    if (this.editingSeries()) return !!form.time && this.checkedDays(form) > 0 && !!form.endsOn && form.endsOn >= this.todayIso();
     if (!form.day || !form.time) return false;
     if (form.kind === 'timeoff') return !!form.teacherUserId && form.endTime > form.time;
     if (this.moving()) return true;
@@ -433,7 +473,16 @@ export class CalendarSectionComponent {
       const startsAt = instant(form.day, form.time);
       const endsAt = new Date(startsAt.getTime() + form.duration * 60000);
       const moving = this.moving();
-      if (form.kind === 'timeoff') {
+      const series = this.editingSeries();
+      if (form.kind !== 'timeoff' && !series && startsAt.getTime() <= Date.now()) {
+        this.editorError.set(problemText({ error: { code: 'Lesson.InvalidTime' } }));
+        return;
+      }
+      if (series) {
+        const mask = form.days.reduce((value, on, index) => on ? value | (1 << index) : value, 0);
+        const result = await this.service.updateLessonSeriesSchedule(id, series.id, form.endsOn, form.time, form.duration, mask, form.roomId || null);
+        this.notice.set(`Seri güncellendi: ${result.sessionsUpdated} ders değişti, ${result.sessionsCreated} ders eklendi, ${result.sessionsCancelled} ders kaldırıldı.`);
+      } else if (form.kind === 'timeoff') {
         await this.service.createTeacherTimeOff(id, form.teacherUserId, startsAt.toISOString(), instant(form.day, form.endTime).toISOString(), form.reason);
         this.notice.set('Öğretmen izni eklendi.');
       } else if (moving) {

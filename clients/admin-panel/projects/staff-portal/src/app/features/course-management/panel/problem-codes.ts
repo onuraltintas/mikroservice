@@ -72,6 +72,7 @@ export const PROBLEM_TEXTS: Record<string, string> = {
   'Attendance.InvalidStatus': 'Yoklama durumu geçersiz.',
   'Attendance.ConcurrentUpdate': 'Aynı anda başka bir değişiklik yapıldı. Sayfayı yenileyip yeniden deneyin.',
   'Assignment.NoActiveRecipients': 'Grupta etkin öğrenci yok.',
+  'Assignment.InUse': 'Bu ödev işaretlenmiş ya da teslim edilmiş; silinemez, yalnız düzeltilebilir.',
   'Assignment.InvalidInput': 'Ödev bilgilerini kontrol edin; ödev adı ve teslim tarihi gerekli.',
   'Assignment.InvalidPage': 'Sayfa bilgisi hatalı; sayfayı yenileyin.',
   'Assignment.ConcurrentCreation': 'Aynı ödev iki kez gönderildi. Sayfayı yenileyin.',

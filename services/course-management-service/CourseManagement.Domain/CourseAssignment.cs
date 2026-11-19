@@ -39,6 +39,15 @@ public sealed class CourseAssignment
         };
     }
 
+    /// <summary>The teacher fixes the title, the description or the due date of homework already given.</summary>
+    public void Revise(string title, string? instructions, DateTimeOffset dueAt)
+    {
+        if (dueAt == default) throw new ArgumentException("Assignment due date is required.", nameof(dueAt));
+        Title = Required(title, 160, nameof(title));
+        Instructions = Optional(instructions, 4000, nameof(instructions));
+        DueAt = dueAt.ToUniversalTime();
+    }
+
     private static string Required(string value, int maximum, string parameter)
     {
         ArgumentNullException.ThrowIfNull(value);
