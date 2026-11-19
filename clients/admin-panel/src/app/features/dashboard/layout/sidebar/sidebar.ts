@@ -346,12 +346,12 @@ export class SidebarComponent {
       // maxkampüs (Kurs Yönetimi), 19.11.2026: institutions, maxkampus.com's content, its contact messages and
       // newsletter; the system admin only.
       if (isSystemAdmin) {
-        const site = (label: string, view: string) => ({ label, route: `/dashboard/maxkampus/site/${view}`, role: 'SystemAdmin', roleOnly: true });
+        const site = (label: string, view: string, icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>') => ({ label, icon, route: `/dashboard/maxkampus/site/${view}`, role: 'SystemAdmin', roleOnly: true });
         items.push({
           label: 'maxkampüs (Kurs Yönetimi)',
           icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" /></svg>',
           children: [
-            { label: 'Genel bakış ve kurumlar', route: '/dashboard/maxkampus/overview', role: 'SystemAdmin', roleOnly: true },
+            { label: 'Genel bakış ve kurumlar', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7.5 15l3-3 3 3 5.25-5.25" /></svg>', route: '/dashboard/maxkampus/overview', role: 'SystemAdmin', roleOnly: true },
             site('Site: ana sayfa', 'home'),
             site('Site: özellikler ve adımlar', 'features'),
             site('Site: müşteri yorumları', 'reviews'),
@@ -361,9 +361,9 @@ export class SidebarComponent {
             site('Site: fiyat sayfası', 'plans'),
             site('Site: menüler', 'menus'),
             site('Site: görseller', 'media'),
-            site('Panel duyuruları', 'notices'),
-            { label: 'İletişim mesajları', route: '/dashboard/maxkampus/messages', role: 'SystemAdmin', roleOnly: true },
-            { label: 'Bülten aboneleri', route: '/dashboard/maxkampus/subscribers', role: 'SystemAdmin', roleOnly: true }
+            site('Panel duyuruları', 'notices', '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>'),
+            { label: 'İletişim mesajları', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>', route: '/dashboard/maxkampus/messages', role: 'SystemAdmin', roleOnly: true },
+            { label: 'Bülten aboneleri', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>', route: '/dashboard/maxkampus/subscribers', role: 'SystemAdmin', roleOnly: true }
           ]
         });
       }
@@ -522,9 +522,9 @@ export class SidebarComponent {
       .filter(i => !i.children || i.children.length > 0)
       .map(i => ({
       ...i,
-      iconHtml: this.sanitizer.bypassSecurityTrustHtml(i.icon),
+      iconHtml: this.sanitizer.bypassSecurityTrustHtml(i.icon ?? ''),
       // Sanitize children icons if they exist
-      children: i.children ? i.children.map((c: any) => ({ ...c, iconHtml: this.sanitizer.bypassSecurityTrustHtml(c.icon) })) : undefined
+      children: i.children ? i.children.map((c: any) => ({ ...c, iconHtml: this.sanitizer.bypassSecurityTrustHtml(c.icon ?? '') })) : undefined
       }));
   });
 
