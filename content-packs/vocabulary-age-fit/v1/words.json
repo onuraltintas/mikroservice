@@ -1,0 +1,838 @@
+{
+ "version": "v1",
+ "purpose": "Çocuk ve Genç için seviye 4-5 kelime havuzu; akademik ve mesleki terimler yetişkinlere ayrılır.",
+ "words": [
+  {
+   "id": "a9e00000-0000-4000-8140-000000000001",
+   "word": "Cesaret",
+   "definition": "Korkulan bir durum karşısında yılmadan davranabilme gücüdür.",
+   "category": "Kişilik",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000002",
+   "word": "Merak",
+   "definition": "Bir şeyi öğrenmeye ve anlamaya karşı duyulan istektir.",
+   "category": "Duygular",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000003",
+   "word": "Sabır",
+   "definition": "Zor bir durumda telaş etmeden bekleyebilme gücüdür.",
+   "category": "Kişilik",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000004",
+   "word": "Dayanışma",
+   "definition": "Bir topluluktaki kişilerin zor zamanda birbirine destek olmasıdır.",
+   "category": "Toplum",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000005",
+   "word": "Keşif",
+   "definition": "Daha önce bilinmeyen bir şeyi bulup ortaya çıkarmaktır.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000006",
+   "word": "Gözlem",
+   "definition": "Bir şeyi dikkatle izleyerek incelemektir.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000007",
+   "word": "Deney",
+   "definition": "Bir düşüncenin doğru olup olmadığını denemek için yapılan planlı çalışmadır.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000008",
+   "word": "Hayal gücü",
+   "definition": "Görülmeyen şeyleri zihinde canlandırabilme yeteneğidir.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000009",
+   "word": "Paylaşmak",
+   "definition": "Sahip olunan bir şeyi başkalarıyla birlikte kullanmaktır.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000010",
+   "word": "Özgüven",
+   "definition": "Kişinin kendi yeteneklerine ve gücüne inanmasıdır.",
+   "category": "Kişilik",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000011",
+   "word": "Sorumluluk",
+   "definition": "Üstlenilen bir işi yerine getirme yükümlülüğüdür.",
+   "category": "Kişilik",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000012",
+   "word": "Hoşgörü",
+   "definition": "Başkalarının farklı düşünce ve davranışlarını anlayışla karşılamaktır.",
+   "category": "Toplum",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000013",
+   "word": "Karşılaştırmak",
+   "definition": "İki ya da daha çok şeyin benzer ve farklı yanlarını ortaya koymaktır.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000014",
+   "word": "Tahmin",
+   "definition": "Kesin bilgiye dayanmadan bir sonucu önceden kestirmektir.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000015",
+   "word": "Çevre kirliliği",
+   "definition": "Hava, su ve toprağın zararlı maddelerle bozulmasıdır.",
+   "category": "Doğa",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000016",
+   "word": "Göç",
+   "definition": "İnsanların ya da hayvanların bir yerden başka bir yere topluca gitmesidir.",
+   "category": "Doğa",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000017",
+   "word": "Mevsim",
+   "definition": "Yılın iklim özelliklerine göre ayrıldığı dört bölümden her biridir.",
+   "category": "Doğa",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000018",
+   "word": "Yörünge",
+   "definition": "Bir gök cisminin başka bir cismin çevresinde dolanırken izlediği yoldur.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000019",
+   "word": "Masal",
+   "definition": "Olağanüstü olayların ve kahramanların anlatıldığı hayalî öyküdür.",
+   "category": "Edebiyat",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000020",
+   "word": "Kahraman",
+   "definition": "Bir öyküde olayların çevresinde geliştiği başlıca kişidir.",
+   "category": "Edebiyat",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000021",
+   "word": "Kararlılık",
+   "definition": "Verilen bir karardan vazgeçmeden onu sürdürmektir.",
+   "category": "Kişilik",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000022",
+   "word": "Pişmanlık",
+   "definition": "Yapılan bir şeyin keşke yapılmasaydı diye duyulan üzüntüdür.",
+   "category": "Duygular",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000023",
+   "word": "Heyecan",
+   "definition": "Beklenen bir olay karşısında duyulan coşku ve kıpırtıdır.",
+   "category": "Duygular",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8140-000000000024",
+   "word": "İş birliği",
+   "definition": "Bir amaca ulaşmak için birlikte çalışmaktır.",
+   "category": "Toplum",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000001",
+   "word": "Azim",
+   "definition": "Bir işi başarmak için gösterilen yılmaz çabadır.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000002",
+   "word": "Empati",
+   "definition": "Kendini başkasının yerine koyarak onun duygularını anlamaktır.",
+   "category": "Duygular",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000003",
+   "word": "Adalet",
+   "definition": "Herkese hakkını vermek ve haklıyı gözetmektir.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000004",
+   "word": "Fedakârlık",
+   "definition": "Başkaları için kendi isteklerinden vazgeçebilmektir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000005",
+   "word": "Özen",
+   "definition": "Bir işi dikkatle ve titizlikle yapmaktır.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000006",
+   "word": "Yansıma",
+   "definition": "Işığın ya da sesin bir yüzeye çarpıp geri dönmesidir.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000007",
+   "word": "Buharlaşma",
+   "definition": "Bir sıvının ısınarak gaz hâline geçmesidir.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000008",
+   "word": "Mıknatıs",
+   "definition": "Demir gibi maddeleri kendine çeken cisimdir.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000009",
+   "word": "Fosil",
+   "definition": "Çok eski canlıların taş içinde korunmuş kalıntısıdır.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000010",
+   "word": "Takımyıldız",
+   "definition": "Gökyüzünde belirli bir şekil oluşturan yıldız topluluğudur.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000011",
+   "word": "Atasözü",
+   "definition": "Atalarımızdan kalan, öğüt veren kısa ve kalıplaşmış sözdür.",
+   "category": "Edebiyat",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000012",
+   "word": "Deyim",
+   "definition": "Genellikle gerçek anlamından farklı bir anlamda kullanılan kalıplaşmış söz grubudur.",
+   "category": "Edebiyat",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000013",
+   "word": "Benzetme",
+   "definition": "Bir varlığı bir yönüyle başka bir varlığa benzeterek anlatmaktır.",
+   "category": "Edebiyat",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000014",
+   "word": "Özet",
+   "definition": "Bir metnin ana düşüncelerinin kısaca anlatılmasıdır.",
+   "category": "Edebiyat",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000015",
+   "word": "Kanıt",
+   "definition": "Bir şeyin doğru olduğunu gösteren bilgi ya da belgedir.",
+   "category": "Genel",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000016",
+   "word": "Gelenek",
+   "definition": "Bir toplulukta kuşaktan kuşağa aktarılan alışkanlık ve davranışlardır.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000017",
+   "word": "Miras",
+   "definition": "Geçmiş kuşaklardan kalan değerli şeylerdir.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000018",
+   "word": "Tutumlu",
+   "definition": "Parasını ve eşyasını gereksiz yere harcamayan kişidir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000019",
+   "word": "Alçakgönüllü",
+   "definition": "Başarılarıyla övünmeyen, kendini büyük görmeyen kişidir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000020",
+   "word": "Kıskançlık",
+   "definition": "Başkasının sahip olduğu bir şeyi isteyip buna üzülme duygusudur.",
+   "category": "Duygular",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000021",
+   "word": "Minnettarlık",
+   "definition": "Görülen bir iyiliğe karşı duyulan teşekkür duygusudur.",
+   "category": "Duygular",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000022",
+   "word": "Erozyon",
+   "definition": "Toprağın su ve rüzgârla aşınıp taşınmasıdır.",
+   "category": "Doğa",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000023",
+   "word": "Yağmur ormanı",
+   "definition": "Çok yağış alan, sık ağaçlı ve sıcak bölge ormanıdır.",
+   "category": "Doğa",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8150-000000000024",
+   "word": "Nesli tükenmek",
+   "definition": "Bir canlı türünün yeryüzünden tamamen yok olmasıdır.",
+   "category": "Doğa",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000001"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000001",
+   "word": "Muhakeme",
+   "definition": "Bilgileri karşılaştırarak doğru bir yargıya varmaktır.",
+   "category": "Düşünce",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000002",
+   "word": "Önyargı",
+   "definition": "Bir konuda yeterli bilgi olmadan önceden verilen yargıdır.",
+   "category": "Toplum",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000003",
+   "word": "Tutarlılık",
+   "definition": "Düşünce ya da davranışların birbiriyle çelişmemesidir.",
+   "category": "Düşünce",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000004",
+   "word": "Gerekçe",
+   "definition": "Bir düşünceyi ya da kararı destekleyen nedendir.",
+   "category": "Düşünce",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000005",
+   "word": "Çelişki",
+   "definition": "Birbirine uymayan, aynı anda doğru olamayan iki durumdur.",
+   "category": "Düşünce",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000006",
+   "word": "Ayrıntı",
+   "definition": "Bir bütünün küçük ve ince parçasıdır.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000007",
+   "word": "Öncelik",
+   "definition": "Önemi nedeniyle önce ele alınması gereken şeydir.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000008",
+   "word": "Verimlilik",
+   "definition": "Harcanan emeğe göre elde edilen sonucun yüksekliğidir.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000009",
+   "word": "İstikrar",
+   "definition": "Bir durumun uzun süre değişmeden devam etmesidir.",
+   "category": "Genel",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000010",
+   "word": "Özerklik",
+   "definition": "Kendi kararlarını kendisi verebilme durumudur.",
+   "category": "Toplum",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000011",
+   "word": "Sorgulamak",
+   "definition": "Bir bilginin doğruluğunu araştırarak incelemektir.",
+   "category": "Düşünce",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000012",
+   "word": "İkna etmek",
+   "definition": "Birini bir düşüncenin doğruluğuna inandırmaktır.",
+   "category": "İletişim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000013",
+   "word": "Uzlaşma",
+   "definition": "Anlaşmazlık içindeki tarafların ortak bir noktada buluşmasıdır.",
+   "category": "İletişim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000014",
+   "word": "Eleştirel",
+   "definition": "Bir konuyu olumlu ve olumsuz yanlarıyla değerlendiren bakıştır.",
+   "category": "Düşünce",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000015",
+   "word": "Kaygı",
+   "definition": "Olabilecek bir olumsuzluk karşısında duyulan huzursuzluktur.",
+   "category": "Duygular",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000016",
+   "word": "Hayranlık",
+   "definition": "Beğenilen bir kişi ya da şey karşısında duyulan derin beğenidir.",
+   "category": "Duygular",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000017",
+   "word": "Kırgınlık",
+   "definition": "Birinin davranışından dolayı duyulan üzüntü ve küskünlüktür.",
+   "category": "Duygular",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000018",
+   "word": "Sürdürülebilir",
+   "definition": "Kaynakları tüketmeden uzun süre devam ettirilebilen demektir.",
+   "category": "Doğa",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000019",
+   "word": "Ekosistem",
+   "definition": "Canlıların ve çevrelerinin birbirini etkileyerek oluşturduğu bütündür.",
+   "category": "Doğa",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000020",
+   "word": "Fotosentez",
+   "definition": "Bitkilerin ışık enerjisini kullanarak kendi besinini üretmesidir.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000021",
+   "word": "Hücre",
+   "definition": "Canlıların yapısını oluşturan en küçük birimdir.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000022",
+   "word": "Yerçekimi",
+   "definition": "Dünya'nın cisimleri kendi merkezine doğru çekmesidir.",
+   "category": "Bilim",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000023",
+   "word": "Kurgu",
+   "definition": "Gerçekte yaşanmamış, hayal ürünü olaylar dizisidir.",
+   "category": "Edebiyat",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000024",
+   "word": "Betimleme",
+   "definition": "Bir varlığı ya da yeri gözle görülür gibi anlatmaktır.",
+   "category": "Edebiyat",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000025",
+   "word": "Anlatıcı",
+   "definition": "Bir öyküde olayları okura aktaran kişidir.",
+   "category": "Edebiyat",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000026",
+   "word": "Zaman çizelgesi",
+   "definition": "Olayların oluş sırasına göre gösterildiği çizelgedir.",
+   "category": "Tarih",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000027",
+   "word": "Uygarlık",
+   "definition": "Bir toplumun bilim, sanat ve yaşam alanlarında ulaştığı gelişmişlik düzeyidir.",
+   "category": "Tarih",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8240-000000000028",
+   "word": "Bağımsızlık",
+   "definition": "Bir ülkenin ya da kişinin başkasına bağlı olmadan yaşayabilmesidir.",
+   "category": "Tarih",
+   "level": 4,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000001",
+   "word": "Öngörü",
+   "definition": "Olacak bir şeyi önceden sezebilme yeteneğidir.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000002",
+   "word": "Soyut",
+   "definition": "Duyularla algılanamayan, yalnız düşünceyle kavranabilen demektir.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000003",
+   "word": "Somut",
+   "definition": "Duyularla algılanabilen, elle tutulur demektir.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000004",
+   "word": "Yorumlamak",
+   "definition": "Bir olayı ya da metni kendi bakış açısıyla açıklamaktır.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000005",
+   "word": "Genelleme",
+   "definition": "Birkaç örnekten yola çıkarak hepsi için geçerli bir yargıya varmaktır.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000006",
+   "word": "Varsayım",
+   "definition": "Doğruluğu kanıtlanmadan doğru kabul edilen düşüncedir.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000007",
+   "word": "Kanaat",
+   "definition": "Bir konuda edinilen kişisel görüştür.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000008",
+   "word": "Özdenetim",
+   "definition": "Kişinin duygu ve davranışlarını kendisinin yönetebilmesidir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000009",
+   "word": "Dirençli",
+   "definition": "Zorluklar karşısında kolay yılmayan kişidir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000010",
+   "word": "Vicdan",
+   "definition": "İyiyi kötüden ayırmamızı sağlayan iç sestir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000011",
+   "word": "Erdem",
+   "definition": "Ahlaka uygun, iyi ve doğru davranma niteliğidir.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000012",
+   "word": "İlke",
+   "definition": "Davranışlara yön veren temel kuraldır.",
+   "category": "Kişilik",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000013",
+   "word": "Duyarlılık",
+   "definition": "Çevresindeki sorunlara karşı ilgili ve özenli olmaktır.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000014",
+   "word": "Eşitlik",
+   "definition": "Herkesin aynı haklara sahip olmasıdır.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000015",
+   "word": "Demokrasi",
+   "definition": "Halkın yönetime kendi seçtiği temsilciler aracılığıyla katıldığı yönetim biçimidir.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000016",
+   "word": "Kamuoyu",
+   "definition": "Bir konuda toplumun büyük bölümünün ortak düşüncesidir.",
+   "category": "Toplum",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000017",
+   "word": "Yanılsama",
+   "definition": "Gerçekte olmayan bir şeyi varmış gibi algılamaktır.",
+   "category": "Düşünce",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000018",
+   "word": "Tükenmişlik",
+   "definition": "Uzun süren yorgunluk sonucunda enerjinin ve isteğin kalmamasıdır.",
+   "category": "Duygular",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000019",
+   "word": "Coşku",
+   "definition": "Güçlü bir sevinç ve heyecan duygusudur.",
+   "category": "Duygular",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000020",
+   "word": "Hüzün",
+   "definition": "Hafif, derin ve sessiz bir üzüntüdür.",
+   "category": "Duygular",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000021",
+   "word": "İklim değişikliği",
+   "definition": "Dünya'nın iklim özelliklerinin uzun sürede kalıcı biçimde değişmesidir.",
+   "category": "Doğa",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000022",
+   "word": "Biyoçeşitlilik",
+   "definition": "Bir bölgede yaşayan canlı türlerinin çeşitliliğidir.",
+   "category": "Doğa",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000023",
+   "word": "Kalıtım",
+   "definition": "Özelliklerin anne ve babadan çocuklara geçmesidir.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000024",
+   "word": "Enerji dönüşümü",
+   "definition": "Enerjinin bir türden başka bir türe geçmesidir.",
+   "category": "Bilim",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000025",
+   "word": "Mecaz",
+   "definition": "Bir sözün gerçek anlamı dışında kullanılmasıdır.",
+   "category": "Edebiyat",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000026",
+   "word": "İroni",
+   "definition": "Bir düşünceyi tersini söyleyerek alaycı biçimde anlatmaktır.",
+   "category": "Edebiyat",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000027",
+   "word": "Belge",
+   "definition": "Bir olayı ya da durumu kanıtlayan yazılı ya da görsel kayıttır.",
+   "category": "Tarih",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  },
+  {
+   "id": "a9e00000-0000-4000-8250-000000000028",
+   "word": "Reform",
+   "definition": "Bir alanda düzeni iyileştirmek için yapılan köklü değişikliktir.",
+   "category": "Tarih",
+   "level": 5,
+   "ageGroupId": "10000000-0000-0000-0000-000000000002"
+  }
+ ]
+}

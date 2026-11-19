@@ -77,6 +77,7 @@ jobs:
           node --test tests/E2E/support/coaching-student-design.contract.test.mjs
           node --test content-packs/exercise-type-texts/v1/pack.test.mjs
           node --test content-packs/eye-tracking/v2/pack.test.mjs
+          node --test content-packs/vocabulary-age-fit/v1/pack.test.mjs
           node --test tests/E2E/support/static-security-headers.contract.test.mjs
           node --test tests/E2E/redesign-public-pages.contract.test.mjs
           node --test tests/E2E/support/production-images.contract.test.mjs
