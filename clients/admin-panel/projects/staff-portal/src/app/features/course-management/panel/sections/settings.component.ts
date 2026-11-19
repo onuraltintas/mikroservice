@@ -131,7 +131,7 @@ const KINDS: Record<string, { title: string; when: string }> = {
       @case ('support') {
         <section class="card card-pad stack" style="gap: 14px">
           <h2>Destek kaydı</h2>
-          <p class="muted" style="margin: 0">eduivme destek ekibi, bir sorunu çözmek için kayıtlarınıza bakabilir ve küçük düzeltmeler yapabilir: öğrenci ve veli iletişim bilgisi, yoklama, tek bir dersin saati, bir e-posta bildirimini kapatma. Para kayıtlarına dokunmaz; öğrenci ve velilere bildirim gitmez. Yapılan her bakış ve değişiklik burada listelenir.</p>
+          <p class="muted" style="margin: 0">{{ state.brand() }} destek ekibi, bir sorunu çözmek için kayıtlarınıza bakabilir ve küçük düzeltmeler yapabilir: öğrenci ve veli iletişim bilgisi, yoklama, tek bir dersin saati, bir e-posta bildirimini kapatma. Para kayıtlarına dokunmaz; öğrenci ve velilere bildirim gitmez. Yapılan her bakış ve değişiklik burada listelenir.</p>
           @if (support()?.logs?.length) {
             <ul>@for (log of support()!.logs; track $index) {
               <li>{{ dateTime(log.occurredAt) }}: @if (log.isChange) { <strong>{{ log.what }}</strong>@if (log.target) {, {{ log.target }}}@if (log.after) {: {{ change(log.before, log.after) }}} } @else { {{ log.what }} görüntülendi }</li>
@@ -144,9 +144,13 @@ const KINDS: Record<string, { title: string; when: string }> = {
           <h2>Abonelik</h2>
           @if (plan(); as current) {
             @if (current.subscription; as sub) {
-              <p style="margin: 0"><strong>{{ sub.planName }}</strong>, {{ date(sub.startsAt) }} – {{ date(sub.endsAt) }}</p>
-              <p style="margin: 0">Etkin öğrenci: <span class="num">{{ current.activeStudentCount }} / {{ sub.activeStudentLimit }}</span></p>
-            } @else { <p style="margin: 0">Etkin öğrenci: {{ current.activeStudentCount }}. Planınız eduivme aboneliğinizden okunur.</p> }
+              <p style="margin: 0">
+                @if (sub.planName) { <strong>{{ sub.planName }}</strong>, }
+                @if (sub.startsAt) { {{ date(sub.startsAt) }} – {{ date(sub.endsAt) }} } @else { {{ date(sub.endsAt) }} tarihine kadar etkin }
+              </p>
+              <p style="margin: 0">Etkin öğrenci: <span class="num">{{ current.activeStudentCount }}@if (sub.activeStudentLimit) { / {{ sub.activeStudentLimit }} }</span></p>
+            } @else { <p style="margin: 0">Etkin öğrenci: {{ current.activeStudentCount }}. Etkin bir planınız yok.</p> }
+            @if (state.site() === 'maxkampus') { <p style="margin: 0"><a href="/plan">Planı, ödemeleri ve belgeleri görün</a></p> }
           } @else { <p class="muted" style="margin: 0">Plan bilgisi yok.</p> }
         </section>
       }

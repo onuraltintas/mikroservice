@@ -20,7 +20,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
       <div><h1>Öğrenciler</h1><p>{{ page()?.total ?? 0 }} öğrenci</p></div>
       @if (state.isOwner() && !state.readOnly()) {
         <div class="actions">
-          <button type="button" class="btn-secondary" (click)="csvOpen.set(true)">Toplu ekle (CSV)</button>
+          <button type="button" class="btn-secondary" (click)="csvName.set(''); csvPreview.set(null); cardError.set(''); csvOpen.set(true)">Toplu ekle (CSV)</button>
           <button type="button" class="btn" (click)="openNew()">Öğrenci ekle</button>
         </div>
       }
@@ -84,7 +84,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
             </div>
           </nav>
         } @else {
-          <p class="empty">{{ hasFilters() ? 'Bu filtrelere uyan öğrenci yok.' : 'Henüz öğrenci yok. Öğrenci ekleyin ya da CSV ile toplu yükleyin.' }}</p>
+          <p class="empty">{{ hasFilters() ? 'Bu filtrelere uyan öğrenci yok.' : state.isOwner() ? 'Henüz öğrenci yok. Öğrenci ekleyin ya da CSV ile toplu yükleyin.' : 'Size atanmış öğrenci yok. Kurum sizi bir gruba öğretmen yaptığında öğrencileri burada görünür.' }}</p>
         }
       } @else if (!error()) { <p class="empty" role="status">Yükleniyor…</p> }
     </section>
@@ -161,8 +161,13 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
       <div class="dialog-backdrop" (click)="csvOpen.set(false)">
         <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="csv-title" (click)="$event.stopPropagation()">
           <h2 id="csv-title">CSV ile toplu öğrenci ekleme</h2>
-          <p class="muted" style="margin: 0">İlk satır başlık olsun: ad, e-posta, telefon. Önce önizleme gösterilir; aynı kişiler iki kez eklenmez.</p>
-          <label class="field">CSV dosyası<input type="file" accept=".csv,text/csv" (change)="pickCsv($event)"></label>
+          <p class="muted" style="margin: 0">İlk satır başlık olsun: <strong>ad, e-posta, telefon</strong>. Yalnız "ad" zorunlu; başka sütunlar okunmaz.
+            Excel'de "Farklı kaydet › CSV" seçin. Önce önizleme gösterilir; aynı kişiler iki kez eklenmez.</p>
+          <div class="file-pick">
+            <input id="csv-file" class="file-pick__input" type="file" accept=".csv,text/csv,text/plain" (change)="pickCsv($event)">
+            <label for="csv-file" class="btn-secondary file-pick__button">Dosya seç</label>
+            <span class="file-pick__name" aria-live="polite">{{ csvName() || 'Dosya seçilmedi' }}</span>
+          </div>
           @if (csvPreview(); as preview) {
             <p>{{ preview.readyCount }} eklenecek, {{ preview.duplicateCount + preview.importedCount }} zaten var, {{ preview.invalidCount }} hatalı.</p>
             @if (preview.invalidCount) {
@@ -195,6 +200,7 @@ export class StudentsSectionComponent {
   readonly account = signal<CourseStudentAccount | null>(null);
   readonly csvOpen = signal(false);
   readonly csvPreview = signal<StudentCsvImportPreview | null>(null);
+  readonly csvName = signal('');
   readonly invalidRows = computed(() => (this.csvPreview()?.rows ?? []).filter(row => row.status === 'Invalid').slice(0, 20));
   private csvText = '';
   filter: Required<Pick<PanelStudentFilter, 'q' | 'courseId' | 'groupId' | 'teacherId' | 'status' | 'sort' | 'skip' | 'take'>> = {
@@ -352,14 +358,18 @@ export class StudentsSectionComponent {
   }
 
   async pickCsv(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     this.csvPreview.set(null);
     this.cardError.set('');
+    this.csvName.set(file?.name ?? '');
     if (!file) return;
     if (file.size > 1_000_000) { this.cardError.set('Dosya en çok 1 MB olabilir.'); return; }
-    this.csvText = await file.text();
+    this.csvText = readCsvText(await file.arrayBuffer());
+    // The same file can be chosen again after it is fixed.
+    input.value = '';
     try { this.csvPreview.set(await this.service.previewStudentCsv(this.state.id(), this.csvText)); }
-    catch (error) { this.cardError.set(problemText(error, 'Dosya okunamadı. Başlık satırını ve virgülleri kontrol edin.')); }
+    catch (error) { this.cardError.set(problemText(error, 'Dosya okunamadı. İlk satırda ad, e-posta, telefon başlıkları olmalı.')); }
   }
 
   async commitCsv(): Promise<void> {
@@ -373,4 +383,10 @@ export class StudentsSectionComponent {
       await this.load();
     }, '');
   }
+}
+
+/** Excel in Turkish saves CSV as Windows-1254, not UTF-8; read UTF-8 when the bytes are valid UTF-8. */
+export function readCsvText(bytes: ArrayBuffer): string {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+  catch { return new TextDecoder('windows-1254').decode(bytes); }
 }

@@ -26,7 +26,7 @@ export function needsPlan(billing: MyBilling | null): boolean {
     <mk-panel-frame>
       @if (ready()) {
         <mk-notices [audience]="session.role() === 'owner' ? 'owners' : 'teachers'" />
-        <staff-course-panel [role]="session.role() === 'owner' ? 'institution' : 'teacher'" />
+        <staff-course-panel [role]="session.role() === 'owner' ? 'institution' : 'teacher'" site="maxkampus" />
       } @else {
         <p class="mk-status" role="status"><span class="ds-spinner" aria-hidden="true"></span> maxkampüs açılıyor</p>
       }

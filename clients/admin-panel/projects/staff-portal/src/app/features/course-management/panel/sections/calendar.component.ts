@@ -2,7 +2,8 @@ import { Component, EventEmitter, HostListener, Output, computed, effect, inject
 import { FormsModule } from '@angular/forms';
 import { CourseLesson, CourseManagementService } from '../../course-management.service';
 import { CoursePanelApi, PanelStudentRow, SeriesPreview, SeriesRequest } from '../panel-api.service';
-import { CoursePanelState, PanelSection, formatDateTime, formatTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { CoursePanelState, PanelSection, formatDateTime, formatTime, hashUrl, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { PanelConfirm } from '../panel-confirm';
 
 const DAY_MS = 86_400_000;
 const TR_OFFSET = 3 * 3_600_000; // Türkiye has been UTC+3 all year since 2016.
@@ -231,6 +232,7 @@ type Editor = {
 export class CalendarSectionComponent {
   @Output() readonly navigate = new EventEmitter<PanelSection>();
   readonly state = inject(CoursePanelState);
+  private readonly confirm = inject(PanelConfirm);
   private readonly api = inject(CoursePanelApi);
   private readonly service = inject(CourseManagementService);
   readonly hours = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, index) => FIRST_HOUR + index);
@@ -453,14 +455,16 @@ export class CalendarSectionComponent {
 
   async cancel(lesson: CourseLesson): Promise<void> {
     this.menu.set(null);
-    if (!globalThis.confirm?.(`${formatDateTime(lesson.startsAt)} dersi iptal edilsin mi? Öğrencilere telafi hakkı açılır.`)) return;
+    if (!await this.confirm.ask(`${formatDateTime(lesson.startsAt)} dersi iptal edilsin mi? Öğrencilere telafi hakkı açılır.`,
+      { title: 'Ders iptal edilsin mi?', confirmText: 'Dersi iptal et', cancelText: 'Vazgeç', danger: true })) return;
     try { await this.service.cancelLesson(this.state.id(), lesson.id); this.notice.set('Ders iptal edildi; öğrencilere telafi hakkı açıldı.'); this.state.changed(); }
     catch (error) { this.error.set(problemText(error)); }
   }
 
   async cancelSeries(lesson: CourseLesson): Promise<void> {
     this.menu.set(null);
-    if (!lesson.seriesId || !globalThis.confirm?.('Bu serinin bundan sonraki bütün dersleri iptal edilsin mi?')) return;
+    if (!lesson.seriesId || !await this.confirm.ask('Bu serinin bundan sonraki bütün dersleri iptal edilir. Öğrencilere telafi hakkı açılır.',
+      { title: 'Serinin kalan dersleri iptal edilsin mi?', confirmText: 'Kalan dersleri iptal et', danger: true })) return;
     try {
       const result = await this.service.cancelFutureLessonSeries(this.state.id(), lesson.seriesId);
       this.notice.set(`${result.sessionsCancelled} ders iptal edildi.`);
@@ -471,7 +475,7 @@ export class CalendarSectionComponent {
   takeAttendance(): void {
     const lesson = this.menu()?.lesson;
     this.menu.set(null);
-    if (lesson) globalThis.history?.replaceState(null, '', `#yoklama?ders=${lesson.id}`);
+    if (lesson) globalThis.history?.replaceState(null, '', hashUrl(`#yoklama?ders=${lesson.id}`));
     this.navigate.emit('attendance');
   }
 }

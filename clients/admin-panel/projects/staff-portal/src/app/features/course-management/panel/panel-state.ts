@@ -3,6 +3,10 @@ import {
   CourseBranch, CourseGroup, CourseManagementService, CourseRoom, CourseSummary, CourseWorkspace
 } from '../course-management.service';
 import { CoursePanelApi, PanelMember } from './panel-api.service';
+import { PROBLEM_TEXTS } from './problem-codes';
+
+/** Where the panel runs: the maxkampüs site or the eduivme staff portal (kurum.eduivme.com). */
+export type PanelSite = 'maxkampus' | 'eduivme';
 
 export type PanelSection = 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings' | 'previous';
 
@@ -37,6 +41,9 @@ export class CoursePanelState {
   readonly branches = signal<CourseBranch[]>([]);
   readonly members = signal<PanelMember[]>([]);
   readonly myUserId = signal<string>('');
+  readonly site = signal<PanelSite>('eduivme');
+  /** Product name for texts shown inside the panel. */
+  readonly brand = computed(() => this.site() === 'maxkampus' ? 'maxkampüs' : 'eduivme');
   /** Bumped after a change that other sections should see (a new lesson, a payment). */
   readonly version = signal(0);
 
@@ -94,34 +101,11 @@ export const formatDateTime = (value: string | Date) =>
   new Intl.DateTimeFormat(tr, { timeZone: ZONE, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 export const formatMoney = (value: number) =>
   `${new Intl.NumberFormat(tr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} TL`;
-/** Plain-language messages for the codes the API answers with. */
+/** Plain-language message for an API error: the code's own text (problem-codes.ts), then the HTTP status. */
 export function problemText(error: unknown, fallback = 'İşlem tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.'): string {
   const code = (error as { error?: { code?: string } })?.error?.code ?? '';
   const status = (error as { status?: number })?.status;
-  const known: Record<string, string> = {
-    'Lesson.TeacherConflict': 'Öğretmenin bu saatte başka bir dersi var.',
-    'Lesson.StudentConflict': 'Öğrencilerden birinin bu saatte başka bir dersi var.',
-    'Room.Conflict': 'Derslik bu saatte dolu.',
-    'Room.CapacityExceeded': 'Derslik bu grup için küçük.',
-    'Availability.TimeOffConflict': 'Öğretmen bu saatte izinli.',
-    'Availability.OutsideWorkingHours': 'Ders öğretmenin çalışma saatlerinin dışında.',
-    'Lesson.GroupHasNoActiveStudents': 'Grupta etkin öğrenci yok; önce öğrenci ekleyin.',
-    'Lesson.TeacherNotInWorkspace': 'Seçilen öğretmen bu kurumda değil.',
-    'LessonSeries.NoFutureOccurrences': 'Seçilen aralıkta ileri tarihli ders çıkmıyor.',
-    'LessonSeries.AllOccurrencesConflict': 'Seçilen derslerin hepsi çakışıyor.',
-    'Invitation.AccountNotFound': 'Bu e-postayla bir eduivme hesabı yok. Öğretmen önce hesap açmalı.',
-    'Membership.AlreadyActive': 'Bu kişi zaten kurumda.',
-    'Invitation.AlreadyPending': 'Bu kişiye gönderilmiş bir davet zaten bekliyor.',
-    'EmailSettings.ConsentRequired': 'E-postaları açmadan önce bilgilendirme onayını işaretleyin.',
-    'Workspace.ErasureReadOnly': 'Kurum salt okunur; değişiklik yapılamaz.',
-    'Subscription.ReadOnly': 'Aboneliğiniz etkin değil; kayıtlar yalnız okunabilir.',
-    'Attendance.LessonNotStarted': 'Ders henüz başlamadı; yoklama ders başlayınca alınır.',
-    'Attendance.LessonClosed': 'Ders tamamlanmış ya da iptal edilmiş; yoklama değiştirilemez.',
-    'Lesson.AttendanceStarted': 'Yoklaması alınmış ya da başlamış ders iptal edilemez.',
-    'Assignment.NoActiveRecipients': 'Grupta etkin öğrenci yok.',
-    'Student.ActiveLimitReached': 'Planınızın öğrenci sınırına ulaştınız.'
-  };
-  if (known[code]) return known[code];
+  if (PROBLEM_TEXTS[code]) return PROBLEM_TEXTS[code];
   if (status === 403 || status === 404) return 'Bu işlem için yetkiniz yok ya da kayıt bulunamadı.';
   if (status === 0) return 'Sunucuya ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.';
   return fallback;
@@ -133,6 +117,15 @@ export function readHashQuery(): URLSearchParams {
   const index = hash.indexOf('?');
   return new URLSearchParams(index >= 0 ? hash.slice(index + 1) : '');
 }
+/**
+ * The address for a fragment on the current page. The apps set <base href="/">, so a bare "#x" would resolve
+ * to the site root ("/#x") and a reload would open the home page instead of the panel.
+ */
+export function hashUrl(fragment: string): string {
+  const where = globalThis.location;
+  return where ? `${where.pathname}${where.search}${fragment}` : fragment;
+}
+
 export function writeHashQuery(slug: string, values: Record<string, string | number | boolean | null | undefined>): void {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(values)) {
@@ -141,5 +134,5 @@ export function writeHashQuery(slug: string, values: Record<string, string | num
   }
   const query = params.toString();
   const next = `#${slug}${query ? `?${query}` : ''}`;
-  if (globalThis.location && globalThis.location.hash !== next) globalThis.history?.replaceState(null, '', next);
+  if (globalThis.location && globalThis.location.hash !== next) globalThis.history?.replaceState(null, '', hashUrl(next));
 }

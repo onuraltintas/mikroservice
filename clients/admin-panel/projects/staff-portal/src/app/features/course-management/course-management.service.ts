@@ -21,7 +21,7 @@ export interface CourseProfile { userId: string; displayName: string; }
 export interface CourseWorkspace { id: string; name: string; type: string; institutionCategory?: LegacyInstitutionCategory | null; role: string; isReadOnly: boolean; }
 export interface CourseWorkspaceSubscription {
   workspaceId: string; workspaceName: string; workspaceType: string; activeStudentCount: number;
-  subscription: { planName: string; activeStudentLimit: number; startsAt: string; endsAt: string; accessStatus: string } | null;
+  subscription: { planName: string | null; activeStudentLimit: number | null; startsAt: string | null; endsAt: string; accessStatus: string } | null;
 }
 export interface CourseMember { userId: string; role: string; isActive: boolean; }
 export interface CourseInvitation { id: string; targetUserId: string; studentRecordId: string | null; role: string; status: string; expiresAt: string; }
