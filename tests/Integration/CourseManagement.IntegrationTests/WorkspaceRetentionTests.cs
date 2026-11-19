@@ -30,7 +30,6 @@ public sealed class WorkspaceRetentionTests
     [Fact]
     public void The_owner_is_warned_30_days_before_and_the_data_goes_a_year_after_the_end()
     {
-        Assert.Equal(WorkspaceRetentionStep.Nothing, Decide(Ended.AddDays(334)));
         Assert.Equal(WorkspaceRetentionStep.Nothing, Decide(Ended.AddDays(334), Ended));
         Assert.Equal(WorkspaceRetentionStep.Warn, Decide(Ended.AddDays(335), Ended));
         var warnedAt = Ended.AddDays(335);
