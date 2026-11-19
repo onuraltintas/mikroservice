@@ -60,6 +60,6 @@ export class HomeComponent implements OnInit {
             url: window.location.href,
             type: 'website'
         });
-        this.seoService.generateStructuredData('Organization', { name: 'eduivme' });
+        this.seoService.generateStructuredData('Organization', { name: 'Master Hızlı Okuma' });
     }
 }
