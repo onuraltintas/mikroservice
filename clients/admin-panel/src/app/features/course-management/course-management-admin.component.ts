@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { CourseManagementInstitutionsComponent } from './course-management-institutions.component';
 import {
   CourseManagementAdminOverview,
   CourseManagementAdminService,
@@ -12,14 +13,13 @@ import {
 @Component({
   selector: 'app-course-management-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CourseManagementInstitutionsComponent],
   template: `
     <section class="course-admin" aria-labelledby="course-admin-title">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Ürün operasyonları</p>
-          <h1 id="course-admin-title">Kurs yönetimi</h1>
-          <p>Çalışma alanı görünümü, plan ve etkin öğrenci limiti yönetimi.</p>
+          <h1 id="course-admin-title">Kurs Yönetimi</h1>
+          <p>Kurumlar, planlar ve kurumun onayıyla açılan destek erişimi.</p>
         </div>
         <button type="button" (click)="load()" [disabled]="loading()">Yenile</button>
       </header>
@@ -45,6 +45,8 @@ import {
           <article><h2>Bekleyen davet</h2><p>{{ data.pendingInvitationCount | number }}</p></article>
         </div>
       }
+
+      <app-course-management-institutions />
 
       <section class="subscriptions" aria-labelledby="course-subscriptions-title">
         <div class="section-heading">
@@ -87,7 +89,7 @@ import {
         </nav>
         @if (selectedWorkspace(); as selected) {
           <form class="subscription-form" (ngSubmit)="saveSubscription()">
-            <h3>{{ selected.workspaceName }} · plan atama</h3>
+            <h3>{{ selected.workspaceName }}: plan atama</h3>
             @if (subscriptionSaveError()) { <p class="error-text" role="alert">Plan kaydedilemedi. Bilgileri ve erişimi kontrol edin.</p> }
             <div class="form-grid">
               <label>Plan adı<input name="planName" [(ngModel)]="planName" maxlength="80" required></label>
@@ -143,7 +145,7 @@ import {
             [disabled]="subscriptionAuditLoading() || subscriptionAuditSkip() + pageSize >= subscriptionAuditTotal()">Sonraki</button>
         </nav>
       </section>
-      <p class="privacy-note">Admin görünümü çalışma alanı adı/türü, etkin öğrenci sayısı, plan alanları ve yalnız abonelik değişikliği eylem/zamanını içerir. Kullanıcı kimlikleri, öğrenci/ödev/finans ayrıntıları ve ödeme hareketleri açılmaz.</p>
+      <p class="privacy-note">Yönetim görünümü kurumun adını, türünü, sayıları ve plan bilgisini içerir. Öğrenci, yoklama, ödev ve tahsilat kayıtları yalnız kurum sahibinin onayladığı süreli destek erişimiyle, salt okunur açılır.</p>
     </section>
   `,
   styles: `
