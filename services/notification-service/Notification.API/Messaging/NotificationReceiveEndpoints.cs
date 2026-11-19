@@ -62,6 +62,7 @@ public static class NotificationReceiveEndpoints
         new("course-management-payment-recorded", typeof(CourseManagementPaymentRecordedConsumer), CourseManagement: true),
         new("course-management-reminder-due", typeof(CourseManagementReminderDueConsumer), CourseManagement: true),
         new("course-management-institution-email", typeof(CourseManagementEmailConsumer), CourseManagement: true),
+        new("course-management-owner-email", typeof(CourseManagementOwnerEmailConsumer), CourseManagement: true),
         new("notification-privacy-erasure-assessment", typeof(NotificationErasureAssessmentRequestedConsumer)),
         new("notification-privacy-erasure-execution", typeof(NotificationErasureExecutionRequestedConsumer)),
         new("notification-realtime", typeof(NotificationRealtimeConsumer)),

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
+import { createServer as createHttpServer } from 'node:http';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -31,6 +32,30 @@ async function freePort() {
 test('institution panel: switched-off student portal and files, teacher homework marks, owner-only finance', async () => {
   assert.ok(connectionString, 'the disposable PostgreSQL connection must be configured');
   const base = `http://127.0.0.1:${await freePort()}`;
+  // Stand-ins for Identity (the owner's address for support notices) and the notification service (delivery results).
+  const internalKey = 'course-management-test-internal-key-0123456789';
+  const identityCalls = [];
+  const deliveryCalls = [];
+  const stub = createHttpServer(async (request, response) => {
+    let body = '';
+    for await (const chunk of request) body += chunk;
+    const json = body ? JSON.parse(body) : {};
+    const reply = value => { response.writeHead(200, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(value)); };
+    if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(401); response.end(); return; }
+    if (request.url === '/api/internal/coaching/accounts') {
+      identityCalls.push(json.userIds);
+      return reply({ accounts: json.userIds.map(userId => ({ userId, firstName: 'TEST', lastName: 'Sahip', email: 'sahip@example.test',
+        isActive: true })) });
+    }
+    if (request.url === '/api/internal/notifications/email/status') {
+      deliveryCalls.push(json);
+      // Every institution e-mail bounced in this test.
+      return reply(json.messageIds.map(messageId => ({ messageId, status: 'Failed' })));
+    }
+    response.writeHead(404); response.end();
+  });
+  await new Promise(done => stub.listen(0, '127.0.0.1', done));
+  const stubBase = `http://127.0.0.1:${stub.address().port}`;
   // No feature switches are set: the defaults are what production gets.
   const child = spawn('dotnet', [resolve(root, 'services/course-management-service/CourseManagement.API/bin/Debug/net10.0/CourseManagement.API.dll')], {
     cwd: root, stdio: process.env.COURSE_MANAGEMENT_TEST_API_LOG === '1' ? 'inherit' : 'ignore', env: { ...process.env,
@@ -39,6 +64,8 @@ test('institution panel: switched-off student portal and files, teacher homework
       CourseManagement__OutboxQueryDelaySeconds: '3600', CourseManagement__ReminderPollingSeconds: '3600',
       // E-mails go out as soon as they are found, checked every second.
       CourseManagement__Email__DelayMinutes: '0', CourseManagement__Email__PollingSeconds: '1',
+      CourseManagement__Email__DeliveryCheckSeconds: '1',
+      Services__IdentityService: stubBase, Services__NotificationService: stubBase, INTERNAL_SERVICE_API_KEY: internalKey,
       COURSE_MANAGEMENT_CONNECTION_STRING: connectionString,
       AllowedHosts: 'localhost;127.0.0.1;course-management-service'
     }
@@ -298,7 +325,79 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(logs[0].section, 'Students');
     assert.equal((await call(`${ws}/support-access/${grantId}/end`, owner, 'POST')).status, 200);
     assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'ended means closed');
+
+    // The owner is e-mailed when support asks, when access opens and when it ends (19.11.2026).
+    const ownerAsked = async count => {
+      for (let attempt = 0; attempt < 40 && identityCalls.filter(ids => ids.includes(ownerId)).length < count; attempt++)
+        await new Promise(done => setTimeout(done, 250));
+      return identityCalls.filter(ids => ids.includes(ownerId)).length;
+    };
+    assert.equal(await ownerAsked(3), 3, 'request, opening and end each look up the owner once');
+
+    // Delivery is read back: the stand-in says every address bounced, and the sending record shows it.
+    const bounced = await waitFor(row => row.id === homework.id && row.delivery === 'Failed', 'delivery result');
+    assert.equal(bounced.failedRecipientCount, 1);
+    assert.ok(deliveryCalls.every(item => item.consumerType === 'CourseManagementEmailConsumer'));
+    assert.equal((await (await call(adminBase, admin)).json()).email.undeliveredLast30Days, 1);
+
+    // Corrections: only with the owner's "düzeltme de yapabilsin", only in the opened sections, and they tell no one.
+    const lessonRules = { ...settings(true), rules: [...settings(true).rules, { kind: 5, enabled: true, audience: 3, note: null }] };
+    assert.equal((await call(settingsPath, owner, 'PUT', lessonRules)).status, 200);
+    const viewOnly = await (await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Yalnız bakmam gerekiyor.' })).json();
+    await call(`${ws}/support-access/${viewOnly.id}/approve`, owner, 'POST', { hours: 1, sections: [1, 2] });
+    assert.equal((await call(`${adminBase}/support/students/${studentA}`, admin, 'PUT', { displayName: 'TEST Ayşe Y', email: null, phoneNumber: null })).status,
+      404, 'a view-only grant changes nothing');
+    await call(`${ws}/support-access/${viewOnly.id}/end`, owner, 'POST');
+
+    const fixing = await (await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Yoklama ve iletişim düzeltmesi.' })).json();
+    const fixGrant = await call(`${ws}/support-access/${fixing.id}/approve`, owner, 'POST', { hours: 1, sections: [1, 2, 8], allowChanges: true });
+    assert.equal((await fixGrant.json()).allowsChanges, true);
+    assert.equal((await call(`${adminBase}/support/students/${studentA}`, adminWithoutMfa, 'PUT',
+      { displayName: 'TEST Ayşe Yılmaz', email: null, phoneNumber: null })).status, 404, 'corrections need a second factor too');
+    const fixedStudent = await call(`${adminBase}/support/students/${studentA}`, admin, 'PUT',
+      { displayName: 'TEST Ayşe Yılmaz', email: 'ayse@example.test', phoneNumber: null });
+    assert.equal(fixedStudent.status, 200, await fixedStudent.clone().text());
+    const supportStudents = await (await call(`${adminBase}/support/students`, admin)).json();
+    const guardianRow = supportStudents.find(item => item.id === studentB).guardians[0];
+    assert.equal((await call(`${adminBase}/support/guardians/${guardianRow.id}`, admin, 'PUT',
+      { displayName: 'TEST Veli Mehmet', email: guardianEmail, phoneNumber: '5550000000' })).status, 200);
+
+    const supportLesson = randomUUID();
+    const ownerLesson = randomUUID();
+    for (const [id, hour] of [[supportLesson, 10], [ownerLesson, 12]])
+      assert.equal((await call(`${ws}/lessons`, owner, 'POST', { id, courseId, groupId, studentId: null, teacherUserId: teacherId,
+        startsAt: `${turkeyDay(10)}T${hour}:00:00+03:00`, endsAt: `${turkeyDay(10)}T${hour}:45:00+03:00` })).status, 201);
+    assert.equal((await (await call(`${adminBase}/support/lessons/${supportLesson}/students/${studentA}/attendance`, admin, 'PUT', { status: 2 })).json()).code,
+      'Attendance.LessonNotStarted');
+    const moved = await call(`${adminBase}/support/lessons/${supportLesson}/schedule`, admin, 'PUT',
+      { startsAt: `${turkeyDay(10)}T16:00:00+03:00`, endsAt: `${turkeyDay(10)}T16:45:00+03:00`, roomId: null });
+    assert.equal(moved.status, 200, await moved.clone().text());
+    assert.equal((await (await call(`${adminBase}/support/lessons/${ownerLesson}/schedule`, admin, 'PUT',
+      { startsAt: `${turkeyDay(10)}T16:15:00+03:00`, endsAt: `${turkeyDay(10)}T17:00:00+03:00`, roomId: null })).json()).code,
+      'Lesson.TeacherConflict', 'support moves are checked like the institution\'s own');
+    // The support move tells no one; the owner's own move is told to families (a record appears).
+    const lessonMails = async () => (await (await call(`${ws}/emails?take=200`, owner)).json()).filter(row => row.kind === 'LessonChanged');
+    await new Promise(done => setTimeout(done, 3000));
+    assert.equal((await lessonMails()).length, 0, 'a support correction sends no lesson-change e-mail');
+    assert.equal((await call(`${ws}/lessons/${ownerLesson}/schedule`, owner, 'PUT',
+      { startsAt: `${turkeyDay(10)}T13:00:00+03:00`, endsAt: `${turkeyDay(10)}T13:45:00+03:00`, roomId: null })).status, 200);
+    await waitFor(row => row.kind === 'LessonChanged', 'the owner\'s lesson change');
+
+    const switched = await call(`${adminBase}/support/settings/email/LessonChanged/off`, admin, 'POST');
+    assert.equal(switched.status, 200, await switched.clone().text());
+    assert.equal((await (await call(settingsPath, owner)).json()).rules.find(rule => rule.kindValue === 5).enabled, false);
+    assert.equal((await call(`${adminBase}/support/finance`, admin)).status, 404, 'finance was not opened');
+
+    const changeLog = (await (await call(`${ws}/support-access`, owner)).json()).logs.filter(item => item.isChange);
+    assert.deepEqual(changeLog.map(item => item.what).sort(), ['Ders saati düzeltildi', 'E-posta bildirimi kapatıldı',
+      'Veli iletişim bilgisi düzeltildi', 'Öğrenci iletişim bilgisi düzeltildi'].sort());
+    const studentChange = changeLog.find(item => item.what === 'Öğrenci iletişim bilgisi düzeltildi');
+    assert.equal(studentChange.target, 'TEST Ayşe Yılmaz');
+    assert.equal(studentChange.after, 'ad, e-posta');
+    assert.equal(changeLog.find(item => item.what === 'Ders saati düzeltildi').target, 'TEST Matematik');
+    assert.equal(changeLog.find(item => item.what === 'E-posta bildirimi kapatıldı').before, 'LessonChanged');
   } finally {
     child.kill();
+    stub.close();
   }
 });

@@ -22,6 +22,8 @@ public sealed class CourseEmailOptions
     /// <summary>How long a mark may still be corrected before anyone is told (absence, homework, lesson change, payment).</summary>
     public int DelayMinutes { get; init; } = 10;
     public int PollingSeconds { get; init; } = 60;
+    /// <summary>How often sent e-mails' delivery is read back from the notification service.</summary>
+    public int DeliveryCheckSeconds { get; init; } = 300;
 
     public static string DeriveKey(string secret)
     {
@@ -102,8 +104,34 @@ public sealed class CourseEmailWorker(IServiceScopeFactory scopeFactory, CourseE
                 options, clock.GetUtcNow(), ct);
         await using (var scope = scopeFactory.CreateAsyncScope())
             await CourseEmailSender.SendDueAsync(scope.ServiceProvider.GetRequiredService<CourseManagementDbContext>(),
-                scope.ServiceProvider.GetRequiredService<IPublishEndpoint>(), options, clock.GetUtcNow(), ct);
+                scope.ServiceProvider.GetRequiredService<IPublishEndpoint>(), options, clock.GetUtcNow(), ct,
+                scope.ServiceProvider.GetService<WorkspaceBillingPlans>());
+        // Each of these is on its own: a missing identity or notification answer must not stop the institution e-mails.
+        try
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            await SupportAccessNotices.SendDueAsync(scope.ServiceProvider.GetRequiredService<CourseManagementDbContext>(),
+                scope.ServiceProvider.GetRequiredService<IPublishEndpoint>(), scope.ServiceProvider.GetRequiredService<IdentityAccountLookup>(),
+                options, clock.GetUtcNow(), ct);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException || !ct.IsCancellationRequested)
+        { logger.LogWarning(exception, "Support access notices could not be sent this time."); }
+        if (clock.GetUtcNow() - lastDeliveryCheck >= TimeSpan.FromSeconds(Math.Clamp(options.DeliveryCheckSeconds, 1, 3600)))
+        {
+            try
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+                await CourseEmailDeliveryCheck.RunAsync(scope.ServiceProvider.GetRequiredService<CourseManagementDbContext>(),
+                    scope.ServiceProvider.GetRequiredService<NotificationDeliveryClient>(), clock.GetUtcNow(), ct,
+                    TimeSpan.FromSeconds(Math.Clamp(options.DeliveryCheckSeconds, 1, 60)));
+                lastDeliveryCheck = clock.GetUtcNow();
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException || !ct.IsCancellationRequested)
+            { logger.LogWarning(exception, "E-mail delivery results could not be read this time."); }
+        }
     }
+
+    private DateTimeOffset lastDeliveryCheck = DateTimeOffset.MinValue;
 }
 
 public static class CourseEmailCollector
@@ -138,6 +166,8 @@ public static class CourseEmailCollector
                 join lesson in db.LessonSessions.AsNoTracking() on attendance.LessonSessionId equals lesson.Id
                 where attendance.WorkspaceId == workspaceId && attendance.Status == LessonAttendanceStatus.Absent
                     && attendance.MarkedAt >= since && attendance.MarkedAt <= settled
+                    // A support correction tells no one.
+                    && !db.SupportAccessGrants.Any(grant => grant.WorkspaceId == workspaceId && grant.AdminUserId == attendance.MarkedByUserId)
                 select new { attendance.StudentId, attendance.LessonSessionId, lesson.StartsAt }).ToListAsync(ct);
             foreach (var group in absences.GroupBy(item => (item.StudentId, Day: TurkeyDate(item.StartsAt))))
                 await GatherAsync(db, workspaceId, CourseEmailKind.Absence, group.Key.StudentId, $"absence:{group.Key.StudentId:N}:{group.Key.Day:yyyyMMdd}",
@@ -280,7 +310,7 @@ public static class CourseEmailCollector
 public static class CourseEmailSender
 {
     public static async Task SendDueAsync(CourseManagementDbContext db, IPublishEndpoint publish, CourseEmailOptions options,
-        DateTimeOffset now, CancellationToken ct)
+        DateTimeOffset now, CancellationToken ct, WorkspaceBillingPlans? billing = null)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
         var due = await db.Emails.FromSqlInterpolated($"""
@@ -290,10 +320,28 @@ public static class CourseEmailSender
             LIMIT 100
             FOR UPDATE SKIP LOCKED
             """).ToListAsync(ct);
+        var paused = new Dictionary<Guid, bool>();
         foreach (var email in due)
+        {
+            if (!paused.TryGetValue(email.WorkspaceId, out var noPlan))
+                paused[email.WorkspaceId] = noPlan = !await HasPlanAsync(db, billing, email.WorkspaceId, now, ct);
+            if (noPlan) { email.Skip("Kurumun aboneliği bitti", now); continue; }
             await SendAsync(db, publish, options, email, now, ct);
+        }
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+    }
+
+    /// <summary>
+    /// A workspace whose plan has ended is read-only, and it sends nothing either: from the billing service where it runs,
+    /// otherwise from the workspace subscription (none recorded means not limited, as for writes).
+    /// </summary>
+    public static async Task<bool> HasPlanAsync(CourseManagementDbContext db, WorkspaceBillingPlans? billing, Guid workspaceId,
+        DateTimeOffset now, CancellationToken ct)
+    {
+        if (billing is { Enabled: true }) return (await billing.GetForWorkspaceAsync(db, workspaceId, ct)).CanWriteAt(now);
+        var subscription = await db.WorkspaceSubscriptions.AsNoTracking().SingleOrDefaultAsync(item => item.WorkspaceId == workspaceId, ct);
+        return subscription is null || subscription.CanWriteAt(now);
     }
 
     private static async Task SendAsync(CourseManagementDbContext db, IPublishEndpoint publish, CourseEmailOptions options,

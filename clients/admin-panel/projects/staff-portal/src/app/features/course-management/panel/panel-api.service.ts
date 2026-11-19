@@ -38,12 +38,17 @@ export interface PanelEmailPreview { institutionName: string; subject: string; t
 export interface PanelSentEmail {
   id: string; kind: string; studentId: string; studentName: string; status: 'Sent' | 'Skipped'; subject: string | null;
   recipients: string | null; recipientCount: number; skipReason: string | null; processedAt: string | null;
+  delivery: 'Unknown' | 'Delivered' | 'PartlyFailed' | 'Failed'; failedRecipientCount: number;
 }
 export interface PanelSupportGrant {
   id: string; reason: string; status: 'Requested' | 'Active' | 'Ended'; sections: string[]; durationHours: number;
   requestedAt: string; approvedAt: string | null; expiresAt: string | null; endedAt: string | null; endReason: string | null;
+  allowsChanges: boolean;
 }
-export interface PanelSupportView { grants: PanelSupportGrant[]; logs: { grantId: string; section: string; what: string; occurredAt: string }[]; }
+export interface PanelSupportLog {
+  grantId: string; section: string; what: string; occurredAt: string; isChange: boolean; target: string | null; before: string | null; after: string | null;
+}
+export interface PanelSupportView { grants: PanelSupportGrant[]; logs: PanelSupportLog[]; }
 export interface SeriesRequest {
   courseId: string; groupId: string | null; studentId: string | null; teacherUserId: string; startsOn: string; endsOn: string;
   startTime: string; durationMinutes: number; daysOfWeekMask: number; roomId: string | null;
@@ -126,8 +131,8 @@ export class CoursePanelApi {
     return firstValueFrom(this.http.put<{ emailsMuted: boolean }>(`${this.ws(id)}/students/${studentId}/email-mute`, { muted }));
   }
   support(id: string) { return firstValueFrom(this.http.get<PanelSupportView>(`${this.ws(id)}/support-access`)); }
-  approveSupport(id: string, grantId: string, hours: number, sections: number[]) {
-    return firstValueFrom(this.http.post<PanelSupportGrant>(`${this.ws(id)}/support-access/${grantId}/approve`, { hours, sections }));
+  approveSupport(id: string, grantId: string, hours: number, sections: number[], allowChanges = false) {
+    return firstValueFrom(this.http.post<PanelSupportGrant>(`${this.ws(id)}/support-access/${grantId}/approve`, { hours, sections, allowChanges }));
   }
   declineSupport(id: string, grantId: string) { return firstValueFrom(this.http.post<PanelSupportGrant>(`${this.ws(id)}/support-access/${grantId}/decline`, {})); }
   endSupport(id: string, grantId: string) { return firstValueFrom(this.http.post<PanelSupportGrant>(`${this.ws(id)}/support-access/${grantId}/end`, {})); }

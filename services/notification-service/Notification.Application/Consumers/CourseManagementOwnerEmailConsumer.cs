@@ -1,0 +1,42 @@
+using EduPlatform.Shared.Contracts.Events.CourseManagement;
+using MassTransit;
+using Notification.Application.Configuration;
+using Notification.Application.Interfaces;
+using Notification.Application.Messaging;
+
+namespace Notification.Application.Consumers;
+
+/// <summary>
+/// eduivme's own service e-mail to an institution's owner (Kurs Yönetimi support access, 19.11.2026). Sent from the
+/// platform's address. The button opens the institution panel; a link outside eduivme's addresses is dropped.
+/// </summary>
+public sealed class CourseManagementOwnerEmailConsumer(IEmailDeliveryQueue queue) : IConsumer<CourseManagementOwnerEmailRequestedV1>
+{
+    public async Task Consume(ConsumeContext<CourseManagementOwnerEmailRequestedV1> context)
+    {
+        var message = context.Message;
+        if (string.IsNullOrWhiteSpace(message.RecipientEmail) || !message.RecipientEmail.Contains('@')) return;
+        var content = string.Concat(message.Paragraphs.Select(paragraph => $"<p style=\"margin:0 0 12px\">{EmailContent.Html(paragraph)}</p>"));
+        var link = SafeLink(message.LinkUrl);
+        var button = link is null ? string.Empty
+            : $"<p style=\"margin:20px 0 0\"><a href=\"{EmailContent.Html(link)}\" style=\"display:inline-block;padding:12px 18px;background:#3A2E14;color:#FFFFFF;border-radius:8px;text-decoration:none\">{EmailContent.Html(message.LinkText)}</a></p>";
+        var body = $"""
+            <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1C2430;line-height:1.6">
+              <p style="margin:0 0 4px;font-size:14px;color:#4A5563">eduivme Kurs Yönetimi</p>
+              <h1 style="margin:0 0 16px;font-size:20px">{EmailContent.Html(message.Title)}</h1>
+              {content}{button}
+              <hr style="border:0;border-top:1px solid #D6DAE0;margin:24px 0 12px">
+              <p style="margin:0;font-size:12px;color:#4A5563">Bu e-posta kurumunuzun güvenliği için gönderildi; abonelikten çıkılamaz.</p>
+            </div>
+            """;
+        await queue.QueueAsync(MessageIds.Require(context), nameof(CourseManagementOwnerEmailConsumer), message.RecipientEmail.Trim(),
+            EmailContent.SubjectText(message.Subject), body, null, context.CancellationToken);
+    }
+
+    /// <summary>Only https links on eduivme's own addresses.</summary>
+    public static string? SafeLink(string? link) =>
+        Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps && string.IsNullOrEmpty(uri.UserInfo)
+            && (uri.Host.Equals("eduivme.com", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.EndsWith(".eduivme.com", StringComparison.OrdinalIgnoreCase))
+            ? uri.AbsoluteUri : null;
+}

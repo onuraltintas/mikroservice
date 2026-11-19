@@ -101,6 +101,18 @@ public sealed class WorkspaceEmailSettings
         UpdatedAt = now.ToUniversalTime();
     }
 
+    /// <summary>Switches one kind off (support may do this under a correcting grant; switching on stays the institution's).</summary>
+    public bool SwitchOff(CourseEmailKind kind, DateTimeOffset now)
+    {
+        var rules = Rules.ToArray();
+        var index = Array.FindIndex(rules, rule => rule.Kind == kind);
+        if (index < 0 || !rules[index].Enabled) return false;
+        rules[index] = rules[index] with { Enabled = false };
+        RulesJson = JsonSerializer.Serialize(rules, Json);
+        UpdatedAt = now.ToUniversalTime();
+        return true;
+    }
+
     private static string? NormalizeNote(string? note)
     {
         if (string.IsNullOrWhiteSpace(note)) return null;
@@ -117,6 +129,15 @@ public sealed class WorkspaceEmailSettings
             throw new ArgumentException("A valid e-mail address is required.", nameof(email));
         return value;
     }
+}
+
+/// <summary>What the mail server said after sending (19.11.2026): read back from the notification service.</summary>
+public enum CourseEmailDelivery
+{
+    Unknown = 0,
+    Delivered = 1,
+    PartlyFailed = 2,
+    Failed = 3
 }
 
 public enum CourseEmailStatus
@@ -151,6 +172,9 @@ public sealed class CourseEmail
     public string? SkipReason { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? ProcessedAt { get; private set; }
+    public CourseEmailDelivery Delivery { get; private set; }
+    public int FailedRecipientCount { get; private set; }
+    public DateTimeOffset? DeliveryCheckedAt { get; private set; }
 
     public static CourseEmail Create(Guid workspaceId, CourseEmailKind kind, Guid studentId, string dedupKey,
         DateTimeOffset dueAt, DateTimeOffset now, IEnumerable<Guid>? references = null)
@@ -193,6 +217,19 @@ public sealed class CourseEmail
         Recipients = joined.Length > MaxRecipientsLength ? joined[..MaxRecipientsLength] : joined;
         RecipientCount = recipients.Count;
         ProcessedAt = now.ToUniversalTime();
+    }
+
+    /// <summary>The addresses it went to (for asking the notification service how each one ended).</summary>
+    public IReadOnlyList<string> RecipientList =>
+        string.IsNullOrWhiteSpace(Recipients) ? [] : Recipients.Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    /// <summary>Records how the sending ended once every address has an answer.</summary>
+    public void RecordDelivery(int delivered, int failed, DateTimeOffset now)
+    {
+        if (Status != CourseEmailStatus.Sent || delivered < 0 || failed < 0 || delivered + failed == 0) return;
+        Delivery = failed == 0 ? CourseEmailDelivery.Delivered : delivered == 0 ? CourseEmailDelivery.Failed : CourseEmailDelivery.PartlyFailed;
+        FailedRecipientCount = failed;
+        DeliveryCheckedAt = now.ToUniversalTime();
     }
 
     public void Skip(string reason, DateTimeOffset now)

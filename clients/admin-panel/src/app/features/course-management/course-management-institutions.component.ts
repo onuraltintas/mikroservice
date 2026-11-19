@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { CourseManagementSupportChangesComponent } from './course-management-support-changes.component';
 import {
   CourseManagementAdminWorkspaceDetail,
   CourseManagementAdminWorkspaceRow,
@@ -23,13 +24,14 @@ const COLUMN_LABELS: Record<string, string> = {
 };
 
 /**
- * Kurumlar (19.11.2026): every institution with counts only. A named administrator can ask for time-limited, read-only
- * access; the institution's owner approves it in their panel, chooses the sections and can end it. Every look is logged.
+ * Kurumlar (19.11.2026): every institution with counts only. A named administrator can ask for time-limited access;
+ * the institution's owner approves it in their panel, chooses the sections, whether corrections are allowed, and can end
+ * it. Every look and every change is logged.
  */
 @Component({
   selector: 'app-course-management-institutions',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CourseManagementSupportChangesComponent],
   template: `
     <section class="panel" aria-labelledby="institutions-title">
       <div class="heading">
@@ -87,13 +89,14 @@ const COLUMN_LABELS: Record<string, string> = {
             <div><dt>E-postalar</dt><dd>{{ detail.email.switchedOn ? 'Açık' : 'Kapalı' }}</dd></div>
             <div><dt>Son 30 günde e-posta</dt><dd class="num">{{ detail.email.sentLast30Days }} gönderildi, {{ detail.email.skippedLast30Days }} gönderilmedi</dd></div>
             <div><dt>E-postalardan çıkan adres</dt><dd class="num">{{ detail.email.optedOutAddresses }}</dd></div>
+            <div><dt>Son 30 günde teslim edilemeyen</dt><dd class="num">{{ detail.email.undeliveredLast30Days }}</dd></div>
           </dl>
 
           <h4>Destek erişimi</h4>
           @if (activeGrant(); as grant) {
             <div class="banner" role="status">
-              <strong>Destek erişimi açık: yalnız görüntüleme, {{ remaining(grant) }} kaldı.</strong>
-              Kurumun açtığı bölümler: {{ sectionNames(grant) }}. Her bakış kuruma kayıt olarak görünür.
+              <strong>Destek erişimi açık: {{ grant.allowsChanges ? 'görüntüleme ve düzeltme' : 'yalnız görüntüleme' }}, {{ remaining(grant) }} kaldı.</strong>
+              Kurumun açtığı bölümler: {{ sectionNames(grant) }}. Her bakış ve her değişiklik kuruma kayıt olarak görünür.
             </div>
             <div class="actions">
               @for (section of grant.sections; track section) {
@@ -103,6 +106,12 @@ const COLUMN_LABELS: Record<string, string> = {
             </div>
             @if (sectionError()) {
               <p class="alert" role="alert">Bu bölüm açılamadı. Erişimin süresi dolmuş, kurum kapatmış ya da oturumunuz iki adımlı doğrulamayla açılmamış olabilir.</p>
+            }
+            @if (grant.allowsChanges && shownSection(); as section) {
+              @if (section !== 'Finance') {
+                <app-course-management-support-changes [workspaceId]="detail.id" [section]="section" [data]="shownData()"
+                  (changed)="view(detail.id, section)" />
+              } @else { <p class="banner">Tahsilat kayıtlarını yalnız kurum değiştirebilir.</p> }
             }
             @for (table of tables(); track table.title) {
               <div class="scroll">
@@ -185,6 +194,8 @@ export class CourseManagementInstitutionsComponent implements OnInit {
   readonly sectionLoading = signal(false);
   readonly sectionError = signal(false);
   readonly requestError = signal('');
+  readonly shownSection = signal<SupportSection | null>(null);
+  readonly shownData = signal<unknown>(null);
   query = '';
   reason = '';
 
@@ -205,6 +216,7 @@ export class CourseManagementInstitutionsComponent implements OnInit {
 
   open(id: string): void {
     this.tables.set([]);
+    this.shownSection.set(null);
     this.sectionError.set(false);
     this.requestError.set('');
     this.service.detail(id).subscribe({ next: detail => this.selected.set(detail), error: () => this.error.set(true) });
@@ -228,8 +240,8 @@ export class CourseManagementInstitutionsComponent implements OnInit {
     this.sectionLoading.set(true);
     this.sectionError.set(false);
     this.service.section(id, section).pipe(finalize(() => this.sectionLoading.set(false))).subscribe({
-      next: data => this.tables.set(toTables(SECTION_LABELS[section], data)),
-      error: () => { this.tables.set([]); this.sectionError.set(true); }
+      next: data => { this.tables.set(toTables(SECTION_LABELS[section], data)); this.shownSection.set(section); this.shownData.set(data); },
+      error: () => { this.tables.set([]); this.shownSection.set(null); this.sectionError.set(true); }
     });
   }
 
@@ -274,7 +286,9 @@ export function toTables(title: string, data: unknown): SupportTable[] {
 function cell(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (typeof value === 'boolean') return value ? 'Evet' : 'Hayır';
-  if (Array.isArray(value)) return value.map(item => item && typeof item === 'object' ? Object.values(item).filter(part => part !== null).join(', ') : String(item)).join('; ');
+  if (Array.isArray(value)) return value.map(item => item && typeof item === 'object'
+    ? Object.entries(item).filter(([key, part]) => part !== null && !/id$/i.test(key) && typeof part !== 'boolean').map(([, part]) => String(part)).join(', ')
+    : String(item)).join('; ');
   if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
     return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
   }

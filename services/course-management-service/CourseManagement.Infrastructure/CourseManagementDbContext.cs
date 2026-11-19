@@ -244,6 +244,8 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.ToTable("SupportAccessLogs");
             entity.HasKey(log => log.Id);
             entity.Property(log => log.What).HasMaxLength(200);
+            entity.Property(log => log.Before).HasMaxLength(200);
+            entity.Property(log => log.After).HasMaxLength(200);
             entity.HasIndex(log => new { log.WorkspaceId, log.OccurredAt });
             entity.HasOne<SupportAccessGrant>().WithMany().HasForeignKey(log => log.GrantId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -270,6 +272,8 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasIndex(email => new { email.WorkspaceId, email.DedupKey }).IsUnique();
             entity.HasIndex(email => new { email.Status, email.DueAt });
             entity.HasIndex(email => new { email.WorkspaceId, email.CreatedAt });
+            // Sent e-mails whose delivery has not been read back yet.
+            entity.HasIndex(email => new { email.Status, email.Delivery, email.ProcessedAt });
             entity.HasOne<Workspace>().WithMany().HasForeignKey(email => email.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<StudentRecord>().WithMany().HasForeignKey(email => email.StudentId).OnDelete(DeleteBehavior.Restrict);
         });

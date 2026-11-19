@@ -84,12 +84,13 @@ export interface CourseManagementSupportGrant {
   id: string; workspaceId: string; adminUserId: string; reason: string;
   status: 'Requested' | 'Active' | 'Ended'; sections: SupportSection[]; durationHours: number;
   requestedAt: string; approvedAt: string | null; expiresAt: string | null; endedAt: string | null; endReason: string | null;
+  allowsChanges: boolean;
 }
 
 export interface CourseManagementAdminWorkspaceDetail {
   id: string; name: string; type: 'Institution' | 'IndependentTeacher'; createdAt: string; isReadOnly: boolean;
   teacherCount: number; activeStudentCount: number; courseCount: number; lessonsLast30Days: number;
-  email: { switchedOn: boolean; sentLast30Days: number; recipientsLast30Days: number; skippedLast30Days: number; optedOutAddresses: number };
+  email: { switchedOn: boolean; sentLast30Days: number; recipientsLast30Days: number; skippedLast30Days: number; optedOutAddresses: number; undeliveredLast30Days: number };
   supportAccess: CourseManagementSupportGrant[];
 }
 
@@ -114,4 +115,22 @@ export class CourseManagementInstitutionsService {
     const path = { Students: 'students', Schedule: 'lessons', Finance: 'finance', Settings: 'settings' }[section];
     return this.http.get<unknown>(`${this.url}/${id}/support/${path}`);
   }
+  // Corrections, only under a grant the owner opened with corrections allowed.
+  fixStudent(id: string, studentId: string, contact: SupportContact) {
+    return this.http.put<unknown>(`${this.url}/${id}/support/students/${studentId}`, contact);
+  }
+  fixGuardian(id: string, guardianId: string, contact: SupportContact) {
+    return this.http.put<unknown>(`${this.url}/${id}/support/guardians/${guardianId}`, contact);
+  }
+  fixAttendance(id: string, lessonId: string, studentId: string, status: number) {
+    return this.http.put<unknown>(`${this.url}/${id}/support/lessons/${lessonId}/students/${studentId}/attendance`, { status });
+  }
+  moveLesson(id: string, lessonId: string, startsAt: string, endsAt: string) {
+    return this.http.put<unknown>(`${this.url}/${id}/support/lessons/${lessonId}/schedule`, { startsAt, endsAt, roomId: null });
+  }
+  switchEmailOff(id: string, kind: string) {
+    return this.http.post<unknown>(`${this.url}/${id}/support/settings/email/${kind}/off`, {});
+  }
 }
+
+export interface SupportContact { displayName: string; email: string | null; phoneNumber: string | null; }
