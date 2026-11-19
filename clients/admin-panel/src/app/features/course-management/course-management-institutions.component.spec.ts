@@ -9,13 +9,13 @@ describe('CourseManagementInstitutionsComponent', () => {
   const detail = (supportAccess: CourseManagementAdminWorkspaceDetail['supportAccess']): CourseManagementAdminWorkspaceDetail => ({
     id: 'w1', name: 'TEST Kurs', type: 'Institution', createdAt: '2026-11-01T09:00:00Z', isReadOnly: false,
     teacherCount: 2, activeStudentCount: 14, courseCount: 3, lessonsLast30Days: 40,
-    email: { switchedOn: true, sentLast30Days: 12, recipientsLast30Days: 15, skippedLast30Days: 2, optedOutAddresses: 1 },
+    email: { switchedOn: true, sentLast30Days: 12, recipientsLast30Days: 15, skippedLast30Days: 2, optedOutAddresses: 1, undeliveredLast30Days: 0 },
     supportAccess
   });
   const grant = (status: 'Requested' | 'Active' | 'Ended') => ({ id: 'g1', workspaceId: 'w1', adminUserId: 'a1',
     reason: 'TEST neden yazıldı', status, sections: status === 'Active' ? ['Students' as const] : [], durationHours: 24,
     requestedAt: '2026-11-19T09:00:00Z', approvedAt: null, expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
-    endedAt: null, endReason: status === 'Ended' ? 'Declined' : null });
+    endedAt: null, endReason: status === 'Ended' ? 'Declined' : null, allowsChanges: false });
 
   async function create(service: Partial<Record<keyof CourseManagementInstitutionsService, ReturnType<typeof vi.fn>>>) {
     await TestBed.configureTestingModule({
