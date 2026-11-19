@@ -36,7 +36,7 @@ public static class OverviewEndpoints
                 select new
                 {
                     lesson.Id, CourseName = course.Name, lesson.StartsAt, lesson.EndsAt, Status = lesson.Status.ToString(), lesson.TeacherUserId,
-                    GroupName = db.Groups.Where(group => group.Id == lesson.GroupId).Select(group => group.Name).FirstOrDefault(),
+                    GroupName = db.Groups.Where(item => item.Id == lesson.GroupId).Select(item => item.Name).FirstOrDefault(),
                     RoomName = db.Rooms.Where(room => room.Id == lesson.RoomId).Select(room => room.Name).FirstOrDefault(),
                     TeacherName = db.UserProfiles.Where(profile => profile.UserId == lesson.TeacherUserId).Select(profile => profile.DisplayName).FirstOrDefault(),
                     StudentCount = db.LessonParticipants.Count(participant => participant.LessonSessionId == lesson.Id && participant.IsActive),
@@ -50,7 +50,7 @@ public static class OverviewEndpoints
                     && !db.AttendanceRecords.Any(record => record.LessonSessionId == lesson.Id)
                 orderby lesson.StartsAt descending
                 select new { lesson.Id, CourseName = course.Name, lesson.StartsAt,
-                    GroupName = db.Groups.Where(group => group.Id == lesson.GroupId).Select(group => group.Name).FirstOrDefault() })
+                    GroupName = db.Groups.Where(item => item.Id == lesson.GroupId).Select(item => item.Name).FirstOrDefault() })
                 .Take(10).ToListAsync(ct);
 
             object? finance = null;
