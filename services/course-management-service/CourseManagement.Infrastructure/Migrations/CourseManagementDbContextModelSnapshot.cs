@@ -864,6 +864,12 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("MonthlyWeekOfMonth")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RepeatEveryWeeks")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("RoomId")
                         .HasColumnType("uuid");
 
