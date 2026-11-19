@@ -8,7 +8,7 @@
     @if (view(); as v) {
       <div class="strip" data-testid="today-strip">
         @if (v.exam; as exam) {
-          <div class="fact" [attr.aria-label]="(exam.source === 'Estimated' ? 'Tahminen ' : '') + exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
+          <div class="fact exam" [attr.aria-label]="(exam.source === 'Estimated' ? 'Tahminen ' : '') + exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
             <strong>{{ exam.source === 'Estimated' ? '~' : '' }}{{ exam.daysLeft }}</strong>
             <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name }}@if (exam.source === 'Estimated') { <span data-testid="exam-estimated">, tahmini tarih</span> }</small></span>
           </div>

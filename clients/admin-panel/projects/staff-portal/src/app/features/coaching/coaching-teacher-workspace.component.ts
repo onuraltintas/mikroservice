@@ -136,9 +136,20 @@ export class CoachingTeacherWorkspaceComponent {
   /** Back and forward: follow the address unless unsaved work would be lost; then put the address back. */
   private async followAddress(place: StaffPlace): Promise<void> {
     const section = (place.section ?? 'tracking') as CoachingTeacherSection;
+    if (section === 'assignments' && section === this.activeSection() && !place.id) {
+      // Back from a review's own address to the list.
+      await this.assignments?.closeAssignmentDetail();
+      return;
+    }
     if (section === this.activeSection() && !place.id && !place.week) return;
     if (!await this.canLeavePage()) { this.remember({ section: this.activeSection(), id: this.notificationAssignmentId(), week: this.notificationWeeklyTarget() }, true); return; }
     this.applyPlace(place);
+  }
+
+  /** Live test 19.11.2026 (B7): opening or closing a review updates the address, so refresh and back work. */
+  onAssignmentReviewChange(id: string | null): void {
+    if ((this.staffLocation?.place()?.id ?? null) === id) return;
+    this.remember({ section: 'assignments', id });
   }
 
   private remember(place: { section: CoachingTeacherSection; id?: string | null; week?: WeeklyDestination | null }, replace = false): void {

@@ -200,7 +200,7 @@
               @if (!list.length) { <p class="site-admin__muted">Bu içerik henüz hiç değiştirilmedi.</p> }
               <ul>
                 @for (revision of list; track revision.id) {
-                  <li class="row"><span class="row__main"><strong>{{ revision.version }}. sürüm</strong><span class="site-admin__muted">{{ revision.title }}, {{ revision.createdAt.slice(0, 16).replace('T', ' ') }}</span></span>
+                  <li class="row"><span class="row__main"><strong>{{ revision.version }}. sürüm</strong><span class="site-admin__muted">{{ revision.title }}, {{ revisionTime(revision.createdAt) }}</span></span>
                     <button type="button" class="ds-btn ds-btn--quiet" (click)="restore(revision)">Geri yükle</button></li>
                 }
               </ul>

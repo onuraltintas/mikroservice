@@ -131,7 +131,8 @@ describe('O1 practice exam form', () => {
     expect(fixture.nativeElement.querySelector('.summary').textContent).toMatch(/28[.,]00 net/);
     editor.edit('MAT', 'wrong', 11); fixture.detectChanges(); await fixture.whenStable();
     expect(editor.totals()).toBeNull();
-    expect(fixture.nativeElement.querySelector('[role=alert]').textContent).toContain('Matematik');
+    expect(fixture.nativeElement.querySelector('[role=alert]').textContent).toContain('40 soruyu geçemez');
+    expect(fixture.nativeElement.querySelector('p.error').textContent).toContain('Matematik');
   });
 
   it('names and dates a new practice exam result for the student', async () => {

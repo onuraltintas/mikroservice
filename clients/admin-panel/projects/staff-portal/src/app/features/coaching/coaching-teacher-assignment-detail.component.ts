@@ -38,6 +38,7 @@ export class CoachingTeacherAssignmentDetailComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly isLoadingNames = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly gradeErrors = signal<Record<string, string>>({});
   readonly successMessage = signal<string | null>(null);
   readonly gradingStudentId = signal<string | null>(null);
   readonly gradeDrafts = signal<Record<string, GradeDraft>>({});
@@ -103,15 +104,14 @@ export class CoachingTeacherAssignmentDetailComponent implements OnInit {
   grade(studentId: string): void {
     const assignment = this.assignment();
     const score = this.gradeDraft(studentId).score;
-    if (!assignment || score === null || !Number.isFinite(score)
-      || score < 0 || (assignment.maxScore != null && score > assignment.maxScore)) {
-      const maximum = assignment?.maxScore;
-      this.errorMessage.set(maximum == null
-        ? 'Sıfır veya daha yüksek geçerli bir puan girin.'
-        : `Geçerli puan 0 ile ${maximum} arasında olmalıdır.`);
+    // Live test 19.11.2026 (B4): the score error sits under the score field; without a scale the maximum is 100.
+    const maximum = assignment?.maxScore ?? 100;
+    if (!assignment || score === null || !Number.isFinite(score) || score < 0 || score > maximum) {
+      this.gradeErrors.update(current => ({ ...current, [studentId]: `Puan 0 ile ${maximum} arasında olmalı.` }));
       return;
     }
 
+    this.gradeErrors.update(current => ({ ...current, [studentId]: '' }));
     this.errorMessage.set(null);
     this.successMessage.set(null);
     this.gradingStudentId.set(studentId);
@@ -125,7 +125,7 @@ export class CoachingTeacherAssignmentDetailComponent implements OnInit {
         this.successMessage.set('Değerlendirme kaydedildi.');
         this.load();
       },
-      error: () => this.errorMessage.set('Değerlendirme kaydedilemedi. Lütfen tekrar deneyin.')
+      error: () => this.gradeErrors.update(current => ({ ...current, [studentId]: 'Değerlendirme kaydedilemedi. Biraz sonra yeniden kaydet.' }))
     });
   }
 

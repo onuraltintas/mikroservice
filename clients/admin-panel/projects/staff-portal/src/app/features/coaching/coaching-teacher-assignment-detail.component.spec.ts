@@ -39,7 +39,11 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     component.grade('student-1');
 
     expect(assignments.gradeAssignment).not.toHaveBeenCalled();
-    expect(component.errorMessage()).toContain('0 ile 100');
+    // Live test 19.11.2026 (B4): the message sits under the score field, not in the page-level alert.
+    expect(component.gradeErrors()['student-1']).toContain('0 ile 100');
+    expect(component.errorMessage()).toBeNull();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#score-error-student-1')?.textContent).toContain('0 ile 100');
   });
 
   it('counts submitted and graded students, leaving pending students out', async () => {

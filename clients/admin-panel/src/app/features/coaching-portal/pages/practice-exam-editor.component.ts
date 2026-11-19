@@ -13,11 +13,11 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, examTypeForPro
     td input { width:4.25rem; min-width:4.25rem; padding:.5rem .25rem !important; text-align:center; font-variant-numeric:tabular-nums; appearance:textfield; -moz-appearance:textfield; }
     td input::-webkit-outer-spin-button, td input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
     td[data-label=Soru], td[data-label=Boş] { font-variant-numeric:tabular-nums; white-space:nowrap; }
-    .summary { padding:.8rem; border:1px solid var(--ui-border); border-radius:.5rem; } .error { color:var(--ui-danger); } tr.invalid td.net { color:var(--ui-danger); } td.net { white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .summary { padding:.8rem; border:1px solid var(--ui-border); border-radius:.5rem; } .error { color:var(--ui-danger); } tr.invalid td.net { color:var(--ui-danger); white-space:normal; } td.net { white-space:nowrap; font-variant-numeric:tabular-nums; }
     @media (max-width: 640px) {
       thead { display:none; } table, tbody, tr, th, td { display:block; } tr { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.35rem .5rem; padding:.6rem 0; border-bottom:1px solid var(--ui-border); }
       th[scope=row] { grid-column:1 / -1; border:0; padding:0; } td { border:0; padding:0; font-size:.85rem; } td::before { content:attr(data-label); display:block; font-size:.7rem; opacity:.7; }
-      td input { width:100%; min-width:0; }
+      td input { width:100%; min-width:0; } tr.invalid td.net { grid-column:1 / -1; }
     }
   `], template: `
     <label>Deneme kapsamı<select [ngModel]="value?.examCode || ''" (ngModelChange)="choose($event)" [disabled]="disabled || locked">
@@ -32,14 +32,14 @@ import { PracticeExamInput, PracticeExamProfile, PracticeSection, examTypeForPro
       <div class="table-wrap"><table><thead><tr><th>Ders / test</th><th>Soru</th><th>Doğru</th><th>Yanlış</th><th>Boş</th><th>Net</th></tr></thead>
         <tbody>@for (section of profile()?.sections || []; track section.code) {
           @if (row(section.code); as answers) { <tr [class.invalid]="!rowValid(section)"><th scope="row">{{section.name}}</th><td data-label="Soru">{{section.questionCount}}</td>
-            <td data-label="Doğru"><input type="number" inputmode="numeric" [attr.aria-label]="section.name + ' doğru'" [ngModel]="answers.correct" (ngModelChange)="edit(section.code, 'correct', $event)" [disabled]="disabled" min="0" [max]="section.questionCount" step="1"></td>
-            <td data-label="Yanlış"><input type="number" inputmode="numeric" [attr.aria-label]="section.name + ' yanlış'" [ngModel]="answers.wrong" (ngModelChange)="edit(section.code, 'wrong', $event)" [disabled]="disabled" min="0" [max]="section.questionCount" step="1"></td>
+            <td data-label="Doğru"><input type="number" inputmode="numeric" [attr.aria-label]="section.name + ' doğru'" [attr.aria-invalid]="!rowValid(section)" [attr.aria-describedby]="rowValid(section) ? null : 'practice-error-' + section.code" [ngModel]="answers.correct" (ngModelChange)="edit(section.code, 'correct', $event)" [disabled]="disabled" min="0" [max]="section.questionCount" step="1"></td>
+            <td data-label="Yanlış"><input type="number" inputmode="numeric" [attr.aria-label]="section.name + ' yanlış'" [attr.aria-invalid]="!rowValid(section)" [attr.aria-describedby]="rowValid(section) ? null : 'practice-error-' + section.code" [ngModel]="answers.wrong" (ngModelChange)="edit(section.code, 'wrong', $event)" [disabled]="disabled" min="0" [max]="section.questionCount" step="1"></td>
             <td data-label="Boş">{{rowValid(section) ? answers.empty : '—'}}</td>
-            <td data-label="Net" class="net">{{rowValid(section) ? (net(answers.correct, answers.wrong) | number:'1.2-2') : '—'}}</td>
+            <td data-label="Net" class="net">@if (rowValid(section)) { {{ net(answers.correct, answers.wrong) | number:'1.2-2' }} } @else { <span class="error" [id]="'practice-error-' + section.code" role="alert">Doğru ve yanlış toplamı {{ section.questionCount }} soruyu geçemez</span> }</td>
           </tr> }
         }</tbody></table></div>
       @if (totals(); as total) { <p class="summary" role="status">Toplam: {{total.correct}} doğru, {{total.wrong}} yanlış, {{total.empty}} boş, <strong>{{total.net | number:'1.2-2'}} net</strong></p> }
-      @else { <p class="error" role="alert">{{ invalidSections() }}: doğru ve yanlış toplamı soru sayısını geçemez.</p> }
+      @else { <p class="error">Kırmızı satırları düzelt: {{ invalidSections() }}.</p> }
     }
   ` })
 export class PracticeExamEditorComponent {

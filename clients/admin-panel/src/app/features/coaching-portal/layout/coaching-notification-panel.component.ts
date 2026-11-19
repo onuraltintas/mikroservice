@@ -61,6 +61,10 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
     } @else {
       <p class="empty">Yeni bildirimin yok. Bir şey olduğunda burada göreceksin.</p>
     }
+    <!-- Live test 19.11.2026 (B10): reminders pile up; the panel can mark them all read without leaving the page. -->
+    @if (notifications.unreadCount() > 0) {
+      <button type="button" class="mark-all" (click)="markAllRead()">Tümünü okundu yap</button>
+    }
     <a class="all" [routerLink]="allLink()" (click)="closed.emit()">Tümünü gör</a>
   </section>`,
   styles: [`.panel{position:fixed;z-index:70;top:72px;right:24px;width:min(380px,calc(100vw - 32px));max-height:min(560px,calc(100dvh - 96px));overflow:auto;padding:var(--coaching-space-4);border:1px solid var(--ui-border);border-radius:var(--coaching-radius-card);background:var(--ui-surface);color:var(--ui-text);box-shadow:var(--coaching-raised-shadow)}
@@ -78,12 +82,13 @@ export function groupNotificationsByDay(items: Notification[], now = new Date())
     strong{font-size:var(--coaching-text-body);font-weight:650;overflow-wrap:anywhere}
     small{color:var(--ui-text-muted);font-size:var(--coaching-text-sm)}
     .empty{margin:var(--coaching-space-4) 0;color:var(--ui-text-muted)}
+    .mark-all{display:block;width:100%;min-height:44px;margin-top:var(--coaching-space-3);border:1px solid var(--ui-border);border-radius:var(--coaching-radius-control);background:var(--ui-surface);color:var(--ui-text);font:inherit;font-weight:600;cursor:pointer}
     .all{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:var(--coaching-space-3);border-radius:var(--coaching-radius-control);background:var(--ui-brand-soft);color:var(--ui-brand-text);font-weight:700;text-decoration:none}
     .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
     @media (max-width:800px){.panel{top:76px;right:16px}}`]
 })
 export class CoachingNotificationPanelComponent {
-  private readonly notifications = inject(NotificationService);
+  protected readonly notifications = inject(NotificationService);
   private readonly host = inject(ElementRef<HTMLElement>);
   readonly closed = output<void>();
   /** V4: parents have their own Bildirimler page. */
@@ -99,6 +104,10 @@ export class CoachingNotificationPanelComponent {
     const target = coachingNotificationTarget(item, 'student');
     return target ? { ...coachingStudentNotificationLink(target), label: target.label } : null;
   }
+  markAllRead(): void {
+    this.notifications.markAllAsRead().subscribe({ error: () => undefined });
+  }
+
   readonly groups = computed(() => groupNotificationsByDay([...this.notifications.notifications()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10)));
 
   constructor() {

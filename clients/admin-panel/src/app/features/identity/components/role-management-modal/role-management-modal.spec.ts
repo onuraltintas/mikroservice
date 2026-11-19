@@ -35,9 +35,9 @@ describe('Service-scoped role management', () => {
 
   it('shows both assignments with distinct service names and removal labels', async () => {
     const fixture = create();
-    expect(fixture.nativeElement.textContent).toContain('Teacher · Koçluk');
-    expect(fixture.nativeElement.textContent).toContain('Teacher · Hızlı Okuma');
-    expect(fixture.nativeElement.querySelector('[aria-label="Teacher · Hızlı Okuma rolünü kaldır"]')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen, Koçluk');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen, Hızlı Okuma');
+    expect(fixture.nativeElement.querySelector('[aria-label="Öğretmen, Hızlı Okuma rolünü kaldır"]')).toBeTruthy();
   });
 
   it('requires an explicit service before adding a role', async () => {
@@ -59,12 +59,12 @@ describe('Service-scoped role management', () => {
 
   it('removes only the clicked service assignment and refreshes scoped roles', async () => {
     const fixture = create();
-    fixture.nativeElement.querySelector('[aria-label="Teacher · Hızlı Okuma rolünü kaldır"]').click();
+    fixture.nativeElement.querySelector('[aria-label="Öğretmen, Hızlı Okuma rolünü kaldır"]').click();
     await new Promise(resolve => setTimeout(resolve));
     fixture.detectChanges();
     expect(identity.removeRole).toHaveBeenCalledWith('user-1', 'Teacher', 'speed-reading');
-    expect(fixture.nativeElement.textContent).toContain('Teacher · Koçluk');
-    expect(fixture.nativeElement.textContent).not.toContain('Teacher · Hızlı Okuma');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen, Koçluk');
+    expect(fixture.nativeElement.textContent).not.toContain('Öğretmen, Hızlı Okuma');
   });
 
   // Paket F F4 (user decision 07.11.2026): removing a service's last role also closes its access, so ask first.
@@ -114,13 +114,13 @@ describe('Service-scoped role management', () => {
     const component = fixture.componentInstance;
     await component.removeRole({ role: 'Teacher', product: null });
     expect(identity.removeRole).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain('Servis belirtilmemiş');
+    expect(fixture.nativeElement.textContent).toContain('servis belirtilmemiş');
   });
 
   it('uses explicit global removal for SystemAdmin and excludes it from product assignment', async () => {
     const fixture = create({ ...user, roles: ['SystemAdmin'], productRoles: [{ role: 'SystemAdmin', product: null }] });
     const component = fixture.componentInstance;
-    expect(fixture.nativeElement.textContent).toContain('SystemAdmin · Tüm servisler');
+    expect(fixture.nativeElement.textContent).toContain('Sistem yöneticisi, tüm servisler');
     expect(component.serviceRoles()).not.toContain('SystemAdmin');
     component.selectedProduct.set('speed-reading');
     component.assignRole('SystemAdmin');

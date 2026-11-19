@@ -87,38 +87,6 @@
           <div class="notice warning" role="alert">{{ switchError }}</div>
         }
 
-        @if (!isTeacherWorkspaceSelected) { <section class="session-panel" aria-labelledby="session-title">
-          <div class="session-heading">
-            <div>
-              <p class="eyebrow">Oturum ve yetki</p>
-              <h2 id="session-title">Ürün verileri birbirinden ayrı kalır</h2>
-            </div>
-            <span class="active-pill"><span></span> Aktif · {{ currentProductLabel }}</span>
-          </div>
-
-          <div class="session-grid">
-            <article class="session-item">
-              <span class="session-index">01</span>
-              <div>
-                <h3>Seçili ürünle sınırlı erişim</h3>
-                <p>Her API isteği, sunucuda seçili ürünün rolü ve kurum kapsamıyla doğrulanır.</p>
-              </div>
-            </article>
-            <article class="session-item">
-              <span class="session-index">02</span>
-              <div>
-                <h3>Yetkili ürünleriniz</h3>
-                <p>
-                  @for (access of auth.products(); track access.product; let last = $last) {
-                    <span>{{ productLabel(access.product) }} · {{ roleLabel(access.roles) }}</span>@if (!last) { <span> &nbsp;/&nbsp; </span> }
-                  }
-                </p>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        }
         @if (accountSettingsVisible && auth.activeProduct() !== 'course-management') {
           @defer (on immediate) { <staff-account-settings /> } @placeholder { <p role="status">Hesap ayarları hazırlanıyor…</p> }
         }

@@ -77,11 +77,11 @@
           <div class="actions">
             <label class="cs-file-button camera-capture" [class.is-disabled]="isUploading()">
               {{ isUploading() ? 'Yükleniyor…' : 'Fotoğraf çek' }}
-              <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" capture="environment" (change)="onFileSelected($event)" [disabled]="isUploading()" />
+              <input type="file" class="sr-only" aria-label="Fotoğraf çek" accept="image/jpeg,image/png,image/webp" capture="environment" (change)="onFileSelected($event)" [disabled]="isUploading()" />
             </label>
             <label class="cs-file-button" [class.is-disabled]="isUploading()">
               {{ isUploading() ? 'Yükleniyor…' : 'Dosya ekle' }}
-              <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,.md,.doc,.docx,.pdf" (change)="onFileSelected($event)" [disabled]="isUploading()" />
+              <input type="file" class="sr-only" aria-label="Dosya ekle" accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,.md,.doc,.docx,.pdf" (change)="onFileSelected($event)" [disabled]="isUploading()" />
             </label>
             <button type="button" class="cs-button-primary" (click)="submit()" [disabled]="isSubmitting() || isUploading()">{{ isSubmitting() ? 'Gönderiliyor…' : editing() ? 'Yeniden teslim et' : 'Teslim et' }}</button>
             @if (editing()) { <button type="button" class="cs-button-ghost" (click)="editing.set(false)">Vazgeç</button> }

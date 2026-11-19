@@ -12,7 +12,7 @@ import { RoleManagementModalComponent } from '../../components/role-management-m
 import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
-import { productRoleLabel, userProductRoles } from '../../../../core/services/user-product-roles';
+import { productRoleLabel, roleName, userProductRoles } from '../../../../core/services/user-product-roles';
 
 @Component({
   selector: 'app-user-list',
@@ -87,11 +87,11 @@ export class UserListComponent {
   private defaultRoles = [
     { value: 'Student', label: 'Öğrenci' },
     { value: 'Teacher', label: 'Öğretmen' },
-    { value: 'InstitutionAdmin', label: 'Kurum Yöneticisi' },
-    { value: 'InstitutionOwner', label: 'Kurum Sahibi' },
+    { value: 'InstitutionAdmin', label: 'Kurum yöneticisi' },
+    { value: 'InstitutionOwner', label: 'Kurum sahibi' },
     { value: 'Parent', label: 'Veli' },
     { value: 'Editor', label: 'Editör' },
-    { value: 'SystemAdmin', label: 'Sistem Yöneticisi' }
+    { value: 'SystemAdmin', label: 'Sistem yöneticisi' }
   ];
 
   roleOptions = signal<{ value: string, label: string }[]>([
@@ -103,14 +103,11 @@ export class UserListComponent {
     this.identityService.getAllRoles().subscribe({
       next: (roles) => {
         if (roles && roles.length > 0) {
-          const dynamicRoles = roles.map(r => ({
-            value: r.name,
-            label: r.name // r.description yerine r.name kullanılsın
-          }));
+          const dynamicRoles = roles.map(r => ({ value: r.name, label: roleName(r.name) }));
 
           const mergedMap = new Map();
-          this.defaultRoles.forEach(r => mergedMap.set(r.value, r));
           dynamicRoles.forEach(r => mergedMap.set(r.value, r));
+          this.defaultRoles.forEach(r => mergedMap.set(r.value, r));
 
           this.roleOptions.set([{ value: '', label: 'Tüm roller' }, ...Array.from(mergedMap.values())]);
         } else {

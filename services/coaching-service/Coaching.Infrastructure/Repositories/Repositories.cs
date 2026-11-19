@@ -616,9 +616,10 @@ public sealed class CoachingStudentProgressRepository(CoachingDbContext context)
             })
             .ToListAsync(cancellationToken);
 
+        // Live test 19.11.2026 (A12): a grade without a score scale is out of 100 (grading caps it at 100).
         var assignmentPercentages = assignments
-            .Where(item => item.Score.HasValue && item.MaxScore.HasValue && item.MaxScore.Value > 0)
-            .Select(item => (double)item.Score!.Value / (double)item.MaxScore!.Value * 100)
+            .Where(item => item.Score.HasValue && (item.MaxScore ?? 100m) > 0)
+            .Select(item => (double)item.Score!.Value / (double)(item.MaxScore ?? 100m) * 100)
             .ToArray();
 
         var exams = await context.ExamResults
@@ -712,8 +713,8 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
             .ToListAsync(cancellationToken);
 
         var assignmentPercentages = assignmentRows
-            .Where(item => item.Score.HasValue && item.MaxScore.HasValue && item.MaxScore.Value > 0)
-            .Select(item => (double)item.Score!.Value / (double)item.MaxScore!.Value * 100)
+            .Where(item => item.Score.HasValue && (item.MaxScore ?? 100m) > 0)
+            .Select(item => (double)item.Score!.Value / (double)(item.MaxScore ?? 100m) * 100)
             .ToArray();
 
         var examRows = await context.ExamResults

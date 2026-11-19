@@ -28,4 +28,15 @@ td small { display: block; margin-top: 5px; }
 .error { padding: 15px; color: var(--ui-danger); background: var(--coaching-danger-soft); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @media (max-width: 1050px) { .filters { grid-template-columns: 1fr 1fr; } .filters button { justify-self: start; } }
-@media (max-width: 550px) { .filters { grid-template-columns: 1fr; padding: 14px; } table { min-width: 680px; } .pagination { justify-content: flex-start; flex-wrap: wrap; } }
+@media (max-width: 550px) { .filters { grid-template-columns: 1fr; padding: 14px; } .pagination { justify-content: flex-start; flex-wrap: wrap; } }
+/* Live test 19.11.2026 (A13): on a phone each record is a card; values stack under their column name instead of
+   being squeezed into the global two-column card, and the action button stays inside the card. */
+@media (max-width: 640px) {
+  :host .table-scroll { overflow-x: visible; border: 0; background: none; }
+  :host .table-scroll :is(table, tbody, tr) { display: block; width: 100%; min-width: 0; }
+  :host .table-scroll tr { box-sizing: border-box; margin-bottom: 12px; padding: 6px 14px 14px; }
+  :host .table-scroll :is(td, tbody th) { display: block; padding: 8px 0; text-align: left; }
+  :host .table-scroll tbody th { font-size: 14px; }
+  :host .table-scroll td[data-label]::before { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 600; }
+  :host .table-scroll td.action-cell button { width: 100%; min-height: 44px; }
+}

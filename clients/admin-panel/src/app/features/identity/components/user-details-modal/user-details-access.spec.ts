@@ -59,7 +59,7 @@ describe('UserDetailsModalComponent access management', () => {
   it('shows which platform each role is assigned to', () => {
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Student · Koçluk');
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci, Koçluk');
   });
 
   it('revokes a selected session and refreshes the local list', async () => {

@@ -16,7 +16,7 @@ import { CsStatusChipComponent } from '../ui';
     <button type="button" class="main" (click)="opened.emit()" [attr.aria-label]="task().title + (badge() ? ', ' + badge() : '') + ', ayrıntıları aç'">
       <span class="lesson">{{ task().lessonName || 'Çalışma' }}@if (badge(); as label) { <cs-status-chip class="source" [label]="label" [tone]="badgeTone()" /> }</span>
       <span class="title">{{ task().title }}</span>
-      <span class="meta">{{ timeText() }}, {{ task().plannedMinutes }} dk @if (task().plannedQuestions) {, {{ task().plannedQuestions }} soru }</span>
+      <span class="meta">{{ timeText() }}, {{ task().plannedMinutes }} dk@if (task().plannedQuestions) {<span>, {{ task().plannedQuestions }} soru</span>}</span>
       @if (overdue()) { <span class="flag late-flag">Gecikti</span> }
       @else if (partial()) { <span class="flag">Yarım, {{ task().actualMinutes }} dk</span> }
     </button>

@@ -53,7 +53,7 @@
         </form>
         @if (selected()?.status === 'Draft') {
           <div class="actions"><button type="button" class="secondary" [disabled]="busy() || dirty" (click)="archiveDraft()">Taslağı arşivle</button>
-            <p class="muted">Güncelliğini yitirmiş bir taslağı arşivleyip otomatik planı yeniden hazırlayabilirsin. Geçmiş silinmez.</p></div>
+            <p class="muted">Eski bir taslağı kaldırıp planı yeniden hazırlayabilirsin. Geçmişin silinmez.</p></div>
           <div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3><p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p>
             <label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy() || dirty">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label>
             <button type="button" (click)="publish()" [disabled]="busy() || dirty || !publishConfirmed || !selected()?.tasks?.length">Planı yayımla</button></div>
@@ -62,13 +62,13 @@
 
 <ng-template #taskDetail let-task let-plan="plan">
           <article class="task" [style.--lesson-color]="taskColor(task)" [class.completed]="task.isCompleted">
-            <div class="task-heading"><span class="lesson-badge">{{ task.lessonName || 'Çalışma' }}</span><span class="task-status">{{ task.isCompleted ? '✓ Tamamlandı' : '◷ Bekliyor' }}</span></div><h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }}, {{ task.plannedMinutes }} dk @if (task.isPinned) {, Sabit }</p>
+            <div class="task-heading"><span class="lesson-badge">{{ task.lessonName || 'Çalışma' }}</span><span class="task-status">{{ task.isCompleted ? '✓ Tamamlandı' : '◷ Bekliyor' }}</span></div><h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }}, {{ task.plannedMinutes }} dk@if (task.isPinned) {<span>, Sabit</span>}</p>
             @if(isOverdue(task)){<p class="notice error">Gecikmiş çalışma</p>}
             @if(task.plannedStartMinute!=null){<p>{{ task.lessonName }}, {{ clock(task.plannedStartMinute) }}–{{ clock(task.plannedStartMinute+task.plannedMinutes) }}</p>}
             @for (outcome of task.outcomes || []; track outcome.outcomeId) {
               <!-- Live test #11 (user decision 17.11.2026): the outcome code and the estimate number are for the teacher only. -->
-              @if (staffStudentId) { <p>{{ outcome.code }} — {{ outcome.name }}, {{ outcome.allocatedMinutes }} dk, süre sürümü {{ outcome.estimateNumber }} @if (outcome.origin === 'StudentOverride') {, Öğrencinin süre seçimi }</p> }
-              @else { <p>{{ outcome.name }}, {{ outcome.allocatedMinutes }} dk</p> }
+              @if (staffStudentId) { <p>{{ outcome.code }} — {{ withoutFinalStop(outcome.name) }}, {{ outcome.allocatedMinutes }} dk, süre sürümü {{ outcome.estimateNumber }}@if (outcome.origin === 'StudentOverride') {<span>, Öğrencinin süre seçimi</span>}</p> }
+              @else { <p>{{ withoutFinalStop(outcome.name) }}, {{ outcome.allocatedMinutes }} dk</p> }
             }
             @if (task.sourceName) { <p>Kaynak: {{ task.sourceName.startsWith('DenemeTekrar:') ? 'Deneme analizine göre konu tekrarı' : task.sourceName }}</p> }
             @if(task.predecessorTaskId){<p>{{ staffStudentId ? 'Devam çalışması: önceki gerçekleşmeler kaynak görevde korunur. Buraya yalnız bu devam görevindeki yeni çalışma toplamını gir. Konuların süre payları kaynak çalışmayla birlikte korunur.' : 'Yarım kalan çalışmanın devamı. Buraya yalnız bu kısımda yaptığın çalışmayı gir.' }}</p>}
@@ -161,7 +161,7 @@
         <div class="detail-heading"><h2>{{ plan.title }}</h2><span class="badge">{{ statusLabel(plan.status) }}</span>
           <button type="button" class="secondary" (click)="open(plan.id)" [disabled]="busy()">Planı yenile</button></div>
         @if(plan.weeklySource;as source){
-          <p class="muted">Haftalık takvimden üretilen plan, {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saat ve kazanım bağlantıları korunur; yeni bir dağıtım için taslağı arşivleyip yeniden önizle.</p>
+          <p class="muted">Haftalık takvimden üretilen plan, {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saatler ve konular korunur. Planı baştan dağıtmak istersen taslağı kaldırıp yeniden oluştur.</p>
           <app-plan-extend [source]="source" [active]="plan.status==='Active'" [readOnly]="readOnly || planningClosed()" [staffStudentId]="staffStudentId ?? null" (extended)="openExtended($event)" />
           @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3><p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }
@@ -209,7 +209,7 @@
       </details>
     </div>
         @if(plan.weeklySource;as source){
-          <p class="muted">Haftalık takvimden üretilen plan, {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saat ve kazanım bağlantıları korunur; yeni bir dağıtım için taslağı arşivleyip yeniden önizle.</p>
+          <p class="muted">Haftalık takvimden üretilen plan, {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saatler ve konular korunur. Planı baştan dağıtmak istersen taslağı kaldırıp yeniden oluştur.</p>
           <app-plan-extend [source]="source" [active]="plan.status==='Active'" [readOnly]="readOnly || planningClosed()" [staffStudentId]="staffStudentId ?? null" (extended)="openExtended($event)" />
           @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3><p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }

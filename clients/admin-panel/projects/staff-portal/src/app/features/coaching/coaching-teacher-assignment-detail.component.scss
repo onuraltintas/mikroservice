@@ -60,3 +60,5 @@
   .save-grade-button { grid-column: auto; justify-self: stretch; }
   .submissions-heading { align-items: flex-start; flex-direction: column; }
 }
+
+.field-error { display: block; margin-top: 6px; color: var(--ui-danger); font-size: 13px; font-weight: 600; }

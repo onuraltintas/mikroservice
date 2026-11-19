@@ -86,7 +86,7 @@ describe('BulkUserOperationsComponent', () => {
     await component.assignRole();
 
     expect(identityService.assignBulkRole).toHaveBeenCalledWith(['user-1', 'user-2'], 'Editor', false, 'speed-reading');
-    expect(toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Editor · Hızlı Okuma'), expect.anything());
+    expect(toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Editör, Hızlı Okuma'), expect.anything());
     expect(component.assignmentResult()).toEqual({ succeeded: 2, failed: 0, errors: [] });
     expect(toaster.success).toHaveBeenCalled();
   });

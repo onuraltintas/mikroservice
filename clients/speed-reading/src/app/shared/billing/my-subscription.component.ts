@@ -26,10 +26,12 @@ export class MySubscriptionComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.auth.currentUserValue;
+    // The billing panel shows its own errors next to the action; no second toast (live test 19.11.2026, B4).
+    const headers = { 'X-Skip-Error-Toast': 'true' };
     const http: BillingHttp = {
-      get: url => firstValueFrom(this.httpClient.get<never>(url)),
-      post: (url, body) => firstValueFrom(this.httpClient.post<never>(url, body)),
-      delete: url => firstValueFrom(this.httpClient.delete<never>(url)),
+      get: url => firstValueFrom(this.httpClient.get<never>(url, { headers })),
+      post: (url, body) => firstValueFrom(this.httpClient.post<never>(url, body, { headers })),
+      delete: url => firstValueFrom(this.httpClient.delete<never>(url, { headers })),
       blob: url => firstValueFrom(this.httpClient.get(url, { responseType: 'blob' }))
     };
     this.c = new MySubscriptionController(http, {

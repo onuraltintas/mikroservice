@@ -340,6 +340,9 @@ public class Assignment : AggregateRoot
         }
     }
 
+    /// <summary>Scale of a grade when the assignment has no score scale of its own.</summary>
+    public const decimal DefaultMaxScore = 100m;
+
     /// <summary>Returns false when the student already had exactly this grade and feedback (nothing to announce).</summary>
     public bool GradeAssignment(Guid studentId, decimal score, string? feedback = null)
     {
@@ -347,8 +350,10 @@ public class Assignment : AggregateRoot
         if (studentAssignment == null)
             throw new InvalidOperationException($"Student {studentId} is not assigned to this assignment.");
 
-        if (MaxScore.HasValue && score > MaxScore.Value)
-            throw new ArgumentException($"Score {score} exceeds maximum score {MaxScore.Value}");
+        // Live test 19.11.2026 (A12): without a score scale a grade is out of 100, as in the averages.
+        var maximum = MaxScore ?? DefaultMaxScore;
+        if (score > maximum)
+            throw new ArgumentException($"Score {score} exceeds maximum score {maximum}");
 
         if (!studentAssignment.Grade(score, feedback)) return false;
         UpdatedAt = DateTime.UtcNow;

@@ -123,7 +123,12 @@
     small { display: none; }
     &:first-child small { display: block; font-size: 11px; }
     cs-progress-ring { --cs-ring-size: 50px; }
+    // Live test 19.11.2026 (B13): a long exam name ("Liselere Geçiş Sistemi, 2027") gets its own row instead of
+    // breaking into five lines next to the other two facts.
+    &.exam { grid-column: 1 / -1; padding-bottom: var(--coaching-space-2); border-bottom: 1px solid var(--ui-border); }
+    &.exam + & { padding-left: 0; border-left: 0; }
   }
+  .strip:has(.fact.exam) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .next { padding: var(--coaching-space-5); gap: var(--coaching-space-2); &::after { width: 120px; height: 120px; right: -44px; top: -44px; border-width: 10px; } }
   .next-action { min-height: 44px; }
   .row { grid-template-columns: 48px minmax(0, 1fr) auto; min-height: 56px; }

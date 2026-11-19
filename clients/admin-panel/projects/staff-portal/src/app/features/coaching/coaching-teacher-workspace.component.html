@@ -1,9 +1,10 @@
 <section class="teacher-workspace" aria-labelledby="teacher-workspace-title">
-  <div class="workspace-heading">
+  <!-- Live test 19.11.2026 (B6): the welcome text stays on the main section; sub-pages keep a compact title. -->
+  <div class="workspace-heading" [class.compact]="activeSection() !== 'tracking'">
     <div>
-      <p class="workspace-eyebrow">Koçluk, öğretmen çalışma alanı</p>
+      @if (activeSection() === 'tracking') { <p class="workspace-eyebrow">Koçluk, öğretmen çalışma alanı</p> }
       <h2 id="teacher-workspace-title">Öğretmen paneli</h2>
-      <p>Öğrencilerinizi, ödevleri, seansları, hedefleri ve sınav sonuçlarını tek çalışma alanından yönetin.</p>
+      @if (activeSection() === 'tracking') { <p>Öğrencilerinizi, ödevleri, seansları, hedefleri ve sınav sonuçlarını tek çalışma alanından yönetin.</p> }
     </div>
   </div>
 
@@ -21,7 +22,7 @@
   } @else if (activeSection() === 'students') {
     <staff-coaching-teacher-students />
   } @else if (activeSection() === 'assignments') {
-    <staff-coaching-teacher-assignments [notificationAssignmentId]="notificationAssignmentId()" />
+    <staff-coaching-teacher-assignments [notificationAssignmentId]="notificationAssignmentId()" (reviewChange)="onAssignmentReviewChange($event)" />
   } @else if (activeSection() === 'sessions') {
     <staff-coaching-teacher-sessions />
   } @else if (activeSection() === 'goals') {

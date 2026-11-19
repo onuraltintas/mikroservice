@@ -72,3 +72,4 @@ td { padding: .72rem .7rem; border-top: 1px solid var(--ui-border); color: var(-
 .link-remove:hover:not(:disabled), .link-remove:focus-visible { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
 .handover select { min-width: 10rem; }
 .handover-warning { margin: 0.25rem 0 0; color: var(--ui-danger); font-size: 0.875rem; }
+.institution-heading.compact h2 { font-size: 1.05rem; }
