@@ -58,7 +58,7 @@ services:
       OTEL_SERVICE_NAME: EduPlatform.CourseManagement
       OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
       # Institution e-mails: unsubscribe links open on the institution portal's address.
-      CourseManagement__Email__PublicBaseUrl: ${COURSE_MANAGEMENT_PUBLIC_URL:-https://kurum.eduivme.com}
+      CourseManagement__Email__PublicBaseUrl: ${COURSE_MANAGEMENT_PUBLIC_URL:-https://maxkampus.com}
       AllowedHosts: ${COURSE_MANAGEMENT_ALLOWED_HOSTS:?COURSE_MANAGEMENT_ALLOWED_HOSTS must be set}
     depends_on:
       course-management-migrations:

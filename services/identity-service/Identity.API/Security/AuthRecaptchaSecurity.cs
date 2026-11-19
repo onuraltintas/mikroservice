@@ -128,6 +128,8 @@ public static class AuthRecaptchaRules
             return segments[3].ToLowerInvariant() switch
             {
                 "google-register-complete" => "auth_register",
+                // maxkampus.com (/api/auth/course-management/register).
+                "register" when string.Equals(segments[2], "course-management", StringComparison.OrdinalIgnoreCase) => "auth_register",
                 "login" or "google" or "google-login" => "auth_login",
                 _ => null
             };

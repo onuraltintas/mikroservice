@@ -275,6 +275,7 @@ services:
       PublicApp__StaffPortalUrl: ${PUBLIC_STAFF_PORTAL_URL:-https://ogretmen.eduivme.com/staff}
       PublicApp__InstitutionPortalUrl: ${PUBLIC_INSTITUTION_PORTAL_URL:-https://kurum.eduivme.com/staff}
       PublicApp__AdminPanelUrl: ${PUBLIC_ADMIN_PANEL_URL:-https://admin.eduivme.com}
+      PublicApp__CourseManagementBaseUrl: ${COURSE_MANAGEMENT_PUBLIC_URL:-https://maxkampus.com}
       # New bank-transfer notices and institution expiries are e-mailed here; empty sends none.
       CoachingNotices__AdminAlertEmail: ${COACHING_ADMIN_ALERT_EMAIL:-}
       TextMessaging__Enabled: ${TEXT_MESSAGING_ENABLED:-false}

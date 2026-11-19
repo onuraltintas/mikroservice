@@ -9,6 +9,7 @@ public sealed class RegistrationLegalConsentPolicyTests
     [Theory]
     [InlineData(PlatformProduct.Coaching, true)]
     [InlineData(PlatformProduct.SpeedReading, false)]
+    [InlineData(PlatformProduct.CourseManagement, true)]
     public void GoogleRegistration_RequiresLegalAcceptanceOnlyForCoaching(PlatformProduct product, bool expected)
     {
         RegistrationLegalConsentPolicy.GoogleRequiresAcceptance(product).Should().Be(expected);
@@ -17,6 +18,7 @@ public sealed class RegistrationLegalConsentPolicyTests
     [Theory]
     [InlineData(PlatformProduct.Coaching, "coaching-terms")]
     [InlineData(PlatformProduct.SpeedReading, "speed-reading-terms")]
+    [InlineData(PlatformProduct.CourseManagement, "course-management-terms")]
     public void RequiredSlugs_AlwaysIncludeSharedNoticesAndProductSpecificTerms(
         PlatformProduct product,
         string expectedTermsSlug)

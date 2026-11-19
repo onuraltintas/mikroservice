@@ -12,4 +12,6 @@ public record GoogleLoginCommand(
     PlatformProduct? Product = null,
     IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null,
     /// <summary>Roadmap O11: campaign tags of the landing page, stored when the login creates an account.</summary>
-    Identity.Application.Registration.RegistrationUtm? Utm = null) : IRequest<Result<LoginResponse>>;
+    Identity.Application.Registration.RegistrationUtm? Utm = null,
+    /// <summary>maxkampus.com: what a new account says about itself (kind, phone, workspace name).</summary>
+    Identity.Application.Commands.RegisterCourseManagement.CourseManagementSignup? Signup = null) : IRequest<Result<LoginResponse>>;

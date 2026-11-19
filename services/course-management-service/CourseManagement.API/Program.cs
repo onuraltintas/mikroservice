@@ -59,6 +59,8 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<CourseManagementErasureAssessmentRequestedConsumer>();
     x.AddConsumer<CourseManagementErasureExecutionRequestedConsumer>();
+    // maxkampus.com registration: the workspace the new owner named (19.11.2026).
+    x.AddConsumer<CourseManagementWorkspaceRequestedConsumer>();
     x.AddEntityFrameworkOutbox<CourseManagementDbContext>(options =>
     {
         options.UsePostgres();

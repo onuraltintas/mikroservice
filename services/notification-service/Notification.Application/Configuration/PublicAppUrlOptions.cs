@@ -27,6 +27,20 @@ public sealed class PublicAppUrlOptions
     /// </summary>
     public string StaffPortalUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// maxkampüs (19.11.2026): the Kurs Yönetimi site, production https://maxkampus.com. Account e-mails of the
+    /// "course-management" product (verification, password reset, sign-in) open its own pages. Empty: older behaviour.
+    /// </summary>
+    public string CourseManagementBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>maxkampus.com pages (Turkish addresses, as on the site).</summary>
+    public const string CourseManagementVerificationPath = "/eposta-dogrula";
+    public const string CourseManagementResetPath = "/sifre-yenile";
+    public const string CourseManagementLoginPath = "/giris";
+
+    private bool IsCourseManagement(string? product) =>
+        string.Equals(product, "course-management", StringComparison.OrdinalIgnoreCase) && IsValidBaseUrl(CourseManagementBaseUrl);
+
     /// <summary>Alan adı planı (18.11.2026): the staff portal of institution managers, e.g. https://kurum.eduivme.com/staff.
     /// Empty means <see cref="StaffPortalUrl"/>.</summary>
     public string InstitutionPortalUrl { get; set; } = string.Empty;
@@ -129,7 +143,7 @@ public sealed class PublicAppUrlOptions
 
     /// <summary>Null (older message shape), "coaching" or "speed-reading".</summary>
     public static bool IsKnownProduct(string? product) =>
-        product is null || product.ToLowerInvariant() is "coaching" or "speed-reading";
+        product is null || product.ToLowerInvariant() is "coaching" or "speed-reading" or "course-management";
 
     /// <summary>The admin-panel (Coaching site) page that reads <c>userId</c> and <c>token</c>.</summary>
     public const string CoachingEmailVerificationPath = "/auth/confirm-email";
@@ -154,6 +168,7 @@ public sealed class PublicAppUrlOptions
     /// </summary>
     public string ResolveBaseUrl(string? role, string? product)
     {
+        if (IsCourseManagement(product)) return CourseManagementBaseUrl.TrimEnd('/');
         var candidate = IsManagementRole(role) && IsValidBaseUrl(AdminPanelUrl)
             ? AdminPanelUrl
             : IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
@@ -178,6 +193,7 @@ public sealed class PublicAppUrlOptions
         var baseUrl = ResolveBaseUrl(role, product);
         var id = Uri.EscapeDataString(userId.ToString());
         var value = Uri.EscapeDataString(token);
+        if (IsCourseManagement(product)) return $"{baseUrl}{CourseManagementVerificationPath}?userId={id}&token={value}";
         // PR #111 second review H1: each site's own verification page; the Coaching site has no /auth/verify-email.
         return !IsManagementRole(role) && IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
             ? $"{baseUrl}{SpeedReadingEmailVerificationPath}?token={value}&userId={id}"
@@ -190,7 +206,8 @@ public sealed class PublicAppUrlOptions
     public string BuildPasswordResetLink(string token, string email, string? role, string? product)
     {
         var baseUrl = ResolveBaseUrl(role, product);
-        return $"{baseUrl}{PasswordResetPath}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        var path = IsCourseManagement(product) ? CourseManagementResetPath : PasswordResetPath;
+        return $"{baseUrl}{path}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
 
     /// <summary>
@@ -205,13 +222,15 @@ public sealed class PublicAppUrlOptions
 
     public string BuildLoginLink(string? role = null) => BuildLoginLink(role, null);
 
-    public string BuildLoginLink(string? role, string? product) => $"{ResolveBaseUrl(role, product)}/auth/login";
+    public string BuildLoginLink(string? role, string? product) =>
+        $"{ResolveBaseUrl(role, product)}{(IsCourseManagement(product) ? CourseManagementLoginPath : "/auth/login")}";
 
     public static string GetApplicationName(string? role) =>
         GetApplicationName(role, null);
 
     public static string GetApplicationName(string? role, string? product) =>
-        IsSpeedReadingProduct(role, product) ? "Master Hızlı Okuma" : IsLearnerRole(role) ? "maxkoç" : "eduivme";
+        string.Equals(product, "course-management", StringComparison.OrdinalIgnoreCase) ? "maxkampüs"
+        : IsSpeedReadingProduct(role, product) ? "Master Hızlı Okuma" : IsLearnerRole(role) ? "maxkoç" : "eduivme";
 
     /// <summary>Brand decision 18.11.2026: Koçluk students and parents use maxkoç; teachers, institutions and managers eduivme.</summary>
     private static bool IsLearnerRole(string? role) =>
