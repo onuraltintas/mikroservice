@@ -22,7 +22,7 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
         <div class="ds-auth__panel">
           <a routerLink="/" class="ds-auth__brand" aria-label="maxkampüs ana sayfa">
             <mk-brand-mark [size]="40" />
-            <span><span class="ds-auth__brand-name">maxkampüs</span><span class="ds-auth__brand-note">bir eduivme markası</span></span>
+            <span><span class="ds-auth__brand-name">maxkampüs</span></span>
           </a>
           <ng-content />
         </div>

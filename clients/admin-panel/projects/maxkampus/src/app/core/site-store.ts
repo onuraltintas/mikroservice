@@ -10,7 +10,6 @@ export class SiteStore {
   readonly failed = signal(false);
   readonly headerMenu = computed(() => (this.home()?.menus ?? []).filter(item => item.category === 'header'));
   readonly footerMenu = computed(() => (this.home()?.menus ?? []).filter(item => item.category === 'footer'));
-  readonly brandLine = computed(() => this.home()?.site?.subtitle || 'bir eduivme markası');
 
   load(): Promise<SiteHome | null> {
     this.loading ??= this.api.home().then(home => { this.home.set(home); this.failed.set(false); return home; })

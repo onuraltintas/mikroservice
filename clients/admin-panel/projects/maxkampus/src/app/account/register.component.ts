@@ -43,7 +43,7 @@ export function passwordLooksValid(value: string): boolean {
           @if (resent()) { <p class="mk-success" role="status">Bağlantı yeniden gönderildi.</p> }
           <button type="button" class="ds-btn ds-btn--secondary" (click)="resend()" [disabled]="busy()">Bağlantıyı yeniden gönder</button>
         } @else {
-          <p>Mevcut eduivme hesabınız maxkampüs'e eklendi. Aynı e-posta ve şifreyle giriş yapın.</p>
+          <p>maxkoç ya da Master Hızlı Okuma hesabınız maxkampüs'e eklendi. Aynı e-posta ve şifreyle giriş yapın.</p>
           <a class="ds-btn ds-btn--primary ds-btn--large ds-btn--block" routerLink="/giris" [queryParams]="kind() === 'invited' && davet() ? { donus: '/davet/' + davet() } : {}">Giriş yap</a>
         }
       } @else if (!kind()) {

@@ -42,6 +42,7 @@ const PARENT_PAGE_LABELS: [string, string][] = [
   encapsulation: ViewEncapsulation.None
 })
 export class CoachingPortalLayoutComponent {
+  readonly currentYear = new Date().getFullYear();
   readonly studentNavigation = inject(CoachingStudentNavigationService);
   readonly unreadCount = inject(NotificationService).unreadCount;
   private readonly messagesUnread = inject(CoachingMessagesUnreadService);

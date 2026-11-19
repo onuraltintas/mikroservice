@@ -48,7 +48,7 @@ public sealed class CourseManagementEmailConsumer(IEmailDeliveryQueue queue, INo
           <h1 style="margin:0 0 16px;font-size:20px">{title}</h1>
           {content}{note}
           <hr style="border:0;border-top:1px solid #D6DAE0;margin:24px 0 12px">
-          <p style="margin:0;font-size:12px;color:#4A5563">Bu e-postayı {institution} eduivme Kurs Yönetimi ile gönderdi.
+          <p style="margin:0;font-size:12px;color:#4A5563">Bu e-postayı {institution} maxkampüs ile gönderdi.
           Bu e-postaları almak istemiyorsanız <a href="{unsubscribeLink}" style="color:#4A5563">buradan çıkabilirsiniz</a>.</p>
         </div>
         """;

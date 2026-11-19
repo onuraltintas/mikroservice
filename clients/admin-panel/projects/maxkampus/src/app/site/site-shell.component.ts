@@ -18,7 +18,7 @@ import { SiteLinkComponent } from './site-link.component';
       <div class="mk-wrap top__bar">
         <a routerLink="/" class="logo" aria-label="maxkampüs ana sayfa">
           <mk-brand-mark [size]="36" />
-          <span class="logo__text"><strong>maxkampüs</strong><span>{{ store.brandLine() }}</span></span>
+          <span class="logo__text"><strong>maxkampüs</strong></span>
         </a>
         <button type="button" class="menu-toggle" [attr.aria-expanded]="open()" aria-controls="site-menu" (click)="open.set(!open())">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -48,7 +48,7 @@ import { SiteLinkComponent } from './site-link.component';
         <div class="foot__brand">
           <a routerLink="/" class="logo logo--light" aria-label="maxkampüs ana sayfa">
             <mk-brand-mark [size]="32" />
-            <span class="logo__text"><strong>maxkampüs</strong><span>{{ store.brandLine() }}</span></span>
+            <span class="logo__text"><strong>maxkampüs</strong></span>
           </a>
           <p>{{ store.home()?.site?.body || 'Kurslar, etüt merkezleri ve özel ders verenler için ders programı, yoklama, ödev ve tahsilat.' }}</p>
         </div>

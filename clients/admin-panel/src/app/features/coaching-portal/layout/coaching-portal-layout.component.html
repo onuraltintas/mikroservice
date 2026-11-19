@@ -52,7 +52,7 @@
     <main id="coaching-main" class="coaching-content" tabindex="-1">
       <router-outlet />
     </main>
-    <footer class="coaching-footer"><span>maxkoç, bir eduivme markası</span><span>© ONAL Yazılım ve Otomasyon</span></footer>
+    <footer class="coaching-footer"><span>maxkoç bir eduivme markasıdır. © {{ currentYear }} ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır.</span></footer>
   </div>
   <nav *ngIf="isStudent() && !isParent()" class="coaching-mobile-nav" aria-label="Hızlı erişim" [style.--mobile-items]="mobileLinks().length">
     <a *ngFor="let link of mobileLinks()" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.aria-label]="link.badge ? (link.short || link.label) + ' (' + link.badge + ' okunmamış)' : null"><app-coaching-icon [name]="link.icon" /><span>{{ link.short || link.label }}</span>@if (link.badge) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(link.badge) }}</span> }</a>

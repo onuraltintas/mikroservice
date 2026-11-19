@@ -22,7 +22,7 @@ public sealed class CourseManagementOwnerEmailConsumer(IEmailDeliveryQueue queue
             : $"<p style=\"margin:20px 0 0\"><a href=\"{EmailContent.Html(link)}\" style=\"display:inline-block;padding:12px 18px;background:#3A2E14;color:#FFFFFF;border-radius:8px;text-decoration:none\">{EmailContent.Html(message.LinkText)}</a></p>";
         var body = $"""
             <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1C2430;line-height:1.6">
-              <p style="margin:0 0 4px;font-size:14px;color:#4A5563">maxkampüs, bir eduivme markası</p>
+              <p style="margin:0 0 4px;font-size:14px;color:#4A5563">maxkampüs</p>
               <h1 style="margin:0 0 16px;font-size:20px">{EmailContent.Html(message.Title)}</h1>
               {content}{button}
               <hr style="border:0;border-top:1px solid #D6DAE0;margin:24px 0 12px">

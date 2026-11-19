@@ -15,7 +15,7 @@ import { SiteAnalyticsService } from '../../../core/services/site-analytics.serv
         <div class="site__bar">
           <a routerLink="/coaching" class="site__brand" aria-label="maxkoç ana sayfası">
             <img src="brand/maxkoc.svg" alt="" width="40" height="40">
-            <span><span class="site__name">{{ branding()?.title || 'maxkoç' }}</span><span class="site__note">{{ branding()?.eyebrow || 'bir eduivme markası' }}</span></span>
+            <span><span class="site__name">{{ branding()?.title || 'maxkoç' }}</span><span class="site__note">{{ branding()?.eyebrow || 'Öğrenci koçluğu' }}</span></span>
           </a>
           <nav class="site__nav" aria-label="Koçluk içerik menüsü">
             @for (item of navigation(); track item.id) {

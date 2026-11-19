@@ -3,7 +3,7 @@
 
 
         <mat-card-content>
-            <div class="existing-account"><p>maxkoç ya da başka bir eduivme hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+            <div class="existing-account"><p>maxkoç ya da maxkampüs hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
               {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
             </button></div>
             @if (joinExisting) { <app-existing-product-join product="speed-reading" account="institution" /> }

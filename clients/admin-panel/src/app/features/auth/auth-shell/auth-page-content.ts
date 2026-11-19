@@ -29,7 +29,7 @@ const EDUIVME = { brand: 'eduivme', brandName: 'eduivme', logo: 'brand/eduivme.s
 
 export const AUTH_PAGES: Readonly<Record<EduivmeSite, AuthPageContent>> = {
   student: {
-    ...MAXKOC, brandNote: 'bir eduivme markası', visual: 'today', place: 'maxkoc.com',
+    ...MAXKOC, brandNote: 'Öğrenci paneli', visual: 'today', place: 'maxkoc.com',
     headline: 'Haftan seni bekliyor.',
     sub: 'Bugünün işleri, deneme netlerin ve koçunun notları tek yerde.',
     points: [],
@@ -38,7 +38,7 @@ export const AUTH_PAGES: Readonly<Record<EduivmeSite, AuthPageContent>> = {
     other: { lead: 'Veli misin?', label: 'Veli girişi', site: 'parent' }
   },
   parent: {
-    ...MAXKOC, brandNote: 'Veli paneli, bir eduivme markası', visual: 'week', place: 'veli.maxkoc.com',
+    ...MAXKOC, brandNote: 'Veli paneli', visual: 'week', place: 'veli.maxkoc.com',
     headline: 'Çocuğunun haftasını tek bakışta gör.',
     sub: 'Çalışma süresi, denemeler ve görüşmeler; yalnız çocuğunun paylaştığı kadarıyla.',
     points: [],
