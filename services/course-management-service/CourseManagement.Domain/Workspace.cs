@@ -17,6 +17,11 @@ public sealed class Workspace
     public InstitutionCategory? InstitutionCategory { get; private set; }
     public bool IsErasureReadOnly { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    /// <summary>The plan end the owner was last warned about (data deletion a year after it); null when never warned.</summary>
+    public DateTimeOffset? RetentionWarningForEndsAt { get; private set; }
+    public DateTimeOffset? RetentionWarnedAt { get; private set; }
+    /// <summary>When the panel data was last deleted for retention; the workspace and its owner stay.</summary>
+    public DateTimeOffset? ContentPurgedAt { get; private set; }
 
     public static Workspace Create(Guid id, Guid ownerUserId, string name, WorkspaceType type)
     {
@@ -55,6 +60,19 @@ public sealed class Workspace
             if (!Enum.IsDefined(category)) throw new ArgumentOutOfRangeException(nameof(institutionCategory));
             InstitutionCategory = category;
         }
+    }
+
+    public void MarkRetentionWarned(DateTimeOffset planEndsAt, DateTimeOffset now)
+    {
+        RetentionWarningForEndsAt = planEndsAt;
+        RetentionWarnedAt = now;
+    }
+
+    public void MarkContentPurged(DateTimeOffset now)
+    {
+        ContentPurgedAt = now;
+        RetentionWarningForEndsAt = null;
+        RetentionWarnedAt = null;
     }
 
     public void SetErasureReadOnly()

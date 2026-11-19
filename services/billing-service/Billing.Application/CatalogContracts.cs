@@ -12,12 +12,16 @@ public sealed record ProductView(
     BankTransferApproval BankTransferApproval,
     bool IsActive,
     int SortOrder,
-    IReadOnlyList<EntitlementView> Entitlements);
+    IReadOnlyList<EntitlementView> Entitlements,
+    /// <summary>Sold to businesses: business contract, no withdrawal (see <see cref="Product.BusinessSales"/>).</summary>
+    bool BusinessSales = false);
 
 public sealed record ProductRequest(string Code, string Name, bool IsActive, int SortOrder);
 
 /// <summary>The two billing settings of a product, changed on their own so a catalog edit never flips them by accident.</summary>
-public sealed record ProductSettingsRequest(bool RequireSubscription, BankTransferApproval BankTransferApproval);
+public sealed record ProductSettingsRequest(bool RequireSubscription, BankTransferApproval BankTransferApproval,
+    /// <summary>Null leaves the setting as it is (older screens do not send it).</summary>
+    bool? BusinessSales = null);
 
 public sealed record EntitlementRequest(string Key, string Name, bool HasLimit);
 
@@ -43,7 +47,11 @@ public sealed record PlanView(
     IReadOnlyList<string> Features,
     IReadOnlyList<PlanEntitlementView> Entitlements,
     /// <summary>The products whose entitlements the plan gives; more than one is a bundle.</summary>
-    IReadOnlyList<string> ProductCodes);
+    IReadOnlyList<string> ProductCodes,
+    /// <summary>Null: the price includes taxes. A rate: the price is net and VAT at this percentage is added.</summary>
+    decimal? VatRate = null,
+    /// <summary>What a buyer pays for the plan: the price plus VAT.</summary>
+    decimal PriceWithVat = 0);
 
 public sealed record PlanRequest(
     string Name,
@@ -59,7 +67,8 @@ public sealed record PlanRequest(
     bool IsPublic,
     int SortOrder,
     IReadOnlyList<string>? Features,
-    IReadOnlyList<PlanEntitlementRequest>? Entitlements);
+    IReadOnlyList<PlanEntitlementRequest>? Entitlements,
+    decimal? VatRate = null);
 
 public sealed record SellerView(
     string? Title,
@@ -113,7 +122,8 @@ public sealed record PublicCatalog(
     /// <summary>Plans can be ordered: the seller details are complete and at least one bank account is open.</summary>
     bool SalesOpen,
     IReadOnlyList<PlanView> Plans,
-    IReadOnlyList<PublicBankAccount> BankAccounts);
+    IReadOnlyList<PublicBankAccount> BankAccounts,
+    bool BusinessSales = false);
 
 /// <summary>The catalog and settings of the billing service (stage 1 of billing-service-plan.md).</summary>
 public interface IBillingCatalog

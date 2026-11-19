@@ -122,6 +122,10 @@ builder.Services.AddSingleton<ICourseAssignmentAttachmentScanner>(attachmentOpti
     : new DevelopmentCourseAssignmentAttachmentScanner());
 builder.Services.AddHostedService<CourseAssignmentAttachmentCleanupService>();
 builder.Services.AddHostedService<CourseManagementReminderWorker>();
+// maxkampüs data retention (20.11.2026): warn 30 days before, delete panel data a year after the plan ended.
+builder.Services.AddSingleton<WorkspaceRetentionWorker>();
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddHostedService(provider => provider.GetRequiredService<WorkspaceRetentionWorker>());
 // E-mails to students and guardians (19.11.2026): settings, sending record and unsubscribe links.
 var emailOptions = builder.Configuration.GetSection(CourseEmailOptions.SectionName).Get<CourseEmailOptions>() ?? new CourseEmailOptions();
 if (builder.Environment.IsProduction() && emailOptions.UnsubscribeKey == CourseEmailOptions.DevelopmentKey)

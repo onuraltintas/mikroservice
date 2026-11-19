@@ -95,7 +95,10 @@ public sealed record OrderView(
     WithdrawalStatus? Withdrawal = null,
     /// <summary>A paid order can be withdrawn from until this moment; null when it cannot.</summary>
     DateTime? WithdrawUntil = null,
-    bool HasInvoice = false);
+    bool HasInvoice = false,
+    /// <summary>Null when the price included taxes; otherwise the VAT rate of the order.</summary>
+    decimal? VatRate = null,
+    decimal VatAmount = 0);
 
 public sealed record AdminOrderView(
     OrderView Order,
@@ -132,7 +135,12 @@ public sealed record ProductAccess(
     string ProductCode,
     /// <summary>False: everybody with an account uses the product; entitlements are not looked at.</summary>
     bool RequireSubscription,
-    IReadOnlyList<GrantedEntitlement> Entitlements);
+    IReadOnlyList<GrantedEntitlement> Entitlements,
+    /// <summary>
+    /// The latest end of any subscription that gave the user this product, past or running; null when there was none.
+    /// Course Management deletes a workspace's data a year after it (user decision 20.11.2026).
+    /// </summary>
+    DateTime? LastEndsAt = null);
 
 /// <summary>"Aboneliğim" of one product for the signed-in user.</summary>
 public sealed record MyBilling(
@@ -142,7 +150,8 @@ public sealed record MyBilling(
     bool SalesOpen,
     IReadOnlyList<GrantedEntitlement> Entitlements,
     IReadOnlyList<SubscriptionView> Subscriptions,
-    IReadOnlyList<OrderView> PendingOrders);
+    IReadOnlyList<OrderView> PendingOrders,
+    bool BusinessSales = false);
 
 /// <summary>Publishes billing messages with the transaction that causes them (outbox).</summary>
 public interface IBillingEvents
@@ -241,7 +250,8 @@ public sealed record CouponView(
 public sealed record CouponRequest(string Code, CouponKind Kind, decimal Value, DateTime? StartsAt, DateTime? EndsAt, int? MaxUses, IReadOnlyList<Guid>? PlanIds, bool IsActive);
 
 public sealed record CouponQuoteRequest(Guid PlanId, string? Code);
-public sealed record CouponQuote(string Code, decimal ListPrice, decimal Discount, decimal Amount, string Currency);
+public sealed record CouponQuote(string Code, decimal ListPrice, decimal Discount, decimal Amount, string Currency,
+    decimal? VatRate = null, decimal VatAmount = 0);
 
 public sealed record StartTrialRequest(Guid PlanId, string? BuyerName);
 

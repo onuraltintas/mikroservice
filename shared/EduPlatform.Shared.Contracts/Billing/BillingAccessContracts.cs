@@ -4,7 +4,9 @@ namespace EduPlatform.Shared.Contracts.Billing;
 /// What the billing service answers a product service about one user (GET /internal/billing/v1/entitlements).
 /// <paramref name="RequireSubscription"/> false: everybody with an account uses the product and the entitlements are not looked at.
 /// </summary>
-public sealed record BillingProductAccessResponse(string ProductCode, bool RequireSubscription, IReadOnlyList<BillingGrantedEntitlement>? Entitlements);
+/// <paramref name="LastEndsAt"/>: the latest end of any subscription that gave the user the product, past or running.
+public sealed record BillingProductAccessResponse(string ProductCode, bool RequireSubscription, IReadOnlyList<BillingGrantedEntitlement>? Entitlements,
+    DateTime? LastEndsAt = null);
 
 public sealed record BillingGrantedEntitlement(string Key, int? LimitValue, DateTime EndsAt);
 

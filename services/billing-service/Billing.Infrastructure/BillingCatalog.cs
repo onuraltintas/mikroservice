@@ -64,6 +64,7 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
             await events.PublishAsync(new BillingProductSettingsChangedV1(product.Code, request.RequireSubscription, Now), cancellationToken);
         product.RequireSubscription = request.RequireSubscription;
         product.BankTransferApproval = request.BankTransferApproval;
+        if (request.BusinessSales is { } business) product.BusinessSales = business;
         product.UpdatedAt = Now;
         product.UpdatedBy = actorId;
         await db.SaveChangesAsync(cancellationToken);
@@ -147,6 +148,7 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
         var problem = BillingRules.PlanProblem(request.BuyerType, request.Price, request.DurationDays, request.TrialDays, request.SeatCount,
             request.ExtraSeatPrice, request.IsContactOnly);
         if (problem is not null) throw new BusinessRuleException("Billing.PlanInvalid", problem);
+        if (BillingRules.VatRateProblem(request.VatRate) is { } vatProblem) throw new BusinessRuleException("Billing.PlanInvalid", vatProblem);
         var features = (request.Features ?? []).Select(item => item?.Trim() ?? string.Empty).Where(item => item.Length > 0).ToArray();
         if (features.Length > MaxFeatures || features.Any(item => item.Length > MaxFeatureLength))
             throw new BusinessRuleException("Billing.PlanInvalid", "En çok 20 plan özelliği yazılabilir; her biri en fazla 200 karakter olabilir.");
@@ -174,6 +176,7 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
         if (plan.Description.Length > 2_000) throw new BusinessRuleException("Billing.PlanInvalid", "Plan açıklaması en fazla 2000 karakter olabilir.");
         plan.BuyerType = request.BuyerType;
         plan.Price = Math.Round(request.Price, 2, MidpointRounding.AwayFromZero);
+        plan.VatRate = request.VatRate;
         plan.Currency = BillingRules.DefaultCurrency;
         plan.DurationDays = request.DurationDays;
         plan.TrialDays = request.TrialDays;
@@ -205,7 +208,8 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
             return new PlanView(plan.Id, plan.Name, plan.Description, plan.BuyerType, plan.Price, plan.Currency, plan.DurationDays, plan.TrialDays,
                 plan.SeatCount, plan.ExtraSeatPrice, plan.IsContactOnly, plan.IsActive, plan.IsPublic, plan.SortOrder,
                 JsonSerializer.Deserialize<string[]>(plan.FeaturesJson) ?? [], entitlements,
-                entitlements.Select(item => item.ProductCode).Distinct().ToArray());
+                entitlements.Select(item => item.ProductCode).Distinct().ToArray(),
+                plan.VatRate, plan.Price + BillingRules.Vat(plan.Price, plan.VatRate));
         }).ToArray();
     }
 
@@ -320,7 +324,8 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
         var seller = await db.Sellers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == Seller.SingleId, cancellationToken);
         return new PublicCatalog(product.Code, product.Name, product.RequireSubscription, seller is { IsComplete: true } && accounts.Count > 0,
             await ViewsAsync(plans, cancellationToken),
-            accounts.Select(item => new PublicBankAccount(item.BankName, item.AccountHolder, item.Iban, BillingRules.FormatIban(item.Iban), item.Instructions)).ToArray());
+            accounts.Select(item => new PublicBankAccount(item.BankName, item.AccountHolder, item.Iban, BillingRules.FormatIban(item.Iban), item.Instructions)).ToArray(),
+            product.BusinessSales);
     }
 
     // ---- Helpers ------------------------------------------------------------------------------------------------------
@@ -335,7 +340,8 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
 
     private static ProductView View(Product product, IReadOnlyList<Entitlement> entitlements) =>
         new(product.Id, product.Code, product.Name, product.RequireSubscription, product.BankTransferApproval, product.IsActive, product.SortOrder,
-            entitlements.Where(item => item.ProductId == product.Id).Select(item => new EntitlementView(item.Id, item.Key, item.Name, item.HasLimit)).ToArray());
+            entitlements.Where(item => item.ProductId == product.Id).Select(item => new EntitlementView(item.Id, item.Key, item.Name, item.HasLimit)).ToArray(),
+            product.BusinessSales);
 
     private static SellerView View(Seller seller) =>
         new(seller.Title, seller.Address, seller.TaxOffice, seller.TaxNumber, seller.MersisNumber, seller.Email, seller.Phone, seller.AlertEmail, seller.IsComplete);
