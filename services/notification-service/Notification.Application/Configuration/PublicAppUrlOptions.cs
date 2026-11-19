@@ -206,8 +206,9 @@ public sealed class PublicAppUrlOptions
     public string BuildPasswordResetLink(string token, string email, string? role, string? product)
     {
         var baseUrl = ResolveBaseUrl(role, product);
-        var path = IsCourseManagement(product) ? CourseManagementResetPath : PasswordResetPath;
-        return $"{baseUrl}{path}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        if (IsCourseManagement(product))
+            return $"{baseUrl}{CourseManagementResetPath}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        return $"{baseUrl}{PasswordResetPath}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
 
     /// <summary>

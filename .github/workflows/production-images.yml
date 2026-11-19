@@ -93,6 +93,7 @@ jobs:
           - { name: speed-reading-frontend, context: ./clients, dockerfile: speed-reading/Dockerfile }
           - { name: admin-panel, context: ./clients, dockerfile: admin-panel/Dockerfile }
           - { name: staff-portal, context: ./clients, dockerfile: admin-panel/Dockerfile.staff-portal }
+          - { name: maxkampus, context: ./clients, dockerfile: admin-panel/Dockerfile.maxkampus }
     steps:
       - name: Resolve commit and tag
         id: meta

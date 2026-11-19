@@ -1,0 +1,61 @@
+// maxkampus.com (19.11.2026): grafit and kehribar of the eduivme panel family, IBM Plex Sans, "siz".
+// Colours only through --ds-* tokens (data-brand="eduivme" on <html>); the site adds its warm soft tone (--mk-soft).
+@use '../../../../shared/styles/design-tokens';
+@use '../../../../shared/styles/design-components';
+
+[data-brand='eduivme'] {
+  --mk-soft: #FDF3DC;
+  --mk-on-soft: #5C3D00;
+  --mk-mark: #3A2E14;
+  --mk-hero-muted: #D6DAE0;
+  --mk-hero-line: #2E3A49;
+  --mk-hero-card: #222C39;
+}
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+  font-family: var(--ds-font);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.01em; }
+img { max-width: 100%; height: auto; }
+a { color: var(--ds-link); }
+.num { font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+// Page width and the site's section rhythm.
+.mk-wrap { width: min(1200px, 100%); margin: 0 auto; padding: 0 24px; }
+.mk-narrow { width: min(760px, 100%); margin: 0 auto; padding: 0 24px; }
+.mk-section { padding: 64px 0; }
+.mk-section h2 { margin: 0 0 12px; font-size: clamp(26px, 3.4vw, 34px); }
+.mk-lead { margin: 0 0 32px; max-width: 40em; color: var(--ds-muted); font-size: 18px; }
+.mk-muted { color: var(--ds-muted); }
+.mk-card { padding: 22px; border: 1px solid var(--ds-line); border-radius: 14px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+.mk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.mk-status { padding: 48px 0; color: var(--ds-muted); text-align: center; }
+
+// The amber call to action on the graphite hero.
+.mk-btn-amber { background: var(--ds-accent); color: var(--ds-on-accent); }
+.mk-btn-amber:hover { background: color-mix(in srgb, var(--ds-accent) 85%, #FFFFFF); }
+.mk-btn-ghost { border-color: #7A8492; background: transparent; color: #FFFFFF; }
+.mk-btn-ghost:hover { background: rgba(255, 255, 255, 0.08); }
+
+// Long text (blog, pages, legal texts) rendered from blocks.
+.mk-prose { font-size: 17px; line-height: 1.75; }
+.mk-prose h2 { margin: 36px 0 12px; font-size: 24px; }
+.mk-prose p { margin: 0 0 18px; }
+.mk-prose ul { margin: 0 0 18px; padding-left: 22px; }
+.mk-prose li { margin-bottom: 6px; }
+
+.mk-pill { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; background: var(--mk-soft); color: var(--mk-on-soft); font-size: 14px; font-weight: 600; }
+.mk-notice { padding: 14px 16px; border: 1px solid var(--ds-line); border-left: 4px solid var(--ds-accent); border-radius: var(--ds-radius-control); background: var(--ds-surface); }
+.mk-success { padding: 14px 16px; border-radius: var(--ds-radius-control); background: var(--ds-success-soft); color: var(--ds-success); }

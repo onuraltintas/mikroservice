@@ -34,7 +34,7 @@ test('the image workflow builds every production image from the compose Dockerfi
   const images = workflowImages();
   assert.deepEqual(images.map(image => image.name).sort(), [
     'admin-panel', 'api-gateway', 'billing-service', 'coaching-service', 'course-management-service', 'identity-service',
-    'notification-service', 'site-service', 'speed-reading-frontend', 'speed-reading-service', 'staff-portal']);
+    'maxkampus', 'notification-service', 'site-service', 'speed-reading-frontend', 'speed-reading-service', 'staff-portal']);
   for (const image of images) {
     assert.ok(compose.has(image.name), `${image.name} is not built by the production compose files`);
     assert.deepEqual({ context: image.context, dockerfile: image.dockerfile }, compose.get(image.name), image.name);

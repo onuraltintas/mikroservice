@@ -139,7 +139,17 @@
                 "input": "projects/staff-portal/public"
               }
             ],
-            "styles": ["@fontsource/ibm-plex-sans/400.css", "@fontsource/ibm-plex-sans/500.css", "@fontsource/ibm-plex-sans/600.css", "@fontsource/ibm-plex-sans/700.css", "@fontsource/inter/400.css", "@fontsource/inter/500.css", "@fontsource/inter/600.css", "@fontsource/inter/700.css", "projects/staff-portal/src/styles.scss"]
+            "styles": [
+              "@fontsource/ibm-plex-sans/400.css",
+              "@fontsource/ibm-plex-sans/500.css",
+              "@fontsource/ibm-plex-sans/600.css",
+              "@fontsource/ibm-plex-sans/700.css",
+              "@fontsource/inter/400.css",
+              "@fontsource/inter/500.css",
+              "@fontsource/inter/600.css",
+              "@fontsource/inter/700.css",
+              "projects/staff-portal/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -198,6 +208,96 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "projects/staff-portal/tsconfig.spec.json",
+            "setupFiles": [
+              "test-setup.ts"
+            ]
+          }
+        }
+      }
+    },
+    "maxkampus": {
+      "projectType": "application",
+      "root": "projects/maxkampus",
+      "sourceRoot": "projects/maxkampus/src",
+      "prefix": "mk",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "index": "projects/maxkampus/src/index.html",
+            "browser": "projects/maxkampus/src/main.ts",
+            "tsConfig": "projects/maxkampus/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/maxkampus/public"
+              }
+            ],
+            "styles": [
+              "@fontsource/ibm-plex-sans/400.css",
+              "@fontsource/ibm-plex-sans/500.css",
+              "@fontsource/ibm-plex-sans/600.css",
+              "@fontsource/ibm-plex-sans/700.css",
+              "projects/maxkampus/src/styles.scss"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/maxkampus/src/environments/environment.ts",
+                  "with": "projects/maxkampus/src/environments/environment.production.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "15kB",
+                  "maximumError": "16kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/maxkampus/src/environments/environment.ts",
+                  "with": "projects/maxkampus/src/environments/environment.development.ts"
+                }
+              ],
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json",
+            "port": 4300
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "maxkampus:build:production"
+            },
+            "development": {
+              "buildTarget": "maxkampus:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/maxkampus/tsconfig.spec.json",
             "setupFiles": [
               "test-setup.ts"
             ]

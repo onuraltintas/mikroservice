@@ -378,6 +378,27 @@ services:
     networks:
       - edu-network
 
+  # maxkampus.com (19.11.2026): maxkampüs' site, accounts and institution panel in one SPA image; Caddy serves it on
+  # maxkampus.com and sends /api to the gateway.
+  maxkampus:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/maxkampus:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: ./clients
+      dockerfile: admin-panel/Dockerfile.maxkampus
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--no-verbose", "http://127.0.0.1:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - edu-network
+
   # Staff portal is a separate SPA image. Caddy publishes it only below
   # /staff on ogretmen.eduivme.com and kurum.eduivme.com (alan adı planı 18.11.2026).
   staff-portal:
