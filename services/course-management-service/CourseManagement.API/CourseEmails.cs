@@ -229,13 +229,13 @@ public static class CourseEmailCollector
 
         if (settings.IsEnabled(CourseEmailKind.WeeklySchedule) && local.DayOfWeek == DayOfWeek.Sunday && local.Hour is >= 18 and <= 21)
         {
-            var (from, to) = CourseEmailContent.NextWeek(now);
+            var (weekStart, weekEnd) = CourseEmailContent.NextWeek(now);
             var students = await (from participant in db.LessonParticipants.AsNoTracking()
                 join lesson in db.LessonSessions.AsNoTracking() on participant.LessonSessionId equals lesson.Id
                 where participant.WorkspaceId == workspaceId && participant.IsActive && lesson.Status == LessonSessionStatus.Scheduled
-                    && lesson.StartsAt >= from && lesson.StartsAt < to
+                    && lesson.StartsAt >= weekStart && lesson.StartsAt < weekEnd
                 select participant.StudentId).Distinct().ToListAsync(ct);
-            var week = DateOnly.FromDateTime(TurkeyNow(from).DateTime);
+            var week = DateOnly.FromDateTime(TurkeyNow(weekStart).DateTime);
             foreach (var studentId in students)
                 await CreateOnceAsync(db, workspaceId, CourseEmailKind.WeeklySchedule, studentId, $"weekly:{studentId:N}:{week:yyyyMMdd}",
                     null, now, ct);
@@ -338,9 +338,9 @@ public static class CourseEmailContent
         var daysToMonday = ((int)DayOfWeek.Monday - (int)local.DayOfWeek + 7) % 7;
         if (daysToMonday == 0) daysToMonday = 7;
         var monday = local.AddDays(daysToMonday);
-        var from = new DateTimeOffset(monday, CourseManagementTime.Turkey.GetUtcOffset(monday));
-        var sunday = monday.AddDays(7);
-        return (from, new DateTimeOffset(sunday, CourseManagementTime.Turkey.GetUtcOffset(sunday)));
+        var nextMonday = monday.AddDays(7);
+        return (new DateTimeOffset(monday, CourseManagementTime.Turkey.GetUtcOffset(monday)),
+            new DateTimeOffset(nextMonday, CourseManagementTime.Turkey.GetUtcOffset(nextMonday)));
     }
 
     public sealed record OpenInstallment(Guid Id, Guid StudentId, string Label, string CourseName, decimal Remaining, DateOnly DueOn);
@@ -470,12 +470,12 @@ public static class CourseEmailContent
             }
             case CourseEmailKind.WeeklySchedule:
             {
-                var (from, to) = NextWeek(email.CreatedAt);
+                var (weekStart, weekEnd) = NextWeek(email.CreatedAt);
                 var lessons = await (from participant in db.LessonParticipants.AsNoTracking()
                     join lesson in db.LessonSessions.AsNoTracking() on participant.LessonSessionId equals lesson.Id
                     join course in db.Courses.AsNoTracking() on lesson.CourseId equals course.Id
                     where participant.WorkspaceId == email.WorkspaceId && participant.StudentId == student.Id && participant.IsActive
-                        && lesson.Status == LessonSessionStatus.Scheduled && lesson.StartsAt >= from && lesson.StartsAt < to
+                        && lesson.Status == LessonSessionStatus.Scheduled && lesson.StartsAt >= weekStart && lesson.StartsAt < weekEnd
                     orderby lesson.StartsAt
                     select new { course.Name, lesson.StartsAt }).ToListAsync(ct);
                 if (lessons.Count == 0) return null;
