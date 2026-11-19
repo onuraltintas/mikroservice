@@ -151,7 +151,11 @@ export class CachedFetcher {
     let value: T | null = null;
     try {
       const response = await this.fetcher(url, { signal: AbortSignal.timeout(this.timeoutMs), headers: { accept: 'application/json' } });
-      value = response.ok ? (await response.json() as { data?: T }).data ?? null : null;
+      // Coaching answers { data: … }; site-service (eduivme.com) answers the value itself (live check 19.11.2026).
+      const body = response.ok ? await response.json() as unknown : null;
+      value = body !== null && typeof body === 'object' && !Array.isArray(body) && 'data' in body
+        ? ((body as { data?: T }).data ?? null)
+        : (body as T | null);
     } catch { value = null; }
     if (this.cache.size > 500) this.cache.clear();
     this.cache.set(url, { at: Date.now(), value });
