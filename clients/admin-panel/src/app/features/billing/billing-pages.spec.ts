@@ -221,6 +221,23 @@ describe('Abonelik ve Ödeme pages', () => {
     expect(component.toRequest(draft).vatRate).toBeNull();
   });
 
+  it('plans: the trial day count shows only when a free trial is switched on', () => {
+    const { component, element, fixture } = setup(BillingPlansComponent);
+    component.start();
+    fixture.detectChanges();
+    const draft = component.draft()!;
+    expect(draft.hasTrial).toBe(false);
+    expect(element.querySelector('[name=planTrialDays]')).toBeNull();
+    expect(element.textContent).not.toContain('0 yazarsanız');
+    draft.hasTrial = true;
+    component.syncTrial();
+    expect(draft.trialDays).toBe(7);
+    expect(component.toRequest(draft).trialDays).toBe(7);
+    draft.hasTrial = false;
+    component.syncTrial();
+    expect(component.toRequest(draft).trialDays).toBe(0);
+  });
+
   it('plans: a plan that gives nothing is not sent', () => {
     const { component, billing } = setup(BillingPlansComponent);
     component.start();

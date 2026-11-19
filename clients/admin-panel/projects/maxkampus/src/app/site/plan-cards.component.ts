@@ -55,6 +55,7 @@ interface PlanCard { plan: BillingCatalogPlan; note: SiteEntry | null; featured:
     .plan--featured { border: 2px solid var(--ds-accent); }
     .plan h3 { margin: 0; font-size: 20px; }
     .plan__price { margin: 0; font-size: 15px; } .plan__price strong { font-size: 30px; }
+    .plan__price strong + span, .plan__price span + span { margin-left: 4px; }
     .plan__vat { margin: 2px 0 0; font-size: 14px; }
     .plan p { margin: 0; }
     .plan__list { margin: 0; padding-left: 20px; flex: 1; }

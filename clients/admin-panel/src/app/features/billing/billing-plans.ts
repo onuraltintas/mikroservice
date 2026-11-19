@@ -35,6 +35,8 @@ interface PlanDraft {
   addsVat: boolean;
   vatRate: number | null;
   durationDays: number;
+  /** Off: the plan has no free trial and the form shows no day count (user decision 20.11.2026). */
+  hasTrial: boolean;
   trialDays: number;
   hasSeats: boolean;
   seatCount: number | null;
@@ -94,8 +96,12 @@ interface PlanDraft {
             @if (plan.addsVat) {
               <label>KDV oranı (%)<input type="number" [(ngModel)]="plan.vatRate" name="planVatRate" min="0.01" max="100" step="0.01" required /></label>
             }
-            <label>Ücretsiz deneme (gün)<input type="number" [(ngModel)]="plan.trialDays" name="planTrialDays" min="0" max="90" [disabled]="plan.buyerType === 'Institution'" />
-              <span class="muted">{{ plan.buyerType === 'Institution' ? 'Kurum planlarında deneme olmaz.' : '0 yazarsanız deneme sunulmaz.' }}</span></label>
+            @if (plan.buyerType !== 'Institution') {
+              <label class="check"><input type="checkbox" [(ngModel)]="plan.hasTrial" (ngModelChange)="syncTrial()" name="planHasTrial" /> Ücretsiz deneme sun</label>
+              @if (plan.hasTrial) {
+                <label>Ücretsiz deneme (gün)<input type="number" [(ngModel)]="plan.trialDays" name="planTrialDays" min="1" max="90" required /></label>
+              }
+            }
             <label class="check"><input type="checkbox" [(ngModel)]="plan.isContactOnly" (ngModelChange)="syncContactOnly()" name="planContactOnly" /> Fiyat yerine "iletişime geçin" göster</label>
             <label>Sıra<input type="number" [(ngModel)]="plan.sortOrder" name="planSortOrder" min="0" max="10000" /></label>
           </div>
@@ -219,6 +225,7 @@ export class BillingPlansComponent implements OnInit {
       addsVat: plan?.vatRate != null,
       vatRate: plan?.vatRate ?? null,
       durationDays: plan?.durationDays ?? 30,
+      hasTrial: (plan?.trialDays ?? 0) > 0,
       trialDays: plan?.trialDays ?? 0,
       hasSeats: plan?.seatCount != null,
       seatCount: plan?.seatCount ?? null,
@@ -250,7 +257,14 @@ export class BillingPlansComponent implements OnInit {
     if (!plan) return;
     if (plan.buyerType === 'Individual') { plan.hasSeats = false; this.syncSeats(); }
     if (plan.buyerType !== 'Institution') { plan.hasExtraSeats = false; plan.extraSeatPrice = null; }
-    if (plan.buyerType === 'Institution') plan.trialDays = 0;
+    if (plan.buyerType === 'Institution') { plan.hasTrial = false; plan.trialDays = 0; }
+  }
+
+  /** A trial starts at 7 days when switched on and is 0 when off. */
+  syncTrial(): void {
+    const plan = this.draft();
+    if (!plan) return;
+    plan.trialDays = plan.hasTrial ? (plan.trialDays > 0 ? plan.trialDays : 7) : 0;
   }
 
   syncSeats(): void {
@@ -292,7 +306,7 @@ export class BillingPlansComponent implements OnInit {
       price: plan.isContactOnly ? 0 : Number(plan.price) || 0,
       vatRate: plan.addsVat ? number(plan.vatRate) : null,
       durationDays: Number(plan.durationDays) || 0,
-      trialDays: plan.buyerType === 'Institution' ? 0 : Number(plan.trialDays) || 0,
+      trialDays: plan.buyerType === 'Institution' || !plan.hasTrial ? 0 : Number(plan.trialDays) || 0,
       seatCount: plan.hasSeats ? number(plan.seatCount) : null,
       extraSeatPrice: plan.hasSeats && plan.hasExtraSeats ? number(plan.extraSeatPrice) : null,
       isContactOnly: plan.isContactOnly,
