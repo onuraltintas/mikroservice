@@ -547,6 +547,7 @@ jobs:
           grep -q '20261013144126_P0FailClosedLegalHoldStatus' artifacts/course-management/course-management-idempotent.sql
           grep -q '20261013155811_P6AttachmentCleanupRetryQueue' artifacts/course-management/course-management-idempotent.sql
           grep -q '20261119140441_V1AssignmentCompletion' artifacts/course-management/course-management-idempotent.sql
+          grep -q '20261119142000_V1InstitutionEmails' artifacts/course-management/course-management-idempotent.sql
 
       - name: Upload Course Management migration SQL for review
         uses: actions/upload-artifact@v4

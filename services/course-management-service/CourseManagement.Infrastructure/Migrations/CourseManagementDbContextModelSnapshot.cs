@@ -345,6 +345,95 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.ToTable("CourseBranches", (string)null);
                 });
 
+            modelBuilder.Entity("CourseManagement.Domain.CourseEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DedupKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Recipients")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ReferencesJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("SkipReason")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("Status", "DueAt");
+
+                    b.HasIndex("WorkspaceId", "CreatedAt");
+
+                    b.HasIndex("WorkspaceId", "DedupKey")
+                        .IsUnique();
+
+                    b.ToTable("CourseEmails", (string)null);
+                });
+
+            modelBuilder.Entity("CourseManagement.Domain.CourseEmailOptOut", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId", "Email")
+                        .IsUnique();
+
+                    b.ToTable("CourseEmailOptOuts", (string)null);
+                });
+
             modelBuilder.Entity("CourseManagement.Domain.CourseGroup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1135,6 +1224,9 @@ namespace CourseManagement.Infrastructure.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
 
+                    b.Property<bool>("EmailsMuted")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1305,6 +1397,45 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.HasIndex("WorkspaceId", "OccurredAt");
 
                     b.ToTable("WorkspaceAuditEntries", (string)null);
+                });
+
+            modelBuilder.Entity("CourseManagement.Domain.WorkspaceEmailSettings", b =>
+                {
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("InformedConsentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InformedConsentByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("InstallmentDaysBefore")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("InstallmentOnDueDay")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("OverdueDaysAfter")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReplyToEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("RulesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("SendHour")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("WorkspaceId");
+
+                    b.ToTable("WorkspaceEmailSettings", (string)null);
                 });
 
             modelBuilder.Entity("CourseManagement.Domain.WorkspaceInvitation", b =>
@@ -1702,6 +1833,30 @@ namespace CourseManagement.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CourseManagement.Domain.CourseEmail", b =>
+                {
+                    b.HasOne("CourseManagement.Domain.StudentRecord", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CourseManagement.Domain.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CourseManagement.Domain.CourseEmailOptOut", b =>
+                {
+                    b.HasOne("CourseManagement.Domain.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CourseManagement.Domain.CourseGroup", b =>
                 {
                     b.HasOne("CourseManagement.Domain.Course", null)
@@ -2070,6 +2225,15 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.HasOne("CourseManagement.Domain.Workspace", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CourseManagement.Domain.WorkspaceEmailSettings", b =>
+                {
+                    b.HasOne("CourseManagement.Domain.Workspace", null)
+                        .WithOne()
+                        .HasForeignKey("CourseManagement.Domain.WorkspaceEmailSettings", "WorkspaceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

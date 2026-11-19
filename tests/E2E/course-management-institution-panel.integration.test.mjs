@@ -37,6 +37,8 @@ test('institution panel: switched-off student portal and files, teacher homework
       ASPNETCORE_URLS: base, ASPNETCORE_ENVIRONMENT: 'Development',
       JWT_SECRET: secret, JWT_ISSUER: 'course-tests', JWT_AUDIENCE: 'course-tests',
       CourseManagement__OutboxQueryDelaySeconds: '3600', CourseManagement__ReminderPollingSeconds: '3600',
+      // E-mails go out as soon as they are found, checked every second.
+      CourseManagement__Email__DelayMinutes: '0', CourseManagement__Email__PollingSeconds: '1',
       COURSE_MANAGEMENT_CONNECTION_STRING: connectionString,
       AllowedHosts: 'localhost;127.0.0.1;course-management-service'
     }
@@ -125,6 +127,81 @@ test('institution panel: switched-off student portal and files, teacher homework
 
     // Files are off: no upload or listing addresses.
     assert.equal((await call(`${ws}/assignments/${assignmentId}/attachments`, teacher)).status, 404);
+
+    // E-mails: switched off until the owner turns them on and confirms students and guardians were informed.
+    const settingsPath = `${ws}/email-settings`;
+    const defaults = await (await call(settingsPath, owner)).json();
+    assert.equal(defaults.rules.length, 7);
+    assert.ok(defaults.rules.every(rule => rule.enabled === false));
+    assert.equal((await call(settingsPath, teacher)).status, 404, 'only the owner manages e-mails');
+    const settings = consent => ({ rules: [
+      { kind: 2, enabled: true, audience: 1, note: 'TEST Sorularınız için arayın.' },
+      { kind: 7, enabled: true, audience: 1, note: null }
+    ], installmentDaysBefore: 3, installmentOnDueDay: true, overdueDaysAfter: 3, sendHour: 9,
+      replyToEmail: 'kurs@example.test', informedConsentConfirmed: consent });
+    const noConsent = await call(settingsPath, owner, 'PUT', settings(false));
+    assert.equal(noConsent.status, 400);
+    assert.equal((await noConsent.json()).code, 'EmailSettings.ConsentRequired');
+    const saved = await call(settingsPath, owner, 'PUT', settings(true));
+    assert.equal(saved.status, 200, await saved.clone().text());
+    const savedView = await saved.json();
+    assert.ok(savedView.informedConsentAt);
+    assert.equal(savedView.rules.find(rule => rule.kindValue === 2).note, 'TEST Sorularınız için arayın.');
+    const preview = await (await call(`${ws}/email-settings/preview/HomeworkNotDone`, owner)).json();
+    assert.equal(preview.institutionName, 'TEST Kurs');
+    assert.equal(preview.note, 'TEST Sorularınız için arayın.');
+
+    const guardianEmail = 'veli.mehmet@example.test';
+    const guardian = await call(`${ws}/students/${studentB}/guardians`, owner, 'POST', { guardianId: randomUUID(),
+      displayName: 'TEST Veli', email: guardianEmail, phoneNumber: null, relationship: 1 });
+    assert.equal(guardian.status, 201, await guardian.clone().text());
+
+    const waitFor = async (predicate, what) => {
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const rows = await (await call(`${ws}/emails`, owner)).json();
+        const found = rows.find(predicate);
+        if (found) return found;
+        await new Promise(done => setTimeout(done, 500));
+      }
+      assert.fail(`no e-mail record: ${what}`);
+    };
+    // Mehmet's homework was marked "not done" before e-mails were switched on; it is still recent, so it is told.
+    const homework = await waitFor(row => row.kind === 'HomeworkNotDone' && row.studentId === studentB, 'homework');
+    assert.equal(homework.status, 'Sent');
+    assert.equal(homework.recipients, guardianEmail);
+    assert.match(homework.subject, /TEST Mehmet/);
+    // Ayşe did hers and has no guardian address: nothing is queued for her.
+    assert.equal((await (await call(`${ws}/emails`, owner)).json()).some(row => row.studentId === studentA), false);
+
+    // The guardian leaves through the signed link; a GET only shows the button.
+    const encode = value => Buffer.from(value).toString('base64url');
+    const sign = email => createHmac('sha256', 'course-management-development-unsubscribe-key-only')
+      .update(`${workspaceId.replaceAll('-', '')}:${email}`).digest('base64url');
+    const query = `w=${workspaceId.replaceAll('-', '')}&e=${encode(guardianEmail)}&t=${sign(guardianEmail)}`;
+    const unsubscribeBase = `${base}/api/course-management/public/email/unsubscribe`;
+    const confirmPage = await fetch(`${unsubscribeBase}?${query}`);
+    assert.equal(confirmPage.status, 200);
+    assert.match(await confirmPage.text(), /<form method="post">/);
+    assert.match(await (await fetch(`${unsubscribeBase}?w=${workspaceId.replaceAll('-', '')}&e=${encode(guardianEmail)}&t=bad`)).text(),
+      /Bağlantı geçersiz/);
+    const left = await fetch(`${unsubscribeBase}?${query}`, { method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'List-Unsubscribe=One-Click' });
+    assert.equal(left.status, 200);
+    assert.match(await left.text(), /E-postalardan çıktınız/);
+
+    // A payment is told only to addresses that still want e-mails: here nobody.
+    const payment = await call(`${ws}/finance/payments`, owner, 'POST', { id: randomUUID(), studentId: studentB, method: 1,
+      amount: 100, receivedAt: new Date().toISOString(), note: null, allocations: [] });
+    assert.equal(payment.status, 201, await payment.clone().text());
+    const paymentEmail = await waitFor(row => row.kind === 'PaymentReceived', 'payment');
+    assert.equal(paymentEmail.status, 'Skipped');
+    assert.equal(paymentEmail.skipReason, 'Alıcılar e-postalardan çıktı');
+
+    const muted = await call(`${ws}/students/${studentB}/email-mute`, owner, 'PUT', { muted: true });
+    assert.deepEqual(await muted.json(), { studentId: studentB, emailsMuted: true });
+    assert.equal((await call(`${ws}/students/${studentB}/email-mute`, teacher, 'PUT', { muted: false })).status, 404);
+    const testEmail = await call(`${ws}/email-settings/test`, owner, 'POST', { kind: 1, email: 'sahip@example.test' });
+    assert.equal(testEmail.status, 202);
   } finally {
     child.kill();
   }
