@@ -84,9 +84,13 @@ builder.Services.AddMassTransit(x =>
         x.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
     }
 });
+var features = builder.Configuration.GetSection(CourseManagementFeatures.SectionName).Get<CourseManagementFeatures>()
+    ?? new CourseManagementFeatures();
+builder.Services.AddSingleton(features);
 var attachmentOptions = builder.Configuration.GetSection(CourseAssignmentAttachmentStorageOptions.SectionName)
     .Get<CourseAssignmentAttachmentStorageOptions>() ?? new CourseAssignmentAttachmentStorageOptions();
-if (builder.Environment.IsProduction())
+// Uploads are the only use of the scanner and the storage root; without them nothing is stored or scanned.
+if (builder.Environment.IsProduction() && features.AssignmentAttachments)
 {
     var configuredRoot = builder.Configuration[$"{CourseAssignmentAttachmentStorageOptions.SectionName}:RootPath"];
     if (string.IsNullOrWhiteSpace(configuredRoot) || !Path.IsPathFullyQualified(attachmentOptions.RootPath))
@@ -131,6 +135,7 @@ builder.Services.AddHealthChecks().AddDbContextCheck<CourseManagementDbContext>(
 
 var app = builder.Build();
 app.UseMiddleware<CourseManagementOperationMetricsMiddleware>();
+app.UseCourseManagementFeatureGate(features);
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();

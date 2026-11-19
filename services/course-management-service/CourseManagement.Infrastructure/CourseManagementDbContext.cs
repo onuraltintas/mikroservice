@@ -228,6 +228,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasKey(recipient => recipient.Id);
             entity.HasIndex(recipient => new { recipient.AssignmentId, recipient.StudentId }).IsUnique();
             entity.HasIndex(recipient => new { recipient.WorkspaceId, recipient.StudentId });
+            entity.Property(recipient => recipient.CompletionNote).HasMaxLength(CourseAssignmentRecipient.MaxCompletionNoteLength);
             entity.HasOne<Workspace>().WithMany().HasForeignKey(recipient => recipient.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<CourseAssignment>().WithMany().HasForeignKey(recipient => recipient.AssignmentId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<StudentRecord>().WithMany().HasForeignKey(recipient => recipient.StudentId).OnDelete(DeleteBehavior.Restrict);

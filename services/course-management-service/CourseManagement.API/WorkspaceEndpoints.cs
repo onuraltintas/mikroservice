@@ -146,9 +146,12 @@ public static class WorkspaceEndpoints
                 .Select(member => new { member.UserId, role = member.Role.ToString(), member.IsActive }).ToListAsync(ct));
         });
 
-        api.MapPost("/workspaces/{workspaceId:guid}/invitations", async (Guid workspaceId, CreateInvitationRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        api.MapPost("/workspaces/{workspaceId:guid}/invitations", async (Guid workspaceId, CreateInvitationRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CourseManagementFeatures features, CancellationToken ct) =>
         {
             if (!await Owns(db, workspaceId, user, ct)) return Results.NotFound();
+            // Without the student application a student account has nothing to open; students stay local records.
+            if (request.Role == WorkspaceRole.Student && !features.StudentPortal)
+                return Results.BadRequest(new { code = "Invitation.StudentPortalDisabled" });
             if (request.Id == Guid.Empty || request.TargetUserId == Guid.Empty || request.TargetUserId == UserId(user)
                 || request.Role is not (WorkspaceRole.Teacher or WorkspaceRole.Student)
                 || (request.StudentRecordId.HasValue && request.Role != WorkspaceRole.Student))

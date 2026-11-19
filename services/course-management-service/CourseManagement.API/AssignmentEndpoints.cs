@@ -283,8 +283,56 @@ public static class AssignmentEndpoints
                 : Results.Ok(ToView(submission!, assignment.DueAt));
         });
 
+        // Homework without a student portal: the teacher marks each student in class (done, partial, not done).
+        api.MapGet("/workspaces/{workspaceId:guid}/assignments/{assignmentId:guid}/completions", async (Guid workspaceId,
+            Guid assignmentId, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        {
+            var assignment = await db.Assignments.AsNoTracking().SingleOrDefaultAsync(item => item.Id == assignmentId
+                && item.WorkspaceId == workspaceId, ct);
+            if (assignment is null || !await CanManageAssignment(db, assignment, UserId(user), ct)) return Results.NotFound();
+            return Results.Ok(await CompletionViews(db, workspaceId, assignmentId, ct));
+        });
+
+        api.MapPut("/workspaces/{workspaceId:guid}/assignments/{assignmentId:guid}/completions", async (Guid workspaceId,
+            Guid assignmentId, MarkAssignmentCompletionsRequest request, ClaimsPrincipal user, CourseManagementDbContext db,
+            CancellationToken ct) =>
+        {
+            if (request.Items is null || request.Items.Length is 0 or > 200
+                || request.Items.Select(item => item.StudentId).Distinct().Count() != request.Items.Length
+                || request.Items.Any(item => item.StudentId == Guid.Empty || !Enum.IsDefined(item.Completion)
+                    || item.Note?.Trim().Length > CourseAssignmentRecipient.MaxCompletionNoteLength))
+                return Results.BadRequest(new { code = "AssignmentCompletion.InvalidInput" });
+            var assignment = await db.Assignments.AsNoTracking().SingleOrDefaultAsync(item => item.Id == assignmentId
+                && item.WorkspaceId == workspaceId, ct);
+            var userId = UserId(user);
+            if (assignment is null || !await CanManageAssignment(db, assignment, userId, ct)) return Results.NotFound();
+            var studentIds = request.Items.Select(item => item.StudentId).ToArray();
+            var recipients = await db.AssignmentRecipients.Where(item => item.WorkspaceId == workspaceId
+                && item.AssignmentId == assignmentId && Enumerable.Contains(studentIds, item.StudentId))
+                .ToDictionaryAsync(item => item.StudentId, ct);
+            if (recipients.Count != studentIds.Length) return Results.NotFound();
+            var now = DateTimeOffset.UtcNow;
+            foreach (var item in request.Items)
+            {
+                var recipient = recipients[item.StudentId];
+                if (recipient.MarkCompletion(item.Completion, item.Note, userId, now))
+                    AddAudit(db, workspaceId, userId, recipient.Id, "Assignment.CompletionMarked");
+            }
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(await CompletionViews(db, workspaceId, assignmentId, ct));
+        });
+
         api.MapAssignmentAttachmentEndpoints();
     }
+
+    private static async Task<AssignmentCompletionView[]> CompletionViews(CourseManagementDbContext db, Guid workspaceId,
+        Guid assignmentId, CancellationToken ct) =>
+        (await (from recipient in db.AssignmentRecipients.AsNoTracking()
+            join student in db.Students.AsNoTracking() on recipient.StudentId equals student.Id
+            where recipient.WorkspaceId == workspaceId && recipient.AssignmentId == assignmentId
+            orderby student.DisplayName, student.Id
+            select new AssignmentCompletionView(student.Id, student.DisplayName, recipient.Completion.ToString(),
+                recipient.CompletionNote, recipient.CompletionMarkedAt)).ToListAsync(ct)).ToArray();
 
     private static bool Matches(CourseAssignment assignment, Guid workspaceId, CreateCourseAssignmentRequest request) =>
         assignment.WorkspaceId == workspaceId && assignment.CourseId == request.CourseId
@@ -342,6 +390,10 @@ public static class AssignmentEndpoints
 public sealed record CreateCourseAssignmentRequest(Guid Id, Guid CourseId, Guid? GroupId, Guid? StudentId,
     string Title, string? Instructions, DateTimeOffset? DueAt);
 public sealed record SubmitCourseAssignmentRequest(string? Text);
+public sealed record MarkAssignmentCompletionsRequest(AssignmentCompletionItem[]? Items);
+public sealed record AssignmentCompletionItem(Guid StudentId, CourseAssignmentCompletion Completion, string? Note);
+public sealed record AssignmentCompletionView(Guid StudentId, string StudentName, string Completion, string? Note,
+    DateTimeOffset? MarkedAt);
 public sealed record ReviewCourseAssignmentRequest(decimal? Score, string? Feedback);
 public sealed record AssignmentView(Guid Id, Guid WorkspaceId, Guid CourseId, string? CourseName, Guid? GroupId,
     Guid? StudentId, Guid TeacherUserId, string Title, string? Instructions, DateTimeOffset DueAt,
