@@ -104,6 +104,6 @@ public static class OverviewEndpoints
     private static DateTimeOffset Start(DateOnly day)
     {
         var local = day.ToDateTime(TimeOnly.MinValue);
-        return new DateTimeOffset(local, CourseManagementTime.Turkey.GetUtcOffset(local));
+        return new DateTimeOffset(local, CourseManagementTime.Turkey.GetUtcOffset(local)).ToUniversalTime();
     }
 }

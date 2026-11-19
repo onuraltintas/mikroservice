@@ -345,8 +345,9 @@ public static class CourseEmailContent
         if (daysToMonday == 0) daysToMonday = 7;
         var monday = local.AddDays(daysToMonday);
         var nextMonday = monday.AddDays(7);
-        return (new DateTimeOffset(monday, CourseManagementTime.Turkey.GetUtcOffset(monday)),
-            new DateTimeOffset(nextMonday, CourseManagementTime.Turkey.GetUtcOffset(nextMonday)));
+        // UTC: PostgreSQL stores instants and Npgsql refuses other offsets.
+        return (new DateTimeOffset(monday, CourseManagementTime.Turkey.GetUtcOffset(monday)).ToUniversalTime(),
+            new DateTimeOffset(nextMonday, CourseManagementTime.Turkey.GetUtcOffset(nextMonday)).ToUniversalTime());
     }
 
     public sealed record OpenInstallment(Guid Id, Guid StudentId, string Label, string CourseName, decimal Remaining, DateOnly DueOn);

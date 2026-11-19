@@ -136,7 +136,7 @@ public static class SupportAccessEndpoints
             var grant = await OpenGrantAsync(db, workspaceId, user, SupportAccessSections.Schedule, "Takvim ve yoklama", ct);
             if (grant is null) return Results.NotFound();
             var startDay = from ?? CourseEmailCollector.TurkeyDate(DateTimeOffset.UtcNow).AddDays(-7);
-            var start = new DateTimeOffset(startDay.ToDateTime(TimeOnly.MinValue), CourseManagementTime.Turkey.GetUtcOffset(startDay.ToDateTime(TimeOnly.MinValue)));
+            var start = new DateTimeOffset(startDay.ToDateTime(TimeOnly.MinValue), CourseManagementTime.Turkey.GetUtcOffset(startDay.ToDateTime(TimeOnly.MinValue))).ToUniversalTime();
             var end = start.AddDays(days ?? 14);
             var lessons = await (from lesson in db.LessonSessions.AsNoTracking()
                 join course in db.Courses.AsNoTracking() on lesson.CourseId equals course.Id
