@@ -17,14 +17,19 @@ public static class SupportAccessNotices
         CourseEmailOptions options, DateTimeOffset now, CancellationToken ct)
     {
         var candidates = await db.SupportAccessGrants.Where(item =>
-                (item.RequestNoticeSentAt == null && item.Status != SupportAccessStatus.Ended)
-                || (item.StartNoticeSentAt == null && item.Status == SupportAccessStatus.Active)
+                item.RequestNoticeSentAt == null
+                || (item.StartNoticeSentAt == null && item.ApprovedAt != null)
                 || (item.StartNoticeSentAt != null && item.EndNoticeSentAt == null))
             .OrderBy(item => item.RequestedAt).Take(50).ToListAsync(ct);
         foreach (var grant in candidates)
         {
             var notice = grant.DueNotice(now);
-            if (notice is null) continue;
+            if (notice is null)
+            {
+                grant.SettleSkippedNotices(now);
+                await db.SaveChangesAsync(ct);
+                continue;
+            }
             var workspace = await db.Workspaces.AsNoTracking().SingleAsync(item => item.Id == grant.WorkspaceId, ct);
             var address = await identity.FindEmailAsync(workspace.OwnerUserId, ct);
             if (address is not null)
@@ -35,6 +40,7 @@ public static class SupportAccessNotices
                     context => context.MessageId = NoticeId(grant.Id, notice.Value), ct);
             }
             grant.MarkNoticeSent(notice.Value, now);
+            grant.SettleSkippedNotices(now);
             await db.SaveChangesAsync(ct);
         }
     }

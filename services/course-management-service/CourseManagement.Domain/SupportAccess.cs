@@ -111,15 +111,25 @@ public sealed class SupportAccessGrant
         EndReason = expired ? "Expired" : reason;
     }
 
-    /// <summary>Which owner e-mail is due now, if any: the request, the opening, or the end (also a quiet expiry).</summary>
+    /// <summary>
+    /// Which owner e-mail is due now, if any. Each is about something that happened, even if more happened since: an
+    /// approval that was ended a moment later still sends "opened" and then "ended". A request the owner already
+    /// answered is not announced (see <see cref="SettleSkippedNotices"/>).
+    /// </summary>
     public SupportAccessNotice? DueNotice(DateTimeOffset now)
     {
         if (RequestNoticeSentAt is null && Status == SupportAccessStatus.Requested) return SupportAccessNotice.Requested;
-        if (StartNoticeSentAt is null && Status == SupportAccessStatus.Active && IsActive(now)) return SupportAccessNotice.Started;
+        if (StartNoticeSentAt is null && ApprovedAt is not null) return SupportAccessNotice.Started;
         if (StartNoticeSentAt is not null && EndNoticeSentAt is null
             && (Status == SupportAccessStatus.Ended || (Status == SupportAccessStatus.Active && !IsActive(now))))
             return SupportAccessNotice.Ended;
         return null;
+    }
+
+    /// <summary>A request answered before it was announced needs no announcement.</summary>
+    public void SettleSkippedNotices(DateTimeOffset now)
+    {
+        if (RequestNoticeSentAt is null && Status != SupportAccessStatus.Requested) RequestNoticeSentAt = now.ToUniversalTime();
     }
 
     public void MarkNoticeSent(SupportAccessNotice notice, DateTimeOffset now)

@@ -68,6 +68,24 @@ public sealed class SupportAccessChangesTests
     }
 
     [Fact]
+    public void Access_approved_and_ended_before_any_notice_still_tells_both()
+    {
+        var grant = Requested();
+        grant.Approve(OwnerId, 1, SupportAccessSections.Students, Now);
+        grant.End("EndedByOwner", Now.AddSeconds(1));
+
+        Assert.Equal(SupportAccessNotice.Started, grant.DueNotice(Now.AddSeconds(2)));
+        grant.MarkNoticeSent(SupportAccessNotice.Started, Now.AddSeconds(2));
+        Assert.Equal(SupportAccessNotice.Ended, grant.DueNotice(Now.AddSeconds(3)));
+
+        var answered = Requested();
+        answered.Decline(OwnerId, Now);
+        Assert.Null(answered.DueNotice(Now));
+        answered.SettleSkippedNotices(Now);
+        Assert.NotNull(answered.RequestNoticeSentAt);
+    }
+
+    [Fact]
     public void A_change_entry_keeps_codes_and_field_names_not_the_values()
     {
         var grant = Requested();

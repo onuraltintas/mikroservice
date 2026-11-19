@@ -302,6 +302,13 @@ test('institution panel: switched-off student portal and files, teacher homework
     const requested = await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST Taksit listesi yanlış görünüyor.' });
     assert.equal(requested.status, 201, await requested.clone().text());
     const grantId = (await requested.json()).id;
+    // The owner is e-mailed when support asks, when access opens and when it ends (19.11.2026).
+    const ownerAsked = async count => {
+      for (let attempt = 0; attempt < 40 && identityCalls.filter(ids => ids.includes(ownerId)).length < count; attempt++)
+        await new Promise(done => setTimeout(done, 250));
+      return identityCalls.filter(ids => ids.includes(ownerId)).length;
+    };
+    assert.equal(await ownerAsked(1), 1, 'the owner is told of the request');
     assert.equal((await call(`${adminBase}/support-access`, admin, 'POST', { reason: 'TEST İkinci talep gönderilmez.' })).status, 409);
     assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'a request is not access');
 
@@ -325,14 +332,8 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(logs[0].section, 'Students');
     assert.equal((await call(`${ws}/support-access/${grantId}/end`, owner, 'POST')).status, 200);
     assert.equal((await call(`${adminBase}/support/students`, admin)).status, 404, 'ended means closed');
+    assert.equal(await ownerAsked(3), 3, 'and of the opening and the end, once each');
 
-    // The owner is e-mailed when support asks, when access opens and when it ends (19.11.2026).
-    const ownerAsked = async count => {
-      for (let attempt = 0; attempt < 40 && identityCalls.filter(ids => ids.includes(ownerId)).length < count; attempt++)
-        await new Promise(done => setTimeout(done, 250));
-      return identityCalls.filter(ids => ids.includes(ownerId)).length;
-    };
-    assert.equal(await ownerAsked(3), 3, 'request, opening and end each look up the owner once');
 
     // Delivery is read back: the stand-in says every address bounced, and the sending record shows it.
     const bounced = await waitFor(row => row.id === homework.id && row.delivery === 'Failed', 'delivery result');
