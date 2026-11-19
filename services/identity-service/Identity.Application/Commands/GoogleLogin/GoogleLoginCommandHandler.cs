@@ -129,7 +129,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                 courseRoleName = Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.RoleFor(request.Signup?.Kind);
                 coursePhone = Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.NormalizePhone(request.Signup?.Phone);
                 courseWorkspace = request.Signup is null ? null : Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration
-                    .WorkspaceName(request.Signup.Kind, request.Signup.WorkspaceName, googleUser.FirstName ?? "", googleUser.LastName ?? "");
+                    .WorkspaceName(request.Signup.Kind, request.Signup.WorkspaceName, googleUser.FirstName, googleUser.LastName);
                 if (courseRoleName is null || coursePhone is null || courseWorkspace is null || _roles is null)
                     return Result.Failure<LoginResponse>(new Error("Auth.CourseManagementDetailsRequired",
                         "Kaydı tamamlamak için hesap türünü, kurumunuzun adını ve telefonunuzu yazın."));
