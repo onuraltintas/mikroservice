@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace Site.Infrastructure;
 
 /// <summary>
-/// One piece of eduivme.com content. The site is built from typed entries (see <see cref="SiteKinds"/>): the home page
-/// entries have an empty <see cref="Group"/>, a product page's own entries carry the page's slug as their group.
+/// One piece of site content. Each entry belongs to a site (<see cref="SiteRules.Sites"/>: eduivme.com and, since
+/// 19.11.2026, maxkampus.com) and is built from typed entries (see <see cref="SiteKinds"/>): the home page entries have an
+/// empty <see cref="Group"/>, an eduivme.com product page's own entries carry the page's slug as their group.
 /// </summary>
 public sealed class SiteEntry
 {
     public Guid Id { get; set; }
+    public string Site { get; set; } = SiteRules.Eduivme;
     public string Kind { get; set; } = string.Empty;
     public string Group { get; set; } = string.Empty;
     public string? Slug { get; set; }
@@ -28,6 +30,14 @@ public sealed class SiteEntry
     public string? CtaBody { get; set; }
     public string? SeoTitle { get; set; }
     public string? SeoDescription { get; set; }
+    /// <summary>A blog post's topic, or a menu item's place ("header", "footer"), or "featured" on a plan note.</summary>
+    public string? Category { get; set; }
+    /// <summary>Who a panel notice is for: "all", "owners" or "teachers".</summary>
+    public string? Audience { get; set; }
+    /// <summary>After this the entry is no longer shown (panel notices).</summary>
+    public DateTime? EndsAt { get; set; }
+    /// <summary>A blog post's author as shown to readers.</summary>
+    public string? Author { get; set; }
     public int SortOrder { get; set; }
     public bool IsPublished { get; set; }
     public DateTime? PublishAt { get; set; }
@@ -59,12 +69,57 @@ public sealed class SiteMedia
     public DateTime CreatedAt { get; set; }
 }
 
-/// <summary>The eduivme.com site's own database (schema "site"). It holds no personal data.</summary>
+/// <summary>A message sent with a site's contact form (maxkampus.com). Kept until answered and then for a while (see SiteRetention).</summary>
+public sealed class SiteContactMessage
+{
+    public Guid Id { get; set; }
+    public string Site { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Organization { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public DateTime ConsentAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? AnsweredAt { get; set; }
+    public Guid? AnsweredByUserId { get; set; }
+}
+
+public enum SiteSubscriberStatus
+{
+    Pending = 1,
+    Confirmed = 2,
+    Unsubscribed = 3
+}
+
+/// <summary>
+/// A newsletter address (double opt-in: it counts only after the link in the confirmation e-mail is opened). An address
+/// that left stays as "Unsubscribed" so it is not written to again; a confirmation never opened is deleted after a week.
+/// </summary>
+public sealed class SiteSubscriber
+{
+    public Guid Id { get; set; }
+    public string Site { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Token { get; set; } = string.Empty;
+    public SiteSubscriberStatus Status { get; set; }
+    public string? Source { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? ConfirmedAt { get; set; }
+    public DateTime? UnsubscribedAt { get; set; }
+}
+
+/// <summary>
+/// The sites' own database (schema "site"). Content holds no personal data; contact messages and newsletter addresses do,
+/// and they are deleted on a schedule (SiteRetention) or by the admin.
+/// </summary>
 public sealed class SiteDbContext(DbContextOptions<SiteDbContext> options) : DbContext(options)
 {
     public DbSet<SiteEntry> Entries => Set<SiteEntry>();
     public DbSet<SiteRevision> Revisions => Set<SiteRevision>();
     public DbSet<SiteMedia> Media => Set<SiteMedia>();
+    public DbSet<SiteContactMessage> ContactMessages => Set<SiteContactMessage>();
+    public DbSet<SiteSubscriber> Subscribers => Set<SiteSubscriber>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,12 +129,16 @@ public sealed class SiteDbContext(DbContextOptions<SiteDbContext> options) : DbC
         {
             entity.ToTable("entries");
             entity.HasKey(item => item.Id);
+            entity.Property(item => item.Site).HasMaxLength(20).IsRequired().HasDefaultValue(SiteRules.Eduivme);
             entity.Property(item => item.Kind).HasMaxLength(20).IsRequired();
             entity.Property(item => item.Group).HasMaxLength(80).IsRequired();
             entity.Property(item => item.Slug).HasMaxLength(80);
             entity.Property(item => item.Title).HasMaxLength(SiteRules.TitleLength).IsRequired();
             entity.Property(item => item.Subtitle).HasMaxLength(SiteRules.SubtitleLength);
-            entity.Property(item => item.Body).HasMaxLength(SiteRules.BodyLength).IsRequired();
+            entity.Property(item => item.Body).HasMaxLength(SiteRules.LongBodyLength).IsRequired();
+            entity.Property(item => item.Category).HasMaxLength(60);
+            entity.Property(item => item.Audience).HasMaxLength(20);
+            entity.Property(item => item.Author).HasMaxLength(120);
             entity.Property(item => item.Brand).HasMaxLength(20);
             entity.Property(item => item.Icon).HasMaxLength(30);
             entity.Property(item => item.LinkLabel).HasMaxLength(SiteRules.LabelLength);
@@ -91,8 +150,8 @@ public sealed class SiteDbContext(DbContextOptions<SiteDbContext> options) : DbC
             entity.Property(item => item.SeoTitle).HasMaxLength(SiteRules.SeoTitleLength);
             entity.Property(item => item.SeoDescription).HasMaxLength(SiteRules.SubtitleLength);
             entity.Property(item => item.Version).IsConcurrencyToken();
-            entity.HasIndex(item => new { item.Group, item.Kind, item.SortOrder });
-            entity.HasIndex(item => new { item.Kind, item.Group, item.Slug }).IsUnique().HasFilter("\"Slug\" IS NOT NULL");
+            entity.HasIndex(item => new { item.Site, item.Group, item.Kind, item.SortOrder });
+            entity.HasIndex(item => new { item.Site, item.Kind, item.Group, item.Slug }).IsUnique().HasFilter("\"Slug\" IS NOT NULL");
         });
 
         modelBuilder.Entity<SiteRevision>(entity =>
@@ -111,6 +170,32 @@ public sealed class SiteDbContext(DbContextOptions<SiteDbContext> options) : DbC
             entity.Property(item => item.ContentType).HasMaxLength(40).IsRequired();
             entity.Property(item => item.Sha256).HasMaxLength(64).IsRequired();
             entity.Property(item => item.AltText).HasMaxLength(SiteRules.SubtitleLength);
+        });
+
+        modelBuilder.Entity<SiteContactMessage>(entity =>
+        {
+            entity.ToTable("contact_messages");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Site).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.Name).HasMaxLength(120).IsRequired();
+            entity.Property(item => item.Organization).HasMaxLength(200);
+            entity.Property(item => item.Email).HasMaxLength(320).IsRequired();
+            entity.Property(item => item.Phone).HasMaxLength(40);
+            entity.Property(item => item.Message).HasMaxLength(SiteRules.MessageLength).IsRequired();
+            entity.HasIndex(item => new { item.Site, item.CreatedAt });
+        });
+
+        modelBuilder.Entity<SiteSubscriber>(entity =>
+        {
+            entity.ToTable("subscribers");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Site).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.Email).HasMaxLength(320).IsRequired();
+            entity.Property(item => item.Token).HasMaxLength(64).IsRequired();
+            entity.Property(item => item.Source).HasMaxLength(40);
+            entity.HasIndex(item => new { item.Site, item.Email }).IsUnique();
+            entity.HasIndex(item => item.Token).IsUnique();
+            entity.HasIndex(item => new { item.Site, item.Status });
         });
     }
 }
