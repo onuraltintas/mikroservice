@@ -398,3 +398,33 @@ function createCallbacks(actions: any[], errors: string[]): any {
     onAction: (action: any) => actions.push(action)
   };
 }
+
+describe('VocabularyBuilderEngine answer options', () => {
+  it('does not keep the correct answer on A (unbiased shuffle)', () => {
+    const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+    for (let run = 0; run < 2000; run++) {
+      const engine = createQuizEngine([], []);
+      engine.start();
+      counts[engine.getCorrectAnswer()]++;
+      engine.destroy();
+    }
+    for (const letter of ['A', 'B', 'C', 'D']) expect(counts[letter] / 2000).toBeGreaterThan(0.18);
+  });
+
+  it('prefers distractors from the same category', () => {
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({
+      mode: 'quiz', quizType: 'word_to_definition', totalSteps: 1,
+      words: [
+        { id: crypto.randomUUID(), word: 'merak', definition: 'Öğrenme isteği', category: 'Duygu', difficultyLevel: 1 },
+        { id: crypto.randomUUID(), word: 'sevinç', definition: 'Mutluluk duygusu', category: 'Duygu', difficultyLevel: 1 },
+        { id: crypto.randomUUID(), word: 'öfke', definition: 'Kızgınlık duygusu', category: 'Duygu', difficultyLevel: 1 },
+        { id: crypto.randomUUID(), word: 'hüzün', definition: 'Hafif üzüntü', category: 'Duygu', difficultyLevel: 1 },
+        { id: crypto.randomUUID(), word: 'atom', definition: 'Maddenin küçük birimi', category: 'Bilim', difficultyLevel: 1 }
+      ]
+    } as any, createCallbacks([], []));
+    engine.start();
+    expect(engine.getQuizOptions().map(option => option.text)).not.toContain('Maddenin küçük birimi');
+    engine.destroy();
+  });
+});

@@ -11,6 +11,7 @@
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
 import { boundedInteger, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
+import { shuffled, shuffleInPlace } from '../../../../../shared/utils/shuffle';
 
 // ==================== INTERFACES ====================
 
@@ -497,11 +498,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
             this.currentQuizQuestionType = Math.random() > 0.5 ? 'word' : 'definition';
         }
 
-        // Get 3 wrong options from other words
-        const otherWords = this.words
-            .filter((w, i) => i !== this.currentWordIndex)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3);
+        // Get 3 wrong options from other words; prefer the same category so the
+        // distractors cannot be ruled out just because they belong to another field.
+        const candidates = shuffled(this.words.filter((w, i) => i !== this.currentWordIndex && w.word !== currentWord.word));
+        const sameCategory = candidates.filter(w => !!currentWord.category && w.category === currentWord.category);
+        const otherWords = [...sameCategory, ...candidates.filter(w => !sameCategory.includes(w))].slice(0, 3);
 
         // Create options array
         const options: QuizOption[] = [
@@ -521,7 +522,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
         });
 
         // Shuffle and assign letters
-        options.sort(() => Math.random() - 0.5);
+        shuffleInPlace(options);
         const letters = ['A', 'B', 'C', 'D'];
         options.forEach((opt, i) => {
             opt.letter = letters[i];
