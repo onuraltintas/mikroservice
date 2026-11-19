@@ -233,7 +233,7 @@
   background-color: var(--ui-surface-muted);
   border-top: 1px solid var(--ui-border);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
 
   button {
@@ -242,26 +242,6 @@
     cursor: pointer;
     border-radius: 8px;
     transition: background-color 0.2s;
-  }
-
-  .push-toggle {
-    width: 36px;
-    height: 36px;
-    background: var(--ui-surface);
-    border: 1px solid var(--ui-border-strong);
-    color: var(--ui-text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-      background: var(--ui-brand-soft);
-      color: var(--ui-brand);
-    }
-
-    .material-icons {
-      font-size: 20px;
-    }
   }
 
   .view-all {
