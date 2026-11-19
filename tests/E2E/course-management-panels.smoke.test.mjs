@@ -354,6 +354,9 @@ test('course teacher creates a profile, independent workspace and targeted invit
       }
       if (path === '/api/course-management/notifications') return reply([{ id: 'staff-course-notice', title: 'Ödev teslim edildi',
         message: 'Bir öğrenci ödevini gönderdi.', type: 'CourseManagement.AssignmentSubmitted', createdAt: new Date().toISOString(), isRead: false }]);
+      if (path.endsWith('/overview')) return reply({ today: new Date().toISOString().slice(0, 10),
+        role: workspace?.role === 'Owner' ? 'Owner' : 'Teacher', todayLessons: [], lessonsWaitingForAttendance: [],
+        finance: null, emails: null, supportAccess: null });
       if (path.endsWith('/me/profile')) {
         if (request.method() === 'PUT') displayName = request.postDataJSON().displayName;
         return displayName ? reply({ userId: studentId, displayName }) : route.fulfill({ status: 404 });
@@ -580,10 +583,12 @@ test('course teacher creates a profile, independent workspace and targeted invit
     await page.getByLabel('E-posta adresi').fill('teacher@example.test');
     await page.getByLabel('Şifre', { exact: true }).fill('test-password');
     await page.getByRole('button', { name: 'Personel olarak giriş yap' }).click();
-    await page.getByLabel('Görünen ad').fill('Öğretmen adı');
-    await page.getByLabel('Çalışma alanı adı').fill('Matematik özel ders');
-    await page.getByRole('button', { name: 'Çalışma alanı oluştur', exact: true }).click();
-    await page.getByText('Çalışma alanınız oluşturuldu.', { exact: true }).waitFor();
+    // The new panel opens with a setup card; the earlier screen stays reachable as "Önceki ekran" for its remaining tools.
+    await page.getByLabel('Adınız').fill('Öğretmen adı');
+    await page.getByLabel('Özel ders alanının adı').fill('Matematik özel ders');
+    await page.getByRole('button', { name: 'Özel ders alanını aç', exact: true }).click();
+    await page.getByRole('navigation', { name: 'Kurs Yönetimi' }).waitFor();
+    await page.getByRole('link', { name: 'Önceki ekran' }).click();
     await page.getByText('Öğretmen Plus', { exact: true }).waitFor();
     await page.getByText('Etkin öğrenci: 0 / 25', { exact: true }).waitFor();
     await page.getByText('Başlangıç öncesi, bitiş sonrası veya plan askıya alındığında çalışma alanı salt okunur olur. Mevcut verileri okuyup dışa aktarabilirsiniz; davet, öğrenci, ders, ödev ve finans değişiklikleri durur. Kişisel profiliniz etkilenmez.', { exact: true }).waitFor();
@@ -824,6 +829,9 @@ test('institution owner imports selected legacy teachers and institution fields 
       if (path.endsWith('/auth/staff-session/switch/coaching'))
         return reply({ accessToken: jwt('coaching'), expiresInMinutes: 15, tokenType: 'Bearer' });
       if (path === '/api/course-management/notifications') return reply([]);
+      if (path.endsWith('/overview')) return reply({ today: new Date().toISOString().slice(0, 10),
+        role: workspace?.role === 'Owner' ? 'Owner' : 'Teacher', todayLessons: [], lessonsWaitingForAttendance: [],
+        finance: null, emails: null, supportAccess: null });
       if (path.endsWith('/me/profile')) return reply({ userId: studentId, displayName: 'Kurum Sahibi' });
       if (path.endsWith('/me/memberships')) return reply([workspace]);
       if (path.endsWith('/me/subscriptions')) return reply([{
@@ -897,6 +905,7 @@ test('institution owner imports selected legacy teachers and institution fields 
     await page.getByLabel('E-posta adresi').fill('owner@example.test');
     await page.getByLabel('Şifre', { exact: true }).fill('test-password');
     await page.getByRole('button', { name: 'Personel olarak giriş yap' }).click();
+    await page.getByRole('link', { name: 'Önceki ekran' }).click();
     await page.getByRole('heading', { name: 'Eski üründen öğretmen daveti' }).waitFor();
     assert.equal(await page.locator('#course-workspace-select').inputValue(), workspaceId);
 
@@ -929,5 +938,117 @@ test('institution owner imports selected legacy teachers and institution fields 
     assert.equal(await page.locator('#course-workspace-select option').count(), 1,
       'institution details update the existing workspace without creating another one');
     assert.equal(workspaceCreateRequests, 0);
+  }, '/staff/');
+});
+
+test('institution panel: student filters stay in the address, a year-long series is added from the calendar menu, e-mails need consent', async () => {
+  await withPage('clients/admin-panel/dist/staff-portal/browser', async (page, base) => {
+    const courseId = '1c1d6f0c-5a43-4d44-9d47-6a3a8d1f2b10';
+    const groupId = '2d2e7a1d-6b54-4e55-8e58-7b4b9e2a3c21';
+    const workspace = { id: workspaceId, name: 'TEST Deneme Kursu', type: 'Institution', institutionCategory: null, role: 'Owner', isReadOnly: false };
+    const searches = [];
+    const seriesBodies = [];
+    let savedEmailSettings = null;
+    const kinds = ['Absence', 'HomeworkNotDone', 'InstallmentReminder', 'InstallmentOverdue', 'LessonChanged', 'WeeklySchedule', 'PaymentReceived'];
+    const emailSettings = () => ({ rules: kinds.map((kind, index) => ({ kind, kindValue: index + 1,
+      enabled: savedEmailSettings?.rules.find(rule => rule.kind === index + 1)?.enabled ?? false, audience: 1, note: null })),
+      installmentDaysBefore: 3, installmentOnDueDay: false, overdueDaysAfter: 3, sendHour: 10, replyToEmail: null,
+      informedConsentAt: savedEmailSettings?.informedConsentConfirmed ? new Date().toISOString() : null });
+
+    await page.route('**/api/**', async route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      const path = url.pathname;
+      const reply = (json, status = 200) => route.fulfill({ status, json });
+      if (path.endsWith('/auth/refresh-token')) return reply({ code: 'Auth.InvalidToken' }, 400);
+      if (path.endsWith('/auth/course-management/refresh-token'))
+        return reply({ accessToken: jwt('course-management'), expiresInMinutes: 15, tokenType: 'Bearer' });
+      if (path.endsWith('/auth/captcha-config')) return reply({ enabled: false, siteKey: null });
+      if (path.endsWith('/auth/course-management/login')) return reply({ accessToken: jwt('course-management'), expiresInMinutes: 15 });
+      if (path.endsWith('/auth/staff-session/products')) return reply([{ product: 'course-management', roles: ['CourseInstitutionOwner'] }]);
+      if (path === '/api/course-management/notifications') return reply([]);
+      if (path.endsWith('/me/profile')) return reply({ userId: studentId, displayName: 'TEST Kurum Sahibi' });
+      if (path.endsWith('/me/memberships')) return reply([workspace]);
+      if (path.endsWith('/me/subscriptions')) return reply([]);
+      if (path.endsWith('/participation/invitations')) return reply([]);
+      if (path.endsWith('/overview')) return reply({ today: new Date().toISOString().slice(0, 10), role: 'Owner', todayLessons: [],
+        lessonsWaitingForAttendance: [], finance: { overdueCount: 1, overdueStudentCount: 1, overdueAmount: 400, monthCollections: 1200 },
+        emails: { sent: 0, skipped: 0, byKind: [] }, supportAccess: { pendingRequest: false, active: false } });
+      if (path.endsWith('/members')) return reply([{ userId: studentId, role: 'Owner', isActive: true, displayName: 'TEST Kurum Sahibi' }]);
+      if (path.endsWith('/courses')) return reply([{ id: courseId, name: 'Matematik', subject: 'Matematik' }]);
+      if (path.endsWith('/groups')) return reply([{ id: groupId, courseId, courseName: 'Matematik', name: '8. sınıf', teacherUserId: studentId }]);
+      if (path.endsWith('/students/search')) {
+        searches.push(Object.fromEntries(url.searchParams));
+        const items = [{ id: inviteId, displayName: 'Ada Öğrenci', email: null, phoneNumber: null, isActive: true, emailsMuted: false,
+          createdAt: '2026-11-01T09:00:00Z', groups: [{ id: groupId, name: '8. sınıf', courseName: 'Matematik' }], guardianCount: 1,
+          guardianWithoutEmail: false, overdueAmount: 400 }];
+        return reply({ total: 1, skip: 0, take: Number(url.searchParams.get('take') ?? 25), items });
+      }
+      if (path.endsWith('/lesson-series') && request.method() === 'POST') {
+        const body = request.postDataJSON();
+        seriesBodies.push(body);
+        if (body.preview) return reply({ sessionCount: 50, conflictCount: 1, occurrences: [{ startsAt: `${body.startsOn}T07:00:00Z`,
+          endsAt: `${body.startsOn}T08:00:00Z`, conflicts: [{ code: 'Lesson.TeacherConflict', with: 'Fizik' }] }] });
+        return reply({ seriesId: body.id, sessionsCreated: 49, sessionsSkipped: 1 }, 201);
+      }
+      if (path.endsWith('/email-settings') && request.method() === 'PUT') { savedEmailSettings = request.postDataJSON(); return reply(emailSettings()); }
+      if (path.endsWith('/email-settings')) return reply(emailSettings());
+      if (path.endsWith('/emails')) return reply([]);
+      if (path.startsWith(`/api/course-management/v1/workspaces/${workspaceId}/`) && request.method() === 'GET') return reply([]);
+      throw new Error(`Unexpected institution panel request: ${request.method()} ${path}`);
+    });
+
+    await page.goto(`${base}/?product=course-management`);
+    await page.getByLabel('E-posta adresi').fill('owner@example.test');
+    await page.getByLabel('Şifre', { exact: true }).fill('test-password');
+    await page.getByRole('button', { name: 'Personel olarak giriş yap' }).click();
+    await page.getByRole('heading', { name: 'Genel bakış' }).waitFor();
+
+    // Students: the search and filters are kept in the address, so a refresh keeps them.
+    await page.getByRole('link', { name: 'Öğrenciler' }).click();
+    await page.getByRole('heading', { name: 'Öğrenciler' }).waitFor();
+    await page.getByLabel('Ara').fill('Ada');
+    await page.getByLabel('Ara').press('Enter');
+    await page.getByText('Ada Öğrenci').first().waitFor();
+    await page.waitForFunction(() => location.hash.startsWith('#ogrenciler') && location.hash.includes('q=Ada'));
+    assert.equal(searches.at(-1).q, 'Ada');
+    await page.reload();
+    await page.getByRole('heading', { name: 'Öğrenciler' }).waitFor();
+    await page.waitForFunction(() => document.querySelector('input[name="q"]')?.value === 'Ada');
+
+    // Calendar: right-click an empty hour, add a lesson series that runs a year, see the clash, skip it and save.
+    await page.getByRole('link', { name: 'Takvim' }).click();
+    await page.getByRole('heading', { name: 'Takvim' }).waitFor();
+    await page.getByRole('button', { name: /10\.00, ders ekle$/ }).first().click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Tekrarlayan ders ekle' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Grup').selectOption({ label: '8. sınıf' });
+    await dialog.getByLabel('Ne kadar sürsün').selectOption('year');
+    await dialog.getByRole('button', { name: 'Dersleri göster' }).click();
+    await dialog.getByText('50 ders oluşacak.').waitFor();
+    assert.equal(seriesBodies[0].preview, true);
+    const span = (Date.parse(seriesBodies[0].endsOn) - Date.parse(seriesBodies[0].startsOn)) / 86400000;
+    assert.ok(span >= 360 && span <= 366, `a year-long series (${span} days)`);
+    assert.equal(seriesBodies[0].groupId, groupId);
+    assert.equal(seriesBodies[0].startTime, '10:00');
+    await dialog.getByLabel('Çakışan 1 dersi atla, kalanları kaydet').check();
+    await dialog.getByRole('button', { name: 'Kaydet' }).click();
+    await page.getByText('49 ders eklendi; çakışan 1 ders atlandı.').waitFor();
+    assert.equal(seriesBodies[1].skipConflicts, true);
+    assert.equal(seriesBodies[1].preview, undefined);
+
+    // E-mails: turning one on needs the institution's confirmation that students and guardians were told.
+    await page.getByRole('link', { name: 'Ayarlar' }).click();
+    await page.getByRole('heading', { name: 'Ayarlar' }).waitFor();
+    await page.getByRole('switch', { name: 'Devamsızlık' }).click();
+    await page.getByRole('button', { name: 'Kaydet' }).click();
+    await page.getByText('E-postaları açmadan önce bilgilendirme onayını işaretleyin.').waitFor();
+    assert.equal(savedEmailSettings, null);
+    await page.getByLabel(/Öğrencileri ve velileri bilgilendirdik/).check();
+    await page.getByRole('button', { name: 'Kaydet' }).click();
+    await page.getByText('E-posta ayarları kaydedildi.').waitFor();
+    assert.equal(savedEmailSettings.informedConsentConfirmed, true);
+    assert.equal(savedEmailSettings.rules.find(rule => rule.kind === 1).enabled, true);
+    assert.equal(savedEmailSettings.rules.filter(rule => rule.enabled).length, 1);
   }, '/staff/');
 });

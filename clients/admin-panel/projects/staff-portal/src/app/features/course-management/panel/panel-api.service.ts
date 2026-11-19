@@ -51,6 +51,15 @@ export interface SeriesRequest {
 }
 export interface SeriesPreview { sessionCount: number; conflictCount: number; occurrences: { startsAt: string; endsAt: string; conflicts: string[] }[]; }
 
+export interface PanelInstallmentRow {
+  id: string; studentId: string; studentName: string; courseId: string; courseName: string; label: string; amount: number;
+  remaining: number; dueOn: string; isLessonCharge: boolean; overdueDays: number;
+}
+export interface PanelPaymentRow {
+  id: string; studentId: string; studentName: string; amount: number; receivedAt: string; method: 'Cash' | 'BankTransfer';
+  note: string | null; isReversal: boolean; reversed: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoursePanelApi {
   private readonly http = inject(HttpClient);
@@ -86,6 +95,19 @@ export class CoursePanelApi {
   createSeries(id: string, request: SeriesRequest, skipConflicts: boolean) {
     return firstValueFrom(this.http.post<{ seriesId: string; sessionsCreated: number; sessionsSkipped: number }>(`${this.ws(id)}/lesson-series`,
       { id: crypto.randomUUID(), ...request, skipConflicts }));
+  }
+  installments(id: string, filter: { status: string; courseId?: string; q?: string; skip: number; take: number }) {
+    let params = new HttpParams().set('status', filter.status).set('skip', filter.skip).set('take', filter.take);
+    if (filter.courseId) params = params.set('courseId', filter.courseId);
+    if (filter.q?.trim()) params = params.set('q', filter.q.trim());
+    return firstValueFrom(this.http.get<{ total: number; outstanding: number; skip: number; take: number; items: PanelInstallmentRow[] }>(
+      `${this.ws(id)}/finance/installments`, { params }));
+  }
+  payments(id: string, filter: { from?: string; to?: string; method?: string; q?: string; skip: number; take: number }) {
+    let params = new HttpParams().set('skip', filter.skip).set('take', filter.take);
+    for (const key of ['from', 'to', 'method', 'q'] as const) if (filter[key]) params = params.set(key, String(filter[key]).trim());
+    return firstValueFrom(this.http.get<{ total: number; sum: number; skip: number; take: number; items: PanelPaymentRow[] }>(
+      `${this.ws(id)}/finance/payments`, { params }));
   }
   emailSettings(id: string) { return firstValueFrom(this.http.get<PanelEmailSettings>(`${this.ws(id)}/email-settings`)); }
   saveEmailSettings(id: string, settings: Omit<PanelEmailSettings, 'informedConsentAt' | 'rules'> & {

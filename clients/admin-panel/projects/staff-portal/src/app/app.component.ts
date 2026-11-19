@@ -16,7 +16,7 @@ import { SpeedReadingInstitutionWorkspaceComponent } from './features/speed-read
 import { StaffAccountSettingsComponent } from './account/staff-account-settings.component';
 import { StaffNotificationCenterComponent } from './notifications/staff-notification-center.component';
 import type { WeeklyDestination } from '../../../../shared/coaching-notification-target';
-import { CourseManagementWorkspaceComponent } from './features/course-management/course-management-workspace.component';
+import { CoursePanelComponent } from './features/course-management/panel/course-panel.component';
 import { CourseManagementEnrollmentComponent } from './features/course-management/course-management-enrollment.component';
 import { EDUIVME_SITE_URLS, STAFF_PORTAL_PATH, siteForHost } from '../../../../shared/eduivme-sites';
 
@@ -25,7 +25,7 @@ type StaffWorkspaceRole = 'teacher' | 'institution';
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CdkTrapFocus, CoachingIconComponent, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CourseManagementWorkspaceComponent, CourseManagementEnrollmentComponent],
+  imports: [FormsModule, CdkTrapFocus, CoachingIconComponent, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CoursePanelComponent, CourseManagementEnrollmentComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

@@ -13,6 +13,7 @@ import { FinanceSectionComponent } from './sections/finance.component';
 import { TeachersSectionComponent } from './sections/teachers.component';
 import { ReportsSectionComponent } from './sections/reports.component';
 import { SettingsSectionComponent } from './sections/settings.component';
+import { CourseManagementWorkspaceComponent } from '../course-management-workspace.component';
 
 /**
  * Kurs Yönetimi institution panel (19.11.2026, design approved 17.42): one panel, nine sections in a side menu.
@@ -22,7 +23,7 @@ import { SettingsSectionComponent } from './sections/settings.component';
 @Component({
   selector: 'staff-course-panel',
   standalone: true,
-  imports: [FormsModule, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
+  imports: [FormsModule, CourseManagementWorkspaceComponent, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
     AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent],
   providers: [CoursePanelState],
   styleUrl: './panel.scss',
@@ -62,7 +63,7 @@ import { SettingsSectionComponent } from './sections/settings.component';
         <main>
           @if (supportPending()) {
             <p class="banner" role="status">eduivme destek ekibi kurum kayıtlarınıza bakmak için izin istedi.
-              <a href="#ayarlar" (click)="go('settings', $event)">İsteği görüntüleyin</a></p>
+              <a href="#ayarlar?bolum=destek" (click)="go('settings', $event, 'bolum=destek')">İsteği görüntüleyin</a></p>
           }
           @if (state.readOnly()) {
             <p class="banner" role="status">Kurum salt okunur: kayıtları görebilir ve dışa aktarabilirsiniz, değişiklik yapamazsınız.</p>
@@ -77,6 +78,10 @@ import { SettingsSectionComponent } from './sections/settings.component';
             @case ('teachers') { <course-teachers-section /> }
             @case ('reports') { <course-reports-section /> }
             @case ('settings') { <course-settings-section /> }
+            @case ('previous') {
+              <p class="banner" role="status">Bu ekran geçiş dönemi içindir: başka üründen kayıt aktarma, telafi dersleri ve işlem kaydı burada. Diğer işler için sol menüyü kullanın.</p>
+              <staff-course-management-workspace [role]="role" />
+            }
           }
         </main>
       </div>
@@ -162,12 +167,15 @@ export class CoursePanelComponent implements OnInit {
     if (workspace) await this.open(workspace);
   }
 
-  go(section: PanelSection, event?: Event): void {
+  go(section: PanelSection, event?: Event, query?: string): void {
     event?.preventDefault();
-    this.section.set(section);
     const slug = SECTIONS.find(item => item.id === section)?.slug ?? '';
     const view = this.document.defaultView;
-    if (view && view.location.hash.split('?')[0] !== `#${slug}`) view.history.pushState(null, '', `#${slug}`);
+    if (view && query) view.history.pushState(null, '', `#${slug}?${query}`);
+    else if (view && view.location.hash.split('?')[0] !== `#${slug}`) view.history.pushState(null, '', `#${slug}`);
+    // Re-create the section when it is chosen again, so it reads its filters from the address.
+    if (this.section() === section) { this.section.set('overview'); queueMicrotask(() => this.section.set(section)); }
+    else this.section.set(section);
     view?.scrollTo?.({ top: 0 });
   }
 

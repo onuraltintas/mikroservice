@@ -4,7 +4,7 @@ import {
 } from '../course-management.service';
 import { CoursePanelApi, PanelMember } from './panel-api.service';
 
-export type PanelSection = 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings';
+export type PanelSection = 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings' | 'previous';
 
 export const SECTIONS: { id: PanelSection; label: string; slug: string; ownerOnly: boolean }[] = [
   { id: 'overview', label: 'Genel bakış', slug: 'genel-bakis', ownerOnly: false },
@@ -15,7 +15,10 @@ export const SECTIONS: { id: PanelSection; label: string; slug: string; ownerOnl
   { id: 'finance', label: 'Tahsilat', slug: 'tahsilat', ownerOnly: true },
   { id: 'teachers', label: 'Öğretmenler', slug: 'ogretmenler', ownerOnly: true },
   { id: 'reports', label: 'Raporlar', slug: 'raporlar', ownerOnly: false },
-  { id: 'settings', label: 'Ayarlar', slug: 'ayarlar', ownerOnly: true }
+  { id: 'settings', label: 'Ayarlar', slug: 'ayarlar', ownerOnly: true },
+  // Transition: the earlier single-page screen keeps the tools the new sections do not have yet
+  // (moving records from other products, makeup lessons, homework files, the change record).
+  { id: 'previous', label: 'Önceki ekran', slug: 'onceki-ekran', ownerOnly: false }
 ];
 
 /**
