@@ -7,8 +7,9 @@ using Npgsql;
 namespace CourseManagement.API;
 
 /// <summary>
-/// The platform's view of institutions (19.11.2026): a list and a summary without personal records, and time-limited,
-/// read-only support access that the owner approves (see <see cref="SupportAccessGrant"/>).
+/// The platform's view of institutions (19.11.2026): a list and a summary without personal records, and time-limited
+/// support access that the owner approves (see <see cref="SupportAccessGrant"/>); corrections are in
+/// <see cref="SupportChangeEndpoints"/>.
 /// </summary>
 public static class SupportAccessEndpoints
 {
@@ -66,7 +67,9 @@ public static class SupportAccessEndpoints
                     sentLast30Days = emails.Where(item => item.Status == CourseEmailStatus.Sent).Sum(item => item.Count),
                     recipientsLast30Days = emails.Where(item => item.Status == CourseEmailStatus.Sent).Sum(item => item.People),
                     skippedLast30Days = emails.Where(item => item.Status == CourseEmailStatus.Skipped).Sum(item => item.Count),
-                    optedOutAddresses = await db.EmailOptOuts.CountAsync(item => item.WorkspaceId == workspaceId, ct)
+                    optedOutAddresses = await db.EmailOptOuts.CountAsync(item => item.WorkspaceId == workspaceId, ct),
+                    undeliveredLast30Days = await db.Emails.CountAsync(item => item.WorkspaceId == workspaceId && item.ProcessedAt >= since
+                        && (item.Delivery == CourseEmailDelivery.Failed || item.Delivery == CourseEmailDelivery.PartlyFailed), ct)
                 },
                 supportAccess = grants.Select(grant => GrantView(grant, now)).ToArray()
             });
@@ -120,7 +123,7 @@ public static class SupportAccessEndpoints
                     guardians = (from link in db.StudentGuardianLinks
                         join guardian in db.Guardians on link.GuardianContactId equals guardian.Id
                         where link.StudentId == item.Id && link.IsActive
-                        select new { guardian.DisplayName, guardian.Email, guardian.PhoneNumber }).ToList(),
+                        select new { guardian.Id, guardian.DisplayName, guardian.Email, guardian.PhoneNumber }).ToList(),
                     groups = (from enrollment in db.Enrollments
                         join courseGroup in db.Groups on enrollment.GroupId equals courseGroup.Id
                         where enrollment.StudentId == item.Id && enrollment.Status == EnrollmentStatus.Active
@@ -145,10 +148,14 @@ public static class SupportAccessEndpoints
                 select new
                 {
                     lesson.Id, courseName = course.Name, lesson.StartsAt, lesson.EndsAt, status = lesson.Status.ToString(), lesson.TeacherUserId,
-                    attendance = (from record in db.AttendanceRecords
-                        join student in db.Students on record.StudentId equals student.Id
-                        where record.LessonSessionId == lesson.Id
-                        select new { student.DisplayName, status = record.Status.ToString() }).ToList()
+                    attendance = (from participant in db.LessonParticipants
+                        join student in db.Students on participant.StudentId equals student.Id
+                        where participant.LessonSessionId == lesson.Id && participant.IsActive
+                        select new { studentId = student.Id, student.DisplayName,
+                            status = db.AttendanceRecords.Where(record => record.LessonSessionId == lesson.Id && record.StudentId == student.Id)
+                                .Select(record => record.Status.ToString()).FirstOrDefault(),
+                            charged = db.Installments.Any(item => item.SourceLessonId == lesson.Id && item.StudentId == student.Id) }).ToList(),
+                    lesson.SeriesId
                 }).Take(500).ToListAsync(ct);
             return Results.Ok(lessons);
         });
@@ -204,9 +211,22 @@ public static class SupportAccessEndpoints
             var now = DateTimeOffset.UtcNow;
             var grants = await db.SupportAccessGrants.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
                 .OrderByDescending(item => item.RequestedAt).Take(50).ToListAsync(ct);
-            var logs = await db.SupportAccessLogs.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
-                .OrderByDescending(item => item.OccurredAt).Take(200)
-                .Select(item => new { item.GrantId, section = item.Section.ToString(), item.What, item.OccurredAt }).ToListAsync(ct);
+            var rows = await db.SupportAccessLogs.AsNoTracking().Where(item => item.WorkspaceId == workspaceId)
+                .OrderByDescending(item => item.OccurredAt).Take(200).ToListAsync(ct);
+            // Names are read now, so an erased student or guardian stays erased here too.
+            var targets = rows.Where(item => item.TargetId is not null).Select(item => item.TargetId!.Value).Distinct().ToArray();
+            var names = await db.Students.AsNoTracking().Where(item => targets.Contains(item.Id)).Select(item => new { item.Id, Name = item.DisplayName })
+                .Concat(db.Guardians.AsNoTracking().Where(item => targets.Contains(item.Id)).Select(item => new { item.Id, Name = item.DisplayName }))
+                .ToDictionaryAsync(item => item.Id, item => item.Name, ct);
+            var lessonNames = await (from lesson in db.LessonSessions.AsNoTracking()
+                    join course in db.Courses.AsNoTracking() on lesson.CourseId equals course.Id
+                    where targets.Contains(lesson.Id) select new { lesson.Id, course.Name }).ToDictionaryAsync(item => item.Id, item => item.Name, ct);
+            var logs = rows.Select(item => new
+            {
+                item.GrantId, section = item.Section.ToString(), item.What, item.OccurredAt, item.IsChange,
+                target = item.TargetId is { } id ? names.GetValueOrDefault(id) ?? lessonNames.GetValueOrDefault(id) : null,
+                item.Before, item.After
+            });
             return Results.Ok(new { grants = grants.Select(grant => GrantView(grant, now)), logs });
         }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
 
@@ -218,10 +238,11 @@ public static class SupportAccessEndpoints
             if (grant is null) return Results.NotFound();
             var sections = (request.Sections ?? []).Aggregate(SupportAccessSections.None, (all, item) => all | item);
             var now = DateTimeOffset.UtcNow;
-            try { grant.Approve(AssignmentEndpoints.UserId(user), request.Hours, sections, now); }
+            try { grant.Approve(AssignmentEndpoints.UserId(user), request.Hours, sections, request.AllowChanges, now); }
             catch (InvalidOperationException) { return Results.Conflict(new { code = "SupportAccess.NotRequested" }); }
             catch (ArgumentException) { return Results.BadRequest(new { code = "SupportAccess.InvalidChoice" }); }
-            AssignmentEndpoints.AddAudit(db, workspaceId, AssignmentEndpoints.UserId(user), grant.Id, "SupportAccess.Approved");
+            AssignmentEndpoints.AddAudit(db, workspaceId, AssignmentEndpoints.UserId(user), grant.Id,
+                request.AllowChanges ? "SupportAccess.ApprovedWithChanges" : "SupportAccess.Approved");
             await db.SaveChangesAsync(ct);
             return Results.Ok(GrantView(grant, now));
         }).WithMetadata(new ReadOnlyWorkspaceOperationMetadata());
@@ -269,6 +290,18 @@ public static class SupportAccessEndpoints
         return grant;
     }
 
+    /// <summary>The caller's active grant that allows corrections in the section (second factor required); null answers 404.</summary>
+    internal static async Task<SupportAccessGrant?> ChangeGrantAsync(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user,
+        SupportAccessSections section, CancellationToken ct)
+    {
+        if (!string.Equals(user.FindFirstValue("amr"), "mfa", StringComparison.Ordinal)) return null;
+        var adminId = AssignmentEndpoints.UserId(user);
+        var now = DateTimeOffset.UtcNow;
+        var grants = await db.SupportAccessGrants.Where(item => item.WorkspaceId == workspaceId && item.AdminUserId == adminId
+            && item.Status == SupportAccessStatus.Active).ToListAsync(ct);
+        return grants.FirstOrDefault(item => item.OpensForChange(section, adminId, now));
+    }
+
     private static Task<bool> IsOwner(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user, CancellationToken ct)
     {
         var userId = AssignmentEndpoints.UserId(user);
@@ -281,13 +314,13 @@ public static class SupportAccessEndpoints
             .Select(item => item.ToString()).ToArray(),
         grant.DurationHours, grant.RequestedAt, grant.ApprovedAt, grant.ExpiresAt,
         grant.Status == SupportAccessStatus.Active && !grant.IsActive(now) ? grant.ExpiresAt : grant.EndedAt,
-        grant.Status == SupportAccessStatus.Active && !grant.IsActive(now) ? "Expired" : grant.EndReason);
+        grant.Status == SupportAccessStatus.Active && !grant.IsActive(now) ? "Expired" : grant.EndReason, grant.AllowsChanges);
 }
 
 public sealed record AdminWorkspaceRow(Guid Id, string Name, string Type, DateTimeOffset CreatedAt, int TeacherCount,
     int ActiveStudentCount, DateTimeOffset? LastActivityAt, bool IsReadOnly);
 public sealed record RequestSupportAccessRequest(string? Reason);
-public sealed record ApproveSupportAccessRequest(int Hours, SupportAccessSections[]? Sections);
+public sealed record ApproveSupportAccessRequest(int Hours, SupportAccessSections[]? Sections, bool AllowChanges = false);
 public sealed record SupportGrantView(Guid Id, Guid WorkspaceId, Guid AdminUserId, string Reason, string Status, string[] Sections,
     int DurationHours, DateTimeOffset RequestedAt, DateTimeOffset? ApprovedAt, DateTimeOffset? ExpiresAt, DateTimeOffset? EndedAt,
-    string? EndReason);
+    string? EndReason, bool AllowsChanges);

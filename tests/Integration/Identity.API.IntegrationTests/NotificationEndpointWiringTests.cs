@@ -54,10 +54,10 @@ public sealed class NotificationEndpointWiringTests
 
         on.Should().BeEquivalentTo(NotificationReceiveEndpoints.All);
         NotificationReceiveEndpoints.All.Where(endpoint => endpoint.CourseManagement).Select(endpoint => endpoint.Queue)
-            .Should().HaveCount(9).And.OnlyContain(queue => queue.StartsWith("course-management-"));
+            .Should().HaveCount(10).And.OnlyContain(queue => queue.StartsWith("course-management-"));
         off.Should().NotContain(endpoint => endpoint.Queue.StartsWith("course-management-")
             || endpoint.Consumer.Name.StartsWith("CourseManagement"));
-        off.Should().HaveCount(NotificationReceiveEndpoints.All.Count - 9);
+        off.Should().HaveCount(NotificationReceiveEndpoints.All.Count - 10);
     }
 
     [Theory]
@@ -107,7 +107,9 @@ public sealed class NotificationEndpointWiringTests
              // Billing service: one queue for every product's order, withdrawal, invoice and expiry e-mails.
              "billing-notice",
              // Kurs Yönetimi (19.11.2026): an institution's e-mails to its students and guardians.
-             "course-management-institution-email"],
+             "course-management-institution-email",
+             // ... and eduivme's service e-mails to an institution's owner (support access).
+             "course-management-owner-email"],
             "five update notifications were registered without a queue; realtime pushes now run after commit; " +
             "the password-setup e-mail no longer rides on user-created");
     }

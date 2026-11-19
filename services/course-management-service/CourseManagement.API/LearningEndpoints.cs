@@ -1777,10 +1777,10 @@ public static class LearningEndpoints
     private static Task<bool> IsActiveTeacher(CourseManagementDbContext db, Guid workspaceId, Guid userId, CancellationToken ct) =>
         db.Memberships.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == userId
             && member.IsActive && member.Role == WorkspaceRole.Teacher, ct);
-    private static bool IsSerializationFailure(Exception exception) => exception is PostgresException
+    internal static bool IsSerializationFailure(Exception exception) => exception is PostgresException
         { SqlState: PostgresErrorCodes.SerializationFailure }
         || exception is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.SerializationFailure } };
-    private static bool FitsTeacherAvailability((DateTimeOffset StartsAt, DateTimeOffset EndsAt) occurrence,
+    internal static bool FitsTeacherAvailability((DateTimeOffset StartsAt, DateTimeOffset EndsAt) occurrence,
         IReadOnlyList<TeacherAvailabilityWindow> windows)
     {
         // E3 #34: the hours are Türkiye time (older rows stored with another zone too).

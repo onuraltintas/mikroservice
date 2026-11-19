@@ -359,8 +359,17 @@ namespace CourseManagement.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("Delivery")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("DeliveryCheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("DueAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FailedRecipientCount")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Kind")
                         .HasColumnType("integer");
@@ -405,6 +414,8 @@ namespace CourseManagement.Infrastructure.Migrations
 
                     b.HasIndex("WorkspaceId", "DedupKey")
                         .IsUnique();
+
+                    b.HasIndex("Status", "Delivery", "ProcessedAt");
 
                     b.ToTable("CourseEmails", (string)null);
                 });
@@ -1268,6 +1279,9 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.Property<Guid>("AdminUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("AllowsChanges")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1276,6 +1290,9 @@ namespace CourseManagement.Infrastructure.Migrations
 
                     b.Property<int>("DurationHours")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("EndNoticeSentAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EndReason")
                         .HasMaxLength(40)
@@ -1292,11 +1309,17 @@ namespace CourseManagement.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTimeOffset?>("RequestNoticeSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("RequestedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Sections")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("StartNoticeSentAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .IsConcurrencyToken()
@@ -1325,14 +1348,28 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.Property<Guid>("AdminUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("After")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Before")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<Guid>("GrantId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsChange")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Section")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("What")
                         .IsRequired()

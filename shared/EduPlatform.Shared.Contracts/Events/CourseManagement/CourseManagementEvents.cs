@@ -63,3 +63,16 @@ public sealed record CourseManagementEmailRequestedV1(
     IReadOnlyList<string> Paragraphs,
     string? InstitutionNote,
     string UnsubscribeUrl);
+
+/// <summary>
+/// A service e-mail to an institution's owner from eduivme (19.11.2026): support asked to look at the institution's
+/// records, access opened, or it ended. Sent from the platform's own address; not a marketing mail, so no unsubscribe.
+/// </summary>
+public sealed record CourseManagementOwnerEmailRequestedV1(
+    Guid EmailId,
+    string RecipientEmail,
+    string Subject,
+    string Title,
+    IReadOnlyList<string> Paragraphs,
+    string LinkUrl,
+    string LinkText);

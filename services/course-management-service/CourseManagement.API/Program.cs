@@ -43,6 +43,7 @@ builder.Services.AddScoped<ICourseManagementAccountErasureService>(services =>
     services.GetRequiredService<CourseManagementAccountErasureService>());
 builder.Services.AddHttpClient<ICourseManagementLegalHoldStatusProvider, IdentityCourseManagementErasureReadinessProvider>();
 builder.Services.AddHttpClient<IdentityAccountLookup>(client => client.Timeout = TimeSpan.FromSeconds(5));
+builder.Services.AddHttpClient<NotificationDeliveryClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddSingleton(TimeProvider.System);
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? builder.Configuration["RabbitMQ:Host"];
 var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") ?? builder.Configuration["RabbitMQ:Username"];
@@ -209,6 +210,7 @@ api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
 api.MapCourseEmailEndpoints(app);
 app.MapSupportAccessEndpoints(api);
+app.MapSupportChangeEndpoints();
 api.MapOverviewEndpoints();
 api.MapStudentSearchEndpoints();
 api.MapFinanceListEndpoints();

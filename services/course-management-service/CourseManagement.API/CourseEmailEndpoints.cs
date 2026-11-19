@@ -102,7 +102,7 @@ public static class CourseEmailEndpoints
                 orderby email.ProcessedAt descending, email.Id
                 select new SentEmailView(email.Id, email.Kind.ToString(), email.StudentId, student.DisplayName,
                     email.Status.ToString(), email.Subject, email.Recipients, email.RecipientCount, email.SkipReason,
-                    email.ProcessedAt)).Skip(skip ?? 0).Take(take ?? 50).ToListAsync(ct);
+                    email.ProcessedAt, email.Delivery.ToString(), email.FailedRecipientCount)).Skip(skip ?? 0).Take(take ?? 50).ToListAsync(ct);
             return Results.Ok(rows);
         });
 
@@ -209,5 +209,5 @@ public sealed record EmailSettingsView(EmailRuleView[] Rules, int InstallmentDay
 public sealed record EmailPreviewView(string InstitutionName, string Subject, string Title, IReadOnlyList<string> Paragraphs, string? Note);
 public sealed record SendTestEmailRequest(CourseEmailKind Kind, string? Email);
 public sealed record SentEmailView(Guid Id, string Kind, Guid StudentId, string StudentName, string Status, string? Subject,
-    string? Recipients, int RecipientCount, string? SkipReason, DateTimeOffset? ProcessedAt);
+    string? Recipients, int RecipientCount, string? SkipReason, DateTimeOffset? ProcessedAt, string Delivery, int FailedRecipientCount);
 public sealed record SetEmailMuteRequest(bool Muted);
