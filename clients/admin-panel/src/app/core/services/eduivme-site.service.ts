@@ -2,10 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
-/** eduivme.com content (site-service). Kinds: see services/site-service/Site.Infrastructure/SiteRules.cs. */
-export type SiteKind = 'site' | 'hero' | 'section' | 'product' | 'audience' | 'faq' | 'page' | 'feature' | 'step';
+/** eduivme.com and maxkampus.com content (site-service). Kinds: see services/site-service/Site.Infrastructure/SiteRules.cs. */
+export type SiteKind = 'site' | 'hero' | 'section' | 'product' | 'audience' | 'faq' | 'page' | 'feature' | 'step'
+  | 'review' | 'post' | 'menu' | 'notice' | 'plan';
+export type SiteKey = 'eduivme' | 'maxkampus';
+export type NoticeAudience = 'all' | 'owners' | 'teachers';
 export type SiteBrand = 'eduivme' | 'maxkoc' | 'ho' | 'km';
-export const SITE_ICONS = ['calendar', 'check', 'assignment', 'payment', 'building', 'person', 'chart', 'book', 'clock', 'chat', 'star', 'shield', 'users', 'target', 'bolt', 'school'] as const;
+export const SITE_ICONS = ['calendar', 'check', 'assignment', 'payment', 'building', 'person', 'chart', 'book', 'clock', 'chat', 'star', 'shield', 'users', 'target', 'bolt', 'school', 'mail'] as const;
 export type SiteIcon = typeof SITE_ICONS[number];
 
 export interface SitePublicEntry {
@@ -27,6 +30,9 @@ export interface SitePublicEntry {
   ctaBody: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  category?: string | null;
+  audience?: NoticeAudience | null;
+  author?: string | null;
 }
 
 export interface SiteHomeView {
@@ -49,6 +55,8 @@ export interface SitePageView {
 }
 
 export interface SiteEntry extends SitePublicEntry {
+  site: SiteKey;
+  endsAt: string | null;
   group: string;
   imageId: string | null;
   sortOrder: number;
@@ -82,6 +90,21 @@ export interface SiteEntryRequest {
   isPublished: boolean;
   publishAt: string | null;
   version?: number;
+  site?: SiteKey;
+  category?: string | null;
+  audience?: NoticeAudience | null;
+  endsAt?: string | null;
+  author?: string | null;
+}
+
+export interface SitePage<T> { total: number; items: T[]; }
+export interface SiteContactMessage {
+  id: string; name: string; organization: string | null; email: string; phone: string | null; message: string;
+  createdAt: string; answeredAt: string | null;
+}
+export type SubscriberStatus = 'Pending' | 'Confirmed' | 'Unsubscribed';
+export interface SiteSubscriber {
+  id: string; email: string; status: SubscriberStatus; source: string | null; createdAt: string; confirmedAt: string | null; unsubscribedAt: string | null;
 }
 
 export interface SiteRevision { id: string; version: number; createdAt: string; title: string; }
@@ -96,8 +119,10 @@ export class EduivmeSiteService {
   getHome() { return this.http.get<SiteHomeView>(`${this.publicUrl}/home`); }
   getPage(slug: string) { return this.http.get<SitePageView>(`${this.publicUrl}/pages/${encodeURIComponent(slug)}`); }
 
-  getEntries(group?: string) {
-    return this.http.get<SiteEntry[]>(`${this.adminUrl}/entries`, group === undefined ? {} : { params: { group } });
+  getEntries(group?: string, site: SiteKey = 'eduivme') {
+    const params: Record<string, string> = site === 'eduivme' ? {} : { site };
+    if (group !== undefined) params['group'] = group;
+    return this.http.get<SiteEntry[]>(`${this.adminUrl}/entries`, { params });
   }
   createEntry(request: SiteEntryRequest) { return this.http.post<SiteEntry>(`${this.adminUrl}/entries`, request); }
   updateEntry(id: string, request: SiteEntryRequest) { return this.http.put<SiteEntry>(`${this.adminUrl}/entries/${id}`, request); }
@@ -114,6 +139,22 @@ export class EduivmeSiteService {
     return this.http.post<SiteMedia>(`${this.adminUrl}/media`, form);
   }
   deleteMedia(id: string) { return this.http.delete<void>(`${this.adminUrl}/media/${id}`); }
+
+  // maxkampus.com's contact messages and newsletter addresses (personal data: the system admin only).
+  getMessages(status: 'open' | 'answered' | null, skip = 0, take = 50) {
+    const params: Record<string, string | number> = { skip, take };
+    if (status) params['status'] = status;
+    return this.http.get<SitePage<SiteContactMessage>>(`${this.adminUrl}/sites/maxkampus/messages`, { params });
+  }
+  markAnswered(id: string, answered: boolean) { return this.http.put<void>(`${this.adminUrl}/sites/maxkampus/messages/${id}/answered`, { answered }); }
+  deleteMessage(id: string) { return this.http.delete<void>(`${this.adminUrl}/sites/maxkampus/messages/${id}`); }
+  getSubscribers(status: SubscriberStatus | null, skip = 0, take = 100) {
+    const params: Record<string, string | number> = { skip, take };
+    if (status) params['status'] = status;
+    return this.http.get<SitePage<SiteSubscriber>>(`${this.adminUrl}/sites/maxkampus/subscribers`, { params });
+  }
+  exportSubscribers() { return this.http.get(`${this.adminUrl}/sites/maxkampus/subscribers.csv`, { responseType: 'blob' }); }
+  deleteSubscriber(id: string) { return this.http.delete<void>(`${this.adminUrl}/sites/maxkampus/subscribers/${id}`); }
 }
 
 /** Builds a request from an existing entry (for edits that change only a few fields, such as publishing). */
@@ -123,6 +164,7 @@ export function siteRequestFrom(entry: SiteEntry): SiteEntryRequest {
     highlights: [...entry.highlights], brand: entry.brand, icon: entry.icon, linkLabel: entry.linkLabel, linkUrl: entry.linkUrl,
     secondaryLinkLabel: entry.secondaryLinkLabel, secondaryLinkUrl: entry.secondaryLinkUrl, imageId: entry.imageId,
     ctaTitle: entry.ctaTitle, ctaBody: entry.ctaBody, seoTitle: entry.seoTitle, seoDescription: entry.seoDescription,
-    sortOrder: entry.sortOrder, isPublished: entry.isPublished, publishAt: entry.publishAt, version: entry.version
+    sortOrder: entry.sortOrder, isPublished: entry.isPublished, publishAt: entry.publishAt, version: entry.version,
+    site: entry.site, category: entry.category ?? null, audience: entry.audience ?? null, endsAt: entry.endsAt, author: entry.author ?? null
   };
 }

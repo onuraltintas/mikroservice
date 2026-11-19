@@ -10,17 +10,18 @@ import { SidebarComponent } from '../dashboard/layout/sidebar/sidebar';
 describe('Course Management admin entry points', () => {
   afterEach(() => TestBed.resetTestingModule());
 
-  it('requires the SystemAdmin role and loads the admin screen lazily', () => {
-    const route = DASHBOARD_ROUTES.find(candidate => candidate.path === 'course-management');
-
-    expect(route?.canActivate).toContain(permissionGuard);
-    expect(route?.data?.['role']).toBe('SystemAdmin');
-    expect(route?.loadComponent).toBeTypeOf('function');
+  it('requires the SystemAdmin role and loads the admin screens lazily', () => {
+    for (const path of ['maxkampus/overview', 'maxkampus/site/:view', 'maxkampus/messages', 'maxkampus/subscribers']) {
+      const route = DASHBOARD_ROUTES.find(candidate => candidate.path === path);
+      expect(route?.canActivate).toContain(permissionGuard);
+      expect(route?.data?.['role']).toBe('SystemAdmin');
+      expect(route?.loadComponent).toBeTypeOf('function');
+    }
+    expect(DASHBOARD_ROUTES.find(candidate => candidate.path === 'maxkampus/site/:view')?.data?.['site']).toBe('maxkampus');
+    expect(DASHBOARD_ROUTES.find(candidate => candidate.path === 'course-management')?.redirectTo).toBe('maxkampus/overview');
   });
 
-  // Live test 13.11.2026 (Paket I5): the entry opened a page of errors while the Course Management routes are closed at
-  // the gateway, so nobody gets it in the menu; the route itself stays for SystemAdmins.
-  it('keeps the Course Management navigation item out of the menu until the product is opened', () => {
+  it('shows the maxkampüs menu to the system admin only', () => {
     const profile = signal<{ roles: string[]; permissions: string[] }>({ roles: ['InstitutionAdmin'], permissions: [] });
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
@@ -32,10 +33,17 @@ describe('Course Management admin entry points', () => {
     });
 
     const component = TestBed.createComponent(SidebarComponent).componentInstance;
-    const hasCourseManagement = () => component.menuItems().some(item => item.route === '/dashboard/course-management');
+    const menu = () => component.menuItems().find(item => item.label === 'maxkampüs (Kurs Yönetimi)');
 
-    expect(hasCourseManagement()).toBe(false);
-    profile.set({ roles: ['SystemAdmin'], permissions: [] });
-    expect(hasCourseManagement()).toBe(false);
+    expect(menu()).toBeUndefined();
+    // The administrative menus sit under the management permissions every admin has.
+    profile.set({ roles: ['InstitutionAdmin'], permissions: ['Permissions.Users.View'] });
+    expect(menu()).toBeUndefined();
+    profile.set({ roles: ['SystemAdmin'], permissions: ['Permissions.Users.View'] });
+    const routes = menu()?.children?.map((child: { route?: string }) => child.route) ?? [];
+    expect(routes).toContain('/dashboard/maxkampus/overview');
+    expect(routes).toContain('/dashboard/maxkampus/site/blog');
+    expect(routes).toContain('/dashboard/maxkampus/messages');
+    expect(routes).toContain('/dashboard/maxkampus/subscribers');
   });
 });

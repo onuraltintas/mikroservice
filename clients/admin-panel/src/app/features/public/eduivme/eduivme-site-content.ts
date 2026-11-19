@@ -122,7 +122,8 @@ export const SITE_ICON_PATHS: Record<SiteIcon, string> = {
   users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M22 21a7 7 0 0 0-4-6.3',
   target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
   bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
-  school: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6'
+  school: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6',
+  mail: 'M3 5h18v14H3zM3 7l9 6 9-6'
 };
 
 /** The colour scope each audience card uses, so the four cards are told apart (and also by their icon and title). */
