@@ -16,7 +16,7 @@ import { caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from
       }
       <p>Bu ayarlar yalnız bu önizlemeye uygulanır. Kayıtlı egzersiz ve ilerlemeniz değişmez.</p>
       @if (values['cycleDurationMs'] !== undefined) {
-        <p>Düşük süre daha hızlı hareket demektir. Yatay/dikey yolda gidiş-dönüş, daire/sekiz yolunda bir tam döngü; sıçramalı yolda iki konum arasındaki bekleme süresidir. Noktayı gözlerinizle takip edin; göz hareketleri veya okuma hızı ölçülmez. Rahatsızlık hissederseniz durdurun.</p>
+        <p>Düşük süre daha hızlı hareket demektir. Yatay/dikey yolda gidiş-dönüş, daire/sekiz yolunda bir tam döngü; sıçramalı yolda iki konum arasındaki bekleme süresidir. Noktayı gözlerinle takip et; göz hareketleri veya okuma hızı ölçülmez. Rahatsızlık hissedersen durdur.</p>
       }
       @for (control of controls; track control.key) {
       <label [for]="'preview-' + control.key">{{ control.label }}</label>

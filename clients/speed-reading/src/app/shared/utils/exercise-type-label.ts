@@ -19,8 +19,27 @@ const EXERCISE_TYPE_LABELS: Record<string, string> = {
   subvocalizationreduction: 'İç Sesi Azaltma',
   rsvp: 'Akan Kelimeler',
   examsimulation: 'Sınav Provası',
-  attention: 'Dikkat'
+  attention: 'Dikkat',
+  targethunt: 'Hedef Avı',
+  freereading: 'Serbest Okuma',
+  saccade: 'Göz Sıçraması',
+  textfading: 'Silinen Metin',
+  erroranalysis: 'Hata Analizi',
+  peripheralvision: 'Çevresel Görüş',
+  rapidserial: 'Akan Kelimeler',
+  scrollingtext: 'Kayan Metin',
+  verticalreading: 'Dikey Okuma',
+  visualization: 'Zihinde Canlandırma',
+  visualizationexercise: 'Zihinde Canlandırma',
+  vocabularybuilder: 'Kelime Bilgisi',
+  wordgroups: 'Kelime Grupları',
+  paragrafsimulasyonu: 'Paragraf Provası',
+  guidedreading: 'Rehberli Okuma',
+  grouping: 'Öbek Okuma'
 };
+
+/** Every code the platform can send; a code missing from the table must fail the unit test, not reach a student. */
+export const KNOWN_EXERCISE_TYPE_CODES = Object.keys(EXERCISE_TYPE_LABELS);
 
 export function exerciseTypeLabel(typeName: string | null | undefined): string {
   if (!typeName) return '';
@@ -30,4 +49,15 @@ export function exerciseTypeLabel(typeName: string | null | undefined): string {
 /** A title that ends with a type's code name ("Seviye Tespit — Genç — Comprehension") reads with the Turkish name. */
 export function exerciseTitleLabel(title: string | null | undefined): string {
   return (title ?? '').split(' — ').map(part => exerciseTypeLabel(part)).join(' — ');
+}
+
+/**
+ * Exercise names shown to a student. The level already appears next to the title, so a content
+ * suffix such as " (Seviye 5)" or " — Seviye 5" is dropped and code names read in Turkish.
+ */
+export function exerciseDisplayName(title: string | null | undefined): string {
+  return exerciseTitleLabel(title)
+    .replace(/\s*\(Seviye\s*\d+\)\s*$/i, '')
+    .replace(/\s*[—-]\s*Seviye\s*\d+\s*$/i, '')
+    .trim();
 }

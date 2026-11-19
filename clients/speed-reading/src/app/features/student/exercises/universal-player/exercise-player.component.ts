@@ -6,7 +6,7 @@
  */
 
 import { awaitsServerResult, examCorrectAnswer, focusSummary, resultPerformanceLevel, scanningResultMessage, serverErrorCount } from './result-display';
-import { exerciseTitleLabel } from '../../../../shared/utils/exercise-type-label';
+import { exerciseDisplayName, exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -98,7 +98,7 @@ interface ParsedConfig {
   styleUrls: ['./exercise-player.component.scss']
 })
 export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChecked {
-  readonly displayTitle = exerciseTitleLabel;
+  readonly displayTitle = exerciseDisplayName;
   private destroy$ = new Subject<void>();
 
   // INJECTED SERVICES
@@ -1964,6 +1964,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         return;
       }
     }
+    if (this.engine?.engineType === 'visual_expansion' && this.engineState.currentStep === 0 && this.readyCountdown === null
+      && !this.isPreviewSession()) {
+      await this.runReadyCountdown();
+      if (!this.engine) return;
+    }
     this.startReadingTracking(() => this.engine?.start());
 
     // Calculate line breaks for Subvocalization Reduction to prevent cross-line chunks
@@ -3238,7 +3243,32 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getEngineDisplayName(): string {
-    return this.engine?.displayName || 'Universal Engine';
+    const typeName = this.exercise?.exerciseTypeName;
+    const label = exerciseTypeLabel(typeName);
+    return label && label !== typeName ? label : (this.engine?.displayName || '');
+  }
+
+  /** 3-2-1 before the first flashed round, so the first letters do not pass while the student is still reading. */
+  readyCountdown: number | null = null;
+
+  private async runReadyCountdown(): Promise<void> {
+    for (let second = 3; second > 0; second--) {
+      this.readyCountdown = second;
+      this.cdr.detectChanges();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    this.readyCountdown = null;
+  }
+
+  getExpansionLastMiss(): string | null {
+    return (this.engine as VisualExpansionEngine | null)?.getLastMiss?.() ?? null;
+  }
+
+  /** "480" → "0,48 sn": students see seconds, not milliseconds. */
+  formatSeconds(milliseconds: number | string | null | undefined): string {
+    const value = Number(milliseconds);
+    if (!Number.isFinite(value) || value <= 0) return '';
+    return `${(value / 1000).toLocaleString('tr-TR', { maximumFractionDigits: 2 })} sn`;
   }
 
   getConfigSummary(): string {
@@ -3712,7 +3742,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const pattern = (this.engine as VisualExpansionEngine)?.getPattern?.();
     const labels = pattern === 'radial' ? ['Üst sol', 'Üst sağ', 'Alt sol', 'Alt sağ']
       : pattern === 'vertical' ? ['Üst', 'Alt'] : ['Sol', 'Sağ'];
-    return labels[index] || `Uyaran ${index + 1}`;
+    return labels[index] || `${index + 1}. harf`;
   }
 
   getExpansionAnswerMaxLength(index: number): number {
@@ -4074,14 +4104,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
         let msg = 'Sonuç kaydedildi.';
         if (sessionResult.xpGained > 0) {
-          msg += ` +${sessionResult.xpGained} XP kazandınız!`;
+          msg += ` +${sessionResult.xpGained} XP kazandın.`;
         }
         if (sessionResult.leveledUp) {
-          msg += ` 🆙 Seviye Atladınız!`;
+          msg += ' XP seviyen yükseldi.';
         }
 
         if (sessionResult.unlockedBadges && sessionResult.unlockedBadges.length > 0) {
-          msg += ` Yeni rozet kazandınız!`;
+          msg += ' Yeni rozet kazandın.';
         }
 
         this.showToast(msg, 'info', 5000);

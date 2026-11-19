@@ -136,7 +136,7 @@
                 <!-- Body -->
                 <div class="de-card__body">
                   <span class="de-card__type">{{ typeLabel(exercise.exerciseTypeName) }}</span>
-                  <h3 class="de-card__title">{{ exercise.title }}</h3>
+                  <h3 class="de-card__title">{{ displayName(exercise.title) }}</h3>
                   <div class="de-card__tags">
                     <span class="de-card__tag">
                       <span class="material-icons">speed</span>
@@ -159,7 +159,7 @@
                       [disabled]="isExerciseDisabled(i)"
                       (click)="startExercise(exercise)">
                       <span class="material-icons">play_circle</span>
-                      BAŞLA
+                      Başla
                     </button>
                     @if (isExerciseDisabled(i)) {
                       <p class="de-card__locked-hint">
@@ -175,7 +175,7 @@
                     <button type="button" class="de-card__btn de-card__btn--ghost"
                       (click)="startExercise(exercise)">
                       <span class="material-icons">replay</span>
-                      TEKRAR ET
+                      Tekrar et
                     </button>
                   }
                 </div>
@@ -242,7 +242,7 @@
               </div>
               <div class="de-card__body">
                 <span class="de-card__type">{{ typeLabel(exercise.exerciseTypeName) }}</span>
-                <h3 class="de-card__title">{{ exercise.title }}</h3>
+                <h3 class="de-card__title">{{ displayName(exercise.title) }}</h3>
                 <div class="de-card__tags">
                   <span class="de-card__tag">
                     <span class="material-icons">speed</span>

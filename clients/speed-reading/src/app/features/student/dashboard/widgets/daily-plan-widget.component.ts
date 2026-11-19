@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
+import { exerciseDisplayName, exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
 import { difficultyLabel } from '../../../../shared/utils/difficulty-label';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -40,6 +40,7 @@ interface TodaysPlan {
 })
 export class DailyPlanWidgetComponent implements OnInit {
   readonly typeLabel = exerciseTypeLabel;
+  readonly displayName = exerciseDisplayName;
   readonly difficulty = difficultyLabel;
   private http = inject(HttpClient);
   private router = inject(Router);

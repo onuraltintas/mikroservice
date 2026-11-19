@@ -37,7 +37,7 @@ test('exit confirmation renders an icon instead of the warning ligature', () => 
 test('fixation describes rounds, exposure and response duration without a false verification label in preview', () => {
   assert.match(motionPath, /isFixationMode\(\) \? 'Tur' : 'Nokta'/);
   assert.match(motionPath, /getMotionPathFixationDuration\(\) \/ 1000 \| number:'1\.2-2'/);
-  assert.match(motionPath, /Harfleri gördükten sonra tamamını yazın; sıra önemli değildir/);
+  assert.match(motionPath, /Harfleri gördükten sonra hepsini yaz; sıra önemli değil/);
   const result = html.split('isFixationMode() && result?.details?.averageResponseTimeMs != null')[1]?.split('measurement-not-available')[0] ?? '';
   assert.match(result, /averageResponseTimeMs \/ 1000 \| number:'1\.2-2'/);
   assert.match(result, /Tamamlanan \/ planlanan tur/);

@@ -76,7 +76,7 @@
               <span class="dp-timeline__type">{{ typeLabel(exercise.exerciseType) }}</span>
               @if (exercise.estimatedDurationMinutes && exercise.estimatedDurationMinutes > 0) { <span class="dp-timeline__duration">~{{ exercise.estimatedDurationMinutes }} dk</span> }
             </div>
-            <h4 class="dp-timeline__name">{{ exercise.name }}</h4>
+            <h4 class="dp-timeline__name">{{ displayName(exercise.name) }}</h4>
             <div class="dp-timeline__meta">
               <span class="dp-timeline__meta-pill">
                 <span class="material-icons">signal_cellular_alt</span>

@@ -397,7 +397,7 @@ export class TextStreamEngine implements BaseEngine {
         if (!candidates.length) candidates = this.contentPool;
         if (!candidates.length) {
             this.stop();
-            this.callbacks.onError('Takistoskop için uygun içerik bulunamadı.');
+            this.callbacks.onError('Bu kısa gösterim çalışması için uygun içerik bulunamadı.');
             return '';
         }
         const distance = Math.min(...candidates.map(word => Math.abs(word.length - this.targetLength)));
@@ -416,14 +416,14 @@ export class TextStreamEngine implements BaseEngine {
         this.awaitingServer = false;
         if (!response.isValid) {
             this.stop();
-            this.callbacks.onError(response.message || 'Takistoskop yanıtı doğrulanamadı.');
+            this.callbacks.onError(response.message || 'Cevabın doğrulanamadı.');
             return;
         }
         const data = response.feedbackData;
         if (action.action === 'tachistoscope_present') {
             if (this.state.isPaused) return;
             if (data?.round !== this.currentStimulusIndex || typeof data.stimulus !== 'string' || !data.stimulus.length) {
-                this.stop(); this.callbacks.onError('Takistoskop uyaranı sunucudan eksik döndü.'); return;
+                this.stop(); this.callbacks.onError('Sıradaki tur yüklenemedi.'); return;
             }
             this.currentDurationMs = boundedInteger(data.displayDurationMs, this.currentDurationMs, 50, 5000);
             this.targetLength = boundedInteger(data.targetLength, this.targetLength, 1, 100);
@@ -432,7 +432,7 @@ export class TextStreamEngine implements BaseEngine {
             return;
         }
         if (action.action !== 'tachistoscope_answer' || data?.round !== this.currentStimulusIndex + 1) {
-            this.stop(); this.callbacks.onError('Takistoskop tur sırası doğrulanamadı.'); return;
+            this.stop(); this.callbacks.onError('Tur sırası doğrulanamadı.'); return;
         }
         const correct = response.isCorrect === true;
         if (response.isCorrect != null && !(this.config as any).isAssessmentMode) {

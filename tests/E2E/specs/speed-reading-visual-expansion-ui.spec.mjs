@@ -50,7 +50,7 @@ for (const [pattern, type] of [['radial','word'], ['vertical','symbol']]) test(`
   const stimuli = await page.locator('.expansion-stimulus').allTextContents();
   expect(stimuli).toHaveLength(pattern === 'radial' ? 4 : 2);
   await expect(page.locator('.center-circle')).toBeVisible();
-  await expect(page.getByText('Göreli uzaklık', { exact: true })).toBeVisible();
+  await expect(page.getByText('Merkeze uzaklık', { exact: true })).toBeVisible();
   await expect(page.getByText('Görüş Açısı', { exact: true })).toHaveCount(0);
   await page.clock.runFor(1000);
   const inputs = page.locator('.expansion-answer-area input');
