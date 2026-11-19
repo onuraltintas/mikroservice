@@ -40,7 +40,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
             Math.Min(((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays)));
+                await AvailableDayAsync(program.Value.Progress, DateTime.UtcNow, cancellationToken)));
         return await BuildExercisesAsync(
             userId,
             program.Value.Progress,
@@ -61,7 +61,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var currentProgramDay = ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay;
         var visibleDay = program.Value.Progress.IsActive
             ? Math.Min(currentProgramDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))
+                await AvailableDayAsync(program.Value.Progress, DateTime.UtcNow, cancellationToken))
             : currentProgramDay;
         if (dayNumber > visibleDay)
             return [];
@@ -127,7 +127,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         db.StudentProgramProgresses.Attach(progress);
         var now = DateTime.UtcNow;
         if (((progress.CurrentWeek - 1) * 7) + progress.CurrentDay
-            > SpeedReadingDailyProgressRules.GetAvailableDay(progress.AssignedDate, now, progress.IsStaffTraining, progress.EarlyAdvanceDays))
+            > await AvailableDayAsync(progress, now, cancellationToken))
             throw new BusinessRuleException("DailyProgress.DayLocked", "Sonraki program günü yarın açılacak.");
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
             ((progress.CurrentWeek - 1) * 7) + progress.CurrentDay);
@@ -628,6 +628,27 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             "ux_daily_exercise_logs_progress_slot",
             StringComparison.Ordinal);
 
+    /// <summary>Calendar availability plus the one-program-day-per-calendar-day rule (A4/K1).</summary>
+    private async Task<int> AvailableDayAsync(StudentProgramProgress progress, DateTime now, CancellationToken cancellationToken)
+    {
+        var available = SpeedReadingDailyProgressRules.GetAvailableDay(progress.AssignedDate, now, progress.IsStaffTraining, progress.EarlyAdvanceDays);
+        var current = ((progress.CurrentWeek - 1) * 7) + progress.CurrentDay;
+        if (progress.IsStaffTraining || current <= 1 || current > available)
+            return available;
+        var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(current - 1);
+        var progressId = progress.Id;
+        var previousCompletedAt = await db.DailyExerciseLogs.AsNoTracking()
+            .Where(item => item.StudentProgramProgressId == progressId && item.WeekNumber == week && item.DayNumber == day)
+            .MaxAsync(item => (DateTime?)item.CompletedDate, cancellationToken);
+        return SpeedReadingDailyProgressRules.ApplyOneDayPerCalendarDay(
+            available,
+            current,
+            SpeedReadingDailyProgressRules.GetCalendarAvailableDay(progress.AssignedDate, now),
+            previousCompletedAt,
+            now,
+            progress.IsStaffTraining);
+    }
+
     public async Task<DailyProgressSummary?> GetProgressSummaryAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -650,11 +671,12 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var firstWpm = await wpmResults.OrderBy(item => item.CreatedAt).Take(5)
             .Select(item => item.RawWpm).ToListAsync(cancellationToken);
 
+        var shownDay = SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
+            ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
+            await AvailableDayAsync(program.Value.Progress, DateTime.UtcNow, cancellationToken)));
         return new DailyProgressSummary(
             program.Value.Progress.Id,
-            SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
-                ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))).Day,
+            shownDay.Day,
             program.Value.Progress.DaysCompleted,
             program.Value.Progress.ExercisesCompleted,
             logCount,
@@ -663,9 +685,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             latestWpm.Count == 0 ? 0 : latestWpm.Average(),
             firstWpm.Count == 0 ? 0 : firstWpm.Average(),
             averageComprehension,
-            SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
-                ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))).Week);
+            shownDay.Week);
     }
 
     public async Task<WeeklyProgressSummary> GetWeeklyStatsAsync(

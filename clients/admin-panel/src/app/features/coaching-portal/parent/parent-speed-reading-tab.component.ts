@@ -1,11 +1,12 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { trNumber, trPercent } from '../../../../../../shared/utils/tr-number';
 import { CsCardComponent, CsProgressBarComponent, CsStatusChipComponent } from '../ui';
-import { CoachingParentService } from './coaching-parent.service';
+import { CoachingParentService, ParentSpeedReadingSubscription } from './coaching-parent.service';
+import { CoachingDatePipe } from '../coaching-labels';
+import { possessive } from './parent-model';
 import { ParentBar, ParentReadingTrendComponent, ParentWeekBarsComponent } from './parent-charts.component';
 import { ParentSpeedReadingOverview, firstName, shortDate } from './parent-model';
 
-const number = new Intl.NumberFormat('tr-TR');
-const percent = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
 /** V2 sends "active", "completed" or "inactive". */
 const programStatus: Record<string, string> = { active: 'Devam ediyor', completed: 'Tamamlandı', inactive: 'Ara verildi' };
 
@@ -16,7 +17,7 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
 @Component({
   selector: 'app-parent-speed-reading-tab',
   standalone: true,
-  imports: [CsCardComponent, CsProgressBarComponent, CsStatusChipComponent, ParentReadingTrendComponent, ParentWeekBarsComponent],
+  imports: [CsCardComponent, CsProgressBarComponent, CsStatusChipComponent, ParentReadingTrendComponent, ParentWeekBarsComponent, CoachingDatePipe],
   template: `
     @if (forbidden()) { <p class="cp-notice" role="status">{{ name() }} hızlı okuma ilerlemesini şu an seninle paylaşmıyor ya da veli bağlantısı artık geçerli değil. Çocuklarım sayfasından durumu görebilirsin.</p> }
     @else if (error()) { <p class="cp-alert" role="alert">Hızlı okuma ilerlemesi şu an görüntülenemiyor. Biraz sonra yeniden dene.</p> }
@@ -27,7 +28,7 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
           @if (v.program; as program) {
             <p class="cp-big"><strong>{{ program.currentDay }}/{{ program.totalDays }}. gün</strong>
               <cs-status-chip [label]="status(program.status)" [tone]="isCompleted(program.status) ? 'success' : 'brand'" /></p>
-            <p class="cp-line">{{ program.name }}, Seviye {{ program.level }}</p>
+            <p class="cp-line">{{ program.name }}, program seviyesi {{ program.level }}</p>
             <cs-progress-bar [value]="program.completedDays" [max]="program.totalDays" [label]="'Programda tamamlanan gün: ' + program.completedDays + '/' + program.totalDays" />
             <p class="cp-muted">Tamamlanan görev: <strong>{{ program.completedTasks }}/{{ program.totalTasks }}</strong>, tamamlanan gün: {{ program.completedDays }}</p>
           } @else {
@@ -71,7 +72,7 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
         @if (v.gamification; as game) {
           <dl class="cp-stat-grid">
             <div><dt>Çalışma serisi</dt><dd>{{ game.streakDays }} gün</dd></div>
-            <div><dt>Seviye</dt><dd>{{ game.level }}</dd></div>
+            <div><dt>XP seviyesi</dt><dd>{{ game.level }}</dd></div>
             <div><dt>Puan (XP)</dt><dd>{{ format(game.xp) }}</dd></div>
             <div><dt>Rozet</dt><dd>{{ game.badgesEarned }}</dd></div>
           </dl>
@@ -88,9 +89,28 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
         <ul class="cp-rows">
           @for (result of v.recentResults; track $index) {
             <li><span class="cp-row-main"><strong>{{ result.exerciseName }}</strong><small>{{ result.exerciseType ? result.exerciseType + ', ' : '' }}{{ day(result.date) }}</small></span>
-              <span class="cp-row-side">@if (result.wpm !== null) { <strong>{{ result.wpm }} kelime/dk</strong> }@if (result.comprehension !== null) { <span>anlama {{ pct(result.comprehension) }}</span> }@if (result.wpm === null && result.score !== null) { <strong>{{ result.score }} puan</strong> }</span></li>
+              <span class="cp-row-side">@if (result.wpm !== null) { <strong>{{ result.wpm }} kelime/dk</strong> }@if (result.comprehension !== null) { <span>anlama {{ pct(result.comprehension) }}</span> }@if (result.wpm === null && result.score !== null) { <strong>{{ format(result.score) }} puan</strong> }</span></li>
           } @empty { <li class="cp-muted">Henüz ölçülen sonuç yok. Öğrenme ve tekrar alıştırmaları ölçüme sayılmaz.</li> }
         </ul>
+      </section>
+
+      <section class="cp-section" aria-labelledby="cp-reading-payments-title" data-testid="parent-reading-subscription">
+        <h2 id="cp-reading-payments-title">Ödemeler</h2>
+        <div class="cp-card">
+          <h3>Hızlı Okuma aboneliği</h3>
+          @if (subscription(); as current) {
+            @if (!current.requireSubscription) {
+              <p class="cp-line">{{ name() }} Hızlı Okuma'yı şu an kullanabiliyor; bir ödeme yapılması gerekmiyor.</p>
+            } @else if (current.hasAccess) {
+              <p class="cp-line"><cs-status-chip label="Etkin" tone="success" />
+                @if (current.accessUntil) { <span class="cp-muted">{{ current.accessUntil | coachingDate }} tarihine kadar</span> }</p>
+            } @else {
+              <p class="cp-line">{{ possessiveName() }} etkin bir Hızlı Okuma aboneliği yok.</p>
+              <p class="cp-muted">Abonelik {{ possessiveName() }} kendi hesabından, Hızlı Okuma'daki "Aboneliğim" sayfasından alınır. Havaleyi sen de yapabilirsin: açıklamaya o sayfadaki ödeme kodunu yazman yeterli.</p>
+            }
+          } @else if (subscriptionError()) { <p class="cp-muted">Abonelik bilgisi yüklenemedi.</p> }
+          @else { <p class="cp-muted" role="status">Abonelik bilgisi yükleniyor…</p> }
+        </div>
       </section>
     } @else { <div class="cp-skeleton" role="status" aria-label="Hızlı okuma ilerlemesi yükleniyor"></div> }`
 })
@@ -100,6 +120,9 @@ export class ParentSpeedReadingTabComponent implements OnInit {
   readonly childName = input('');
   readonly name = computed(() => firstName(this.childName()));
   readonly view = signal<ParentSpeedReadingOverview | null>(null);
+  readonly possessiveName = computed(() => possessive(this.name()));
+  readonly subscription = signal<ParentSpeedReadingSubscription | null>(null);
+  readonly subscriptionError = signal(false);
   readonly error = signal(false);
   /** 403 ParentReadForbidden: the child hid speed reading or the link is no longer valid. */
   readonly forbidden = signal(false);
@@ -111,14 +134,16 @@ export class ParentSpeedReadingTabComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.service.getSpeedReadingSubscription(this.studentId()).subscribe({
+      next: value => this.subscription.set(value), error: () => this.subscriptionError.set(true) });
     this.service.getSpeedReadingOverview(this.studentId()).subscribe({ next: view => this.view.set(normalize(view)), error: (response: { status?: number }) => response?.status === 403 ? this.forbidden.set(true) : this.error.set(true) });
   }
 
   status(value: string) { return programStatus[value?.toLowerCase()] ?? 'Devam ediyor'; }
   isCompleted(value: string) { return value?.toLowerCase() === 'completed'; }
-  pct(value: number | null) { return value === null || value === undefined ? '—' : '%' + percent.format(value); }
+  pct(value: number | null) { return trPercent(value, 1); }
   day(iso: string) { return shortDate(iso); }
-  format(value: number) { return number.format(value); }
+  format(value: number) { return trNumber(value); }
   abs(value: number) { return Math.abs(value); }
 }
 

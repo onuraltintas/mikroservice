@@ -1,6 +1,6 @@
 import { coachingFeedback } from '../../../../../../src/app/features/coaching-portal/coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -25,6 +25,8 @@ type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
 })
 export class CoachingTeacherAssignmentsComponent implements OnInit {
   @Input() notificationAssignmentId: string | null = null;
+  /** Live test 19.11.2026 (B7): the opened review gets its own address (null when the list is shown again). */
+  @Output() readonly reviewChange = new EventEmitter<string | null>();
   @ViewChild(CoachingTeacherAssignmentDetailComponent) private detail?: CoachingTeacherAssignmentDetailComponent;
   readonly navigationError = signal<string | null>(null);
   async canLeavePage(): Promise<boolean> {
@@ -75,12 +77,14 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
     this.successMessage.set(null);
     this.formMode.set(null);
     this.detailAssignmentId.set(assignmentId);
+    this.reviewChange.emit(assignmentId);
     return true;
   }
 
   async closeAssignmentDetail(): Promise<void> {
     if (!(await this.detail?.canLeavePage() ?? true)) return;
     this.detailAssignmentId.set(null);
+    this.reviewChange.emit(null);
   }
 
   closeEditor(): void {

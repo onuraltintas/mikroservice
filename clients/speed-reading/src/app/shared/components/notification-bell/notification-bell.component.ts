@@ -7,7 +7,6 @@ import {
   Notification,
   UnreadCount
 } from '../../../core/services/notification.service';
-import { PushService } from '../../../core/services/push.service';
 import { ClickOutsideDirective } from '../../directives/click-outside.directive';
 
 import { AuthService } from '../../../core/services/auth.service';
@@ -24,7 +23,6 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private pushService = inject(PushService);
   private destroy$ = new Subject<void>();
 
   unreadCount: UnreadCount = { total: 0, high: 0, urgent: 0 };
@@ -123,11 +121,6 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       this.router.navigateByUrl(url);
     }
 
-    this.closeDropdown();
-  }
-
-  enablePushNotifications(): void {
-    this.pushService.requestSubscription();
     this.closeDropdown();
   }
 

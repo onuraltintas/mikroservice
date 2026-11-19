@@ -6,7 +6,11 @@ const backend = readFileSync(new URL('./OwnedSpeedReadingDailyProgress.cs', impo
 const dailyPage = readFileSync(new URL('../../../../clients/speed-reading/src/app/features/student/daily-exercises/daily-exercises.component.ts', import.meta.url), 'utf8');
 
 test('future program days are unavailable for listing and completion', () => {
-  assert.match(backend, /GetAvailableDay\(program\.Value\.Progress\.AssignedDate, DateTime\.UtcNow, program\.Value\.Progress\.IsStaffTraining/);
+  assert.match(backend, /GetAvailableDay\(progress\.AssignedDate, now, progress\.IsStaffTraining, progress\.EarlyAdvanceDays\)/);
+  // Live test 19.11.2026 (A4/K1): listing, today's plan and completion all use the same gate, which also keeps
+  // the next program day closed until the day after the previous one was finished.
+  assert.match(backend, /ApplyOneDayPerCalendarDay\(/);
+  assert.equal((backend.match(/await AvailableDayAsync\(/g) ?? []).length, 4);
   assert.match(backend, /if \(dayNumber > visibleDay\)\s*return \[\]/);
   assert.match(backend, /DailyProgress\.DayLocked/);
 });

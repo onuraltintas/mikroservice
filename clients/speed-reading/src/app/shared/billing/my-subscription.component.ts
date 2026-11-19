@@ -13,7 +13,8 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-my-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: MY_SUBSCRIPTION_TEMPLATE,
-  styles: [MY_SUBSCRIPTION_STYLES]
+  // Live test 19.11.2026 (C6): the panel takes the product's own colours, light and dark (green buttons in Hızlı Okuma).
+  styles: [`:host { --bill-accent: var(--sp-primary); --bill-on-accent: var(--sp-on-primary); --bill-surface: var(--sp-surface); --bill-soft: var(--sp-surface-2); --bill-text: var(--sp-text-1); --bill-muted: var(--sp-text-2); --bill-border: var(--sp-border); }`, MY_SUBSCRIPTION_STYLES]
 })
 export class MySubscriptionComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
@@ -26,10 +27,12 @@ export class MySubscriptionComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.auth.currentUserValue;
+    // The billing panel shows its own errors next to the action; no second toast (live test 19.11.2026, B4).
+    const headers = { 'X-Skip-Error-Toast': 'true' };
     const http: BillingHttp = {
-      get: url => firstValueFrom(this.httpClient.get<never>(url)),
-      post: (url, body) => firstValueFrom(this.httpClient.post<never>(url, body)),
-      delete: url => firstValueFrom(this.httpClient.delete<never>(url)),
+      get: url => firstValueFrom(this.httpClient.get<never>(url, { headers })),
+      post: (url, body) => firstValueFrom(this.httpClient.post<never>(url, body, { headers })),
+      delete: url => firstValueFrom(this.httpClient.delete<never>(url, { headers })),
       blob: url => firstValueFrom(this.httpClient.get(url, { responseType: 'blob' }))
     };
     this.c = new MySubscriptionController(http, {

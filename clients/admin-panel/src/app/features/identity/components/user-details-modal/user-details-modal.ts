@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '@angular/core';
+import { roleName } from '../../../../core/services/user-product-roles';
 import { CommonModule } from '@angular/common';
 import { IdentityService, UserProfileDto, UserSessionDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
@@ -166,7 +167,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                     <div class="flex flex-wrap gap-2">
                       @for (role of user()?.productRoles; track role.role + ':' + (role.product || 'global')) {
                         <span class="px-3 py-1 bg-(--ui-brand-soft) text-(--ui-brand-text) rounded-lg text-xs font-bold border border-(--ui-brand-soft) shadow-sm">
-                          {{ role.role }} · {{ productLabel(role.product) }}
+                          {{ roleText(role.role) }}, {{ productLabel(role.product) }}
                         </span>
                       } @empty {
                         @for (role of user()?.roles; track role) {
@@ -396,6 +397,8 @@ export class UserDetailsModalComponent implements OnInit {
   canManageAccess(): boolean {
     return this.hasAccessPermission() && this.isMfaVerified();
   }
+
+  readonly roleText = roleName;
 
   productLabel(product: string | null | undefined): string {
     return product === 'coaching' ? 'Koçluk' : product === 'speed-reading' ? 'Hızlı Okuma' : 'Genel';

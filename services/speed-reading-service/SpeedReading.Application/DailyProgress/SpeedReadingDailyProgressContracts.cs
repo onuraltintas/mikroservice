@@ -172,6 +172,42 @@ public static class SpeedReadingDailyProgressRules
         return Math.Max(1, today.DayNumber - start.DayNumber + 1);
     }
 
+    /// <summary>
+    /// Live test 19.11.2026 (A4, decision K1): one program day per calendar day. When the student finished the previous
+    /// program day today (Istanbul time), the next day opens tomorrow even if the calendar would allow it (for example
+    /// a student who started late and caught up). An administrator's early-advance grant still opens it.
+    /// </summary>
+    public static int ApplyOneDayPerCalendarDay(
+        int availableDay,
+        int currentProgramDay,
+        int calendarAvailableDay,
+        DateTime? previousDayCompletedAt,
+        DateTime now,
+        bool isStaffTraining)
+    {
+        if (isStaffTraining || currentProgramDay <= 1 || previousDayCompletedAt is null)
+            return availableDay;
+        if (calendarAvailableDay < currentProgramDay)
+            return availableDay;
+        return IsSameIstanbulDay(previousDayCompletedAt.Value, now)
+            ? Math.Min(availableDay, currentProgramDay - 1)
+            : availableDay;
+    }
+
+    public static bool IsSameIstanbulDay(DateTime first, DateTime second)
+    {
+        var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(EnsureUtc(first), zone))
+            == DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(EnsureUtc(second), zone));
+    }
+
+    private static DateTime EnsureUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+    };
+
     public static int CountCompletedScheduledDays(
         IEnumerable<(int Week, int Day, Guid ExerciseId)> scheduled,
         IEnumerable<(int Week, int Day, Guid ExerciseId)> completed,

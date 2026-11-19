@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   UserGameification,
@@ -24,33 +24,57 @@ export class GamificationService {
   private achievementsSubject = new BehaviorSubject<Achievement[]>([]);
   public achievements$ = this.achievementsSubject.asObservable();
 
+  /**
+   * Live test 19.11.2026: the home page asked for the same gamification data two or three times because several
+   * widgets load it together. Reads made within a few seconds share one request; a write clears the shared reads.
+   */
+  private static readonly ShareWindowMs = 10_000;
+  private readonly sharedReads = new Map<string, { at: number; request: Observable<unknown> }>();
+
+  private sharedRead<T>(key: string, create: () => Observable<T>, now = Date.now()): Observable<T> {
+    const existing = this.sharedReads.get(key);
+    if (existing && now - existing.at <= GamificationService.ShareWindowMs) return existing.request as Observable<T>;
+    const request = create().pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    this.sharedReads.set(key, { at: now, request });
+    request.subscribe({ error: () => this.sharedReads.delete(key) });
+    return request;
+  }
+
+  /** Forget shared reads, e.g. after XP or achievements changed. */
+  clearSharedReads(): void {
+    this.sharedReads.clear();
+  }
+
   getUserGameification(): Observable<UserGameification> {
-    return this.http.get<UserGameification>(`${this.apiUrl}/user`).pipe(
+    return this.sharedRead('user', () => this.http.get<UserGameification>(`${this.apiUrl}/user`).pipe(
       tap(gamification => this.userGamificationSubject.next(gamification))
-    );
+    ));
   }
 
   getAllAchievements(): Observable<Achievement[]> {
-    return this.http.get<Achievement[]>(`${this.apiUrl}/achievements`).pipe(
+    return this.sharedRead('achievements', () => this.http.get<Achievement[]>(`${this.apiUrl}/achievements`).pipe(
       tap(achievements => this.achievementsSubject.next(achievements))
-    );
+    ));
   }
 
   getUserAchievements(): Observable<UserAchievement[]> {
-    return this.http.get<UserAchievement[]>(`${this.apiUrl}/achievements/user`);
+    return this.sharedRead('achievements/user', () => this.http.get<UserAchievement[]>(`${this.apiUrl}/achievements/user`));
   }
 
   checkAchievements(): Observable<Achievement[]> {
+    this.clearSharedReads();
     return this.http.post<Achievement[]>(`${this.apiUrl}/achievements/check`, {});
   }
 
   updateShowcase(achievementIds: string[]): Observable<{ success: boolean }> {
+    this.clearSharedReads();
     return this.http.put<{ success: boolean }>(`${this.apiUrl}/achievements/showcase`, {
       achievementIds
     });
   }
 
   useStreakFreeze(): Observable<{ success: boolean }> {
+    this.clearSharedReads();
     return this.http.post<{ success: boolean }>(`${this.apiUrl}/streak/use-freeze`, {});
   }
 

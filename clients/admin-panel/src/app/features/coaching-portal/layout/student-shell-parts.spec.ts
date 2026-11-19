@@ -225,7 +225,7 @@ describe('CoachingMessagesUnreadService', () => {
     service.refresh();
     http.expectOne('/api/coaching/messages/unread-count').flush({ count: 4 });
     expect(service.count()).toBe(4);
-    service.refresh();
+    service.refresh({ force: true });
     http.expectOne('/api/coaching/messages/unread-count').flush('x', { status: 500, statusText: 'err' });
     expect(service.count()).toBe(0);
     http.verify();

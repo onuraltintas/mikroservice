@@ -92,6 +92,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   readonly dayItems=planDayItems;
   visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];const tasks=this.filteredTasks();return plan?.weeklySource?tasks.slice((this.taskPage-1)*50,this.taskPage*50):tasks;}
   readonly taskColors=computed(()=>lessonColors(this.selected()?.tasks??[]));
+  /** Live test 19.11.2026 (C2): an outcome sentence followed by ", 60 dk" must not read "bulunur., 60 dk". */
+  withoutFinalStop(text: string | null | undefined): string { return (text ?? '').replace(/[.…]+\s*$/u, ''); }
+
   taskColor(task:StudyTask){return this.taskColors().get(lessonKey(task));}
   @ViewChild('taskDialog') private taskDialogElement?:ElementRef<HTMLElement>;
   calendarForm:{kind:CalendarAction['kind'];taskId:string|null;taskIds:string[];date:string;time:string;title:string;minutes:number;lessonId:string|null;actualMinutes:number;actualQuestions:number|null;workedOn?:string}|null=null;

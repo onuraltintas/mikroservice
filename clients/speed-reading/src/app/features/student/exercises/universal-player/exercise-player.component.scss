@@ -8458,3 +8458,23 @@ h1 {
 .completion-card {
   color: var(--sp-text-1);
 }
+
+.ready-countdown {
+  margin: 12px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--sp-primary);
+}
+
+.expansion-feedback {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--sp-surface);
+  color: var(--sp-text-1);
+  font-weight: 600;
+}

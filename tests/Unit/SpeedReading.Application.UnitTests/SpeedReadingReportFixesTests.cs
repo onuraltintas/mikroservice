@@ -271,17 +271,20 @@ public sealed class SpeedReadingReportFixesTests
     [Fact]
     public async Task Institution_student_reports_start_at_the_membership_date()
     {
-        var joined = new DateTime(2026, 10, 20, 9, 0, 0, DateTimeKind.Utc);
+        // Relative to today: with fixed dates the default 30-day window passed the join date on 19.11.2026.
+        var today = DateTime.UtcNow.Date;
+        var joined = today.AddDays(-10).AddHours(9);
+        var afterJoining = DateTime.SpecifyKind(today.AddDays(-3), DateTimeKind.Unspecified);
         var analytics = new RecordingAnalytics();
         var controller = InstitutionController(new MemberSinceAccess(joined), analytics);
 
-        await controller.GetStudentSummary(Guid.NewGuid(), Guid.NewGuid(), new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Unspecified), null);
+        await controller.GetStudentSummary(Guid.NewGuid(), Guid.NewGuid(), DateTime.SpecifyKind(today.AddDays(-40), DateTimeKind.Unspecified), null);
         await controller.GetStudentActivity(Guid.NewGuid(), Guid.NewGuid(), null, null);
-        await controller.GetStudentSeries(Guid.NewGuid(), Guid.NewGuid(), new DateTime(2026, 10, 25, 0, 0, 0, DateTimeKind.Unspecified), null);
+        await controller.GetStudentSeries(Guid.NewGuid(), Guid.NewGuid(), afterJoining, null);
 
         analytics.From[0].Should().Be(joined);
         analytics.From[1].Should().Be(joined);
-        analytics.From[2].Should().Be(new DateTime(2026, 10, 25, 0, 0, 0, DateTimeKind.Unspecified));
+        analytics.From[2].Should().Be(afterJoining);
     }
 
     [Fact]

@@ -131,8 +131,8 @@ describe('CreateUserModalComponent', () => {
     const http = TestBed.inject(HttpTestingController);
     http.expectOne('/api/users').flush({ userId: 'dual-1' });
     fixture.detectChanges();
-    expect(component.createdUser()?.scope).toBe('Student · Koçluk / Student · Hızlı Okuma');
-    expect(fixture.nativeElement.textContent).toContain('Student · Koçluk / Student · Hızlı Okuma');
+    expect(component.createdUser()?.scope).toBe('Öğrenci, Koçluk / Öğrenci, Hızlı Okuma');
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci, Koçluk / Öğrenci, Hızlı Okuma');
     http.expectOne('/api/users/roles').flush(['Student']);
     http.verify();
   });
@@ -148,7 +148,7 @@ describe('CreateUserModalComponent', () => {
     expect(request.request.body.products).toEqual([]);
     expect(request.request.body.product).toBeNull();
     request.flush({ userId: 'admin-1' });
-    expect(component.createdUser()?.scope).toBe('SystemAdmin · Tüm servisler');
+    expect(component.createdUser()?.scope).toBe('Sistem yöneticisi, tüm servisler');
     http.verify();
   });
 });

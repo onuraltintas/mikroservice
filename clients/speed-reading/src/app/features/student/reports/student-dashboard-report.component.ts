@@ -2,6 +2,8 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { MeasuredProgress, MeasuredProgressService } from '../../../core/services/measured-progress.service';
+import { trPercent } from '../../../../../../shared/utils/tr-number';
 import { StudentDashboardReport } from '../../../core/models/report.model';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -27,8 +29,19 @@ export class StudentDashboardReportComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
 
+  private measuredProgress = inject(MeasuredProgressService);
+
   report = signal<StudentDashboardReport | null>(null);
   loading = signal(true);
+  /** Same measured values the home page shows (live test 19.11.2026, A3). */
+  measured = signal<MeasuredProgress | null>(null);
+  readingSpeed = computed(() => this.measured()?.readingSpeed
+    ?? ((this.report()?.currentWPM ?? 0) > 0 ? Math.round(this.report()!.currentWPM!) : null));
+  comprehension = computed(() => {
+    const value = this.measured()?.comprehension;
+    if (value != null) return Math.round(value);
+    return this.report()?.comprehensionDataAvailable ? Math.round(this.report()?.averageComprehension ?? 0) : null;
+  });
 
   ngOnInit(): void {
     this.loadReport();
@@ -41,6 +54,8 @@ export class StudentDashboardReportComponent implements OnInit {
       this.loading.set(false);
       return;
     }
+
+    this.measuredProgress.load().subscribe(value => this.measured.set(value));
 
     const studentId = currentUser.id;
     const endDate = new Date();
@@ -60,6 +75,8 @@ export class StudentDashboardReportComponent implements OnInit {
     });
 
   }
+
+  pct(value: number | null | undefined, decimals = 0): string { return trPercent(value, decimals); }
 
   // Transform pie chart data - pie charts need {name, value} format
   pieChartData = computed(() => {

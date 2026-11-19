@@ -56,7 +56,7 @@ for (const age of ['child', 'teen', 'young-adult', 'adult']) {
     await expect(page.getByText(`0 / ${config.content.points} Tur`, { exact: true })).toBeVisible();
     await page.clock.runFor(config.timing.holdMs);
     await expect(stimuli).toHaveCount(0);
-    await expect(page.getByRole('textbox', { name: 'Gördüğünüz harfler' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Gördüğün harfler' })).toBeVisible();
     expect(errors).toEqual([]); expect(writes).toEqual([]);
   });
 }
@@ -86,7 +86,7 @@ test('four-letter custom preview scores complete rounds, pauses safely and shows
       await page.clock.runFor(5000);
       await page.getByRole('button', { name: 'Devam et', exact: true }).click();
     }
-    const input = page.getByRole('textbox', { name: 'Gördüğünüz harfler' });
+    const input = page.getByRole('textbox', { name: 'Gördüğün harfler' });
     await input.fill(round === 0 ? answers.reverse().join('') : 'AAAA');
     await page.clock.runFor(20);
     const bounds = await input.boundingBox();

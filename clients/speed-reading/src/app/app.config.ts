@@ -1,4 +1,4 @@
-import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, isDevMode, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -15,7 +15,6 @@ import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { apiResponseInterceptor } from './core/interceptors/api-response.interceptor';
 import { GlobalErrorHandler } from './core/handlers/global-error.handler';
 import { TurkishPaginatorIntl } from './core/services/turkish-paginator-intl.service';
-import { provideServiceWorker } from '@angular/service-worker';
 import { AuthService } from './core/services/auth.service';
 
 // Register Turkish locale globally
@@ -36,10 +35,6 @@ export const appConfig: ApplicationConfig = {
     { provide: MatPaginatorIntl, useClass: TurkishPaginatorIntl },
     { provide: MAT_DATE_LOCALE, useValue: 'tr-TR' },
     { provide: LOCALE_ID, useValue: 'tr-TR' },
-    { provide: ErrorHandler, useClass: GlobalErrorHandler },
-    provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
-    })
+    { provide: ErrorHandler, useClass: GlobalErrorHandler }
   ]
 };

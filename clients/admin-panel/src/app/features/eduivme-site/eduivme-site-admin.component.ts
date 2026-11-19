@@ -26,6 +26,14 @@ interface SiteGroup { title: string; kind: SiteKind; group: string; entries: Sit
   styleUrl: './eduivme-site-admin.component.scss'
 })
 export class EduivmeSiteAdminComponent implements OnInit {
+  /** Live test 19.11.2026 (B15): revision times in Turkey time, "19 Kasım 13:03" (the API sends UTC). */
+  revisionTime(value: string): string {
+    const date = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(value) ? value : value + 'Z');
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
+      .format(date).replace(',', '');
+  }
+
   private readonly api = inject(EduivmeSiteService);
   private readonly toaster = inject(ToasterService);
   private readonly route = inject(ActivatedRoute);

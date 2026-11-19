@@ -1,10 +1,12 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
+import { exerciseDisplayName, exerciseTypeLabel } from '../../../../shared/utils/exercise-type-label';
 import { difficultyLabel } from '../../../../shared/utils/difficulty-label';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { map } from 'rxjs';
+import { MeasuredProgressService } from '../../../../core/services/measured-progress.service';
 
 interface DailyPlanItem {
   id: string;
@@ -40,8 +42,10 @@ interface TodaysPlan {
 })
 export class DailyPlanWidgetComponent implements OnInit {
   readonly typeLabel = exerciseTypeLabel;
+  readonly displayName = exerciseDisplayName;
   readonly difficulty = difficultyLabel;
   private http = inject(HttpClient);
+  private measuredProgress = inject(MeasuredProgressService);
   private router = inject(Router);
   private apiUrl = `${environment.speedReadingApiUrl}/daily-progress`;
 
@@ -68,9 +72,8 @@ export class DailyPlanWidgetComponent implements OnInit {
     this.error.set(null);
 
     // First, get current program info to know which day we're on
-    this.http.get<any>(`${this.apiUrl}/my-progress`, {
-      headers: { 'X-Skip-Error-Toast': 'true' }
-    }).subscribe({
+    // One shared my-progress request for the whole home page (live test 19.11.2026).
+    this.measuredProgress.load().pipe(map(value => value.raw as any)).subscribe({
       next: (progressData: any) => {
         // New students do not have a program yet; the API intentionally
         // returns 204 in that case, which Angular exposes as a null body.

@@ -200,7 +200,18 @@ internal sealed class OwnedSpeedReadingParentReports(OwnedSpeedReadingDbContext 
         var exercise = await (descending ? exercises.OrderByDescending(item => item.CompletedDate) : exercises.OrderBy(item => item.CompletedDate))
             .Select(item => new MeasuredPoint(item.CompletedDate, item.AverageWPM, null))
             .FirstOrDefaultAsync(cancellationToken);
-        var pick = new[] { reading, exercise }.Where(item => item is not null)
+        // Live test 19.11.2026 (A3): measured exercise sessions (placement test included) are the same source the
+        // student's home page reads, so the parent sees the speed the student sees instead of "—".
+        var sessions = db.ExerciseSessionResults.AsNoTracking()
+            .Where(item => item.StudentId == userId && item.IsMeasured && item.RawWpm > 0);
+        if (from is { } sessionStart)
+            sessions = sessions.Where(item => item.CreatedAt >= sessionStart);
+        if (to is { } sessionEnd)
+            sessions = sessions.Where(item => item.CreatedAt < sessionEnd);
+        var session = await (descending ? sessions.OrderByDescending(item => item.CreatedAt) : sessions.OrderBy(item => item.CreatedAt))
+            .Select(item => new MeasuredPoint(item.CreatedAt, (decimal?)item.RawWpm, null))
+            .FirstOrDefaultAsync(cancellationToken);
+        var pick = new[] { reading, exercise, session }.Where(item => item is not null)
             .OrderBy(item => descending ? -item!.At.Ticks : item!.At.Ticks)
             .FirstOrDefault();
         return RoundWpm(pick?.Wpm);

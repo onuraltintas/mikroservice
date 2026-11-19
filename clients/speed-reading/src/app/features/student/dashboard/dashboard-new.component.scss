@@ -434,3 +434,10 @@
  .db-program-choice,.db-followup{margin-top:18px;padding:18px;border: 1px solid var(--border-color,var(--ui-brand-soft));border-radius:12px}
  .db-program-choice label{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
  .db-followup a{display:block;margin-top:12px}
+
+// Koyu tema sade kalır (tasarım kuralı): parlak marka zemini yerine kart yüzeyi ve ince çerçeve.
+:host-context([data-sp-theme='dark']) .db-hero {
+  --ui-brand: var(--ds-surface);
+  --ui-brand-contrast: var(--sp-text-1);
+  border: 1px solid var(--ds-line);
+}

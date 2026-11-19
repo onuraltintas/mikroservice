@@ -463,13 +463,13 @@ export class FocusEngine implements BaseEngine {
             if (actionName === 'focus_step') {
                 this.awaitingAssessmentStep = false;
                 if (response?.isValid === false) {
-                    this.callbacks.onError(response?.message || 'Focus uyaranı alınamadı.');
+                    this.callbacks.onError(response?.message || 'Sıradaki tur yüklenemedi.');
                     return;
                 }
 
                 const feedback = response?.feedbackData;
                 if (!feedback || typeof feedback !== 'object') {
-                    this.callbacks.onError('Focus uyaranı sunucudan eksik döndü.');
+                    this.callbacks.onError('Sıradaki tur yüklenemedi.');
                     return;
                 }
 

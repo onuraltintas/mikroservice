@@ -18,8 +18,8 @@
       <p class="assignments-description">Öğrencilere verdiğiniz çalışmaları ve teslim durumlarını takip edin.</p>
     </div>
     <div class="assignments-heading-actions">
+      <span class="assignments-count">Toplam {{ totalCount() }} ödev</span>
       <button type="button" class="review-button" (click)="followUpVisible.set(true)">Geciken ve teslim edilmeyenler</button>
-      <span class="assignments-count">{{ totalCount() }} ödev</span>
       <button type="button" class="create-assignment-button" data-testid="create-assignment" (click)="createAssignment()">Yeni ödev</button>
     </div>
   </div>

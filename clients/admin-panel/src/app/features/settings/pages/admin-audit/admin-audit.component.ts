@@ -281,11 +281,15 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
     if (!ids.length) return;
 
     ids.forEach(id => this.resolvingActors.add(id));
-    forkJoin(ids.map(id => this.identityService.getUserById(id).pipe(catchError(() => of<UserProfileDto | null>(null)))))
+    // Live test 19.11.2026 (A10): an actor whose account was deleted answers 404; the row then says so.
+    forkJoin(ids.map(id => this.identityService.getUserById(id).pipe(
+      catchError(error => of<UserProfileDto | 'deleted' | null>(error?.status === 404 ? 'deleted' : null)))))
       .subscribe(profiles => profiles.forEach((profile, index) => {
         const id = ids[index];
         this.resolvingActors.delete(id);
-        if (profile) {
+        if (profile === 'deleted') {
+          this.actorLabels.update(current => ({ ...current, [id]: { name: 'Silinmiş kullanıcı' } }));
+        } else if (profile) {
           const name = profile.fullName || `${profile.firstName} ${profile.lastName}`.trim() || profile.email;
           this.actorLabels.update(current => ({ ...current, [id]: { name, email: profile.email } }));
         } else {

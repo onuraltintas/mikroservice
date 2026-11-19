@@ -1,5 +1,5 @@
 <div class="player-container">
-    <p *ngIf="focusPracticeActive" role="status">Puanlanmayan alıştırma — 8 uyaran. Sonuç ve program ilerlemesi kaydedilmez.</p>
+    <p *ngIf="focusPracticeActive" role="status">Puanlanmayan alıştırma, 8 tur. Sonuç ve program ilerlemesi kaydedilmez.</p>
     <p *ngIf="customPreviewActive" role="status">Özel ayarlı önizleme — sonuç ve ilerleme kaydedilmez.</p>
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
@@ -47,7 +47,7 @@
                 <p class="description" *ngIf="getTrackingTarget()">
                     Noktayı gözlerinle takip et; tıklaman veya cevap yazman gerekmez.
                     Süre tamamlandığında çalışma biter; duraklatılan süre sayılmaz.
-                    Göz hareketleri veya okuma hızı ölçülmez. Rahatsızlık hissederseniz durdurun.
+                    Göz hareketleri veya okuma hızı ölçülmez. Rahatsızlık hissedersen durdur.
                 </p>
                 <p class="description" *ngIf="engine.engineType === 'skimming'">
                     Başlık, giriş ve sonuç cümlelerinden metnin ana fikrini belirle; her kelimeyi okumak zorunda değilsin.
@@ -76,6 +76,21 @@
                         <span class="target-hunt-example__hint">Yeşil olanlar dokunulacak hedefler.</span>
                     </div>
                 </ng-container>
+                <ng-container *ngIf="engine.engineType === 'visual_expansion'">
+                    <p class="description visual-expansion-ready">
+                        Gözünü ortadaki işarete dik; başını ve gözünü çevirme. Kenarlarda bir an için harfler belirecek.
+                        Harfler kaybolunca, gördüğün harfleri yerlerine göre kutulara yaz. Her doğru turda harfler biraz daha
+                        uzağa çıkar, yanlış turda yaklaşır. Yanlış turda doğru harfleri sana gösteririz.
+                    </p>
+                    <div class="target-hunt-example" role="img" aria-label="Örnek: solda K, sağda M belirir; kutulara K ve M yazılır">
+                        <span class="target-hunt-example__label">Örnek:</span>
+                        <span class="target-hunt-example__item">K</span>
+                        <span class="target-hunt-example__item">+</span>
+                        <span class="target-hunt-example__item">M</span>
+                        <span class="target-hunt-example__hint">Ortadaki işarete bak; yazacağın: Sol K, Sağ M.</span>
+                    </div>
+                    <p class="description">İlk tur, "Egzersize başla" düğmesine bastıktan 3 saniye sonra gelir.</p>
+                </ng-container>
                 <p class="description" *ngIf="canPracticeFocus">
                     <span *ngIf="!asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki
                         {{ asFocusEngine?.isWordMode ? 'kelime' : 'konum' }} aynıysa eşleşme düğmesine bas; farklıysa bekle.</span>
@@ -87,13 +102,13 @@
                 <p class="description" *ngIf="engine.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
                     Metni okurken hafif sesle bir–iki–üç–dört say; her ritim işaretinde bir sayı söyle.
                     Sayma ritmi okuma temposundan bağımsızdır. Anlama sorularına geçince saymayı bırak.
-                    Zorlanırsanız duraklatın. Sayı sayma anlamayı zorlaştırabilir; kalıcı iç ses azalması ölçülmez.
+                    Zorlanırsan duraklat. Sayı sayma anlamayı zorlaştırabilir; kalıcı iç ses azalması ölçülmez.
                 </p>
 
                 <div class="badges-container">
                     <div class="info-badge level">
                         <span class="material-icons">signal_cellular_alt</span>
-                        <span>Seviye {{ exercise?.difficultyLevel }}</span>
+                        <span>Program seviyesi {{ exercise?.difficultyLevel }}</span>
                     </div>
                     <div class="info-badge config">
                         <span class="material-icons">settings</span>
@@ -128,9 +143,9 @@
                     </div>
 
                     <div class="detail-item">
-                        <span class="label">Mod:</span>
-                        <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'rsvp' ? 'RSVP Hızlı Okuma' :
-                            'Takistoskop' }}</span>
+                        <span class="label">Çalışma:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'rsvp' ? 'Akan kelimeler' :
+                            'Kısa gösterim' }}</span>
                     </div>
                     <div class="detail-item" *ngIf="isTachistoscopeMode()">
                         <span class="label">İçerik:</span>
@@ -143,11 +158,11 @@
                         <span class="value">{{ parsedConfig?.engineConfig?.['content']?.['durationSeconds'] }} sn</span>
                     </div>
                     <div class="detail-item" *ngIf="!parsedConfig?.engineConfig?.['content']?.['durationSeconds']">
-                        <span class="label">Soru:</span>
+                        <span class="label">Tur:</span>
                         <span class="value">{{ parsedConfig?.engineConfig?.['content']?.['count'] ||
                             parsedConfig?.engineConfig?.['TotalStimuli'] ||
                             getEstimatedStimulusCount(parsedConfig?.engineConfig?.['DifficultyLevel'] ||
-                            exercise?.difficultyLevel || 1) }} Adet</span>
+                            exercise?.difficultyLevel || 1) }}</span>
                     </div>
 
                     <!-- WPM (if available) or DurationMs -->
@@ -156,15 +171,16 @@
                         <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} kelime/dk</span>
                     </div>
                     <div class="detail-item" *ngIf="!parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
-                        <span class="label">Gösterme:</span>
-                        <span class="value">{{ parsedConfig?.engineConfig?.['timing']?.['durationMs'] ||
+                        <span class="label">Görünme süresi:</span>
+                        <span class="value">{{ formatSeconds(parsedConfig?.engineConfig?.['timing']?.['durationMs'] ||
                             parsedConfig?.engineConfig?.['DisplayDurationMs'] ||
                             getEstimatedDuration(parsedConfig?.engineConfig?.['DifficultyLevel'] ||
-                            exercise?.difficultyLevel || 1) }}ms</span>
+                            exercise?.difficultyLevel || 1)) }}</span>
                     </div>
                 </div>
             </div>
 
+            <p class="ready-countdown" role="status" *ngIf="readyCountdown !== null">Hazırlan: {{ readyCountdown }}</p>
             <div class="card-action-area">
                 <button *ngIf="canPracticeFocus" class="ep-btn ep-btn--secondary" (click)="startFocusPractice()">Kısa alıştırma yap</button>
                 <button *ngIf="canPracticeFocus && (asFocusEngine?.nLevel || 1) > 1" class="ep-btn ep-btn--secondary"
@@ -194,10 +210,10 @@
             <div class="target-display" *ngIf="schulteSettings.showHints">
                 Hedef: <strong>{{ getCurrentTarget() }}</strong>
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -219,11 +235,11 @@
         <div class="game-stats">
             <div class="stat">
                 <span class="label">Skor</span>
-                <span class="value">%{{ engineState.score }}</span>
+                <span class="value">{{ pct(engineState.score) }}</span>
             </div>
             <div class="stat">
                 <span class="label">Doğruluk</span>
-                <span class="value">%{{ engineState.accuracy }}</span>
+                <span class="value">{{ pct(engineState.accuracy) }}</span>
             </div>
             <div class="stat">
                 <span class="label">Hatalar</span>
@@ -333,7 +349,7 @@
                             <span>Çevrede ne gördün?</span>
                         </div>
                         <div class="input-hint">
-                            Harfleri gördükten sonra tamamını yazın; sıra önemli değildir.
+                            Harfleri gördükten sonra hepsini yaz; sıra önemli değil.
                         </div>
                         <input #peripheralInput type="text" class="peripheral-input" [(ngModel)]="peripheralInputValue"
                             (input)="onPeripheralInputChange($event)" (keydown.enter)="submitPeripheralInput()"
@@ -384,16 +400,16 @@
             <div class="progress-info">
                 <span class="word-count-display word-count-display--active">
                     {{ engineState.currentStep }}/{{ engineState.totalSteps }}
-                    <small class="word-count-display__label">{{ isTachistoscopeMode() ? 'Uyaran' : 'Kelime' }}</small>
+                    <small class="word-count-display__label">{{ isTachistoscopeMode() ? 'Tur' : 'Kelime' }}</small>
                     <small *ngIf="getAssessmentRoundLabel() as label">{{ label }}</small>
                 </span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
 
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -466,10 +482,10 @@
                 <span>Kelime {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -520,10 +536,10 @@
                 <span>Grup {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -570,7 +586,7 @@
             <button class="ep-btn ep-btn--icon" *ngIf="engine.engineType !== 'exam_simulation'" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -659,10 +675,10 @@
                 </span>
             </div>
 
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -681,9 +697,12 @@
                 {{ stim.content }}
             </div>
 
+            <div class="expansion-feedback" role="status" *ngIf="getExpansionLastMiss() as miss">
+                Doğrusu: {{ miss }}
+            </div>
             <!-- Cevap Giriş Alanı -->
             <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()">
-                <div class="answer-prompt">Gördüğün uyaranları konumlarına göre yaz:</div>
+                <div class="answer-prompt">Gördüğün harfleri yerlerine göre yaz:</div>
                 <div class="answer-inputs">
                     <input *ngFor="let index of getExpansionAnswerSlots(); trackBy: trackByIdx" type="text"
                         class="char-input" [value]="expansionAnswers[index] || ''"
@@ -704,7 +723,7 @@
 
         <div class="game-stats">
             <div class="stat">
-                <span class="label">Göreli uzaklık</span>
+                <span class="label">Merkeze uzaklık</span>
                 <span class="value">%{{ getExpansionRelativeDistance() | number:'1.0-1' }}</span>
             </div>
             <div class="stat correct-stat">
@@ -736,10 +755,10 @@
             <div class="score-info">
                 Buldun: {{ engineState.currentStep }} / {{ engineState.totalSteps }}
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -854,10 +873,10 @@
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getErrorAnalysisErrorCount() ? (getErrorAnalysisFoundCount() / getErrorAnalysisErrorCount()) * 100 : 0"></div></div>
             </div>
 
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -927,10 +946,10 @@
                 <span class="material-icons">sync_problem</span>
                 <span>Önceki kelimeye tıklama: {{ getRegressionBackwardClickCount() }}</span>
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -1132,10 +1151,10 @@
                 <span class="material-icons">music_note</span>
             </div>
 
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -1280,7 +1299,7 @@
                 <span class="countdown-value">{{ getVisualizationSceneRemaining() }}</span>
                 <span class="countdown-label">sn</span>
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
             <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
@@ -1348,7 +1367,7 @@
             </div>
 
             <div class="header-right">
-                <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                     <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
                 </button>
                 <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
@@ -1470,7 +1489,7 @@
 
             <!-- Right: Controls -->
             <div class="header-section right">
-                <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                     <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
                 </button>
                 <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
@@ -1707,13 +1726,13 @@
                             <small *ngIf="result?.details?.benchmarks">Uygulama referansı: {{ formatTime(result?.details?.benchmarks?.intermediate || 0) }} — bilimsel norm değildir.</small>
                         </div>
                         <div class="schulte-summary__stat-grid">
-                            <div><strong>{{ result?.score }}</strong><span>Skor</span></div>
+                            <div><strong>{{ num(result?.score) }}</strong><span>Skor</span></div>
                             <div><strong>%{{ result?.accuracy | number:'1.0-0' }}</strong><span>Doğruluk</span></div>
                             <div><strong>{{ result?.errors }}</strong><span>Hata</span></div>
                         </div>
                         <div class="schulte-summary__rewards" *ngIf="sessionResult?.xpGained || sessionResult?.leveledUp">
                             <span *ngIf="sessionResult?.xpGained">+{{ sessionResult?.xpGained }} XP</span>
-                            <span *ngIf="sessionResult?.leveledUp">Seviye {{ sessionResult?.newLevel }}</span>
+                            <span *ngIf="sessionResult?.leveledUp">XP seviyesi {{ sessionResult?.newLevel }}</span>
                         </div>
                     </div>
 
@@ -1791,7 +1810,7 @@
             <!-- Main Stats Row - Hide for exam_simulation and reading exercises -->
             <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'grid_interaction' && engine?.engineType !== 'reading_comprehension'">
                 <div class="stat-card primary">
-                    <div class="stat-value">{{ result?.score }}</div>
+                    <div class="stat-value">{{ num(result?.score) }}</div>
                     <div class="stat-label">Skor</div>
                 </div>
                 <div class="stat-card">
@@ -1876,15 +1895,15 @@
                 <div class="measurement-not-available">{{ target.targetReached ? 'Hedefe ulaşıldı' : 'Hedefe ulaşılmadı' }}</div>
                 <div class="stats-row">
                     <div class="stat-card"><div class="stat-value">%{{ getExpansionDistancePercent(target.targetDistance) | number:'1.0-1' }}</div><div class="stat-label">Hedef uzaklık</div></div>
-                    <div class="stat-card"><div class="stat-value">{{ target.targetRounds }}</div><div class="stat-label">Hedefteki tur</div></div>
-                    <div class="stat-card"><div class="stat-value">{{ target.targetCorrectRounds }}</div><div class="stat-label">Hedefteki doğru tur</div></div>
-                    <div class="stat-card"><div class="stat-value">{{ target.targetAccuracy == null ? 'Ölçülmedi' : target.targetAccuracy + '%' }}</div><div class="stat-label">Hedefteki doğruluk</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetRounds }}</div><div class="stat-label">Hedef uzaklıktaki tur</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetCorrectRounds }}</div><div class="stat-label">Hedef uzaklıkta doğru tur</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetAccuracy == null ? 'Ölçülmedi' : pct(target.targetAccuracy) }}</div><div class="stat-label">Hedef uzaklıkta doğruluk</div></div>
                     <div class="stat-card"><div class="stat-value">{{ target.shortestCorrectDisplayDurationMs == null ? 'Ölçülmedi' : ((target.shortestCorrectDisplayDurationMs / 1000 | number:'1.2-2') + ' sn') }}</div><div class="stat-label">Hedefte doğru yanıtlanan en kısa gösterim</div></div>
                 </div>
             </ng-container>
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'visual_expansion'">
                 Uzaklık ekrandaki göreli konumdur; fiziksel görüş açısı veya okuma hızı ölçümü değildir.
-                Cevap süresi uyaran gizlendikten sonraki yanıtlama süresidir; kayıtlı oturumlarda ağ gecikmesi de etkileyebilir.
+                Cevap süresi, harfler kaybolduktan sonra yanıtlama süresidir; kayıtlı oturumlarda ağ gecikmesi de etkileyebilir.
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
                 {{ getReadingMeasurementMessage() }}
@@ -1945,7 +1964,7 @@
                 </div>
                 <div class="level-up" *ngIf="sessionResult?.leveledUp">
                     <span class="material-icons">stars</span>
-                    <span>Seviye {{ sessionResult?.newLevel }} oldun!</span>
+                    <span>XP seviyen {{ sessionResult?.newLevel }} oldu.</span>
                 </div>
             </div>
 

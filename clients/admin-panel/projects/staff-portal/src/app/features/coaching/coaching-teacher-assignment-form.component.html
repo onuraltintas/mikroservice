@@ -29,7 +29,7 @@
 
       <div class="editor-grid two-columns">
         <label for="assignment-title"><span class="label-line">Başlık <span aria-hidden="true">*</span></span>
-          <input id="assignment-title" name="title" [(ngModel)]="form.title" required maxlength="200" autocomplete="off">
+          <input id="assignment-title" name="title" [(ngModel)]="form.title" required aria-required="true" aria-label="Başlık" maxlength="200" autocomplete="off">
         </label>
         <label for="assignment-subject">Ders
           <input id="assignment-subject" name="subject" [(ngModel)]="form.subject" maxlength="120">
@@ -177,7 +177,7 @@
             <div class="student-options" aria-label="Atanabilir öğrenciler">
               @for (student of students(); track trackByStudent($index, student)) {
                 <label class="student-option">
-                  <input type="checkbox" [checked]="isSelected(student.userId)"
+                  <input type="checkbox" [checked]="isSelected(student.userId)" [attr.aria-label]="student.fullName + ' öğrencisini seç'"
                     [disabled]="!isSelected(student.userId) && selectedStudentIds.size >= 100"
                     (change)="toggleStudent(student.userId)">
                   <span><strong>{{ student.fullName }}</strong><small>{{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}</small></span>

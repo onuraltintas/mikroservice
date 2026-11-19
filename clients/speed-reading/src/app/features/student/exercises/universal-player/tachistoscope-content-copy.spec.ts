@@ -49,10 +49,10 @@ describe('Tachistoscope copy and answer input per content type', () => {
   }
 
   const cases: [string, string, string][] = [
-    ['number', 'Ekranda kısa süre görünen sayıyı yazın.', 'Gördüğünüz sayıyı yazın'],
-    ['word', 'Ekranda kısa süre görünen kelimeyi yazın. Büyük-küçük harf fark etmez.', 'Gördüğünüz kelimeyi yazın'],
-    ['phrase', 'Ekranda kısa süre görünen kelime grubunu yazın. Büyük-küçük harf fark etmez.', 'Gördüğünüz kelime grubunu yazın'],
-    ['letter', 'Ekranda kısa süre görünen harfleri yazın.', 'Gördüğünüz harfleri yazın']
+    ['number', 'Ekranda kısa süre görünen sayıyı yaz.', 'Gördüğün sayıyı yaz'],
+    ['word', 'Ekranda kısa süre görünen kelimeyi yaz. Büyük-küçük harf fark etmez.', 'Gördüğün kelimeyi yaz'],
+    ['phrase', 'Ekranda kısa süre görünen kelime grubunu yaz. Büyük-küçük harf fark etmez.', 'Gördüğün kelime grubunu yaz'],
+    ['letter', 'Ekranda kısa süre görünen harfleri yaz.', 'Gördüğün harfleri yaz']
   ];
 
   for (const [type, instruction, prompt] of cases) {
@@ -80,10 +80,10 @@ describe('Tachistoscope copy and answer input per content type', () => {
       expect(TACHISTOSCOPE_COPY.answerPrompt(kind)).toBe(prompt);
     }
     expect(TACHISTOSCOPE_COPY.contentLabel.phrase).toContain('Kelime grubu');
-    // Student-facing speed-reading copy uses the formal "siz" form, like the rest of the player.
+    // Students are addressed with "sen" (design rule, 18.11.2026; live test 19.11.2026).
     for (const type of ['number', 'letter', 'word', 'phrase'] as const) {
-      expect(TACHISTOSCOPE_COPY.instruction(type)).not.toMatch(/\byaz\.|Gördüğün /);
-      expect(TACHISTOSCOPE_COPY.answerPrompt(type)).toMatch(/^Gördüğünüz .+ yazın$/);
+      expect(TACHISTOSCOPE_COPY.instruction(type)).not.toMatch(/yazın|Gördüğünüz/);
+      expect(TACHISTOSCOPE_COPY.answerPrompt(type)).toMatch(/^Gördüğün .+ yaz$/);
     }
     expect(Object.values(TACHISTOSCOPE_COPY.contentLabel)).toEqual(['Sayı', 'Harf', 'Kelime', 'Kelime grubu (iki kelime)']);
   });
@@ -91,7 +91,7 @@ describe('Tachistoscope copy and answer input per content type', () => {
   it('takes the content type from the server session over the catalogue configuration', () => {
     const ready = render({ serverAuthoritative: true, content: { type: 'number', count: 3 },
       tachistoscope: { count: 3, round: 0, contentType: 'phrase', displayDurationMs: 400 } }, false);
-    expect(ready.querySelector('.tachistoscope-ready')!.textContent).toContain('kelime grubunu yazın.');
+    expect(ready.querySelector('.tachistoscope-ready')!.textContent).toContain('kelime grubunu yaz.');
   });
 
   it('accepts free text with Turkish letters and spaces for words and phrases', () => {
@@ -117,6 +117,6 @@ describe('Tachistoscope copy and answer input per content type', () => {
   it('always uses number copy in assessments', () => {
     const ready = render({ content: { type: 'word', count: 3 }, isAssessmentMode: true,
       assessmentProtocol: { version: 2, practiceRounds: 3, roundsPerBlock: 6, blockValues: [600, 450, 300] } }, false);
-    expect(ready.querySelector('.tachistoscope-ready')!.textContent).toContain('sayıyı yazın.');
+    expect(ready.querySelector('.tachistoscope-ready')!.textContent).toContain('sayıyı yaz.');
   });
 });

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { CurrencyNamePipe } from './currency-name.pipe';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, finalize, forkJoin } from 'rxjs';
@@ -22,7 +23,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
 @Component({
   selector: 'app-billing-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CurrencyNamePipe, CommonModule, FormsModule],
   template: `
     <main class="space-y-6" aria-labelledby="billing-orders-title">
       <header>
@@ -58,7 +59,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
                 <tr [attr.data-testid]="'order-' + row.order.paymentCode">
                   <td><strong>{{ row.accountName }}</strong><div class="muted">{{ row.accountEmail || '—' }}</div></td>
                   <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }} · {{ row.order.durationDays }} gün</div></td>
-                  <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency }}
+                  <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency | currencyName }}
                     @if (row.order.couponCode) { <div class="muted">Kupon {{ row.order.couponCode }}: −{{ row.order.discount | number:'1.2-2' }}</div> }</td>
                   <td class="font-mono code">{{ row.order.paymentCode }}</td>
                   <td>{{ row.order.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (row.order.status === 'Pending') { <div class="muted">Son gün {{ row.order.expiresAt | date:'dd.MM.yyyy' }}</div> }</td>
@@ -93,7 +94,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
                       <form (ngSubmit)="confirm()" class="review" data-testid="review-form">
                         @switch (current.kind) {
                           @case ('approve') {
-                            <p><strong>{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency }}</strong> tutarındaki ödemeyi banka hesabınızda <strong class="font-mono">{{ row.order.paymentCode }}</strong> koduyla gördünüz mü? Onay, {{ row.accountName }} için {{ row.order.planName }} aboneliğini {{ row.order.durationDays }} gün açar.</p>
+                            <p><strong>{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency | currencyName }}</strong> tutarındaki ödemeyi banka hesabınızda <strong class="font-mono">{{ row.order.paymentCode }}</strong> koduyla gördünüz mü? Onay, {{ row.accountName }} için {{ row.order.planName }} aboneliğini {{ row.order.durationDays }} gün açar.</p>
                           }
                           @case ('reject') {
                             <label>Ret gerekçesi (alıcı görür)<textarea [(ngModel)]="current.note" name="reviewNote" required minlength="5" maxlength="1000"></textarea></label>

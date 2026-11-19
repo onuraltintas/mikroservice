@@ -83,9 +83,9 @@ npm run build -- --configuration development
 npm run build -- --configuration production
 ```
 
-Çıktı `dist/speed-reading-frontend/browser` altındadır. Tanımlı yapılandırmalar development/production'dır; `staging` adlı Angular build yapılandırması yoktur. Üretim build'i environment değişimi, minification, hash'li asset ve service worker kullanır. Başlangıç bütçesi 3 MB uyarı / 5 MB hata; component CSS bütçesi 120 kB uyarı / 200 kB hatadır.
+Çıktı `dist/speed-reading-frontend/browser` altındadır. Tanımlı yapılandırmalar development/production'dır; `staging` adlı Angular build yapılandırması yoktur. Üretim build'i environment değişimi, minification ve hash'li asset kullanır; service worker yoktur. Başlangıç bütçesi 3 MB uyarı / 5 MB hata; component CSS bütçesi 120 kB uyarı / 200 kB hatadır.
 
-Frontend Dockerfile'ın build context'i `clients/` klasörüdür; `../shared` de image build'ine girer. `build-release.txt`, Dockerfile'da service worker sürüm işaretinde kullanılır. Yayın, API migration ve rollback işlemleri [servis belgesi](../../docs/SPEED_READING_SERVICE.md) ve [operasyon runbook'u](../../docs/OPERATIONS_RUNBOOK.md) üzerinden yürütülür.
+Frontend Dockerfile'ın build context'i `clients/` klasörüdür; `../shared` de image build'ine girer. Yayın, API migration ve rollback işlemleri [servis belgesi](../../docs/SPEED_READING_SERVICE.md) ve [operasyon runbook'u](../../docs/OPERATIONS_RUNBOOK.md) üzerinden yürütülür.
 
 ## İlgili belgeler
 

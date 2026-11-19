@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using SpeedReading.API;
 using SpeedReading.API.Controllers;
 using SpeedReading.Application.Parents;
+using SpeedReading.Application.Subscription;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -24,6 +25,32 @@ public sealed class SpeedReadingParentControllersTests
         response.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeSameAs(reports.Overview);
         access.Calls.Should().ContainSingle().Which.Should().Be((parent, student));
         reports.OverviewStudent.Should().Be(student);
+    }
+
+    [Fact]
+    public async Task Subscription_shows_the_childs_access_after_identity_allows_the_parent()
+    {
+        var parent = Guid.NewGuid(); var student = Guid.NewGuid();
+        var until = new DateTime(2027, 11, 19, 0, 0, 0, DateTimeKind.Utc);
+        var billing = new StubBilling { Decision = new BillingAccessDecision(true, true, until, true) };
+
+        var response = await Parents(new StubAccess { Allowed = true }, new StubReports(), parent, billing)
+            .GetSubscription(student, CancellationToken.None);
+
+        response.Should().BeOfType<OkObjectResult>().Which.Value.Should()
+            .Be(new SpeedReadingParentSubscription(true, true, until, true));
+        billing.AskedFor.Should().Be(student);
+    }
+
+    [Fact]
+    public async Task Subscription_is_forbidden_without_identity_permission_and_asks_billing_nothing()
+    {
+        var billing = new StubBilling();
+        var response = await Parents(new StubAccess { Allowed = false }, new StubReports(), Guid.NewGuid(), billing)
+            .GetSubscription(Guid.NewGuid(), CancellationToken.None);
+
+        response.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        billing.AskedFor.Should().BeNull();
     }
 
     [Fact]
@@ -89,8 +116,8 @@ public sealed class SpeedReadingParentControllersTests
             .Should().BeOfType<OkObjectResult>().Which.Value.Should().BeSameAs(reports.Summary);
     }
 
-    private static SpeedReadingParentsController Parents(StubAccess access, StubReports reports, Guid parent) =>
-        new(access, reports)
+    private static SpeedReadingParentsController Parents(StubAccess access, StubReports reports, Guid parent, StubBilling? billing = null) =>
+        new(access, reports, billing ?? new StubBilling())
         {
             ControllerContext = new ControllerContext
             {
@@ -135,6 +162,20 @@ public sealed class SpeedReadingParentControllersTests
             return Task.FromResult(Summary);
         }
     }
+}
+
+internal sealed class StubBilling : ISpeedReadingBillingAccess
+{
+    public bool Enabled { get; init; } = true;
+    public BillingAccessDecision Decision { get; init; } = new(true, false, null, true);
+    public Guid? AskedFor { get; private set; }
+    public Task<BillingAccessDecision> GetAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        AskedFor = userId;
+        return Task.FromResult(Decision);
+    }
+    public void Forget(Guid userId) { }
+    public void ForgetAll() { }
 }
 
 public sealed class SpeedReadingParentCalendarTests

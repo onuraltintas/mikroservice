@@ -31,7 +31,8 @@ export interface VisualExpansionConfig extends EngineConfig {
 
 export class VisualExpansionEngine implements BaseEngine {
     readonly engineType = 'visual_expansion';
-    readonly displayName = 'Görsel Genişletme';
+    readonly displayName = 'Görsel Genişleme';
+    private lastMiss: string | null = null;
 
     state: EngineState = {
         isRunning: false,
@@ -396,7 +397,7 @@ export class VisualExpansionEngine implements BaseEngine {
         if (actionName === 'visual_expansion_present') {
             const stimuli = response?.feedbackData?.stimuli;
             if (!Array.isArray(stimuli) || stimuli.length < 2) {
-                this.callbacks.onError('Görsel genişleme uyaranı sunucudan eksik döndü.');
+                this.callbacks.onError('Sıradaki tur yüklenemedi.');
                 return;
             }
             const degrees = Number(response?.feedbackData?.degrees);
@@ -407,6 +408,7 @@ export class VisualExpansionEngine implements BaseEngine {
             if (Number.isFinite(displayDurationMs) && displayDurationMs >= 100) {
                 this.config.timing.durationMs = displayDurationMs;
             }
+            this.lastMiss = null;
             this.currentStimuli = this.positionStimuli(stimuli.map(String));
             this.maxDegreesReached = Math.max(this.maxDegreesReached, this.currentDegrees);
             this.isStimulusVisible = true;
@@ -434,6 +436,9 @@ export class VisualExpansionEngine implements BaseEngine {
             const correctAnswers = this.lastShownStimuli.map(value => value.toUpperCase());
             const responseTimeMs = Number(response?.feedbackData?.responseTimeMs ?? Date.now() - this.stimulusShownTime);
             const isPractice = this.isAssessmentPractice();
+            // Show the right letters after a miss, but never in a measured assessment (the key stays on the server).
+            this.lastMiss = !isCorrect && serverCorrect != null && !this.assessmentProtocol && correctAnswers.length
+                ? correctAnswers.join(', ') : null;
             if (!isPractice) {
                 this.totalAnswers++;
                 if (isCorrect) this.correctAnswers++; else this.state.errors++;
@@ -482,6 +487,11 @@ export class VisualExpansionEngine implements BaseEngine {
     /**
      * Son gösterilen karakterleri döndür (UI'da feedback için)
      */
+    /** The letters of the last missed round ("K, M"), until the next round appears. */
+    getLastMiss(): string | null {
+        return this.lastMiss;
+    }
+
     getLastShownStimuli(): string[] {
         return this.lastShownStimuli;
     }

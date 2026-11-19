@@ -71,7 +71,7 @@ export class CsStatusChipComponent {
     :host(:last-child){border-bottom:0}
     .leading:empty,.trailing:empty{display:none}
     .main{display:grid;gap:2px;min-width:0}
-    strong{font-size:var(--coaching-text-body);font-weight:700;overflow-wrap:anywhere}
+    strong{font-size:var(--coaching-text-body);font-weight:700;overflow-wrap:break-word;hyphens:auto}
     small{font-size:var(--coaching-text-sm);color:var(--ui-text-muted)}`]
 })
 export class CsListRowComponent {
@@ -182,9 +182,11 @@ export class CsSegmentedTabsComponent {
   selector: 'cs-bottom-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Live test 19.11.2026 (B3): Escape closes the sheet wherever the focus is.
+  host: { '(document:keydown.escape)': 'closeOnEscape()' },
   template: `@if (open()) {
     <div class="scrim" (click)="open.set(false)"></div>
-    <section role="dialog" aria-modal="true" [attr.aria-label]="title()" (keydown.escape)="open.set(false)">
+    <section role="dialog" aria-modal="true" [attr.aria-label]="title()">
       <header><strong>{{ title() }}</strong><button type="button" class="close" aria-label="Kapat" (click)="open.set(false)">✕</button></header>
       <div class="body"><ng-content /></div>
     </section>}`,
@@ -204,7 +206,12 @@ export class CsBottomSheetComponent {
     effect(() => {
       if (!this.open()) return;
       // T5: start on the close button so a phone does not open its keyboard on the first field.
-      queueMicrotask(() => (this.host.nativeElement.querySelector('.close') as HTMLElement | null)?.focus());
+      // The sheet renders after this effect, so the focus waits for the next frame.
+      setTimeout(() => (this.host.nativeElement.querySelector('.close') as HTMLElement | null)?.focus());
     });
+  }
+
+  closeOnEscape(): void {
+    if (this.open()) this.open.set(false);
   }
 }

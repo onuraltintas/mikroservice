@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { exerciseTypeLabel } from '../../../shared/utils/exercise-type-label';
+import { exerciseDisplayName, exerciseTypeLabel } from '../../../shared/utils/exercise-type-label';
 import { difficultyLabel } from '../../../shared/utils/difficulty-label';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExerciseProgramService, DailyExercise, StudentProgressSummary, ProgramDayAdvanceState } from '../../../core/services/exercise-program.service';
@@ -24,6 +24,7 @@ import { canUseStaffTraining } from '../../../core/guards/staff-training.guard';
 })
 export class DailyExercisesComponent extends BaseComponent implements OnInit {
   readonly typeLabel = exerciseTypeLabel;
+  readonly displayName = exerciseDisplayName;
   readonly difficulty = difficultyLabel;
   private readonly exerciseService = inject(ExerciseProgramService);
   private readonly exerciseTypeService = inject(ExerciseTypeService);
@@ -286,12 +287,10 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
    * Egzersiz tipine göre renk kodu döndür
    */
   getExerciseColor(typeName: string): string {
-    // 1. Try dynamic map from backend
-    if (this.dynamicTypeColors.has(typeName)) {
-      return this.dynamicTypeColors.get(typeName)!;
-    }
-    // 2. Fallback to static map
-    return this.typeColorMap[typeName] || this.typeColorMap['default'];
+    // 1. Try dynamic map from backend, 2. fall back to the static map. Cards use a flat colour (design rule:
+    // no gradients), so a gradient value keeps only its first colour.
+    const value = this.dynamicTypeColors.get(typeName) ?? this.typeColorMap[typeName] ?? this.typeColorMap['default'];
+    return solidColor(value);
   }
 
   getExerciseBaseColor(typeName: string): string {
@@ -422,4 +421,10 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
   historicalCompletedCount(): number {
     return this.historicalExercises().filter(e => e.isCompleted).length;
   }
+}
+
+/** "linear-gradient(135deg, #f57c00 0%, …)" → "#f57c00"; any other colour is returned unchanged. */
+export function solidColor(value: string): string {
+  if (!value?.includes('gradient(')) return value;
+  return value.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/i)?.[0] ?? value;
 }

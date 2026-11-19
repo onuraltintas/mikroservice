@@ -82,14 +82,14 @@ describe('reports without measured speed', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Average WPM');
   });
 
-  it('does not plot missing speed and shows no data in the summary speed card', () => {
+  it('does not plot missing speed and says not measured in the summary speed card (same text as the home page)', () => {
     const fixture = TestBed.createComponent(StudentDashboardReportComponent);
     fixture.componentInstance.loading.set(false);
     fixture.componentInstance.report.set({ currentWPM: 0 } as any);
     fixture.detectChanges();
     const card = Array.from(fixture.nativeElement.querySelectorAll('.stat-card'))
       .find((item: any) => item.textContent.includes('Okuma Hızı')) as HTMLElement;
-    expect(card.querySelector('.stat-value')?.textContent).toContain('Veri yok');
+    expect(card.querySelector('.stat-value')?.textContent).toContain('Ölçülmedi');
     expect(fixture.componentInstance.wpmProgressData()).toEqual([]);
   });
 

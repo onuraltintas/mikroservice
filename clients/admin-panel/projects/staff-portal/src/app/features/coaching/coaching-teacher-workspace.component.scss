@@ -12,3 +12,4 @@
 // and 16–28 px in the others. The panel gives the same space to every section; the section's own top margin is dropped.
 #teacher-section-panel { margin-top: 20px; }
 #teacher-section-panel > ::ng-deep * > :first-child { margin-top: 0; }
+.workspace-heading.compact h2 { font-size: 18px; }

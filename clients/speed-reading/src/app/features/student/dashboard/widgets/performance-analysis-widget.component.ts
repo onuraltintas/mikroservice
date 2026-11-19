@@ -1,8 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { MeasuredProgressService } from '../../../../core/services/measured-progress.service';
 
 interface PerformanceMetric {
   label: string;
@@ -12,6 +11,8 @@ interface PerformanceMetric {
   percentage: number;
   trend: 'up' | 'down' | 'stable';
   change: number;
+  /** False when the student has no measurement for this metric yet: the card says "Ölçülmedi" instead of 0. */
+  measured: boolean;
 }
 
 interface PerformanceData {
@@ -31,8 +32,7 @@ interface PerformanceData {
   styleUrls: ['./performance-analysis-widget.component.scss']
 })
 export class PerformanceAnalysisWidgetComponent implements OnInit {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.speedReadingApiUrl}/daily-progress`;
+  private measured = inject(MeasuredProgressService);
 
   loading = signal(true);
   performanceData = signal<PerformanceData | null>(null);
@@ -43,16 +43,15 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
   }
 
   loadPerformanceData(): void {
-    this.http.get<any>(`${this.apiUrl}/my-progress`, {
-      headers: { 'X-Skip-Error-Toast': 'true' }
-    }).subscribe({
-      next: (data) => {
-        const currentSpeed = data?.currentReadingSpeed;
-        const initialSpeed = data?.initialReadingSpeed;
+    this.measured.load().subscribe({
+      next: (measured) => {
+        const data: any = measured.raw;
+        const currentSpeed = measured.readingSpeed ?? 0;
+        const initialSpeed = measured.initialReadingSpeed ?? 0;
         const successRate = data?.averageSuccessRate;
         const completedExercises = data?.completedExercises ?? 0;
 
-        if (completedExercises === 0) {
+        if (completedExercises === 0 && measured.readingSpeed === null) {
           // No program exercises completed yet — don't show misleading values
           this.hasRealData.set(false);
           this.loading.set(false);
@@ -68,7 +67,8 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
             unit: 'KDK',
             percentage: Math.min(((currentSpeed ?? 0) / 600) * 100, 100),
             trend: (currentSpeed ?? 0) >= (initialSpeed ?? 0) ? 'up' : 'down',
-            change: initialSpeed ? Math.round(((currentSpeed - initialSpeed) / initialSpeed) * 100) : 0
+            change: initialSpeed ? Math.round(((currentSpeed - initialSpeed) / initialSpeed) * 100) : 0,
+            measured: measured.readingSpeed !== null
           },
           comprehension: {
             label: 'Kavrama Oranı',
@@ -77,7 +77,8 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
             unit: '%',
             percentage: successRate ?? 0,
             trend: 'stable',
-            change: 0
+            change: 0,
+            measured: measured.comprehension !== null
           },
           eyeMovement: {
             label: 'Göz Hareketi',
@@ -86,7 +87,8 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
             unit: '%',
             percentage: data?.eyeMovementScore ?? 0,
             trend: 'stable',
-            change: 0
+            change: 0,
+            measured: (data?.eyeMovementScore ?? 0) > 0
           },
           concentration: {
             label: 'Konsantrasyon',
@@ -95,7 +97,8 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
             unit: '%',
             percentage: data?.concentrationScore ?? 0,
             trend: 'stable',
-            change: 0
+            change: 0,
+            measured: (data?.concentrationScore ?? 0) > 0
           }
         };
 
