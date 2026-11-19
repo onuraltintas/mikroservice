@@ -184,7 +184,7 @@ export function googleProblem(error: unknown): string {
   switch (problemCode(error)) {
     case 'Auth.NoRoleForProduct':
     case 'Auth.ProductAccessDenied':
-      return 'Bu Google hesabının e-postasıyla bir eduivme hesabı var. maxkampüs\'e katılmak için Kayıt ol sayfasında o hesabın e-posta ve şifresini kullanın.';
+      return 'Bu Google hesabının e-postasıyla maxkoç ya da Master Hızlı Okuma\'da bir hesabınız var. maxkampüs\'e katılmak için Kayıt ol sayfasında o hesabın e-posta ve şifresini kullanın.';
     case 'Auth.ExternalLoginLinkRequired':
       return 'Bu e-postayla şifreli bir hesabınız var. E-posta ve şifrenizle giriş yapın.';
     default:
