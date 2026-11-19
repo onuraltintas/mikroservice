@@ -65,6 +65,19 @@ public static class WorkspaceContentPurge
 
     public const string PurgedAuditAction = "Retention.ContentPurged";
 
+    /// <summary>The statements, built once from the fixed names above (letters only), never from input.</summary>
+    private static readonly string[] CutSelfReferences = SelfReferences
+        .Select(item => $"UPDATE \"{Name(item.Table)}\" SET \"{Name(item.Column)}\" = NULL WHERE \"WorkspaceId\" = {{0}} AND \"{Name(item.Column)}\" IS NOT NULL")
+        .ToArray();
+    private static readonly string[] DeleteStatements = TablesInDeleteOrder
+        .Select(table => table == "WorkspaceMemberships"
+            ? "DELETE FROM \"WorkspaceMemberships\" WHERE \"WorkspaceId\" = {0} AND \"UserId\" <> {1}"
+            : $"DELETE FROM \"{Name(table)}\" WHERE \"WorkspaceId\" = {{0}}")
+        .ToArray();
+
+    private static string Name(string value) =>
+        value.Length > 0 && value.All(char.IsAsciiLetter) ? value : throw new InvalidOperationException("Unexpected table or column name.");
+
     /// <summary>Deletes the panel data; returns the number of rows deleted. The caller saves nothing else in this context.</summary>
     public static async Task<int> PurgeAsync(CourseManagementDbContext db, Guid workspaceId, DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -80,18 +93,14 @@ public static class WorkspaceContentPurge
                 SELECT gen_random_uuid(), a."StorageKey", {now} FROM "CourseAssignmentAttachments" a WHERE a."WorkspaceId" = {workspaceId}
                 ON CONFLICT ("StorageKey") DO NOTHING
                 """, cancellationToken);
-            foreach (var (table, column) in SelfReferences)
-                await db.Database.ExecuteSqlRawAsync(
-                    $"UPDATE \"{table}\" SET \"{column}\" = NULL WHERE \"WorkspaceId\" = {{0}} AND \"{column}\" IS NOT NULL", [workspaceId], cancellationToken);
+            foreach (var statement in CutSelfReferences)
+                await db.Database.ExecuteSqlRawAsync(statement, [workspaceId], cancellationToken);
 
             var deleted = 0;
-            foreach (var table in TablesInDeleteOrder)
-            {
-                deleted += table == "WorkspaceMemberships"
-                    ? await db.Database.ExecuteSqlRawAsync(
-                        "DELETE FROM \"WorkspaceMemberships\" WHERE \"WorkspaceId\" = {0} AND \"UserId\" <> {1}", [workspaceId, owner], cancellationToken)
-                    : await db.Database.ExecuteSqlRawAsync($"DELETE FROM \"{table}\" WHERE \"WorkspaceId\" = {{0}}", [workspaceId], cancellationToken);
-            }
+            foreach (var statement in DeleteStatements)
+                deleted += statement.Contains("{1}", StringComparison.Ordinal)
+                    ? await db.Database.ExecuteSqlRawAsync(statement, [workspaceId, owner], cancellationToken)
+                    : await db.Database.ExecuteSqlRawAsync(statement, [workspaceId], cancellationToken);
 
             workspace.MarkContentPurged(now);
             // The one line the owner finds in the empty panel's history.
