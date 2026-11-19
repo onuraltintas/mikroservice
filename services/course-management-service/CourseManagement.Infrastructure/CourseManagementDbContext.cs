@@ -11,6 +11,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
     public DbSet<WorkspaceMembership> Memberships => Set<WorkspaceMembership>();
     public DbSet<WorkspaceSubscription> WorkspaceSubscriptions => Set<WorkspaceSubscription>();
     public DbSet<WorkspaceInvitation> Invitations => Set<WorkspaceInvitation>();
+    public DbSet<TeacherEmailInvitation> TeacherEmailInvitations => Set<TeacherEmailInvitation>();
     public DbSet<WorkspaceAuditEntry> AuditEntries => Set<WorkspaceAuditEntry>();
     public DbSet<StudentRecord> Students => Set<StudentRecord>();
     public DbSet<LegacyStudentImportMapping> LegacyStudentImports => Set<LegacyStudentImportMapping>();
@@ -425,6 +426,18 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.Property(invitation => invitation.Status).IsConcurrencyToken();
             entity.HasIndex(invitation => new { invitation.WorkspaceId, invitation.TargetUserId }).IsUnique().HasFilter("\"Status\" = 1");
             entity.HasIndex(invitation => new { invitation.TargetUserId, invitation.Status });
+
+        modelBuilder.Entity<TeacherEmailInvitation>(entity =>
+        {
+            entity.ToTable("TeacherEmailInvitations");
+            entity.HasKey(invitation => invitation.Id);
+            entity.Property(invitation => invitation.Email).HasMaxLength(320).IsRequired();
+            entity.Property(invitation => invitation.CodeHash).HasMaxLength(64).IsRequired();
+            entity.Property(invitation => invitation.Status).IsConcurrencyToken();
+            entity.HasIndex(invitation => invitation.CodeHash).IsUnique();
+            entity.HasIndex(invitation => new { invitation.WorkspaceId, invitation.Email }).IsUnique().HasFilter("\"Status\" = 1");
+            entity.HasOne<Workspace>().WithMany().HasForeignKey(invitation => invitation.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+        });
             entity.HasOne<Workspace>().WithMany().HasForeignKey(invitation => invitation.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<StudentRecord>().WithMany().HasForeignKey(invitation => invitation.StudentRecordId).OnDelete(DeleteBehavior.Restrict);
         });

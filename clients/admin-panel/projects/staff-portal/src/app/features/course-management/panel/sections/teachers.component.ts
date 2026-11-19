@@ -1,7 +1,7 @@
 import { Component, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CourseInvitation, CourseManagementService, TeacherAvailabilityWindow, TeacherTimeOff } from '../../course-management.service';
-import { CoursePanelApi } from '../panel-api.service';
+import { CoursePanelApi, PanelTeacherInvitation } from '../panel-api.service';
 import { CoursePanelState, formatDate, formatDateTime, problemText } from '../panel-state';
 
 const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
@@ -13,7 +13,7 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
   imports: [FormsModule],
   styleUrl: '../panel.scss',
   template: `
-    <header class="page-head"><div><h1>Öğretmenler</h1><p>Öğretmenler kendi eduivme hesaplarıyla girer; yalnız kendi derslerini görürler.</p></div></header>
+    <header class="page-head"><div><h1>Öğretmenler</h1><p>Öğretmenler e-postayla gelen davetle katılır; yalnız kendi derslerini görürler.</p></div></header>
     @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
     @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
     <div class="row">
@@ -35,12 +35,19 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
             </tbody>
           </table></div>
         </section>
-        @if (invitations().length) {
+        @if (invitations().length || emailInvitations().length) {
           <section class="card" aria-labelledby="invite-list-title">
-            <div class="card-head"><h2 id="invite-list-title">Bekleyen davetler</h2></div>
+            <div class="card-head"><h2 id="invite-list-title">Davetler</h2></div>
             <ul class="plain">
+              @for (invitation of emailInvitations(); track invitation.id) {
+                <li><span><strong>{{ invitation.email }}</strong> {{ statusLine(invitation) }}</span>
+                  @if (!state.readOnly() && (invitation.status === 'Pending' || invitation.status === 'Expired')) {
+                    <span><button type="button" class="btn-quiet" (click)="resend(invitation)">Yeniden gönder</button>
+                    @if (invitation.status === 'Pending') { <button type="button" class="btn-quiet" (click)="cancelEmail(invitation)">Daveti geri al</button> }</span>
+                  }</li>
+              }
               @for (invitation of invitations(); track invitation.id) {
-                <li><span>Gönderildi, {{ date(invitation.expiresAt) }} tarihine kadar geçerli</span>
+                <li><span>Hesaba gönderildi, {{ date(invitation.expiresAt) }} tarihine kadar geçerli</span>
                   @if (!state.readOnly()) { <button type="button" class="btn-quiet" (click)="cancel(invitation)">Daveti geri al</button> }</li>
               }
             </ul>
@@ -61,7 +68,7 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
           <form class="card card-pad stack" style="gap: 14px" (ngSubmit)="invite()">
             <h2>Öğretmen davet et</h2>
             <label class="field">Öğretmenin e-posta adresi<input type="email" name="email" [(ngModel)]="email" autocomplete="off">
-              <span class="hint">Öğretmenin eduivme hesabının adresi. Hesabı yoksa önce hesap açmalı.</span></label>
+              <span class="hint">Bu adrese davet bağlantısı gider. Hesabı yoksa bağlantıdan birkaç adımda açar.</span></label>
             <div><button type="submit" class="btn" [disabled]="busy() || !email.includes('@')">Davet gönder</button></div>
           </form>
           <form class="card card-pad stack" style="gap: 14px" (ngSubmit)="addHours()">
@@ -95,6 +102,7 @@ export class TeachersSectionComponent {
   private readonly service = inject(CourseManagementService);
   readonly weekdays = WEEKDAYS;
   readonly invitations = signal<CourseInvitation[]>([]);
+  readonly emailInvitations = signal<PanelTeacherInvitation[]>([]);
   readonly availability = signal<TeacherAvailabilityWindow[]>([]);
   readonly timeOff = signal<TeacherTimeOff[]>([]);
   readonly busy = signal(false);
@@ -117,9 +125,12 @@ export class TeachersSectionComponent {
     const id = this.state.id();
     if (!id) return;
     try {
-      const [invitations, availability, timeOff] = await Promise.all([
-        this.service.getInvitations(id), this.service.getTeacherAvailability(id), this.service.getTeacherTimeOff(id)]);
+      const [invitations, availability, timeOff, emailInvitations] = await Promise.all([
+        this.service.getInvitations(id), this.service.getTeacherAvailability(id), this.service.getTeacherTimeOff(id),
+        this.api.teacherInvitations(id).catch(() => [] as PanelTeacherInvitation[])]);
       this.invitations.set(invitations.filter(item => item.status === 'Pending' && item.role === 'Teacher'));
+      // Accepted invitations show up among the members; the rest stay here so they can be sent again.
+      this.emailInvitations.set(emailInvitations.filter(item => item.status !== 'Accepted' && item.status !== 'Cancelled'));
       this.availability.set(availability);
       this.timeOff.set(timeOff);
       if (!this.hoursTeacher) this.hoursTeacher = this.activeMembers()[0]?.userId ?? '';
@@ -135,7 +146,16 @@ export class TeachersSectionComponent {
 
   invite(): Promise<void> {
     return this.act(async () => { await this.api.inviteTeacher(this.state.id(), this.email.trim()); this.email = ''; },
-      'Davet gönderildi. Öğretmen öğretmen adresinden giriş yapınca daveti görüp kabul eder.');
+      'Davet gönderildi. Öğretmen e-postadaki bağlantıyı açıp daveti kabul edince listede görünür.');
+  }
+  statusLine(invitation: PanelTeacherInvitation): string {
+    return invitation.status === 'Expired' ? 'süresi doldu' : `bekliyor, ${this.date(invitation.expiresAt)} tarihine kadar geçerli`;
+  }
+  resend(invitation: PanelTeacherInvitation): Promise<void> {
+    return this.act(() => this.api.inviteTeacher(this.state.id(), invitation.email).then(() => undefined), 'Davet yeniden gönderildi; önceki bağlantı artık açılmaz.');
+  }
+  cancelEmail(invitation: PanelTeacherInvitation): Promise<void> {
+    return this.act(() => this.api.cancelTeacherInvitation(this.state.id(), invitation.id), 'Davet geri alındı.');
   }
   cancel(invitation: CourseInvitation): Promise<void> {
     return this.act(() => this.service.cancel(this.state.id(), invitation.id).then(() => undefined), 'Davet geri alındı.');

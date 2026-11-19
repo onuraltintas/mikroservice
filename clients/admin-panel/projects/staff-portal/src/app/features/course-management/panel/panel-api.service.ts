@@ -5,6 +5,10 @@ import { environment } from '../../../../environments/environment';
 import { CourseLesson } from '../course-management.service';
 
 /** Endpoints the institution panel (19.11.2026) adds on top of CourseManagementService. */
+/** A teacher invited by e-mail address (maxkampus.com/davet). */
+export interface PanelTeacherInvitation {
+  id: string; email: string; status: 'Pending' | 'Accepted' | 'Cancelled' | 'Expired'; createdAt: string; expiresAt: string; acceptedAt: string | null;
+}
 export interface PanelMember { userId: string; role: 'Owner' | 'Teacher' | 'Student'; isActive: boolean; displayName: string | null; }
 export interface PanelOverviewLesson {
   id: string; courseName: string; groupName: string | null; roomName: string | null; teacherName: string | null; teacherUserId: string;
@@ -67,8 +71,13 @@ export class CoursePanelApi {
 
   overview(id: string) { return firstValueFrom(this.http.get<PanelOverview>(`${this.ws(id)}/overview`)); }
   members(id: string) { return firstValueFrom(this.http.get<PanelMember[]>(`${this.ws(id)}/members`)); }
+  /** maxkampüs (19.11.2026): the address needs no account; the teacher gets a link and opens one if needed. */
   inviteTeacher(id: string, email: string) {
-    return firstValueFrom(this.http.post<unknown>(`${this.ws(id)}/teacher-invitations`, { id: crypto.randomUUID(), email }));
+    return firstValueFrom(this.http.post<PanelTeacherInvitation>(`${this.ws(id)}/teacher-email-invitations`, { id: crypto.randomUUID(), email }));
+  }
+  teacherInvitations(id: string) { return firstValueFrom(this.http.get<PanelTeacherInvitation[]>(`${this.ws(id)}/teacher-email-invitations`)); }
+  cancelTeacherInvitation(id: string, invitationId: string) {
+    return firstValueFrom(this.http.post<void>(`${this.ws(id)}/teacher-email-invitations/${invitationId}/cancel`, {}));
   }
   searchStudents(id: string, filter: PanelStudentFilter) {
     let params = new HttpParams();

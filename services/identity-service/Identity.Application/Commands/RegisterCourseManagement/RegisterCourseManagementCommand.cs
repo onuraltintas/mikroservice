@@ -6,7 +6,8 @@ using MediatR;
 namespace Identity.Application.Commands.RegisterCourseManagement;
 
 /// <summary>
-/// maxkampus.com registration (19.11.2026): "Kurumum var" (<c>institution</c>) or "Özel ders veriyorum" (<c>teacher</c>).
+/// maxkampus.com registration (19.11.2026): "Kurumum var" (<c>institution</c>), "Özel ders veriyorum" (<c>teacher</c>) or a
+/// teacher who came with an institution's invitation (<c>invited</c>, no workspace of their own).
 /// The phone is required; the workspace opens under <paramref name="WorkspaceName"/>. Someone who already has an
 /// eduivme account (Koçluk, Hızlı Okuma) registers with that account's e-mail and password and joins with it.
 /// </summary>
@@ -31,6 +32,8 @@ public static class CourseManagementRegistration
 {
     public const string InstitutionKind = "institution";
     public const string TeacherKind = "teacher";
+    /// <summary>A teacher who came with an institution's e-mail invitation: no workspace of their own.</summary>
+    public const string InvitedKind = "invited";
     public const string OwnerRole = "CourseInstitutionOwner";
     public const string TeacherRole = "CourseTeacher";
     public const int WorkspaceNameLength = 200;
@@ -38,9 +41,12 @@ public static class CourseManagementRegistration
     public static string? RoleFor(string? kind) => kind switch
     {
         InstitutionKind => OwnerRole,
-        TeacherKind => TeacherRole,
+        TeacherKind or InvitedKind => TeacherRole,
         _ => null
     };
+
+    /// <summary>Whether this registration opens a workspace (an invited teacher joins the institution's).</summary>
+    public static bool OpensWorkspace(string? kind) => kind is InstitutionKind or TeacherKind;
 
     /// <summary>
     /// A Turkish mobile or landline number in the forms people write it ("0532 123 45 67", "+90 212 …", "5321234567"),
@@ -65,7 +71,7 @@ public static class CourseManagementRegistration
     public static string? WorkspaceName(string kind, string? given, string firstName, string lastName)
     {
         var name = given?.Trim();
-        if (string.IsNullOrEmpty(name) && kind == TeacherKind) name = $"{firstName.Trim()} {lastName.Trim()}".Trim();
+        if (string.IsNullOrEmpty(name) && kind is TeacherKind or InvitedKind) name = $"{firstName.Trim()} {lastName.Trim()}".Trim();
         return string.IsNullOrEmpty(name) || name.Length > WorkspaceNameLength ? null : name;
     }
 

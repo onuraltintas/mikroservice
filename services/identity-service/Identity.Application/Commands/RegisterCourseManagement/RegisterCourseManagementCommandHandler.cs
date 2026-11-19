@@ -175,7 +175,7 @@ public sealed class RegisterCourseManagementCommandHandler(
     }
 
     private Task PublishWorkspaceAsync(User user, string kind, string workspaceName, CancellationToken cancellationToken) =>
-        publisher.Publish(new CourseManagementWorkspaceRequestedV1(user.Id, CourseManagementRegistration.WorkspaceIdFor(user.Id), workspaceName,
+        !CourseManagementRegistration.OpensWorkspace(kind) ? Task.CompletedTask : publisher.Publish(new CourseManagementWorkspaceRequestedV1(user.Id, CourseManagementRegistration.WorkspaceIdFor(user.Id), workspaceName,
             kind, $"{user.FirstName} {user.LastName}".Trim(), timeProvider.GetUtcNow()), cancellationToken);
 
     private static Result<RegistrationOutcome> Failure(string code, string message) =>

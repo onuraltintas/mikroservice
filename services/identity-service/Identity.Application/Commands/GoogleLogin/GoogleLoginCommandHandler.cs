@@ -337,6 +337,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                             registered.SetPhoneNumber(coursePhone!);
                             user = registered;
                         }
+                        if (Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.OpensWorkspace(request.Signup!.Kind))
                         await _profileEvents.Publish(new EduPlatform.Shared.Contracts.Events.CourseManagement.CourseManagementWorkspaceRequestedV1(
                             userId,
                             Identity.Application.Commands.RegisterCourseManagement.CourseManagementRegistration.WorkspaceIdFor(userId),

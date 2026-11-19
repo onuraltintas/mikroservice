@@ -209,6 +209,8 @@ api.MapGet("/me/workspaces", async (ClaimsPrincipal user, ICourseManagementStore
         institutionCategory = workspace.InstitutionCategory?.ToString() }));
 });
 app.MapWorkspaceEndpoints(api);
+// Teachers invited by e-mail address (maxkampus.com/davet).
+api.MapTeacherInvitationEndpoints(app);
 api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
 api.MapFinanceEndpoints();

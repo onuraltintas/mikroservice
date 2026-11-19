@@ -68,6 +68,18 @@ public sealed class CourseManagementRegistrationTests
     }
 
     [Fact]
+    public async Task An_invited_teacher_gets_the_teacher_role_and_no_workspace_of_their_own()
+    {
+        await using var db = Db();
+        var setup = Setup(db, created: User.Create(Guid.NewGuid(), "test-davet@example.test", "TEST", "Öğretmen"));
+        var result = await setup.Handler.Handle(new RegisterCourseManagementCommand("invited", "test-davet@example.test", Password,
+            "TEST", "Öğretmen", "05321234567", null), CancellationToken.None);
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
+        Assert.Empty(setup.Publisher.Messages.OfType<CourseManagementWorkspaceRequestedV1>());
+        Assert.Equal("CourseTeacher", Assert.Single(setup.Publisher.Messages.OfType<UserRegisteredEvent>()).Role);
+    }
+
+    [Fact]
     public async Task A_weak_password_opens_no_new_account()
     {
         await using var db = Db();
