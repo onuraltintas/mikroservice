@@ -210,6 +210,7 @@ api.MapAssignmentEndpoints();
 api.MapCourseEmailEndpoints(app);
 app.MapSupportAccessEndpoints(api);
 api.MapOverviewEndpoints();
+api.MapStudentSearchEndpoints();
 app.Run();
 
 public sealed record UpdateProfileRequest(string DisplayName);

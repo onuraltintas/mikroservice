@@ -237,6 +237,19 @@ test('institution panel: switched-off student portal and files, teacher homework
     const members = await (await call(`${ws}/members`, owner)).json();
     assert.equal(members.find(member => member.userId === teacherId).displayName, 'TEST Öğretmen');
 
+    // The student list: search, filters and pages; a teacher sees no contact details or money.
+    const search = (query, bearer = owner) => call(`${ws}/students/search?${query}`, bearer).then(response => response.json());
+    assert.equal((await search('q=mehmet')).total, 1);
+    assert.equal((await search('q=TEST%20Veli')).items[0].displayName, 'TEST Mehmet', 'guardian names are searched too');
+    assert.equal((await search(`groupId=${groupId}&take=1&sort=-name`)).items[0].displayName, 'TEST Mehmet');
+    assert.equal((await search(`groupId=${groupId}&take=1&skip=1&sort=-name`)).items[0].displayName, 'TEST Ayşe');
+    assert.equal((await search('status=archived')).total, 0);
+    const teacherView = await search('', teacher);
+    assert.equal(teacherView.total, 2);
+    assert.equal(teacherView.items[0].email, null);
+    assert.equal(teacherView.items[0].overdueAmount, null);
+    assert.equal((await call(`${ws}/students/search?take=500`, owner)).status, 400);
+
     // Support access: the platform sees no records until the owner approves a named administrator's request.
     const adminId = randomUUID();
     const admin = token('coaching', adminId, 'SystemAdmin', { amr: 'mfa' });
