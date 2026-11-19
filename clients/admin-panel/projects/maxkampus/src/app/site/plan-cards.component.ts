@@ -26,8 +26,15 @@ interface PlanCard { plan: BillingCatalogPlan; note: SiteEntry | null; featured:
             <h3>{{ card.note?.title || card.plan.name }}</h3>
             <p class="plan__price">
               @if (card.plan.isContactOnly) { <span>Teklif alın</span> }
-              @else { <strong class="num">{{ money(card.plan.price, card.plan.currency) }}</strong> <span class="mk-muted">/ {{ period(card.plan.durationDays) }}</span> }
+              @else {
+                <strong class="num">{{ money(card.plan.price, card.plan.currency) }}</strong>
+                @if (card.plan.vatRate != null) { <span class="mk-muted">+ KDV</span> }
+                <span class="mk-muted">/ {{ period(card.plan.durationDays) }}</span>
+              }
             </p>
+            @if (!card.plan.isContactOnly && card.plan.vatRate != null) {
+              <p class="mk-muted plan__vat">KDV dahil {{ money(card.plan.priceWithVat ?? card.plan.price, card.plan.currency) }}</p>
+            }
             @if (card.note?.body || card.plan.description) { <p class="mk-muted">{{ card.note?.body || card.plan.description }}</p> }
             @if (highlights(card).length) {
               <ul class="plan__list">@for (line of highlights(card); track line) { <li>{{ line }}</li> }</ul>
@@ -48,6 +55,7 @@ interface PlanCard { plan: BillingCatalogPlan; note: SiteEntry | null; featured:
     .plan--featured { border: 2px solid var(--ds-accent); }
     .plan h3 { margin: 0; font-size: 20px; }
     .plan__price { margin: 0; font-size: 15px; } .plan__price strong { font-size: 30px; }
+    .plan__vat { margin: 2px 0 0; font-size: 14px; }
     .plan p { margin: 0; }
     .plan__list { margin: 0; padding-left: 20px; flex: 1; }
     .plan .ds-btn { align-self: stretch; margin-top: auto; }

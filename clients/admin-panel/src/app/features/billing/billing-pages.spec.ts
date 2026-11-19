@@ -109,11 +109,17 @@ describe('Abonelik ve Ödeme pages', () => {
     expect(component.settingsChanged(courses)).toBe(false);
     component.saveSettings(coaching);
 
-    expect(billing.updateProductSettings).toHaveBeenCalledWith('p-coaching', { requireSubscription: true, bankTransferApproval: 'Automatic' });
+    expect(billing.updateProductSettings).toHaveBeenCalledWith('p-coaching', { requireSubscription: true, bankTransferApproval: 'Automatic', businessSales: false });
     fixture.detectChanges();
     expect(component.products()[0].requireSubscription).toBe(true);
     expect(component.products()[1].requireSubscription).toBe(false);
-    expect(element.querySelector('[data-testid="product-coaching"]')?.textContent).toContain('abonelik isteniyor · otomatik onay');
+    expect(element.querySelector('[data-testid="product-coaching"]')?.textContent).toContain('abonelik isteniyor, otomatik onay, tüketiciye satış');
+
+    // maxkampüs (20.11.2026): a product can be sold to businesses — business contract, no withdrawal.
+    component.settingsDrafts()[courses.id].businessSales = true;
+    expect(component.settingsChanged(courses)).toBe(true);
+    component.saveSettings(courses);
+    expect(billing.updateProductSettings).toHaveBeenCalledWith(courses.id, expect.objectContaining({ businessSales: true }));
   });
 
   it('products: a new entitlement starts with the product code and deleting asks first', () => {
@@ -194,6 +200,25 @@ describe('Abonelik ve Ödeme pages', () => {
       buyerType: 'Institution', trialDays: 0, seatCount: null,
       entitlements: [{ entitlementId: 'e-workspace', holder: 'Buyer', limitValue: 100 }]
     }));
+  });
+
+  it('plans: a net price gets a VAT rate (20 by default) and the form shows what the buyer pays', () => {
+    const { component, billing } = setup(BillingPlansComponent);
+    component.start();
+    const draft = component.draft()!;
+    Object.assign(draft, { name: '10 öğrenci (aylık)', price: 500, durationDays: 30 });
+    expect(component.toRequest(draft).vatRate).toBeNull();
+    draft.addsVat = true;
+    component.syncVat();
+    expect(draft.vatRate).toBe(20);
+    expect(component.withVat(draft)).toBe(600);
+    draft.groups.flatMap(group => group.choices).find(choice => choice.key === 'course-management.workspace')!.buyer = true;
+    draft.groups.flatMap(group => group.choices).find(choice => choice.key === 'course-management.workspace')!.limitValue = 10;
+    component.save();
+    expect(billing.createPlan).toHaveBeenCalledWith(expect.objectContaining({ price: 500, vatRate: 20 }));
+    draft.addsVat = false;
+    component.syncVat();
+    expect(component.toRequest(draft).vatRate).toBeNull();
   });
 
   it('plans: a plan that gives nothing is not sent', () => {

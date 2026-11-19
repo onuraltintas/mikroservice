@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
-  BILLING_NAME_SETTLE_MS, BillingHttp, BillingOrder, BillingPlan, MyBilling, MySubscriptionController, billingDuration, billingError, billingMoney,
+  BILLING_NAME_SETTLE_MS, BillingHttp, BillingOrder, BillingPlan, MyBilling, MySubscriptionController, billingBreakdown, billingDuration, billingError, billingMoney,
   billingOrderStatus, billingPlansFor, billingReceiptProblem
 } from '../../../../../shared/billing/my-subscription';
 import { AuthService } from '../../core/auth/auth.service';
@@ -57,6 +57,18 @@ function controller(responses: Record<string, unknown>, roles: string[] = ['Stud
   });
   return { c, saved, ...server, changes: () => changes };
 }
+
+describe('Aboneliğim: VAT and business documents (maxkampüs, 20.11.2026)', () => {
+  const net: BillingPlan = { id: 'v', name: '10 öğrenci', description: '', buyerType: 'Individual', price: 500, currency: 'TRY', durationDays: 30,
+    trialDays: 0, seatCount: null, extraSeatPrice: null, isContactOnly: false, features: [], productCodes: ['course-management'], vatRate: 20, priceWithVat: 600 };
+
+  it('a net price shows net, VAT and total; a coupon quote is taken as billing computed it', () => {
+    expect(billingBreakdown(net, null)).toEqual({ net: 500, vat: 100, total: 600, rate: 20 });
+    expect(billingBreakdown(net, { code: 'X', listPrice: 500, discount: 100, amount: 480, currency: 'TRY', vatRate: 20, vatAmount: 80 }))
+      .toEqual({ net: 400, vat: 80, total: 480, rate: 20 });
+    expect(billingBreakdown({ ...net, vatRate: null, priceWithVat: 749, price: 749 }, null)).toEqual({ net: 749, vat: 0, total: 749, rate: null });
+  });
+});
 
 describe('Aboneliğim (shared billing page)', () => {
   it('formats money, durations, states and server sentences the Turkish way', () => {

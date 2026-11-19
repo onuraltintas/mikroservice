@@ -31,6 +31,9 @@ interface PlanDraft {
   description: string;
   buyerType: BuyerType;
   price: number;
+  /** false: the price includes taxes (Koçluk, Hızlı Okuma); true: the price is net and VAT at vatRate is added. */
+  addsVat: boolean;
+  vatRate: number | null;
   durationDays: number;
   trialDays: number;
   hasSeats: boolean;
@@ -81,6 +84,16 @@ interface PlanDraft {
             </label>
             <label>Süre (gün)<input type="number" [(ngModel)]="plan.durationDays" name="planDurationDays" min="1" max="3650" required /></label>
             <label>Fiyat (TL)<input type="number" [(ngModel)]="plan.price" name="planPrice" min="0" step="0.01" required [disabled]="plan.isContactOnly" /></label>
+            <label>KDV
+              <select [(ngModel)]="plan.addsVat" name="planAddsVat" (ngModelChange)="syncVat()">
+                <option [ngValue]="false">Fiyata KDV dahil</option>
+                <option [ngValue]="true">Fiyat KDV hariç, KDV eklenir</option>
+              </select>
+              @if (plan.addsVat) { <span class="muted">Alıcı {{ withVat(plan) | number:'1.2-2' }} TL öder.</span> }
+            </label>
+            @if (plan.addsVat) {
+              <label>KDV oranı (%)<input type="number" [(ngModel)]="plan.vatRate" name="planVatRate" min="0.01" max="100" step="0.01" required /></label>
+            }
             <label>Ücretsiz deneme (gün)<input type="number" [(ngModel)]="plan.trialDays" name="planTrialDays" min="0" max="90" [disabled]="plan.buyerType === 'Institution'" />
               <span class="muted">{{ plan.buyerType === 'Institution' ? 'Kurum planlarında deneme olmaz.' : '0 yazarsanız deneme sunulmaz.' }}</span></label>
             <label class="check"><input type="checkbox" [(ngModel)]="plan.isContactOnly" (ngModelChange)="syncContactOnly()" name="planContactOnly" /> Fiyat yerine "iletişime geçin" göster</label>
@@ -143,7 +156,7 @@ interface PlanDraft {
                 <tr>
                   <td><strong>{{ plan.name }}</strong>@if (plan.trialDays) { <div class="muted">{{ plan.trialDays }} gün deneme</div> }</td>
                   <td>{{ buyerLabel(plan.buyerType) }}</td>
-                  <td>{{ plan.isContactOnly ? 'İletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (plan.currency | currencyName) }}</td>
+                  <td>{{ plan.isContactOnly ? 'İletişime geçin' : (plan.price | number:'1.2-2') + ' ' + (plan.currency | currencyName) }}@if (plan.vatRate && !plan.isContactOnly) { <div class="muted">+ %{{ plan.vatRate }} KDV</div> }</td>
                   <td>{{ plan.durationDays }} gün</td>
                   <td>{{ plan.seatCount ?? '—' }}@if (plan.extraSeatPrice) { <div class="muted">ek koltuk {{ plan.extraSeatPrice | number:'1.2-2' }}</div> }</td>
                   <td>{{ productNames(plan) }}@if (plan.productCodes.length > 1) { <div><span class="badge">Paket</span></div> }</td>
@@ -203,6 +216,8 @@ export class BillingPlansComponent implements OnInit {
       description: plan?.description ?? '',
       buyerType: plan?.buyerType ?? 'Individual',
       price: plan?.price ?? 0,
+      addsVat: plan?.vatRate != null,
+      vatRate: plan?.vatRate ?? null,
       durationDays: plan?.durationDays ?? 30,
       trialDays: plan?.trialDays ?? 0,
       hasSeats: plan?.seatCount != null,
@@ -247,6 +262,21 @@ export class BillingPlansComponent implements OnInit {
     plan.groups.forEach(group => group.choices.forEach(choice => choice.seatHolder = false));
   }
 
+  /** Turkey's standard rate is offered when VAT is switched on. */
+  syncVat(): void {
+    const plan = this.draft();
+    if (!plan) return;
+    if (plan.addsVat && plan.vatRate == null) plan.vatRate = 20;
+    if (!plan.addsVat) plan.vatRate = null;
+  }
+
+  /** What the buyer pays for a net price: the price plus VAT, to the kuruş. */
+  withVat(plan: PlanDraft): number {
+    const price = Number(plan.price) || 0;
+    const rate = plan.addsVat ? Number(plan.vatRate) || 0 : 0;
+    return Math.round((price + price * rate / 100) * 100) / 100;
+  }
+
   syncContactOnly(): void {
     const plan = this.draft();
     if (plan?.isContactOnly) plan.price = 0;
@@ -260,6 +290,7 @@ export class BillingPlansComponent implements OnInit {
       description: plan.description.trim() || null,
       buyerType: plan.buyerType,
       price: plan.isContactOnly ? 0 : Number(plan.price) || 0,
+      vatRate: plan.addsVat ? number(plan.vatRate) : null,
       durationDays: Number(plan.durationDays) || 0,
       trialDays: plan.buyerType === 'Institution' ? 0 : Number(plan.trialDays) || 0,
       seatCount: plan.hasSeats ? number(plan.seatCount) : null,
