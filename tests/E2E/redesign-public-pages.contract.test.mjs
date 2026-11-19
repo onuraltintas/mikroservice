@@ -40,5 +40,21 @@ test('the public pages carry their brand and the company line', () => {
   assert.match(layout, /ONAL Yazılım ve Otomasyon\. Tüm hakları saklıdır\./);
   const home = read('clients/admin-panel/src/app/features/public/eduivme-home.component.ts');
   assert.match(home, /data-brand="eduivme"/);
-  assert.match(home, /ONAL Yazılım ve Otomasyon\. Tüm hakları saklıdır\./);
+  // eduivme.com (19.11.2026): the frame of every page carries the brand and the company line.
+  const frame = read('clients/admin-panel/src/app/features/public/eduivme/eduivme-site-layout.component.ts');
+  assert.match(frame, /data-brand="eduivme"/);
+  assert.match(frame, /ONAL Yazılım ve Otomasyon\. Tüm hakları saklıdır\./);
+});
+
+test('eduivme.com reads its content from site-service on its own address and shows product pages', () => {
+  const site = block(':80');
+  const content = site.indexOf('@siteContent path /api/site/*');
+  assert.ok(content > 0 && content < site.indexOf('@management path'), 'the site content route comes before the management redirect');
+  assert.match(site, /handle @siteContent \{\n\s*reverse_proxy api-gateway:8080/);
+  const routes = read('clients/admin-panel/src/app/app.routes.ts');
+  assert.match(routes, /path: 'urunler\/:slug',\s*canMatch: \[eduivmeHomeHost\]/);
+  const gateway = JSON.parse(read('services/api-gateway/appsettings.json'));
+  assert.equal(gateway.ReverseProxy.Routes['site-public-route'].AuthorizationPolicy, 'Anonymous');
+  assert.equal(gateway.ReverseProxy.Routes['site-public-route'].Match.Path, '/api/site/{**catch-all}');
+  assert.equal(gateway.ReverseProxy.Routes['site-admin-route'].AuthorizationPolicy, undefined);
 });

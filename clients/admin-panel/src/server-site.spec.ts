@@ -20,8 +20,9 @@ describe('server site helpers (O11)', () => {
     expect(robots).toContain('Sitemap: https://maxkoc.com/sitemap.xml');
   });
 
+  // eduivme.com is the parent brand's own site since 19.11.2026; its robots.txt is tested below.
   it('closes the parent, teacher, institution and management addresses to search engines (B5)', () => {
-    for (const origin of ['https://veli.maxkoc.com', 'https://ogretmen.eduivme.com', 'https://kurum.eduivme.com', 'https://admin.eduivme.com', 'https://eduivme.com'])
+    for (const origin of ['https://veli.maxkoc.com', 'https://ogretmen.eduivme.com', 'https://kurum.eduivme.com', 'https://admin.eduivme.com'])
       expect(buildRobots(origin)).toBe('User-agent: *\nDisallow: /\n');
     expect(buildRobots('http://localhost:4000')).toContain('Allow: /coaching');
   });
@@ -90,5 +91,27 @@ describe('server site helpers (O11)', () => {
     expect(maxkoc).toContain('content="/brand/og-maxkoc.png"');
     expect(maxkoc).toContain('<title>maxkoç</title>');
     expect(maxkoc).not.toContain('eduivme');
+  });
+});
+
+describe('eduivme.com (19.11.2026)', () => {
+  it('lets search engines read the site and lists the home page and the product pages', async () => {
+    const { buildEduivmeSitemap, isEduivmeSiteHost, productPagePreviewTarget } = await import('./server-site');
+    expect(isEduivmeSiteHost('eduivme.com')).toBe(true);
+    expect(isEduivmeSiteHost('www.eduivme.com')).toBe(true);
+    expect(isEduivmeSiteHost('admin.eduivme.com')).toBe(false);
+    const robots = buildRobots('https://eduivme.com');
+    expect(robots).toContain('Allow: /');
+    expect(robots).toContain('Disallow: /dashboard');
+    expect(robots).toContain('Sitemap: https://eduivme.com/sitemap.xml');
+    const xml = buildEduivmeSitemap('https://eduivme.com', [
+      { slug: 'kurs-yonetimi', lastModified: '2026-11-19T06:00:00Z' },
+      { slug: '../kotu', lastModified: '2026-11-19T06:00:00Z' }
+    ]);
+    expect(xml).toContain('<loc>https://eduivme.com/</loc>');
+    expect(xml).toContain('<loc>https://eduivme.com/urunler/kurs-yonetimi</loc><lastmod>2026-11-19</lastmod>');
+    expect(xml).not.toContain('kotu');
+    expect(productPagePreviewTarget('/urunler/kurs-yonetimi')).toBe('kurs-yonetimi');
+    expect(productPagePreviewTarget('/urunler/../x')).toBeNull();
   });
 });

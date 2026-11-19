@@ -1,5 +1,5 @@
-BG = {'edu': '#1C2430', 'koc': '#1F4E8C', 'ho': '#0B7A64'}
-ACC = {'edu': '#F2B33D', 'koc': '#FFE066', 'ho': '#FF9A3D'}
+BG = {'edu': '#1C2430', 'koc': '#1F4E8C', 'ho': '#0B7A64', 'km': '#3A2E14'}
+ACC = {'edu': '#F2B33D', 'koc': '#FFE066', 'ho': '#FF9A3D', 'km': '#F2B33D'}
 def svg(size, body, label=None):
     a = f' role="img" aria-label="{label}"' if label else ' aria-hidden="true"'
     return f'<svg width="{size}" height="{size}" viewBox="0 0 64 64"{a}>{body}</svg>'
@@ -16,6 +16,8 @@ def i_mark(k, size, label=None):  # B: i harfinin noktası
     extra = ''
     if k == 'koc': extra = '<path d="M22 50h20" stroke="#FFE066" stroke-width="5" stroke-linecap="round"></path>'
     if k == 'ho': extra = '<path d="M20 50h24" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.55"></path><rect x="36" y="46" width="3" height="8" rx="1.5" fill="#FF9A3D"></rect>'
+    # Kurs Yönetimi (19.11.2026): three short marks under the "i", a week of lessons.
+    if k == 'km': extra = '<rect x="18" y="50" width="7" height="4" rx="2" fill="#F2B33D"></rect><rect x="28.5" y="50" width="7" height="4" rx="2" fill="#F2B33D"></rect><rect x="39" y="50" width="7" height="4" rx="2" fill="#F2B33D" opacity="0.45"></rect>'
     body = tile(k) + '<rect x="27" y="27" width="10" height="20" rx="5" fill="#FFFFFF"></rect>' + f'<path d="M24 20c3-6 9-9 14-8" fill="none" stroke="{ACC[k]}" stroke-width="2.5" stroke-linecap="round" opacity="0.6"></path><circle cx="40" cy="14" r="6.5" fill="{ACC[k]}"></circle>' + extra
     return svg(size, body, label)
 

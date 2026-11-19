@@ -87,6 +87,12 @@ export const routes: Routes = [
         canMatch: [eduivmeHomeHost],
         loadComponent: () => import('./features/public/eduivme-home.component').then(m => m.EduivmeHomeComponent)
     },
+    // eduivme.com/urunler/{slug}: a product's page on the parent brand's site (19.11.2026).
+    {
+        path: 'urunler/:slug',
+        canMatch: [eduivmeHomeHost],
+        loadComponent: () => import('./features/public/eduivme/eduivme-product-page.component').then(m => m.EduivmeProductPageComponent)
+    },
 
     // Default Redirect
     {

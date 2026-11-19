@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import { googleAuthOpenerPolicy, resolveServerAllowedHosts, serverTrustProxyHeaders } from './server-config';
-import { CachedFetcher, SITE_BRAND_NAME, SitemapEntry, SocialPreview, brandForHost, buildRobots, buildSitemap, cmsPreviewTarget, enrichHead, publicOrigin } from './server-site';
+import { CachedFetcher, SITE_BRAND_NAME, SitemapEntry, SocialPreview, brandForHost, buildRobots, buildEduivmeSitemap, buildSitemap, cmsPreviewTarget, enrichHead, isEduivmeSiteHost, productPagePreviewTarget, publicOrigin } from './server-site';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -45,12 +45,27 @@ app.get('/robots.txt', (req, res) => {
 });
 
 app.get('/sitemap.xml', async (req, res) => {
+  if (isEduivmeSiteHost(new URL(requestOrigin(req)).hostname)) {
+    const pages = siteApiOrigin ? await sitemapFetcher.json<{ slug: string; lastModified: string }[]>(`${siteApiOrigin}/api/site/sitemap`) : null;
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.type('application/xml').send(buildEduivmeSitemap(requestOrigin(req), pages ?? []));
+    return;
+  }
   const entries = siteApiOrigin ? await sitemapFetcher.json<SitemapEntry[]>(`${siteApiOrigin}/api/coaching/cms/sitemap`) : null;
   res.setHeader('Cache-Control', 'public, max-age=3600');
   res.type('application/xml').send(buildSitemap(requestOrigin(req), entries ?? []));
 });
 
 async function socialPreview(req: express.Request): Promise<SocialPreview | null> {
+  const productPage = productPagePreviewTarget(req.path);
+  if (productPage && siteApiOrigin && isEduivmeSiteHost(new URL(requestOrigin(req)).hostname)) {
+    const view = await previewFetcher.json<{ page: { title: string; body?: string | null; seoTitle?: string | null; seoDescription?: string | null } }>(
+      `${siteApiOrigin}/api/site/pages/${productPage}`);
+    if (!view?.page) return null;
+    const origin = requestOrigin(req);
+    return { title: view.page.seoTitle || `${view.page.title} | eduivme`, description: view.page.seoDescription || view.page.body || null,
+      url: `${origin}/urunler/${productPage}`, image: `${origin}/brand/og-eduivme.png`, type: 'website' };
+  }
   const target = cmsPreviewTarget(req.path);
   if (!target || !siteApiOrigin) return null;
   const entry = await previewFetcher.json<{ title: string; slug: string; summary?: string | null; seoTitle?: string | null;

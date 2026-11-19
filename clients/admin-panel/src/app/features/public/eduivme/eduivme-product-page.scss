@@ -1,0 +1,31 @@
+// eduivme.com product page parts; the shared parts are in eduivme-site.scss.
+.crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--ds-visual-muted); font-size: 15px; }
+.crumb a { color: var(--ds-visual-muted); }
+.crumb a:hover { color: var(--ds-visual-text); }
+.page-brand { display: flex; align-items: center; gap: 14px; font-size: 20px; font-weight: 600; }
+.page-brand img { border-radius: 14px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.feature { display: flex; flex-direction: column; gap: 10px; padding: 26px; border: 1px solid var(--ds-line); border-radius: 18px; background: var(--ds-surface); }
+.feature__icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin-bottom: 4px;
+  border-radius: 14px; background: color-mix(in srgb, var(--ds-accent) 22%, var(--ds-surface)); color: var(--ds-text); }
+.feature h3 { font-size: 19px; font-weight: 700; }
+.feature p { color: var(--ds-muted); font-size: 15px; line-height: 1.6; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; counter-reset: step; }
+.step { display: flex; flex-direction: column; gap: 8px; padding-top: 20px; border-top: 3px solid var(--ds-accent); }
+.step__number { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; margin-bottom: 6px;
+  border-radius: 50%; background: var(--ds-visual-bg); color: var(--ds-visual-text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.step h3 { font-size: 20px; font-weight: 700; }
+.step p { color: var(--ds-muted); font-size: 15px; line-height: 1.6; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; padding: 48px;
+  border-radius: 24px; background: var(--ds-accent); color: var(--ds-on-accent); }
+.cta h2 { font-size: clamp(26px, 3vw, 34px); font-weight: 700; letter-spacing: -0.02em; }
+.cta p { margin-top: 6px; font-size: 18px; }
+.cta__button { background: var(--ds-on-accent); border-color: var(--ds-on-accent); color: var(--ds-accent); }
+.cta__button:hover { background: color-mix(in srgb, var(--ds-on-accent) 85%, var(--ds-accent)); }
+.cta a:focus-visible { outline: 3px solid var(--ds-on-accent); outline-offset: 3px; }
+.missing { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding: 96px 0; }
+.missing h1 { font-size: 34px; }
+.missing p { color: var(--ds-muted); font-size: 18px; }
+
+@media (max-width: 860px) { .cta { padding: 32px 24px; } }

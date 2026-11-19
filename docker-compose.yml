@@ -466,6 +466,45 @@ services:
     restart: "no"
 
   # API Gateway (YARP)
+  # eduivme.com content (redesign 19.11.2026). The job creates the database when it is missing, applies the schema and
+  # writes the first content once; the admin edits it under "eduivme sitesi".
+  site-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/site-service:${RELEASE_TAG:-dev}
+    build:
+      context: .
+      dockerfile: services/site-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
+      - SITE_CONNECTION_STRING=Host=postgres;Port=5432;Database=${POSTGRES_DB_SITE:-eduivme_site};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=${POSTGRES_MAX_POOL_SIZE:-30};GSS Encryption Mode=Disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - edu-network
+
+  site-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/site-service:${RELEASE_TAG:-dev}
+    build:
+      context: .
+      dockerfile: services/site-service/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
+      - SITE_CONNECTION_STRING=Host=postgres;Port=5432;Database=${POSTGRES_DB_SITE:-eduivme_site};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=${POSTGRES_MAX_POOL_SIZE:-30};GSS Encryption Mode=Disable
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=${JWT_ISSUER}
+      - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_KEY_ID=${JWT_KEY_ID:-}
+      - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
+      - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
+      - AllowedHosts=site-service
+    depends_on:
+      site-migrations:
+        condition: service_completed_successfully
+    networks:
+      - edu-network
+
   api-gateway:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/api-gateway:${RELEASE_TAG:-dev}
     build:
@@ -477,6 +516,7 @@ services:
       - ReverseProxy__Clusters__coaching-cluster__Destinations__destination1__Address=http://coaching-service:8080
       - ReverseProxy__Clusters__notification-cluster__Destinations__destination1__Address=http://notification-service:8080
       - ReverseProxy__Clusters__speed-reading-cluster__Destinations__destination1__Address=http://speed-reading-service:8080
+      - ReverseProxy__Clusters__site-cluster__Destinations__destination1__Address=http://site-service:8080
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}

@@ -3,6 +3,14 @@ import { permissionGuard } from '../../core/auth/auth.guard';
 import { ADMIN_PERMISSIONS } from '../../core/auth/permissions';
 
 export const DASHBOARD_ROUTES: Routes = [
+    // eduivme sitesi (19.11.2026): every word of eduivme.com, kept in site-service; the system admin only.
+    { path: 'eduivme', pathMatch: 'full', redirectTo: 'eduivme/home' },
+    {
+        path: 'eduivme/:view',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin' },
+        loadComponent: () => import('../eduivme-site/eduivme-site-admin.component').then(m => m.EduivmeSiteAdminComponent)
+    },
     // "Abonelik ve Ödeme" (billing service, stage 1): one section for every product; the system admin only.
     {
         path: 'billing/overview',
