@@ -203,6 +203,17 @@ test('institution panel: switched-off student portal and files, teacher homework
     const testEmail = await call(`${ws}/email-settings/test`, owner, 'POST', { kind: 1, email: 'sahip@example.test' });
     assert.equal(testEmail.status, 202);
 
+    // The first page: the owner sees money and e-mails, the teacher only their own lessons.
+    const ownerOverview = await (await call(`${ws}/overview`, owner)).json();
+    assert.equal(ownerOverview.role, 'Owner');
+    assert.equal(ownerOverview.finance.monthCollections, 100);
+    const teacherOverview = await (await call(`${ws}/overview`, teacher)).json();
+    assert.equal(teacherOverview.role, 'Teacher');
+    assert.equal(teacherOverview.finance, null);
+    assert.equal((await call(`${ws}/overview`, outsider)).status, 404);
+    const members = await (await call(`${ws}/members`, owner)).json();
+    assert.equal(members.find(member => member.userId === teacherId).displayName, 'TEST Öğretmen');
+
     // Support access: the platform sees no records until the owner approves a named administrator's request.
     const adminId = randomUUID();
     const admin = token('coaching', adminId, 'SystemAdmin', { amr: 'mfa' });

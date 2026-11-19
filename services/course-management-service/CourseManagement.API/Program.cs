@@ -42,6 +42,7 @@ builder.Services.AddScoped<CourseManagementAccountErasureService>();
 builder.Services.AddScoped<ICourseManagementAccountErasureService>(services =>
     services.GetRequiredService<CourseManagementAccountErasureService>());
 builder.Services.AddHttpClient<ICourseManagementLegalHoldStatusProvider, IdentityCourseManagementErasureReadinessProvider>();
+builder.Services.AddHttpClient<IdentityAccountLookup>(client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddSingleton(TimeProvider.System);
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? builder.Configuration["RabbitMQ:Host"];
 var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") ?? builder.Configuration["RabbitMQ:Username"];
@@ -208,6 +209,7 @@ api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
 api.MapCourseEmailEndpoints(app);
 app.MapSupportAccessEndpoints(api);
+api.MapOverviewEndpoints();
 app.Run();
 
 public sealed record UpdateProfileRequest(string DisplayName);

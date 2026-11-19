@@ -143,44 +143,32 @@ public static class WorkspaceEndpoints
             if (!await Owns(db, workspaceId, user, ct)) return Results.NotFound();
             return Results.Ok(await db.Memberships.AsNoTracking().Where(member => member.WorkspaceId == workspaceId)
                 .OrderBy(member => member.UserId).Take(100)
-                .Select(member => new { member.UserId, role = member.Role.ToString(), member.IsActive }).ToListAsync(ct));
+                .Select(member => new { member.UserId, role = member.Role.ToString(), member.IsActive,
+                    displayName = db.UserProfiles.Where(profile => profile.UserId == member.UserId).Select(profile => profile.DisplayName).FirstOrDefault() })
+                .ToListAsync(ct));
         });
 
-        api.MapPost("/workspaces/{workspaceId:guid}/invitations", async (Guid workspaceId, CreateInvitationRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CourseManagementFeatures features, CancellationToken ct) =>
+        api.MapPost("/workspaces/{workspaceId:guid}/invitations", (Guid workspaceId, CreateInvitationRequest request, ClaimsPrincipal user,
+            CourseManagementDbContext db, CourseManagementFeatures features, CancellationToken ct) =>
+            CreateInvitationAsync(workspaceId, request, user, db, features, ct));
+
+        // Teachers are invited by the e-mail of their eduivme account (19.11.2026); the owner never handles account ids.
+        api.MapPost("/workspaces/{workspaceId:guid}/teacher-invitations", async (Guid workspaceId, InviteTeacherByEmailRequest request,
+            ClaimsPrincipal user, CourseManagementDbContext db, CourseManagementFeatures features, IdentityAccountLookup accounts,
+            CancellationToken ct) =>
         {
             if (!await Owns(db, workspaceId, user, ct)) return Results.NotFound();
-            // Without the student application a student account has nothing to open; students stay local records.
-            if (request.Role == WorkspaceRole.Student && !features.StudentPortal)
-                return Results.BadRequest(new { code = "Invitation.StudentPortalDisabled" });
-            if (request.Id == Guid.Empty || request.TargetUserId == Guid.Empty || request.TargetUserId == UserId(user)
-                || request.Role is not (WorkspaceRole.Teacher or WorkspaceRole.Student)
-                || (request.StudentRecordId.HasValue && request.Role != WorkspaceRole.Student))
-                return Results.BadRequest(new { code = "Invitation.InvalidTarget" });
-            var existing = await db.Invitations.FindAsync([request.Id], ct);
-            if (existing is not null)
-                return existing.WorkspaceId == workspaceId && existing.TargetUserId == request.TargetUserId && existing.Role == request.Role
-                    && existing.StudentRecordId == request.StudentRecordId
-                    ? Results.Ok(InvitationView(existing)) : Results.Conflict(new { code = "Invitation.RequestConflict" });
-            if (request.StudentRecordId is Guid studentRecordId && !await db.Students.AnyAsync(student =>
-                student.Id == studentRecordId && student.WorkspaceId == workspaceId && student.IsActive && student.UserId == null, ct))
-                return Results.Conflict(new { code = "Invitation.StudentUnavailable" });
-            if (await db.Memberships.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == request.TargetUserId && member.IsActive, ct))
-                return Results.Conflict(new { code = "Membership.AlreadyActive" });
-            var pending = await db.Invitations.SingleOrDefaultAsync(invitation => invitation.WorkspaceId == workspaceId && invitation.TargetUserId == request.TargetUserId && invitation.Status == InvitationStatus.Pending, ct);
-            var now = DateTimeOffset.UtcNow;
-            if (pending is not null && now < pending.ExpiresAt)
-                return pending.Role == request.Role && pending.StudentRecordId == request.StudentRecordId
-                    ? Results.Ok(InvitationView(pending)) : Results.Conflict(new { code = "Invitation.AlreadyPending" });
-            if (pending is not null) pending.Expire(now);
-            var invitation = WorkspaceInvitation.Create(request.Id, workspaceId, request.TargetUserId, request.Role, now, request.StudentRecordId);
-            // Persist expiry first within the same transaction so the unique pending-target index permits a new invitation.
-            await using var transaction = await db.Database.BeginTransactionAsync(ct);
-            if (pending is not null) await db.SaveChangesAsync(ct);
-            db.Invitations.Add(invitation);
-            Audit(db, workspaceId, UserId(user), invitation.Id, "Invitation.Created");
-            await db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
-            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/invitations", InvitationView(invitation));
+            string? email;
+            try { email = WorkspaceEmailSettings.NormalizeEmail(request.Email); }
+            catch (ArgumentException) { email = null; }
+            if (email is null || request.Id == Guid.Empty) return Results.BadRequest(new { code = "Invitation.InvalidEmail" });
+            var account = await accounts.FindByEmailAsync(email, ct);
+            if (account is null) return Results.NotFound(new { code = "Invitation.AccountNotFound" });
+            if (account.UserId == UserId(user)) return Results.BadRequest(new { code = "Invitation.InvalidTarget" });
+            if (!string.IsNullOrWhiteSpace(account.DisplayName) && await db.UserProfiles.FindAsync([account.UserId], ct) is null)
+                db.UserProfiles.Add(CourseUserProfile.Create(account.UserId, account.DisplayName));
+            return await CreateInvitationAsync(workspaceId, new CreateInvitationRequest(request.Id, account.UserId, WorkspaceRole.Teacher, null),
+                user, db, features, ct);
         });
 
         api.MapGet("/workspaces/{workspaceId:guid}/invitations", async (Guid workspaceId, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
@@ -366,6 +354,44 @@ public static class WorkspaceEndpoints
         });
     }
 
+    private static async Task<IResult> CreateInvitationAsync(Guid workspaceId, CreateInvitationRequest request, ClaimsPrincipal user,
+        CourseManagementDbContext db, CourseManagementFeatures features, CancellationToken ct)
+    {
+            if (!await Owns(db, workspaceId, user, ct)) return Results.NotFound();
+            // Without the student application a student account has nothing to open; students stay local records.
+            if (request.Role == WorkspaceRole.Student && !features.StudentPortal)
+                return Results.BadRequest(new { code = "Invitation.StudentPortalDisabled" });
+            if (request.Id == Guid.Empty || request.TargetUserId == Guid.Empty || request.TargetUserId == UserId(user)
+                || request.Role is not (WorkspaceRole.Teacher or WorkspaceRole.Student)
+                || (request.StudentRecordId.HasValue && request.Role != WorkspaceRole.Student))
+                return Results.BadRequest(new { code = "Invitation.InvalidTarget" });
+            var existing = await db.Invitations.FindAsync([request.Id], ct);
+            if (existing is not null)
+                return existing.WorkspaceId == workspaceId && existing.TargetUserId == request.TargetUserId && existing.Role == request.Role
+                    && existing.StudentRecordId == request.StudentRecordId
+                    ? Results.Ok(InvitationView(existing)) : Results.Conflict(new { code = "Invitation.RequestConflict" });
+            if (request.StudentRecordId is Guid studentRecordId && !await db.Students.AnyAsync(student =>
+                student.Id == studentRecordId && student.WorkspaceId == workspaceId && student.IsActive && student.UserId == null, ct))
+                return Results.Conflict(new { code = "Invitation.StudentUnavailable" });
+            if (await db.Memberships.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == request.TargetUserId && member.IsActive, ct))
+                return Results.Conflict(new { code = "Membership.AlreadyActive" });
+            var pending = await db.Invitations.SingleOrDefaultAsync(invitation => invitation.WorkspaceId == workspaceId && invitation.TargetUserId == request.TargetUserId && invitation.Status == InvitationStatus.Pending, ct);
+            var now = DateTimeOffset.UtcNow;
+            if (pending is not null && now < pending.ExpiresAt)
+                return pending.Role == request.Role && pending.StudentRecordId == request.StudentRecordId
+                    ? Results.Ok(InvitationView(pending)) : Results.Conflict(new { code = "Invitation.AlreadyPending" });
+            if (pending is not null) pending.Expire(now);
+            var invitation = WorkspaceInvitation.Create(request.Id, workspaceId, request.TargetUserId, request.Role, now, request.StudentRecordId);
+            // Persist expiry first within the same transaction so the unique pending-target index permits a new invitation.
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            if (pending is not null) await db.SaveChangesAsync(ct);
+            db.Invitations.Add(invitation);
+            Audit(db, workspaceId, UserId(user), invitation.Id, "Invitation.Created");
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/invitations", InvitationView(invitation));
+    }
+
     private static Guid UserId(ClaimsPrincipal user) => Guid.Parse(user.FindFirstValue("sub")!);
     private static Task<bool> Owns(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user, CancellationToken ct) =>
         db.Workspaces.AnyAsync(workspace => workspace.Id == workspaceId && workspace.OwnerUserId == UserId(user), ct);
@@ -378,6 +404,7 @@ public static class WorkspaceEndpoints
         db.AuditEntries.Add(WorkspaceAuditEntry.Create(workspaceId, actorId, targetId, action));
 }
 
+public sealed record InviteTeacherByEmailRequest(Guid Id, string? Email);
 public sealed record CreateWorkspaceRequest(Guid Id, string Name, WorkspaceType Type);
 public sealed record CreateInvitationRequest(Guid Id, Guid TargetUserId, WorkspaceRole Role, Guid? StudentRecordId = null);
 public sealed record AcceptInvitationRequest(string DisplayName);
