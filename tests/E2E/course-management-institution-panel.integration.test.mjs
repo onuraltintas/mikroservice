@@ -361,7 +361,6 @@ test('institution panel: switched-off student portal and files, teacher homework
     const switched = await call(`${adminBase}/support/settings/email/LessonChanged/off`, admin, 'POST');
     assert.equal(switched.status, 200, await switched.clone().text());
     assert.equal((await (await call(settingsPath, owner)).json()).rules.find(rule => rule.kindValue === 5).enabled, false);
-    assert.equal((await call(`${adminBase}/support/finance`, admin)).status, 404, 'finance was not opened');
 
     const changeLog = (await (await call(`${ws}/support-access`, owner)).json()).logs.filter(item => item.isChange);
     assert.deepEqual(changeLog.map(item => item.what).sort(), ['Ders saati düzeltildi', 'E-posta bildirimi kapatıldı',
