@@ -105,6 +105,22 @@ test('institution panel: switched-off student portal and files, teacher homework
     const accepted = await call(`/participation/invitations/${invitationId}/accept`, teacher, 'POST', { displayName: 'TEST Öğretmen' });
     assert.equal(accepted.status, 200, await accepted.clone().text());
 
+    // maxkampus.com (19.11.2026): a teacher is invited by address; the code travels only in the e-mail link.
+    const emailInviteId = randomUUID();
+    const emailInvite = await call(`${ws}/teacher-email-invitations`, owner, 'POST', { id: emailInviteId, email: ' TEST-Davet@Example.com ' });
+    assert.equal(emailInvite.status, 200, await emailInvite.clone().text());
+    assert.deepEqual((({ email, status }) => ({ email, status }))(await emailInvite.json()), { email: 'test-davet@example.com', status: 'Pending' });
+    // Sending again renews the same invitation instead of opening a second one.
+    assert.equal((await call(`${ws}/teacher-email-invitations`, owner, 'POST', { id: randomUUID(), email: 'test-davet@example.com' })).status, 200);
+    assert.equal((await (await call(`${ws}/teacher-email-invitations`, owner)).json()).length, 1);
+    assert.equal((await call(`${ws}/teacher-email-invitations`, teacher)).status, 404, 'only the owner sees invitations');
+    const unknownCode = 'a'.repeat(64);
+    assert.equal((await fetch(`${base}/api/course-management/public/teacher-invitations/${unknownCode}`)).status, 404);
+    assert.equal((await fetch(`${base}/api/course-management/public/teacher-invitations/kisa`)).status, 404);
+    assert.equal((await call(`/me/teacher-invitations/${unknownCode}/accept`, teacher, 'POST', { displayName: 'TEST' })).status, 404);
+    assert.equal((await call(`${ws}/teacher-email-invitations/${emailInviteId}/cancel`, owner, 'POST')).status, 204);
+    assert.equal((await (await call(`${ws}/teacher-email-invitations`, owner)).json())[0].status, 'Cancelled');
+
     const courseId = randomUUID();
     const groupId = randomUUID();
     const studentA = randomUUID();
