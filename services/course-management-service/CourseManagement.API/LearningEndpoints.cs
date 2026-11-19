@@ -33,7 +33,8 @@ public static class LearningEndpoints
                     && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == UserId(user))));
             return Results.Ok(await students.OrderByDescending(student => student.IsActive).ThenBy(student => student.DisplayName).ThenBy(student => student.Id)
                 .Skip(pageSkip).Take(pageSize)
-                .Select(student => new { student.Id, student.UserId, student.DisplayName, student.Email, student.PhoneNumber, student.IsActive }).ToListAsync(ct));
+                .Select(student => new { student.Id, student.UserId, student.DisplayName, student.Email, student.PhoneNumber, student.IsActive,
+                    student.EmailsMuted }).ToListAsync(ct));
         });
 
         api.MapPost("/workspaces/{workspaceId:guid}/students", async (Guid workspaceId, CreateStudentRequest request, ClaimsPrincipal user, CourseManagementDbContext db, WorkspaceBillingPlans billing, CancellationToken ct) =>

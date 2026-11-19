@@ -78,7 +78,9 @@ public sealed class EmailDeliveryWorker : LeasedDeliveryWorker<EmailDeliveryWork
             delivery.Body,
             delivery.AttemptCount,
             leaseToken,
-            delivery.SubjectUserId);
+            delivery.SubjectUserId,
+            delivery.SenderName is null && delivery.ReplyTo is null && delivery.UnsubscribeUrl is null
+                ? null : new EmailSender(delivery.SenderName, delivery.ReplyTo, delivery.UnsubscribeUrl));
     }
 
     protected override async Task DeliverAsync(EmailDeliveryWorkItem workItem, CancellationToken cancellationToken)
@@ -112,11 +114,10 @@ public sealed class EmailDeliveryWorker : LeasedDeliveryWorker<EmailDeliveryWork
         try
         {
             var body = _bodyProtector.Unprotect(workItem.ProtectedBody);
-            await emailService.SendEmailAsync(
-                workItem.Recipient,
-                workItem.Subject,
-                body,
-                cancellationToken);
+            if (workItem.Sender is null)
+                await emailService.SendEmailAsync(workItem.Recipient, workItem.Subject, body, cancellationToken);
+            else
+                await emailService.SendEmailAsync(workItem.Recipient, workItem.Subject, body, workItem.Sender, cancellationToken);
 
             var sentAt = DateTime.UtcNow;
             var sentRows = await dbContext.EmailDeliveries
@@ -247,5 +248,6 @@ public sealed class EmailDeliveryWorker : LeasedDeliveryWorker<EmailDeliveryWork
         string ProtectedBody,
         int AttemptCount,
         Guid LeaseToken,
-        Guid? SubjectUserId);
+        Guid? SubjectUserId,
+        EmailSender? Sender = null);
 }

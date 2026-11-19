@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using MimeKit;
 using MimeKit.Text;
 using Notification.Application.Interfaces;
+using Notification.Domain.Entities;
 
 namespace Notification.Infrastructure.Services;
 
@@ -29,7 +30,11 @@ public class EmailService : IEmailService
             : throw new InvalidOperationException($"SMTP port '{value}' is not a valid port number.");
     }
 
-    public async Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
+    public Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default) =>
+        SendEmailAsync(to, subject, body, null, cancellationToken);
+
+    public async Task SendEmailAsync(string to, string subject, string body, EmailSender? sender,
+        CancellationToken cancellationToken = default)
     {
         var email = new MimeMessage();
         
@@ -38,7 +43,15 @@ public class EmailService : IEmailService
                         ?? _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "noreply@eduivme.com";
         var fromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME") 
                       ?? _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "eduivme";
-        email.From.Add(new MailboxAddress(fromName, fromEmail));
+        // Another sender's name, never its address: the platform's address keeps SPF and DMARC passing.
+        email.From.Add(new MailboxAddress(string.IsNullOrWhiteSpace(sender?.Name) ? fromName : sender.Name, fromEmail));
+        if (!string.IsNullOrWhiteSpace(sender?.ReplyTo) && MailboxAddress.TryParse(sender.ReplyTo, out var replyTo))
+            email.ReplyTo.Add(replyTo);
+        if (!string.IsNullOrWhiteSpace(sender?.UnsubscribeUrl))
+        {
+            email.Headers.Add("List-Unsubscribe", $"<{sender.UnsubscribeUrl}>");
+            email.Headers.Add("List-Unsubscribe-Post", "List-Unsubscribe=One-Click");
+        }
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;
         email.Body = new TextPart(TextFormat.Html) { Text = body };

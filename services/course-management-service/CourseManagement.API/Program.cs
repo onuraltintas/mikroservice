@@ -115,6 +115,16 @@ builder.Services.AddSingleton<ICourseAssignmentAttachmentScanner>(attachmentOpti
     : new DevelopmentCourseAssignmentAttachmentScanner());
 builder.Services.AddHostedService<CourseAssignmentAttachmentCleanupService>();
 builder.Services.AddHostedService<CourseManagementReminderWorker>();
+// E-mails to students and guardians (19.11.2026): settings, sending record and unsubscribe links.
+var emailOptions = builder.Configuration.GetSection(CourseEmailOptions.SectionName).Get<CourseEmailOptions>() ?? new CourseEmailOptions();
+if (builder.Environment.IsProduction() && (emailOptions.UnsubscribeKey == CourseEmailOptions.DevelopmentKey
+        || emailOptions.UnsubscribeKey.Length < 32))
+    throw new InvalidOperationException("Production Course Management e-mails require their own unsubscribe key (32+ characters).");
+if (!Uri.TryCreate(emailOptions.PublicBaseUrl, UriKind.Absolute, out var emailBase) || emailBase.Scheme != Uri.UriSchemeHttps
+        && !builder.Environment.IsDevelopment())
+    throw new InvalidOperationException("Course Management e-mail links need an absolute https base address.");
+builder.Services.AddSingleton(emailOptions);
+builder.Services.AddHostedService<CourseEmailWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddAuthorization(options =>
 {
@@ -185,6 +195,7 @@ api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
+api.MapCourseEmailEndpoints(app);
 app.Run();
 
 public sealed record UpdateProfileRequest(string DisplayName);

@@ -29,6 +29,11 @@ public class EmailDelivery
     public Guid? LeaseToken { get; private set; }
     public DateTime? SentAt { get; private set; }
     public string? LastError { get; private set; }
+    /// <summary>Shown as the sender's name instead of the platform's (an institution's e-mail to its students).</summary>
+    public string? SenderName { get; private set; }
+    public string? ReplyTo { get; private set; }
+    /// <summary>List-Unsubscribe link for mail programs (one-click, RFC 8058).</summary>
+    public string? UnsubscribeUrl { get; private set; }
 
     private EmailDelivery() { }
 
@@ -38,10 +43,14 @@ public class EmailDelivery
         string recipient,
         string subject,
         string body,
-        Guid? subjectUserId = null)
+        Guid? subjectUserId = null,
+        EmailSender? sender = null)
     {
         return new EmailDelivery
         {
+            SenderName = sender?.Name,
+            ReplyTo = sender?.ReplyTo,
+            UnsubscribeUrl = sender?.UnsubscribeUrl,
             Id = Guid.NewGuid(),
             MessageId = messageId,
             SubjectUserId = subjectUserId,
@@ -65,3 +74,6 @@ public class EmailDelivery
         return leaseToken;
     }
 }
+
+/// <summary>Who an e-mail appears to come from when it is not the platform itself.</summary>
+public sealed record EmailSender(string? Name, string? ReplyTo, string? UnsubscribeUrl);

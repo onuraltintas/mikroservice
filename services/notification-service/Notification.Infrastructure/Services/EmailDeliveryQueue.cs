@@ -39,8 +39,12 @@ public sealed class EmailDeliveryQueue : IEmailDeliveryQueue
         await InsertAsync(messageId, consumerType, recipient, subject, body, subjectUserId, cancellationToken);
     }
 
+    public Task QueueFromAsync(Guid messageId, string consumerType, string recipient, string subject, string body,
+        EmailSender sender, CancellationToken cancellationToken = default) =>
+        InsertAsync(messageId, consumerType, recipient, subject, body, null, cancellationToken, sender);
+
     private async Task InsertAsync(Guid messageId, string consumerType, string recipient, string subject, string body,
-        Guid? subjectUserId, CancellationToken cancellationToken)
+        Guid? subjectUserId, CancellationToken cancellationToken, EmailSender? sender = null)
     {
         var delivery = EmailDelivery.Create(
             messageId,
@@ -48,18 +52,19 @@ public sealed class EmailDeliveryQueue : IEmailDeliveryQueue
             recipient,
             subject,
             _bodyProtector.Protect(body),
-            subjectUserId);
+            subjectUserId,
+            sender);
 
         // The unique key is enforced atomically in PostgreSQL. A check-then-insert
         // sequence would still allow two replicas to enqueue the same event.
         await _dbContext.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "EmailDeliveries"
                 ("Id", "MessageId", "SubjectUserId", "ConsumerType", "Recipient", "Subject", "Body",
-                 "Status", "AttemptCount", "CreatedAt", "NextAttemptAt")
+                 "Status", "AttemptCount", "CreatedAt", "NextAttemptAt", "SenderName", "ReplyTo", "UnsubscribeUrl")
             VALUES
                 ({delivery.Id}, {delivery.MessageId}, {delivery.SubjectUserId}, {delivery.ConsumerType}, {delivery.Recipient},
                  {delivery.Subject}, {delivery.Body}, {(int)delivery.Status}, {delivery.AttemptCount},
-                 {delivery.CreatedAt}, {delivery.NextAttemptAt})
+                 {delivery.CreatedAt}, {delivery.NextAttemptAt}, {delivery.SenderName}, {delivery.ReplyTo}, {delivery.UnsubscribeUrl})
             ON CONFLICT ("MessageId", "ConsumerType") DO NOTHING
             """, cancellationToken);
     }

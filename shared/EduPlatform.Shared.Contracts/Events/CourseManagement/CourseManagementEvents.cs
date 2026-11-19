@@ -46,3 +46,20 @@ public sealed record CourseManagementReminderDueV1(
     Guid RecipientUserId,
     string ReminderType,
     DateTimeOffset TargetAt);
+
+/// <summary>
+/// An institution's e-mail to a student or guardian (19.11.2026). Course Management decides whether, whom and what;
+/// the notification service only lays it out and sends it. Paragraphs are plain text (escaped when rendered).
+/// The sender shows the institution's name; replies go to the institution's address when it gave one.
+/// </summary>
+public sealed record CourseManagementEmailRequestedV1(
+    Guid EmailId,
+    Guid WorkspaceId,
+    string InstitutionName,
+    string? ReplyTo,
+    string RecipientEmail,
+    string Subject,
+    string Title,
+    IReadOnlyList<string> Paragraphs,
+    string? InstitutionNote,
+    string UnsubscribeUrl);

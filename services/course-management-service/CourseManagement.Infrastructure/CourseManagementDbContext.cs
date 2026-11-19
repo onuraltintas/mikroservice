@@ -29,6 +29,9 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<MakeupCredit> MakeupCredits => Set<MakeupCredit>();
     public DbSet<CourseAssignment> Assignments => Set<CourseAssignment>();
+    public DbSet<WorkspaceEmailSettings> EmailSettings => Set<WorkspaceEmailSettings>();
+    public DbSet<CourseEmail> Emails => Set<CourseEmail>();
+    public DbSet<CourseEmailOptOut> EmailOptOuts => Set<CourseEmailOptOut>();
     public DbSet<CourseAssignmentRecipient> AssignmentRecipients => Set<CourseAssignmentRecipient>();
     public DbSet<CourseAssignmentSubmission> AssignmentSubmissions => Set<CourseAssignmentSubmission>();
     public DbSet<CourseAssignmentAttachment> AssignmentAttachments => Set<CourseAssignmentAttachment>();
@@ -221,6 +224,40 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasOne<Course>().WithMany().HasForeignKey(assignment => assignment.CourseId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<CourseGroup>().WithMany().HasForeignKey(assignment => assignment.GroupId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<StudentRecord>().WithMany().HasForeignKey(assignment => assignment.StudentId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<WorkspaceEmailSettings>(entity =>
+        {
+            entity.ToTable("WorkspaceEmailSettings");
+            entity.HasKey(settings => settings.WorkspaceId);
+            entity.Ignore(settings => settings.Rules);
+            entity.Property(settings => settings.RulesJson).HasColumnType("jsonb");
+            entity.Property(settings => settings.ReplyToEmail).HasMaxLength(320);
+            entity.HasOne<Workspace>().WithOne().HasForeignKey<WorkspaceEmailSettings>(settings => settings.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<CourseEmail>(entity =>
+        {
+            entity.ToTable("CourseEmails");
+            entity.HasKey(email => email.Id);
+            entity.Ignore(email => email.References);
+            entity.Property(email => email.DedupKey).HasMaxLength(200);
+            entity.Property(email => email.ReferencesJson).HasColumnType("jsonb");
+            entity.Property(email => email.Subject).HasMaxLength(200);
+            entity.Property(email => email.Recipients).HasMaxLength(CourseEmail.MaxRecipientsLength);
+            entity.Property(email => email.SkipReason).HasMaxLength(100);
+            entity.HasIndex(email => new { email.WorkspaceId, email.DedupKey }).IsUnique();
+            entity.HasIndex(email => new { email.Status, email.DueAt });
+            entity.HasIndex(email => new { email.WorkspaceId, email.CreatedAt });
+            entity.HasOne<Workspace>().WithMany().HasForeignKey(email => email.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<StudentRecord>().WithMany().HasForeignKey(email => email.StudentId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<CourseEmailOptOut>(entity =>
+        {
+            entity.ToTable("CourseEmailOptOuts");
+            entity.HasKey(optOut => optOut.Id);
+            entity.Property(optOut => optOut.Email).HasMaxLength(320);
+            entity.HasIndex(optOut => new { optOut.WorkspaceId, optOut.Email }).IsUnique();
+            entity.HasOne<Workspace>().WithMany().HasForeignKey(optOut => optOut.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<CourseAssignmentRecipient>(entity =>
         {

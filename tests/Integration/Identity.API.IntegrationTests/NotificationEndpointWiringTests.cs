@@ -54,10 +54,10 @@ public sealed class NotificationEndpointWiringTests
 
         on.Should().BeEquivalentTo(NotificationReceiveEndpoints.All);
         NotificationReceiveEndpoints.All.Where(endpoint => endpoint.CourseManagement).Select(endpoint => endpoint.Queue)
-            .Should().HaveCount(8).And.OnlyContain(queue => queue.StartsWith("course-management-"));
+            .Should().HaveCount(9).And.OnlyContain(queue => queue.StartsWith("course-management-"));
         off.Should().NotContain(endpoint => endpoint.Queue.StartsWith("course-management-")
             || endpoint.Consumer.Name.StartsWith("CourseManagement"));
-        off.Should().HaveCount(NotificationReceiveEndpoints.All.Count - 8);
+        off.Should().HaveCount(NotificationReceiveEndpoints.All.Count - 9);
     }
 
     [Theory]
