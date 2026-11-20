@@ -86,3 +86,24 @@ test('payments: only the date is shown, a payment can be taken back with a reaso
   assert.match(finance, /reversePayment\(this\.state\.id\(\), row\.id/);
   assert.match(finance, /evenSplit\(form\.amount, form\.count\) \? '' : 'yaklaşık '/);
 });
+
+// E and F: reports, settings, brand.
+test('reports are Turkish tables for Excel with plain file names', () => {
+  const reports = read(`${panel}/course-management-reports.ts`);
+  assert.match(reports, /const CSV_SEPARATOR = ';'/);
+  assert.doesNotMatch(reports, /'record_type', 'report', 'workspace', 'scope'/);
+  assert.match(reports, /headers: \['Öğrenci', 'Durum'\]/);
+  const section = read(`${panel}/panel/sections/reports.component.ts`);
+  assert.match(section, /courseReportFileName\(table\.title\)/);
+  assert.doesNotMatch(section, /-\$\{this\.state\.id\(\)\}`/);
+  assert.doesNotMatch(section, /iletişim bilgileriyle/);
+});
+
+test('settings: the profile name is shown, maxkampüs names itself, unsubscribe links default to maxkampus.com', () => {
+  const settings = read(`${panel}/panel/sections/settings.component.ts`);
+  assert.match(settings, /readonly displayName = signal\(''\)/);
+  assert.match(settings, /\{\{ state\.brand\(\) \}\} destek ekibi/);
+  assert.doesNotMatch(settings, /eduivme aboneliğinizden/);
+  assert.match(read('clients/admin-panel/projects/maxkampus/src/app/panel/panel-gate.component.ts'), /site="maxkampus"/);
+  assert.match(read('services/course-management-service/CourseManagement.API/CourseEmails.cs'), /PublicBaseUrl \{ get; init; \} = "https:\/\/maxkampus\.com"/);
+});

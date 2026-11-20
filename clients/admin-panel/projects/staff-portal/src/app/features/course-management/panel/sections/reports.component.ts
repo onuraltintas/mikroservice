@@ -2,13 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import {
   CourseManagementService, CourseReportTable, buildCourseAssignmentProgressReport, buildCourseFinanceSummaryCsv,
   buildCourseFinanceWorkspaceReport, buildCourseLessonAttendanceReport, buildCourseReportCsv, buildCourseReportPrintHtml,
-  buildCourseStudentRosterReport
+  buildCourseStudentRosterReport, courseReportFileName
 } from '../../course-management.service';
 import { CoursePanelState, problemText } from '../panel-state';
 
 type ReportId = 'students' | 'attendance' | 'homework' | 'debts' | 'finance';
 const REPORTS: { id: ReportId; title: string; text: string; ownerOnly: boolean; print: boolean }[] = [
-  { id: 'students', title: 'Öğrenci listesi', text: 'Etkin ve arşivdeki öğrenciler, iletişim bilgileriyle.', ownerOnly: false, print: true },
+  { id: 'students', title: 'Öğrenci listesi', text: 'Etkin ve arşivdeki öğrenciler. E-posta ve telefon dosyaya yazılmaz.', ownerOnly: false, print: true },
   { id: 'attendance', title: 'Ders ve yoklama', text: 'Son 7 gün ile önümüzdeki 30 gündeki dersler ve her öğrencinin yoklaması.', ownerOnly: false, print: true },
   { id: 'homework', title: 'Ödev durumu', text: 'Verilen ödevler ve kaç öğrenciye verildiği.', ownerOnly: false, print: true },
   { id: 'debts', title: 'Borç ve paket durumu', text: 'Geciken ve önümüzdeki 30 gündeki taksitler, kalan paket hakları.', ownerOnly: true, print: true },
@@ -48,8 +48,9 @@ export class ReportsSectionComponent {
     const workspace = this.state.id();
     switch (id) {
       case 'students': return buildCourseStudentRosterReport(await this.service.getStudentRosterForReport(workspace));
-      case 'attendance': return buildCourseLessonAttendanceReport(await this.service.getLessonAttendanceForReport(workspace));
-      case 'homework': return buildCourseAssignmentProgressReport(await this.service.getAssignmentProgressForReport(workspace));
+      case 'attendance': return buildCourseLessonAttendanceReport(await this.service.getLessonAttendanceForReport(workspace), id => this.state.teacherName(id));
+      case 'homework': return buildCourseAssignmentProgressReport(await this.service.getAssignmentProgressForReport(workspace),
+        groupId => this.state.groups().find(group => group.id === groupId)?.name ?? '', id => this.state.teacherName(id));
       default: return buildCourseFinanceWorkspaceReport(await this.service.getFinanceWorkspaceReport(workspace));
     }
   }
@@ -67,8 +68,11 @@ export class ReportsSectionComponent {
     this.busy.set(true); this.error.set('');
     try {
       const name = this.state.workspace()?.name ?? 'kurs';
-      if (id === 'finance') this.download(buildCourseFinanceSummaryCsv(await this.service.getFinanceSummary(this.state.id())), `tahsilat-ozeti-${this.state.id()}`);
-      else this.download(buildCourseReportCsv(name, await this.table(id)), `${id}-${this.state.id()}`);
+      if (id === 'finance') this.download(buildCourseFinanceSummaryCsv(await this.service.getFinanceSummary(this.state.id())), courseReportFileName('Tahsilat özeti'));
+      else {
+        const table = await this.table(id);
+        this.download(buildCourseReportCsv(name, table), courseReportFileName(table.title));
+      }
     } catch (error) { this.error.set(problemText(error, 'Rapor hazırlanamadı.')); }
     finally { this.busy.set(false); }
   }

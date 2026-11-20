@@ -157,8 +157,8 @@ const KINDS: Record<string, { title: string; when: string }> = {
       @case ('profile') {
         <form class="card card-pad stack" style="gap: 14px; max-width: 520px" (ngSubmit)="saveProfile()">
           <h2>Profilim</h2>
-          <label class="field">Görünen adınız<input name="displayName" [(ngModel)]="displayName" maxlength="200"><span class="hint">Takvimde ve listelerde bu ad görünür.</span></label>
-          <div><button type="submit" class="btn" [disabled]="busy() || !displayName.trim()">Kaydet</button></div>
+          <label class="field">Görünen adınız<input name="displayName" [ngModel]="displayName()" (ngModelChange)="displayName.set($event)" maxlength="200" autocomplete="name"><span class="hint">Takvimde ve listelerde bu ad görünür.</span></label>
+          <div><button type="submit" class="btn" [disabled]="busy() || !displayName().trim()">Kaydet</button></div>
         </form>
       }
     }
@@ -197,7 +197,8 @@ export class SettingsSectionComponent {
   readonly dateTime = formatDateTime;
   consent = false; testEmail = ''; logSkip = 0;
   branchName = ''; roomBranchId = ''; roomName = ''; roomCapacity: number | null = null;
-  displayName = '';
+  /** A signal: the panel is zoneless, so a plain field filled after the profile loads stayed empty on screen. */
+  readonly displayName = signal('');
 
   constructor() {
     const wanted = this.tabs.find(item => item.slug === readHashQuery().get('bolum'));
@@ -222,7 +223,7 @@ export class SettingsSectionComponent {
         }
         case 'support': this.support.set(await this.api.support(id)); break;
         case 'plan': this.plan.set((await this.service.getMySubscriptions()).find(item => item.workspaceId === id) ?? null); break;
-        case 'profile': this.displayName = (await this.service.getProfile()).displayName; break;
+        case 'profile': this.displayName.set((await this.service.getProfile()).displayName); break;
       }
     } catch (error) { this.error.set(problemText(error, 'Ayarlar yüklenemedi.')); }
   }
@@ -284,6 +285,6 @@ export class SettingsSectionComponent {
     return before ? `${name(before)} → ${name(after)}` : name(after);
   }
   saveProfile(): Promise<void> {
-    return this.act(async () => { await this.service.saveProfile(this.displayName.trim()); await this.state.refreshLists(); }, 'Adınız kaydedildi.');
+    return this.act(async () => { await this.service.saveProfile(this.displayName().trim()); await this.state.refreshLists(); }, 'Adınız kaydedildi.');
   }
 }

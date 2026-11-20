@@ -18,11 +18,12 @@ describe('buildCourseFinanceSummaryCsv', () => {
     const csv = buildCourseFinanceSummaryCsv(summary);
 
     expect(csv.startsWith('\uFEFF')).toBe(true);
-    expect(csv).toContain('"scope","from","to","metric","amount_try","payment_method"');
-    expect(csv).toContain('"all_time","","","total_charges","1234.50",""');
-    expect(csv).toContain('"all_time","","","total_payments","500.00",""');
-    expect(csv).toContain('"snapshot","","","balance","734.50",""');
-    expect(csv).toContain('"period","2026-10-01","2026-10-13","collection","500.00","EFT, ""Havale"""');
+    // Excel in Turkish: semicolons and a decimal comma (20.11.2026 live test).
+    expect(csv).toContain('"Kalem";"Dönem";"Tutar (TL)"');
+    expect(csv).toContain('"Toplam borç";"Bugüne kadar";"1234,50"');
+    expect(csv).toContain('"Toplam tahsilat";"Bugüne kadar";"500,00"');
+    expect(csv).toContain('"Bakiye";"Bugün";"734,50"');
+    expect(csv).toContain('"Tahsilat: EFT, ""Havale""";"01.10.2026–13.10.2026";"500,00"');
     expect(csv).not.toContain('studentId');
     expect(csv).not.toContain('email');
   });
@@ -79,8 +80,10 @@ describe('course operations report exports', () => {
     const report = buildCourseStudentRosterReport(students);
     const csv = buildCourseReportCsv('Kurum', report);
 
-    expect(csv).toContain('"metadata","Öğrenci listesi","Kurum"');
-    expect(csv).toContain('"\'=HYPERLINK(""https://bad.test"")"');
+    expect(csv.split('\r\n')[0]).toBe('﻿"Öğrenci";"Durum"');
+    expect(csv).toContain('"\'=HYPERLINK(""https://bad.test"")";"Etkin"');
+    expect(csv).not.toContain('student-1');
+    expect(csv).not.toContain('metadata');
     expect(csv).not.toContain('private@example.test');
     expect(csv).not.toContain('5551234567');
   });
@@ -91,11 +94,11 @@ describe('course operations report exports', () => {
       roomId: 'room-1', roomName: 'Salon 1', branchName: 'Merkez', teacherUserId: 'teacher-1',
       startsAt: '2026-10-14T09:00:00+03:00', endsAt: '2026-10-14T10:00:00+03:00', status: 'Completed',
       students: [{ studentId: 'student-1', displayName: 'Ada', attendanceStatus: 'Absent' }] }];
-    const csv = buildCourseReportCsv('Kurum', buildCourseLessonAttendanceReport(lessons));
+    const csv = buildCourseReportCsv('Kurum', buildCourseLessonAttendanceReport(lessons, id => id === 'teacher-1' ? 'Ayşe Öğretmen' : ''));
 
-    expect(csv).toContain('Ders programı ve yoklama');
-    expect(csv).toContain('"student-1","Ada","Absent"');
-    expect(csv).toContain('"Salon 1"');
+    expect(csv).toContain('"Tarih";"Saat";"Kurs";"Grup";"Öğretmen";"Şube";"Derslik";"Ders";"Öğrenci";"Yoklama"');
+    expect(csv).toContain('"14.10.2026";"09:00–10:00";"Matematik";"A Grubu";"Ayşe Öğretmen";"Merkez";"Salon 1";"Tamamlandı";"Ada";"Gelmedi"');
+    expect(csv).not.toContain('lesson-1');
   });
 
   it('calculates assignment completion and escapes report text in the print view', () => {
@@ -107,7 +110,7 @@ describe('course operations report exports', () => {
     const csv = buildCourseReportCsv('Kurum', report);
     const html = buildCourseReportPrintHtml('<Kurum>', report);
 
-    expect(csv).toContain('"50"');
+    expect(csv).toContain('"Kesirler";"<Matematik>";"Birebir";"20.10.2026";"";"4";"2";"50"');
     expect(html).toContain('&lt;Kurum&gt;');
     expect(html).toContain('&lt;Matematik&gt;');
     expect(html).toContain('@media print');

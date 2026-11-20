@@ -14,7 +14,8 @@ export {
   buildCourseStudentRosterReport,
   buildCourseLessonAttendanceReport,
   buildCourseAssignmentProgressReport,
-  buildCourseFinanceWorkspaceReport
+  buildCourseFinanceWorkspaceReport,
+  courseReportFileName
 } from './course-management-reports';
 
 export interface CourseProfile { userId: string; displayName: string; }
