@@ -1,8 +1,8 @@
 import { Component, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CourseInstallment, CourseManagementService, CourseFinanceSummary } from '../../course-management.service';
+import { CourseInstallment, CourseManagementService, CourseFinanceSummary, CourseFinanceWorkspaceReport } from '../../course-management.service';
 import { CoursePanelApi, PanelInstallmentRow, PanelPaymentRow, PanelStudentRow } from '../panel-api.service';
-import { CoursePanelState, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { CoursePanelState, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, sameStudentName, writeHashQuery } from '../panel-state';
 
 type Tab = 'debts' | 'payments';
 const MODELS = [
@@ -35,6 +35,21 @@ const MODELS = [
         <div class="card kpi"><span class="kpi-label">Geciken</span><span class="kpi-value num">{{ money(totals.overdueAmount) }}</span></div>
         <div class="card kpi"><span class="kpi-label">Önümüzdeki 30 gün</span><span class="kpi-value num">{{ money(totals.dueInNext30Days) }}</span></div>
         <div class="card kpi"><span class="kpi-label">Toplam bakiye</span><span class="kpi-value num">{{ money(totals.balance) }}</span></div>
+      </section>
+    }
+    @if (packages().length) {
+      <section class="card" aria-labelledby="packages-title" style="margin-bottom: 20px">
+        <div class="card-head"><h2 id="packages-title">Ders paketleri</h2><span class="muted">Ders tamamlanınca bir hak düşer.</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th scope="col">Öğrenci</th><th scope="col">Kurs</th><th scope="col" class="num">Kalan ders</th><th scope="col">Son kullanım</th></tr></thead>
+          <tbody>
+            @for (item of packages(); track item.agreementId) {
+              <tr><td>{{ item.studentName }}</td><td>{{ item.courseName }}</td>
+                <td class="num">{{ item.remainingSessions }} / {{ item.grantedSessions }}</td>
+                <td>{{ item.expiresAt ? (item.expiresAt.length === 10 ? day(item.expiresAt) : date(item.expiresAt)) : 'Süresiz' }}</td></tr>
+            }
+          </tbody>
+        </table></div>
       </section>
     }
     <div class="tabs" role="tablist" aria-label="Görünüm" style="margin-bottom: 16px">
@@ -191,6 +206,9 @@ const MODELS = [
               <label class="field">Ödeme günü<input type="date" [(ngModel)]="form.firstDue"></label>
             }
           </div>
+          @if ((form.model === 3 || form.model === 4) && form.studentId && form.courseId && !inCourseGroup(form.studentId, form.courseId)) {
+            <p class="banner" style="margin: 0">Öğrenci bu kursun hiçbir grubunda değil. {{ form.model === 4 ? 'Paket' : 'Ücret' }} yalnız onun birebir derslerinde işler; grup dersleri için önce öğrenciyi gruba ekleyin.</p>
+          }
           @if (form.model === 1 && form.amount > 0 && form.count > 0) {
             <p class="muted" style="margin: 0">{{ form.count }} taksit, her biri {{ evenSplit(form.amount, form.count) ? '' : 'yaklaşık ' }}{{ money(form.amount / form.count) }}; ayın aynı gününde.</p>
           }
@@ -210,6 +228,8 @@ export class FinanceSectionComponent {
   readonly models = MODELS;
   readonly tab = signal<Tab>('debts');
   readonly summary = signal<CourseFinanceSummary | null>(null);
+  /** Lesson packages with lessons left: the panel showed them nowhere but in a printed report (20.11.2026 live test). */
+  readonly packages = signal<CourseFinanceWorkspaceReport['packageBalances']>([]);
   readonly debts = signal<{ total: number; outstanding: number; skip: number; take: number; items: PanelInstallmentRow[] } | null>(null);
   readonly paymentsPage = signal<{ total: number; sum: number; skip: number; take: number; items: PanelPaymentRow[] } | null>(null);
   /** The payment being taken back (20.11.2026 live test: a wrong payment could not be corrected). */
@@ -244,12 +264,19 @@ export class FinanceSectionComponent {
     const days = Math.round((new Date(`${row.dueOn}T00:00:00+03:00`).getTime() - new Date(`${this.today()}T00:00:00+03:00`).getTime()) / 86_400_000);
     return days === 0 ? 'Bugün' : `${days} gün kaldı`;
   }
+  /** Whether the student is in a group of the course; unknown students count as in one (no warning). */
+  inCourseGroup(studentId: string, courseId: string): boolean {
+    const student = this.studentOptions().find(item => item.id === studentId);
+    const course = this.state.courses().find(item => item.id === courseId);
+    return !student || !course || student.groups.some(group => group.courseName === course.name);
+  }
   modelHint(model: number): string { return MODELS.find(item => item.value === model)?.hint ?? ''; }
 
   async reload(): Promise<void> {
     const id = this.state.id();
     if (!id) return;
     try { this.summary.set(await this.service.getFinanceSummary(id)); } catch { /* the lists still load */ }
+    try { this.packages.set((await this.service.getFinanceWorkspaceReport(id)).packageBalances); } catch { this.packages.set([]); }
     await (this.tab() === 'debts' ? this.loadDebts(0) : this.loadPayments(0));
   }
   setTab(tab: Tab): void { this.tab.set(tab); void (tab === 'debts' ? this.loadDebts(0) : this.loadPayments(0)); }
@@ -266,11 +293,18 @@ export class FinanceSectionComponent {
   }
 
   async pickStudent(text: string, target: 'payment' | 'agreement'): Promise<void> {
-    const match = this.studentOptions().find(student => student.displayName === text);
-    if (target === 'payment') { this.payment.update(form => form && { ...form, studentId: match?.id ?? '', studentName: text }); if (match) await this.loadOpen(match.id); }
-    else this.agreement.update(form => form && { ...form, studentId: match?.id ?? '', studentName: text });
+    const apply = async (match: PanelStudentRow | undefined) => {
+      if (target === 'payment') { this.payment.update(form => form && { ...form, studentId: match?.id ?? '', studentName: text }); if (match) await this.loadOpen(match.id); }
+      else this.agreement.update(form => form && { ...form, studentId: match?.id ?? '', studentName: text });
+    };
+    let match = sameStudentName(this.studentOptions(), text);
+    await apply(match);
     if (match || text.trim().length < 2) return;
-    try { this.studentOptions.set((await this.api.searchStudents(this.state.id(), { q: text.trim(), take: 20 })).items); } catch { /* keep typing */ }
+    try { this.studentOptions.set((await this.api.searchStudents(this.state.id(), { q: text.trim(), take: 20 })).items); } catch { return; }
+    // A full name typed before the search answered matched nothing; match it again with the answer (20.11.2026 live test).
+    const current = target === 'payment' ? this.payment()?.studentName : this.agreement()?.studentName;
+    match = current === text ? sameStudentName(this.studentOptions(), text) : undefined;
+    if (match) await apply(match);
   }
 
   private async loadOpen(studentId: string): Promise<void> {

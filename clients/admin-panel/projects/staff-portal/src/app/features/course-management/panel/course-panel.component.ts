@@ -158,7 +158,14 @@ export class CoursePanelComponent implements OnInit {
   private async open(workspace: CourseWorkspace): Promise<void> {
     this.storage()?.setItem('eduivme_course_workspace', workspace.id);
     await this.state.open(workspace, this.myUserId);
-    if (!this.visibleSections().some(item => item.id === this.section())) this.section.set('overview');
+    if (!this.visibleSections().some(item => item.id === this.section())) this.toOverview();
+  }
+
+  /** A teacher who types an owner-only address (#tahsilat, #ayarlar…) lands on Genel bakış (20.11.2026 live test). */
+  private toOverview(): void {
+    this.section.set('overview');
+    const view = this.document.defaultView;
+    if (view && view.location.hash) view.history.replaceState(view.history.state, '', hashUrl('#genel-bakis'));
   }
 
   async choose(id: string): Promise<void> {
@@ -183,7 +190,10 @@ export class CoursePanelComponent implements OnInit {
   private readHash(): void {
     const slug = (this.document.defaultView?.location.hash ?? '').replace(/^#/, '').split('?')[0];
     const match = SECTIONS.find(item => item.slug === slug);
-    if (match) this.section.set(match.id);
+    if (!match) return;
+    // Before the workspace is open the role is unknown; open() checks the section again.
+    if (this.state.workspace() && !this.visibleSections().some(item => item.id === match.id)) this.toOverview();
+    else this.section.set(match.id);
   }
 
   async create(): Promise<void> {

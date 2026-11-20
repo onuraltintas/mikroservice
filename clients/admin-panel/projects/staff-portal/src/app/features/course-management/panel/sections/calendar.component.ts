@@ -1,8 +1,8 @@
 import { Component, EventEmitter, HostListener, Output, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CourseLesson, CourseLessonSeries, CourseManagementService } from '../../course-management.service';
+import { CourseLesson, CourseLessonSeries, CourseManagementService, TeacherAvailabilityWindow, TeacherTimeOff } from '../../course-management.service';
 import { CoursePanelApi, PanelStudentRow, SeriesPreview, SeriesRequest } from '../panel-api.service';
-import { CoursePanelState, PanelSection, formatDateTime, formatTime, hashUrl, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { CoursePanelState, PanelSection, formatDateTime, formatTime, hashUrl, problemText, readHashQuery, sameStudentName, writeHashQuery } from '../panel-state';
 import { PanelConfirm } from '../panel-confirm';
 
 const DAY_MS = 86_400_000;
@@ -11,6 +11,8 @@ const FIRST_HOUR = 8;
 const LAST_HOUR = 22;
 const HOUR_PX = 56;
 const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+/** Turkish short day names; the first three letters gave "Paz" twice and "Cum" twice (20.11.2026 live test). */
+const WEEKDAYS_SHORT = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -62,6 +64,9 @@ type Editor = {
         }
       </div>
     }
+    @if (shadeTeacher() && hasWindows(shadeTeacher())) {
+      <p class="muted hint-line"><span class="legend closed-legend" aria-hidden="true"></span> Gri alanlar {{ state.isOwner() ? 'öğretmenin çalışma saatlerinin' : 'çalışma saatlerinizin' }} dışı; bu saatlere ders eklenemez.</p>
+    }
     <p class="muted hint-line">Boş bir saate tıklayın ya da sağ tıklayın. Bir derse tıklayınca yoklama, taşıma ve iptal seçenekleri çıkar; tekrarlayan derslerin saati "Seriyi düzenle" ile değişir.</p>
     <section class="card cal-wrap" aria-label="Haftalık takvim">
       <div class="cal">
@@ -78,8 +83,17 @@ type Editor = {
                 (click)="openEditor('single', day.iso, pad(hour) + ':00')"
                 (contextmenu)="openMenu($event, day.iso, pad(hour) + ':00', null)"></button>
             }
+            @for (block of closedOn($index); track block.top) {
+              <div class="closed" aria-hidden="true" [style.top.px]="block.top" [style.height.px]="block.height"></div>
+            }
+            @for (off of timeOffOn(day.iso); track off.id) {
+              <div class="timeoff" role="note" [style.top.px]="off.top" [style.height.px]="off.height"
+                [attr.aria-label]="'İzin: ' + off.label">
+                <span>İzin: {{ off.label }}</span>
+              </div>
+            }
             @for (lesson of lessonsOn(day.iso); track lesson.id) {
-              <button type="button" class="lesson" [class]="'lesson tone-' + tone(lesson)" [class.cancelled]="lesson.status === 'Cancelled'"
+              <button type="button" class="lesson" [class]="'lesson tone-' + tone(lesson)" [class.cancelled]="lesson.status === 'Cancelled'" [class.short]="height(lesson) < 44"
                 [style.top.px]="top(lesson)" [style.height.px]="height(lesson)"
                 [attr.aria-label]="lessonLabel(lesson)"
                 (click)="openMenu($event, day.iso, '', lesson)" (contextmenu)="openMenu($event, day.iso, '', lesson)">
@@ -226,6 +240,15 @@ type Editor = {
     .tone-0 { background: var(--ds-success-soft); border-color: var(--ds-success); color: var(--ds-success); }
     .tone-1 { background: var(--ds-warning-soft); border-color: var(--ds-warning); color: var(--ds-warning); }
     .tone-2 { background: var(--ds-soft); border-color: var(--ds-primary); color: var(--ds-text); }
+    .lesson.short { flex-direction: row; align-items: center; gap: 6px; padding: 2px 8px; }
+    .lesson.short span { white-space: nowrap; }
+    .closed { position: absolute; left: 0; right: 0; background: color-mix(in srgb, var(--ds-muted) 14%, transparent); pointer-events: none; }
+    .legend { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+    .closed-legend { background: color-mix(in srgb, var(--ds-muted) 28%, transparent); }
+    .timeoff { position: absolute; left: 4px; right: 4px; box-sizing: border-box; padding: 4px 8px; border-radius: 8px; border: 1px dashed var(--ds-muted);
+      background: repeating-linear-gradient(135deg, var(--ds-surface) 0 6px, var(--ds-soft) 6px 12px); color: var(--ds-text); font-size: 13px;
+      overflow: hidden; pointer-events: none; }
+    .timeoff span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lesson.cancelled { background: var(--ds-surface); border-color: var(--ds-field); color: var(--ds-muted); }
     .lesson.cancelled strong { text-decoration: line-through; color: var(--ds-muted); }
     .menu { position: fixed; z-index: 60; min-width: 240px; padding: 6px; display: flex; flex-direction: column; }
@@ -250,6 +273,9 @@ export class CalendarSectionComponent {
   readonly dateTime = formatDateTime;
   readonly weekStart = signal(mondayOf(Date.now()));
   readonly lessons = signal<CourseLesson[]>([]);
+  /** Teacher time off and working hours, drawn on the week (20.11.2026 live test: time off was listed only on Öğretmenler). */
+  readonly timeOffs = signal<TeacherTimeOff[]>([]);
+  readonly availability = signal<TeacherAvailabilityWindow[]>([]);
   readonly menu = signal<Menu | null>(null);
   readonly editor = signal<Editor | null>(null);
   readonly moving = signal<CourseLesson | null>(null);
@@ -277,7 +303,7 @@ export class CalendarSectionComponent {
   readonly days = computed(() => Array.from({ length: 7 }, (_, index) => {
     const ms = this.weekStart() + index * DAY_MS;
     const d = new Date(ms + TR_OFFSET);
-    return { iso: isoDay(ms), label: `${WEEKDAYS[index].slice(0, 3)} ${d.getUTCDate()}`, long: `${WEEKDAYS[index]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}` };
+    return { iso: isoDay(ms), label: `${WEEKDAYS_SHORT[index]} ${d.getUTCDate()}`, long: `${WEEKDAYS[index]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}` };
   }));
   readonly weekLabel = computed(() => {
     const first = new Date(this.weekStart() + TR_OFFSET);
@@ -302,7 +328,14 @@ export class CalendarSectionComponent {
     if (!id) return;
     writeHashQuery('takvim', { hafta: isoDay(this.weekStart()), ogretmen: this.teacherFilter, derslik: this.roomFilter });
     try {
-      this.lessons.set(await this.api.lessons(id, new Date(this.weekStart()), new Date(this.weekStart() + 7 * DAY_MS)));
+      const [lessons, timeOffs, availability] = await Promise.all([
+        this.api.lessons(id, new Date(this.weekStart()), new Date(this.weekStart() + 7 * DAY_MS)),
+        this.service.getTeacherTimeOff(id).catch(() => [] as TeacherTimeOff[]),
+        this.service.getTeacherAvailability(id).catch(() => [] as TeacherAvailabilityWindow[])
+      ]);
+      this.lessons.set(lessons);
+      this.timeOffs.set(timeOffs);
+      this.availability.set(availability);
       this.error.set('');
     } catch (error) { this.error.set(problemText(error, 'Takvim yüklenemedi.')); }
   }
@@ -317,6 +350,40 @@ export class CalendarSectionComponent {
     return this.lessons().filter(lesson => isoDay(new Date(lesson.startsAt).getTime()) === day
       && (!this.teacherFilter || lesson.teacherUserId === this.teacherFilter)
       && (!this.roomFilter || lesson.roomId === this.roomFilter));
+  }
+  /** Whose working hours are shaded: the chosen teacher for the owner, the teacher's own for a teacher. */
+  shadeTeacher(): string { return this.state.isOwner() ? this.teacherFilter : this.state.myUserId(); }
+  hasWindows(teacherUserId: string): boolean { return this.availability().some(window => window.teacherUserId === teacherUserId); }
+  /** Hours of the day (Monday = 0) outside the teacher's working hours; none when the teacher has no hours set. */
+  closedOn(weekday: number): { top: number; height: number }[] {
+    const teacher = this.shadeTeacher();
+    if (!teacher || !this.hasWindows(teacher)) return [];
+    const toMinutes = (value: string) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+    const open = this.availability().filter(window => window.teacherUserId === teacher && window.weekday === weekday)
+      .map(window => [toMinutes(window.startTime), toMinutes(window.endTime)] as const).sort((a, b) => a[0] - b[0]);
+    const first = this.hours()[0] * 60; const last = (this.hours()[this.hours().length - 1] + 1) * 60;
+    const blocks: { top: number; height: number }[] = [];
+    let from = first;
+    for (const [start, end] of open) {
+      if (start > from) blocks.push({ top: (from - first) * HOUR_PX / 60, height: (Math.min(start, last) - from) * HOUR_PX / 60 });
+      from = Math.max(from, end);
+    }
+    if (from < last) blocks.push({ top: (from - first) * HOUR_PX / 60, height: (last - from) * HOUR_PX / 60 });
+    return blocks.filter(block => block.height > 0);
+  }
+  /** Time off overlapping the day, cut to the hours shown, for the chosen teacher (or everyone on "Tüm kurum"). */
+  timeOffOn(day: string): { id: string; top: number; height: number; label: string }[] {
+    const dayStart = instant(day, '00:00').getTime(); const dayEnd = dayStart + DAY_MS;
+    const first = this.hours()[0] * 60; const last = (this.hours()[this.hours().length - 1] + 1) * 60;
+    const teacher = this.state.isOwner() ? this.teacherFilter : this.state.myUserId();
+    return this.timeOffs().filter(off => (!teacher || off.teacherUserId === teacher)
+        && new Date(off.startsAt).getTime() < dayEnd && new Date(off.endsAt).getTime() > dayStart)
+      .map(off => {
+        const from = Math.max(first, (Math.max(new Date(off.startsAt).getTime(), dayStart) - dayStart) / 60000);
+        const to = Math.min(last, (Math.min(new Date(off.endsAt).getTime(), dayEnd) - dayStart) / 60000);
+        const label = this.state.isOwner() ? `${this.state.teacherName(off.teacherUserId)}${off.reason ? ', ' + off.reason : ''}` : off.reason || 'izinlisiniz';
+        return { id: off.id, top: (from - first) * HOUR_PX / 60, height: Math.max(24, (to - from) * HOUR_PX / 60), label };
+      }).filter(off => off.height > 0);
   }
   private minutes(value: string): number { const d = new Date(new Date(value).getTime() + TR_OFFSET); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
   top(lesson: CourseLesson): number { return Math.max(0, (this.minutes(lesson.startsAt) - this.hours()[0] * 60) * HOUR_PX / 60); }
@@ -405,10 +472,14 @@ export class CalendarSectionComponent {
   async findStudents(text: string): Promise<void> {
     const form = this.editor();
     if (!form) return;
-    const match = this.studentOptions().find(student => student.displayName === text);
-    form.studentId = match?.id ?? '';
+    const match = sameStudentName(this.studentOptions(), text);
+    this.editor.set({ ...form, studentName: text, studentId: match?.id ?? '' });
     if (match || text.trim().length < 2) return;
-    try { this.studentOptions.set((await this.api.searchStudents(this.state.id(), { q: text.trim(), take: 20 })).items); } catch { /* typing continues */ }
+    try { this.studentOptions.set((await this.api.searchStudents(this.state.id(), { q: text.trim(), take: 20 })).items); } catch { return; }
+    // Match again once the search answers: a full name typed quickly matched nothing before (20.11.2026 live test).
+    const latest = this.editor();
+    const found = latest && latest.studentName === text ? sameStudentName(this.studentOptions(), text) : undefined;
+    if (latest && found) this.editor.set({ ...latest, studentId: found.id });
   }
 
   checkedDays(form: Editor): number { return form.days.filter(Boolean).length; }

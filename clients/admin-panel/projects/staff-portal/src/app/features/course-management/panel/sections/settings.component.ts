@@ -72,7 +72,7 @@ const KINDS: Record<string, { title: string; when: string }> = {
                   @if (!state.readOnly()) { <div><button type="button" class="btn" (click)="saveEmails(settings)" [disabled]="busy()">Kaydet</button></div> }
                 </section>
                 @if (preview(); as mail) {
-                  <section class="card card-pad stack" style="gap: 8px" aria-label="Önizleme">
+                  <section id="email-preview" tabindex="-1" class="card card-pad stack" style="gap: 8px" aria-label="Önizleme">
                     <span class="muted">Gönderen: {{ mail.institutionName }}</span>
                     <strong>{{ mail.title }}</strong>
                     @for (line of mail.paragraphs; track $index) { <span>{{ line }}</span> }
@@ -255,7 +255,15 @@ export class SettingsSectionComponent {
   }
 
   async showPreview(kind: string): Promise<void> {
-    try { this.preview.set(await this.api.emailPreview(this.state.id(), kind)); } catch (error) { this.error.set(problemText(error)); }
+    try {
+      this.preview.set(await this.api.emailPreview(this.state.id(), kind));
+      // The preview opens at the bottom of the page; bring it into view so the click visibly does something (20.11.2026 live test).
+      setTimeout(() => {
+        const box = document.getElementById('email-preview');
+        box?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+        box?.focus({ preventScroll: true });
+      });
+    } catch (error) { this.error.set(problemText(error)); }
   }
 
   sendTest(kind: number): Promise<void> {

@@ -111,6 +111,9 @@ import { SiteLinkComponent } from './site-link.component';
     .foot__title { margin: 0 0 8px; color: #FFFFFF; font-size: 15px; }
     .foot__copy { padding-bottom: 32px; font-size: 14px; border-top: 1px solid var(--mk-hero-line); padding-top: 16px; }
     .foot ::ng-deep .ds-check { color: var(--mk-hero-muted); }
+    /* The ink "primary" button vanished on the ink footer (20.11.2026 live test); the footer uses the amber accent. */
+    .foot ::ng-deep .ds-btn--primary { background: var(--ds-accent); border-color: var(--ds-accent); color: var(--ds-on-accent); }
+    .foot ::ng-deep .ds-btn--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--ds-accent) 85%, #FFFFFF); }
     .foot ::ng-deep .mk-success { color: var(--ds-success); }
     .foot ::ng-deep .ds-field__error { color: #FFB4AB; }
   `

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CourseAssignment, CourseLesson, CourseManagementService } from '../../course-management.service';
 import { CompletionMark, CoursePanelApi, PanelCompletion } from '../panel-api.service';
@@ -63,7 +63,7 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
             <div class="actions" style="padding: 12px 20px 18px">
               <button type="button" class="btn-secondary" (click)="restPresent(current)" [disabled]="busy() || markedCount(current) === activeStudents(current).length">Kalanlar geldi</button>
               <button type="button" class="btn" (click)="complete(current)" [disabled]="busy() || !ended(current) || markedCount(current) < activeStudents(current).length">Dersi tamamla</button>
-              @if (!ended(current)) { <span class="muted" style="font-size: 14px">Ders {{ time(current.endsAt) }}'de bitince tamamlayabilirsiniz.</span> }
+              @if (!ended(current)) { <span class="muted" style="font-size: 14px">Ders bitince ({{ time(current.endsAt) }}) tamamlayabilirsiniz.</span> }
               @else if (markedCount(current) < activeStudents(current).length) { <span class="muted" style="font-size: 14px">Tamamlamak için bütün öğrencileri işaretleyin.</span> }
             </div>
           }
@@ -149,16 +149,14 @@ export class AttendanceSectionComponent {
   /** Homework of this lesson being corrected in the form below. */
   readonly editingHomework = signal<CourseAssignment | null>(null);
   private readonly confirm = inject(PanelConfirm);
-  /** Homework given for this lesson's group (or student) from two hours before it started to twelve hours after it ended. */
+  /** Clock for "started" and "ended": the screen opens attendance and completion on time without a reload. */
+  readonly now = signal(Date.now());
+  /** Homework given for this lesson: each homework belongs to the nearest lesson of its group (or student),
+   * so homework from the 18:00 lesson is not shown under the 09:00 lesson of the same day (20.11.2026 live test). */
   readonly givenHomework = computed(() => {
     const current = this.lesson();
     if (!current) return [];
-    const from = new Date(current.startsAt).getTime() - 2 * 3_600_000;
-    const to = new Date(current.endsAt).getTime() + 12 * 3_600_000;
-    const studentIds = new Set(current.students.map(item => item.studentId));
-    return this.assignments().filter(item => item.courseId === current.courseId
-        && (current.groupId ? item.groupId === current.groupId : !!item.studentId && studentIds.has(item.studentId))
-        && new Date(item.createdAt).getTime() >= from && new Date(item.createdAt).getTime() <= to)
+    return this.assignments().filter(item => this.homeworkLesson(item)?.id === current.id)
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   });
 
@@ -181,6 +179,8 @@ export class AttendanceSectionComponent {
   });
 
   constructor() {
+    const timer = setInterval(() => this.now.set(Date.now()), 20_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
     const wanted = readHashQuery().get('ders');
     effect(() => { this.state.id(); this.state.version(); untracked(() => void this.load(wanted)); });
     effect(() => { const homework = this.previousHomework(); untracked(() => void this.loadCompletions(homework)); });
@@ -214,12 +214,30 @@ export class AttendanceSectionComponent {
       ?? list[0];
   }
 
-  choose(id: string): void { this.lessonId.set(id); writeHashQuery('yoklama', { ders: id }); }
+  choose(id: string): void { this.lessonId.set(id); this.notice.set(''); this.error.set(''); writeHashQuery('yoklama', { ders: id }); }
+
+  /** The lesson a homework was given in: same course and group (or student), given from two hours before the lesson
+   * to twelve hours after it, and of those the lesson nearest to the moment it was given. */
+  private homeworkLesson(item: CourseAssignment): CourseLesson | undefined {
+    const given = new Date(item.createdAt).getTime();
+    let best: CourseLesson | undefined; let bestGap = Infinity;
+    for (const lesson of this.lessons()) {
+      if (lesson.status === 'Cancelled' || lesson.courseId !== item.courseId) continue;
+      const sameAudience = lesson.groupId ? item.groupId === lesson.groupId
+        : !!item.studentId && lesson.students.some(student => student.studentId === item.studentId);
+      if (!sameAudience) continue;
+      const start = new Date(lesson.startsAt).getTime(); const end = new Date(lesson.endsAt).getTime();
+      if (given < start - 2 * 3_600_000 || given > end + 12 * 3_600_000) continue;
+      const gap = given < start ? start - given : given > end ? given - end : 0;
+      if (gap < bestGap) { best = lesson; bestGap = gap; }
+    }
+    return best;
+  }
   lessonTitle(lesson: CourseLesson): string { return `${formatDateTime(lesson.startsAt)}, ${lesson.groupName ?? lesson.courseName}`; }
   activeStudents(lesson: CourseLesson) { return lesson.students.filter(item => item.isActive !== false); }
   markedCount(lesson: CourseLesson): number { return this.activeStudents(lesson).filter(item => item.attendanceStatus).length; }
-  started(lesson: CourseLesson): boolean { return new Date(lesson.startsAt).getTime() <= Date.now(); }
-  ended(lesson: CourseLesson): boolean { return new Date(lesson.endsAt).getTime() <= Date.now(); }
+  started(lesson: CourseLesson): boolean { return new Date(lesson.startsAt).getTime() <= this.now(); }
+  ended(lesson: CourseLesson): boolean { return new Date(lesson.endsAt).getTime() <= this.now(); }
   editable(lesson: CourseLesson): boolean { return lesson.status === 'Scheduled' && this.started(lesson) && !this.state.readOnly(); }
 
   private patch(lessonId: string, studentId: string, status: string): void {

@@ -26,8 +26,8 @@ const EMAIL_KINDS: Record<string, string> = {
     @if (data(); as view) {
       <div class="stack">
         <section class="kpis" aria-label="Özet">
-          <div class="card kpi"><span class="kpi-label">Bugünkü dersler</span><span class="kpi-value">{{ view.todayLessons.length }}</span>
-            <span class="kpi-label">{{ doneCount(view) }} tamamlandı</span></div>
+          <div class="card kpi"><span class="kpi-label">Bugünkü dersler</span><span class="kpi-value">{{ heldCount(view) }}</span>
+            <span class="kpi-label">{{ doneCount(view) }} tamamlandı{{ cancelledCount(view) ? ', ' + cancelledCount(view) + ' iptal' : '' }}</span></div>
           <div class="card kpi"><span class="kpi-label">Yoklaması alınmamış</span><span class="kpi-value">{{ view.lessonsWaitingForAttendance.length }}</span>
             <span class="kpi-label">Son 7 gün</span></div>
           @if (view.finance; as money) {
@@ -134,6 +134,9 @@ export class OverviewSectionComponent implements OnInit {
   }
 
   day(value: string): string { return formatDay(`${value}T12:00:00+03:00`); }
+  /** Today's lessons that take place: a cancelled lesson is listed but not counted (20.11.2026 live test). */
+  heldCount(view: PanelOverview): number { return view.todayLessons.filter(item => item.status !== 'Cancelled').length; }
+  cancelledCount(view: PanelOverview): number { return view.todayLessons.length - this.heldCount(view); }
   doneCount(view: PanelOverview): number { return view.todayLessons.filter(item => item.status === 'Completed' || item.attendanceTaken).length; }
   status(lesson: PanelOverview['todayLessons'][number]): 'done' | 'now' | 'cancelled' | 'waiting' | 'next' {
     if (lesson.status === 'Cancelled') return 'cancelled';

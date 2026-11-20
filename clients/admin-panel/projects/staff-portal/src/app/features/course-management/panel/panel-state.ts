@@ -99,8 +99,9 @@ export const formatTime = (value: string | Date) =>
   new Intl.DateTimeFormat(tr, { timeZone: ZONE, hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 export const formatDateTime = (value: string | Date) =>
   new Intl.DateTimeFormat(tr, { timeZone: ZONE, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+/** Money in Turkish style; a negative amount (a reversal) gets a real minus sign, not a hyphen. */
 export const formatMoney = (value: number) =>
-  `${new Intl.NumberFormat(tr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} TL`;
+  `${new Intl.NumberFormat(tr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value).replace(/^-/, '\u2212')} TL`;
 /** Plain-language message for an API error: the code's own text (problem-codes.ts), then the HTTP status. */
 export function problemText(error: unknown, fallback = 'İşlem tamamlanamadı. Bilgileri kontrol edip yeniden deneyin.'): string {
   const code = (error as { error?: { code?: string } })?.error?.code ?? '';
@@ -135,4 +136,10 @@ export function writeHashQuery(slug: string, values: Record<string, string | num
   const query = params.toString();
   const next = `#${slug}${query ? `?${query}` : ''}`;
   if (globalThis.location && globalThis.location.hash !== next) globalThis.history?.replaceState(null, '', hashUrl(next));
+}
+
+/** The student whose name is the typed text, ignoring case and surrounding spaces. */
+export function sameStudentName<T extends { displayName: string }>(options: readonly T[], text: string): T | undefined {
+  const wanted = text.trim().toLocaleLowerCase('tr');
+  return wanted ? options.find(student => student.displayName.trim().toLocaleLowerCase('tr') === wanted) : undefined;
 }

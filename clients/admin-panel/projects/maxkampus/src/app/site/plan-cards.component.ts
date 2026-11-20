@@ -28,7 +28,7 @@ interface PlanCard { plan: BillingCatalogPlan; note: SiteEntry | null; featured:
               @if (card.plan.isContactOnly) { <span>Teklif alın</span> }
               @else {
                 <strong class="num">{{ money(card.plan.price, card.plan.currency) }}</strong>
-                <span class="mk-muted">{{ (card.plan.vatRate != null ? '+ KDV ' : '') + '/ ' + period(card.plan.durationDays) }}</span>
+                <span class="mk-muted">{{ ' ' + (card.plan.vatRate != null ? '+ KDV ' : '') + '/ ' + period(card.plan.durationDays) }}</span>
               }
             </p>
             @if (!card.plan.isContactOnly && card.plan.vatRate != null) {

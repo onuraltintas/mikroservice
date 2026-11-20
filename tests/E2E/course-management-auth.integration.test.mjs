@@ -672,7 +672,13 @@ test('live API enforces product and subject boundaries before database access', 
       assert.equal(duplicatePreviewBody.duplicateCount, 1);
       const duplicateCommit = await request(importPath, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv: duplicateCsv, previewId: duplicatePreviewBody.previewId }) });
-      assert.equal(duplicateCommit.status, 400, 'rows with duplicates cannot be committed');
+      assert.equal(duplicateCommit.status, 200, 'rows already in the workspace are skipped, not imported');
+      assert.equal((await duplicateCommit.json()).createdCount ?? 0, 0, 'a skipped row adds no student');
+      const samePersonCsv = `displayName,email,phoneNumber\n${adaStudent.displayName.toLocaleUpperCase('tr')},,${adaStudent.phoneNumber ?? ''}`;
+      const samePersonPreview = await (await request(`${importPath}/preview`, teacherToken, { method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv: samePersonCsv }) })).json();
+      assert.equal(samePersonPreview.duplicateCount, 1, 'a row without e-mail matching an existing name and phone is already there');
+      assert.equal(samePersonPreview.readyCount, 0);
       const repeatedRowsCsv = 'displayName,email,phoneNumber\nİlk öğrenci,repeated@example.test,\nİkinci öğrenci,REPEATED@example.test,';
       const repeatedRowsPreview = await request(`${importPath}/preview`, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv: repeatedRowsCsv }) });

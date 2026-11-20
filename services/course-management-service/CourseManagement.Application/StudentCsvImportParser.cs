@@ -81,7 +81,8 @@ public static class StudentCsvImportParser
             var displayName = fields[displayNameIndex].Trim();
             var email = Optional(fields, emailIndex)?.ToLowerInvariant();
             var phoneNumber = Optional(fields, phoneIndex);
-            var error = displayName.Length is < 1 or > 200 ? "Öğrenci adı 1–200 karakter olmalıdır."
+            var error = displayName.Length < 1 ? "Öğrenci adı boş; ad sütununu doldurun."
+                : displayName.Length > 200 ? "Öğrenci adı en fazla 200 karakter olabilir."
                 : email?.Length > 320 ? "E-posta en fazla 320 karakter olabilir."
                 : phoneNumber?.Length > 40 ? "Telefon en fazla 40 karakter olabilir."
                 : null;

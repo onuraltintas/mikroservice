@@ -20,7 +20,8 @@ export const BILLING_PAGE_STYLES = `
   .data-table td { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; color: var(--ui-text); vertical-align: top; }
   .actions { white-space: nowrap; text-align: right; }
   .actions button + button { margin-left: .35rem; }
-  .actions .danger { color: #b91c1c; }
+  /* Theme token: the fixed red read 2.47:1 on the dark theme's red-tinted button (20.11.2026 live test). */
+  .actions .danger { color: var(--ui-danger); border-color: currentColor; }
   .muted { color: var(--ui-text-muted); font-size: .8rem; }
   .empty { padding: 2rem; text-align: center; color: var(--ui-text-muted); }
   .badge { display: inline-block; border-radius: 999px; border: 1px solid var(--ui-border-strong); padding: .1rem .5rem; font-size: .75rem; color: var(--ui-text); }

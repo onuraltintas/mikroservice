@@ -59,7 +59,7 @@ test('the calendar does not offer past hours, widens to early lessons and edits 
 test('"Dersi tamamla" waits for the end of the lesson and saved homework can be corrected or taken back', () => {
   const attendance = read(`${panel}/panel/sections/attendance.component.ts`);
   assert.match(attendance, /\[disabled\]="busy\(\) \|\| !ended\(current\)/);
-  assert.match(attendance, /bitince tamamlayabilirsiniz/);
+  assert.match(attendance, /Ders bitince \(\{\{ time\(current.endsAt\) \}\}\) tamamlayabilirsiniz/);
   assert.match(attendance, /readonly givenHomework = computed/);
   assert.match(attendance, /reviseAssignment\(/);
   assert.match(attendance, /deleteAssignment\(/);

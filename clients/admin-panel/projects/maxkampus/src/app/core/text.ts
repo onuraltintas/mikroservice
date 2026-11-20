@@ -39,10 +39,9 @@ export function trDate(value: string | null | undefined): string {
   return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' }).format(date);
 }
 
+/** Money as on every other maxkampüs page: "1.250 TL" (not "₺1.250"); other currencies keep their code. */
 export function trMoney(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency, maximumFractionDigits: amount % 1 === 0 ? 0 : 2 }).format(amount);
-  } catch {
-    return `${amount} ${currency}`;
-  }
+  const digits = amount % 1 === 0 ? 0 : 2;
+  const number = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: digits, maximumFractionDigits: 2 }).format(amount);
+  return `${number} ${!currency || currency.toUpperCase() === 'TRY' ? 'TL' : currency.toUpperCase()}`;
 }
