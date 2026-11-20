@@ -173,6 +173,18 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
             @if (preview.invalidCount) {
               <ul>@for (row of invalidRows(); track row.rowNumber) { <li>{{ row.rowNumber }}. satır: {{ row.error }}</li> }</ul>
             }
+            @if (readyRows().length) {
+              <!-- The names to be added, so Turkish letters can be checked before saving (20.11.2026 live test). -->
+              <div class="csv-preview">
+                <table class="table">
+                  <caption class="muted">Eklenecekler{{ preview.readyCount > readyRows().length ? ' (ilk ' + readyRows().length + ')' : '' }}</caption>
+                  <thead><tr><th scope="col">Ad</th><th scope="col">E-posta</th><th scope="col">Telefon</th></tr></thead>
+                  <tbody>@for (row of readyRows(); track row.rowNumber) {
+                    <tr><td>{{ row.displayName }}</td><td>{{ row.email ?? '–' }}</td><td class="num">{{ row.phoneNumber ?? '–' }}</td></tr>
+                  }</tbody>
+                </table>
+              </div>
+            }
           }
           @if (cardError()) { <p class="alert" role="alert">{{ cardError() }}</p> }
           <div class="dialog-actions">
@@ -201,6 +213,7 @@ export class StudentsSectionComponent {
   readonly csvOpen = signal(false);
   readonly csvPreview = signal<StudentCsvImportPreview | null>(null);
   readonly csvName = signal('');
+  readonly readyRows = computed(() => (this.csvPreview()?.rows ?? []).filter(row => row.status === 'Ready').slice(0, 50));
   readonly invalidRows = computed(() => (this.csvPreview()?.rows ?? []).filter(row => row.status === 'Invalid').slice(0, 20));
   private csvText = '';
   filter: Required<Pick<PanelStudentFilter, 'q' | 'courseId' | 'groupId' | 'teacherId' | 'status' | 'sort' | 'skip' | 'take'>> = {

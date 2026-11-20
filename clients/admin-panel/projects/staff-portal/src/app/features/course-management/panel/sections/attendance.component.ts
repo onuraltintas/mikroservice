@@ -164,7 +164,8 @@ export class AttendanceSectionComponent {
 
   readonly choices = computed(() => {
     const now = Date.now();
-    return this.lessons().filter(lesson => new Date(lesson.startsAt).getTime() <= now + 12 * 3_600_000)
+    // A cancelled lesson has no attendance to take (20.11.2026 live test: it was offered in the list).
+    return this.lessons().filter(lesson => lesson.status !== 'Cancelled' && new Date(lesson.startsAt).getTime() <= now + 12 * 3_600_000)
       .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
   });
   readonly lesson = computed(() => this.lessons().find(item => item.id === this.lessonId()) ?? null);

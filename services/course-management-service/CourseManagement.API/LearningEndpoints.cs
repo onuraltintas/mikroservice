@@ -914,8 +914,33 @@ public static class LearningEndpoints
                 var occurrenceStarts = occurrences.Select(item => item.StartsAt).ToHashSet();
                 var sessionsUpdated = 0;
                 var sessionsCancelled = 0;
+                // 20.11.2026 live test: a new time on the same day moves the lesson instead of cancelling it and opening
+                // another, so the calendar has no cancelled twin and parents read "yeni saatinde", not "iptal edildi".
+                DateOnly LocalDay(DateTimeOffset at) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(at, timeZone).DateTime);
+                var openOccurrences = occurrences.Where(item => !existingByStart.ContainsKey(item.StartsAt)).ToList();
+                var movedTo = new Dictionary<Guid, (DateTimeOffset StartsAt, DateTimeOffset EndsAt)>();
+                foreach (var lesson in futureSessions.Where(item => !occurrenceStarts.Contains(item.StartsAt)))
+                {
+                    var sameDay = openOccurrences.FindIndex(item => LocalDay(item.StartsAt) == LocalDay(lesson.StartsAt));
+                    if (sameDay < 0) continue;
+                    movedTo[lesson.Id] = openOccurrences[sameDay];
+                    openOccurrences.RemoveAt(sameDay);
+                }
+                var movedStarts = movedTo.Values.Select(item => item.StartsAt).ToHashSet();
                 foreach (var lesson in futureSessions)
                 {
+                    if (movedTo.TryGetValue(lesson.Id, out var target))
+                    {
+                        lesson.Reschedule(target.StartsAt, target.EndsAt, request.RoomId);
+                        await CourseManagementReminderScheduling.ScheduleLessonAsync(db, workspaceId, lesson.Id,
+                            lesson.StartsAt, studentUserIds, now, ct);
+                        if (studentUserIds.Length > 0)
+                            await publishEndpoint.Publish(new CourseManagementLessonRescheduledV1(lesson.Id, workspaceId,
+                                studentUserIds, lesson.StartsAt), ct);
+                        AddAudit(db, workspaceId, userId, lesson.Id, "LessonSession.Rescheduled");
+                        sessionsUpdated++;
+                        continue;
+                    }
                     if (!occurrenceStarts.Contains(lesson.StartsAt))
                     {
                         lesson.Cancel();
@@ -931,6 +956,7 @@ public static class LearningEndpoints
                 var sessionsCreated = 0;
                 foreach (var occurrence in occurrences)
                 {
+                    if (movedStarts.Contains(occurrence.StartsAt)) continue;
                     if (existingByStart.TryGetValue(occurrence.StartsAt, out var existing))
                     {
                         if (existing.EndsAt != occurrence.EndsAt || existing.RoomId != request.RoomId)
