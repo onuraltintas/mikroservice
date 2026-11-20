@@ -14,7 +14,7 @@ test('the guide has eight steps and a summary, each one skippable and saved at o
   assert.match(source, /Bu adımı atla/);
   assert.match(source, /Daha sonra devam et/);
   assert.match(source, /Kurulumu bitir, panele geç/);
-  assert.match(source, /Birebir: /, 'a student is placed in a group or marked one-to-one with a teacher');
+  assert.match(source, /Birebir ders alıyorsa öğretmeni/, 'a student is placed in a group or marked one-to-one with a teacher');
   assert.match(source, /createFeeAgreementWithInstallments/);
   assert.match(source, /previewSeries/, 'clashes are shown before lessons are opened');
   assert.match(source, /informedConsentConfirmed: this\.consent/);
