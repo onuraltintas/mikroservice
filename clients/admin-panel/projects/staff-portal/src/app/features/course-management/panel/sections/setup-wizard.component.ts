@@ -49,7 +49,7 @@ const EMAIL_KINDS = [
   { kind: 'PaymentReceived', value: 7, label: 'Ödeme alındı', hint: 'Ödeme kaydedilince' }
 ];
 
-interface FeePlan { model: number; amount: number; count: number; firstDue: string; unit: number; sessions: number; expiresOn: string; courseId: string; }
+interface FeePlan { model: number; amount: number | null; count: number; firstDue: string; unit: number; sessions: number; expiresOn: string; courseId: string; }
 interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId: string; endsOn: string; }
 
 /**
@@ -97,10 +97,10 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
     .foot .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .progress { height: 6px; border-radius: 3px; background: var(--ds-line); overflow: hidden; }
     .progress span { display: block; height: 100%; background: var(--ds-accent); }
-    .placement { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr); gap: 8px 14px; align-items: center; }
-    .placement > strong { font-weight: 500; }
-    @media (max-width: 900px) { .wizard { grid-template-columns: 1fr; } .steps { position: static; flex-direction: row; overflow-x: auto; }
-      .steps button { white-space: nowrap; } .steps .name { display: none; } .placement { grid-template-columns: 1fr; } }
+    :host { display: block; container-type: inline-size; }
+    .placement { gap: 6px; } .placement > strong { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    @container (max-width: 860px) { .wizard { grid-template-columns: 1fr; } .steps { position: static; flex-direction: row; overflow-x: auto; }
+      .steps button { white-space: nowrap; width: auto; } .steps button:not([aria-current]) .name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
     @media (prefers-reduced-motion: no-preference) { .progress span { transition: width .3s ease; } }
   `,
   template: `
@@ -120,7 +120,7 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
         @for (step of steps; track step.id; let i = $index) {
           <li><button type="button" [attr.aria-current]="current() === step.id ? 'step' : null" (click)="goTo(step.id)">
             <span class="dot" [class.done]="status(step.id) === 'done'" [class.skipped]="status(step.id) === 'skipped'" aria-hidden="true">
-              {{ status(step.id) === 'done' ? '✓' : i + 1 }}</span>
+              @if (status(step.id) === 'done') { <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 6.2 5 8.6l4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> } @else { {{ i + 1 }} }</span>
             <span class="name">{{ step.title }}<span class="sr-only">{{ statusText(step.id) }}</span></span>
           </button></li>
         }
@@ -266,18 +266,26 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
             </div>
             @if (students().length) {
               <p class="label">{{ unplacedCount() }} öğrenci yerleştirilmedi. Gruba ya da birebir öğretmenine tıklayın.</p>
-              <div class="placement">
+              <div class="stack" style="gap: 8px">
                 @for (student of students(); track student.id) {
-                  <strong>{{ student.displayName }}</strong>
-                  <div class="chips">
-                    @for (group of state.groups(); track group.id) {
-                      <button type="button" [attr.aria-pressed]="inGroup(student, group.id)" [disabled]="busy()" (click)="toggleGroup(student, group.id)"
-                        [attr.aria-label]="student.displayName + ', ' + groupLabel(group.id)">{{ groupLabel(group.id) }}</button>
+                  <div class="block placement" role="group" [attr.aria-label]="student.displayName">
+                    <strong>{{ student.displayName }}
+                      @if (!student.groups.length && !student.oneToOneTeacherUserId) { <span class="badge warn">Yerleştirilmedi</span> }</strong>
+                    @if (state.groups().length) {
+                      <p class="label">Grup</p>
+                      <div class="chips">
+                        @for (group of state.groups(); track group.id) {
+                          <button type="button" [attr.aria-pressed]="inGroup(student, group.id)" [disabled]="busy()" (click)="toggleGroup(student, group.id)">{{ groupLabel(group.id) }}</button>
+                        }
+                      </div>
                     }
-                    @for (teacher of state.teachers(); track teacher.userId) {
-                      <button type="button" [attr.aria-pressed]="student.oneToOneTeacherUserId === teacher.userId" [disabled]="busy()"
-                        (click)="toggleSolo(student, teacher.userId)">Birebir: {{ shortName(teacher.userId) }}</button>
-                    }
+                    <p class="label">Birebir ders alıyorsa öğretmeni</p>
+                    <div class="chips">
+                      @for (teacher of state.teachers(); track teacher.userId) {
+                        <button type="button" [attr.aria-pressed]="student.oneToOneTeacherUserId === teacher.userId" [disabled]="busy()"
+                          [attr.aria-label]="'Birebir öğretmeni ' + shortName(teacher.userId)" (click)="toggleSolo(student, teacher.userId)">{{ shortName(teacher.userId) }}</button>
+                      }
+                    </div>
                   </div>
                 }
               </div>
@@ -289,10 +297,14 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
             @for (group of state.groups(); track group.id) {
               <div class="block">
                 <h3>{{ groupLabel(group.id) }}</h3>
-                <p class="muted" style="margin: 0">{{ waitingFee(group.id).length }} öğrencinin bu kurs için anlaşması yok.</p>
-                <ng-container *ngTemplateOutlet="feeForm; context: { $implicit: feeOf('g:' + group.id), key: 'g:' + group.id, solo: false }"></ng-container>
-                <div><button type="button" class="btn-secondary" [disabled]="busy() || !waitingFee(group.id).length || !(feeOf('g:' + group.id).amount > 0)"
-                  (click)="applyGroupFee(group.id)">{{ waitingFee(group.id).length }} öğrenciye uygula</button></div>
+                @if (!membersOf(group.id)) { <p class="muted" style="margin: 0">Bu grupta henüz öğrenci yok.</p> }
+                @else if (!waitingFee(group.id).length) { <p class="muted" style="margin: 0">Bu gruptaki herkesin ücret anlaşması var.</p> }
+                @else {
+                  <p class="muted" style="margin: 0">{{ waitingFee(group.id).length }} öğrencinin bu kurs için anlaşması yok.</p>
+                  <ng-container *ngTemplateOutlet="feeForm; context: { $implicit: feeOf('g:' + group.id), key: 'g:' + group.id, solo: false }"></ng-container>
+                  <div><button type="button" class="btn-secondary" [disabled]="busy() || !((feeOf('g:' + group.id).amount ?? 0) > 0)"
+                    (click)="applyGroupFee(group.id)">{{ waitingFee(group.id).length }} öğrenciye uygula</button></div>
+                }
               </div>
             }
             @for (student of soloStudents(); track student.id) {
@@ -304,7 +316,7 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
                     <button type="button" [attr.aria-pressed]="feeOf('s:' + student.id).courseId === course.id" (click)="feeOf('s:' + student.id).courseId = course.id">{{ course.name }}</button>
                   }</div>
                   <ng-container *ngTemplateOutlet="feeForm; context: { $implicit: feeOf('s:' + student.id), key: 's:' + student.id, solo: true }"></ng-container>
-                  <div><button type="button" class="btn-secondary" [disabled]="busy() || !feeOf('s:' + student.id).courseId || !(feeOf('s:' + student.id).amount > 0)"
+                  <div><button type="button" class="btn-secondary" [disabled]="busy() || !feeOf('s:' + student.id).courseId || !((feeOf('s:' + student.id).amount ?? 0) > 0)"
                     (click)="applySoloFee(student)">Kaydet</button></div>
                 }
               </div>
@@ -350,7 +362,7 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
             <div class="stack" style="gap: 8px">
               @for (item of emailKinds; track item.value) {
                 <button type="button" class="choice" [attr.aria-pressed]="emailOn[item.value]" (click)="emailOn[item.value] = !emailOn[item.value]">
-                  <strong>{{ emailOn[item.value] ? '✓ ' : '' }}{{ item.label }}</strong><span>{{ item.hint }}</span></button>
+                  <strong>{{ item.label }}</strong><span>{{ item.hint }}</span></button>
               }
             </div>
             <p class="label">Kime gitsin?</p>
@@ -401,7 +413,7 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
       <div class="chips">@for (amount of amounts; track amount) {
         <button type="button" [attr.aria-pressed]="fee.amount === amount" (click)="fee.amount = amount">{{ money(amount) }}</button>
       }</div>
-      <label class="field" style="max-width: 220px">Ya da yazın (TL)<input type="number" min="1" step="1" [(ngModel)]="fee.amount" [ngModelOptions]="{ standalone: true }"></label>
+      <label class="field" style="max-width: 220px">Ya da yazın (TL)<input type="number" min="1" step="1" inputmode="numeric" [(ngModel)]="fee.amount" [ngModelOptions]="{ standalone: true }"></label>
       @if (fee.model === 1 || fee.model === 2) {
         <p class="label">{{ fee.model === 1 ? 'Kaç taksit?' : 'Kaç ay?' }}</p>
         <div class="chips">@for (count of [3, 4, 6, 8, 9, 10, 12]; track count) {
@@ -704,7 +716,7 @@ export class SetupWizardComponent implements OnInit {
   feeOf(key: string): FeePlan {
     let fee = this.fees.get(key);
     if (!fee) {
-      fee = { model: key.startsWith('s:') ? 3 : 2, amount: 0, count: 9, firstDue: this.today(), unit: 1, sessions: 8, expiresOn: '', courseId: '' };
+      fee = { model: key.startsWith('s:') ? 3 : 2, amount: null, count: 9, firstDue: this.today(), unit: 1, sessions: 8, expiresOn: '', courseId: '' };
       this.fees.set(key, fee);
     }
     return fee;
@@ -713,6 +725,7 @@ export class SetupWizardComponent implements OnInit {
   hasFee(studentId: string, courseId?: string): boolean {
     return this.agreements().some(item => item.isActive && item.studentId === studentId && (!courseId || item.courseId === courseId));
   }
+  membersOf(groupId: string): number { return this.students().filter(student => this.inGroup(student, groupId)).length; }
   waitingFee(groupId: string): PanelStudentRow[] {
     const group = this.state.groups().find(item => item.id === groupId);
     return group ? this.students().filter(student => this.inGroup(student, groupId) && !this.hasFee(student.id, group.courseId)) : [];
@@ -725,7 +738,7 @@ export class SetupWizardComponent implements OnInit {
     let done = 0;
     await this.act(async () => {
       for (const student of waiting) {
-        await createFeeAgreementWithInstallments(this.service, this.state.id(), { ...fee, studentId: student.id, courseId: group.courseId }, this.today());
+        await createFeeAgreementWithInstallments(this.service, this.state.id(), { ...fee, amount: fee.amount ?? 0, studentId: student.id, courseId: group.courseId }, this.today());
         done++;
       }
       await this.reload();
@@ -735,7 +748,7 @@ export class SetupWizardComponent implements OnInit {
   async applySoloFee(student: PanelStudentRow): Promise<void> {
     const fee = this.feeOf('s:' + student.id);
     await this.act(async () => {
-      await createFeeAgreementWithInstallments(this.service, this.state.id(), { ...fee, studentId: student.id }, this.today());
+      await createFeeAgreementWithInstallments(this.service, this.state.id(), { ...fee, amount: fee.amount ?? 0, studentId: student.id }, this.today());
       await this.reload();
     }, `${student.displayName} için ücret anlaşması açıldı.`);
   }
