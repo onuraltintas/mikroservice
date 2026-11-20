@@ -62,6 +62,40 @@ public sealed class BillingNoticeConsumerTests
     }
 
     [Fact]
+    public async Task An_institution_is_emailed_as_maxkampus_in_siz_with_a_link_to_maxkampus_plan()
+    {
+        // 20.11.2026: maxkampüs notices said "Kurs Yönetimi", "Aboneliğin…" and opened maxkoç's payments page.
+        var owner = Guid.NewGuid();
+        var (provider, mail) = await StartAsync();
+        var harness = provider.GetRequiredService<ITestHarness>();
+        try
+        {
+            await harness.Bus.Publish(Notice(BillingNoticeKinds.Expiring, owner, "kurum@example.test", ["course-management"]));
+            await harness.Bus.Publish(Notice(BillingNoticeKinds.OrderApproved, owner, "onay@example.test", ["course-management"]));
+            await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 2);
+
+            var expiring = mail.Messages.Single(x => x.Recipient == "kurum@example.test");
+            expiring.Subject.Should().Be("maxkampüs: Planınız yakında sona eriyor");
+            var body = System.Net.WebUtility.HtmlDecode(expiring.Body);
+            body.Should().Contain("https://maxkampus.com/plan").And.Contain("Planım ve ödemeler").And.Contain("salt okunur")
+                .And.NotContain("coaching-portal").And.NotContain("Aboneliğin");
+            mail.Messages.Single(x => x.Recipient == "onay@example.test").Subject.Should().Be("maxkampüs: Ödemeniz onaylandı");
+        }
+        finally { await harness.Stop(); await provider.DisposeAsync(); }
+    }
+
+    [Fact]
+    public void Every_kind_has_an_institution_text_too()
+    {
+        var kinds = typeof(BillingNoticeKinds).GetFields().Where(field => field.IsLiteral).Select(field => (string)field.GetRawConstantValue()!).ToArray();
+        var describe = typeof(BillingNoticeConsumer).GetMethod("Describe", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        foreach (var kind in kinds)
+            describe.Invoke(null, [Notice(kind, Guid.NewGuid(), "a@example.test", ["course-management"])]).Should().NotBeNull($"{kind} needs an institution text");
+        BillingNoticeConsumer.BuyerLink(new PublicAppUrlOptions { CourseManagementBaseUrl = "https://kampus.example.test/" }, ["course-management"])
+            .Should().Be("https://kampus.example.test/plan");
+    }
+
+    [Fact]
     public void Every_kind_the_billing_service_sends_has_a_text()
     {
         var kinds = typeof(BillingNoticeKinds).GetFields().Where(field => field.IsLiteral).Select(field => (string)field.GetRawConstantValue()!).ToArray();
