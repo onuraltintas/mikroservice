@@ -164,18 +164,6 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.deepEqual((({ name, teacherUserId }) => ({ name, teacherUserId }))(await renamed.json()), { name: 'TEST 8-C', teacherUserId: teacherId });
     assert.equal((await call(`${ws}/groups/${pendingGroupId}`, teacher, 'PUT', { name: 'X', teacherUserId: null, moveFutureLessons: false, force: false })).status, 404);
 
-    const soloId = randomUUID();
-    assert.equal((await call(`${ws}/students`, owner, 'POST', { id: soloId, displayName: 'TEST Birebir', email: null, phoneNumber: null })).status, 201);
-    const teacherBefore = await (await call(`${ws}/students/search?take=50`, teacher)).json();
-    assert.equal(teacherBefore.items.some(item => item.id === soloId), false);
-    const solo = await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: teacherId });
-    assert.equal(solo.status, 200, await solo.clone().text());
-    const teacherAfter = await (await call(`${ws}/students/search?take=50`, teacher)).json();
-    assert.equal(teacherAfter.items.find(item => item.id === soloId)?.oneToOneTeacherUserId, teacherId, 'the one-to-one teacher sees the student');
-    assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: pendingId })).status, 200);
-    assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: randomUUID() })).status, 400);
-    // The rest of this test counts two active students: the one-to-one test student is archived again.
-    assert.equal((await call(`${ws}/students/${soloId}`, owner, 'PUT', { displayName: 'TEST Birebir', email: null, phoneNumber: null, isActive: false })).status, 200);
 
     const extraGroupId = randomUUID();
     assert.equal((await call(`${ws}/groups`, owner, 'POST', { id: extraGroupId, courseId, teacherUserId: teacherId, name: 'TEST 8-D' })).status, 201);
@@ -345,7 +333,7 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal((await search('q=TEST%20Veli')).items[0].displayName, 'TEST Mehmet', 'guardian names are searched too');
     assert.equal((await search(`groupId=${groupId}&take=1&sort=-name`)).items[0].displayName, 'TEST Mehmet');
     assert.equal((await search(`groupId=${groupId}&take=1&skip=1&sort=-name`)).items[0].displayName, 'TEST Ayşe');
-    assert.equal((await search('status=archived')).total, 1, 'only the archived one-to-one test student');
+    assert.equal((await search('status=archived')).total, 0);
     const teacherView = await search('', teacher);
     assert.equal(teacherView.total, 2);
     assert.equal(teacherView.items[0].email, null);
@@ -438,6 +426,18 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(studentChange.after, 'ad, e-posta');
     assert.equal(changeLog.find(item => item.what === 'Ders saati düzeltildi').target, 'TEST Matematik');
     assert.equal(changeLog.find(item => item.what === 'E-posta bildirimi kapatıldı').before, 'LessonChanged');
+
+    // One-to-one teachers (20.11.2026): last, so the student counts above stay as they were.
+    const soloId = randomUUID();
+    assert.equal((await call(`${ws}/students`, owner, 'POST', { id: soloId, displayName: 'TEST Birebir', email: null, phoneNumber: null })).status, 201);
+    const teacherBefore = await (await call(`${ws}/students/search?take=50`, teacher)).json();
+    assert.equal(teacherBefore.items.some(item => item.id === soloId), false);
+    const solo = await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: teacherId });
+    assert.equal(solo.status, 200, await solo.clone().text());
+    const teacherAfter = await (await call(`${ws}/students/search?take=50`, teacher)).json();
+    assert.equal(teacherAfter.items.find(item => item.id === soloId)?.oneToOneTeacherUserId, teacherId, 'the one-to-one teacher sees the student');
+    assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: pendingId })).status, 200);
+    assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: randomUUID() })).status, 400);
   } finally {
     child.kill();
     stub.close();
