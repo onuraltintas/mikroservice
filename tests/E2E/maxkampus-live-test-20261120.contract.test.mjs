@@ -107,3 +107,36 @@ test('settings: the profile name is shown, maxkampüs names itself, unsubscribe 
   assert.match(read('clients/admin-panel/projects/maxkampus/src/app/panel/panel-gate.component.ts'), /site="maxkampus"/);
   assert.match(read('services/course-management-service/CourseManagement.API/CourseEmails.cs'), /PublicBaseUrl \{ get; init; \} = "https:\/\/maxkampus\.com"/);
 });
+
+// G, H, I: sign-up, plan page, admin, account switch.
+test('sign-up asks the password twice, both forms can show it, and both have a back button', () => {
+  const register = read('clients/admin-panel/projects/maxkampus/src/app/account/register.component.ts');
+  assert.match(register, /name="passwordAgain"/);
+  assert.match(register, /İki şifre aynı değil/);
+  assert.match(register, /'Şifreyi gizle' : 'Şifreyi göster'/);
+  assert.match(read('clients/admin-panel/projects/maxkampus/src/app/account/login.component.ts'), /'Şifreyi gizle' : 'Şifreyi göster'/);
+  assert.match(read('clients/admin-panel/projects/maxkampus/src/app/account/auth-layout.component.ts'), /\(click\)="back\(\)">← Geri</);
+});
+
+test('plan page: maxkampüs colours, a tab title that matches, contracts say TL', () => {
+  assert.match(read('clients/admin-panel/projects/maxkampus/src/app/panel/plan-subscription.component.ts'), /--bill-accent: var\(--ds-primary\)/);
+  assert.match(read('clients/admin-panel/projects/maxkampus/src/app/panel/panel-gate.component.ts'), /this\.active\(\) \? 'Planım ve ödemeler'/);
+  assert.match(read('services/billing-service/Billing.Application/SalesDocuments.cs'), /currency == "TRY" \? "TL" : currency/);
+  assert.match(read('services/notification-service/Notification.Application/Consumers/BillingNoticeConsumer.cs'), /notice\.Currency == "TRY" \? "TL"/);
+});
+
+test('admin: each maxkampüs site page has its own icon and orders show net and VAT', () => {
+  const sidebar = read('clients/admin-panel/src/app/features/dashboard/layout/sidebar/sidebar.ts');
+  const siteLines = sidebar.split('\n').filter((line) => /site\('Site: /.test(line));
+  assert.equal(siteLines.length, 9);
+  assert.ok(siteLines.every((line) => /', '<svg/.test(line)), 'every site page names its own icon');
+  assert.equal(new Set(siteLines.map((line) => line.match(/ d="([^"]+)"/)[1])).size, 9, 'no two site pages share an icon');
+  assert.match(read('clients/admin-panel/src/app/features/billing/billing-orders.ts'), /Net \{\{ row\.order\.amount - row\.order\.vatAmount/);
+});
+
+test('maxkampüs says when another account signed in on the same browser', () => {
+  const frame = read('clients/admin-panel/projects/maxkampus/src/app/panel/panel-frame.component.ts');
+  assert.match(frame, /LAST_ACCOUNT_KEY = 'mk_last_account'/);
+  assert.match(frame, /önceki hesabın oturumu kapandı/);
+  assert.match(frame, /addEventListener\?\.\('storage'/);
+});

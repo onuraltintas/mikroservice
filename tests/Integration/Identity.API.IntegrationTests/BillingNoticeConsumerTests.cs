@@ -52,7 +52,7 @@ public sealed class BillingNoticeConsumerTests
             await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 2);
 
             var declared = mail.Messages.Single(x => x.Subject.Contains("ödeme bildirimi", StringComparison.OrdinalIgnoreCase));
-            System.Net.WebUtility.HtmlDecode(declared.Body).Should().Contain("https://app.example.test/dashboard/billing/orders").And.Contain("200,00 TRY").And.Contain("Ada Öğrenci");
+            System.Net.WebUtility.HtmlDecode(declared.Body).Should().Contain("https://app.example.test/dashboard/billing/orders").And.Contain("200,00 TL").And.Contain("Ada Öğrenci");
             declared.SubjectUserId.Should().BeNull();
             declared.ConsumerType.Should().Be("BillingNoticeConsumer.Seller");
             mail.Messages.Single(x => x.Subject.Contains("cayma", StringComparison.OrdinalIgnoreCase)).Body

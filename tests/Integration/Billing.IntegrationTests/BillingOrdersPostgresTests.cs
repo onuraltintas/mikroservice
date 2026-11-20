@@ -133,7 +133,7 @@ public sealed class BillingOrdersPostgresTests : IAsyncLifetime
             Assert.Contains("TEST Satıcı Ltd.", documents!.DistanceSales);
             Assert.Contains("Deneme Öğrenci", documents.PreInformation);
             Assert.Contains("Master Hızlı Okuma TEST Aylık aboneliği", documents.PreInformation);
-            Assert.Contains("200,00 TRY", documents.PreInformation);
+            Assert.Contains("200,00 TL", documents.PreInformation);
             Assert.Null(await orders.GetAcceptedDocumentsAsync(Guid.NewGuid(), order.Id));
             Assert.Single(await db.Accounts.Where(item => item.UserId == user.Id).ToListAsync());
         }

@@ -99,7 +99,7 @@ public sealed class BillingExtrasPostgresTests : IAsyncLifetime
 
         Assert.Equal((200m, 50m, 150m, "OKUL-25"), (order.ListPrice, order.Discount, order.Amount, order.CouponCode));
         await using var check = Db();
-        Assert.Contains("150,00 TRY", (await Orders(check).GetAcceptedDocumentsAsync(user.Id, order.Id))!.PreInformation);
+        Assert.Contains("150,00 TL", (await Orders(check).GetAcceptedDocumentsAsync(user.Id, order.Id))!.PreInformation);
         Assert.Equal(1, Assert.Single(await Extras(check).GetCouponsAsync()).UsedCount);
     }
 

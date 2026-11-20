@@ -82,7 +82,7 @@ public sealed class BillingVatPostgresTests : IAsyncLifetime
         Assert.True(documents!.Business);
         Assert.Equal(SalesDocumentTexts.BusinessVersion, documents.Version);
         Assert.Contains("KURUMSAL ABONELİK SÖZLEŞMESİ", documents.DistanceSales);
-        Assert.Contains("Net tutar 500,00 TRY, KDV (%20) 100,00 TRY, ödenecek toplam tutar 600,00 TRY.", documents.DistanceSales);
+        Assert.Contains("Net tutar 500,00 TL, KDV (%20) 100,00 TL, ödenecek toplam tutar 600,00 TL.", documents.DistanceSales);
         Assert.DoesNotContain("Cayma hakkı", documents.DistanceSales);
         Assert.DoesNotContain("Tüketici Hakem Heyeti", documents.DistanceSales);
 
@@ -125,7 +125,7 @@ public sealed class BillingVatPostgresTests : IAsyncLifetime
         var documents = await Orders(db).PreviewDocumentsAsync(reader, _consumerPlan, "TEST Okur");
         Assert.False(documents!.Business);
         Assert.Equal(SalesDocumentTexts.Version, documents.Version);
-        Assert.Contains("Ödenecek toplam tutar 749,00 TRY (vergiler dahil).", documents.DistanceSales);
+        Assert.Contains("Ödenecek toplam tutar 749,00 TL (vergiler dahil).", documents.DistanceSales);
         var order = await Orders(db).CreateOrderAsync(reader, new CreateOrderRequest(_consumerPlan, SalesDocumentTexts.Version, "TEST Okur", null, null));
         Assert.Null(order.VatRate);
         Assert.Equal(0m, order.VatAmount);

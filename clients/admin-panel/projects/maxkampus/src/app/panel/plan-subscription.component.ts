@@ -12,7 +12,9 @@ import { environment } from '../../environments/environment';
   selector: 'mk-plan-subscription',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: MY_SUBSCRIPTION_TEMPLATE,
-  styles: [MY_SUBSCRIPTION_STYLES]
+  // maxkampüs colours instead of the shared page's default blue (20.11.2026 live test: "Satın al" was blue).
+  styles: [`:host { --bill-accent: var(--ds-primary); --bill-on-accent: var(--ds-on-primary); --bill-surface: var(--ds-surface);
+    --bill-soft: var(--ds-soft); --bill-text: var(--ds-text); --bill-muted: var(--ds-muted); --bill-border: var(--ds-field); }`, MY_SUBSCRIPTION_STYLES]
 })
 export class PlanSubscriptionComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
