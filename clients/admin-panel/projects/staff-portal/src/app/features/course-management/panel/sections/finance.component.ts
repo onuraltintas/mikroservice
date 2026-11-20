@@ -2,6 +2,7 @@ import { Component, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CourseInstallment, CourseManagementService, CourseFinanceSummary, CourseFinanceWorkspaceReport } from '../../course-management.service';
 import { CoursePanelApi, PanelInstallmentRow, PanelPaymentRow, PanelStudentRow } from '../panel-api.service';
+import { createFeeAgreementWithInstallments } from '../fee-agreements';
 import { CoursePanelState, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, sameStudentName, writeHashQuery } from '../panel-state';
 
 type Tab = 'debts' | 'payments';
@@ -382,29 +383,10 @@ export class FinanceSectionComponent {
     const form = this.agreement();
     if (!form) return;
     this.busy.set(true); this.dialogError.set('');
-    const id = this.state.id();
     try {
-      const amount = Math.round(form.amount * 100) / 100;
-      const created = await this.service.createFeeAgreement(id, { id: crypto.randomUUID(), studentId: form.studentId, courseId: form.courseId,
-        model: form.model, amount, billingUnit: form.model === 3 ? form.unit : null,
-        packageSessions: form.model === 4 ? form.sessions : null,
-        packageExpiresAt: form.model === 4 && form.expiresOn ? new Date(`${form.expiresOn}T23:59:00+03:00`).toISOString() : null });
-      const installments: { label: string; amount: number; dueOn: string }[] = [];
-      if (form.model === 1 || form.model === 2) {
-        const count = Math.max(1, Math.min(24, Math.floor(form.count)));
-        const each = form.model === 1 ? Math.floor(amount / count * 100) / 100 : amount;
-        for (let index = 0; index < count; index++) {
-          const due = new Date(`${form.firstDue}T12:00:00Z`);
-          due.setUTCMonth(due.getUTCMonth() + index);
-          const value = form.model === 1 && index === count - 1 ? Math.round((amount - each * (count - 1)) * 100) / 100 : each;
-          installments.push({ label: form.model === 1 ? `${index + 1}. taksit` : this.monthName(due), amount: value, dueOn: due.toISOString().slice(0, 10) });
-        }
-      } else if (form.model === 4) {
-        installments.push({ label: `${form.sessions} derslik paket`, amount, dueOn: form.firstDue || this.today() });
-      }
-      for (const item of installments) await this.service.createInstallment(id, created.id, { id: crypto.randomUUID(), ...item });
+      const opened = await createFeeAgreementWithInstallments(this.service, this.state.id(), form, this.today());
       this.agreement.set(null);
-      this.notice.set(installments.length ? `Anlaşma kaydedildi; ${installments.length} taksit açıldı.` : 'Anlaşma kaydedildi; borç ders tamamlandıkça yazılır.');
+      this.notice.set(opened ? `Anlaşma kaydedildi; ${opened} taksit açıldı.` : 'Anlaşma kaydedildi; borç ders tamamlandıkça yazılır.');
       this.state.changed();
     } catch (error) {
       this.dialogError.set((error as { error?: { code?: string } })?.error?.code === 'FeeAgreement.ActiveAgreementExists'
@@ -412,7 +394,4 @@ export class FinanceSectionComponent {
     } finally { this.busy.set(false); }
   }
 
-  private monthName(date: Date): string {
-    return new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
-  }
 }

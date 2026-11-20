@@ -89,3 +89,14 @@ describe('plan ending and money (20.11.2026 evening fixes)', () => {
     expect(trMoney(1250.5, 'TRY')).toBe('1.250,50 TL');
   });
 });
+
+describe('the way from sign-up to the panel', () => {
+  it('shows plan, payment, approval and setup in turn', async () => {
+    const { planStep, START_STEPS } = await import('../site/start-steps.component');
+    expect(START_STEPS).toEqual(['Hesap', 'Plan', 'Ödeme', 'Onay', 'Kurulum']);
+    expect(planStep({ subscriptions: [], pendingOrders: [] })).toBe(1);
+    expect(planStep({ subscriptions: [], pendingOrders: [{ paidDeclaredAt: null }] })).toBe(2);
+    expect(planStep({ subscriptions: [], pendingOrders: [{ paidDeclaredAt: '2026-11-21T10:00:00Z' }] })).toBe(3);
+    expect(planStep({ subscriptions: [{ isCurrent: true }], pendingOrders: [] })).toBe(4);
+  });
+});

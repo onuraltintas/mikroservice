@@ -10,6 +10,7 @@ import { AuthLayoutComponent } from './auth-layout.component';
 import { GoogleButtonComponent } from './google-button.component';
 import { GoogleSignup } from './google-signup';
 import { LegalConsentComponent } from './legal-consent.component';
+import { StartStepsComponent } from '../site/start-steps.component';
 import { googleProblem } from './login.component';
 
 export type RegistrationKind = 'institution' | 'teacher' | 'invited';
@@ -32,9 +33,10 @@ export function passwordLooksValid(value: string): boolean {
 @Component({
   selector: 'mk-register',
   standalone: true,
-  imports: [FormsModule, RouterLink, AuthLayoutComponent, GoogleButtonComponent, LegalConsentComponent],
+  imports: [FormsModule, RouterLink, AuthLayoutComponent, GoogleButtonComponent, LegalConsentComponent, StartStepsComponent],
   template: `
     <mk-auth-layout [headline]="invitation() ? invitation()!.workspaceName + ' sizi bekliyor' : 'Kurumunuzu birkaç dakikada açın'">
+      @if (kind() !== 'invited') { <mk-start-steps [current]="0" /> }
       @if (done(); as outcome) {
         <div class="ds-auth__heading"><h1 class="ds-auth__title">{{ outcome === 'sent' ? 'E-postanızı doğrulayın' : 'Hesabınız hazır' }}</h1></div>
         @if (outcome === 'sent') {

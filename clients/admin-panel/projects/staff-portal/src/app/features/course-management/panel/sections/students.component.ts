@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CourseManagementService, CourseStudentAccount, StudentCsvImportPreview, StudentGuardianLink } from '../../course-management.service';
 import { CoursePanelApi, PanelSentEmail, PanelStudentFilter, PanelStudentPage, PanelStudentRow } from '../panel-api.service';
 import { CoursePanelState, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { PanelConfirm } from '../panel-confirm';
 
 const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babası' }, { value: 4, label: 'Yasal vasisi' }, { value: 1, label: 'Velisi' }, { value: 5, label: 'Diğer' }];
 
@@ -104,13 +105,27 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
           @if (form.id) {
             <section class="stack" style="gap: 10px">
               <h3>Gruplar</h3>
-              <p class="muted" style="margin: 0">{{ form.groups || 'Henüz bir gruba kayıtlı değil.' }}</p>
+              @if (!form.groupIds.length) { <p class="muted" style="margin: 0">Henüz bir gruba kayıtlı değil.</p> }
+              @for (groupId of form.groupIds; track groupId) {
+                <div class="actions" style="justify-content: space-between"><span>{{ groupLabel(groupId, form.groups) }}</span>
+                  @if (state.isOwner() && !state.readOnly()) { <button type="button" class="btn-quiet btn-small" [disabled]="busy()" (click)="leaveGroup(groupId)"
+                    [attr.aria-label]="groupLabel(groupId, form.groups) + ' grubundan çıkar'">Gruptan çıkar</button> }</div>
+              }
               @if (state.isOwner() && !state.readOnly()) {
                 <div class="actions"><label class="field" style="flex: 1">Gruba ekle<select [(ngModel)]="enrollGroupId">
                   <option value="">Grup seçin</option>@for (group of openGroups(form.groupIds); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
                   <button type="button" class="btn-secondary" style="align-self: flex-end" (click)="enroll()" [disabled]="!enrollGroupId || busy()">Ekle</button></div>
               }
             </section>
+            @if (state.isOwner()) {
+              <section class="stack" style="gap: 10px">
+                <h3>Birebir ders</h3>
+                <p class="muted" style="margin: 0">Birebir ders alıyorsa öğretmenini seçin; o öğretmen bu öğrenciyi kendi listesinde görür ve ona ders açabilirsiniz.</p>
+                <label class="field">Birebir öğretmeni<select [ngModel]="form.oneToOneTeacherUserId" (ngModelChange)="setSolo($event)" [disabled]="state.readOnly() || busy()">
+                  <option value="">Birebir ders almıyor</option>
+                  @for (teacher of state.teachers(); track teacher.userId) { <option [value]="teacher.userId">{{ state.teacherName(teacher.userId) }}</option> }</select></label>
+              </section>
+            }
             @if (state.isOwner()) {
               <section class="stack" style="gap: 10px">
                 <h3>Veliler</h3>
@@ -202,6 +217,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
 export class StudentsSectionComponent {
   readonly state = inject(CoursePanelState);
   private readonly api = inject(CoursePanelApi);
+  private readonly confirm = inject(PanelConfirm);
   private readonly service = inject(CourseManagementService);
   readonly relationships = RELATIONSHIPS;
   readonly page = signal<PanelStudentPage | null>(null);
@@ -209,7 +225,7 @@ export class StudentsSectionComponent {
   readonly notice = signal('');
   readonly busy = signal(false);
   readonly cardError = signal('');
-  readonly editing = signal<{ id: string; displayName: string; email: string; phoneNumber: string; isActive: boolean; emailsMuted: boolean; groups: string; groupIds: string[] } | null>(null);
+  readonly editing = signal<{ id: string; displayName: string; email: string; phoneNumber: string; isActive: boolean; emailsMuted: boolean; groups: string; groupIds: string[]; oneToOneTeacherUserId: string } | null>(null);
   readonly guardians = signal<StudentGuardianLink[]>([]);
   readonly emails = signal<PanelSentEmail[]>([]);
   readonly account = signal<CourseStudentAccount | null>(null);
@@ -282,14 +298,15 @@ export class StudentsSectionComponent {
 
   openNew(): void {
     this.cardError.set('');
-    this.editing.set({ id: '', displayName: '', email: '', phoneNumber: '', isActive: true, emailsMuted: false, groups: '', groupIds: [] });
+    this.editing.set({ id: '', displayName: '', email: '', phoneNumber: '', isActive: true, emailsMuted: false, groups: '', groupIds: [], oneToOneTeacherUserId: '' });
   }
 
   async openCard(student: PanelStudentRow): Promise<void> {
     this.cardError.set('');
     this.guardians.set([]); this.emails.set([]); this.account.set(null);
     this.editing.set({ id: student.id, displayName: student.displayName, email: student.email ?? '', phoneNumber: student.phoneNumber ?? '',
-      isActive: student.isActive, emailsMuted: student.emailsMuted, groups: student.groups.map(group => `${group.courseName}, ${group.name}`).join('; '), groupIds: student.groups.map(group => group.id) });
+      isActive: student.isActive, emailsMuted: student.emailsMuted, groups: student.groups.map(group => `${group.courseName}, ${group.name}`).join('; '), groupIds: student.groups.map(group => group.id),
+      oneToOneTeacherUserId: student.oneToOneTeacherUserId ?? '' });
     if (!this.state.isOwner()) return;
     const id = this.state.id();
     const [guardians, emails, account] = await Promise.all([
@@ -345,6 +362,35 @@ export class StudentsSectionComponent {
       this.enrollGroupId = '';
       await this.load();
     }, 'Öğrenci gruba eklendi.');
+  }
+
+  groupLabel(groupId: string, fallback: string): string {
+    const group = this.state.groups().find(item => item.id === groupId);
+    return group ? `${group.courseName}, ${group.name}` : fallback;
+  }
+
+  /** Takes the student out of a group: the enrollment is archived and their place in the group's future lessons is cancelled. */
+  async leaveGroup(groupId: string): Promise<void> {
+    const form = this.editing();
+    if (!form?.id) return;
+    const label = this.groupLabel(groupId, 'bu grup');
+    if (!await this.confirm.ask(`${form.displayName} ${label} grubundan çıkarılsın mı? Grubun gelecek derslerinde artık yer almaz; geçmiş yoklama ve ödevler kalır.`,
+      { title: 'Gruptan çıkar', confirmText: 'Gruptan çıkar', danger: true })) return;
+    await this.act(async () => {
+      await this.api.removeFromGroup(this.state.id(), groupId, form.id);
+      this.editing.set({ ...form, groupIds: form.groupIds.filter(id => id !== groupId) });
+      await this.load();
+    }, 'Öğrenci gruptan çıkarıldı.');
+  }
+
+  async setSolo(teacherUserId: string): Promise<void> {
+    const form = this.editing();
+    if (!form?.id) return;
+    await this.act(async () => {
+      await this.api.setOneToOneTeacher(this.state.id(), form.id, teacherUserId || null);
+      this.editing.set({ ...form, oneToOneTeacherUserId: teacherUserId });
+      await this.load();
+    }, teacherUserId ? 'Birebir öğretmeni kaydedildi.' : 'Birebir ders kaldırıldı.');
   }
 
   async addGuardian(): Promise<void> {

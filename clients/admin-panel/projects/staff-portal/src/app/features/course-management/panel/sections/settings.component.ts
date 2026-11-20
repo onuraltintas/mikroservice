@@ -1,8 +1,8 @@
-import { Component, effect, inject, signal, untracked } from '@angular/core';
+import { Component, EventEmitter, Output, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CourseManagementService, CourseWorkspaceSubscription } from '../../course-management.service';
 import { CoursePanelApi, PanelEmailPreview, PanelEmailSettings, PanelSentEmail, PanelSupportView } from '../panel-api.service';
-import { CoursePanelState, formatDate, formatDateTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { CoursePanelState, PanelSection, formatDate, formatDateTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 
 type Tab = 'emails' | 'branches' | 'support' | 'plan' | 'profile';
 const KINDS: Record<string, { title: string; when: string }> = {
@@ -22,7 +22,8 @@ const KINDS: Record<string, { title: string; when: string }> = {
   imports: [FormsModule],
   styleUrl: '../panel.scss',
   template: `
-    <header class="page-head"><div><h1>Ayarlar</h1><p>{{ state.workspace()?.name }}</p></div></header>
+    <header class="page-head"><div><h1>Ayarlar</h1><p>{{ state.workspace()?.name }}</p></div>
+      @if (state.isInstitutionOwner()) { <div class="actions"><button type="button" class="btn-secondary" (click)="navigate.emit('setup')">Kurulum rehberini aç</button></div> }</header>
     <div class="tabs" role="tablist" aria-label="Ayarlar" style="margin-bottom: 18px">
       @for (item of tabs; track item.id) {
         <button type="button" role="tab" [attr.aria-selected]="tab() === item.id" (click)="open(item.id)">{{ item.label }}</button>
@@ -176,6 +177,7 @@ const KINDS: Record<string, { title: string; when: string }> = {
   `
 })
 export class SettingsSectionComponent {
+  @Output() readonly navigate = new EventEmitter<PanelSection>();
   readonly state = inject(CoursePanelState);
   private readonly api = inject(CoursePanelApi);
   private readonly service = inject(CourseManagementService);

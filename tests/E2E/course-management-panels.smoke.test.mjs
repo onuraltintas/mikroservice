@@ -997,6 +997,11 @@ test('institution panel: student filters stay in the address, a year-long series
           endsAt: `${body.startsOn}T08:00:00Z`, conflicts: [{ code: 'Lesson.TeacherConflict', with: 'Fizik' }] }] });
         return reply({ seriesId: body.id, sessionsCreated: 49, sessionsSkipped: 1 }, 201);
       }
+      // The setup guide (20.11.2026): one step open, so the guide opens by itself on entry.
+      if (path.endsWith('/setup') && request.method() === 'GET') return reply({ name: workspace.name, institutionCategory: null, closed: false,
+        steps: ['profile', 'teachers', 'rooms', 'courses', 'students', 'fees', 'schedule', 'emails']
+          .map(id => ({ id, status: id === 'profile' ? 'open' : id === 'rooms' ? 'skipped' : 'done' })),
+        counts: { teachers: 0, invited: 0, rooms: 0, courses: 1, groups: 1, students: 1, unplaced: 0, withoutFee: 0, futureLessons: 0 } });
       if (path.endsWith('/email-settings') && request.method() === 'PUT') { savedEmailSettings = request.postDataJSON(); return reply(emailSettings()); }
       if (path.endsWith('/email-settings')) return reply(emailSettings());
       if (path.endsWith('/emails')) return reply([]);
@@ -1008,7 +1013,15 @@ test('institution panel: student filters stay in the address, a year-long series
     await page.getByLabel('E-posta adresi').fill('owner@example.test');
     await page.getByLabel('Şifre', { exact: true }).fill('test-password');
     await page.getByRole('button', { name: 'Personel olarak giriş yap' }).click();
+    // The setup guide opens by itself at the first open step; the grouped menu shows its progress on top.
+    await page.getByRole('heading', { name: 'Kurumunuzu tanıyalım' }).waitFor();
+    await page.getByRole('link', { name: 'Kurulum (7/8)' }).waitFor();
+    // On a 390 px phone the menu is one scrolling row and the group headings are hidden; they are still in the page.
+    assert.deepEqual(await page.getByRole('navigation', { name: 'maxkampüs' }).locator('.menu-group').allTextContents(), ['Günlük', 'Kurum', 'Diğer']);
+    assert.equal(await page.getByRole('button', { name: 'Kurs / dershane' }).getAttribute('aria-pressed'), 'false');
+    await page.getByRole('button', { name: 'Daha sonra devam et' }).click();
     await page.getByRole('heading', { name: 'Genel bakış' }).waitFor();
+    await page.getByRole('button', { name: 'Kuruluma devam et' }).waitFor();
 
     // Students: the search and filters are kept in the address, so a refresh keeps them.
     await page.getByRole('link', { name: 'Öğrenciler' }).click();

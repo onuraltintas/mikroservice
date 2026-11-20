@@ -3,7 +3,8 @@ import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StaffAuthService } from '../../../auth/staff-auth.service';
 import { CourseManagementService, CourseWorkspace, PendingCourseInvitation } from '../course-management.service';
-import { CoursePanelState, PanelSection, PanelSite, SECTIONS, hashUrl, problemText } from './panel-state';
+import { CoursePanelState, PanelSection, PanelSite, SECTIONS, SECTION_GROUPS, hashUrl, problemText } from './panel-state';
+import { SetupWizardComponent } from './sections/setup-wizard.component';
 import { PanelConfirmDialogComponent } from './panel-confirm';
 import { OverviewSectionComponent } from './sections/overview.component';
 import { StudentsSectionComponent } from './sections/students.component';
@@ -25,7 +26,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
   selector: 'staff-course-panel',
   standalone: true,
   imports: [FormsModule, CourseManagementWorkspaceComponent, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
-    AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent, PanelConfirmDialogComponent],
+    AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent, PanelConfirmDialogComponent, SetupWizardComponent],
   providers: [CoursePanelState],
   styleUrl: './panel.scss',
   styles: `
@@ -35,11 +36,13 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
     .brand strong { display: block; font-size: 16px; } .brand span { font-size: 13px; color: var(--ds-muted); }
     nav.side a { display: flex; align-items: center; min-height: 44px; padding: 0 14px 0 17px; border-radius: 8px; color: var(--ds-text); text-decoration: none; opacity: .85; }
     nav.side a[aria-current='page'] { background: var(--ds-surface); box-shadow: 0 1px 2px rgba(28,36,48,.08); font-weight: 600; opacity: 1; border-left: 3px solid var(--ds-accent); padding-left: 14px; }
+    .menu-group { margin: 14px 8px 4px; font-size: 13px; font-weight: 600; color: var(--ds-muted); }
+    nav.side a.setup-link { font-weight: 600; opacity: 1; background: var(--ds-surface); border: 1px dashed var(--ds-accent); margin-bottom: 4px; }
     nav.side select { min-height: 40px; margin: 0 8px 12px; border: 1px solid var(--ds-field); border-radius: 8px; background: var(--ds-surface); color: var(--ds-text); font: inherit; padding: 0 8px; }
     main { flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 36px 40px; max-width: 1240px; }
     .setup { max-width: 560px; margin: 40px auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
     @media (max-width: 720px) { nav.side { max-width: none; flex-basis: 100%; flex-direction: row; overflow-x: auto; padding: 8px; }
-      .brand, nav.side select { display: none; } nav.side a { white-space: nowrap; } main { padding: 20px 16px 32px; } }
+      .brand, nav.side select, .menu-group { display: none; } nav.side a { white-space: nowrap; } main { padding: 20px 16px 32px; } }
   `,
   template: `
     @if (loading()) {
@@ -57,8 +60,12 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
               @for (item of workspaces(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }
             </select>
           }
-          @for (item of visibleSections(); track item.id) {
-            <a [href]="link(item.slug)" [attr.aria-current]="section() === item.id ? 'page' : null" (click)="go(item.id, $event)">{{ item.label }}</a>
+          @for (group of menu(); track group.id) {
+            @if (group.label) { <span class="menu-group">{{ group.label }}</span> }
+            @for (item of group.items; track item.id) {
+              <a [href]="link(item.slug)" [attr.aria-current]="section() === item.id ? 'page' : null" [class.setup-link]="item.id === 'setup'"
+                (click)="go(item.id, $event)">{{ item.id === 'setup' ? 'Kurulum (' + state.setupProgress().done + '/' + state.setupProgress().total + ')' : item.label }}</a>
+            }
           }
         </nav>
         <main>
@@ -66,6 +73,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
             <p class="banner" role="status">Kurum salt okunur: kayıtları görebilir ve dışa aktarabilirsiniz, değişiklik yapamazsınız.</p>
           }
           @switch (section()) {
+            @case ('setup') { <course-setup-wizard (navigate)="leaveSetup($event)" /> }
             @case ('overview') { <course-overview-section (navigate)="go($event)" /> }
             @case ('students') { <course-students-section /> }
             @case ('courses') { <course-courses-section /> }
@@ -74,7 +82,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
             @case ('finance') { <course-finance-section /> }
             @case ('teachers') { <course-teachers-section /> }
             @case ('reports') { <course-reports-section /> }
-            @case ('settings') { <course-settings-section /> }
+            @case ('settings') { <course-settings-section (navigate)="go($event)" /> }
             @case ('previous') {
               <p class="banner" role="status">Bu ekran geçiş dönemi içindir: başka üründen kayıt aktarma, telafi dersleri ve işlem kaydı burada. Diğer işler için sol menüyü kullanın.</p>
               <staff-course-management-workspace [role]="role" />
@@ -119,7 +127,17 @@ export class CoursePanelComponent implements OnInit {
   readonly workspaces = signal<CourseWorkspace[]>([]);
   readonly pending = signal<PendingCourseInvitation[]>([]);
   readonly section = signal<PanelSection>('overview');
-  readonly visibleSections = computed(() => SECTIONS.filter(item => this.state.isOwner() || !item.ownerOnly));
+  /** Sections this user may open (a teacher: no owner-only ones). The setup guide stays reachable after it is closed. */
+  readonly visibleSections = computed(() => SECTIONS.filter(item => (this.state.isOwner() || !item.ownerOnly)
+    && (item.id !== 'setup' || this.state.isInstitutionOwner())));
+  /** The side menu, grouped by daily use; "Kurulum (x/8)" sits on top until the owner finishes or closes the guide. */
+  readonly menu = computed(() => {
+    const setup = this.state.setup();
+    const showSetup = !!setup && !setup.closed;
+    return SECTION_GROUPS.map(group => ({ ...group,
+      items: this.visibleSections().filter(item => item.group === group.id && (item.id !== 'setup' || showSetup)) }))
+      .filter(group => group.items.length);
+  });
   displayName = '';
   workspaceName = '';
   private myUserId = '';
@@ -158,7 +176,29 @@ export class CoursePanelComponent implements OnInit {
   private async open(workspace: CourseWorkspace): Promise<void> {
     this.storage()?.setItem('eduivme_course_workspace', workspace.id);
     await this.state.open(workspace, this.myUserId);
+    await this.state.loadSetup();
     if (!this.visibleSections().some(item => item.id === this.section())) this.toOverview();
+    // The guide opens by itself on entry while steps are open, unless the owner chose "Daha sonra devam et" in this
+    // browser session or came in on a section's own address.
+    const setup = this.state.setup();
+    const hash = (this.document.defaultView?.location.hash ?? '').replace(/^#/, '').split('?')[0];
+    const later = this.session()?.getItem(`eduivme_setup_later_${workspace.id}`) === '1';
+    if (setup && !setup.closed && setup.steps.some(step => step.status === 'open') && !later && (!hash || hash === 'genel-bakis')) {
+      this.section.set('setup');
+      const view = this.document.defaultView;
+      view?.history.replaceState(view.history.state, '', hashUrl('#kurulum'));
+    }
+  }
+
+  /** Leaving the guide: "Daha sonra devam et" keeps it closed until the next visit; finishing removes it from the menu. */
+  leaveSetup(section: PanelSection): void {
+    const id = this.state.id();
+    if (id && !this.state.setup()?.closed) this.session()?.setItem(`eduivme_setup_later_${id}`, '1');
+    this.go(section);
+  }
+
+  private session(): Storage | null {
+    try { return this.document.defaultView?.sessionStorage ?? null; } catch { return null; }
   }
 
   /** A teacher who types an owner-only address (#tahsilat, #ayarlar…) lands on Genel bakış (20.11.2026 live test). */

@@ -8,6 +8,7 @@ import { MaxkampusSession } from '../core/session.service';
 import { NoticesComponent } from './notices.component';
 import { PanelFrameComponent } from './panel-frame.component';
 import { PlanSubscriptionComponent } from './plan-subscription.component';
+import { StartStepsComponent, planStep } from '../site/start-steps.component';
 
 /** True when billing asks for a plan and the owner has none running now. */
 export function needsPlan(billing: MyBilling | null): boolean {
@@ -57,10 +58,11 @@ export class PanelGateComponent implements OnInit {
 @Component({
   selector: 'mk-plan',
   standalone: true,
-  imports: [PanelFrameComponent, PlanSubscriptionComponent, RouterLink],
+  imports: [PanelFrameComponent, PlanSubscriptionComponent, RouterLink, StartStepsComponent],
   template: `
     <mk-panel-frame>
       <div class="mk-wrap page">
+        @if (!active()) { <mk-start-steps [current]="step()" /> }
         <header class="head">
           <h1>{{ active() ? 'Planım ve ödemeler' : waiting() ? 'Ödemeniz bekleniyor' : 'Planınızı seçin' }}</h1>
           <p class="mk-muted">{{ active()
@@ -69,6 +71,11 @@ export class PanelGateComponent implements OnInit {
               ? 'Ödemeniz hesaba geçince onaylıyoruz; genellikle aynı iş günü. Onaylandığında e-posta gelir ve panel açılır.'
               : 'Panel, ödemeniz onaylanınca açılır. Havale ya da EFT ile ödersiniz; ödeme kodunuzu açıklamaya yazın. Planınızı sonra değiştirebilirsiniz.' }}</p>
           @if (active()) { <a routerLink="/panel" class="ds-btn ds-btn--primary">Panele git</a> }
+          @if (unpaid(); as order) {
+            <div class="code"><span>Ödeme kodunuz <strong class="num">{{ order.paymentCode }}</strong>. Havale açıklamasına yalnız bu kodu yazın.</span>
+              <button type="button" class="ds-btn ds-btn--secondary" (click)="copy(order.paymentCode)">{{ copied() ? 'Kopyalandı' : 'Kodu kopyala' }}</button>
+              <span class="sr-only" role="status">{{ copied() ? 'Ödeme kodu kopyalandı' : '' }}</span></div>
+          }
         </header>
         <mk-plan-subscription [roles]="session.roles()" [buyerName]="session.displayName()" (changed)="check()" />
       </div>
@@ -78,6 +85,9 @@ export class PanelGateComponent implements OnInit {
     .page { padding-top: 28px; padding-bottom: 48px; max-width: 1040px; }
     .head { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-bottom: 24px; }
     h1 { margin: 0; font-size: 30px; } .head p { margin: 0; max-width: 46em; }
+    .code { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px solid var(--ds-field); border-radius: 10px; background: var(--ds-surface); }
+    .num { font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   `
 })
 export class PlanComponent implements OnInit {
@@ -87,6 +97,15 @@ export class PlanComponent implements OnInit {
   private readonly billing = signal<MyBilling | null>(null);
   readonly active = computed(() => !!this.billing() && !needsPlan(this.billing()));
   readonly waiting = computed(() => (this.billing()?.pendingOrders ?? []).some(order => order.paidDeclaredAt));
+  readonly step = computed(() => planStep(this.billing()));
+  /** The order waiting for the transfer: its payment code, ready to copy into the bank's description field. */
+  readonly unpaid = computed(() => this.active() || this.waiting() ? null : (this.billing()?.pendingOrders ?? []).find(order => !order.paidDeclaredAt) ?? null);
+  readonly copied = signal(false);
+
+  async copy(code: string): Promise<void> {
+    try { await navigator.clipboard.writeText(code); this.copied.set(true); setTimeout(() => this.copied.set(false), 3000); }
+    catch { this.copied.set(false); }
+  }
 
   ngOnInit(): void {
     this.seo.set({ title: 'Planınızı seçin', path: '/plan', noindex: true });
