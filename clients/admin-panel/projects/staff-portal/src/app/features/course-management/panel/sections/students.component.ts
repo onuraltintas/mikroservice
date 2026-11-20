@@ -58,8 +58,8 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               </tr></thead>
               <tbody>
                 @for (student of result.items; track student.id) {
-                  <tr class="clickable" (click)="openCard(student)" (keydown.enter)="openCard(student)" tabindex="0">
-                    <th scope="row">{{ student.displayName }}
+                  <tr class="clickable" (click)="openCard(student)">
+                    <th scope="row"><button type="button" class="row-link" (click)="$event.stopPropagation(); openCard(student)">{{ student.displayName }}</button>
                       @if (!student.isActive) { <span class="badge">Arşivde</span> }
                       @if (student.emailsMuted) { <span class="badge">E-posta kapalı</span> }</th>
                     <td>{{ groupNames(student) }}</td>
@@ -107,7 +107,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               <p class="muted" style="margin: 0">{{ form.groups || 'Henüz bir gruba kayıtlı değil.' }}</p>
               @if (state.isOwner() && !state.readOnly()) {
                 <div class="actions"><label class="field" style="flex: 1">Gruba ekle<select [(ngModel)]="enrollGroupId">
-                  <option value="">Grup seçin</option>@for (group of state.groups(); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
+                  <option value="">Grup seçin</option>@for (group of openGroups(form.groupIds); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
                   <button type="button" class="btn-secondary" style="align-self: flex-end" (click)="enroll()" [disabled]="!enrollGroupId || busy()">Ekle</button></div>
               }
             </section>
@@ -194,7 +194,7 @@ export class StudentsSectionComponent {
   readonly notice = signal('');
   readonly busy = signal(false);
   readonly cardError = signal('');
-  readonly editing = signal<{ id: string; displayName: string; email: string; phoneNumber: string; isActive: boolean; emailsMuted: boolean; groups: string } | null>(null);
+  readonly editing = signal<{ id: string; displayName: string; email: string; phoneNumber: string; isActive: boolean; emailsMuted: boolean; groups: string; groupIds: string[] } | null>(null);
   readonly guardians = signal<StudentGuardianLink[]>([]);
   readonly emails = signal<PanelSentEmail[]>([]);
   readonly account = signal<CourseStudentAccount | null>(null);
@@ -266,14 +266,14 @@ export class StudentsSectionComponent {
 
   openNew(): void {
     this.cardError.set('');
-    this.editing.set({ id: '', displayName: '', email: '', phoneNumber: '', isActive: true, emailsMuted: false, groups: '' });
+    this.editing.set({ id: '', displayName: '', email: '', phoneNumber: '', isActive: true, emailsMuted: false, groups: '', groupIds: [] });
   }
 
   async openCard(student: PanelStudentRow): Promise<void> {
     this.cardError.set('');
     this.guardians.set([]); this.emails.set([]); this.account.set(null);
     this.editing.set({ id: student.id, displayName: student.displayName, email: student.email ?? '', phoneNumber: student.phoneNumber ?? '',
-      isActive: student.isActive, emailsMuted: student.emailsMuted, groups: student.groups.map(group => `${group.courseName}, ${group.name}`).join('; ') });
+      isActive: student.isActive, emailsMuted: student.emailsMuted, groups: student.groups.map(group => `${group.courseName}, ${group.name}`).join('; '), groupIds: student.groups.map(group => group.id) });
     if (!this.state.isOwner()) return;
     const id = this.state.id();
     const [guardians, emails, account] = await Promise.all([
@@ -315,13 +315,17 @@ export class StudentsSectionComponent {
     }, form.isActive ? 'Öğrenci arşive kaldırıldı; grup kayıtları kapandı.' : 'Öğrenci yeniden etkinleştirildi. Gruplara yeniden ekleyebilirsiniz.');
   }
 
+  /** Groups the student is not in yet (20.11.2026: the group the student was already in could be chosen again). */
+  openGroups(current: string[]) { return this.state.groups().filter(group => !current.includes(group.id)); }
+
   async enroll(): Promise<void> {
     const form = this.editing();
     if (!form?.id || !this.enrollGroupId) return;
     await this.act(async () => {
       await this.service.enrollStudent(this.state.id(), this.enrollGroupId, form.id);
       const group = this.state.groups().find(item => item.id === this.enrollGroupId);
-      this.editing.set({ ...form, groups: [form.groups, group ? `${group.courseName}, ${group.name}` : ''].filter(Boolean).join('; ') });
+      this.editing.set({ ...form, groups: [form.groups, group ? `${group.courseName}, ${group.name}` : ''].filter(Boolean).join('; '),
+        groupIds: [...form.groupIds, this.enrollGroupId] });
       this.enrollGroupId = '';
       await this.load();
     }, 'Öğrenci gruba eklendi.');

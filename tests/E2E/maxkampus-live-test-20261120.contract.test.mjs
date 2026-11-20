@@ -68,3 +68,21 @@ test('"Dersi tamamla" waits for the end of the lesson and saved homework can be 
   assert.match(api, /MapDelete\("\/workspaces\/\{workspaceId:guid\}\/assignments\/\{assignmentId:guid\}"/);
   assert.match(api, /code = "Assignment\.InUse"/);
 });
+
+// C and D: students and payments.
+test('students: a group is offered once, the name opens the card from the keyboard, names sort in Turkish order', () => {
+  const students = read(`${panel}/panel/sections/students.component.ts`);
+  assert.match(students, /@for \(group of openGroups\(form\.groupIds\)/);
+  assert.match(students, /<button type="button" class="row-link"/);
+  assert.match(read('services/course-management-service/CourseManagement.API/TurkishCollation.cs'), /"tr-x-icu"/);
+  for (const path of ['StudentSearchEndpoints.cs', 'LearningEndpoints.cs'])
+    assert.match(read(`services/course-management-service/CourseManagement.API/${path}`), /EF\.Functions\.Collate\(\w+\.DisplayName, TurkishCollation\.Name\)/);
+});
+
+test('payments: only the date is shown, a payment can be taken back with a reason, "yaklaşık" only when cents are split', () => {
+  const finance = read(`${panel}/panel/sections/finance.component.ts`);
+  assert.match(finance, /<td class="num">\{\{ date\(row\.receivedAt\) \}\}<\/td>/);
+  assert.match(finance, /\(click\)="openReverse\(row\)">Geri al</);
+  assert.match(finance, /reversePayment\(this\.state\.id\(\), row\.id/);
+  assert.match(finance, /evenSplit\(form\.amount, form\.count\) \? '' : 'yaklaşık '/);
+});
