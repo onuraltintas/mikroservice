@@ -345,7 +345,7 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal((await search('q=TEST%20Veli')).items[0].displayName, 'TEST Mehmet', 'guardian names are searched too');
     assert.equal((await search(`groupId=${groupId}&take=1&sort=-name`)).items[0].displayName, 'TEST Mehmet');
     assert.equal((await search(`groupId=${groupId}&take=1&skip=1&sort=-name`)).items[0].displayName, 'TEST Ayşe');
-    assert.equal((await search('status=archived')).total, 0);
+    assert.equal((await search('status=archived')).total, 1, 'only the archived one-to-one test student');
     const teacherView = await search('', teacher);
     assert.equal(teacherView.total, 2);
     assert.equal(teacherView.items[0].email, null);
