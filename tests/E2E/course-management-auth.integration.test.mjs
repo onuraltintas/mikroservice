@@ -1126,10 +1126,18 @@ test('live API enforces product and subject boundaries before database access', 
         body: JSON.stringify({ endsOn: seriesEndDate, startTime: '16:00', durationMinutes: 60, daysOfWeekMask: seriesWeekdayMask, roomId: null }) });
       assert.equal(updateSeries.status, 200, await updateSeries.clone().text());
       const updateSeriesResult = await updateSeries.json();
-      assert.ok(updateSeriesResult.sessionsCreated >= 1 && updateSeriesResult.sessionsCancelled >= 1,
-        'changing a recurring time cancels the old occurrences and creates replacements');
-      const replacementSeriesLessons = (await (await request(`${lessonPath}?${seriesRange}`, teacherToken)).json())
-        .filter(lesson => lesson.seriesId === seriesId && lesson.status === 'Scheduled');
+      // 20.11.2026 live test: a new time on the same days moves each lesson; nothing is cancelled or opened anew.
+      assert.equal(updateSeriesResult.sessionsCreated, 0, JSON.stringify(updateSeriesResult));
+      assert.equal(updateSeriesResult.sessionsCancelled, 0, JSON.stringify(updateSeriesResult));
+      assert.equal(updateSeriesResult.sessionsUpdated, activeSeriesLessons.length, JSON.stringify(updateSeriesResult));
+      const seriesAfterMove = (await (await request(`${lessonPath}?${seriesRange}`, teacherToken)).json())
+        .filter(lesson => lesson.seriesId === seriesId);
+      assert.deepEqual(seriesAfterMove.map(lesson => lesson.id).sort(), activeSeriesLessons.map(lesson => lesson.id).sort(),
+        'the same lessons stay, at the new time');
+      assert.ok(seriesAfterMove.every(lesson => lesson.status === 'Scheduled'));
+      assert.ok(seriesAfterMove.every(lesson => new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })
+        .format(new Date(lesson.startsAt)) === '16:00'));
+      const replacementSeriesLessons = seriesAfterMove;
       const cancelledSeries = await request(`${seriesPath}/${seriesId}/cancel-future`, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: '{}' });
       assert.equal(cancelledSeries.status, 200);

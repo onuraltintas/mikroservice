@@ -140,3 +140,17 @@ test('maxkampüs says when another account signed in on the same browser', () =>
   assert.match(frame, /önceki hesabın oturumu kapandı/);
   assert.match(frame, /addEventListener\?\.\('storage'/);
 });
+
+// Second live test (20.11.2026 morning).
+test('a new series time moves lessons on the same day instead of cancelling them', () => {
+  const api = read('services/course-management-service/CourseManagement.API/LearningEndpoints.cs');
+  assert.match(api, /var movedTo = new Dictionary<Guid, \(DateTimeOffset StartsAt, DateTimeOffset EndsAt\)>\(\);/);
+  assert.match(api, /if \(movedStarts\.Contains\(occurrence\.StartsAt\)\) continue;/);
+});
+
+test('"+ KDV / 1 ay" is one text, cancelled lessons are not offered for attendance, CSV preview lists the names', () => {
+  for (const path of ['clients/shared/billing/my-subscription.ts', 'clients/admin-panel/projects/maxkampus/src/app/site/plan-cards.component.ts'])
+    assert.match(read(path), /'\+ KDV ' : ''\) \+ '\/ '/, path);
+  assert.match(read(`${panel}/panel/sections/attendance.component.ts`), /lesson\.status !== 'Cancelled'/);
+  assert.match(read(`${panel}/panel/sections/students.component.ts`), /@for \(row of readyRows\(\)/);
+});

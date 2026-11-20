@@ -41,6 +41,8 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .file-pick__input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .file-pick__input:focus-visible + .file-pick__button { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 .file-pick__name { color: var(--ds-muted); overflow-wrap: anywhere; }
+.csv-preview { max-height: 240px; overflow: auto; border: 1px solid var(--ds-line); border-radius: 8px; }
+.csv-preview caption { text-align: left; padding: 8px 12px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; min-width: 0; }
 .field input, .field select, .field textarea {

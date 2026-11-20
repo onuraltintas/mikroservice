@@ -696,8 +696,8 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
               <h3>{{ plan.name }}</h3>
               @if (plan.productCodes.length > 1) { <span class="bill-tag bill-tag--ok">Paket</span> }
               <p class="bill-price">{{ plan.isContactOnly ? 'Teklif alın' : c.money(plan.price, plan.currency) }}
-                @if (plan.vatRate != null && !plan.isContactOnly) { <span class="bill-muted">+ KDV</span> }
-                <span class="bill-muted">/ {{ c.duration(plan.durationDays) }}</span></p>
+                <!-- One text: Angular drops the space between two spans ("+ KDV/ 1 ay", 20.11.2026 live test). -->
+                <span class="bill-muted">{{ (plan.vatRate != null && !plan.isContactOnly ? '+ KDV ' : '') + '/ ' + c.duration(plan.durationDays) }}</span></p>
               @if (plan.vatRate != null && !plan.isContactOnly) {
                 <p class="bill-muted">KDV dahil {{ c.money(plan.priceWithVat ?? plan.price, plan.currency) }}</p>
               }
