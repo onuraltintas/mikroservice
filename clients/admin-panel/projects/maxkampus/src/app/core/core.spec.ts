@@ -6,6 +6,8 @@ import { maxkampusRecaptchaAction } from './interceptors';
 import { MaxkampusSession } from './session.service';
 import { isInternalLink, textBlocks } from './text';
 import { needsPlan } from '../panel/panel-gate.component';
+import { planEndingSoon } from '../panel/panel-frame.component';
+import { trMoney } from './text';
 import { passwordLooksValid, phoneLooksValid } from '../account/register.component';
 
 const post = (url: string) => new HttpRequest('POST', url, {});
@@ -66,6 +68,25 @@ describe('maxkampus.com core rules', () => {
     session.apply({ accessToken: token({ sub: 'u2', exp, 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': ['CourseTeacher'] }) });
     expect(session.role()).toBe('teacher');
     expect(session.apply({ requiresMfa: true, mfaChallengeToken: 'c' })).toBe(false);
+  });
+});
+
+describe('plan ending and money (20.11.2026 evening fixes)', () => {
+  const now = new Date('2026-11-20T10:00:00Z').getTime();
+  const billing = (...ends: string[]) => ({ requireSubscription: true, salesOpen: true, pendingOrders: [],
+    subscriptions: ends.map((endsAt, index) => ({ id: String(index), planName: 'Kurum', endsAt, isCurrent: index === 0 })) });
+
+  it('warns the owner within 14 days of the last paid period, not before and not after a renewal', () => {
+    expect(planEndingSoon(billing('2026-12-01T21:00:00Z'), now)?.days).toBe(11);
+    expect(planEndingSoon(billing('2026-12-20T21:00:00Z'), now)).toBeNull();
+    expect(planEndingSoon(billing('2026-11-25T21:00:00Z', '2026-12-25T21:00:00Z'), now)).toBeNull();
+    expect(planEndingSoon(billing('2026-11-21T00:00:00Z'), now)?.days).toBe(0);
+    expect(planEndingSoon({ ...billing('2026-11-25T21:00:00Z'), requireSubscription: false }, now)).toBeNull();
+  });
+
+  it('writes Turkish lira as TL', () => {
+    expect(trMoney(500, 'TRY')).toBe('500 TL');
+    expect(trMoney(1250.5, 'TRY')).toBe('1.250,50 TL');
   });
 });
 
