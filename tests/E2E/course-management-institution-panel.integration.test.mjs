@@ -132,6 +132,46 @@ test('institution panel: switched-off student portal and files, teacher homework
     for (const id of [studentA, studentB])
       assert.equal((await call(`${ws}/groups/${groupId}/students/${id}`, owner, 'POST')).status, 201);
 
+    // Setup guide (20.11.2026): progress read from the data, the institution's kind, invited teachers given work before
+    // they accept, group edits and one-to-one teachers.
+    const setup = await (await call(`${ws}/setup`, owner)).json();
+    assert.deepEqual(setup.steps.map(step => step.id), ['profile', 'teachers', 'rooms', 'courses', 'students', 'fees', 'schedule', 'emails']);
+    assert.equal(setup.steps.find(step => step.id === 'courses').status, 'done');
+    assert.equal(setup.steps.find(step => step.id === 'students').status, 'done');
+    assert.equal(setup.steps.find(step => step.id === 'profile').status, 'open');
+    assert.equal((await call(`${ws}/setup`, teacher)).status, 404, 'the guide is the owner\'s');
+    const profile = await call(`${ws}/profile`, owner, 'PUT', { name: 'TEST Kurs', institutionCategory: 3 });
+    assert.equal(profile.status, 200, await profile.clone().text());
+    assert.equal((await profile.json()).institutionCategory, 'StudyCenter');
+    assert.equal((await call(`${ws}/profile`, owner, 'PUT', { name: ' ', institutionCategory: null })).status, 400);
+    assert.equal((await call(`${ws}/setup`, owner, 'PUT', { skipped: ['rooms', 'bogus'], closed: false })).status, 204);
+    const afterSkip = await (await call(`${ws}/setup`, owner)).json();
+    assert.equal(afterSkip.steps.find(step => step.id === 'rooms').status, 'skipped');
+    assert.equal(afterSkip.steps.find(step => step.id === 'profile').status, 'done');
+    assert.equal(afterSkip.closed, false);
+
+    const pendingId = randomUUID();
+    const pending = await call(`${ws}/teacher-email-invitations`, owner, 'POST', { id: pendingId, email: 'test-bekleyen@example.com', displayName: 'TEST Bekleyen' });
+    assert.equal(pending.status, 200, await pending.clone().text());
+    assert.equal((await pending.json()).displayName, 'TEST Bekleyen');
+    const pendingGroupId = randomUUID();
+    const pendingGroup = await call(`${ws}/groups`, owner, 'POST', { id: pendingGroupId, courseId, teacherUserId: pendingId, name: 'TEST 8-B' });
+    assert.equal(pendingGroup.status, 201, `an invited teacher can be given a group: ${await pendingGroup.clone().text()}`);
+    assert.equal((await call(`${ws}/groups`, owner, 'POST', { id: randomUUID(), courseId, teacherUserId: randomUUID(), name: 'TEST yok' })).status >= 400, true,
+      'a made-up teacher is refused');
+    const renamed = await call(`${ws}/groups/${pendingGroupId}`, owner, 'PUT', { name: 'TEST 8-C', teacherUserId: teacherId, moveFutureLessons: true, force: false });
+    assert.equal(renamed.status, 200, await renamed.clone().text());
+    assert.deepEqual((({ name, teacherUserId }) => ({ name, teacherUserId }))(await renamed.json()), { name: 'TEST 8-C', teacherUserId: teacherId });
+    assert.equal((await call(`${ws}/groups/${pendingGroupId}`, teacher, 'PUT', { name: 'X', teacherUserId: null, moveFutureLessons: false, force: false })).status, 404);
+
+
+    const extraGroupId = randomUUID();
+    assert.equal((await call(`${ws}/groups`, owner, 'POST', { id: extraGroupId, courseId, teacherUserId: teacherId, name: 'TEST 8-D' })).status, 201);
+    assert.equal((await call(`${ws}/groups/${extraGroupId}/students/${studentA}`, owner, 'POST')).status, 201);
+    assert.equal((await call(`${ws}/groups/${extraGroupId}/students/${studentA}`, owner, 'DELETE')).status, 204);
+    assert.equal((await call(`${ws}/groups/${extraGroupId}/students/${studentA}`, owner, 'DELETE')).status, 204, 'leaving twice is harmless');
+    assert.equal((await call(`${ws}/groups/${extraGroupId}/students/${studentA}`, teacher, 'DELETE')).status, 404);
+
     // Finance stays with the owner.
     assert.equal((await call(`${ws}/finance/summary`, teacher)).status, 404);
     assert.equal((await call(`${ws}/finance/fee-agreements`, teacher)).status, 404);
@@ -386,6 +426,18 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(studentChange.after, 'ad, e-posta');
     assert.equal(changeLog.find(item => item.what === 'Ders saati düzeltildi').target, 'TEST Matematik');
     assert.equal(changeLog.find(item => item.what === 'E-posta bildirimi kapatıldı').before, 'LessonChanged');
+
+    // One-to-one teachers (20.11.2026): last, so the student counts above stay as they were.
+    const soloId = randomUUID();
+    assert.equal((await call(`${ws}/students`, owner, 'POST', { id: soloId, displayName: 'TEST Birebir', email: null, phoneNumber: null })).status, 201);
+    const teacherBefore = await (await call(`${ws}/students/search?take=50`, teacher)).json();
+    assert.equal(teacherBefore.items.some(item => item.id === soloId), false);
+    const solo = await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: teacherId });
+    assert.equal(solo.status, 200, await solo.clone().text());
+    const teacherAfter = await (await call(`${ws}/students/search?take=50`, teacher)).json();
+    assert.equal(teacherAfter.items.find(item => item.id === soloId)?.oneToOneTeacherUserId, teacherId, 'the one-to-one teacher sees the student');
+    assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: pendingId })).status, 200);
+    assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: randomUUID() })).status, 400);
   } finally {
     child.kill();
     stub.close();

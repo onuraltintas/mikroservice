@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagement.API;
 
-public sealed record TeacherEmailInvitationRequest(Guid Id, string? Email);
+public sealed record TeacherEmailInvitationRequest(Guid Id, string? Email, string? DisplayName = null);
 public sealed record AcceptTeacherInvitationRequest(string? DisplayName);
 
 /// <summary>
@@ -43,6 +43,7 @@ public static class TeacherInvitationEndpoints
                 db.TeacherEmailInvitations.Add(existing);
             }
             else code = existing.Renew(now);
+            if (request.DisplayName is not null) existing.SetDisplayName(request.DisplayName);
             await publisher.Publish(InvitationEmail(emailOptions, workspace.Name, email, code), ct);
             db.AuditEntries.Add(WorkspaceAuditEntry.Create(workspaceId, UserId(user), existing.Id, "TeacherInvitation.Sent"));
             await db.SaveChangesAsync(ct);
@@ -100,6 +101,9 @@ public static class TeacherInvitationEndpoints
             if (await db.UserProfiles.FindAsync([userId], ct) is null) db.UserProfiles.Add(CourseUserProfile.Create(userId, displayName));
             invitation.Accept(userId, now);
             db.AuditEntries.Add(WorkspaceAuditEntry.Create(invitation.WorkspaceId, userId, invitation.Id, "TeacherInvitation.Accepted"));
+            // Groups, lessons, hours, leave and one-to-one students given to the invitation become the teacher's (20.11.2026).
+            if (await TeacherInvitationHandOver.HandOverAsync(db, invitation.WorkspaceId, invitation.Id, userId, ct) > 0)
+                db.AuditEntries.Add(WorkspaceAuditEntry.Create(invitation.WorkspaceId, userId, invitation.Id, "TeacherInvitation.HandedOver"));
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { invitation.WorkspaceId });
         });
@@ -132,6 +136,7 @@ public static class TeacherInvitationEndpoints
     {
         invitation.Id,
         invitation.Email,
+        invitation.DisplayName,
         status = invitation.Status == InvitationStatus.Pending && invitation.ExpiresAt <= now ? "Expired" : invitation.Status.ToString(),
         invitation.CreatedAt,
         invitation.ExpiresAt,

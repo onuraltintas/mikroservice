@@ -78,4 +78,11 @@ public sealed class LessonSession
         EndsAt = endsAt;
         RoomId = roomId;
     }
+
+    /// <summary>Another teacher takes over (the group's teacher changed, or an invited teacher accepted).</summary>
+    public void ChangeTeacher(Guid teacherUserId)
+    {
+        if (teacherUserId == Guid.Empty) throw new ArgumentException("Teacher is required.", nameof(teacherUserId));
+        TeacherUserId = teacherUserId;
+    }
 }

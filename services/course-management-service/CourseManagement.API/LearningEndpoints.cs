@@ -28,9 +28,10 @@ public static class LearningEndpoints
             var isOwner = await IsOwner(db, workspaceId, UserId(user), ct);
             var students = db.Students.AsNoTracking().Where(student => student.WorkspaceId == workspaceId);
             if (!isOwner)
-                students = students.Where(student => student.IsActive && db.Enrollments.Any(enrollment => enrollment.StudentId == student.Id
+                students = students.Where(student => student.IsActive && (student.OneToOneTeacherUserId == UserId(user)
+                    || db.Enrollments.Any(enrollment => enrollment.StudentId == student.Id
                     && enrollment.Status == EnrollmentStatus.Active
-                    && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == UserId(user))));
+                    && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == UserId(user)))));
             return Results.Ok(await students.OrderByDescending(student => student.IsActive).ThenBy(student => EF.Functions.Collate(student.DisplayName, TurkishCollation.Name)).ThenBy(student => student.Id)
                 .Skip(pageSkip).Take(pageSize)
                 .Select(student => new { student.Id, student.UserId, student.DisplayName, student.Email, student.PhoneNumber, student.IsActive,
@@ -181,9 +182,10 @@ public static class LearningEndpoints
             var student = await db.Students.SingleOrDefaultAsync(item => item.Id == studentId && item.WorkspaceId == workspaceId, ct);
             if (student is null) return Results.NotFound();
             var isOwner = await IsOwner(db, workspaceId, userId, ct);
-            if (!isOwner && (!student.IsActive || !await db.Enrollments.AnyAsync(enrollment => enrollment.StudentId == studentId
+            if (!isOwner && (!student.IsActive || (student.OneToOneTeacherUserId != userId
+                    && !await db.Enrollments.AnyAsync(enrollment => enrollment.StudentId == studentId
                     && enrollment.WorkspaceId == workspaceId && enrollment.Status == EnrollmentStatus.Active
-                    && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == userId), ct)))
+                    && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == userId), ct))))
                 return Results.NotFound();
             if (request.IsActive && !student.IsActive && !isOwner) return Results.NotFound();
 
@@ -229,9 +231,10 @@ public static class LearningEndpoints
             if (!await IsOwner(db, workspaceId, userId, ct))
                 guardians = guardians.Where(guardian => db.StudentGuardianLinks.Any(link => link.GuardianContactId == guardian.Id
                     && link.WorkspaceId == workspaceId && link.IsActive
-                    && db.Enrollments.Any(enrollment => enrollment.StudentId == link.StudentId && enrollment.WorkspaceId == workspaceId
+                    && (db.Students.Any(student => student.Id == link.StudentId && student.WorkspaceId == workspaceId && student.OneToOneTeacherUserId == userId)
+                    || db.Enrollments.Any(enrollment => enrollment.StudentId == link.StudentId && enrollment.WorkspaceId == workspaceId
                         && enrollment.Status == EnrollmentStatus.Active
-                        && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == userId))));
+                        && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == userId)))));
             return Results.Ok(await guardians
                 .OrderBy(guardian => guardian.DisplayName).Take(200)
                 .Select(guardian => new { guardian.Id, guardian.DisplayName, guardian.Email, guardian.PhoneNumber }).ToListAsync(ct));
@@ -1801,9 +1804,23 @@ public static class LearningEndpoints
         await IsOwner(db, workspaceId, userId, ct)
         || await db.Memberships.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == userId
             && member.IsActive && member.Role == WorkspaceRole.Teacher, ct);
-    private static Task<bool> IsActiveTeacher(CourseManagementDbContext db, Guid workspaceId, Guid userId, CancellationToken ct) =>
+    /// <summary>
+    /// An active teacher, or a teacher invited by e-mail who has not accepted yet (20.11.2026): groups, lessons, hours,
+    /// leave and one-to-one students are given to the open invitation's id and move to the account on acceptance.
+    /// An invitation id is never a user id, so this widens whom work can be given to, not who may act.
+    /// </summary>
+    private static Task<bool> IsActiveMember(CourseManagementDbContext db, Guid workspaceId, Guid userId, CancellationToken ct) =>
         db.Memberships.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == userId
             && member.IsActive && member.Role == WorkspaceRole.Teacher, ct);
+    internal static async Task<bool> IsActiveTeacher(CourseManagementDbContext db, Guid workspaceId, Guid userId, CancellationToken ct)
+    {
+        if (await db.Memberships.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == userId
+                && member.IsActive && member.Role == WorkspaceRole.Teacher, ct))
+            return true;
+        var now = DateTimeOffset.UtcNow;
+        return await db.TeacherEmailInvitations.AnyAsync(invitation => invitation.WorkspaceId == workspaceId && invitation.Id == userId
+            && invitation.Status == InvitationStatus.Pending && invitation.ExpiresAt > now, ct);
+    }
     internal static bool IsSerializationFailure(Exception exception) => exception is PostgresException
         { SqlState: PostgresErrorCodes.SerializationFailure }
         || exception is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.SerializationFailure } };
@@ -1837,6 +1854,8 @@ public static class LearningEndpoints
     {
         if (!await db.Students.AnyAsync(student => student.Id == studentId && student.WorkspaceId == workspaceId, ct)) return false;
         return await IsOwner(db, workspaceId, userId, ct)
+        || (await db.Students.AnyAsync(student => student.Id == studentId && student.WorkspaceId == workspaceId && student.OneToOneTeacherUserId == userId, ct)
+            && await IsActiveMember(db, workspaceId, userId, ct))
         || await db.Enrollments.AnyAsync(enrollment => enrollment.WorkspaceId == workspaceId && enrollment.StudentId == studentId
             && enrollment.Status == EnrollmentStatus.Active
             && db.Groups.Any(group => group.Id == enrollment.GroupId && group.WorkspaceId == workspaceId && group.TeacherUserId == userId)

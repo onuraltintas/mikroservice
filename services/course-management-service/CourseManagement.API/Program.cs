@@ -217,6 +217,7 @@ app.MapWorkspaceEndpoints(api);
 api.MapTeacherInvitationEndpoints(app);
 api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
+api.MapSetupEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
 api.MapCourseEmailEndpoints(app);

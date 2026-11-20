@@ -264,6 +264,8 @@ public sealed class CourseManagementAccountErasureService(
             message.SubjectUserId, anonymizedUserId, cancellationToken);
         referenceCount += await ReplaceReferencesAsync<CourseAssignment>(nameof(CourseAssignment.TeacherUserId),
             message.SubjectUserId, anonymizedUserId, cancellationToken);
+        referenceCount += await ReplaceReferencesAsync<StudentRecord>(nameof(StudentRecord.OneToOneTeacherUserId),
+            message.SubjectUserId, anonymizedUserId, cancellationToken);
         referenceCount += await ReplaceReferencesAsync<CourseAssignmentSubmission>(nameof(CourseAssignmentSubmission.ReviewedByUserId),
             message.SubjectUserId, anonymizedUserId, cancellationToken);
         referenceCount += await ReplaceReferencesAsync<FeeAgreement>(nameof(FeeAgreement.CreatedByUserId),

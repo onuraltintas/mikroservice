@@ -20,4 +20,19 @@ public sealed class CourseGroup
         return new CourseGroup { Id = id, WorkspaceId = workspaceId, CourseId = courseId,
             TeacherUserId = teacherUserId, Name = normalized, CreatedAt = now };
     }
+
+    public void Rename(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        var normalized = name.Trim();
+        if (normalized.Length is < 1 or > 160) throw new ArgumentException("Group name is invalid.", nameof(name));
+        Name = normalized;
+    }
+
+    /// <summary>The group's teacher changes (setup guide, Kurslar ve gruplar); past lessons keep their teacher.</summary>
+    public void ChangeTeacher(Guid teacherUserId)
+    {
+        if (teacherUserId == Guid.Empty) throw new ArgumentException("Teacher is required.", nameof(teacherUserId));
+        TeacherUserId = teacherUserId;
+    }
 }

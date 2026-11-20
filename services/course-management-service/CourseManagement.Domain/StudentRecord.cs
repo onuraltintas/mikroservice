@@ -46,6 +46,15 @@ public sealed class StudentRecord
 
     public void SetEmailsMuted(bool muted) => EmailsMuted = muted;
 
+    /// <summary>The teacher of the student's one-to-one lessons (20.11.2026): sees the student like a group's teacher does.
+    /// May be a pending e-mail invitation's id until the teacher accepts.</summary>
+    public Guid? OneToOneTeacherUserId { get; private set; }
+
+    public void SetOneToOneTeacher(Guid? teacherUserId) => OneToOneTeacherUserId = teacherUserId == Guid.Empty ? null : teacherUserId;
+
+    /// <summary>The invited teacher accepted: the placeholder (the invitation id) becomes the teacher's account.</summary>
+    public void ReplaceOneToOneTeacher(Guid from, Guid to) { if (OneToOneTeacherUserId == from) OneToOneTeacherUserId = to; }
+
     public void AnonymizeIdentity()
     {
         UserId = null;

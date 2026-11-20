@@ -23,6 +23,14 @@ public sealed class TeacherEmailInvitation
     public Guid CreatedByUserId { get; private set; }
     public Guid? AcceptedUserId { get; private set; }
     public DateTimeOffset? AcceptedAt { get; private set; }
+    /// <summary>The name the owner gave (setup guide); shown as "Ad (davet bekliyor)" until the teacher accepts.</summary>
+    public string? DisplayName { get; private set; }
+
+    public void SetDisplayName(string? displayName)
+    {
+        var name = displayName?.Trim();
+        DisplayName = string.IsNullOrEmpty(name) ? null : name.Length > 200 ? name[..200] : name;
+    }
 
     /// <summary>A new invitation and its code (shown once, in the e-mail link).</summary>
     public static (TeacherEmailInvitation Invitation, string Code) Create(Guid id, Guid workspaceId, string email, Guid createdBy, DateTimeOffset now)
