@@ -174,6 +174,8 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(teacherAfter.items.find(item => item.id === soloId)?.oneToOneTeacherUserId, teacherId, 'the one-to-one teacher sees the student');
     assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: pendingId })).status, 200);
     assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: randomUUID() })).status, 400);
+    // The rest of this test counts two active students: the one-to-one test student is archived again.
+    assert.equal((await call(`${ws}/students/${soloId}`, owner, 'PUT', { displayName: 'TEST Birebir', email: null, phoneNumber: null, isActive: false })).status, 200);
 
     const extraGroupId = randomUUID();
     assert.equal((await call(`${ws}/groups`, owner, 'POST', { id: extraGroupId, courseId, teacherUserId: teacherId, name: 'TEST 8-D' })).status, 201);
