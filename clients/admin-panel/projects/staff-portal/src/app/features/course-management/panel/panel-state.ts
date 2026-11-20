@@ -62,6 +62,8 @@ export class CoursePanelState {
   readonly isOwner = computed(() => this.workspace()?.role === 'Owner');
   readonly readOnly = computed(() => this.workspace()?.isReadOnly ?? false);
   readonly id = computed(() => this.workspace()?.id ?? '');
+  /** The setup guide and teacher invitations are for an institution's owner, not for a teacher's own private-lesson space. */
+  readonly isInstitutionOwner = computed(() => this.isOwner() && this.workspace()?.type === 'Institution');
   /** Who can be given groups and lessons: the owner, active teachers and (for the owner) teachers invited but not yet in. */
   readonly teachers = computed<PanelMember[]>(() => {
     const workspace = this.workspace();
@@ -80,8 +82,11 @@ export class CoursePanelState {
   });
 
   async loadSetup(): Promise<void> {
-    if (!this.isOwner() || !this.id()) { this.setup.set(null); return; }
-    try { this.setup.set(await this.api.setup(this.id())); } catch { this.setup.set(null); }
+    if (!this.isInstitutionOwner() || !this.id()) { this.setup.set(null); return; }
+    try {
+      const setup = await this.api.setup(this.id());
+      this.setup.set(setup && Array.isArray(setup.steps) ? setup : null);
+    } catch { this.setup.set(null); }
   }
 
   teacherName(userId: string | null | undefined): string {
@@ -107,7 +112,7 @@ export class CoursePanelState {
       this.service.getCourses(id), this.service.getGroups(id), this.service.getRooms(id),
       owner ? this.service.getBranches(id) : Promise.resolve([]),
       owner ? this.api.members(id) : Promise.resolve<PanelMember[]>([]),
-      owner ? this.api.teacherInvitations(id).catch(() => [] as PanelTeacherInvitation[]) : Promise.resolve<PanelTeacherInvitation[]>([])
+      this.isInstitutionOwner() ? this.api.teacherInvitations(id).catch(() => [] as PanelTeacherInvitation[]) : Promise.resolve<PanelTeacherInvitation[]>([])
     ]);
     this.invitations.set(invitations);
     this.courses.set(courses);

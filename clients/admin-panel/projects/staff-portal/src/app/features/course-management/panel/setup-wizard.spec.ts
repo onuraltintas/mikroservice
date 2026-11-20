@@ -18,7 +18,7 @@ function configure(api: Partial<Record<keyof CoursePanelApi, unknown>>) {
     providers: [CoursePanelState, { provide: CoursePanelApi, useValue: api }, { provide: CourseManagementService, useValue: service }]
   });
   const state = TestBed.inject(CoursePanelState);
-  state.workspace.set({ id: 'w1', name: 'TEST Kurs', role: 'Owner', isReadOnly: false } as never);
+  state.workspace.set({ id: 'w1', name: 'TEST Kurs', type: 'Institution', role: 'Owner', isReadOnly: false } as never);
   return state;
 }
 

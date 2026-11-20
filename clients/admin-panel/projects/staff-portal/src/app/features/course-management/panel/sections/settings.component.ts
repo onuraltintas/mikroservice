@@ -23,7 +23,7 @@ const KINDS: Record<string, { title: string; when: string }> = {
   styleUrl: '../panel.scss',
   template: `
     <header class="page-head"><div><h1>Ayarlar</h1><p>{{ state.workspace()?.name }}</p></div>
-      <div class="actions"><button type="button" class="btn-secondary" (click)="navigate.emit('setup')">Kurulum rehberini aç</button></div></header>
+      @if (state.isInstitutionOwner()) { <div class="actions"><button type="button" class="btn-secondary" (click)="navigate.emit('setup')">Kurulum rehberini aç</button></div> }</header>
     <div class="tabs" role="tablist" aria-label="Ayarlar" style="margin-bottom: 18px">
       @for (item of tabs; track item.id) {
         <button type="button" role="tab" [attr.aria-selected]="tab() === item.id" (click)="open(item.id)">{{ item.label }}</button>

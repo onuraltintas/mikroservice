@@ -128,7 +128,8 @@ export class CoursePanelComponent implements OnInit {
   readonly pending = signal<PendingCourseInvitation[]>([]);
   readonly section = signal<PanelSection>('overview');
   /** Sections this user may open (a teacher: no owner-only ones). The setup guide stays reachable after it is closed. */
-  readonly visibleSections = computed(() => SECTIONS.filter(item => this.state.isOwner() || !item.ownerOnly));
+  readonly visibleSections = computed(() => SECTIONS.filter(item => (this.state.isOwner() || !item.ownerOnly)
+    && (item.id !== 'setup' || this.state.isInstitutionOwner())));
   /** The side menu, grouped by daily use; "Kurulum (x/8)" sits on top until the owner finishes or closes the guide. */
   readonly menu = computed(() => {
     const setup = this.state.setup();
