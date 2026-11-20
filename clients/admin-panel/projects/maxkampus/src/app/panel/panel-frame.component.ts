@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { MaxkampusApi, MyBilling } from '../core/api';
 import { MaxkampusSession } from '../core/session.service';
 import { BrandMarkComponent } from '../site/brand-mark.component';
 
@@ -29,6 +30,13 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
         <button type="button" (click)="switched.set(null)" aria-label="Bilgiyi kapat">Tamam</button>
       </p>
     }
+    @if (planEnding(); as ending) {
+      <p class="ending" [class.urgent]="ending.days <= 1" role="status">
+        <span>{{ ending.days <= 0 ? 'Planınız bugün sona eriyor.' : ending.days === 1 ? 'Planınız yarın sona eriyor.' : 'Planınız ' + ending.date + ' tarihinde sona eriyor (' + ending.days + ' gün kaldı).' }}
+          Yenilemezseniz panel salt okunur olur; kayıtlarınız durur.</span>
+        <a routerLink="/plan">Planı yenile</a>
+      </p>
+    }
     <ng-content />
   `,
   styles: `
@@ -41,6 +49,10 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
     nav a.on { font-weight: 600; box-shadow: inset 0 -3px 0 var(--ds-accent); }
     .switched { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 10px 20px;
       background: var(--ds-soft); color: var(--ds-text); border-bottom: 1px solid var(--ds-line); line-height: 1.5; }
+    .ending { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 10px 20px;
+      background: var(--mk-soft); color: var(--mk-on-soft); border-bottom: 1px solid var(--ds-line); line-height: 1.5; }
+    .ending.urgent { background: var(--ds-warning-soft); color: var(--ds-text); font-weight: 500; }
+    .ending a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 8px; background: var(--ds-text); color: var(--ds-surface); text-decoration: none; font-weight: 600; }
     .switched button { min-height: 40px; padding: 0 14px; border: 1px solid var(--ds-field); border-radius: 8px; background: var(--ds-surface); color: var(--ds-text); font: inherit; cursor: pointer; }
   `
 })
@@ -53,8 +65,12 @@ export class PanelFrameComponent implements OnInit {
    * says so instead of quietly showing another account's screens (20.11.2026 live test).
    */
   readonly switched = signal<'here' | 'elsewhere' | null>(null);
+  /** The owner sees when the plan ends within 14 days (20.11.2026: only e-mails said so). A renewal already paid counts. */
+  readonly planEnding = signal<{ days: number; date: string } | null>(null);
+  private readonly api = inject(MaxkampusApi);
 
   ngOnInit(): void {
+    if (this.session.role() === 'owner') void this.api.myBilling().then(billing => this.planEnding.set(planEndingSoon(billing, Date.now()))).catch(() => undefined);
     const current = this.session.userId();
     const before = readLastAccount();
     if (current && before && before !== current) this.switched.set('here');
@@ -77,3 +93,15 @@ export class PanelFrameComponent implements OnInit {
 const LAST_ACCOUNT_KEY = 'mk_last_account';
 function readLastAccount(): string | null { try { return globalThis.localStorage?.getItem(LAST_ACCOUNT_KEY) ?? null; } catch { return null; } }
 function writeLastAccount(userId: string): void { try { globalThis.localStorage?.setItem(LAST_ACCOUNT_KEY, userId); } catch { /* private mode */ } }
+
+/** Days until the last paid period ends, when that is 14 days or fewer away; null otherwise. */
+export function planEndingSoon(billing: MyBilling | null, now: number): { days: number; date: string } | null {
+  if (!billing?.requireSubscription) return null;
+  const ends = billing.subscriptions.map(item => new Date(item.endsAt).getTime()).filter(time => !Number.isNaN(time) && time > now);
+  if (!ends.length) return null;
+  const last = Math.max(...ends);
+  const days = Math.ceil((last - now) / 86_400_000) - 1;
+  if (days > 14) return null;
+  const date = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', timeZone: 'Europe/Istanbul' }).format(new Date(last - 1));
+  return { days: Math.max(0, days), date };
+}
