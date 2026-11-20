@@ -58,6 +58,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.Property(student => student.Email).HasMaxLength(320);
             entity.Property(student => student.PhoneNumber).HasMaxLength(40);
             entity.Property(student => student.IsActive).HasDefaultValue(true);
+            entity.HasIndex(student => new { student.WorkspaceId, student.OneToOneTeacherUserId });
             entity.HasIndex(student => new { student.WorkspaceId, student.Email }).IsUnique();
             entity.HasIndex(student => new { student.WorkspaceId, student.UserId }).IsUnique();
             entity.HasOne<Workspace>().WithMany().HasForeignKey(student => student.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
@@ -433,6 +434,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.HasKey(invitation => invitation.Id);
             entity.Property(invitation => invitation.Email).HasMaxLength(320).IsRequired();
             entity.Property(invitation => invitation.CodeHash).HasMaxLength(64).IsRequired();
+            entity.Property(invitation => invitation.DisplayName).HasMaxLength(200);
             entity.Property(invitation => invitation.Status).IsConcurrencyToken();
             entity.HasIndex(invitation => invitation.CodeHash).IsUnique();
             entity.HasIndex(invitation => new { invitation.WorkspaceId, invitation.Email }).IsUnique().HasFilter("\"Status\" = 1");
@@ -465,6 +467,7 @@ public sealed class CourseManagementDbContext(DbContextOptions<CourseManagementD
             entity.Property(workspace => workspace.Name).HasMaxLength(200).IsRequired();
             entity.Property(workspace => workspace.InstitutionCategory);
             entity.Property(workspace => workspace.IsErasureReadOnly).HasDefaultValue(false);
+            entity.Property(workspace => workspace.SetupSkippedSteps).HasMaxLength(200);
             entity.HasIndex(workspace => workspace.OwnerUserId);
         });
         modelBuilder.Entity<WorkspaceSubscription>(entity =>

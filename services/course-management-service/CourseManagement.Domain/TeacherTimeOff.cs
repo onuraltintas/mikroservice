@@ -38,4 +38,11 @@ public sealed class TeacherTimeOff
             CreatedAt = now
         };
     }
+
+    /// <summary>The invited teacher accepted: the placeholder (the invitation id) becomes the teacher's account.</summary>
+    public void ChangeTeacher(Guid teacherUserId)
+    {
+        if (teacherUserId == Guid.Empty) throw new ArgumentException("Teacher is required.", nameof(teacherUserId));
+        TeacherUserId = teacherUserId;
+    }
 }

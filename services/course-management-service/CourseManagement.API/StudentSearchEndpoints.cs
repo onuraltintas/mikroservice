@@ -34,9 +34,10 @@ public static class StudentSearchEndpoints
                 _ => students
             };
             if (teacher)
-                students = students.Where(item => item.IsActive && db.Enrollments.Any(enrollment => enrollment.StudentId == item.Id
+                students = students.Where(item => item.IsActive && (item.OneToOneTeacherUserId == userId
+                    || db.Enrollments.Any(enrollment => enrollment.StudentId == item.Id
                     && enrollment.Status == EnrollmentStatus.Active
-                    && db.Groups.Any(courseGroup => courseGroup.Id == enrollment.GroupId && courseGroup.TeacherUserId == userId)));
+                    && db.Groups.Any(courseGroup => courseGroup.Id == enrollment.GroupId && courseGroup.TeacherUserId == userId))));
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = $"%{q.Trim().Replace("%", "").Replace("_", "")}%";
@@ -80,7 +81,7 @@ public static class StudentSearchEndpoints
             };
             var rows = await students.Skip(skip ?? 0).Take(take ?? 25).Select(item => new
             {
-                item.Id, item.DisplayName, item.Email, item.PhoneNumber, item.IsActive, item.EmailsMuted, item.CreatedAt,
+                item.Id, item.DisplayName, item.Email, item.PhoneNumber, item.IsActive, item.EmailsMuted, item.CreatedAt, item.OneToOneTeacherUserId,
                 groups = (from enrollment in db.Enrollments
                     join courseGroup in db.Groups on enrollment.GroupId equals courseGroup.Id
                     join courseItem in db.Courses on courseGroup.CourseId equals courseItem.Id
@@ -96,7 +97,7 @@ public static class StudentSearchEndpoints
                 items = rows.Select(row => new
                 {
                     row.Id, row.DisplayName, email = teacher ? null : row.Email, phoneNumber = teacher ? null : row.PhoneNumber,
-                    row.IsActive, row.EmailsMuted, row.CreatedAt, row.groups, row.guardianCount, row.guardianWithoutEmail,
+                    row.IsActive, row.EmailsMuted, row.CreatedAt, row.OneToOneTeacherUserId, row.groups, row.guardianCount, row.guardianWithoutEmail,
                     overdueAmount = owner ? debts.GetValueOrDefault(row.Id) : (decimal?)null
                 })
             });

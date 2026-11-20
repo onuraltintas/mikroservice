@@ -22,6 +22,10 @@ public sealed class Workspace
     public DateTimeOffset? RetentionWarnedAt { get; private set; }
     /// <summary>When the panel data was last deleted for retention; the workspace and its owner stay.</summary>
     public DateTimeOffset? ContentPurgedAt { get; private set; }
+    /// <summary>Setup guide (20.11.2026): the steps the owner chose to skip, comma separated; done steps are read from the data.</summary>
+    public string? SetupSkippedSteps { get; private set; }
+    /// <summary>When the owner closed the setup guide for good; null while it may still open on its own.</summary>
+    public DateTimeOffset? SetupClosedAt { get; private set; }
 
     public static Workspace Create(Guid id, Guid ownerUserId, string name, WorkspaceType type)
     {
@@ -60,6 +64,29 @@ public sealed class Workspace
             if (!Enum.IsDefined(category)) throw new ArgumentOutOfRangeException(nameof(institutionCategory));
             InstitutionCategory = category;
         }
+    }
+
+    /// <summary>The setup guide's own memory: skipped steps (known step names only) and whether it was closed.</summary>
+    public void SetSetupProgress(IEnumerable<string> skippedSteps, bool closed, DateTimeOffset now)
+    {
+        var steps = skippedSteps.Select(step => step.Trim()).Where(SetupSteps.Contains).Distinct(StringComparer.Ordinal).OrderBy(step => step, StringComparer.Ordinal).ToArray();
+        SetupSkippedSteps = steps.Length == 0 ? null : string.Join(',', steps);
+        SetupClosedAt = closed ? SetupClosedAt ?? now : null;
+    }
+
+    /// <summary>The setup guide's steps, in order.</summary>
+    public static readonly IReadOnlyList<string> SetupSteps = ["profile", "teachers", "rooms", "courses", "students", "fees", "schedule", "emails"];
+
+    /// <summary>The owner renames the institution or chooses its kind (setup guide, Ayarlar).</summary>
+    public void UpdateProfile(string name, InstitutionCategory? institutionCategory)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        var normalizedName = name.Trim();
+        if (normalizedName.Length is < 1 or > 200)
+            throw new ArgumentException("Workspace name must contain between 1 and 200 characters.", nameof(name));
+        if (institutionCategory is { } category && !Enum.IsDefined(category)) throw new ArgumentOutOfRangeException(nameof(institutionCategory));
+        Name = normalizedName;
+        InstitutionCategory = institutionCategory;
     }
 
     public void MarkRetentionWarned(DateTimeOffset planEndsAt, DateTimeOffset now)

@@ -1249,6 +1249,9 @@ namespace CourseManagement.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
+                    b.Property<Guid?>("OneToOneTeacherUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
@@ -1263,6 +1266,8 @@ namespace CourseManagement.Infrastructure.Migrations
 
                     b.HasIndex("WorkspaceId", "Email")
                         .IsUnique();
+
+                    b.HasIndex("WorkspaceId", "OneToOneTeacherUserId");
 
                     b.HasIndex("WorkspaceId", "UserId")
                         .IsUnique();
@@ -1455,6 +1460,10 @@ namespace CourseManagement.Infrastructure.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(320)
@@ -1550,6 +1559,13 @@ namespace CourseManagement.Infrastructure.Migrations
 
                     b.Property<DateTimeOffset?>("RetentionWarningForEndsAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("SetupClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SetupSkippedSteps")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");

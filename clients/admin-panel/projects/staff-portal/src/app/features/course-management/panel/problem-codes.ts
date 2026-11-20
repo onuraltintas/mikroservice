@@ -95,6 +95,7 @@ export const PROBLEM_TEXTS: Record<string, string> = {
   // Students and guardians
   'Student.ActiveLimitReached': 'Planınızın öğrenci sınırına ulaştınız.',
   'Student.Archived': 'Öğrenci arşivde; önce arşivden çıkarın.',
+  'Student.InvalidTeacher': 'Seçilen öğretmen bu kurumda değil ya da daveti geçersiz.',
   'Student.InvalidInput': 'Öğrenci bilgilerini kontrol edin; ad gerekli, e-posta ve telefon doğru yazılmalı.',
   'Student.InvalidPage': 'Sayfa bilgisi hatalı; sayfayı yenileyin.',
   'Student.InvalidSearch': 'Arama metnini kısaltın.',
@@ -103,6 +104,8 @@ export const PROBLEM_TEXTS: Record<string, string> = {
   'Guardian.WorkspaceConflict': 'Bu veli başka bir kuruma bağlı.',
   'Group.InvalidInput': 'Grup adını ve kursu kontrol edin.',
   'Group.TeacherNotInWorkspace': 'Seçilen öğretmen bu kurumda değil.',
+  'Group.InvalidTeacher': 'Seçilen öğretmen bu kurumda değil ya da daveti geçersiz.',
+  'Group.TeacherConflict': 'Yeni öğretmenin aynı saatlerde başka dersleri var. Yine de devretmek için onaylayın.',
   'Course.InvalidInput': 'Kurs adını kontrol edin.',
   'Course.ConcurrentChange': 'Aynı anda başka bir değişiklik yapıldı. Sayfayı yenileyip yeniden deneyin.',
   'StudentImport.InvalidHeader': 'İlk satır başlık olmalı: ad, e-posta, telefon. Yalnız "ad" sütunu zorunlu.',
@@ -152,6 +155,7 @@ export const PROBLEM_TEXTS: Record<string, string> = {
   // Workspace and subscription
   'Workspace.ErasureReadOnly': 'Kurum salt okunur; değişiklik yapılamaz.',
   'Workspace.InvalidInput': 'Kurum adını kontrol edin.',
+  'Workspace.InvalidProfile': 'Kurum adını (en çok 200 karakter) ve türünü kontrol edin.',
   'Workspace.InvalidPage': 'Sayfa bilgisi hatalı; sayfayı yenileyin.',
   'Workspace.RequestConflict': 'Aynı istek iki kez gönderildi. Sayfayı yenileyin.',
   'Subscription.ReadOnly': 'Aboneliğiniz etkin değil; kayıtlar yalnız okunabilir. Planım ve ödemeler sayfasından planınızı yenileyin.',
