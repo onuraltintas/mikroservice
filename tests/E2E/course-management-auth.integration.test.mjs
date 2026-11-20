@@ -674,7 +674,8 @@ test('live API enforces product and subject boundaries before database access', 
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv: duplicateCsv, previewId: duplicatePreviewBody.previewId }) });
       assert.equal(duplicateCommit.status, 200, 'rows already in the workspace are skipped, not imported');
       assert.equal((await duplicateCommit.json()).createdCount ?? 0, 0, 'a skipped row adds no student');
-      const samePersonCsv = `displayName,email,phoneNumber\n${adaStudent.displayName.toLocaleUpperCase('tr')},,${adaStudent.phoneNumber ?? ''}`;
+      // The fixture name has a comma ("Ada, Öğrenci"), so it is quoted.
+      const samePersonCsv = `displayName,email,phoneNumber\n"${adaStudent.displayName.toLocaleUpperCase('tr')}",,${adaStudent.phoneNumber ?? ''}`;
       const samePersonPreview = await (await request(`${importPath}/preview`, teacherToken, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv: samePersonCsv }) })).json();
       assert.equal(samePersonPreview.duplicateCount, 1, 'a row without e-mail matching an existing name and phone is already there');
