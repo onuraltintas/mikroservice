@@ -196,6 +196,9 @@ test('student signs in with an existing product, accepts invitation and joins th
     await page.getByText('Teslim ettiğiniz dosya: cevap.pdf', { exact: false }).waitFor();
     await page.getByText('Ders başlangıcına en az 24 saat varken iptal ederseniz telafi kredisi öğretmen onayına gönderilir; 24 saatten az süre kaldıysa kredi oluşmaz.', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Derse katılımımı iptal et' }).click();
+    // 20.11.2026: the student answers in the page, not in the browser's confirm box.
+    await page.getByText('Bu derse katılımınız iptal edilsin mi?', { exact: false }).waitFor();
+    await page.getByRole('button', { name: 'Evet, iptal et' }).click();
     await page.getByText('Katılımınız iptal edildi. Telafi kredisi öğretmen onayı bekliyor.', { exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Telafi haklarım' }).waitFor();
     await page.getByText('Öğretmen onayı bekliyor', { exact: true }).waitFor();
@@ -577,6 +580,9 @@ test('course teacher creates a profile, independent workspace and targeted invit
           displayName: 'Aynı E-posta', email: null, phoneNumber: null, isActive: true }];
         return reply({ previewId: body.previewId, createdCount: 1, alreadyImportedCount: 0 });
       }
+      // The overview asks whether any e-mail to parents is on (20.11.2026).
+      if (path.endsWith('/email-settings') && request.method() === 'GET') return reply({ rules: [], installmentDaysBefore: 3,
+        installmentOnDueDay: true, overdueDaysAfter: 3, sendHour: 9, replyToEmail: null, informedConsentAt: null });
       throw new Error(`Unexpected staff request: ${path}`);
     });
     await page.goto(`${base}/?product=course-management`);
