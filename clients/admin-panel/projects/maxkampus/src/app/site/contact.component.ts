@@ -20,7 +20,7 @@ import { Seo } from '../core/seo';
       </div>
       <div class="mk-card">
         @if (sent()) {
-          <div class="mk-success" role="status"><strong>Mesajınız bize ulaştı.</strong> Bir iş günü içinde e-postayla dönüyoruz.</div>
+          <div class="mk-success" id="contact-sent" tabindex="-1" role="status"><strong>Mesajınız bize ulaştı.</strong> Bir iş günü içinde e-postayla dönüyoruz.</div>
         } @else {
           <form class="form" (ngSubmit)="send()" novalidate>
             <label class="ds-field"><span class="ds-field__label">Adınız soyadınız</span>
@@ -91,6 +91,12 @@ export class ContactComponent implements OnInit {
       await this.api.contact({ name: this.name.trim(), organization: this.organization.trim() || null, email: this.email.trim(),
         phone: this.phone.trim() || null, message: this.message.trim(), consent: true, captchaToken });
       this.sent.set(true);
+      // The form was long; after sending, the page stayed scrolled down and the answer was out of view (20.11.2026 live test).
+      setTimeout(() => {
+        const box = document.getElementById('contact-sent');
+        box?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+        box?.focus({ preventScroll: true });
+      });
     } catch (error) {
       this.errors.set(fieldErrors(error));
       this.error.set(problemText(error, 'Mesaj gönderilemedi. Biraz sonra yeniden deneyin.'));

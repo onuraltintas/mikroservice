@@ -167,9 +167,30 @@ export class TeachersSectionComponent {
       { title: 'Öğretmen kurumdan çıkarılsın mı?', confirmText: 'Kurumdan çıkar', danger: true })) return;
     return this.act(() => this.service.revoke(this.state.id(), userId).then(() => undefined), 'Öğretmen kurumdan çıkarıldı.');
   }
-  addHours(): Promise<void> {
+  async addHours(): Promise<void> {
+    // Once a teacher has working hours, lessons outside them stay but no new ones can be added there; say how many
+    // planned lessons that is before saving (20.11.2026 live test: hours were added over lessons without a word).
+    const outside = await this.lessonsOutside().catch(() => 0);
+    if (outside > 0 && !await this.confirm.ask(
+      `${this.state.teacherName(this.hoursTeacher)} öğretmeninin önümüzdeki 60 gündeki ${outside} dersi bu çalışma saatlerinin dışında kalıyor. Dersler yerinde kalır, iptal edilmez; ama bu saatlere yeni ders eklenemez.`,
+      { title: 'Planlı dersler çalışma saati dışında kalacak', confirmText: 'Yine de ekle' })) return;
     return this.act(() => this.service.createTeacherAvailability(this.state.id(), this.hoursTeacher, this.weekday, this.from, this.to, 'Europe/Istanbul')
       .then(() => undefined), 'Çalışma saati eklendi.');
+  }
+  /** Planned lessons of the chosen teacher in the next 60 days that fall outside the hours with the new one added. */
+  private async lessonsOutside(): Promise<number> {
+    const toMinutes = (value: string) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+    const windows = [...this.windowsOf(this.hoursTeacher).map(window => ({ weekday: window.weekday, from: toMinutes(window.startTime), to: toMinutes(window.endTime) })),
+      { weekday: this.weekday, from: toMinutes(this.from), to: toMinutes(this.to) }];
+    const now = Date.now();
+    const lessons = await this.api.lessons(this.state.id(), new Date(now), new Date(now + 60 * 86_400_000));
+    const local = (value: string) => new Date(new Date(value).getTime() + 3 * 3_600_000);
+    return lessons.filter(lesson => lesson.teacherUserId === this.hoursTeacher && lesson.status === 'Scheduled').filter(lesson => {
+      const start = local(lesson.startsAt); const end = local(lesson.endsAt);
+      const weekday = (start.getUTCDay() + 6) % 7;
+      const from = start.getUTCHours() * 60 + start.getUTCMinutes(); const to = end.getUTCHours() * 60 + end.getUTCMinutes() || 24 * 60;
+      return !windows.some(window => window.weekday === weekday && window.from <= from && to <= window.to);
+    }).length;
   }
   removeHours(window: TeacherAvailabilityWindow): Promise<void> {
     return this.act(() => this.service.deleteTeacherAvailability(this.state.id(), window.id).then(() => undefined), 'Çalışma saati kaldırıldı.');

@@ -88,7 +88,8 @@ public static class LearningEndpoints
             if (!string.Equals(request.PreviewId, preview.PreviewId, StringComparison.Ordinal))
                 return Results.Conflict(new { code = "StudentImport.PreviewChanged" });
             if (preview.Rows.Count == 0) return Results.BadRequest(new { code = "StudentImport.EmptyRows" });
-            if (preview.InvalidCount > 0 || preview.DuplicateCount > 0)
+            // Rows already in the workspace ("zaten var") are skipped; only rows with errors stop the import.
+            if (preview.InvalidCount > 0)
                 return Results.BadRequest(new { code = "StudentImport.ResolveRows", preview });
 
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -97,7 +98,7 @@ public static class LearningEndpoints
             var currentPreview = await BuildStudentCsvPreview(workspaceId, request.Csv!, currentDocument, db, ct);
             if (!string.Equals(request.PreviewId, currentPreview.PreviewId, StringComparison.Ordinal))
                 return Results.Conflict(new { code = "StudentImport.PreviewChanged" });
-            if (currentPreview.InvalidCount > 0 || currentPreview.DuplicateCount > 0)
+            if (currentPreview.InvalidCount > 0)
                 return Results.BadRequest(new { code = "StudentImport.ResolveRows", preview = currentPreview });
             if (!await WorkspaceStudentCapacity.CanAddAsync(db, billing, workspaceId, currentPreview.ReadyCount, ct))
                 return Results.Conflict(new { code = "Student.ActiveLimitReached" });
@@ -1952,6 +1953,12 @@ public static class LearningEndpoints
             : (await db.Students.AsNoTracking().Where(student => student.WorkspaceId == workspaceId && student.Email != null
                     && emails.Contains(student.Email))
                 .Select(student => student.Email!).ToListAsync(ct)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Students already in the workspace by name and phone: a row without e-mail for an existing student was counted
+        // as new and would have been added twice (20.11.2026 live test).
+        var existingPeople = validRows.Length == 0 ? new HashSet<string>(StringComparer.Ordinal)
+            : (await db.Students.AsNoTracking().Where(student => student.WorkspaceId == workspaceId)
+                .Select(student => new { student.DisplayName, student.PhoneNumber }).ToListAsync(ct))
+                .Select(student => PersonKey(student.DisplayName, student.PhoneNumber)).ToHashSet(StringComparer.Ordinal);
         var seenRows = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var rows = new List<StudentCsvImportPreviewRow>(document.Rows.Count);
 
@@ -1982,6 +1989,13 @@ public static class LearningEndpoints
                 continue;
             }
 
+            if (row.Email is null && existingPeople.Contains(PersonKey(row.DisplayName, row.PhoneNumber)))
+            {
+                rows.Add(new StudentCsvImportPreviewRow(row.RowNumber, "Duplicate", row.DisplayName, row.Email, row.PhoneNumber,
+                    "Bu ad ve telefonla kayıtlı öğrenci zaten var."));
+                continue;
+            }
+
             var duplicateKey = row.Email is not null ? $"email:{row.Email}"
                 : $"student:{row.DisplayName.ToUpperInvariant()}\u001f{row.PhoneNumber?.ToUpperInvariant()}";
             if (seenRows.TryGetValue(duplicateKey, out var duplicateOf))
@@ -1999,6 +2013,10 @@ public static class LearningEndpoints
             rows.Count(row => row.Status == "Ready"), rows.Count(row => row.Status == "Imported"),
             rows.Count(row => row.Status == "Invalid"), rows.Count(row => row.Status == "Duplicate"), rows);
     }
+    /** Name (case, Turkish dotted/dotless i and extra spaces ignored) and phone digits: how a CSV row is matched to a student. */
+    private static string PersonKey(string displayName, string? phoneNumber) =>
+        $"{string.Join(' ', displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries)).ToUpperInvariant().Replace('İ', 'I')}\u001f"
+        + new string((phoneNumber ?? string.Empty).Where(char.IsDigit).ToArray());
     private static Guid ImportedStudentId(string previewId, int rowNumber) =>
         new(SHA256.HashData(Encoding.UTF8.GetBytes($"{previewId}\n{rowNumber}")).AsSpan(0, 16));
     private static Task<Guid[]> GetLinkedStudentUserIds(CourseManagementDbContext db, Guid workspaceId,

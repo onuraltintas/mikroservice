@@ -69,7 +69,7 @@ interface CouponDraft {
               <tr>
                 <td class="font-mono"><strong>{{ coupon.code }}</strong></td>
                 <td>{{ coupon.kind === 'Percent' ? '%' + coupon.value : (coupon.value | number:'1.2-2') + ' TL' }}</td>
-                <td>{{ coupon.startsAt ? (coupon.startsAt | date:'dd.MM.yyyy') : '—' }} – {{ coupon.endsAt ? (lastDay(coupon.endsAt) | date:'dd.MM.yyyy') : 'süresiz' }}</td>
+                <td>{{ validity(coupon.startsAt ? (coupon.startsAt | date:'dd.MM.yyyy') : null, coupon.endsAt ? (lastDay(coupon.endsAt) | date:'dd.MM.yyyy') : null) }}</td>
                 <td>{{ coupon.usedCount }}{{ coupon.maxUses ? ' / ' + coupon.maxUses : '' }}</td>
                 <td>{{ planNames(coupon) }}</td>
                 <td><span class="badge" [class.on]="coupon.isActive" [class.off]="!coupon.isActive">{{ coupon.isActive ? 'Etkin' : 'Kapalı' }}</span></td>
@@ -115,6 +115,13 @@ export class BillingCouponsComponent implements OnInit {
 
   /** The server keeps the first moment the code no longer works; the admin thinks in "last day". */
   lastDay(endsAt: string): Date { return new Date(new Date(endsAt).getTime() - 1); }
+  /** "Süresiz", "20.11.2026'dan itibaren", "31.12.2026'ya kadar" or a range (it read "— – süresiz"). */
+  validity(from: string | null, to: string | null): string {
+    if (from && to) return `${from} – ${to}`;
+    if (to) return `${to} tarihine kadar`;
+    if (from) return `${from} tarihinden itibaren`;
+    return 'Süresiz';
+  }
 
   start(coupon?: BillingCoupon): void {
     const day = (value: Date) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;

@@ -172,6 +172,9 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
             <p>{{ preview.readyCount }} eklenecek, {{ preview.duplicateCount + preview.importedCount }} zaten var, {{ preview.invalidCount }} hatalı.</p>
             @if (preview.invalidCount) {
               <ul>@for (row of invalidRows(); track row.rowNumber) { <li>{{ row.rowNumber }}. satır: {{ row.error }}</li> }</ul>
+              <p class="banner" style="margin: 0">Hatalı satırları dosyada düzeltip dosyayı yeniden seçin; hatalı satır varken öğrenci eklenmez.</p>
+            } @else if (preview.duplicateCount + preview.importedCount) {
+              <p class="muted" style="margin: 0">Zaten kayıtlı öğrenciler atlanır, yeniden eklenmez.</p>
             }
             @if (readyRows().length) {
               <!-- The names to be added, so Turkish letters can be checked before saving (20.11.2026 live test). -->
@@ -189,7 +192,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
           @if (cardError()) { <p class="alert" role="alert">{{ cardError() }}</p> }
           <div class="dialog-actions">
             <button type="button" class="btn-secondary" (click)="csvOpen.set(false)">Vazgeç</button>
-            <button type="button" class="btn" (click)="commitCsv()" [disabled]="!csvPreview()?.readyCount || busy()">Öğrencileri ekle</button>
+            <button type="button" class="btn" (click)="commitCsv()" [disabled]="!csvPreview()?.readyCount || !!csvPreview()?.invalidCount || busy()">Öğrencileri ekle</button>
           </div>
         </section>
       </div>
