@@ -2,27 +2,35 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   CourseBranch, CourseGroup, CourseManagementService, CourseRoom, CourseSummary, CourseWorkspace
 } from '../course-management.service';
-import { CoursePanelApi, PanelMember } from './panel-api.service';
+import { CoursePanelApi, PanelMember, PanelSetup, PanelTeacherInvitation } from './panel-api.service';
 import { PROBLEM_TEXTS } from './problem-codes';
 
 /** Where the panel runs: the maxkampüs site or the eduivme staff portal (kurum.eduivme.com). */
 export type PanelSite = 'maxkampus' | 'eduivme';
 
-export type PanelSection = 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings' | 'previous';
+export type PanelSection = 'setup' | 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings' | 'previous';
 
-export const SECTIONS: { id: PanelSection; label: string; slug: string; ownerOnly: boolean }[] = [
-  { id: 'overview', label: 'Genel bakış', slug: 'genel-bakis', ownerOnly: false },
-  { id: 'students', label: 'Öğrenciler', slug: 'ogrenciler', ownerOnly: false },
-  { id: 'courses', label: 'Kurslar ve gruplar', slug: 'kurslar', ownerOnly: true },
-  { id: 'calendar', label: 'Takvim', slug: 'takvim', ownerOnly: false },
-  { id: 'attendance', label: 'Yoklama ve ödev', slug: 'yoklama', ownerOnly: false },
-  { id: 'finance', label: 'Tahsilat', slug: 'tahsilat', ownerOnly: true },
-  { id: 'teachers', label: 'Öğretmenler', slug: 'ogretmenler', ownerOnly: true },
-  { id: 'reports', label: 'Raporlar', slug: 'raporlar', ownerOnly: false },
-  { id: 'settings', label: 'Ayarlar', slug: 'ayarlar', ownerOnly: true },
+/** Side menu groups (20.11.2026 decision: by daily use, not by setup order). */
+export type SectionGroup = 'setup' | 'daily' | 'institution' | 'other';
+export const SECTION_GROUPS: { id: SectionGroup; label: string }[] = [
+  { id: 'setup', label: '' }, { id: 'daily', label: 'Günlük' }, { id: 'institution', label: 'Kurum' }, { id: 'other', label: 'Diğer' }
+];
+
+export const SECTIONS: { id: PanelSection; label: string; slug: string; ownerOnly: boolean; group: SectionGroup }[] = [
+  // Setup guide: shown while the setup is not finished or closed (see CoursePanelComponent.visibleSections).
+  { id: 'setup', label: 'Kurulum', slug: 'kurulum', ownerOnly: true, group: 'setup' },
+  { id: 'overview', label: 'Genel bakış', slug: 'genel-bakis', ownerOnly: false, group: 'daily' },
+  { id: 'calendar', label: 'Takvim', slug: 'takvim', ownerOnly: false, group: 'daily' },
+  { id: 'attendance', label: 'Yoklama ve ödev', slug: 'yoklama', ownerOnly: false, group: 'daily' },
+  { id: 'finance', label: 'Tahsilat', slug: 'tahsilat', ownerOnly: true, group: 'daily' },
+  { id: 'students', label: 'Öğrenciler', slug: 'ogrenciler', ownerOnly: false, group: 'institution' },
+  { id: 'courses', label: 'Kurslar ve gruplar', slug: 'kurslar', ownerOnly: true, group: 'institution' },
+  { id: 'teachers', label: 'Öğretmenler', slug: 'ogretmenler', ownerOnly: true, group: 'institution' },
+  { id: 'reports', label: 'Raporlar', slug: 'raporlar', ownerOnly: false, group: 'other' },
+  { id: 'settings', label: 'Ayarlar', slug: 'ayarlar', ownerOnly: true, group: 'other' },
   // Transition: the earlier single-page screen keeps the tools the new sections do not have yet
   // (moving records from other products, makeup lessons, homework files, the change record).
-  { id: 'previous', label: 'Önceki ekran', slug: 'onceki-ekran', ownerOnly: false }
+  { id: 'previous', label: 'Önceki ekran', slug: 'onceki-ekran', ownerOnly: false, group: 'other' }
 ];
 
 /**
@@ -40,6 +48,10 @@ export class CoursePanelState {
   readonly rooms = signal<CourseRoom[]>([]);
   readonly branches = signal<CourseBranch[]>([]);
   readonly members = signal<PanelMember[]>([]);
+  /** Teachers invited by e-mail who have not accepted yet: work can already be given to them (owner only). */
+  readonly invitations = signal<PanelTeacherInvitation[]>([]);
+  /** The setup guide's state (owner only); null until loaded. */
+  readonly setup = signal<PanelSetup | null>(null);
   readonly myUserId = signal<string>('');
   readonly site = signal<PanelSite>('eduivme');
   /** Product name for texts shown inside the panel. */
@@ -50,15 +62,32 @@ export class CoursePanelState {
   readonly isOwner = computed(() => this.workspace()?.role === 'Owner');
   readonly readOnly = computed(() => this.workspace()?.isReadOnly ?? false);
   readonly id = computed(() => this.workspace()?.id ?? '');
-  readonly teachers = computed(() => {
+  /** Who can be given groups and lessons: the owner, active teachers and (for the owner) teachers invited but not yet in. */
+  readonly teachers = computed<PanelMember[]>(() => {
     const workspace = this.workspace();
     const list = this.members().filter(member => member.isActive && (member.role === 'Teacher' || member.role === 'Owner'));
     if (workspace && !this.isOwner()) return list.filter(member => member.userId === this.myUserId());
-    return list;
+    const now = Date.now();
+    const invited = this.invitations().filter(item => item.status === 'Pending' && new Date(item.expiresAt).getTime() > now)
+      .map(item => ({ userId: item.id, role: 'Teacher' as const, isActive: true, displayName: item.displayName, invited: true, email: item.email }));
+    return [...list, ...invited];
   });
+
+  /** Setup steps done or skipped, of eight. */
+  readonly setupProgress = computed(() => {
+    const steps = this.setup()?.steps ?? [];
+    return { done: steps.filter(step => step.status !== 'open').length, total: steps.length };
+  });
+
+  async loadSetup(): Promise<void> {
+    if (!this.isOwner() || !this.id()) { this.setup.set(null); return; }
+    try { this.setup.set(await this.api.setup(this.id())); } catch { this.setup.set(null); }
+  }
 
   teacherName(userId: string | null | undefined): string {
     if (!userId) return '';
+    const invitation = this.invitations().find(item => item.id === userId);
+    if (invitation) return `${invitation.displayName || invitation.email} (${invitation.status === 'Pending' ? 'davet bekliyor' : 'davet geçersiz'})`;
     const member = this.members().find(item => item.userId === userId);
     if (member?.displayName) return member.role === 'Owner' ? `${member.displayName} (kurum sahibi)` : member.displayName;
     return member?.role === 'Owner' ? 'Kurum sahibi' : 'Öğretmen';
@@ -74,11 +103,13 @@ export class CoursePanelState {
     const id = this.id();
     if (!id) return;
     const owner = this.isOwner();
-    const [courses, groups, rooms, branches, members] = await Promise.all([
+    const [courses, groups, rooms, branches, members, invitations] = await Promise.all([
       this.service.getCourses(id), this.service.getGroups(id), this.service.getRooms(id),
       owner ? this.service.getBranches(id) : Promise.resolve([]),
-      owner ? this.api.members(id) : Promise.resolve<PanelMember[]>([])
+      owner ? this.api.members(id) : Promise.resolve<PanelMember[]>([]),
+      owner ? this.api.teacherInvitations(id).catch(() => [] as PanelTeacherInvitation[]) : Promise.resolve<PanelTeacherInvitation[]>([])
     ]);
+    this.invitations.set(invitations);
     this.courses.set(courses);
     this.groups.set(groups);
     this.rooms.set(rooms);
@@ -87,6 +118,12 @@ export class CoursePanelState {
   }
 
   changed(): void { this.version.update(value => value + 1); }
+
+  /** After the owner renames the institution: the header and e-mails use the new name at once. */
+  async refreshWorkspaceName(name: string): Promise<void> {
+    const workspace = this.workspace();
+    if (workspace) this.workspace.set({ ...workspace, name });
+  }
 }
 
 const ZONE = 'Europe/Istanbul';

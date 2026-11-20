@@ -41,7 +41,7 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
             <div class="card-head"><h2 id="invite-list-title">Davetler</h2></div>
             <ul class="plain">
               @for (invitation of emailInvitations(); track invitation.id) {
-                <li><span><strong>{{ invitation.email }}</strong> {{ statusLine(invitation) }}</span>
+                <li><span><strong>{{ invitation.displayName || invitation.email }}</strong>@if (invitation.displayName) { <span class="muted">{{ invitation.email }}</span> } {{ statusLine(invitation) }}</span>
                   @if (!state.readOnly() && (invitation.status === 'Pending' || invitation.status === 'Expired')) {
                     <span><button type="button" class="btn-quiet" (click)="resend(invitation)">Yeniden gönder</button>
                     @if (invitation.status === 'Pending') { <button type="button" class="btn-quiet" (click)="cancelEmail(invitation)">Daveti geri al</button> }</span>
@@ -68,6 +68,8 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
         <div class="side stack">
           <form class="card card-pad stack" style="gap: 14px" (ngSubmit)="invite()">
             <h2>Öğretmen davet et</h2>
+            <label class="field">Öğretmenin adı soyadı<input name="inviteName" [(ngModel)]="inviteName" maxlength="200" autocomplete="off">
+              <span class="hint">Kabul etmeden de bu adla gruplara ve derslere öğretmen olarak seçebilirsiniz.</span></label>
             <label class="field">Öğretmenin e-posta adresi<input type="email" name="email" [(ngModel)]="email" autocomplete="off">
               <span class="hint">Bu adrese davet bağlantısı gider. Hesabı yoksa bağlantıdan birkaç adımda açar.</span></label>
             <div><button type="submit" class="btn" [disabled]="busy() || !email.includes('@')">Davet gönder</button></div>
@@ -112,7 +114,7 @@ export class TeachersSectionComponent {
   readonly notice = signal('');
   readonly date = formatDate;
   readonly dateTime = formatDateTime;
-  email = ''; hoursTeacher = ''; weekday = 0; from = '09:00'; to = '18:00';
+  email = ''; inviteName = ''; hoursTeacher = ''; weekday = 0; from = '09:00'; to = '18:00';
 
   constructor() { effect(() => { this.state.id(); this.state.version(); untracked(() => void this.load()); }); }
 
@@ -147,16 +149,24 @@ export class TeachersSectionComponent {
   }
 
   invite(): Promise<void> {
-    return this.act(async () => { await this.api.inviteTeacher(this.state.id(), this.email.trim()); this.email = ''; },
-      'Davet gönderildi. Öğretmen e-postadaki bağlantıyı açıp daveti kabul edince listede görünür.');
+    return this.act(async () => {
+      await this.api.inviteTeacher(this.state.id(), this.email.trim(), this.inviteName.trim() || null);
+      this.email = ''; this.inviteName = '';
+    }, 'Davet gönderildi. Kabul etmesini beklemeden ona grup ve ders verebilirsiniz; kabul edince hepsi onun olur.');
   }
   statusLine(invitation: PanelTeacherInvitation): string {
     return invitation.status === 'Expired' ? 'süresi doldu' : `bekliyor, ${this.date(invitation.expiresAt)} tarihine kadar geçerli`;
   }
   resend(invitation: PanelTeacherInvitation): Promise<void> {
-    return this.act(() => this.api.inviteTeacher(this.state.id(), invitation.email).then(() => undefined), 'Davet yeniden gönderildi; önceki bağlantı artık açılmaz.');
+    return this.act(() => this.api.inviteTeacher(this.state.id(), invitation.email, invitation.displayName).then(() => undefined), 'Davet yeniden gönderildi; önceki bağlantı artık açılmaz.');
   }
-  cancelEmail(invitation: PanelTeacherInvitation): Promise<void> {
+  async cancelEmail(invitation: PanelTeacherInvitation): Promise<void> {
+    // Work given to the invited teacher stays on the cancelled invitation: say so, and where to hand it to someone else.
+    const groups = this.state.groups().filter(group => group.teacherUserId === invitation.id).length;
+    const message = groups
+      ? `${invitation.displayName || invitation.email} adlı davetliye verilen ${groups} grup öğretmensiz kalır. Geri aldıktan sonra Kurslar ve gruplar bölümünden bu grupları başka bir öğretmene verin.`
+      : `${invitation.displayName || invitation.email} için gönderilen davet geri alınsın mı? Bağlantı artık açılmaz.`;
+    if (!await this.confirm.ask(message, { title: 'Daveti geri al', confirmText: 'Daveti geri al', danger: true })) return;
     return this.act(() => this.api.cancelTeacherInvitation(this.state.id(), invitation.id), 'Davet geri alındı.');
   }
   cancel(invitation: CourseInvitation): Promise<void> {

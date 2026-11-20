@@ -2,6 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CourseManagementService } from '../../course-management.service';
 import { CoursePanelState, problemText } from '../panel-state';
+import { CoursePanelApi } from '../panel-api.service';
+import { PanelConfirm } from '../panel-confirm';
 
 /** Kurslar ve gruplar: what is taught, and which teacher teaches which group. Students join groups from their card. */
 @Component({
@@ -21,7 +23,23 @@ import { CoursePanelState, problemText } from '../panel-state';
             <div><strong>{{ course.name }}</strong> <span class="muted">{{ course.subject }}</span></div>
             <ul>
               @for (group of groupsOf(course.id); track group.id) {
-                <li>{{ group.name }} <span class="muted">{{ state.teacherName(group.teacherUserId) }}</span></li>
+                @if (editing() === group.id) {
+                  <li><form class="edit" (ngSubmit)="saveGroup(group.id)">
+                    <label class="field">Grup adı<input name="editName" [(ngModel)]="editName" maxlength="160"></label>
+                    <label class="field">Öğretmen<select name="editTeacher" [(ngModel)]="editTeacher">
+                      @for (teacher of state.teachers(); track teacher.userId) { <option [value]="teacher.userId">{{ state.teacherName(teacher.userId) }}</option> }</select></label>
+                    @if (editTeacher !== group.teacherUserId) {
+                      <label class="check"><input type="checkbox" name="editMove" [(ngModel)]="editMove">
+                        <span>Grubun planlı dersleri ve tekrarlayan programı da yeni öğretmene geçsin</span></label>
+                    }
+                    <div class="actions"><button type="submit" class="btn btn-small" [disabled]="busy() || !editName.trim() || !editTeacher">Kaydet</button>
+                      <button type="button" class="btn-quiet btn-small" (click)="editing.set('')">Vazgeç</button></div>
+                  </form></li>
+                } @else {
+                  <li>{{ group.name }} <span class="muted">{{ state.teacherName(group.teacherUserId) }}</span>
+                    @if (!state.readOnly()) { <button type="button" class="btn-quiet btn-small" (click)="edit(group)"
+                      [attr.aria-label]="group.name + ' grubunu düzenle'">Düzenle</button> }</li>
+                }
               } @empty { <li class="muted">Henüz grup yok.</li> }
             </ul>
           </div>
@@ -53,6 +71,9 @@ import { CoursePanelState, problemText } from '../panel-state';
     .course { padding: 14px 20px; border-top: 1px solid var(--ds-line); }
     .course ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.8; }
     .course .muted { font-size: 14px; margin-left: 6px; }
+    .course li .btn-quiet { margin-left: 6px; }
+    .edit { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 10px 0; }
+    .edit .field { flex: 1 1 180px; } .edit .check { flex-basis: 100%; }
   `
 })
 export class CoursesSectionComponent {
@@ -61,6 +82,10 @@ export class CoursesSectionComponent {
   readonly busy = signal(false);
   readonly error = signal('');
   readonly notice = signal('');
+  private readonly api = inject(CoursePanelApi);
+  private readonly confirm = inject(PanelConfirm);
+  readonly editing = signal('');
+  editName = ''; editTeacher = ''; editMove = true;
   readonly onlyOwner = computed(() => this.state.teachers().every(member => member.role === 'Owner'));
   courseName = ''; subject = ''; groupCourseId = ''; groupName = ''; groupTeacherId = '';
 
@@ -78,6 +103,31 @@ export class CoursesSectionComponent {
       await this.service.createCourse(this.state.id(), this.courseName.trim(), this.subject.trim());
       this.courseName = ''; this.subject = '';
     }, 'Kurs eklendi.');
+  }
+
+  edit(group: { id: string; name: string; teacherUserId: string }): void {
+    this.editing.set(group.id); this.editName = group.name; this.editTeacher = group.teacherUserId; this.editMove = true;
+  }
+
+  /** Rename a group or give it to another teacher; a clash with the new teacher's lessons is asked about first. */
+  async saveGroup(groupId: string, force = false): Promise<void> {
+    this.busy.set(true); this.error.set(''); this.notice.set('');
+    try {
+      const result = await this.api.updateGroup(this.state.id(), groupId, this.editName.trim(), this.editTeacher, this.editMove, force);
+      await this.state.refreshLists();
+      this.state.changed();
+      this.editing.set('');
+      this.notice.set(result.movedLessons ? `Grup kaydedildi; ${result.movedLessons} planlı ders yeni öğretmene geçti.` : 'Grup kaydedildi.');
+    } catch (error) {
+      const clashes = (error as { error?: { clashes?: number } })?.error?.clashes;
+      if (!force && typeof clashes === 'number' && clashes > 0) {
+        this.busy.set(false);
+        if (await this.confirm.ask(`Yeni öğretmenin ${clashes} dersi bu grubun dersleriyle aynı saatte. Yine de öğretmeni değiştireyim mi?`,
+          { title: 'Saat çakışması', confirmText: 'Yine de değiştir' })) await this.saveGroup(groupId, true);
+        return;
+      }
+      this.error.set(problemText(error));
+    } finally { this.busy.set(false); }
   }
 
   addGroup(): Promise<void> {

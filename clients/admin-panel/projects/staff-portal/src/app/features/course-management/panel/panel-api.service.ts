@@ -7,9 +7,16 @@ import { CourseLesson } from '../course-management.service';
 /** Endpoints the institution panel (19.11.2026) adds on top of CourseManagementService. */
 /** A teacher invited by e-mail address (maxkampus.com/davet). */
 export interface PanelTeacherInvitation {
-  id: string; email: string; status: 'Pending' | 'Accepted' | 'Cancelled' | 'Expired'; createdAt: string; expiresAt: string; acceptedAt: string | null;
+  id: string; email: string; displayName: string | null; status: 'Pending' | 'Accepted' | 'Cancelled' | 'Expired'; createdAt: string; expiresAt: string; acceptedAt: string | null;
 }
-export interface PanelMember { userId: string; role: 'Owner' | 'Teacher' | 'Student'; isActive: boolean; displayName: string | null; }
+/** Setup guide (20.11.2026): each step's state, read from the data on the server. */
+export type SetupStepId = 'profile' | 'teachers' | 'rooms' | 'courses' | 'students' | 'fees' | 'schedule' | 'emails';
+export interface PanelSetup {
+  name: string; institutionCategory: 'School' | 'PrivateCourse' | 'StudyCenter' | 'OnlinePlatform' | null; closed: boolean;
+  steps: { id: SetupStepId; status: 'done' | 'skipped' | 'open' }[];
+  counts: { teachers: number; invited: number; rooms: number; courses: number; groups: number; students: number; unplaced: number; withoutFee: number; futureLessons: number };
+}
+export interface PanelMember { userId: string; role: 'Owner' | 'Teacher' | 'Student'; isActive: boolean; displayName: string | null; invited?: boolean; email?: string; }
 export interface PanelOverviewLesson {
   id: string; courseName: string; groupName: string | null; roomName: string | null; teacherName: string | null; teacherUserId: string;
   startsAt: string; endsAt: string; studentCount: number; attendanceTaken: boolean; status: 'Scheduled' | 'InProgress' | 'Cancelled' | 'Completed';
@@ -22,7 +29,7 @@ export interface PanelOverview {
 }
 export interface PanelStudentRow {
   id: string; displayName: string; email: string | null; phoneNumber: string | null; isActive: boolean; emailsMuted: boolean;
-  createdAt: string; groups: { id: string; name: string; courseName: string }[]; guardianCount: number;
+  createdAt: string; oneToOneTeacherUserId?: string | null; groups: { id: string; name: string; courseName: string }[]; guardianCount: number;
   guardianWithoutEmail: boolean; overdueAmount: number | null;
 }
 export interface PanelStudentPage { total: number; skip: number; take: number; items: PanelStudentRow[]; }
@@ -72,8 +79,24 @@ export class CoursePanelApi {
   overview(id: string) { return firstValueFrom(this.http.get<PanelOverview>(`${this.ws(id)}/overview`)); }
   members(id: string) { return firstValueFrom(this.http.get<PanelMember[]>(`${this.ws(id)}/members`)); }
   /** maxkampüs (19.11.2026): the address needs no account; the teacher gets a link and opens one if needed. */
-  inviteTeacher(id: string, email: string) {
-    return firstValueFrom(this.http.post<PanelTeacherInvitation>(`${this.ws(id)}/teacher-email-invitations`, { id: crypto.randomUUID(), email }));
+  inviteTeacher(id: string, email: string, displayName: string | null = null) {
+    return firstValueFrom(this.http.post<PanelTeacherInvitation>(`${this.ws(id)}/teacher-email-invitations`, { id: crypto.randomUUID(), email, displayName }));
+  }
+  feeAgreements(id: string) {
+    return firstValueFrom(this.http.get<{ id: string; studentId: string; courseId: string; model: string; isActive: boolean }[]>(`${this.ws(id)}/finance/fee-agreements`));
+  }
+  setup(id: string) { return firstValueFrom(this.http.get<PanelSetup>(`${this.ws(id)}/setup`)); }
+  saveSetup(id: string, skipped: SetupStepId[], closed: boolean) { return firstValueFrom(this.http.put<void>(`${this.ws(id)}/setup`, { skipped, closed })); }
+  saveProfile(id: string, name: string, institutionCategory: number | null) {
+    return firstValueFrom(this.http.put<{ name: string; institutionCategory: string | null }>(`${this.ws(id)}/profile`, { name, institutionCategory }));
+  }
+  updateGroup(id: string, groupId: string, name: string, teacherUserId: string | null, moveFutureLessons: boolean, force = false) {
+    return firstValueFrom(this.http.put<{ id: string; name: string; teacherUserId: string; movedLessons: number }>(`${this.ws(id)}/groups/${groupId}`,
+      { name, teacherUserId, moveFutureLessons, force }));
+  }
+  removeFromGroup(id: string, groupId: string, studentId: string) { return firstValueFrom(this.http.delete<void>(`${this.ws(id)}/groups/${groupId}/students/${studentId}`)); }
+  setOneToOneTeacher(id: string, studentId: string, teacherUserId: string | null) {
+    return firstValueFrom(this.http.put<{ id: string; oneToOneTeacherUserId: string | null }>(`${this.ws(id)}/students/${studentId}/one-to-one-teacher`, { teacherUserId }));
   }
   teacherInvitations(id: string) { return firstValueFrom(this.http.get<PanelTeacherInvitation[]>(`${this.ws(id)}/teacher-email-invitations`)); }
   cancelTeacherInvitation(id: string, invitationId: string) {

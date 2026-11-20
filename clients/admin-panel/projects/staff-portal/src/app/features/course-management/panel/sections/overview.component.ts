@@ -23,6 +23,15 @@ const EMAIL_KINDS: Record<string, string> = {
       }
     </header>
     @if (error()) { <p class="alert" role="alert">{{ error() }} <button type="button" class="btn-quiet" (click)="load()">Yeniden dene</button></p> }
+    @if (state.isOwner() && state.setup(); as setup) {
+      @if (!setup.closed && state.setupProgress().done < state.setupProgress().total) {
+        <section class="card card-pad setup-card" aria-labelledby="setup-card-title" style="margin-bottom: 18px">
+          <div><h2 id="setup-card-title" style="margin: 0 0 4px; font-size: 17px">Kurulum: {{ state.setupProgress().done }} / {{ state.setupProgress().total }} adım tamam</h2>
+            <p class="muted" style="margin: 0">Öğretmen, kurs, öğrenci, ücret ve ders programını adım adım girmenize yardım eder.</p></div>
+          <button type="button" class="btn" (click)="navigate.emit('setup')">Kuruluma devam et</button>
+        </section>
+      }
+    }
     @if (data(); as view) {
       <div class="stack">
         <section class="kpis" aria-label="Özet">
@@ -96,6 +105,7 @@ const EMAIL_KINDS: Record<string, string> = {
     } @else if (!error()) { <p class="empty" role="status">Yükleniyor…</p> }
   `,
   styles: `
+    .setup-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-left: 3px solid var(--ds-accent); }
     .lessons { list-style: none; margin: 0; padding: 0; }
     .lessons li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 14px 20px; border-top: 1px solid var(--ds-line); }
     .side .lessons li { grid-template-columns: minmax(0, 1fr) auto; }
