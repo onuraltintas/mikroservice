@@ -38,16 +38,26 @@ describe('RegisterComponent', () => {
   it('asks the institution\'s name, a phone and the consents before sending anything', async () => {
     const { component, http } = setup();
     component.choose('institution');
-    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Guclu-Sifre1', phone: '123' });
+    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Guclu-Sifre1', passwordAgain: 'Guclu-Sifre1', phone: '123' });
     await component.submit();
     expect(Object.keys(component.errors()).sort()).toEqual(['legal', 'phone', 'workspaceName']);
+    http.expectNone('/api/auth/course-management/register');
+  });
+
+  it('asks for the password twice and stops when the two differ (20.11.2026 live test)', async () => {
+    const { component, http } = setup();
+    component.choose('institution');
+    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Guclu-Sifre1', passwordAgain: 'Guclu-Sifre2',
+      phone: '0532 123 45 67', workspaceName: 'TEST Dershanesi' });
+    await component.submit();
+    expect(component.errors()['passwordAgain']).toContain('aynı değil');
     http.expectNone('/api/auth/course-management/register');
   });
 
   it('opens an institution and shows the verification step', async () => {
     const { fixture, component, http } = setup();
     component.choose('institution');
-    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Guclu-Sifre1', phone: '0532 123 45 67', workspaceName: 'TEST Dershanesi' });
+    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Guclu-Sifre1', passwordAgain: 'Guclu-Sifre1', phone: '0532 123 45 67', workspaceName: 'TEST Dershanesi' });
     component.legal.set([{ slug: 'kvkk', version: 1 }, { slug: 'privacy', version: 1 }, { slug: 'course-management-terms', version: 1 }]);
     const sending = component.submit();
     const request = http.expectOne('/api/auth/course-management/register');
@@ -62,7 +72,7 @@ describe('RegisterComponent', () => {
   it('asks the existing account\'s code when it has two-step verification', async () => {
     const { component, http } = setup();
     component.choose('teacher');
-    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Eski-Sifre1', phone: '05321234567' });
+    Object.assign(component, { firstName: 'TEST', lastName: 'Kişi', email: 'test@example.com', password: 'Eski-Sifre1', passwordAgain: 'Eski-Sifre1', phone: '05321234567' });
     component.legal.set([{ slug: 'kvkk', version: 1 }]);
     const sending = component.submit();
     http.expectOne('/api/auth/course-management/register').flush(

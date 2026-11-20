@@ -24,14 +24,15 @@ public static class StudentCsvImportParser
         if (string.IsNullOrEmpty(csv)) throw new StudentCsvImportParseException("StudentImport.EmptyFile");
         if (csv.Length > MaximumCsvLength) throw new StudentCsvImportParseException("StudentImport.FileTooLarge");
 
-        using var reader = new StringReader(csv.TrimStart('\uFEFF'));
+        var text = csv.TrimStart('\uFEFF');
+        using var reader = new StringReader(text);
         using var parser = new TextFieldParser(reader)
         {
             TextFieldType = FieldType.Delimited,
             HasFieldsEnclosedInQuotes = true,
             TrimWhiteSpace = false
         };
-        parser.SetDelimiters(",");
+        parser.SetDelimiters(Delimiter(text));
 
         string[]? headers;
         try
@@ -46,16 +47,14 @@ public static class StudentCsvImportParser
         if (headers is null || headers.Length == 0)
             throw new StudentCsvImportParseException("StudentImport.InvalidHeader");
 
-        var normalizedHeaders = headers.Select(header => header.Trim().ToLowerInvariant()).ToArray();
-        if (normalizedHeaders.Any(string.IsNullOrWhiteSpace)
-            || normalizedHeaders.Distinct(StringComparer.Ordinal).Count() != normalizedHeaders.Length
-            || normalizedHeaders.Any(header => header is not ("displayname" or "email" or "phonenumber"))
-            || !normalizedHeaders.Contains("displayname", StringComparer.Ordinal))
+        var normalizedHeaders = headers.Select(Column).ToArray();
+        var known = normalizedHeaders.Where(header => header is not null).ToArray();
+        if (known.Distinct(StringComparer.Ordinal).Count() != known.Length || !known.Contains(DisplayName, StringComparer.Ordinal))
             throw new StudentCsvImportParseException("StudentImport.InvalidHeader");
 
-        var displayNameIndex = Array.IndexOf(normalizedHeaders, "displayname");
-        var emailIndex = Array.IndexOf(normalizedHeaders, "email");
-        var phoneIndex = Array.IndexOf(normalizedHeaders, "phonenumber");
+        var displayNameIndex = Array.IndexOf(normalizedHeaders, DisplayName);
+        var emailIndex = Array.IndexOf(normalizedHeaders, Email);
+        var phoneIndex = Array.IndexOf(normalizedHeaders, Phone);
         var rows = new List<StudentCsvImportRow>();
         while (!parser.EndOfData)
         {
@@ -90,6 +89,44 @@ public static class StudentCsvImportParser
         }
 
         return new StudentCsvImportDocument(rows);
+    }
+
+    private const string DisplayName = "displayname";
+    private const string Email = "email";
+    private const string Phone = "phonenumber";
+
+    /// <summary>
+    /// Header names the panel tells people to write ("ad, e-posta, telefon") and the English API names. Other columns
+    /// (a parent's name, a class) are left out, so an Excel list can be sent as it is (20.11.2026 live test).
+    /// </summary>
+    private static readonly Dictionary<string, string> Columns = new(StringComparer.Ordinal)
+    {
+        ["displayname"] = DisplayName, ["name"] = DisplayName, ["ad"] = DisplayName, ["adi"] = DisplayName, ["adsoyad"] = DisplayName,
+        ["adisoyadi"] = DisplayName, ["adsoyadi"] = DisplayName, ["isim"] = DisplayName, ["isimsoyisim"] = DisplayName,
+        ["ogrenci"] = DisplayName, ["ogrenciadi"] = DisplayName, ["ogrenciadisoyadi"] = DisplayName,
+        ["email"] = Email, ["eposta"] = Email, ["mail"] = Email, ["epostaadresi"] = Email,
+        ["phonenumber"] = Phone, ["phone"] = Phone, ["telefon"] = Phone, ["tel"] = Phone, ["telefonnumarasi"] = Phone,
+        ["gsm"] = Phone, ["cep"] = Phone, ["ceptelefonu"] = Phone
+    };
+
+    /// <summary>The column a header names, or null for a column the import does not read.</summary>
+    private static string? Column(string header)
+    {
+        var folded = new string(header.Trim().ToLower(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"))
+            .Select(letter => letter switch { 'ç' => 'c', 'ğ' => 'g', 'ı' => 'i', 'ö' => 'o', 'ş' => 's', 'ü' => 'u', _ => letter })
+            .Where(char.IsLetterOrDigit).ToArray());
+        return Columns.GetValueOrDefault(folded);
+    }
+
+    /// <summary>Excel in Turkish saves CSV with semicolons; the first line shows which separator the file uses.</summary>
+    private static string Delimiter(string text)
+    {
+        var end = text.IndexOfAny(['\r', '\n']);
+        var first = end < 0 ? text : text[..end];
+        var semicolons = first.Count(letter => letter == ';');
+        var tabs = first.Count(letter => letter == '\t');
+        var commas = first.Count(letter => letter == ',');
+        return semicolons > commas && semicolons >= tabs ? ";" : tabs > commas ? "\t" : ",";
     }
 
     private static string? Optional(string[] fields, int index)

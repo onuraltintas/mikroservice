@@ -20,7 +20,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
       <div><h1>Öğrenciler</h1><p>{{ page()?.total ?? 0 }} öğrenci</p></div>
       @if (state.isOwner() && !state.readOnly()) {
         <div class="actions">
-          <button type="button" class="btn-secondary" (click)="csvOpen.set(true)">Toplu ekle (CSV)</button>
+          <button type="button" class="btn-secondary" (click)="csvName.set(''); csvPreview.set(null); cardError.set(''); csvOpen.set(true)">Toplu ekle (CSV)</button>
           <button type="button" class="btn" (click)="openNew()">Öğrenci ekle</button>
         </div>
       }
@@ -58,8 +58,8 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               </tr></thead>
               <tbody>
                 @for (student of result.items; track student.id) {
-                  <tr class="clickable" (click)="openCard(student)" (keydown.enter)="openCard(student)" tabindex="0">
-                    <th scope="row">{{ student.displayName }}
+                  <tr class="clickable" (click)="openCard(student)">
+                    <th scope="row"><button type="button" class="row-link" (click)="$event.stopPropagation(); openCard(student)">{{ student.displayName }}</button>
                       @if (!student.isActive) { <span class="badge">Arşivde</span> }
                       @if (student.emailsMuted) { <span class="badge">E-posta kapalı</span> }</th>
                     <td>{{ groupNames(student) }}</td>
@@ -84,7 +84,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
             </div>
           </nav>
         } @else {
-          <p class="empty">{{ hasFilters() ? 'Bu filtrelere uyan öğrenci yok.' : 'Henüz öğrenci yok. Öğrenci ekleyin ya da CSV ile toplu yükleyin.' }}</p>
+          <p class="empty">{{ hasFilters() ? 'Bu filtrelere uyan öğrenci yok.' : state.isOwner() ? 'Henüz öğrenci yok. Öğrenci ekleyin ya da CSV ile toplu yükleyin.' : 'Size atanmış öğrenci yok. Kurum sizi bir gruba öğretmen yaptığında öğrencileri burada görünür.' }}</p>
         }
       } @else if (!error()) { <p class="empty" role="status">Yükleniyor…</p> }
     </section>
@@ -107,7 +107,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               <p class="muted" style="margin: 0">{{ form.groups || 'Henüz bir gruba kayıtlı değil.' }}</p>
               @if (state.isOwner() && !state.readOnly()) {
                 <div class="actions"><label class="field" style="flex: 1">Gruba ekle<select [(ngModel)]="enrollGroupId">
-                  <option value="">Grup seçin</option>@for (group of state.groups(); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
+                  <option value="">Grup seçin</option>@for (group of openGroups(form.groupIds); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
                   <button type="button" class="btn-secondary" style="align-self: flex-end" (click)="enroll()" [disabled]="!enrollGroupId || busy()">Ekle</button></div>
               }
             </section>
@@ -161,8 +161,13 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
       <div class="dialog-backdrop" (click)="csvOpen.set(false)">
         <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="csv-title" (click)="$event.stopPropagation()">
           <h2 id="csv-title">CSV ile toplu öğrenci ekleme</h2>
-          <p class="muted" style="margin: 0">İlk satır başlık olsun: ad, e-posta, telefon. Önce önizleme gösterilir; aynı kişiler iki kez eklenmez.</p>
-          <label class="field">CSV dosyası<input type="file" accept=".csv,text/csv" (change)="pickCsv($event)"></label>
+          <p class="muted" style="margin: 0">İlk satır başlık olsun: <strong>ad, e-posta, telefon</strong>. Yalnız "ad" zorunlu; başka sütunlar okunmaz.
+            Excel'de "Farklı kaydet › CSV" seçin. Önce önizleme gösterilir; aynı kişiler iki kez eklenmez.</p>
+          <div class="file-pick">
+            <input id="csv-file" class="file-pick__input" type="file" accept=".csv,text/csv,text/plain" (change)="pickCsv($event)">
+            <label for="csv-file" class="btn-secondary file-pick__button">Dosya seç</label>
+            <span class="file-pick__name" aria-live="polite">{{ csvName() || 'Dosya seçilmedi' }}</span>
+          </div>
           @if (csvPreview(); as preview) {
             <p>{{ preview.readyCount }} eklenecek, {{ preview.duplicateCount + preview.importedCount }} zaten var, {{ preview.invalidCount }} hatalı.</p>
             @if (preview.invalidCount) {
@@ -189,12 +194,13 @@ export class StudentsSectionComponent {
   readonly notice = signal('');
   readonly busy = signal(false);
   readonly cardError = signal('');
-  readonly editing = signal<{ id: string; displayName: string; email: string; phoneNumber: string; isActive: boolean; emailsMuted: boolean; groups: string } | null>(null);
+  readonly editing = signal<{ id: string; displayName: string; email: string; phoneNumber: string; isActive: boolean; emailsMuted: boolean; groups: string; groupIds: string[] } | null>(null);
   readonly guardians = signal<StudentGuardianLink[]>([]);
   readonly emails = signal<PanelSentEmail[]>([]);
   readonly account = signal<CourseStudentAccount | null>(null);
   readonly csvOpen = signal(false);
   readonly csvPreview = signal<StudentCsvImportPreview | null>(null);
+  readonly csvName = signal('');
   readonly invalidRows = computed(() => (this.csvPreview()?.rows ?? []).filter(row => row.status === 'Invalid').slice(0, 20));
   private csvText = '';
   filter: Required<Pick<PanelStudentFilter, 'q' | 'courseId' | 'groupId' | 'teacherId' | 'status' | 'sort' | 'skip' | 'take'>> = {
@@ -260,14 +266,14 @@ export class StudentsSectionComponent {
 
   openNew(): void {
     this.cardError.set('');
-    this.editing.set({ id: '', displayName: '', email: '', phoneNumber: '', isActive: true, emailsMuted: false, groups: '' });
+    this.editing.set({ id: '', displayName: '', email: '', phoneNumber: '', isActive: true, emailsMuted: false, groups: '', groupIds: [] });
   }
 
   async openCard(student: PanelStudentRow): Promise<void> {
     this.cardError.set('');
     this.guardians.set([]); this.emails.set([]); this.account.set(null);
     this.editing.set({ id: student.id, displayName: student.displayName, email: student.email ?? '', phoneNumber: student.phoneNumber ?? '',
-      isActive: student.isActive, emailsMuted: student.emailsMuted, groups: student.groups.map(group => `${group.courseName}, ${group.name}`).join('; ') });
+      isActive: student.isActive, emailsMuted: student.emailsMuted, groups: student.groups.map(group => `${group.courseName}, ${group.name}`).join('; '), groupIds: student.groups.map(group => group.id) });
     if (!this.state.isOwner()) return;
     const id = this.state.id();
     const [guardians, emails, account] = await Promise.all([
@@ -309,13 +315,17 @@ export class StudentsSectionComponent {
     }, form.isActive ? 'Öğrenci arşive kaldırıldı; grup kayıtları kapandı.' : 'Öğrenci yeniden etkinleştirildi. Gruplara yeniden ekleyebilirsiniz.');
   }
 
+  /** Groups the student is not in yet (20.11.2026: the group the student was already in could be chosen again). */
+  openGroups(current: string[]) { return this.state.groups().filter(group => !current.includes(group.id)); }
+
   async enroll(): Promise<void> {
     const form = this.editing();
     if (!form?.id || !this.enrollGroupId) return;
     await this.act(async () => {
       await this.service.enrollStudent(this.state.id(), this.enrollGroupId, form.id);
       const group = this.state.groups().find(item => item.id === this.enrollGroupId);
-      this.editing.set({ ...form, groups: [form.groups, group ? `${group.courseName}, ${group.name}` : ''].filter(Boolean).join('; ') });
+      this.editing.set({ ...form, groups: [form.groups, group ? `${group.courseName}, ${group.name}` : ''].filter(Boolean).join('; '),
+        groupIds: [...form.groupIds, this.enrollGroupId] });
       this.enrollGroupId = '';
       await this.load();
     }, 'Öğrenci gruba eklendi.');
@@ -352,14 +362,18 @@ export class StudentsSectionComponent {
   }
 
   async pickCsv(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     this.csvPreview.set(null);
     this.cardError.set('');
+    this.csvName.set(file?.name ?? '');
     if (!file) return;
     if (file.size > 1_000_000) { this.cardError.set('Dosya en çok 1 MB olabilir.'); return; }
-    this.csvText = await file.text();
+    this.csvText = readCsvText(await file.arrayBuffer());
+    // The same file can be chosen again after it is fixed.
+    input.value = '';
     try { this.csvPreview.set(await this.service.previewStudentCsv(this.state.id(), this.csvText)); }
-    catch (error) { this.cardError.set(problemText(error, 'Dosya okunamadı. Başlık satırını ve virgülleri kontrol edin.')); }
+    catch (error) { this.cardError.set(problemText(error, 'Dosya okunamadı. İlk satırda ad, e-posta, telefon başlıkları olmalı.')); }
   }
 
   async commitCsv(): Promise<void> {
@@ -373,4 +387,10 @@ export class StudentsSectionComponent {
       await this.load();
     }, '');
   }
+}
+
+/** Excel in Turkish saves CSV as Windows-1254, not UTF-8; read UTF-8 when the bytes are valid UTF-8. */
+export function readCsvText(bytes: ArrayBuffer): string {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+  catch { return new TextDecoder('windows-1254').decode(bytes); }
 }

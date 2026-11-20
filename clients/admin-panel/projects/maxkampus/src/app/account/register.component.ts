@@ -74,10 +74,23 @@ export function passwordLooksValid(value: string): boolean {
             <input class="ds-input" type="email" name="email" [(ngModel)]="email" autocomplete="email" [readonly]="kind() === 'invited' && !!invitation()" [attr.aria-invalid]="!!err('email')">
             @if (kind() === 'invited' && invitation()) { <span class="ds-field__hint">Davet bu adrese gönderildi.</span> }</label>
           @if (err('email')) { <p class="ds-field__error">{{ err('email') }}</p> }
-          <label class="ds-field"><span class="ds-field__label">Şifre</span>
-            <input class="ds-input" type="password" name="password" [(ngModel)]="password" autocomplete="new-password" [attr.aria-invalid]="!!err('password')">
-            <span class="ds-field__hint">{{ passwordRule }} maxkoç ya da Master Hızlı Okuma hesabınız varsa onun şifresini yazın.</span></label>
+          <div class="ds-field"><label class="ds-field__label" for="register-password">Şifre</label>
+            <span class="ds-input-wrap">
+              <input class="ds-input" id="register-password" [type]="showPassword() ? 'text' : 'password'" name="password" [(ngModel)]="password" autocomplete="new-password" [attr.aria-invalid]="!!err('password')">
+              <button type="button" class="ds-input-action" (click)="showPassword.set(!showPassword())"
+                [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'" [attr.aria-pressed]="showPassword()">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"></path>
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                @if (showPassword()) { <path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> }
+              </svg>
+              </button>
+            </span>
+            <span class="ds-field__hint">{{ passwordRule }} maxkoç ya da Master Hızlı Okuma hesabınız varsa onun şifresini yazın.</span></div>
           @if (err('password')) { <p class="ds-field__error">{{ err('password') }}</p> }
+          <label class="ds-field"><span class="ds-field__label">Şifre (tekrar)</span>
+            <input class="ds-input" [type]="showPassword() ? 'text' : 'password'" name="passwordAgain" [(ngModel)]="passwordAgain" autocomplete="new-password" [attr.aria-invalid]="!!err('passwordAgain')"></label>
+          @if (err('passwordAgain')) { <p class="ds-field__error">{{ err('passwordAgain') }}</p> }
           @if (kind() !== 'invited') {
             <label class="ds-field"><span class="ds-field__label">{{ kind() === 'institution' ? 'Kurumunuzun adı' : 'Çalışma alanınızın adı (isteğe bağlı)' }}</span>
               <input class="ds-input" name="workspaceName" [(ngModel)]="workspaceName" maxlength="200" autocomplete="organization" [attr.aria-invalid]="!!err('workspaceName')">
@@ -135,6 +148,9 @@ export class RegisterComponent implements OnInit {
   readonly lead = computed(() => this.kind() === 'invited'
     ? `${this.invitation()?.workspaceName ?? 'Kurumunuz'} sizi öğretmen olarak davet etti. Hesap açınca daveti kabul edersiniz.`
     : 'Kayıttan sonra e-posta adresinizi doğrularsınız, ardından planınızı seçersiniz.');
+  /** 20.11.2026 live test: the password is typed twice and can be shown. */
+  readonly showPassword = signal(false);
+  passwordAgain = '';
   firstName = ''; lastName = ''; email = ''; password = ''; workspaceName = ''; phone = ''; mfaCode = ''; newsletter = false;
 
   async ngOnInit(): Promise<void> {
@@ -160,6 +176,7 @@ export class RegisterComponent implements OnInit {
     if (!this.lastName.trim()) errors['lastName'] = 'Soyadınızı yazın.';
     if (!this.email.includes('@')) errors['email'] = 'Geçerli bir e-posta adresi yazın.';
     if (!this.password) errors['password'] = 'Şifrenizi yazın.';
+    else if (this.password !== this.passwordAgain) errors['passwordAgain'] = 'İki şifre aynı değil; ikinci kutuya aynı şifreyi yazın.';
     if (kind === 'institution' && !this.workspaceName.trim()) errors['workspaceName'] = 'Kurumunuzun adını yazın.';
     if (!phoneLooksValid(this.phone)) errors['phone'] = 'Telefon numaranızı yazın (örnek: 0532 123 45 67).';
     if (!this.legal()) errors['legal'] = 'Devam etmek için metinleri okuyup onaylayın.';

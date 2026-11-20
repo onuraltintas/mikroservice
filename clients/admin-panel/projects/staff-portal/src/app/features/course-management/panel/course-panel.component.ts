@@ -3,7 +3,8 @@ import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StaffAuthService } from '../../../auth/staff-auth.service';
 import { CourseManagementService, CourseWorkspace, PendingCourseInvitation } from '../course-management.service';
-import { CoursePanelState, PanelSection, SECTIONS, problemText } from './panel-state';
+import { CoursePanelState, PanelSection, PanelSite, SECTIONS, hashUrl, problemText } from './panel-state';
+import { PanelConfirmDialogComponent } from './panel-confirm';
 import { OverviewSectionComponent } from './sections/overview.component';
 import { StudentsSectionComponent } from './sections/students.component';
 import { CoursesSectionComponent } from './sections/courses.component';
@@ -24,7 +25,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
   selector: 'staff-course-panel',
   standalone: true,
   imports: [FormsModule, CourseManagementWorkspaceComponent, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
-    AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent],
+    AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent, PanelConfirmDialogComponent],
   providers: [CoursePanelState],
   styleUrl: './panel.scss',
   styles: `
@@ -57,7 +58,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
             </select>
           }
           @for (item of visibleSections(); track item.id) {
-            <a [href]="'#' + item.slug" [attr.aria-current]="section() === item.id ? 'page' : null" (click)="go(item.id, $event)">{{ item.label }}</a>
+            <a [href]="link(item.slug)" [attr.aria-current]="section() === item.id ? 'page' : null" (click)="go(item.id, $event)">{{ item.label }}</a>
           }
         </nav>
         <main>
@@ -99,10 +100,13 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
           {{ role === 'institution' ? 'Kurumu aç' : 'Özel ders alanını aç' }}</button></div>
       </section>
     }
+    <staff-panel-confirm-dialog />
   `
 })
 export class CoursePanelComponent implements OnInit {
   @Input({ required: true }) role!: 'teacher' | 'institution';
+  /** maxkampus.com: plan and support texts name maxkampüs and link to its /plan page. */
+  @Input() set site(value: PanelSite) { this.state.site.set(value); }
   readonly state = inject(CoursePanelState);
   private readonly service = inject(CourseManagementService);
   private readonly auth = inject(StaffAuthService);
@@ -166,13 +170,15 @@ export class CoursePanelComponent implements OnInit {
     event?.preventDefault();
     const slug = SECTIONS.find(item => item.id === section)?.slug ?? '';
     const view = this.document.defaultView;
-    if (view && query) view.history.pushState(null, '', `#${slug}?${query}`);
-    else if (view && view.location.hash.split('?')[0] !== `#${slug}`) view.history.pushState(null, '', `#${slug}`);
+    if (view && query) view.history.pushState(null, '', hashUrl(`#${slug}?${query}`));
+    else if (view && view.location.hash.split('?')[0] !== `#${slug}`) view.history.pushState(null, '', hashUrl(`#${slug}`));
     // Re-create the section when it is chosen again, so it reads its filters from the address.
     if (this.section() === section) { this.section.set('overview'); queueMicrotask(() => this.section.set(section)); }
     else this.section.set(section);
     view?.scrollTo?.({ top: 0 });
   }
+
+  link(slug: string): string { return hashUrl(`#${slug}`); }
 
   private readHash(): void {
     const slug = (this.document.defaultView?.location.hash ?? '').replace(/^#/, '').split('?')[0];

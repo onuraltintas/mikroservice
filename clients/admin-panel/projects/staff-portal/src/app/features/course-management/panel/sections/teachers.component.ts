@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CourseInvitation, CourseManagementService, TeacherAvailabilityWindow, TeacherTimeOff } from '../../course-management.service';
 import { CoursePanelApi, PanelTeacherInvitation } from '../panel-api.service';
 import { CoursePanelState, formatDate, formatDateTime, problemText } from '../panel-state';
+import { PanelConfirm } from '../panel-confirm';
 
 const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
@@ -98,6 +99,7 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
 })
 export class TeachersSectionComponent {
   readonly state = inject(CoursePanelState);
+  private readonly confirm = inject(PanelConfirm);
   private readonly api = inject(CoursePanelApi);
   private readonly service = inject(CourseManagementService);
   readonly weekdays = WEEKDAYS;
@@ -160,8 +162,9 @@ export class TeachersSectionComponent {
   cancel(invitation: CourseInvitation): Promise<void> {
     return this.act(() => this.service.cancel(this.state.id(), invitation.id).then(() => undefined), 'Davet geri alındı.');
   }
-  revoke(userId: string): Promise<void> {
-    if (!globalThis.confirm?.(`${this.state.teacherName(userId)} kurumdan çıkarılsın mı? Geçmiş dersleri ve yoklamaları kalır.`)) return Promise.resolve();
+  async revoke(userId: string): Promise<void> {
+    if (!await this.confirm.ask(`${this.state.teacherName(userId)} kurumdan çıkarılır. Geçmiş dersleri ve yoklamaları kalır.`,
+      { title: 'Öğretmen kurumdan çıkarılsın mı?', confirmText: 'Kurumdan çıkar', danger: true })) return;
     return this.act(() => this.service.revoke(this.state.id(), userId).then(() => undefined), 'Öğretmen kurumdan çıkarıldı.');
   }
   addHours(): Promise<void> {

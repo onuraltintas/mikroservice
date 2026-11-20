@@ -14,14 +14,15 @@ export {
   buildCourseStudentRosterReport,
   buildCourseLessonAttendanceReport,
   buildCourseAssignmentProgressReport,
-  buildCourseFinanceWorkspaceReport
+  buildCourseFinanceWorkspaceReport,
+  courseReportFileName
 } from './course-management-reports';
 
 export interface CourseProfile { userId: string; displayName: string; }
 export interface CourseWorkspace { id: string; name: string; type: string; institutionCategory?: LegacyInstitutionCategory | null; role: string; isReadOnly: boolean; }
 export interface CourseWorkspaceSubscription {
   workspaceId: string; workspaceName: string; workspaceType: string; activeStudentCount: number;
-  subscription: { planName: string; activeStudentLimit: number; startsAt: string; endsAt: string; accessStatus: string } | null;
+  subscription: { planName: string | null; activeStudentLimit: number | null; startsAt: string | null; endsAt: string; accessStatus: string } | null;
 }
 export interface CourseMember { userId: string; role: string; isActive: boolean; }
 export interface CourseInvitation { id: string; targetUserId: string; studentRecordId: string | null; role: string; status: string; expiresAt: string; }
@@ -311,6 +312,12 @@ export class CourseManagementService {
     title: string; instructions: string | null; dueAt: string;
   }) {
     return firstValueFrom(this.http.post<CourseAssignment>(`${this.base}/workspaces/${workspaceId}/assignments`, assignment));
+  }
+  reviseAssignment(workspaceId: string, assignmentId: string, change: { title: string; instructions: string | null; dueAt: string }) {
+    return firstValueFrom(this.http.put<CourseAssignment>(`${this.base}/workspaces/${workspaceId}/assignments/${assignmentId}`, change));
+  }
+  deleteAssignment(workspaceId: string, assignmentId: string) {
+    return firstValueFrom(this.http.delete<void>(`${this.base}/workspaces/${workspaceId}/assignments/${assignmentId}`));
   }
   getAssignmentSubmissions(workspaceId: string, assignmentId: string) {
     return firstValueFrom(this.http.get<CourseAssignmentSubmission[]>(

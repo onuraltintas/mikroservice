@@ -73,10 +73,10 @@ public static class StudentSearchEndpoints
             var total = await students.CountAsync(ct);
             students = sort switch
             {
-                "-name" => students.OrderByDescending(item => item.DisplayName).ThenBy(item => item.Id),
+                "-name" => students.OrderByDescending(item => EF.Functions.Collate(item.DisplayName, TurkishCollation.Name)).ThenBy(item => item.Id),
                 "created" => students.OrderBy(item => item.CreatedAt).ThenBy(item => item.Id),
                 "-created" => students.OrderByDescending(item => item.CreatedAt).ThenBy(item => item.Id),
-                _ => students.OrderBy(item => item.DisplayName).ThenBy(item => item.Id)
+                _ => students.OrderBy(item => EF.Functions.Collate(item.DisplayName, TurkishCollation.Name)).ThenBy(item => item.Id)
             };
             var rows = await students.Skip(skip ?? 0).Take(take ?? 25).Select(item => new
             {

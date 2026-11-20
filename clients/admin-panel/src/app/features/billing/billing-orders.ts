@@ -60,6 +60,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
                   <td><strong>{{ row.accountName }}</strong><div class="muted">{{ row.accountEmail || '—' }}</div></td>
                   <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }} · {{ row.order.durationDays }} gün</div></td>
                   <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency | currencyName }}
+                    @if (row.order.vatAmount) { <div class="muted">Net {{ row.order.amount - row.order.vatAmount | number:'1.2-2' }} + KDV (%{{ row.order.vatRate }}) {{ row.order.vatAmount | number:'1.2-2' }}</div> }
                     @if (row.order.couponCode) { <div class="muted">Kupon {{ row.order.couponCode }}: −{{ row.order.discount | number:'1.2-2' }}</div> }</td>
                   <td class="font-mono code">{{ row.order.paymentCode }}</td>
                   <td>{{ row.order.createdAt | date:'dd.MM.yyyy HH:mm' }}@if (row.order.status === 'Pending') { <div class="muted">Son gün {{ row.order.expiresAt | date:'dd.MM.yyyy' }}</div> }</td>

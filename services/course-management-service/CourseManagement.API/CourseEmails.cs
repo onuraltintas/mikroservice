@@ -15,8 +15,8 @@ public sealed class CourseEmailOptions
     public const string SectionName = "CourseManagement:Email";
     public const string DevelopmentKey = "course-management-development-unsubscribe-key-only";
 
-    /// <summary>Address that serves /api (the institution portal); unsubscribe links start here.</summary>
-    public string PublicBaseUrl { get; init; } = "https://kurum.eduivme.com";
+    /// <summary>Address that serves /api (maxkampus.com, 20.11.2026); unsubscribe links start here.</summary>
+    public string PublicBaseUrl { get; init; } = "https://maxkampus.com";
     /// <summary>Signs unsubscribe links. Production requires its own value of at least 32 characters.</summary>
     public string UnsubscribeKey { get; init; } = DevelopmentKey;
     /// <summary>How long a mark may still be corrected before anyone is told (absence, homework, lesson change, payment).</summary>

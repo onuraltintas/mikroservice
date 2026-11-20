@@ -131,7 +131,7 @@ const KINDS: Record<string, { title: string; when: string }> = {
       @case ('support') {
         <section class="card card-pad stack" style="gap: 14px">
           <h2>Destek kaydı</h2>
-          <p class="muted" style="margin: 0">eduivme destek ekibi, bir sorunu çözmek için kayıtlarınıza bakabilir ve küçük düzeltmeler yapabilir: öğrenci ve veli iletişim bilgisi, yoklama, tek bir dersin saati, bir e-posta bildirimini kapatma. Para kayıtlarına dokunmaz; öğrenci ve velilere bildirim gitmez. Yapılan her bakış ve değişiklik burada listelenir.</p>
+          <p class="muted" style="margin: 0">{{ state.brand() }} destek ekibi, bir sorunu çözmek için kayıtlarınıza bakabilir ve küçük düzeltmeler yapabilir: öğrenci ve veli iletişim bilgisi, yoklama, tek bir dersin saati, bir e-posta bildirimini kapatma. Para kayıtlarına dokunmaz; öğrenci ve velilere bildirim gitmez. Yapılan her bakış ve değişiklik burada listelenir.</p>
           @if (support()?.logs?.length) {
             <ul>@for (log of support()!.logs; track $index) {
               <li>{{ dateTime(log.occurredAt) }}: @if (log.isChange) { <strong>{{ log.what }}</strong>@if (log.target) {, {{ log.target }}}@if (log.after) {: {{ change(log.before, log.after) }}} } @else { {{ log.what }} görüntülendi }</li>
@@ -144,17 +144,21 @@ const KINDS: Record<string, { title: string; when: string }> = {
           <h2>Abonelik</h2>
           @if (plan(); as current) {
             @if (current.subscription; as sub) {
-              <p style="margin: 0"><strong>{{ sub.planName }}</strong>, {{ date(sub.startsAt) }} – {{ date(sub.endsAt) }}</p>
-              <p style="margin: 0">Etkin öğrenci: <span class="num">{{ current.activeStudentCount }} / {{ sub.activeStudentLimit }}</span></p>
-            } @else { <p style="margin: 0">Etkin öğrenci: {{ current.activeStudentCount }}. Planınız eduivme aboneliğinizden okunur.</p> }
+              <p style="margin: 0">
+                @if (sub.planName) { <strong>{{ sub.planName }}</strong>, }
+                @if (sub.startsAt) { {{ date(sub.startsAt) }} – {{ date(sub.endsAt) }} } @else { {{ date(sub.endsAt) }} tarihine kadar etkin }
+              </p>
+              <p style="margin: 0">Etkin öğrenci: <span class="num">{{ current.activeStudentCount }}@if (sub.activeStudentLimit) { / {{ sub.activeStudentLimit }} }</span></p>
+            } @else { <p style="margin: 0">Etkin öğrenci: {{ current.activeStudentCount }}. Etkin bir planınız yok.</p> }
+            @if (state.site() === 'maxkampus') { <p style="margin: 0"><a href="/plan">Planı, ödemeleri ve belgeleri görün</a></p> }
           } @else { <p class="muted" style="margin: 0">Plan bilgisi yok.</p> }
         </section>
       }
       @case ('profile') {
         <form class="card card-pad stack" style="gap: 14px; max-width: 520px" (ngSubmit)="saveProfile()">
           <h2>Profilim</h2>
-          <label class="field">Görünen adınız<input name="displayName" [(ngModel)]="displayName" maxlength="200"><span class="hint">Takvimde ve listelerde bu ad görünür.</span></label>
-          <div><button type="submit" class="btn" [disabled]="busy() || !displayName.trim()">Kaydet</button></div>
+          <label class="field">Görünen adınız<input name="displayName" [ngModel]="displayName()" (ngModelChange)="displayName.set($event)" maxlength="200" autocomplete="name"><span class="hint">Takvimde ve listelerde bu ad görünür.</span></label>
+          <div><button type="submit" class="btn" [disabled]="busy() || !displayName().trim()">Kaydet</button></div>
         </form>
       }
     }
@@ -193,7 +197,8 @@ export class SettingsSectionComponent {
   readonly dateTime = formatDateTime;
   consent = false; testEmail = ''; logSkip = 0;
   branchName = ''; roomBranchId = ''; roomName = ''; roomCapacity: number | null = null;
-  displayName = '';
+  /** A signal: the panel is zoneless, so a plain field filled after the profile loads stayed empty on screen. */
+  readonly displayName = signal('');
 
   constructor() {
     const wanted = this.tabs.find(item => item.slug === readHashQuery().get('bolum'));
@@ -218,7 +223,7 @@ export class SettingsSectionComponent {
         }
         case 'support': this.support.set(await this.api.support(id)); break;
         case 'plan': this.plan.set((await this.service.getMySubscriptions()).find(item => item.workspaceId === id) ?? null); break;
-        case 'profile': this.displayName = (await this.service.getProfile()).displayName; break;
+        case 'profile': this.displayName.set((await this.service.getProfile()).displayName); break;
       }
     } catch (error) { this.error.set(problemText(error, 'Ayarlar yüklenemedi.')); }
   }
@@ -280,6 +285,6 @@ export class SettingsSectionComponent {
     return before ? `${name(before)} → ${name(after)}` : name(after);
   }
   saveProfile(): Promise<void> {
-    return this.act(async () => { await this.service.saveProfile(this.displayName.trim()); await this.state.refreshLists(); }, 'Adınız kaydedildi.');
+    return this.act(async () => { await this.service.saveProfile(this.displayName().trim()); await this.state.refreshLists(); }, 'Adınız kaydedildi.');
   }
 }

@@ -322,6 +322,51 @@ public static class AssignmentEndpoints
             return Results.Ok(await CompletionViews(db, workspaceId, assignmentId, ct));
         });
 
+        // 20.11.2026 live test: homework saved in class could not be seen, corrected or taken back.
+        api.MapPut("/workspaces/{workspaceId:guid}/assignments/{assignmentId:guid}", async (Guid workspaceId, Guid assignmentId,
+            ReviseCourseAssignmentRequest request, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        {
+            if (request.DueAt is null || string.IsNullOrWhiteSpace(request.Title) || request.Title.Trim().Length > 160
+                || request.Instructions?.Length > 4000)
+                return Results.BadRequest(new { code = "Assignment.InvalidInput" });
+            var assignment = await db.Assignments.SingleOrDefaultAsync(item => item.Id == assignmentId && item.WorkspaceId == workspaceId, ct);
+            var userId = UserId(user);
+            if (assignment is null || !await CanManageAssignment(db, assignment, userId, ct)) return Results.NotFound();
+            assignment.Revise(request.Title, request.Instructions, request.DueAt.Value);
+            var recipientUserIds = await (from recipient in db.AssignmentRecipients.AsNoTracking()
+                join student in db.Students.AsNoTracking() on recipient.StudentId equals student.Id
+                where recipient.AssignmentId == assignmentId && recipient.WorkspaceId == workspaceId && student.UserId != null
+                select student.UserId!.Value).Distinct().ToArrayAsync(ct);
+            var now = DateTimeOffset.UtcNow;
+            await CourseManagementReminderScheduling.ScheduleAssignmentAsync(db, workspaceId, assignmentId, assignment.DueAt,
+                recipientUserIds, now, ct);
+            AddAudit(db, workspaceId, userId, assignmentId, "Assignment.Changed");
+            await db.SaveChangesAsync(ct);
+            var recipientCount = await db.AssignmentRecipients.CountAsync(item => item.AssignmentId == assignmentId, ct);
+            var submissionCount = await db.AssignmentSubmissions.CountAsync(item => item.AssignmentId == assignmentId, ct);
+            return Results.Ok(ToView(assignment, recipientCount, submissionCount));
+        });
+
+        // Homework given by mistake is taken back while nothing hangs on it: no mark, no submission, no file.
+        api.MapDelete("/workspaces/{workspaceId:guid}/assignments/{assignmentId:guid}", async (Guid workspaceId, Guid assignmentId,
+            ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
+        {
+            var assignment = await db.Assignments.SingleOrDefaultAsync(item => item.Id == assignmentId && item.WorkspaceId == workspaceId, ct);
+            var userId = UserId(user);
+            if (assignment is null || !await CanManageAssignment(db, assignment, userId, ct)) return Results.NotFound();
+            var inUse = await db.AssignmentRecipients.AnyAsync(item => item.AssignmentId == assignmentId
+                    && item.Completion != CourseAssignmentCompletion.NotMarked, ct)
+                || await db.AssignmentSubmissions.AnyAsync(item => item.AssignmentId == assignmentId, ct)
+                || await db.AssignmentAttachments.AnyAsync(item => item.AssignmentId == assignmentId, ct);
+            if (inUse) return Results.Conflict(new { code = "Assignment.InUse" });
+            db.AssignmentRecipients.RemoveRange(await db.AssignmentRecipients.Where(item => item.AssignmentId == assignmentId).ToListAsync(ct));
+            await CourseManagementReminderScheduling.CancelEntityAsync(db, workspaceId, assignmentId, ct);
+            db.Assignments.Remove(assignment);
+            AddAudit(db, workspaceId, userId, assignmentId, "Assignment.Deleted");
+            await db.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
         api.MapAssignmentAttachmentEndpoints();
     }
 
@@ -386,6 +431,8 @@ public static class AssignmentEndpoints
         new(submission.StudentId, string.Empty, submission.Id, submission.Text, SubmissionStatus(submission, dueAt),
             submission.SubmittedAt > dueAt, submission.SubmittedAt, submission.Score, submission.Feedback, submission.ReviewedAt, []);
 }
+
+public sealed record ReviseCourseAssignmentRequest(string? Title, string? Instructions, DateTimeOffset? DueAt);
 
 public sealed record CreateCourseAssignmentRequest(Guid Id, Guid CourseId, Guid? GroupId, Guid? StudentId,
     string Title, string? Instructions, DateTimeOffset? DueAt);

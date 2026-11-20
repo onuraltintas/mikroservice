@@ -84,8 +84,14 @@ export class AppComponent implements OnInit {
   isWorkspaceReadOnly(workspaceId?: string): boolean {
     return !!workspaceId && this.workspaces.some(workspace => workspace.id === workspaceId && workspace.isReadOnly);
   }
+  /** The lesson whose cancellation waits for a second, explicit answer (no browser confirm box). */
+  confirmingCancelId: string | null = null;
+  askCancelLesson(lesson: StudentLesson): void {
+    if (this.canCancelLesson(lesson)) this.confirmingCancelId = lesson.id;
+  }
   async cancelLesson(lesson: StudentLesson): Promise<void> {
-    if (!this.canCancelLesson(lesson) || !window.confirm('Bu derse katılımınızı iptal etmek istiyor musunuz?')) return;
+    if (!this.canCancelLesson(lesson) || this.confirmingCancelId !== lesson.id) return;
+    this.confirmingCancelId = null;
     await this.run(async () => {
       const result = await this.auth.cancelLessonParticipation(lesson.id);
       await this.load();

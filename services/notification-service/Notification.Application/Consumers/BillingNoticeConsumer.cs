@@ -59,7 +59,7 @@ public sealed class BillingNoticeConsumer(
     {
         var plan = notice.PlanName;
         var ends = notice.EndsAt is { } end ? TurkeyTime.Format(end) : null;
-        var amount = notice.Amount is { } value ? $"{value.ToString("N2", new System.Globalization.CultureInfo("tr-TR"))} {notice.Currency}" : null;
+        var amount = notice.Amount is { } value ? $"{value.ToString("N2", new System.Globalization.CultureInfo("tr-TR"))} {(notice.Currency == "TRY" ? "TL" : notice.Currency)}" : null;
         var seats = notice.Detail == "Seats";
         return notice.Kind switch
         {

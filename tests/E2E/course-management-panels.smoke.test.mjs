@@ -196,6 +196,9 @@ test('student signs in with an existing product, accepts invitation and joins th
     await page.getByText('Teslim ettiğiniz dosya: cevap.pdf', { exact: false }).waitFor();
     await page.getByText('Ders başlangıcına en az 24 saat varken iptal ederseniz telafi kredisi öğretmen onayına gönderilir; 24 saatten az süre kaldıysa kredi oluşmaz.', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Derse katılımımı iptal et' }).click();
+    // 20.11.2026: the student answers in the page, not in the browser's confirm box.
+    await page.getByText('Bu derse katılımınız iptal edilsin mi?', { exact: false }).waitFor();
+    await page.getByRole('button', { name: 'Evet, iptal et' }).click();
     await page.getByText('Katılımınız iptal edildi. Telafi kredisi öğretmen onayı bekliyor.', { exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Telafi haklarım' }).waitFor();
     await page.getByText('Öğretmen onayı bekliyor', { exact: true }).waitFor();
@@ -577,6 +580,9 @@ test('course teacher creates a profile, independent workspace and targeted invit
           displayName: 'Aynı E-posta', email: null, phoneNumber: null, isActive: true }];
         return reply({ previewId: body.previewId, createdCount: 1, alreadyImportedCount: 0 });
       }
+      // The overview asks whether any e-mail to parents is on (20.11.2026).
+      if (path.endsWith('/email-settings') && request.method() === 'GET') return reply({ rules: [], installmentDaysBefore: 3,
+        installmentOnDueDay: true, overdueDaysAfter: 3, sendHour: 9, replyToEmail: null, informedConsentAt: null });
       throw new Error(`Unexpected staff request: ${path}`);
     });
     await page.goto(`${base}/?product=course-management`);
@@ -618,7 +624,7 @@ test('course teacher creates a profile, independent workspace and targeted invit
     const assignmentReportFile = await assignmentReportDownload;
     assert.match(assignmentReportFile.suggestedFilename(), /^kurs-odev-teslim-ozeti-[0-9a-f-]+\.csv$/i);
     const assignmentReportCsv = await readFile(await assignmentReportFile.path(), 'utf8');
-    assert.match(assignmentReportCsv, /submission_rate_percent/);
+    assert.match(assignmentReportCsv, /"Teslim oranı \(%\)"/);
     assert.match(assignmentReportCsv, /Kesirler ödevi/);
     assert.match(assignmentReportCsv, /100/);
     assert.ok(assignmentPageRequests > 0, 'assignment reports request paged data from the API');
@@ -635,7 +641,7 @@ test('course teacher creates a profile, independent workspace and targeted invit
     await page.getByRole('button', { name: 'Ders ve yoklama raporunu CSV indir' }).click();
     const lessonReportFile = await lessonReportDownload;
     const lessonReportCsv = await readFile(await lessonReportFile.path(), 'utf8');
-    assert.match(lessonReportCsv, /student_name/);
+    assert.match(lessonReportCsv, /"Öğrenci";"Yoklama"/);
     assert.match(lessonReportCsv, /Ada Öğrenci/);
     assert.equal(lessonPageRequests, lessonRequestsBeforeReport + 1, 'attendance export fetches the date-scoped report page independently');
     await page.getByRole('heading', { name: 'Öğrenci ücretleri ve tahsilatlar' }).waitFor();
@@ -645,8 +651,8 @@ test('course teacher creates a profile, independent workspace and targeted invit
     const financeSummaryFile = await financeSummaryDownload;
     assert.match(financeSummaryFile.suggestedFilename(), /^kurs-finans-ozeti-\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}\.csv$/);
     const financeSummaryCsv = await readFile(await financeSummaryFile.path(), 'utf8');
-    assert.match(financeSummaryCsv, /total_charges/);
-    assert.match(financeSummaryCsv, /collection/);
+    assert.match(financeSummaryCsv, /"Toplam borç"/);
+    assert.match(financeSummaryCsv, /"Tahsilat: /);
     await page.getByLabel('Ücret modeli').selectOption({ label: 'Aylık sabit' });
     await page.getByLabel('Anlaşma tutarı (TRY)').fill('1200');
     await page.getByRole('button', { name: 'Anlaşmayı kaydet' }).click();
@@ -667,16 +673,16 @@ test('course teacher creates a profile, independent workspace and targeted invit
     await page.getByRole('button', { name: 'Vadesi gelen borç ve paket raporunu CSV indir' }).click();
     const workspaceFinanceReportFile = await workspaceFinanceReportDownload;
     const workspaceFinanceReportCsv = await readFile(await workspaceFinanceReportFile.path(), 'utf8');
-    assert.match(workspaceFinanceReportCsv, /overdue_installment/);
-    assert.match(workspaceFinanceReportCsv, /upcoming_installment/);
-    assert.match(workspaceFinanceReportCsv, /unused_package/);
-    assert.match(workspaceFinanceReportCsv, /900\.00/);
+    assert.match(workspaceFinanceReportCsv, /Geciken taksit/);
+    assert.match(workspaceFinanceReportCsv, /Yaklaşan taksit/);
+    assert.match(workspaceFinanceReportCsv, /Kullanılmamış ders paketi/);
+    assert.match(workspaceFinanceReportCsv, /900,00/);
     assert.doesNotMatch(workspaceFinanceReportCsv, /private-report@example\.test|5551234567|ÖZEL TAHSİLAT NOTU/);
     const workspaceFinancePrintPopup = page.waitForEvent('popup');
     await page.getByRole('button', { name: 'Borç ve paket raporunu yazdır / PDF' }).click();
     const workspaceFinancePrintPage = await workspaceFinancePrintPopup;
-    await workspaceFinancePrintPage.getByRole('heading', { name: 'Çalışma alanı borç ve paket raporu' }).waitFor();
-    await workspaceFinancePrintPage.getByText('upcoming_installment').waitFor();
+    await workspaceFinancePrintPage.getByRole('heading', { name: 'Borç ve paket durumu' }).waitFor();
+    await workspaceFinancePrintPage.getByText('Yaklaşan taksit').first().waitFor();
     await assertPrintablePdf(workspaceFinancePrintPage);
     await workspaceFinancePrintPage.close();
     assert.equal(financeReportRequests, 2, 'CSV and print reports load from the owner-only finance API');
@@ -737,7 +743,7 @@ test('course teacher creates a profile, independent workspace and targeted invit
     await page.getByRole('button', { name: 'Öğrenci raporunu CSV indir' }).click();
     const rosterReportFile = await rosterReportDownload;
     const rosterReportCsv = await readFile(await rosterReportFile.path(), 'utf8');
-    assert.match(rosterReportCsv, /display_name/);
+    assert.match(rosterReportCsv, /"Öğrenci";"Durum"/);
     assert.match(rosterReportCsv, /Finans öğrencisi/);
     assert.doesNotMatch(rosterReportCsv, /email|phoneNumber/i);
     await page.getByRole('button', { name: 'Telafi talebini onayla' }).click();
@@ -773,9 +779,9 @@ test('course teacher creates a profile, independent workspace and targeted invit
     await page.getByRole('button', { name: 'Ders ve yoklama raporunu CSV indir' }).click();
     const attendanceReportFile = await attendanceReportDownload;
     const attendanceReportCsv = await readFile(await attendanceReportFile.path(), 'utf8');
-    assert.match(attendanceReportCsv, /attendance_status/);
+    assert.match(attendanceReportCsv, /"Yoklama"/);
     assert.match(attendanceReportCsv, /Ada Öğrenci/);
-    assert.match(attendanceReportCsv, /Present/);
+    assert.match(attendanceReportCsv, /Geldi/);
     assert.equal(displayName, 'Öğretmen adı');
     assert.equal(importedStudents, 1);
     workspace = { ...workspace, role: 'Teacher' };

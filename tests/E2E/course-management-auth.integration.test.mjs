@@ -839,6 +839,40 @@ test('live API enforces product and subject boundaries before database access', 
         await new Promise(resolve => setTimeout(resolve, 250));
       }
       assert.equal(reminderQueueState, '3:1', 'worker atomically queues one reminder event through the service outbox');
+      // 20.11.2026 live test: homework given in class is corrected or taken back from the attendance screen.
+      const extraAssignmentId = 'f3b9f0c4-6a51-4f43-9a35-2c7a0e7d4b21';
+      const extraPath = `${assignmentsPath}/${extraAssignmentId}`;
+      assert.equal((await createAssignment({ id: extraAssignmentId, courseId, groupId, studentId: null,
+        title: 'Yanlış ödev', instructions: null, dueAt: assignmentDueAt })).status, 201);
+      const laterDueAt = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString();
+      const revise = (body, bearer = teacherToken) => request(extraPath, bearer, { method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      assert.equal((await revise({ title: ' ', instructions: null, dueAt: laterDueAt })).status, 400);
+      assert.equal((await revise({ title: 'Doğru ödev', instructions: 'Sayfa 46–50', dueAt: laterDueAt }, courseStudent)).status, 404,
+        'a student cannot change homework');
+      const revised = await revise({ title: 'Doğru ödev', instructions: 'Sayfa 46–50', dueAt: laterDueAt });
+      assert.equal(revised.status, 200, await revised.clone().text());
+      const revisedView = await revised.json();
+      assert.equal(revisedView.title, 'Doğru ödev');
+      assert.equal(Date.parse(revisedView.dueAt), Date.parse(laterDueAt));
+      const extraReminders = readReminders(extraAssignmentId);
+      assert.ok(extraReminders.some(item => item.status === 1 && Date.parse(item.targetAt) === Date.parse(laterDueAt)),
+        'the reminder follows the new due date');
+      assert.ok(extraReminders.filter(item => item.status === 1).every(item => Date.parse(item.targetAt) === Date.parse(laterDueAt)),
+        'the reminder for the old due date no longer waits');
+      const completionsPath = `${extraPath}/completions`;
+      const markCompletion = (completion) => request(completionsPath, teacherToken, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [{ studentId: linkedStudentId, completion, note: null }] }) });
+      assert.equal((await markCompletion(3)).status, 200);
+      const blocked = await request(extraPath, teacherToken, { method: 'DELETE' });
+      assert.equal(blocked.status, 409);
+      assert.equal((await blocked.json()).code, 'Assignment.InUse', 'marked homework is corrected, not deleted');
+      assert.equal((await markCompletion(0)).status, 200);
+      assert.equal((await request(extraPath, courseStudent, { method: 'DELETE' })).status, 404, 'a student cannot take homework back');
+      assert.equal((await request(extraPath, teacherToken, { method: 'DELETE' })).status, 204);
+      const remaining = await (await request(`${assignmentsPath}?skip=0&take=200`, teacherToken)).json();
+      assert.ok(!remaining.some(item => item.id === extraAssignmentId), 'the taken-back homework is gone from the list');
+      assert.ok(readReminders(extraAssignmentId).every(item => item.status !== 1), 'its reminders no longer wait');
       const assignmentAttachmentsPath = `${assignmentsPath}/${assignmentId}/attachments`;
       const infectedUpload = await request(`${assignmentAttachmentsPath}?fileName=test-virus.pdf`, teacherToken, {
         method: 'POST', headers: { 'Content-Type': 'application/pdf' },

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CourseAssignment, CourseLesson, CourseManagementService } from '../../course-management.service';
 import { CompletionMark, CoursePanelApi, PanelCompletion } from '../panel-api.service';
 import { CoursePanelState, formatDateTime, formatTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { PanelConfirm } from '../panel-confirm';
 
 const DAY_MS = 86_400_000;
 const ATTENDANCE = [
@@ -61,7 +62,9 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
           @if (editable(current)) {
             <div class="actions" style="padding: 12px 20px 18px">
               <button type="button" class="btn-secondary" (click)="restPresent(current)" [disabled]="busy() || markedCount(current) === activeStudents(current).length">Kalanlar geldi</button>
-              <button type="button" class="btn" (click)="complete(current)" [disabled]="busy() || markedCount(current) < activeStudents(current).length">Dersi tamamla</button>
+              <button type="button" class="btn" (click)="complete(current)" [disabled]="busy() || !ended(current) || markedCount(current) < activeStudents(current).length">Dersi tamamla</button>
+              @if (!ended(current)) { <span class="muted" style="font-size: 14px">Ders {{ time(current.endsAt) }}'de bitince tamamlayabilirsiniz.</span> }
+              @else if (markedCount(current) < activeStudents(current).length) { <span class="muted" style="font-size: 14px">Tamamlamak için bütün öğrencileri işaretleyin.</span> }
             </div>
           }
         </section>
@@ -90,13 +93,28 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
         @if (!state.readOnly()) {
           <form class="card card-pad stack" style="gap: 14px" (ngSubmit)="giveHomework(current)" aria-labelledby="homework-new-title">
             <h2 id="homework-new-title">Bu dersin ödevi</h2>
+            @if (givenHomework().length && !editingHomework()) {
+              <ul class="given" aria-label="Bu derste verilen ödev">
+                @for (item of givenHomework(); track item.id) {
+                  <li><div><strong>{{ item.title }}</strong><span class="muted num"> Teslim {{ dateTime(item.dueAt) }}</span>
+                    @if (item.instructions) { <p class="muted" style="margin: 2px 0 0">{{ item.instructions }}</p> }</div>
+                    <div class="actions">
+                      <button type="button" class="btn-secondary btn-small" (click)="editHomework(item)" [disabled]="busy()">Düzelt</button>
+                      <button type="button" class="btn-quiet" (click)="removeHomework(item)" [disabled]="busy()">Geri al</button>
+                    </div></li>
+                }
+              </ul>
+            }
             <div class="form-grid">
               <label class="field">Ödev<input name="title" [(ngModel)]="title" maxlength="160" placeholder="Kesirler, sayfa 46–50"></label>
               <label class="field">Teslim<input name="due" type="date" [(ngModel)]="dueOn"></label>
             </div>
             <label class="field">Açıklama<textarea name="instructions" [(ngModel)]="instructions" maxlength="4000" placeholder="İsteğe bağlı"></textarea></label>
             <p class="muted" style="margin: 0; font-size: 14px">Ödevi bir sonraki derste bu ekrandan "yaptı, eksik, yapmadı" diye işaretlersiniz.</p>
-            <div><button type="submit" class="btn" [disabled]="busy() || !title.trim() || !dueOn">Ödevi kaydet</button></div>
+            <div class="actions">
+              <button type="submit" class="btn" [disabled]="busy() || !title.trim() || !dueOn">{{ editingHomework() ? 'Düzeltmeyi kaydet' : givenHomework().length ? 'Bir ödev daha ver' : 'Ödevi kaydet' }}</button>
+              @if (editingHomework()) { <button type="button" class="btn-secondary" (click)="cancelHomeworkEdit()">Vazgeç</button> }
+            </div>
           </form>
         }
       </div>
@@ -106,6 +124,8 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
     .people { list-style: none; margin: 0; padding: 0; }
     .people li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--ds-line); }
     .name { font-weight: 600; min-width: 160px; }
+    .given { list-style: none; margin: 0; padding: 0; }
+    .given li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ds-line); }
     .segmented button { min-width: 72px; min-height: 44px; }
     @media (max-width: 600px) { .people li { flex-direction: column; align-items: stretch; } .segmented { display: grid; grid-template-columns: repeat(4, 1fr); } }
   `
@@ -126,6 +146,21 @@ export class AttendanceSectionComponent {
   readonly error = signal('');
   readonly notice = signal('');
   title = ''; instructions = ''; dueOn = '';
+  /** Homework of this lesson being corrected in the form below. */
+  readonly editingHomework = signal<CourseAssignment | null>(null);
+  private readonly confirm = inject(PanelConfirm);
+  /** Homework given for this lesson's group (or student) from two hours before it started to twelve hours after it ended. */
+  readonly givenHomework = computed(() => {
+    const current = this.lesson();
+    if (!current) return [];
+    const from = new Date(current.startsAt).getTime() - 2 * 3_600_000;
+    const to = new Date(current.endsAt).getTime() + 12 * 3_600_000;
+    const studentIds = new Set(current.students.map(item => item.studentId));
+    return this.assignments().filter(item => item.courseId === current.courseId
+        && (current.groupId ? item.groupId === current.groupId : !!item.studentId && studentIds.has(item.studentId))
+        && new Date(item.createdAt).getTime() >= from && new Date(item.createdAt).getTime() <= to)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  });
 
   readonly choices = computed(() => {
     const now = Date.now();
@@ -183,6 +218,7 @@ export class AttendanceSectionComponent {
   activeStudents(lesson: CourseLesson) { return lesson.students.filter(item => item.isActive !== false); }
   markedCount(lesson: CourseLesson): number { return this.activeStudents(lesson).filter(item => item.attendanceStatus).length; }
   started(lesson: CourseLesson): boolean { return new Date(lesson.startsAt).getTime() <= Date.now(); }
+  ended(lesson: CourseLesson): boolean { return new Date(lesson.endsAt).getTime() <= Date.now(); }
   editable(lesson: CourseLesson): boolean { return lesson.status === 'Scheduled' && this.started(lesson) && !this.state.readOnly(); }
 
   private patch(lessonId: string, studentId: string, status: string): void {
@@ -231,9 +267,38 @@ export class AttendanceSectionComponent {
     catch (error) { this.error.set(problemText(error)); }
   }
 
+  editHomework(item: CourseAssignment): void {
+    this.editingHomework.set(item);
+    this.title = item.title;
+    this.instructions = item.instructions ?? '';
+    this.dueOn = isoDayTr(item.dueAt);
+  }
+  cancelHomeworkEdit(): void { this.editingHomework.set(null); this.title = ''; this.instructions = ''; this.dueOn = ''; }
+
+  async removeHomework(item: CourseAssignment): Promise<void> {
+    if (!await this.confirm.ask(`"${item.title}" ödevi geri alınsın mı? Öğrenciler bu ödevi artık görmez.`,
+      { title: 'Ödev geri alınsın mı?', confirmText: 'Ödevi geri al', danger: true })) return;
+    this.busy.set(true);
+    try {
+      await this.service.deleteAssignment(this.state.id(), item.id);
+      this.notice.set('Ödev geri alındı.');
+      this.assignments.set(await this.service.getAssignments(this.state.id()));
+    } catch (error) { this.error.set(problemText(error)); }
+    finally { this.busy.set(false); }
+  }
+
   async giveHomework(lesson: CourseLesson): Promise<void> {
     this.busy.set(true);
     try {
+      const editing = this.editingHomework();
+      if (editing) {
+        await this.service.reviseAssignment(this.state.id(), editing.id, { title: this.title.trim(),
+          instructions: this.instructions.trim() || null, dueAt: new Date(`${this.dueOn}T18:00:00+03:00`).toISOString() });
+        this.cancelHomeworkEdit();
+        this.notice.set('Ödev düzeltildi.');
+        this.assignments.set(await this.service.getAssignments(this.state.id()));
+        return;
+      }
       const single = !lesson.groupId && lesson.students.length === 1 ? lesson.students[0].studentId : null;
       await this.service.createAssignment(this.state.id(), { id: crypto.randomUUID(), courseId: lesson.courseId,
         groupId: lesson.groupId, studentId: lesson.groupId ? null : single, title: this.title.trim(),
@@ -245,3 +310,6 @@ export class AttendanceSectionComponent {
     finally { this.busy.set(false); }
   }
 }
+
+/** The Türkiye calendar day of an instant, as yyyy-MM-dd for a date field. */
+function isoDayTr(value: string): string { return new Date(new Date(value).getTime() + 3 * 3_600_000).toISOString().slice(0, 10); }

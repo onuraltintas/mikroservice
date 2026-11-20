@@ -31,7 +31,7 @@ public static class LearningEndpoints
                 students = students.Where(student => student.IsActive && db.Enrollments.Any(enrollment => enrollment.StudentId == student.Id
                     && enrollment.Status == EnrollmentStatus.Active
                     && db.Groups.Any(group => group.Id == enrollment.GroupId && group.TeacherUserId == UserId(user))));
-            return Results.Ok(await students.OrderByDescending(student => student.IsActive).ThenBy(student => student.DisplayName).ThenBy(student => student.Id)
+            return Results.Ok(await students.OrderByDescending(student => student.IsActive).ThenBy(student => EF.Functions.Collate(student.DisplayName, TurkishCollation.Name)).ThenBy(student => student.Id)
                 .Skip(pageSkip).Take(pageSize)
                 .Select(student => new { student.Id, student.UserId, student.DisplayName, student.Email, student.PhoneNumber, student.IsActive,
                     student.EmailsMuted }).ToListAsync(ct));

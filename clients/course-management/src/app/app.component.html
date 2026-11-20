@@ -77,7 +77,12 @@
             <p>{{ lessonTime(lesson.startsAt) }} – {{ lessonTime(lesson.endsAt) }}</p>
             <p>{{ lesson.workspaceName }}, {{ lesson.subject }}{{ lesson.teacherName ? ', ' + lesson.teacherName : '' }}</p>
             @if (isWorkspaceReadOnly(lesson.workspaceId)) { <p>Bu çalışma alanı salt okunur; ders katılımı değiştirilemez.</p> }
-            @if (canCancelLesson(lesson)) { <button type="button" (click)="cancelLesson(lesson)" [disabled]="busy">Derse katılımımı iptal et</button>
+            @if (canCancelLesson(lesson)) {
+              @if (confirmingCancelId === lesson.id) {
+                <span role="group" aria-label="İptali onaylayın">Bu derse katılımınız iptal edilsin mi?
+                  <button type="button" (click)="cancelLesson(lesson)" [disabled]="busy">Evet, iptal et</button>
+                  <button type="button" (click)="confirmingCancelId = null">Vazgeç</button></span>
+              } @else { <button type="button" (click)="askCancelLesson(lesson)" [disabled]="busy">Derse katılımımı iptal et</button> }
               <p>Ders başlangıcına en az 24 saat varken iptal ederseniz telafi kredisi öğretmen onayına gönderilir; 24 saatten az süre kaldıysa kredi oluşmaz.</p> }
           </article>
         }

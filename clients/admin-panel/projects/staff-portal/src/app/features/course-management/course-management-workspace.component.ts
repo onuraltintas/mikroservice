@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CourseManagementService, CourseWorkspace, CourseWorkspaceSubscription, CourseMember, CourseInvitation, CourseAuditEntry, PendingCourseInvitation, CourseStudent, CourseSummary, CourseGroup, CourseBranch, CourseRoom, CourseLesson, CourseLessonSeries, CourseMakeupCredit, TeacherTimeOff, TeacherAvailabilityWindow, GuardianContact, StudentGuardianLink, StudentCsvImportPreview, LegacyStudentImportField, LegacyStudentImportPreview, LegacyInstitutionImportField, LegacyInstitutionImportPreview, LegacyInstitutionImportRequest, CourseFeeAgreement, CourseInstallment, CoursePayment, CoursePackageMovement, CourseFinanceSummary, CourseStudentAccount, CourseAssignment, CourseAssignmentSubmission, CourseAssignmentAttachment, CourseReportTable, buildCourseAssignmentProgressReport, buildCourseFinanceSummaryCsv, buildCourseFinanceWorkspaceReport, buildCourseLessonAttendanceReport, buildCourseReportCsv, buildCourseReportPrintHtml, buildCourseStudentAccountCsv, buildCourseStudentAccountPrintHtml, buildCourseStudentRosterReport } from './course-management.service';
 import { CourseManagementLegacyImportService, LegacyInstitutionCategory, LegacyInstitutionSourceInfo, LegacyInstitutionSourcePage, LegacyStudentSource, LegacyStudentSourcePage, LegacyStudentSourceRow, LegacyTeacherSourcePage, LegacyTeacherSourceRow } from './course-management-legacy-import.service';
+import { PanelConfirm } from './panel/panel-confirm';
 
 const courseAuditActionLabels: Record<string, string> = {
   'Workspace.Created': 'Çalışma alanı oluşturuldu',
@@ -60,6 +61,8 @@ const courseAuditActionLabels: Record<string, string> = {
   'Finance.LessonCharged': 'Ders ücreti tahakkuk etti',
   'Finance.PackageConsumed': 'Paket hakkı tüketildi',
   'Assignment.Created': 'Ödev oluşturuldu',
+  'Assignment.Changed': 'Ödev düzeltildi',
+  'Assignment.Deleted': 'Ödev geri alındı',
   'Assignment.Reviewed': 'Ödev değerlendirildi',
   'Assignment.MaterialUploaded': 'Ödev dosyası yüklendi',
   'Assignment.FileSubmitted': 'Ödev dosyası teslim edildi',
@@ -77,6 +80,7 @@ const courseAuditActionLabels: Record<string, string> = {
 export class CourseManagementWorkspaceComponent implements OnInit {
   @Input({ required: true }) role!: 'teacher' | 'institution';
   readonly auth = inject(StaffAuthService);
+  private readonly confirm = inject(PanelConfirm);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly service = inject(CourseManagementService);
   private readonly legacyImportService = inject(CourseManagementLegacyImportService);
@@ -1011,7 +1015,8 @@ export class CourseManagementWorkspaceComponent implements OnInit {
   async cancelFutureSeries(seriesId: string): Promise<void> {
     if (!this.selected) return;
     const series = this.lessonSeries.find(item => item.id === seriesId);
-    if (!series || !window.confirm(`${series.remainingSessions} gelecek ders iptal edilecek. Devam edilsin mi?`)) return;
+    if (!series || !await this.confirm.ask(`${series.remainingSessions} gelecek ders iptal edilir.`,
+      { title: 'Serinin kalan dersleri iptal edilsin mi?', confirmText: 'Kalan dersleri iptal et', danger: true })) return;
     await this.run(async () => {
       const result = await this.service.cancelFutureLessonSeries(this.selectedId, seriesId);
       [this.lessons, this.lessonSeries] = await Promise.all([

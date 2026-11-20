@@ -26,7 +26,7 @@ export function needsPlan(billing: MyBilling | null): boolean {
     <mk-panel-frame>
       @if (ready()) {
         <mk-notices [audience]="session.role() === 'owner' ? 'owners' : 'teachers'" />
-        <staff-course-panel [role]="session.role() === 'owner' ? 'institution' : 'teacher'" />
+        <staff-course-panel [role]="session.role() === 'owner' ? 'institution' : 'teacher'" site="maxkampus" />
       } @else {
         <p class="mk-status" role="status"><span class="ds-spinner" aria-hidden="true"></span> maxkampüs açılıyor</p>
       }
@@ -93,5 +93,10 @@ export class PlanComponent implements OnInit {
     void this.check();
   }
 
-  async check(): Promise<void> { this.billing.set(await this.api.myBilling().catch(() => this.billing())); }
+  async check(): Promise<void> {
+    this.billing.set(await this.api.myBilling().catch(() => this.billing()));
+    // The browser tab says what the page shows (20.11.2026 live test: "Planınızı seçin" with a running plan).
+    const title = this.active() ? 'Planım ve ödemeler' : this.waiting() ? 'Ödemeniz bekleniyor' : 'Planınızı seçin';
+    this.seo.set({ title, path: '/plan', noindex: true });
+  }
 }

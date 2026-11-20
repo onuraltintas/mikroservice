@@ -28,7 +28,17 @@ type Stage = 'form' | 'verify' | 'setup' | 'recovery-codes';
               <input class="ds-input" type="email" name="email" [(ngModel)]="email" autocomplete="username" required></label>
             <div class="ds-field">
               <span class="ds-field__row"><label for="password">Şifre</label><a class="ds-link" routerLink="/sifremi-unuttum">Şifremi unuttum</a></span>
-              <input class="ds-input" id="password" type="password" name="password" [(ngModel)]="password" autocomplete="current-password" required>
+              <span class="ds-input-wrap">
+                <input class="ds-input" id="password" [type]="showPassword() ? 'text' : 'password'" name="password" [(ngModel)]="password" autocomplete="current-password" required>
+                <button type="button" class="ds-input-action" (click)="showPassword.set(!showPassword())"
+                  [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'" [attr.aria-pressed]="showPassword()">
+                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"></path>
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                @if (showPassword()) { <path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> }
+              </svg>
+                </button>
+              </span>
             </div>
             <label class="ds-check"><input type="checkbox" name="remember" [(ngModel)]="remember"> Beni hatırla</label>
             @if (error()) { <p class="ds-alert" role="alert">{{ error() }}</p> }
@@ -90,6 +100,7 @@ export class LoginComponent implements OnInit {
   readonly useRecovery = signal(false);
   readonly secret = signal('');
   readonly recoveryCodes = signal<string[]>([]);
+  readonly showPassword = signal(false);
   email = ''; password = ''; remember = false; code = ''; recovery = '';
   private challenge = '';
   private setupToken = '';

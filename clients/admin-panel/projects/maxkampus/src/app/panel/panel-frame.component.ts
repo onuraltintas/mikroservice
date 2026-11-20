@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MaxkampusSession } from '../core/session.service';
 import { BrandMarkComponent } from '../site/brand-mark.component';
@@ -18,6 +18,17 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
         <button type="button" (click)="signOut()">Çıkış yap</button>
       </nav>
     </header>
+    @if (switched(); as where) {
+      <p class="switched" role="status">
+        @if (where === 'here') {
+          <span>Bu tarayıcıda şimdi <strong>{{ session.displayName() }}</strong> ({{ roleName() }}) hesabıyla girdiniz; önceki hesabın oturumu kapandı.
+            İki hesabı aynı anda kullanmak için birini gizli pencerede açın.</span>
+        } @else {
+          <span>Bu tarayıcının başka bir sekmesinde başka bir maxkampüs hesabıyla giriş yapıldı. Sayfayı yenilediğinizde o hesap açılır.</span>
+        }
+        <button type="button" (click)="switched.set(null)" aria-label="Bilgiyi kapat">Tamam</button>
+      </p>
+    }
     <ng-content />
   `,
   styles: `
@@ -28,13 +39,41 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
     nav a, nav button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ds-text); font: inherit; text-decoration: none; cursor: pointer; }
     nav a:hover, nav button:hover { background: var(--ds-soft); }
     nav a.on { font-weight: 600; box-shadow: inset 0 -3px 0 var(--ds-accent); }
+    .switched { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 10px 20px;
+      background: var(--ds-soft); color: var(--ds-text); border-bottom: 1px solid var(--ds-line); line-height: 1.5; }
+    .switched button { min-height: 40px; padding: 0 14px; border: 1px solid var(--ds-field); border-radius: 8px; background: var(--ds-surface); color: var(--ds-text); font: inherit; cursor: pointer; }
   `
 })
-export class PanelFrameComponent {
+export class PanelFrameComponent implements OnInit {
   readonly session = inject(MaxkampusSession);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  /**
+   * One maxkampüs session per browser: signing in with another account (a teacher's, say) replaces the owner's. The panel
+   * says so instead of quietly showing another account's screens (20.11.2026 live test).
+   */
+  readonly switched = signal<'here' | 'elsewhere' | null>(null);
+
+  ngOnInit(): void {
+    const current = this.session.userId();
+    const before = readLastAccount();
+    if (current && before && before !== current) this.switched.set('here');
+    if (current) writeLastAccount(current);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === LAST_ACCOUNT_KEY && event.newValue && event.newValue !== this.session.userId()) this.switched.set('elsewhere');
+    };
+    globalThis.addEventListener?.('storage', onStorage);
+    this.destroyRef.onDestroy(() => globalThis.removeEventListener?.('storage', onStorage));
+  }
+
+  roleName(): string { return this.session.role() === 'owner' ? 'kurum sahibi' : 'öğretmen'; }
+
   async signOut(): Promise<void> {
     await this.session.signOut();
     await this.router.navigateByUrl('/');
   }
 }
+
+const LAST_ACCOUNT_KEY = 'mk_last_account';
+function readLastAccount(): string | null { try { return globalThis.localStorage?.getItem(LAST_ACCOUNT_KEY) ?? null; } catch { return null; } }
+function writeLastAccount(userId: string): void { try { globalThis.localStorage?.setItem(LAST_ACCOUNT_KEY, userId); } catch { /* private mode */ } }

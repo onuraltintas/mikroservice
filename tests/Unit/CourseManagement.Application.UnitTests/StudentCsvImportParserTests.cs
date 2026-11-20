@@ -29,12 +29,28 @@ public sealed class StudentCsvImportParserTests
     }
 
     [Theory]
-    [InlineData("name,email\nAda,ada@example.test")]
+    [InlineData("email,telefon\nada@example.test,555")]
     [InlineData("displayName,displayName\nAda,Ada")]
+    [InlineData("ad,Ad Soyad\nAda,Ada")]
     public void RejectsMissingOrDuplicateHeaders(string csv)
     {
         var error = Assert.Throws<StudentCsvImportParseException>(() => StudentCsvImportParser.Parse(csv));
         Assert.Equal("StudentImport.InvalidHeader", error.Code);
+    }
+
+    // 20.11.2026 live test: the panel says "ad, e-posta, telefon", and Excel in Turkish saves with semicolons.
+    [Theory]
+    [InlineData("ad,e-posta,telefon\nAda Öğrenci,ADA@example.test,555 000")]
+    [InlineData("Ad Soyad;E-Posta;Telefon\r\nAda Öğrenci;ada@example.test;555 000")]
+    [InlineData("ÖĞRENCİ ADI\tE-posta adresi\tCep telefonu\nAda Öğrenci\tada@example.test\t555 000")]
+    [InlineData("Sınıf;Adı Soyadı;Veli;Telefon;E-posta\n8-A;Ada Öğrenci;Ayşe;555 000;ada@example.test")]
+    public void ReadsTurkishHeadersAndExcelSeparators(string csv)
+    {
+        var row = Assert.Single(StudentCsvImportParser.Parse(csv).Rows);
+        Assert.Null(row.Error);
+        Assert.Equal("Ada Öğrenci", row.DisplayName);
+        Assert.Equal("ada@example.test", row.Email);
+        Assert.Equal("555 000", row.PhoneNumber);
     }
 
     [Fact]

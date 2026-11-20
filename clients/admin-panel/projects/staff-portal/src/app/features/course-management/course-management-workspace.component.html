@@ -44,9 +44,9 @@
     <article aria-labelledby="course-platform-subscription-title">
       <h3 id="course-platform-subscription-title">Platform aboneliği</h3>
       @if (selectedSubscription?.subscription; as plan) {
-        <p><strong>{{ plan.planName }}</strong> · Kayıt durumu: {{ plan.accessStatus === 'Active' ? 'Etkin' : 'Askıya alınmış' }}</p>
-        <p>Etkin öğrenci: {{ selectedSubscription?.activeStudentCount }} / {{ plan.activeStudentLimit }}</p>
-        <p>{{ lessonTime(plan.startsAt, null) }} – {{ lessonTime(plan.endsAt, null) }}</p>
+        <p>@if (plan.planName) { <strong>{{ plan.planName }}</strong>, } Kayıt durumu: {{ plan.accessStatus === 'Active' ? 'Etkin' : 'Askıya alınmış' }}</p>
+        <p>Etkin öğrenci: {{ selectedSubscription?.activeStudentCount }}@if (plan.activeStudentLimit) { / {{ plan.activeStudentLimit }} }</p>
+        <p>@if (plan.startsAt) { {{ lessonTime(plan.startsAt, null) }} – } {{ lessonTime(plan.endsAt, null) }}@if (!plan.startsAt) { tarihine kadar }</p>
         <p>Başlangıç öncesi, bitiş sonrası veya plan askıya alındığında çalışma alanı salt okunur olur. Mevcut verileri okuyup dışa aktarabilirsiniz; davet, öğrenci, ders, ödev ve finans değişiklikleri durur. Kişisel profiliniz etkilenmez.</p>
       } @else {
         <p>Bu çalışma alanına henüz bir platform planı atanmamış.</p>

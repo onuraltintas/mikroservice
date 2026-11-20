@@ -4,23 +4,18 @@ import type {
 } from './course-management.service';
 
 export function buildCourseFinanceSummaryCsv(summary: CourseFinanceSummary): string {
-  const quote = (value: string) => `"${value.replaceAll('"', '""')}"`;
-  const metricRows: [string, string, number][] = [
-    ['all_time', 'total_charges', summary.totalCharges],
-    ['all_time', 'total_payments', summary.totalPayments],
-    ['snapshot', 'balance', summary.balance],
-    ['snapshot', 'overdue_amount', summary.overdueAmount],
-    ['snapshot', 'due_in_next_30_days', summary.dueInNext30Days]
+  const methods: Record<string, string> = { Cash: 'Nakit', BankTransfer: 'Havale / EFT' };
+  const rows: CourseReportCell[][] = [
+    ['Kalem', 'Dönem', 'Tutar (TL)'],
+    ['Toplam borç', 'Bugüne kadar', money(summary.totalCharges)],
+    ['Toplam tahsilat', 'Bugüne kadar', money(summary.totalPayments)],
+    ['Bakiye', 'Bugün', money(summary.balance)],
+    ['Geciken tutar', 'Bugün', money(summary.overdueAmount)],
+    ['Önümüzdeki 30 gün', 'Bugün', money(summary.dueInNext30Days)],
+    ...summary.collectionsByMethod.map(item => [`Tahsilat: ${methods[item.method] ?? item.method}`,
+      `${trDate(summary.from)}–${trDate(summary.to)}`, money(item.amount)])
   ];
-  const rows: string[][] = [
-    ['scope', 'from', 'to', 'metric', 'amount_try', 'payment_method'],
-    ...metricRows.map(([scope, metric, amount]) => [scope, '', '', metric, amount.toFixed(2), '']),
-    ...summary.collectionsByMethod.map(item => [
-      'period', summary.from, summary.to, 'collection', item.amount.toFixed(2), item.method
-    ])
-  ];
-
-  return `\uFEFF${rows.map(row => row.map(quote).join(',')).join('\r\n')}\r\n`;
+  return `\uFEFF${rows.map(row => row.map(quoteCourseCsvCell).join(CSV_SEPARATOR)).join('\r\n')}\r\n`;
 }
 
 export function buildCourseStudentAccountCsv(workspaceName: string, studentName: string, account: CourseStudentAccount): string {
@@ -81,22 +76,40 @@ export function buildCourseStudentAccountPrintHtml(workspaceName: string, studen
     <section><h2>Paket hakkı hareketleri</h2>${table(['İşlem', 'Hak değişimi', 'Tarih'], packageMovements)}</section></body></html>`;
 }
 
+/**
+ * CSV for Excel in Turkish: semicolon between columns, decimal comma, a header row in Turkish and nothing else
+ * (20.11.2026 live test: English column names, ids and "metadata" rows made the files hard to read).
+ */
+const CSV_SEPARATOR = ';';
+const trNumber = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2, useGrouping: false });
+const trMoney = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+
 function quoteCourseCsvCell(value: CourseReportCell): string {
-  const raw = value === null ? '' : String(value);
-  const safe = typeof value === 'string' && /^[\s]*[=+\-@]/.test(raw) && !/^-?\d+(?:\.\d+)?$/.test(raw)
+  const raw = value === null ? '' : typeof value === 'number' ? trNumber.format(value) : String(value);
+  const safe = typeof value === 'string' && /^[\s]*[=+\-@]/.test(raw) && !/^-?\d+(?:[.,]\d+)?$/.test(raw)
     ? `'${raw}` : raw;
   return `"${safe.replaceAll('"', '""')}"`;
 }
 
-export function buildCourseReportCsv(workspaceName: string, report: CourseReportTable): string {
-  const metadata = ['metadata', report.title, workspaceName, report.scope, ...report.headers.map(() => '')];
-  const rows: CourseReportCell[][] = [
-    ['record_type', 'report', 'workspace', 'scope', ...report.headers],
-    metadata,
-    ...report.rows.map(row => ['data', report.title, workspaceName, report.scope, ...row])
-  ];
-  return `\uFEFF${rows.map(row => row.map(quoteCourseCsvCell).join(',')).join('\r\n')}\r\n`;
+/** The report as a table: the column names in the first line, one line for each record. */
+export function buildCourseReportCsv(_workspaceName: string, report: CourseReportTable): string {
+  const rows: CourseReportCell[][] = [report.headers, ...report.rows];
+  return `\uFEFF${rows.map(row => row.map(quoteCourseCsvCell).join(CSV_SEPARATOR)).join('\r\n')}\r\n`;
 }
+
+/** A file name such as "ogrenci-listesi-2026-11-20" (no ids; Turkish letters folded). */
+export function courseReportFileName(title: string, today = new Date()): string {
+  const folded = title.toLocaleLowerCase('tr-TR').replace(/[çğıöşü]/g, letter => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' })[letter] ?? letter)
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const day = new Date(today.getTime() + 3 * 3_600_000).toISOString().slice(0, 10);
+  return `${folded}-${day}`;
+}
+
+const LESSON_STATUS: Record<string, string> = { Scheduled: 'Planlandı', InProgress: 'Sürüyor', Completed: 'Tamamlandı', Cancelled: 'İptal edildi' };
+const ATTENDANCE_STATUS: Record<string, string> = { Present: 'Geldi', Absent: 'Gelmedi', Late: 'Geç', Excused: 'İzinli' };
+const trDate = (value: string | null) => value ? new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value.length === 10 ? `${value}T12:00:00+03:00` : value)) : null;
+const trTime = (value: string) => new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+const money = (value: number | null) => value === null ? null : trMoney.format(value);
 
 export function buildCourseReportPrintHtml(workspaceName: string, report: CourseReportTable): string {
   const escapeHtml = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -107,66 +120,65 @@ export function buildCourseReportPrintHtml(workspaceName: string, report: Course
     : `<tr><td colspan="${report.headers.length}">Kayıt yok</td></tr>`;
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${escapeHtml(report.title)}</title>
     <style>body{font:14px Arial,sans-serif;color:#18212f;margin:32px}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #cbd2dc;padding:7px;text-align:left}th{background:#eef2f7}@media print{body{margin:12mm}}</style>
-    </head><body><h1>${escapeHtml(report.title)}</h1><p><strong>Çalışma alanı:</strong> ${escapeHtml(workspaceName)}</p>
+    </head><body><h1>${escapeHtml(report.title)}</h1><p><strong>Kurum:</strong> ${escapeHtml(workspaceName)}</p>
     <p>${escapeHtml(report.scope)}</p><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></body></html>`;
 }
 
 export function buildCourseStudentRosterReport(students: CourseStudent[]): CourseReportTable {
   return {
     title: 'Öğrenci listesi',
-    scope: 'Görüntülemeye yetkili olduğunuz tüm öğrenci kayıtları. E-posta ve telefon bilgileri dışarıda bırakılmıştır.',
-    headers: ['student_id', 'display_name', 'status'],
-    rows: students.map(item => [item.id, item.displayName, item.isActive ? 'active' : 'archived'])
+    scope: 'Etkin ve arşivdeki öğrenciler. E-posta ve telefon bilgileri dosyaya yazılmaz.',
+    headers: ['Öğrenci', 'Durum'],
+    rows: [...students].sort((a, b) => a.displayName.localeCompare(b.displayName, 'tr'))
+      .map(item => [item.displayName, item.isActive ? 'Etkin' : 'Arşivde'])
   };
 }
 
-export function buildCourseLessonAttendanceReport(lessons: CourseLesson[]): CourseReportTable {
-  const headers = ['lesson_id', 'starts_at', 'ends_at', 'time_zone_id', 'course', 'group', 'teacher_user_id',
-    'branch', 'room', 'lesson_status', 'student_id', 'student_name', 'attendance_status'];
-  const rows: CourseReportCell[][] = lessons.flatMap(lesson => {
-    const session = [lesson.id, lesson.startsAt, lesson.endsAt, lesson.timeZoneId, lesson.courseName,
-      lesson.groupName, lesson.teacherUserId, lesson.branchName, lesson.roomName, lesson.status];
+export function buildCourseLessonAttendanceReport(lessons: CourseLesson[], teacherName: (userId: string) => string = () => ''): CourseReportTable {
+  const headers = ['Tarih', 'Saat', 'Kurs', 'Grup', 'Öğretmen', 'Şube', 'Derslik', 'Ders', 'Öğrenci', 'Yoklama'];
+  const rows: CourseReportCell[][] = [...lessons].sort((a, b) => a.startsAt.localeCompare(b.startsAt)).flatMap(lesson => {
+    const session = [trDate(lesson.startsAt), `${trTime(lesson.startsAt)}–${trTime(lesson.endsAt)}`, lesson.courseName,
+      lesson.groupName, teacherName(lesson.teacherUserId) || null, lesson.branchName, lesson.roomName, LESSON_STATUS[lesson.status] ?? lesson.status];
     return lesson.students.length
-      ? lesson.students.map(student => [...session, student.studentId, student.displayName, student.attendanceStatus])
-      : [[...session, '', '', '']];
+      ? lesson.students.map(student => [...session, student.displayName,
+        student.attendanceStatus ? ATTENDANCE_STATUS[student.attendanceStatus] ?? student.attendanceStatus : 'İşaretlenmedi'])
+      : [[...session, null, null]];
   });
   return {
-    title: 'Ders programı ve yoklama',
-    scope: 'Takvim aralığı: son 7 gün ve sonraki 30 gün; bu aralıktaki görüntülemeye yetkili olduğunuz tüm dersler.',
+    title: 'Ders ve yoklama',
+    scope: 'Son 7 gün ile önümüzdeki 30 gündeki dersler ve her öğrencinin yoklaması.',
     headers,
     rows
   };
 }
 
-export function buildCourseAssignmentProgressReport(assignments: CourseAssignment[]): CourseReportTable {
+export function buildCourseAssignmentProgressReport(assignments: CourseAssignment[],
+  groupName: (groupId: string) => string = () => '', teacherName: (userId: string) => string = () => ''): CourseReportTable {
   return {
-    title: 'Ödev teslim özeti',
-    scope: 'Görüntülemeye yetkili olduğunuz tüm ödev kayıtları.',
-    headers: ['assignment_id', 'title', 'course', 'group_id', 'due_at', 'teacher_user_id',
-      'recipient_count', 'submission_count', 'submission_rate_percent'],
-    rows: assignments.map(item => [item.id, item.title, item.courseName, item.groupId, item.dueAt,
-      item.teacherUserId, item.recipientCount, item.submissionCount,
+    title: 'Ödev durumu',
+    scope: 'Verilen ödevler ve kaç öğrenciye verildiği.',
+    headers: ['Ödev', 'Kurs', 'Grup', 'Teslim', 'Öğretmen', 'Öğrenci sayısı', 'Teslim eden', 'Teslim oranı (%)'],
+    rows: [...assignments].sort((a, b) => b.dueAt.localeCompare(a.dueAt)).map(item => [item.title, item.courseName,
+      item.groupId ? groupName(item.groupId) || null : 'Birebir', trDate(item.dueAt), teacherName(item.teacherUserId) || null,
+      item.recipientCount, item.submissionCount,
       item.submissionCount === null || item.recipientCount === 0
         ? null : Math.round(item.submissionCount / item.recipientCount * 10000) / 100])
   };
 }
 
 export function buildCourseFinanceWorkspaceReport(report: CourseFinanceWorkspaceReport): CourseReportTable {
-  const headers = ['record_type', 'student_id', 'student_name', 'course_id', 'course', 'record_id', 'agreement_id',
-    'label', 'due_on', 'amount_try', 'remaining_amount_try', 'granted_sessions', 'remaining_sessions', 'expires_at'];
+  const headers = ['Kayıt', 'Öğrenci', 'Kurs', 'Açıklama', 'Son gün', 'Tutar (TL)', 'Kalan (TL)', 'Verilen ders', 'Kalan ders', 'Son kullanım'];
   const installmentRows = (items: CourseFinanceWorkspaceReport['overdueInstallments'] | CourseFinanceWorkspaceReport['upcomingInstallments'], type: string) =>
-    items.map(item => [type, item.studentId, item.studentName, item.courseId, item.courseName, item.installmentId,
-      item.feeAgreementId, item.label, item.dueOn, item.amount.toFixed(2), item.remainingAmount.toFixed(2), null, null, null]);
-  const packageRows = report.packageBalances.map(item => ['unused_package', item.studentId, item.studentName,
-    item.courseId, item.courseName, item.agreementId, item.agreementId, 'Ders paketi', null, item.amount.toFixed(2),
-    null, item.grantedSessions, item.remainingSessions, item.expiresAt]);
+    items.map(item => [type, item.studentName, item.courseName, item.label, trDate(item.dueOn), money(item.amount), money(item.remainingAmount), null, null, null]);
+  const packageRows = report.packageBalances.map(item => ['Kullanılmamış ders paketi', item.studentName, item.courseName, 'Ders paketi', null,
+    money(item.amount), null, item.grantedSessions, item.remainingSessions, trDate(item.expiresAt)]);
   return {
-    title: 'Çalışma alanı borç ve paket raporu',
-    scope: `Oluşturulma: ${report.generatedOn}; yaklaşan vade dönemi ${report.generatedOn}–${report.upcomingThrough}. Yalnızca owner yetkisindeki kayıtlar listelenir; iletişim ve ödeme notları dışarıda bırakılmıştır.`,
+    title: 'Borç ve paket durumu',
+    scope: `Geciken taksitler, ${trDate(report.generatedOn)}–${trDate(report.upcomingThrough)} arasında vadesi gelen taksitler ve kalan paket hakları. İletişim bilgisi ve ödeme notları dosyaya yazılmaz.`,
     headers,
     rows: [
-      ...installmentRows(report.overdueInstallments, 'overdue_installment'),
-      ...installmentRows(report.upcomingInstallments, 'upcoming_installment'),
+      ...installmentRows(report.overdueInstallments, 'Geciken taksit'),
+      ...installmentRows(report.upcomingInstallments, 'Yaklaşan taksit'),
       ...packageRows
     ]
   };

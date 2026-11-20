@@ -78,6 +78,13 @@ const EMAIL_KINDS: Record<string, string> = {
             } @else { <p class="empty">Yoklaması eksik ders yok.</p> }
           </section>
         </div>
+        @if (emailsOff()) {
+          <section class="card card-pad actions" style="justify-content: space-between" aria-labelledby="emails-off-title">
+            <div><strong id="emails-off-title">Velilere e-posta gitmiyor</strong>
+              <p class="muted" style="margin: 2px 0 0">Devamsızlık, yapılmayan ödev ve taksit e-postaları başta kapalıdır. Açmak birkaç dakika sürer.</p></div>
+            <button type="button" class="btn" (click)="navigate.emit('settings')">E-posta bildirimlerini aç</button>
+          </section>
+        }
         @if (view.emails; as mail) {
           <section class="card card-pad actions" style="justify-content: space-between">
             <div><strong>Dün {{ mail.sent }} e-posta gönderildi</strong>
@@ -102,6 +109,8 @@ export class OverviewSectionComponent implements OnInit {
   readonly state = inject(CoursePanelState);
   private readonly api = inject(CoursePanelApi);
   readonly data = signal<PanelOverview | null>(null);
+  /** The owner has not turned any e-mail on yet: new workspaces start with every e-mail off (20.11.2026 live test). */
+  readonly emailsOff = signal(false);
   readonly error = signal('');
   readonly formatMoney = formatMoney;
   readonly time = formatTime;
@@ -117,6 +126,10 @@ export class OverviewSectionComponent implements OnInit {
     try {
       const view = await this.api.overview(id);
       this.data.set(view);
+      if (this.state.isOwner() && !this.state.readOnly()) {
+        const settings = await this.api.emailSettings(id).catch(() => null);
+        this.emailsOff.set(!!settings && (!settings.informedConsentAt || !settings.rules.some(rule => rule.enabled)));
+      } else this.emailsOff.set(false);
     } catch (error) { this.error.set(problemText(error, 'Genel bakış yüklenemedi.')); }
   }
 

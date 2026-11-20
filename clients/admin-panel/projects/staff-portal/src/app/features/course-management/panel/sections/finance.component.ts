@@ -96,15 +96,19 @@ const MODELS = [
         @if (paymentsPage(); as page) {
           @if (page.items.length) {
             <div class="table-wrap"><table>
-              <thead><tr><th scope="col">Tarih</th><th scope="col">Öğrenci</th><th scope="col">Yöntem</th><th scope="col" class="right">Tutar</th><th scope="col">Not</th></tr></thead>
+              <thead><tr><th scope="col">Tarih</th><th scope="col">Öğrenci</th><th scope="col">Yöntem</th><th scope="col" class="right">Tutar</th><th scope="col">Not</th>@if (state.isOwner() && !state.readOnly()) { <th scope="col"><span class="sr-only">İşlem</span></th> }</tr></thead>
               <tbody>
                 @for (row of page.items; track row.id) {
                   <tr>
-                    <td class="num">{{ dateTime(row.receivedAt) }}</td>
+                    <td class="num">{{ date(row.receivedAt) }}</td>
                     <th scope="row">{{ row.studentName }}</th>
                     <td>{{ row.method === 'Cash' ? 'Nakit' : 'Havale / EFT' }}</td>
                     <td class="right num">{{ money(row.amount) }}</td>
                     <td>@if (row.isReversal) { <span class="badge warn">Düzeltme</span> } @else if (row.reversed) { <span class="badge">Geri alındı</span> } {{ row.note ?? '' }}</td>
+                    @if (state.isOwner() && !state.readOnly()) {
+                      <td class="right">@if (!row.isReversal && !row.reversed) {
+                        <button type="button" class="btn-quiet" (click)="openReverse(row)">Geri al</button> }</td>
+                    }
                   </tr>
                 }
               </tbody>
@@ -146,6 +150,20 @@ const MODELS = [
       </div>
     }
 
+    @if (reversing(); as row) {
+      <div class="dialog-backdrop" (click)="reversing.set(null)">
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="reverse-title" (click)="$event.stopPropagation()" (keydown.escape)="reversing.set(null)" style="max-width: 480px">
+          <h2 id="reverse-title">Ödeme geri alınsın mı?</h2>
+          <p style="margin: 0">{{ row.studentName }}, {{ date(row.receivedAt) }}, {{ money(row.amount) }}. Ödeme silinmez; karşısına bir düzeltme kaydı yazılır ve kapattığı taksitler yeniden açılır.</p>
+          @if (reverseError()) { <p class="alert" role="alert">{{ reverseError() }}</p> }
+          <label class="field">Neden geri alıyorsunuz?<input [(ngModel)]="reverseReason" maxlength="500" placeholder="Örneğin yanlış öğrenciye yazıldı"></label>
+          <div class="dialog-actions">
+            <button type="button" class="btn-secondary" (click)="reversing.set(null)">Vazgeç</button>
+            <button type="button" class="btn" (click)="reverse(row)" [disabled]="busy() || reverseReason.trim().length < 3">Ödemeyi geri al</button>
+          </div>
+        </section>
+      </div>
+    }
     @if (agreement(); as form) {
       <div class="dialog-backdrop" (click)="agreement.set(null)">
         <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="agreement-title" (click)="$event.stopPropagation()" (keydown.escape)="agreement.set(null)">
@@ -174,7 +192,7 @@ const MODELS = [
             }
           </div>
           @if (form.model === 1 && form.amount > 0 && form.count > 0) {
-            <p class="muted" style="margin: 0">{{ form.count }} taksit, her biri yaklaşık {{ money(form.amount / form.count) }}; ayın aynı gününde.</p>
+            <p class="muted" style="margin: 0">{{ form.count }} taksit, her biri {{ evenSplit(form.amount, form.count) ? '' : 'yaklaşık ' }}{{ money(form.amount / form.count) }}; ayın aynı gününde.</p>
           }
           <div class="dialog-actions">
             <button type="button" class="btn-secondary" (click)="agreement.set(null)">Vazgeç</button>
@@ -194,6 +212,11 @@ export class FinanceSectionComponent {
   readonly summary = signal<CourseFinanceSummary | null>(null);
   readonly debts = signal<{ total: number; outstanding: number; skip: number; take: number; items: PanelInstallmentRow[] } | null>(null);
   readonly paymentsPage = signal<{ total: number; sum: number; skip: number; take: number; items: PanelPaymentRow[] } | null>(null);
+  /** The payment being taken back (20.11.2026 live test: a wrong payment could not be corrected). */
+  readonly reversing = signal<PanelPaymentRow | null>(null);
+  readonly reverseError = signal('');
+  reverseReason = '';
+  readonly date = formatDate;
   readonly payment = signal<{ studentId: string; studentName: string; amount: number; method: 1 | 2; day: string; note: string } | null>(null);
   readonly agreement = signal<{ studentId: string; studentName: string; courseId: string; model: 1 | 2 | 3 | 4; amount: number; count: number;
     firstDue: string; unit: 1 | 2; sessions: number; expiresOn: string } | null>(null);
@@ -282,6 +305,22 @@ export class FinanceSectionComponent {
       return `${item.label} ${formatMoney(part.amount)}`;
     });
     return parts.length ? parts.join(', ') + '.' : 'tutar girin.';
+  }
+
+  evenSplit(amount: number, count: number): boolean { return Math.round(amount * 100) % count === 0; }
+
+  openReverse(row: PanelPaymentRow): void { this.reverseReason = ''; this.reverseError.set(''); this.reversing.set(row); }
+
+  async reverse(row: PanelPaymentRow): Promise<void> {
+    this.busy.set(true);
+    this.reverseError.set('');
+    try {
+      await this.service.reversePayment(this.state.id(), row.id, crypto.randomUUID(), new Date().toISOString(), this.reverseReason.trim());
+      this.reversing.set(null);
+      this.notice.set(`${row.studentName} için ${formatMoney(row.amount)} ödeme geri alındı; taksitleri yeniden açıldı.`);
+      this.state.changed();
+    } catch (error) { this.reverseError.set(problemText(error)); }
+    finally { this.busy.set(false); }
   }
 
   async savePayment(): Promise<void> {

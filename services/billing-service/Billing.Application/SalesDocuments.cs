@@ -52,7 +52,9 @@ public static class SalesDocumentTexts
         return $"Net tutar {Money(net, terms.Currency)}, KDV (%{rate.ToString("0.##", Turkish)}) {Money(terms.VatAmount, terms.Currency)}, ödenecek toplam tutar {Money(terms.Amount, terms.Currency)}.";
     }
 
-    private static string Money(decimal amount, string currency) => $"{amount.ToString("N2", Turkish)} {currency}";
+    /// <summary>"600,00 TL": the contract names the lira as people write it, not by its ISO code (20.11.2026 live test).</summary>
+    private static string Money(decimal amount, string currency) =>
+        $"{amount.ToString("N2", Turkish)} {(currency == "TRY" ? "TL" : currency)}";
     public const int WithdrawalDays = 14;
     private static readonly CultureInfo Turkish = new("tr-TR");
     private static readonly TimeSpan TurkeyOffset = TimeSpan.FromHours(3);
