@@ -8,6 +8,7 @@
 @use './app/coaching-teacher-theme';
 @use '../../../src/app/features/coaching-portal/layout/coaching-workspace-depth';
 @use './app/staff-brand';
+@use './app/staff-lively';
 
 body:has(.coaching-staff-shell) {
   @include mat.theme((color: (primary: mat.$azure-palette, tertiary: mat.$blue-palette), typography: 'IBM Plex Sans', density: 0));
