@@ -89,12 +89,14 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
               }
             </ul>
             <p class="muted" style="margin: 0; padding: 0 20px 16px; font-size: 14px">Kurum açtıysa "yapmadı" ve "eksik" işaretleri velilere e-postayla bildirilir.</p>
-            <div style="padding: 0 20px 16px">
-              <button type="button" class="btn-quiet" [attr.aria-expanded]="filesFor() === previousHomework()!.id" (click)="toggleFiles(previousHomework()!.id)">
-                {{ filesFor() === previousHomework()!.id ? 'Dosyaları ve teslimleri gizle' : 'Dosyalar ve öğrenci teslimleri' }}</button>
-              @if (filesFor() === previousHomework()!.id) { <course-homework-files [assignment]="previousHomework()!" /> }
-            </div>
-          } @else { <p class="empty">Bu grup için kontrol edilecek ödev yok.</p> }
+            @if (state.features().assignmentAttachments) {
+              <div style="padding: 0 20px 16px">
+                <button type="button" class="btn-quiet" [attr.aria-expanded]="filesFor() === previousHomework()!.id" (click)="toggleFiles(previousHomework()!.id)">
+                  {{ filesFor() === previousHomework()!.id ? 'Dosyaları ve teslimleri gizle' : 'Dosyalar ve öğrenci teslimleri' }}</button>
+                @if (filesFor() === previousHomework()!.id) { <course-homework-files [assignment]="previousHomework()!" /> }
+              </div>
+            }
+          } @else { <p class="empty">{{ current.groupId ? 'Bu grup' : 'Bu öğrenci' }} için kontrol edilecek ödev yok.</p> }
         </section>
 
         @if (!state.readOnly()) {
@@ -107,7 +109,9 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
                     @if (item.instructions) { <p class="muted" style="margin: 2px 0 0">{{ item.instructions }}</p> }</div>
                     <div class="actions">
                       <button type="button" class="btn-secondary btn-small" (click)="editHomework(item)" [disabled]="busy()">Düzelt</button>
-                      <button type="button" class="btn-quiet" [attr.aria-expanded]="filesFor() === item.id" (click)="toggleFiles(item.id)">Dosyalar</button>
+                      @if (state.features().assignmentAttachments) {
+                        <button type="button" class="btn-quiet" [attr.aria-expanded]="filesFor() === item.id" (click)="toggleFiles(item.id)">Dosyalar</button>
+                      }
                       <button type="button" class="btn-quiet" (click)="removeHomework(item)" [disabled]="busy()">Geri al</button>
                     </div>
                     @if (filesFor() === item.id) { <div style="flex-basis: 100%"><course-homework-files [assignment]="item" /></div> }</li>

@@ -588,6 +588,8 @@ test('course teacher creates a profile, independent workspace and targeted invit
       // The overview asks whether any e-mail to parents is on (20.11.2026).
       if (path.endsWith('/email-settings') && request.method() === 'GET') return reply({ rules: [], installmentDaysBefore: 3,
         installmentOnDueDay: true, overdueDaysAfter: 3, sendHour: 9, replyToEmail: null, informedConsentAt: null });
+      // The panel asks which switched features are on (21.11.2026); both stay off here.
+      if (path === '/api/course-management/v1/features') return reply({ studentPortal: false, assignmentAttachments: false });
       throw new Error(`Unexpected staff request: ${path}`);
     });
     await page.goto(`${base}/?product=course-management`);
@@ -742,6 +744,8 @@ test('institution owner imports selected legacy teachers and institution fields 
       if (path.endsWith('/course-management/v1/features')) return reply({ studentPortal: false, assignmentAttachments: false });
       if (path.startsWith(`/api/course-management/v1/workspaces/${workspaceId}/`) && request.method() === 'GET')
         return reply([]);
+      // The panel asks which switched features are on (21.11.2026); both stay off here.
+      if (path === '/api/course-management/v1/features') return reply({ studentPortal: false, assignmentAttachments: false });
       throw new Error(`Unexpected Course Management import request: ${request.method()} ${path}`);
     });
 
@@ -840,6 +844,8 @@ test('institution panel: student filters stay in the address, a year-long series
       if (path.endsWith('/email-settings')) return reply(emailSettings());
       if (path.endsWith('/emails')) return reply([]);
       if (path.startsWith(`/api/course-management/v1/workspaces/${workspaceId}/`) && request.method() === 'GET') return reply([]);
+      // The panel asks which switched features are on (21.11.2026); both stay off here.
+      if (path === '/api/course-management/v1/features') return reply({ studentPortal: false, assignmentAttachments: false });
       throw new Error(`Unexpected institution panel request: ${request.method()} ${path}`);
     });
 
