@@ -15,7 +15,6 @@ import { FinanceSectionComponent } from './sections/finance.component';
 import { TeachersSectionComponent } from './sections/teachers.component';
 import { ReportsSectionComponent } from './sections/reports.component';
 import { SettingsSectionComponent } from './sections/settings.component';
-import { CourseManagementWorkspaceComponent } from '../course-management-workspace.component';
 
 /**
  * Kurs Yönetimi institution panel (19.11.2026, design approved 17.42): one panel, nine sections in a side menu.
@@ -25,7 +24,7 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
 @Component({
   selector: 'staff-course-panel',
   standalone: true,
-  imports: [FormsModule, CourseManagementWorkspaceComponent, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
+  imports: [FormsModule, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
     AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent, PanelConfirmDialogComponent, SetupWizardComponent],
   providers: [CoursePanelState],
   styleUrl: './panel.scss',
@@ -83,10 +82,6 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
             @case ('teachers') { <course-teachers-section /> }
             @case ('reports') { <course-reports-section /> }
             @case ('settings') { <course-settings-section (navigate)="go($event)" /> }
-            @case ('previous') {
-              <p class="banner" role="status">Bu ekran geçiş dönemi içindir: başka üründen kayıt aktarma, telafi dersleri ve işlem kaydı burada. Diğer işler için sol menüyü kullanın.</p>
-              <staff-course-management-workspace [role]="role" />
-            }
           }
         </main>
       </div>
@@ -253,7 +248,8 @@ export class CoursePanelComponent implements OnInit {
   private readHash(): void {
     const slug = (this.document.defaultView?.location.hash ?? '').replace(/^#/, '').split('?')[0];
     const match = SECTIONS.find(item => item.slug === slug);
-    if (!match) return;
+    // The earlier screen was removed on 21.11.2026: a saved #onceki-ekran address opens Genel bakış.
+    if (!match) { if (slug === 'onceki-ekran') this.toOverview(); return; }
     // Before the workspace is open the role is unknown; open() checks the section again.
     if (this.state.workspace() && !this.visibleSections().some(item => item.id === match.id)) this.toOverview();
     else this.section.set(match.id);

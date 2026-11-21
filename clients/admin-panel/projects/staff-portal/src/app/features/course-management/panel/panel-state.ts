@@ -8,7 +8,7 @@ import { PROBLEM_TEXTS } from './problem-codes';
 /** Where the panel runs: the maxkampüs site or the eduivme staff portal (kurum.eduivme.com). */
 export type PanelSite = 'maxkampus' | 'eduivme';
 
-export type PanelSection = 'setup' | 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings' | 'previous';
+export type PanelSection = 'setup' | 'overview' | 'students' | 'courses' | 'calendar' | 'attendance' | 'finance' | 'teachers' | 'reports' | 'settings';
 
 /** Side menu groups (20.11.2026 decision: by daily use, not by setup order). */
 export type SectionGroup = 'setup' | 'daily' | 'institution' | 'other';
@@ -27,10 +27,8 @@ export const SECTIONS: { id: PanelSection; label: string; slug: string; ownerOnl
   { id: 'courses', label: 'Kurslar ve gruplar', slug: 'kurslar', ownerOnly: true, group: 'institution' },
   { id: 'teachers', label: 'Öğretmenler', slug: 'ogretmenler', ownerOnly: true, group: 'institution' },
   { id: 'reports', label: 'Raporlar', slug: 'raporlar', ownerOnly: false, group: 'other' },
-  { id: 'settings', label: 'Ayarlar', slug: 'ayarlar', ownerOnly: true, group: 'other' },
-  // Transition: the earlier single-page screen keeps the tools the new sections do not have yet
-  // (moving records from other products, makeup lessons, homework files, the change record).
-  { id: 'previous', label: 'Önceki ekran', slug: 'onceki-ekran', ownerOnly: false, group: 'other' }
+  { id: 'settings', label: 'Ayarlar', slug: 'ayarlar', ownerOnly: true, group: 'other' }
+  // The earlier single-page screen ("Önceki ekran") was removed on 21.11.2026; its tools live in these sections.
 ];
 
 /**

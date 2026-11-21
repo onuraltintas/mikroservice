@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CourseManagementService, CourseStudentAccount, StudentCsvImportPreview, StudentGuardianLink } from '../../course-management.service';
+import { buildCourseStudentAccountCsv, buildCourseStudentAccountPrintHtml } from '../../course-management-reports';
 import { CoursePanelApi, PanelSentEmail, PanelStudentFilter, PanelStudentPage, PanelStudentRow } from '../panel-api.service';
 import { CoursePanelState, fullRoomNotice, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 import { PanelConfirm } from '../panel-confirm';
@@ -159,6 +160,11 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
                 <section class="stack" style="gap: 6px">
                   <h3>Hesap</h3>
                   <p style="margin: 0">Bakiye <strong class="num">{{ money(balance.balance) }}</strong>, toplam tahsilat <span class="num">{{ money(balance.totalPayments) }}</span>.</p>
+                  <!-- The student's statement, moved from the earlier screen (21.11.2026). -->
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+                    <button type="button" class="btn-secondary btn-small" (click)="statementCsv(balance)">Ekstreyi indir (CSV)</button>
+                    <button type="button" class="btn-quiet" (click)="statementPrint(balance)">Ekstreyi yazdır</button>
+                  </div>
                 </section>
               }
             }
@@ -329,6 +335,33 @@ export class StudentsSectionComponent {
       this.service.getStudentAccount(id, student.id).catch(() => null)
     ]);
     this.guardians.set(guardians); this.emails.set(emails); this.account.set(account);
+  }
+
+  /** The student's statement as a CSV file (the earlier screen's "Öğrenci ekstresi", 21.11.2026). */
+  statementCsv(account: CourseStudentAccount): void {
+    const student = this.editing();
+    if (!student?.id) return;
+    const url = URL.createObjectURL(new Blob([buildCourseStudentAccountCsv(this.state.workspace()?.name ?? '', student.displayName, account)],
+      { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ogrenci-ekstresi-${student.id}.csv`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  /** The statement in a print window, from which it can be saved as PDF. */
+  statementPrint(account: CourseStudentAccount): void {
+    const student = this.editing();
+    if (!student?.id) return;
+    const win = window.open('', '_blank');
+    if (!win) { this.cardError.set('Yazdırma penceresi açılamadı. Tarayıcının açılır pencere ayarını kontrol edin.'); return; }
+    win.opener = null;
+    win.document.open();
+    win.document.write(buildCourseStudentAccountPrintHtml(this.state.workspace()?.name ?? '', student.displayName, account));
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 100);
   }
 
   closeCard(): void { this.editing.set(null); this.enrollGroupId = ''; this.guardian = { displayName: '', email: '', phoneNumber: '', relationship: 2 }; }
