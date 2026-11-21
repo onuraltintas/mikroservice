@@ -114,6 +114,19 @@
   --ds-radius-control: 8px;
   --ds-radius-button: 8px;
   --ds-shadow: 0 1px 2px rgba(28, 36, 48, 0.06), 0 8px 20px -12px rgba(28, 36, 48, 0.18);
+  /* maxkampüs B design (21.11.2026): coloured summary cards, a softer blue-tinted lift. New names only, so the
+     Koçluk and Hızlı Okuma staff panels that share this brand keep their look. */
+  --ds-info: #1F4E8C;
+  --ds-info-soft: #E8EFFB;
+  --ds-violet: #6B21A8;
+  --ds-violet-soft: #F1E8FB;
+  --ds-orange: #9A3412;
+  --ds-orange-soft: #FDEBDD;
+  --ds-now-soft: #FFF6DE;
+  --ds-page-tint: #EEF1F6;
+  --ds-radius-card: 16px;
+  --ds-shadow-raised: 0 1px 2px rgba(28, 36, 48, 0.06), 0 12px 28px -14px rgba(31, 78, 140, 0.28);
+  --ds-shadow-hover: 0 2px 4px rgba(28, 36, 48, 0.07), 0 18px 34px -14px rgba(31, 78, 140, 0.34);
 }
 
 :is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) [data-brand='eduivme'],
@@ -144,6 +157,17 @@
   --ds-success: #8FE0C2;
   --ds-success-soft: #16302A;
   --ds-shadow: none;
+  /* Dark stays plain: tints become small marks on dark ground, no shadows. */
+  --ds-info: #9DBEF2;
+  --ds-info-soft: #1C2A3E;
+  --ds-violet: #D5B8F7;
+  --ds-violet-soft: #2B2140;
+  --ds-orange: #F7B68C;
+  --ds-orange-soft: #3A2417;
+  --ds-now-soft: #2E2814;
+  --ds-page-tint: #12161C;
+  --ds-shadow-raised: none;
+  --ds-shadow-hover: none;
 }
 
 [data-brand='ho'] {

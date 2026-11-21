@@ -19,6 +19,25 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
   standalone: true,
   imports: [FormsModule, LegacyImportComponent],
   styleUrl: '../panel.scss',
+  styles: `
+    .who { display: inline-flex; align-items: center; gap: 12px; }
+    .who .row-link { text-align: left; }
+    .student-cards { display: none; list-style: none; margin: 0; padding: 0 12px 12px; flex-direction: column; gap: 10px; }
+    .student-card { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 12px; box-sizing: border-box;
+      border: 1px solid var(--ds-line); border-radius: 14px; background: var(--ds-surface); color: var(--ds-text); font: inherit; text-align: left; cursor: pointer; }
+    .student-card:hover { background: var(--ds-soft); }
+    .student-card .avatar { width: 40px; height: 40px; font-size: 14px; }
+    .sc-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .sc-text strong, .sc-text .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sc-text .muted { font-size: 13px; }
+    @container (max-width: 480px) {
+      .table-wrap { display: none; }
+      .student-cards { display: flex; }
+      .filters { gap: 10px; padding: 14px 14px 10px; }
+      .filters .field { flex: 1 1 calc(50% - 5px); min-width: 0; }
+      .filters .field:first-child { flex-basis: 100%; }
+    }
+  `,
   template: `
     <header class="page-head">
       <div><h1>Öğrenciler</h1><p>{{ page()?.total ?? 0 }} öğrenci</p></div>
@@ -33,8 +52,13 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
     @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
     @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
     @if (importOpen()) { <div style="margin-bottom: 18px"><course-legacy-import (closed)="importOpen.set(false); load()" /></div> }
+    @if (state.isOwner() && overdueTotal() > 0 && overdueChoice !== 'yes') {
+      <div class="actions rise" style="margin-bottom: 16px">
+        <button type="button" class="chip-note bad" (click)="overdueChoice = 'yes'; search()">{{ overdueTotal() }} öğrencinin ödemesi gecikmiş</button>
+      </div>
+    }
 
-    <section class="card">
+    <section class="card cq rise" style="--i: 1">
       <form class="filters" role="search" (ngSubmit)="search()">
         <label class="field">Ara<input name="q" [(ngModel)]="filter.q" placeholder="Ad, e-posta, telefon ya da veli adı"></label>
         <label class="field">Kurs<select name="course" [(ngModel)]="filter.courseId" (ngModelChange)="search()">
@@ -65,7 +89,8 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               <tbody>
                 @for (student of result.items; track student.id) {
                   <tr class="clickable" (click)="openCard(student)">
-                    <th scope="row"><button type="button" class="row-link" (click)="$event.stopPropagation(); openCard(student)">{{ student.displayName }}</button>
+                    <th scope="row"><span class="who"><span class="avatar" [class]="'avatar ' + tone(student.displayName)" aria-hidden="true">{{ initials(student.displayName) }}</span>
+                      <button type="button" class="row-link" (click)="$event.stopPropagation(); openCard(student)">{{ student.displayName }}</button></span>
                       @if (!student.isActive) { <span class="badge">Arşivde</span> }
                       @if (student.emailsMuted) { <span class="badge">E-posta kapalı</span> }</th>
                     <td>{{ groupNames(student) }}</td>
@@ -79,6 +104,18 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               </tbody>
             </table>
           </div>
+          <!-- On a phone the table becomes a list of cards (21.11.2026 B design). -->
+          <ul class="student-cards">
+            @for (student of result.items; track student.id) {
+              <li><button type="button" class="student-card" (click)="openCard(student)">
+                <span [class]="'avatar ' + tone(student.displayName)" aria-hidden="true">{{ initials(student.displayName) }}</span>
+                <span class="sc-text"><strong>{{ student.displayName }}</strong><span class="muted">{{ groupNames(student) }}</span></span>
+                @if (state.isOwner() && student.overdueAmount) { <span class="badge bad num">{{ money(student.overdueAmount) }}</span> }
+                @else if (state.isOwner() && student.guardianCount === 0) { <span class="badge warn">Veli yok</span> }
+                @else if (!student.isActive) { <span class="badge">Arşivde</span> }
+              </button></li>
+            }
+          </ul>
           <nav class="pager" aria-label="Öğrenci sayfaları">
             <span class="num">{{ result.skip + 1 }}–{{ result.skip + result.items.length }} / {{ result.total }}</span>
             <div class="actions">
@@ -278,9 +315,28 @@ export class StudentsSectionComponent {
     return !!(this.filter.q || this.filter.courseId || this.filter.groupId || this.filter.teacherId || this.overdueChoice || this.filter.status !== 'active');
   }
 
+  /** Students with an overdue payment, for the note above the list (owner only; one small request). */
+  readonly overdueTotal = signal(0);
+  private async loadOverdueTotal(id: string): Promise<void> {
+    if (!this.state.isOwner()) { this.overdueTotal.set(0); return; }
+    try { this.overdueTotal.set((await this.api.searchStudents(id, { status: 'active', overdue: true, skip: 0, take: 1 })).total ?? 0); }
+    catch { this.overdueTotal.set(0); }
+  }
+  initials(name: string): string {
+    const parts = name.replace(/^TEST\s+/i, '').trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toLocaleUpperCase('tr-TR');
+  }
+  /** One of four soft colours, always the same for the same name. */
+  tone(name: string): string {
+    let sum = 0;
+    for (const char of name) sum = (sum + char.charCodeAt(0)) % 997;
+    return ['c0', 'c1', 'c2', 'c3'][sum % 4];
+  }
+
   async load(): Promise<void> {
     const id = this.state.id();
     if (!id) return;
+    void this.loadOverdueTotal(id);
     writeHashQuery('ogrenciler', { q: this.filter.q, kurs: this.filter.courseId, grup: this.filter.groupId, ogretmen: this.filter.teacherId,
       durum: this.filter.status === 'active' ? null : this.filter.status, sira: this.filter.sort === 'name' ? null : this.filter.sort,
       bas: this.filter.skip || null, adet: this.filter.take === 25 ? null : this.filter.take, borc: this.overdueChoice });

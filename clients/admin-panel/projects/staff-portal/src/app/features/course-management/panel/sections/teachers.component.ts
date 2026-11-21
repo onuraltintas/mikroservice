@@ -41,7 +41,7 @@ const WEEKDAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cuma
             <div class="card-head"><h2 id="invite-list-title">Davetler</h2></div>
             <ul class="plain">
               @for (invitation of emailInvitations(); track invitation.id) {
-                <li><span><strong>{{ invitation.displayName || invitation.email }}</strong>@if (invitation.displayName) { <span class="muted">{{ invitation.email }}</span> } {{ statusLine(invitation) }}</span>
+                <li><span><strong>{{ invitation.displayName || invitation.email }}</strong>@if (invitation.displayName) {<span class="muted">{{ ' (' + invitation.email + ')' }}</span>}{{ ' ' + statusLine(invitation) }}</span>
                   @if (!state.readOnly() && (invitation.status === 'Pending' || invitation.status === 'Expired')) {
                     <span><button type="button" class="btn-quiet" (click)="resend(invitation)">Yeniden gönder</button>
                     @if (invitation.status === 'Pending') { <button type="button" class="btn-quiet" (click)="cancelEmail(invitation)">Daveti geri al</button> }</span>

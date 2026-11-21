@@ -862,7 +862,8 @@ test('institution panel: student filters stay in the address, a year-long series
     await page.getByRole('heading', { name: 'Öğrenciler' }).waitFor();
     await page.getByLabel('Ara').fill('Ada');
     await page.getByLabel('Ara').press('Enter');
-    await page.getByText('Ada Öğrenci').first().waitFor();
+    // On a phone the list is cards (21.11.2026 B design); the hidden table holds the same names.
+    await page.locator('text=Ada Öğrenci >> visible=true').first().waitFor();
     await page.waitForFunction(() => location.hash.startsWith('#ogrenciler') && location.hash.includes('q=Ada'));
     assert.equal(searches.at(-1).q, 'Ada');
     await page.reload();

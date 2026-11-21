@@ -33,9 +33,9 @@ const MODELS = [
     @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
     @if (summary(); as totals) {
       <section class="kpis" aria-label="Özet" style="margin-bottom: 20px">
-        <div class="card kpi"><span class="kpi-label">Geciken</span><span class="kpi-value num">{{ money(totals.overdueAmount) }}</span></div>
-        <div class="card kpi"><span class="kpi-label">Önümüzdeki 30 gün</span><span class="kpi-value num">{{ money(totals.dueInNext30Days) }}</span></div>
-        <div class="card kpi"><span class="kpi-label">Toplam bakiye</span><span class="kpi-value num">{{ money(totals.balance) }}</span></div>
+        <div class="card kpi rise" style="--i: 0" [class.tone-bad]="totals.overdueAmount > 0" [class.tone-ok]="!(totals.overdueAmount > 0)"><span class="kpi-label">Geciken</span><span class="kpi-value num">{{ money(totals.overdueAmount) }}</span></div>
+        <div class="card kpi tone-warn rise" style="--i: 1"><span class="kpi-label">Önümüzdeki 30 gün</span><span class="kpi-value num">{{ money(totals.dueInNext30Days) }}</span></div>
+        <div class="card kpi tone-info rise" style="--i: 2"><span class="kpi-label">Toplam bakiye</span><span class="kpi-value num">{{ money(totals.balance) }}</span></div>
       </section>
     }
     @if (packages().length) {
