@@ -95,10 +95,15 @@ type Editor = {
             @for (lesson of lessonsOn(day.iso); track lesson.id) {
               <button type="button" class="lesson" [class]="'lesson tone-' + tone(lesson)" [class.cancelled]="lesson.status === 'Cancelled'" [class.short]="height(lesson) < 44"
                 [style.top.px]="top(lesson)" [style.height.px]="height(lesson)"
-                [attr.aria-label]="lessonLabel(lesson)"
+                [attr.aria-label]="lessonLabel(lesson)" [attr.title]="height(lesson) < 44 ? lessonTitle(lesson) : null"
                 (click)="openMenu($event, day.iso, '', lesson)" (contextmenu)="openMenu($event, day.iso, '', lesson)">
                 <strong>{{ lesson.groupName ?? studentNames(lesson) }}</strong>
-                <span>{{ time(lesson.startsAt) }}–{{ time(lesson.endsAt) }}{{ lesson.roomName ? ', ' + lesson.roomName : '' }}</span>
+                @if (height(lesson) < 44) {
+                  <!-- Live test 20.11.2026: in a short box the name comes first; the start time is small and gives way. -->
+                  <span class="when">{{ time(lesson.startsAt) }}</span>
+                } @else {
+                  <span>{{ time(lesson.startsAt) }}–{{ time(lesson.endsAt) }}{{ lesson.roomName ? ', ' + lesson.roomName : '' }}</span>
+                }
               </button>
             }
           </div>
@@ -241,7 +246,8 @@ type Editor = {
     .tone-1 { background: var(--ds-warning-soft); border-color: var(--ds-warning); color: var(--ds-warning); }
     .tone-2 { background: var(--ds-soft); border-color: var(--ds-primary); color: var(--ds-text); }
     .lesson.short { flex-direction: row; align-items: center; gap: 6px; padding: 2px 8px; }
-    .lesson.short span { white-space: nowrap; }
+    .lesson.short strong { flex: 0 1 auto; min-width: 0; }
+    .lesson.short .when { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; font-size: 12px; font-weight: 400; }
     .closed { position: absolute; left: 0; right: 0; background: color-mix(in srgb, var(--ds-muted) 14%, transparent); pointer-events: none; }
     .legend { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
     .closed-legend { background: color-mix(in srgb, var(--ds-muted) 28%, transparent); }
@@ -400,6 +406,10 @@ export class CalendarSectionComponent {
   lessonLabel(lesson: CourseLesson): string {
     return `${lesson.groupName ?? this.studentNames(lesson)}, ${lesson.courseName}, ${formatDateTime(lesson.startsAt)}`
       + (lesson.status === 'Cancelled' ? ', iptal edildi' : '') + '. Seçenekler için Enter.';
+  }
+  /** Tooltip of a short box: what the box has no room to show. */
+  lessonTitle(lesson: CourseLesson): string {
+    return `${lesson.groupName ?? this.studentNames(lesson)}, ${this.time(lesson.startsAt)}–${this.time(lesson.endsAt)}${lesson.roomName ? ', ' + lesson.roomName : ''}`;
   }
   isFuture(lesson: CourseLesson): boolean { return new Date(lesson.startsAt) > new Date(); }
   dayLong(day: string): string { return this.days().find(item => item.iso === day)?.long ?? day; }
