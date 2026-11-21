@@ -75,6 +75,9 @@ export class CoursePanelState {
     return [...list, ...invited];
   });
 
+  /** Rooms that can be planned into: archived ones only show in Ayarlar and on past lessons (21.11.2026). */
+  readonly activeRooms = computed(() => this.rooms().filter(room => !room.archivedAt));
+
   /** Setup steps done or skipped, of eight. */
   readonly setupProgress = computed(() => {
     const steps = this.setup()?.steps ?? [];
@@ -184,4 +187,9 @@ export function writeHashQuery(slug: string, values: Record<string, string | num
 export function sameStudentName<T extends { displayName: string }>(options: readonly T[], text: string): T | undefined {
   const wanted = text.trim().toLocaleLowerCase('tr');
   return wanted ? options.find(student => student.displayName.trim().toLocaleLowerCase('tr') === wanted) : undefined;
+}
+
+/** After a student joins a group (21.11.2026): the group's planned lessons whose room is now too small; the join is not refused. */
+export function fullRoomNotice(lessons: number | undefined): string {
+  return lessons ? ` Bu grubun ${lessons} planlı dersinin dersliği artık grup için küçük; Takvim'den başka bir derslik seçebilirsiniz.` : '';
 }

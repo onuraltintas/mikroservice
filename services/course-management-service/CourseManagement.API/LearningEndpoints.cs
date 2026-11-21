@@ -352,7 +352,7 @@ public static class LearningEndpoints
         {
             if (!await CanManageWorkspace(db, workspaceId, UserId(user), ct)) return Results.NotFound();
             return Results.Ok(await db.Branches.AsNoTracking().Where(branch => branch.WorkspaceId == workspaceId)
-                .OrderBy(branch => branch.Name).Select(branch => new { branch.Id, branch.Name }).Take(200).ToListAsync(ct));
+                .OrderBy(branch => branch.Name).Select(branch => new { branch.Id, branch.Name, branch.ArchivedAt }).Take(200).ToListAsync(ct));
         });
 
         api.MapPost("/workspaces/{workspaceId:guid}/branches", async (Guid workspaceId, CreateBranchRequest request,
@@ -368,7 +368,7 @@ public static class LearningEndpoints
             db.Branches.Add(branch);
             AddAudit(db, workspaceId, userId, branch.Id, "CourseBranch.Created");
             await db.SaveChangesAsync(ct);
-            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/branches/{branch.Id}", new { branch.Id, branch.Name });
+            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/branches/{branch.Id}", new { branch.Id, branch.Name, branch.ArchivedAt });
         });
 
         api.MapGet("/workspaces/{workspaceId:guid}/rooms", async (Guid workspaceId, ClaimsPrincipal user,
@@ -379,7 +379,7 @@ public static class LearningEndpoints
                 join branch in db.Branches.AsNoTracking() on room.BranchId equals branch.Id
                 where room.WorkspaceId == workspaceId
                 orderby branch.Name, room.Name
-                select new { room.Id, room.BranchId, branchName = branch.Name, room.Name, room.Capacity })
+                select new { room.Id, room.BranchId, branchName = branch.Name, room.Name, room.Capacity, room.ArchivedAt })
                 .Take(500).ToListAsync(ct);
             return Results.Ok(rooms);
         });
@@ -402,7 +402,7 @@ public static class LearningEndpoints
             await db.SaveChangesAsync(ct);
             var branchName = await db.Branches.Where(branch => branch.Id == branchId).Select(branch => branch.Name).SingleAsync(ct);
             return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/rooms/{room.Id}",
-                new { room.Id, room.BranchId, branchName, room.Name, room.Capacity });
+                new { room.Id, room.BranchId, branchName, room.Name, room.Capacity, room.ArchivedAt });
         });
 
         api.MapGet("/workspaces/{workspaceId:guid}/groups", async (Guid workspaceId, ClaimsPrincipal user, CourseManagementDbContext db, CancellationToken ct) =>
@@ -450,13 +450,14 @@ public static class LearningEndpoints
                 existing.Reactivate();
                 AddAudit(db, workspaceId, userId, existing.Id, "Enrollment.Restored");
                 await db.SaveChangesAsync(ct);
-                return Results.Ok(new { existing.Id });
+                return Results.Ok(new { existing.Id, fullRoomLessons = await FullRoomLessons(db, workspaceId, groupId, ct) });
             }
             var enrollment = StudentGroupEnrollment.Create(Guid.NewGuid(), workspaceId, groupId, studentId, DateTimeOffset.UtcNow);
             db.Enrollments.Add(enrollment);
             AddAudit(db, workspaceId, userId, enrollment.Id, "Enrollment.Created");
             await db.SaveChangesAsync(ct);
-            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/groups/{groupId}/students/{studentId}", new { enrollment.Id });
+            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/groups/{groupId}/students/{studentId}",
+                new { enrollment.Id, fullRoomLessons = await FullRoomLessons(db, workspaceId, groupId, ct) });
         });
 
         api.MapGet("/workspaces/{workspaceId:guid}/lessons", async (Guid workspaceId, DateTimeOffset? from, DateTimeOffset? to,
@@ -832,6 +833,7 @@ public static class LearningEndpoints
                 {
                     room = await db.Rooms.SingleOrDefaultAsync(item => item.Id == roomId && item.WorkspaceId == workspaceId, ct);
                     if (room is null) return Results.NotFound();
+                    if (room.ArchivedAt is not null) return Results.Conflict(new { code = "Room.Archived" });
                     if (room.Capacity is int capacity && participantStudentIds.Count > capacity)
                         return Results.Conflict(new { code = "Room.CapacityExceeded" });
                 }
@@ -1148,6 +1150,7 @@ public static class LearningEndpoints
                 {
                     room = await db.Rooms.SingleOrDefaultAsync(item => item.Id == roomId && item.WorkspaceId == workspaceId, ct);
                     if (room is null) return Results.NotFound();
+                    if (room.ArchivedAt is not null) return Results.Conflict(new { code = "Room.Archived" });
                     if (room.Capacity is int capacity && studentIds.Count > capacity)
                         return Results.Conflict(new { code = "Room.CapacityExceeded" });
                 }
@@ -1824,6 +1827,22 @@ public static class LearningEndpoints
     internal static bool IsSerializationFailure(Exception exception) => exception is PostgresException
         { SqlState: PostgresErrorCodes.SerializationFailure }
         || exception is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.SerializationFailure } };
+    /// <summary>
+    /// Planned lessons of a group whose room is smaller than the group now is (21.11.2026): the owner is told when a
+    /// student joins, the join itself is not refused.
+    /// </summary>
+    internal static async Task<int> FullRoomLessons(CourseManagementDbContext db, Guid workspaceId, Guid groupId, CancellationToken ct)
+    {
+        var members = await db.Enrollments.CountAsync(item => item.WorkspaceId == workspaceId && item.GroupId == groupId
+            && item.Status == EnrollmentStatus.Active, ct);
+        var now = DateTimeOffset.UtcNow;
+        return await (from lesson in db.LessonSessions.AsNoTracking()
+            join room in db.Rooms.AsNoTracking() on lesson.RoomId equals (Guid?)room.Id
+            where lesson.WorkspaceId == workspaceId && lesson.GroupId == groupId && lesson.Status == LessonSessionStatus.Scheduled
+                && lesson.StartsAt > now && room.Capacity != null && room.Capacity < members
+            select lesson.Id).CountAsync(ct);
+    }
+
     internal static bool FitsTeacherAvailability((DateTimeOffset StartsAt, DateTimeOffset EndsAt) occurrence,
         IReadOnlyList<TeacherAvailabilityWindow> windows)
     {

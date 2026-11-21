@@ -79,6 +79,9 @@ public sealed class LessonSession
         RoomId = roomId;
     }
 
+    /// <summary>The room was deleted (21.11.2026): the lesson stays, without a room.</summary>
+    public void ClearRoom() => RoomId = null;
+
     /// <summary>Another teacher takes over (the group's teacher changed, or an invited teacher accepted).</summary>
     public void ChangeTeacher(Guid teacherUserId)
     {

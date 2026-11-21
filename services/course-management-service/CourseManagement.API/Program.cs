@@ -218,6 +218,7 @@ api.MapTeacherInvitationEndpoints(app);
 api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
 api.MapSetupEndpoints();
+api.MapRoomEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
 api.MapCourseEmailEndpoints(app);
