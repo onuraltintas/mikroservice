@@ -288,7 +288,13 @@ export class StudentsSectionComponent {
     this.search();
   }
   sortMark(field: string): string { return this.filter.sort === field ? '↑' : this.filter.sort === `-${field}` ? '↓' : ''; }
-  groupNames(student: PanelStudentRow): string { return student.groups.map(group => group.name).join(', ') || '–'; }
+  groupNames(student: PanelStudentRow): string {
+    const groups = student.groups.map(group => group.name);
+    // Live test 21.11.2026: a one-to-one student showed only "–".
+    if (student.oneToOneTeacherUserId)
+      groups.push(this.state.isOwner() ? `Birebir: ${this.state.teacherName(student.oneToOneTeacherUserId).replace(/ \(.*\)$/, '')}` : 'Birebir');
+    return groups.join(', ') || '–';
+  }
   money(value: number): string { return formatMoney(value); }
   date(value: string): string { return formatDate(value); }
   dateTime(value: string): string { return formatDateTime(value); }

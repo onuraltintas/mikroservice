@@ -3,6 +3,7 @@ import { CourseManagementService } from '../course-management.service';
 import { CoursePanelApi, PanelSetup } from './panel-api.service';
 import { CoursePanelState, SECTIONS, SECTION_GROUPS } from './panel-state';
 import { SetupWizardComponent } from './sections/setup-wizard.component';
+import { teacherChangeQuestion } from './sections/courses.component';
 
 // Setup guide (20.11.2026, design approved by the user).
 const setup = (open: string[] = []): PanelSetup => ({
@@ -85,5 +86,10 @@ describe('setup guide', () => {
       const wizard = TestBed.createComponent(SetupWizardComponent).componentInstance;
       expect(wizard.dueChoices().map(item => item.value)).toEqual(['2026-11-21', '2026-12-01', '2026-12-15']);
     } finally { vi.useRealTimers(); }
+  });
+
+  it('says why a group cannot simply go to another teacher', () => {
+    expect(teacherChangeQuestion(2, 0, 1, 1)).toBe('Grubun 2 planlı dersi yeni öğretmene uymuyor: 1 ders öğretmenin izinli olduğu saatte, '
+      + '1 ders öğretmenin çalışma saatleri dışında. Yine de öğretmeni değiştireyim mi?');
   });
 });

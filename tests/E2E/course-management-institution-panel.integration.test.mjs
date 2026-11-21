@@ -159,8 +159,23 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(pendingGroup.status, 201, `an invited teacher can be given a group: ${await pendingGroup.clone().text()}`);
     assert.equal((await call(`${ws}/groups`, owner, 'POST', { id: randomUUID(), courseId, teacherUserId: randomUUID(), name: 'TEST yok' })).status >= 400, true,
       'a made-up teacher is refused');
-    const renamed = await call(`${ws}/groups/${pendingGroupId}`, owner, 'PUT', { name: 'TEST 8-C', teacherUserId: teacherId, moveFutureLessons: true, force: false });
+    // Live test 21.11.2026: the new teacher's time off stops the change until the owner confirms.
+    const dayAhead = offset => new Date(Date.now() + 3 * 3600000 + offset * 86400000).toISOString().slice(0, 10);
+    assert.equal((await call(`${ws}/groups/${pendingGroupId}/students/${studentA}`, owner, 'POST')).status, 201);
+    const pendingLesson = await call(`${ws}/lessons`, owner, 'POST', { id: randomUUID(), courseId, groupId: pendingGroupId, studentId: null,
+      teacherUserId: pendingId, startsAt: `${dayAhead(20)}T10:00:00+03:00`, endsAt: `${dayAhead(20)}T10:45:00+03:00` });
+    assert.equal(pendingLesson.status, 201, await pendingLesson.clone().text());
+    const offDay = await call(`${ws}/teacher-time-off`, owner, 'POST', { id: randomUUID(), teacherUserId: teacherId,
+      startsAt: `${dayAhead(20)}T09:00:00+03:00`, endsAt: `${dayAhead(20)}T12:00:00+03:00`, reason: 'TEST izin' });
+    assert.equal(offDay.status, 201, await offDay.clone().text());
+    const blockedChange = await call(`${ws}/groups/${pendingGroupId}`, owner, 'PUT', { name: 'TEST 8-C', teacherUserId: teacherId, moveFutureLessons: true, force: false });
+    assert.equal(blockedChange.status, 409);
+    assert.deepEqual((({ code, clashes, duringTimeOff }) => ({ code, clashes, duringTimeOff }))(await blockedChange.json()),
+      { code: 'Group.TeacherConflict', clashes: 1, duringTimeOff: 1 });
+    const renamed = await call(`${ws}/groups/${pendingGroupId}`, owner, 'PUT', { name: 'TEST 8-C', teacherUserId: teacherId, moveFutureLessons: true, force: true });
     assert.equal(renamed.status, 200, await renamed.clone().text());
+    assert.equal((await renamed.clone().json()).movedLessons, 1);
+    assert.equal((await call(`${ws}/groups/${pendingGroupId}/students/${studentA}`, owner, 'DELETE')).status, 204);
     assert.deepEqual((({ name, teacherUserId }) => ({ name, teacherUserId }))(await renamed.json()), { name: 'TEST 8-C', teacherUserId: teacherId });
     assert.equal((await call(`${ws}/groups/${pendingGroupId}`, teacher, 'PUT', { name: 'X', teacherUserId: null, moveFutureLessons: false, force: false })).status, 404);
 
