@@ -389,3 +389,40 @@
   .review-card:hover,
   .stat-detail-card:hover { transform: none; }
 }
+
+// Lively design (21.11.2026): the four counts sit in a row of soft-tone cards under the title.
+.review-container .hero-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.review-container .stats-overview {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 18px;
+    box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card));
+    color: var(--sp-text-1);
+
+    .material-icons { color: var(--tone); }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--sp-text-1); }
+    .stat-label { color: var(--sp-text-2); font-size: 0.8125rem; }
+  }
+  .stat-card.primary { --tone: var(--sp-tone-mint); background: var(--sp-tone-mint-soft); }
+  .stat-card.warning { --tone: var(--sp-tone-peach); background: var(--sp-tone-peach-soft); }
+  .stat-card.success { --tone: var(--sp-tone-sea); background: var(--sp-tone-sea-soft); }
+  .stat-card.info { --tone: var(--sp-tone-sand); background: var(--sp-tone-sand-soft); }
+}
+
+@media (max-width: 760px) {
+  .review-container .stats-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

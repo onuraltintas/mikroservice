@@ -20,14 +20,28 @@
     border-color var(--sp-transition-fast),
     transform var(--sp-transition-fast);
 
+  // Lively design (21.11.2026): earned badges wear the soft tone of their tier and open once.
   &--unlocked {
-    border-color: color-mix(in srgb, var(--ui-warning) 35%, transparent);
-    background: color-mix(in srgb, var(--ui-warning) 4%, transparent);
+    --badge-tone: var(--sp-tone-mint);
+    --badge-soft: var(--sp-tone-mint-soft);
+    border-color: transparent;
+    background: var(--badge-soft);
+    box-shadow: var(--sp-shadow-raised, var(--sp-shadow-sm));
+    animation: sp-badge-unlock 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+    &[data-tier='Bronze'] { --badge-tone: var(--sp-tone-peach); --badge-soft: var(--sp-tone-peach-soft); }
+    &[data-tier='Silver'] { --badge-tone: var(--sp-tone-sea); --badge-soft: var(--sp-tone-sea-soft); }
+    &[data-tier='Gold'] { --badge-tone: var(--sp-tone-sand); --badge-soft: var(--sp-tone-sand-soft); }
+
+    .badge-card__icon { background: var(--sp-surface); }
+    .badge-card__tier { color: var(--badge-tone) !important; }
   }
 
+  // Locked badges stay readable (no opacity on text) and say what is needed.
   &--locked {
-    opacity: 0.55;
-    filter: saturate(0.4);
+    border-style: dashed;
+    border-color: var(--sp-border-strong, var(--sp-border));
+    background: var(--sp-surface);
   }
 
   &:hover {
@@ -42,11 +56,26 @@
 }
 
 .badge-card__icon {
-  font-size: 2rem;
+  display: grid;
+  place-items: center;
+  font-size: 1.75rem;
   line-height: 1;
   flex-shrink: 0;
-  width: 40px;
-  text-align: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--sp-surface-2, var(--sp-surface));
+}
+
+.badge-card__how {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--sp-text-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-card--unlocked, .badge-card--new { animation: none; }
+  .badge-card:hover { transform: none; }
 }
 
 .badge-card__info {
@@ -73,11 +102,11 @@
   font-size: 0.6875rem;
   font-weight: 600;
 
-  &--locked  { color: var(--sp-text-3); }
-  &--earned  { color: var(--sp-xp); }
+  &--locked  { color: var(--sp-text-2); }
+  &--earned  { color: var(--sp-text-1); }
 }
 
 .badge-card__date {
   font-size: 0.6875rem;
-  color: var(--sp-text-3);
+  color: var(--sp-text-2);
 }

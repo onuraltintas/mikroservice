@@ -66,7 +66,7 @@
         <!-- Active Assignments Tab -->
         @if (selectedTab === 0) {
             <div class="assignments-grid" *ngIf="!loading && activeAssignments.length > 0">
-                <div class="assignment-card pending-card" *ngFor="let item of activeAssignments">
+                <div class="assignment-card pending-card sp-rise" *ngFor="let item of activeAssignments; let i = index" [style.--sp-i]="i">
                     <div class="card-status-bar" [ngClass]="getDueDateClass(item)"></div>
                     <div class="card-content">
                         <div class="card-header">
@@ -93,7 +93,7 @@
                 <img src="assets/images/illustrations/completed.svg" alt=""
                     onerror="this.style.display='none'">
                 <span class="material-icons">task_alt</span>
-                <h3>Bekleyen Ödevin Yok!</h3>
+                <h3>Bekleyen ödevin yok</h3>
                 <!-- Live test 16.11.2026 (#57): with no assignment ever given there is nothing to praise. -->
                 <p>{{ completedAssignments.length ? 'Harikasın! Tüm ödevlerini tamamladın.' : 'Öğretmenin ödev verdiğinde burada göreceksin.' }}</p>
             </div>

@@ -640,3 +640,28 @@
     animation: none !important; transition: none !important; }
   :is(app-exercise-player, #ho-lively) .success-confetti { display: none; }
 }
+
+// Lively design step 6 (21.11.2026): the other student pages share the card radius, the soft raised shadow and a calm
+// empty-state icon in a soft circle. Exercise and reading areas are not touched.
+#main-content {
+  .sp-card,
+  .settings-card,
+  .profile-card,
+  .notifications-card {
+    border-radius: var(--sp-radius-card-lg, 22px);
+    box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card));
+  }
+
+  .empty-state > .material-icons,
+  .empty-state .sp-card-content > .material-icons,
+  .empty-state__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--sp-tone-mint-soft);
+    color: var(--sp-tone-mint);
+    font-size: 36px;
+  }
+}

@@ -152,7 +152,9 @@ export class AchievementsComponent implements OnInit, OnDestroy {
   }
 
   getAchievementsByTier(tier: string): AchievementWithStatus[] {
-    return this.filteredAchievements.filter(a => a.tier === tier);
+    // Earned badges first, so the wall opens with what the student already has.
+    return this.filteredAchievements.filter(a => a.tier === tier)
+      .sort((a, b) => Number(!!b.userAchievement) - Number(!!a.userAchievement));
   }
 
   getTierLabel(tier: string): string {

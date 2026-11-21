@@ -445,3 +445,23 @@ $bg-color: var(--sp-surface-2);
         }
     }
 }
+
+// Lively design (21.11.2026): soft-tone cards, the due date says how close it is.
+.assignment-card {
+    border-radius: var(--sp-radius-card-lg, 22px);
+    box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card));
+    transition: transform var(--sp-transition-fast), box-shadow var(--sp-transition-fast);
+
+    &:hover { transform: translateY(-3px); box-shadow: var(--sp-shadow-raised-hover, var(--sp-shadow-hover)); }
+}
+
+.status-badge.soon { background: var(--sp-tone-peach-soft); color: var(--sp-tone-peach); }
+.status-badge.normal { background: var(--sp-tone-mint-soft); color: var(--sp-tone-mint); }
+
+.stats-row .stat-card.pending { background: var(--sp-tone-peach-soft); }
+.stats-row .stat-card.completed { background: var(--sp-tone-mint-soft); }
+.stats-row .stat-card.score { background: var(--sp-tone-sea-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+    .assignment-card:hover { transform: none; }
+}
