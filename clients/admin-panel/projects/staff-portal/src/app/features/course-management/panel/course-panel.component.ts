@@ -147,6 +147,11 @@ export class CoursePanelComponent implements OnInit {
     const onHash = () => this.readHash();
     this.document.defaultView?.addEventListener('hashchange', onHash);
     this.destroyRef.onDestroy(() => this.document.defaultView?.removeEventListener('hashchange', onHash));
+    // Live test 21.11.2026: a change made elsewhere (a teacher accepting an invitation, another tab) showed only after a
+    // reload. Coming back to the tab reloads the lists, at most once a minute.
+    const onVisible = () => { if (this.document.visibilityState === 'visible') void this.refreshIfStale(); };
+    this.document.addEventListener('visibilitychange', onVisible);
+    this.destroyRef.onDestroy(() => this.document.removeEventListener('visibilitychange', onVisible));
     try {
       try {
         const profile = await this.service.getProfile();
@@ -188,6 +193,17 @@ export class CoursePanelComponent implements OnInit {
       const view = this.document.defaultView;
       view?.history.replaceState(view.history.state, '', hashUrl('#kurulum'));
     }
+  }
+
+  private refreshedAt = Date.now();
+  private async refreshIfStale(): Promise<void> {
+    if (!this.state.id() || Date.now() - this.refreshedAt < 60_000) return;
+    this.refreshedAt = Date.now();
+    try {
+      await this.state.refreshLists();
+      await this.state.loadSetup();
+      this.state.changed();
+    } catch { /* the next visit tries again */ }
   }
 
   /** Leaving the guide: "Daha sonra devam et" keeps it closed until the next visit; finishing removes it from the menu. */

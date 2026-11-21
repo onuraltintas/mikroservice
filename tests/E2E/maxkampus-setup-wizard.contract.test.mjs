@@ -32,6 +32,7 @@ test('the menu is grouped, the guide opens by itself and can be opened again fro
   assert.match(frame, /'Kurulum \(' \+ state\.setupProgress\(\)\.done/);
   assert.match(frame, /eduivme_setup_later_/);
   assert.match(frame, /class="menu-group"/);
+  assert.match(frame, /visibilitychange/, 'lists reload when the owner comes back to the tab');
   assert.match(read(`${panel}/sections/settings.component.ts`), /Kurulum rehberini aç/);
   assert.match(read(`${panel}/sections/overview.component.ts`), /Kuruluma devam et/);
 });
