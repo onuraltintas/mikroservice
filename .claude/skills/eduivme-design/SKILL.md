@@ -40,12 +40,20 @@ Ders renkleri (maxkoç, açık temada soluk zemin + koyu yazı etiketi):
 
 Koyu temada ders rengi yalnız küçük işaret olarak kullanılır.
 
+**maxkoç güncellemesi (21.11.2026, kullanıcı kararı):** Büyük yüzeylerde fosforlu sarı yerine bal rengi kullanılır: `--coaching-honey` `#F5C842` (koyu `#E6C84A`), soluk `--coaching-honey-soft` `#FFF3CC`, koyu ton `--coaching-honey-deep` `#D89A00`. Fosforlu `#FFE066` yalnız küçük "bugün / şimdi" işaretinde kalır. Kart köşesi 16 px, denetim köşesi 10 px.
+
 ## Canlılık (açık tema) ve ölçüsü
+21.11.2026 kararı: paneller (maxkampüs, maxkoç öğrenci ve veli, öğretmen ve kurum panelleri) "B" dilinde, renkli ve hareketli ama abartısız.
+Referans: maxkampüs tuvali https://claude.ai/artifact/Y1TFFms6NBZzQQKEnxhNR4, maxkoç öğrenci tuvali https://claude.ai/artifact/TryF7d3VSQayKom8eCsSvT.
+
 Açık temada şunlar kullanılır:
-- hafif renkli zemin
-- ürün rengine çalan iki katlı ince gölge: `0 1px 2px rgba(…,0.06), 0 8px 20px -10px rgba(…,0.18)`
-- renkli ders, seri ve XP etiketleri
+- hafif renkli sayfa zemini (`--ds-page-tint`), üstünde beyaz kartlar
+- ürün rengine çalan iki katlı ince gölge: `0 1px 2px rgba(…,0.06), 0 8px 20px -10px rgba(…,0.18)` (`--ds-shadow`, `--ds-shadow-raised`)
+- özet kutuları anlamının soluk renginde: bilgi mavi (`--ds-info-soft`), başarı yeşil, sınav ve hedef mor (`--ds-violet-soft`), seans ve uyarı turuncu (`--ds-orange-soft`), gecikme kırmızı; sayı aynı tonun koyusunda
+- renkli ders, seri ve XP etiketleri; baş harf yuvarlakları sırayla farklı ders renklerinde
+- grafikler: sayıların yanında oran çubuğu, ölçüm dizilerinde sütun grafik, parçalı bütünde dağılım çubuğu (`staff-portal/src/app/shared/staff-charts.ts`: `staff-bars`, `staff-meter`, `staff-split`); veri tablosu "Tablo olarak gör" altında kalır
 - grafik çizgisinin altında %10–12 dolgu
+- öğretmen ve kurum panellerinde grafit karşılama kartı ve amber halka; menüde hap biçiminde sekmeler, grup renk noktaları
 
 Kullanılmaz:
 - gradyanlı arka plan ya da parlama
@@ -68,9 +76,14 @@ Koyu tema sade kalır, gölge yok.
 - **Anlam yalnız renkle verilmez:** simge ya da metin de olsun. "✓" yazı karakteri yerine SVG kullan, yanında ekran okuyucu metni olsun.
 - **Menü:** seçili öğede `aria-current="page"`.
 - **Grafikler:** açıklamada değerler yazsın (`aria-label`). Az veri varsa değerleri doğrudan çiz. Çubuk eksenleri 0'dan başlar.
-- **Hareket:** `prefers-reduced-motion` açıksa hiç hareket yok. Ekran başına bir hareket:
-  - Hızlı Okuma ana sayfası: odak çizgisi sıradaki egzersize kayar.
-  - maxkoç: görev tamamlanınca onay işareti çizilir.
+- **Hareket (21.11.2026 kararı: canlı ama ölçülü):** `prefers-reduced-motion` açıksa hiç hareket yok. Eski "ekran başına tek hareket" kuralının yerine:
+  - Ekran açılınca kartlar ve bölümler bir kez, sırayla belirir (0,5 s, en çok yaklaşık 300 ms gecikme).
+  - Tıklanabilir kart ve sekme üstüne gelince 2–3 px yükselir.
+  - Grafikte çubuklar sıfırdan büyür, oran çubukları soldan dolar, dağılım parçaları sırayla açılır.
+  - Seçili menü öğesinin küçük bir işareti olur (maxkoç: bal rengi kıvılcım; eduivme: amber nokta); okunmamış sayısı hafifçe nabız atar.
+  - Sürekli süren tek hareket yavaş "nefes"tir (karşılama halkası); hızlı yanıp sönme, zıplama, parlama yok.
+  - Okunan metin, soru ve egzersiz alanı sabit kalır; hareket bir şey anlatır ya da dikkati doğru yere çeker, süs için yapılmaz.
+  - Hızlı Okuma ana sayfasında odak çizgisi sıradaki egzersize kayar; maxkoç'ta görev tamamlanınca onay işareti çizilir.
 - **Egzersizlerde klavye:** kelimeler arasında ok tuşlarıyla gezinilir; her kelime ayrı sekme durağı olmaz. Süreli egzersizde duraklat düğmesi olur.
 
 ## Yazı ve dil
@@ -91,6 +104,6 @@ Koyu tema sade kalır, gölge yok.
 3. Sabit renk yok; değişkenler kullanıldı.
 4. Ekran başına tek ana düğme var; ikincil eylemler geride.
 5. Yükleniyor, boş ve hata durumları tasarlandı.
-6. Hareket azaltma ayarına uyuldu.
+6. Hareket azaltma ayarına uyuldu; hareket yukarıdaki ölçünün içinde (açılışta bir kez, üstüne gelince, grafik büyümesi).
 7. Klavyeyle her şeye ulaşılıyor ve odak görünüyor.
 8. Türkçe karakterler ve uzun sözcükler taşmıyor.
