@@ -333,6 +333,9 @@ services:
       OTEL_SERVICE_NAME: EduPlatform.Site
       INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
       Site__MaxkampusPublicUrl: ${COURSE_MANAGEMENT_PUBLIC_URL:-https://maxkampus.com}
+      # Contact form (21.11.2026): the team's notice goes here; empty means no notice (the sender's receipt still goes).
+      Site__ContactNotifyEmail: ${SITE_CONTACT_NOTIFY_EMAIL:-}
+      Site__AdminPanelUrl: ${PUBLIC_ADMIN_PANEL_URL:-https://admin.eduivme.com}
     restart: unless-stopped
 
   api-gateway:
