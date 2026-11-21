@@ -21,7 +21,7 @@ interface PlanCard { plan: BillingCatalogPlan; note: SiteEntry | null; featured:
     } @else {
       <ul class="plans">
         @for (card of cards(); track card.plan.id) {
-          <li class="mk-card plan" [class.plan--featured]="card.featured">
+          <li class="mk-card plan mk-lift" [class.plan--featured]="card.featured">
             @if (card.featured) { <span class="mk-pill">En çok tercih edilen</span> }
             <h3>{{ card.note?.title || card.plan.name }}</h3>
             <p class="plan__price">
@@ -51,7 +51,7 @@ interface PlanCard { plan: BillingCatalogPlan; note: SiteEntry | null; featured:
   styles: `
     .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 0; padding: 0; list-style: none; }
     .plan { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-    .plan--featured { border: 2px solid var(--ds-accent); }
+    .plan--featured { border: 2px solid var(--ds-accent); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); }
     .plan h3 { margin: 0; font-size: 20px; }
     .plan__price { margin: 0; font-size: 15px; } .plan__price strong { font-size: 30px; }
     .plan__price strong + span, .plan__price span + span { margin-left: 4px; }

@@ -19,7 +19,7 @@ html { scroll-behavior: smooth; }
 body {
   min-width: 320px;
   margin: 0;
-  background: var(--ds-bg);
+  background: var(--ds-page-tint, var(--ds-bg));
   color: var(--ds-text);
   font-family: var(--ds-font);
   font-size: 16px;
@@ -39,7 +39,24 @@ a { color: var(--ds-link); }
 .mk-section h2 { margin: 0 0 12px; font-size: clamp(26px, 3.4vw, 34px); }
 .mk-lead { margin: 0 0 32px; max-width: 40em; color: var(--ds-muted); font-size: 18px; }
 .mk-muted { color: var(--ds-muted); }
-.mk-card { padding: 22px; border: 1px solid var(--ds-line); border-radius: 14px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+.mk-card { padding: 22px; border: 1px solid color-mix(in srgb, var(--ds-line) 70%, transparent); border-radius: var(--ds-radius-card, 16px);
+  background: var(--ds-surface); box-shadow: var(--ds-shadow-raised, var(--ds-shadow)); }
+
+// B design (21.11.2026), the same language as the panel: a card that opens something lifts 2 px under the pointer;
+// the hero comes in once; sections fade in as they scroll into view where the browser can do it without script.
+.mk-lift { transition: transform .18s ease, box-shadow .18s ease; }
+.mk-lift:hover, .mk-lift:focus-within { transform: translateY(-2px); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); }
+.mk-enter { animation: mk-enter .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes mk-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@supports (animation-timeline: view()) {
+  .mk-reveal { animation: mk-enter linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+}
+// Icon chips take turns through the soft colours, in the order the editors list the items.
+.mk-tones > :nth-child(5n + 1) { --mk-icon-bg: var(--ds-info-soft); --mk-icon-fg: var(--ds-info); }
+.mk-tones > :nth-child(5n + 2) { --mk-icon-bg: var(--ds-success-soft); --mk-icon-fg: var(--ds-success); }
+.mk-tones > :nth-child(5n + 3) { --mk-icon-bg: var(--mk-soft); --mk-icon-fg: var(--mk-on-soft); }
+.mk-tones > :nth-child(5n + 4) { --mk-icon-bg: var(--ds-violet-soft); --mk-icon-fg: var(--ds-violet); }
+.mk-tones > :nth-child(5n + 5) { --mk-icon-bg: var(--ds-orange-soft); --mk-icon-fg: var(--ds-orange); }
 .mk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
 .mk-status { padding: 48px 0; color: var(--ds-muted); text-align: center; }
 
