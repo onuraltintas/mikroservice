@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Output, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CourseManagementService, CourseWorkspaceSubscription } from '../../course-management.service';
+import { CourseAuditEntry, CourseManagementService, CourseWorkspaceSubscription } from '../../course-management.service';
+import { auditLabel } from '../audit-labels';
 import { CoursePanelApi, PanelEmailPreview, PanelEmailSettings, PanelSentEmail, PanelSupportView } from '../panel-api.service';
 import { CoursePanelState, PanelSection, formatDate, formatDateTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 
-type Tab = 'emails' | 'branches' | 'support' | 'plan' | 'profile';
+type Tab = 'emails' | 'branches' | 'support' | 'audit' | 'plan' | 'profile';
 const KINDS: Record<string, { title: string; when: string }> = {
   Absence: { title: 'Devamsızlık', when: 'Öğrenci "gelmedi" işaretlenince, günde bir e-posta' },
   HomeworkNotDone: { title: 'Yapılmayan ödev', when: 'Öğretmen "yapmadı" ya da "eksik" işaretleyince' },
@@ -129,6 +130,19 @@ const KINDS: Record<string, { title: string; when: string }> = {
           }
         </div>
       }
+      @case ('audit') {
+        <section class="card" aria-labelledby="audit-title">
+          <div class="card-head"><h2 id="audit-title">İşlem kaydı</h2><span class="muted">Son 100 işlem</span></div>
+          <p class="muted" style="margin: 0; padding: 0 20px 12px; font-size: 14px">Panelde ne zaman ne yapıldığını gösterir. Kişisel veri ve içerik bu kayda yazılmaz.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th scope="col">Ne zaman</th><th scope="col">İşlem</th></tr></thead>
+            <tbody>
+              @for (entry of audit(); track $index) { <tr><td class="num">{{ dateTime(entry.occurredAt) }}</td><td>{{ auditLabel(entry.action) }}</td></tr> }
+              @empty { <tr><td colspan="2" class="empty">Henüz işlem kaydı yok.</td></tr> }
+            </tbody>
+          </table></div>
+        </section>
+      }
       @case ('support') {
         <section class="card card-pad stack" style="gap: 14px">
           <h2>Destek kaydı</h2>
@@ -185,12 +199,16 @@ export class SettingsSectionComponent {
   readonly hours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
   readonly tabs: { id: Tab; label: string; slug: string }[] = [
     { id: 'emails', label: 'E-posta bildirimleri', slug: 'eposta' }, { id: 'branches', label: 'Şube ve derslik', slug: 'subeler' },
-    { id: 'support', label: 'Destek kaydı', slug: 'destek' }, { id: 'plan', label: 'Abonelik', slug: 'abonelik' }, { id: 'profile', label: 'Profilim', slug: 'profil' }];
+    { id: 'support', label: 'Destek kaydı', slug: 'destek' }, { id: 'audit', label: 'İşlem kaydı', slug: 'islemler' },
+    { id: 'plan', label: 'Abonelik', slug: 'abonelik' }, { id: 'profile', label: 'Profilim', slug: 'profil' }];
   readonly tab = signal<Tab>('emails');
   readonly email = signal<PanelEmailSettings | null>(null);
   readonly preview = signal<PanelEmailPreview | null>(null);
   readonly log = signal<PanelSentEmail[]>([]);
   readonly support = signal<PanelSupportView | null>(null);
+  /** The last 100 changes (moved from the earlier screen, 21.11.2026): what and when, no names or personal data. */
+  readonly audit = signal<CourseAuditEntry[]>([]);
+  readonly auditLabel = auditLabel;
   readonly plan = signal<CourseWorkspaceSubscription | null>(null);
   readonly busy = signal(false);
   readonly error = signal('');
@@ -224,6 +242,7 @@ export class SettingsSectionComponent {
           break;
         }
         case 'support': this.support.set(await this.api.support(id)); break;
+        case 'audit': this.audit.set(await this.service.getAudit(id)); break;
         case 'plan': this.plan.set((await this.service.getMySubscriptions()).find(item => item.workspaceId === id) ?? null); break;
         case 'profile': this.displayName.set((await this.service.getProfile()).displayName); break;
       }

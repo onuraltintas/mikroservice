@@ -4,6 +4,8 @@ import { CourseAssignment, CourseLesson, CourseManagementService } from '../../c
 import { CompletionMark, CoursePanelApi, PanelCompletion } from '../panel-api.service';
 import { CoursePanelState, formatDateTime, formatTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 import { PanelConfirm } from '../panel-confirm';
+import { HomeworkFilesComponent } from './homework-files.component';
+import { MakeupCreditsComponent } from './makeup-credits.component';
 
 const DAY_MS = 86_400_000;
 const ATTENDANCE = [
@@ -25,7 +27,7 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
 @Component({
   selector: 'course-attendance-section',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, HomeworkFilesComponent, MakeupCreditsComponent],
   styleUrl: '../panel.scss',
   template: `
     <header class="page-head">
@@ -87,6 +89,11 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
               }
             </ul>
             <p class="muted" style="margin: 0; padding: 0 20px 16px; font-size: 14px">Kurum açtıysa "yapmadı" ve "eksik" işaretleri velilere e-postayla bildirilir.</p>
+            <div style="padding: 0 20px 16px">
+              <button type="button" class="btn-quiet" [attr.aria-expanded]="filesFor() === previousHomework()!.id" (click)="toggleFiles(previousHomework()!.id)">
+                {{ filesFor() === previousHomework()!.id ? 'Dosyaları ve teslimleri gizle' : 'Dosyalar ve öğrenci teslimleri' }}</button>
+              @if (filesFor() === previousHomework()!.id) { <course-homework-files [assignment]="previousHomework()!" /> }
+            </div>
           } @else { <p class="empty">Bu grup için kontrol edilecek ödev yok.</p> }
         </section>
 
@@ -100,8 +107,10 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
                     @if (item.instructions) { <p class="muted" style="margin: 2px 0 0">{{ item.instructions }}</p> }</div>
                     <div class="actions">
                       <button type="button" class="btn-secondary btn-small" (click)="editHomework(item)" [disabled]="busy()">Düzelt</button>
+                      <button type="button" class="btn-quiet" [attr.aria-expanded]="filesFor() === item.id" (click)="toggleFiles(item.id)">Dosyalar</button>
                       <button type="button" class="btn-quiet" (click)="removeHomework(item)" [disabled]="busy()">Geri al</button>
-                    </div></li>
+                    </div>
+                    @if (filesFor() === item.id) { <div style="flex-basis: 100%"><course-homework-files [assignment]="item" /></div> }</li>
                 }
               </ul>
             }
@@ -119,6 +128,7 @@ const HOMEWORK: { value: CompletionMark; key: PanelCompletion['completion']; lab
         }
       </div>
     } @else if (!error()) { <p class="empty">Son yedi günde ve bugün ders yok. Takvimden ders planlayabilirsiniz.</p> }
+    <div style="margin-top: 18px"><course-makeup-credits /></div>
   `,
   styles: `
     .people { list-style: none; margin: 0; padding: 0; }
@@ -148,6 +158,9 @@ export class AttendanceSectionComponent {
   title = ''; instructions = ''; dueOn = '';
   /** Homework of this lesson being corrected in the form below. */
   readonly editingHomework = signal<CourseAssignment | null>(null);
+  /** The homework whose files and answers are open (moved from the earlier screen, 21.11.2026). */
+  readonly filesFor = signal('');
+  toggleFiles(id: string): void { this.filesFor.set(this.filesFor() === id ? '' : id); }
   private readonly confirm = inject(PanelConfirm);
   /** Clock for "started" and "ended": the screen opens attendance and completion on time without a reload. */
   readonly now = signal(Date.now());
