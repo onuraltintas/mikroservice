@@ -8,7 +8,7 @@
   <div class="de-header">
     <div class="de-header__left">
       @if (progress()) {
-        <p class="de-header__week">Hafta {{ progress()!.currentWeek || 1 }} • Gün {{ progress()!.currentDay || 1 }}</p>
+        <p class="de-header__week">{{ progress()!.currentWeek || 1 }}. hafta, {{ progress()!.currentDay || 1 }}. gün</p>
       }
       <h1 class="de-header__title">Günlük İlerleme</h1>
     </div>
@@ -116,16 +116,17 @@
         @if (exercises().length > 0) {
           <div class="de-grid">
             @for (exercise of exercises(); track exercise.order; let i = $index) {
-              <div class="de-card"
+              <div class="de-card sp-rise" [style.--sp-i]="i"
                 [class.de-card--done]="exercise.isCompleted"
-                [class.de-card--locked]="isExerciseDisabled(i)">
+                [class.de-card--locked]="isExerciseDisabled(i)"
+                [class.de-card--next]="!exercise.isCompleted && !isExerciseDisabled(i)">
 
                 <!-- Colored header strip -->
-                <div class="de-card__header" [style.background]="getExerciseColor(exercise.exerciseTypeName)">
+                <div class="de-card__header" [ngClass]="'sp-tone-' + getExerciseTone(exercise.exerciseTypeName)">
                   <div class="de-card__icon-wrap">
                     <span class="material-icons de-card__icon">{{ getExerciseIcon(exercise.exerciseTypeName) }}</span>
                   </div>
-                  <span class="de-card__order">#{{ i + 1 }}</span>
+                  <span class="de-card__order">{{ !exercise.isCompleted && !isExerciseDisabled(i) ? 'Sıradaki' : (i + 1) + '.' }}</span>
                   @if (exercise.isCompleted) {
                     <div class="de-card__done-badge">
                       <span class="material-icons">check_circle</span>
@@ -135,7 +136,7 @@
 
                 <!-- Body -->
                 <div class="de-card__body">
-                  <span class="de-card__type">{{ typeLabel(exercise.exerciseTypeName) }}</span>
+                  <span class="de-card__type" [ngClass]="'sp-tone-' + getExerciseTone(exercise.exerciseTypeName)">{{ typeLabel(exercise.exerciseTypeName) }}</span>
                   <h3 class="de-card__title">{{ displayName(exercise.title) }}</h3>
                   <div class="de-card__tags">
                     <span class="de-card__tag">
@@ -161,6 +162,7 @@
                       <span class="material-icons">play_circle</span>
                       Başla
                     </button>
+                    @if (!isExerciseDisabled(i)) { <span class="de-card__focus-line" aria-hidden="true"></span> }
                     @if (isExerciseDisabled(i)) {
                       <p class="de-card__locked-hint">
                         <span class="material-icons">lock</span>

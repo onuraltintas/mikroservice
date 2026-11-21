@@ -293,6 +293,16 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
     return solidColor(value);
   }
 
+  /** Lively design (21.11.2026): each kind of exercise wears a soft tone of the same family (eyes mint, pacing sand,
+   *  scanning peach, reading and meaning sea) instead of an arbitrary colour. */
+  getExerciseTone(typeName: string): 'mint' | 'sand' | 'peach' | 'sea' {
+    const name = (typeName || '').toLowerCase();
+    if (/saccade|eyetracking|fixation|peripheral|visualexpansion|schulte|targethunt|focus|attention/.test(name)) return 'mint';
+    if (/scanning|skimming|scan/.test(name)) return 'peach';
+    if (/speedreading|tachistoscope|rapidserial|rsvp|wordgroup|chunking|textfading|scrolling|vertical/.test(name)) return 'sand';
+    return 'sea';
+  }
+
   getExerciseBaseColor(typeName: string): string {
     return this.dynamicBaseColors.get(typeName) || '#667eea';
   }

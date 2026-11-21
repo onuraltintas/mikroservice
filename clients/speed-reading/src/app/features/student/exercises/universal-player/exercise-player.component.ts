@@ -1955,6 +1955,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
+    // Lively design (21.11.2026): a short 3-2-1 before every first start, so the first stimulus does not pass while the
+    // student is still reading the start card. It runs before any timed or server-started step, so no timing changes.
+    // Level assessment keeps its measured protocol unchanged, like the exam branch above.
+    if (this.engineState.currentStep === 0 && this.readyCountdown === null && !this.isPreviewSession() && !this.isAssessmentMode) {
+      await this.runReadyCountdown();
+      if (!this.engine) return;
+    }
+
     if (this.engine instanceof MotionPathEngine && ['tracking', 'saccade'].includes(this.engine.getMode()) && !this.isPreviewSession()) {
       try {
         let valid = false;
@@ -1964,11 +1972,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         this.error = this.getActionValidationErrorMessage(error);
         return;
       }
-    }
-    if (this.engine?.engineType === 'visual_expansion' && this.engineState.currentStep === 0 && this.readyCountdown === null
-      && !this.isPreviewSession()) {
-      await this.runReadyCountdown();
-      if (!this.engine) return;
     }
     this.startReadingTracking(() => this.engine?.start());
 
@@ -3244,6 +3247,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       case 'regression_reduction': return 'sync_problem';
       case 'visualization': return 'palette';
       default: return 'fitness_center';
+    }
+  }
+
+  /** A short celebration on the result card only for a clearly good, saved result (never in an assessment). */
+  isCelebration(): boolean {
+    return !this.isAssessmentMode && this.resultSaveStatus !== 'failed' && (this.result?.accuracy ?? 0) >= 80;
+  }
+
+  /** Lively design: the start and result cards wear the soft tone of the kind of exercise. */
+  getEngineTone(): 'mint' | 'sand' | 'peach' | 'sea' {
+    switch (this.engine?.engineType) {
+      case 'grid_interaction': case 'motion_path': case 'visual_expansion': case 'target_hunt': case 'focus': case 'attention_training':
+        return 'mint';
+      case 'scan_find': case 'scanning': case 'skimming': case 'error_analysis': return 'peach';
+      case 'text_stream': case 'word_highlight': case 'word_group': case 'text_fade': return 'sand';
+      default: return 'sea';
     }
   }
 

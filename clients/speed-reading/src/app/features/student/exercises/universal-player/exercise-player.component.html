@@ -33,7 +33,7 @@
     <!-- Exercise Ready -->
     <div *ngIf="!isLoading && !error && engine && !engineState.isRunning && !engineState.isCompleted"
         class="ready-state">
-        <div class="start-card">
+        <div class="start-card" [ngClass]="'sp-tone-' + getEngineTone()">
             <div class="card-header-content">
                 <div class="exercise-icon-large">
                     <span class="material-icons">{{ getExerciseIcon() }}</span>
@@ -180,12 +180,15 @@
                 </div>
             </div>
 
-            <p class="ready-countdown" role="status" *ngIf="readyCountdown !== null">Hazırlan: {{ readyCountdown }}</p>
+            <div class="ready-countdown" role="status" *ngIf="readyCountdown !== null" [attr.aria-label]="'Hazırlan: ' + readyCountdown">
+                <span class="ready-countdown__ring" aria-hidden="true"><span class="ready-countdown__num">{{ readyCountdown }}</span></span>
+                <span>Hazırlan; gözünü ekranın ortasına getir.</span>
+            </div>
             <div class="card-action-area">
                 <button *ngIf="canPracticeFocus" class="ep-btn ep-btn--secondary" (click)="startFocusPractice()">Kısa alıştırma yap</button>
                 <button *ngIf="canPracticeFocus && (asFocusEngine?.nLevel || 1) > 1" class="ep-btn ep-btn--secondary"
                     (click)="startFocusPractice(true)">Önceki N ile alıştırma</button>
-                <button class="ep-btn ep-btn--primary start-button-large" (click)="startExercise()">
+                <button class="ep-btn ep-btn--primary start-button-large" (click)="startExercise()" [disabled]="readyCountdown !== null">
                     <span class="material-icons">play_circle_filled</span>
                     Egzersize başla
                 </button>
@@ -1711,7 +1714,7 @@
             <section class="schulte-summary" *ngIf="engine?.engineType === 'grid_interaction'">
                 <div class="schulte-summary__heading">
                     <div>
-                        <span class="schulte-summary__eyebrow">SCHULTE TABLOSU, {{ result?.details?.gridSize || 5 }}×{{ result?.details?.gridSize || 5 }}</span>
+                        <span class="schulte-summary__eyebrow">Schulte tablosu, {{ result?.details?.gridSize || 5 }}×{{ result?.details?.gridSize || 5 }}</span>
                         <h2>Tablo tamamlandı</h2>
                         <p>Bakış ritmin ve sayı bulma sürelerin</p>
                     </div>
@@ -1759,7 +1762,9 @@
                 </div>
             </section>
             <!-- Success Badge -->
-            <div class="success-badge" *ngIf="engine?.engineType !== 'grid_interaction'">
+            <div class="success-badge" *ngIf="engine?.engineType !== 'grid_interaction'" [ngClass]="'sp-tone-' + getEngineTone()"
+                [class.success-badge--celebrate]="isCelebration()">
+                <span class="success-confetti" aria-hidden="true" *ngIf="isCelebration()"><i></i><i></i><i></i><i></i><i></i><i></i></span>
                 <div class="badge-icon">
                     <span class="material-icons">emoji_events</span>
                 </div>

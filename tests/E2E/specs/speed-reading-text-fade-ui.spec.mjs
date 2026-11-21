@@ -133,7 +133,7 @@ for (const partial of [false, true]) test(`student honors server ${partial ? 'pa
   await page.goto(`/student/exercises/universal-player/${exerciseId}`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.start-button-large')).toBeVisible();
   await page.locator('.start-button-large').click();
-  await expect.poll(() => completions).toBe(1);
+  await expect.poll(() => completions, { timeout: 15000 }).toBe(1); // includes the 3 s ready countdown
   expect(actions).toEqual(['start_reading', 'finish_reading']);
   await expect.poll(() => writes).toEqual(partial ? [] : ['/api/speed-reading/daily-progress/complete-exercise']);
   expect(completionPayload.rawWPM).toBeUndefined();
