@@ -4,6 +4,8 @@ import { CourseManagementService, CourseStudentAccount, StudentCsvImportPreview,
 import { CoursePanelApi, PanelSentEmail, PanelStudentFilter, PanelStudentPage, PanelStudentRow } from '../panel-api.service';
 import { CoursePanelState, fullRoomNotice, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 import { PanelConfirm } from '../panel-confirm';
+import { LegacyImportComponent, legacySources } from './legacy-import.component';
+import { StaffAuthService } from '../../../../auth/staff-auth.service';
 
 const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babası' }, { value: 4, label: 'Yasal vasisi' }, { value: 1, label: 'Velisi' }, { value: 5, label: 'Diğer' }];
 
@@ -14,13 +16,14 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
 @Component({
   selector: 'course-students-section',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, LegacyImportComponent],
   styleUrl: '../panel.scss',
   template: `
     <header class="page-head">
       <div><h1>Öğrenciler</h1><p>{{ page()?.total ?? 0 }} öğrenci</p></div>
       @if (state.isOwner() && !state.readOnly()) {
         <div class="actions">
+          @if (canImportFromProducts()) { <button type="button" class="btn-secondary" (click)="importOpen.set(!importOpen())">Başka üründen aktar</button> }
           <button type="button" class="btn-secondary" (click)="csvName.set(''); csvPreview.set(null); cardError.set(''); csvOpen.set(true)">Toplu ekle (CSV)</button>
           <button type="button" class="btn" (click)="openNew()">Öğrenci ekle</button>
         </div>
@@ -28,6 +31,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
     </header>
     @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
     @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+    @if (importOpen()) { <div style="margin-bottom: 18px"><course-legacy-import (closed)="importOpen.set(false); load()" /></div> }
 
     <section class="card">
       <form class="filters" role="search" (ngSubmit)="search()">
@@ -218,6 +222,10 @@ export class StudentsSectionComponent {
   readonly state = inject(CoursePanelState);
   private readonly api = inject(CoursePanelApi);
   private readonly confirm = inject(PanelConfirm);
+  private readonly auth = inject(StaffAuthService);
+  /** Moving students from maxkoç or Master Hızlı Okuma (from the earlier screen, 21.11.2026): only where the owner manages one. */
+  readonly importOpen = signal(false);
+  readonly canImportFromProducts = computed(() => this.state.isOwner() && legacySources(this.auth.products()).length > 0);
   private readonly service = inject(CourseManagementService);
   readonly relationships = RELATIONSHIPS;
   readonly page = signal<PanelStudentPage | null>(null);
