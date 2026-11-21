@@ -221,7 +221,14 @@ export class CoursePanelComponent implements OnInit {
   private toOverview(): void {
     this.section.set('overview');
     const view = this.document.defaultView;
-    if (view && view.location.hash) view.history.replaceState(view.history.state, '', hashUrl('#genel-bakis'));
+    if (!view || !view.location.hash) return;
+    view.history.replaceState(view.history.state, '', hashUrl('#genel-bakis'));
+    // Live test 21.11.2026: the host app's router finishes its own navigation afterwards and wrote the old address back.
+    // Replacing once more after it settles leaves #genel-bakis in the address bar (hashchange → readHash → overview).
+    setTimeout(() => {
+      const slug = view.location.hash.replace(/^#/, '').split('?')[0];
+      if (slug && slug !== 'genel-bakis' && !this.visibleSections().some(item => item.slug === slug)) view.location.replace(hashUrl('#genel-bakis'));
+    }, 300);
   }
 
   async choose(id: string): Promise<void> {
