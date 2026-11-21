@@ -13,13 +13,13 @@
         <img src="brand/master-hizli-okuma.svg" alt="" class="hero-logo">
       </div>
 
-      <h1 class="hero-title">Seviye Belirleme Testi <span class="material-icons title-icon" aria-hidden="true">analytics</span></h1>
-      <p class="hero-subtitle">Size en uygun öğrenme yolunu birlikte keşfedelim</p>
+      <h1 class="hero-title">Seviye belirleme testi</h1>
+      <p class="hero-subtitle">Sana en uygun öğrenme yolunu birlikte bulalım</p>
     </div>
 
     <!-- Info Cards -->
     <div class="info-cards">
-      <div class="info-card">
+      <div class="info-card info-card--mint">
         <div class="card-icon timer">
           <span class="material-icons">timer</span>
         </div>
@@ -27,15 +27,15 @@
         <p>Kısa süre</p>
       </div>
 
-      <div class="info-card">
+      <div class="info-card info-card--sea">
         <div class="card-icon exercises">
           <span class="material-icons">assignment</span>
         </div>
-        <h3>3 Test</h3>
+        <h3>3 test</h3>
         <p>Hızlı ölçüm</p>
       </div>
 
-      <div class="info-card">
+      <div class="info-card info-card--sand">
         <div class="card-icon personalized">
           <span class="material-icons">stars</span>
         </div>
@@ -46,10 +46,7 @@
 
     <!-- Exercise Preview -->
     <div class="exercise-preview-section">
-      <h2 class="section-title">
-        <span class="material-icons">checklist</span>
-        Ne yapacaksın?
-      </h2>
+      <h2 class="section-title">Ne yapacaksın?</h2>
 
       <div class="exercise-cards">
         <div class="exercise-card">
@@ -57,7 +54,7 @@
           <div class="exercise-icon comprehension">
             <span class="material-icons">article</span>
           </div>
-          <h3>Okuduğunu Anlama</h3>
+          <h3>Okuduğunu anlama</h3>
           <p>Kısa bir metni okuyup sorularını cevaplayacaksın</p>
           <div class="exercise-tag">~2 dakika</div>
         </div>
@@ -67,7 +64,7 @@
           <div class="exercise-icon visual">
             <span class="material-icons">visibility</span>
           </div>
-          <h3>Görsel Genişleme</h3>
+          <h3>Görsel genişleme</h3>
           <p>Odak noktasının yanında beliren harfleri ne kadar fark ettiğine bakacağız</p>
           <div class="exercise-tag">~2 dakika</div>
         </div>
@@ -93,11 +90,11 @@
       </div>
       <div class="benefit-item">
         <span class="material-icons check-icon">check_circle</span>
-        <span>Ne çok kolay ne çok zor - tam size göre</span>
+        <span>Ne çok kolay ne çok zor; tam sana göre</span>
       </div>
       <div class="benefit-item">
         <span class="material-icons check-icon">check_circle</span>
-        <span>Sonuçları anında görün ve plan alın</span>
+        <span>Sonucunu hemen gör, planını al</span>
       </div>
     </div>
 
@@ -105,11 +102,11 @@
     <div class="action-section">
       <button type="button" class="sp-btn start-btn" (click)="startAssessment()" [disabled]="loading">
         <span class="material-icons">play_circle_filled</span>
-        Teste Başla
+        Teste başla
       </button>
 
       <button type="button" class="sp-btn skip-btn" (click)="skipAssessment()" [disabled]="loading">
-        Şimdilik Atla
+        Şimdilik atla
       </button>
     </div>
 
