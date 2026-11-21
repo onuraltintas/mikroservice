@@ -100,3 +100,14 @@ describe('the way from sign-up to the panel', () => {
     expect(planStep({ subscriptions: [{ isCurrent: true }], pendingOrders: [] })).toBe(4);
   });
 });
+
+describe('signed-in guard (21.11.2026 live test)', () => {
+  it('sends a signed-out visitor to /giris instead of failing after the session check', async () => {
+    const { signedIn } = await import('../app.routes');
+    const { Router, provideRouter } = await import('@angular/router');
+    TestBed.configureTestingModule({ providers: [provideRouter([]),
+      { provide: MaxkampusSession, useValue: { ensure: () => new Promise(resolve => setTimeout(() => resolve(false))) } }] });
+    const result = await TestBed.runInInjectionContext(() => signedIn({} as never, { url: '/panel' } as never));
+    expect(TestBed.inject(Router).serializeUrl(result as never)).toBe('/giris?donus=%2Fpanel');
+  });
+});

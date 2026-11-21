@@ -17,6 +17,7 @@ test('the guide has eight steps and a summary, each one skippable and saved at o
   assert.match(source, /Birebir ders alıyorsa öğretmeni/, 'a student is placed in a group or marked one-to-one with a teacher');
   assert.match(source, /createFeeAgreementWithInstallments/);
   assert.match(source, /previewSeries/, 'clashes are shown before lessons are opened');
+  assert.match(source, /item\.conflicts\.map\(code => problemText/, 'clash reasons are written in Turkish, not as codes');
   assert.match(source, /informedConsentConfirmed: this\.consent/);
   assert.doesNotMatch(source, /#[0-9a-fA-F]{3,6}\b/, 'colours come from the design variables');
 });

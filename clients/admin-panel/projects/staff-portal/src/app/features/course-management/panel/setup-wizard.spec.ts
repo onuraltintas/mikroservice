@@ -76,4 +76,14 @@ describe('setup guide', () => {
     expect(saved).toEqual([['w1', 'TEST Kurs', 3]]);
     expect(fixture.componentInstance.current()).toBe('teachers');
   });
+
+  it('lists the first payment days in date order (21.11.2026 live test)', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-21T08:00:00Z'));
+    try {
+      configure({});
+      const wizard = TestBed.createComponent(SetupWizardComponent).componentInstance;
+      expect(wizard.dueChoices().map(item => item.value)).toEqual(['2026-11-21', '2026-12-01', '2026-12-15']);
+    } finally { vi.useRealTimers(); }
+  });
 });

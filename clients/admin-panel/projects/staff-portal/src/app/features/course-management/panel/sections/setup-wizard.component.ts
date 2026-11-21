@@ -17,7 +17,7 @@ const STEPS: { id: StepId; title: string; question: string }[] = [
   { id: 'fees', title: 'Ücretler', question: 'Ücretleri nasıl alıyorsunuz?' },
   { id: 'schedule', title: 'Ders programı', question: 'Dersler haftanın hangi gün ve saatinde?' },
   { id: 'emails', title: 'Veli bildirimleri', question: 'Velilere hangi e-postalar gitsin?' },
-  { id: 'summary', title: 'Özet', question: 'Kurulum özeti' }
+  { id: 'summary', title: 'Özet', question: 'Kurulumunuz ne durumda?' }
 ];
 const KINDS = [
   { value: 2, label: 'Kurs / dershane', hint: 'LGS, YKS, dil ve benzeri kurslar', key: 'PrivateCourse' },
@@ -121,7 +121,7 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
           <li><button type="button" [attr.aria-current]="current() === step.id ? 'step' : null" (click)="goTo(step.id)">
             <span class="dot" [class.done]="status(step.id) === 'done'" [class.skipped]="status(step.id) === 'skipped'" aria-hidden="true">
               @if (status(step.id) === 'done') { <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 6.2 5 8.6l4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> } @else { {{ i + 1 }} }</span>
-            <span class="name">{{ step.title }}<span class="sr-only">{{ statusText(step.id) }}</span></span>
+            <span class="name">{{ step.title }}@if (step.id !== 'summary') { <span class="sr-only">, {{ statusText(step.id) }}</span> }</span>
           </button></li>
         }
       </ol>
@@ -349,9 +349,10 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
             }
             @if (conflicts().length) {
               <div class="banner" role="alert">
-                <p style="margin: 0 0 6px"><strong>{{ conflicts().length }} ders başka bir dersle çakışıyor.</strong> Çakışanları atlayıp kalanları açabilir ya da saati değiştirebilirsiniz.</p>
+                <p style="margin: 0 0 6px"><strong>{{ conflicts().length }} ders bu saatte açılamıyor.</strong> Bunları atlayıp kalanları açabilir ya da saati değiştirebilirsiniz.
+                  Öğretmenin çalışma saatlerini Öğretmenler bölümünden düzenleyebilirsiniz.</p>
                 <ul class="conflicts">@for (item of conflicts().slice(0, 6); track $index) { <li>{{ item }}</li> }</ul>
-                <div class="actions"><button type="button" class="btn" [disabled]="busy()" (click)="planSeries(pendingKey, pendingArgs[0], pendingArgs[1], pendingArgs[2], pendingArgs[3], true)">Çakışanları atla, kalanları aç</button>
+                <div class="actions"><button type="button" class="btn" [disabled]="busy()" (click)="planSeries(pendingKey, pendingArgs[0], pendingArgs[1], pendingArgs[2], pendingArgs[3], true)">Bunları atla, kalanları aç</button>
                   <button type="button" class="btn-quiet" (click)="conflicts.set([])">Vazgeç</button></div>
               </div>
             }
@@ -376,7 +377,7 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
           }
 
           @case ('summary') {
-            <p class="lead">Kurulum özeti. Atladığınız adımları istediğiniz zaman buradan ya da menüdeki bölümlerinden tamamlayabilirsiniz.</p>
+            <p class="lead">Atladığınız ya da eksik kalan adımları istediğiniz zaman buradan ya da menüdeki bölümlerinden tamamlayabilirsiniz.</p>
             <div class="stack" style="gap: 8px">
               @for (step of steps.slice(0, 8); track step.id) {
                 <div class="item"><div class="item-main"><strong>{{ step.title }}</strong><span class="muted">{{ summaryLine(step.id) }}</span></div>
@@ -425,8 +426,9 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
         }</div>
       }
       @if (fee.model === 3) {
-        <div class="chips"><button type="button" [attr.aria-pressed]="fee.unit === 1" (click)="fee.unit = 1">Ders başı</button>
-          <button type="button" [attr.aria-pressed]="fee.unit === 2" (click)="fee.unit = 2">Saat başı</button></div>
+        <p class="label">Tutar neye göre?</p>
+        <div class="chips"><button type="button" [attr.aria-pressed]="fee.unit === 1" (click)="fee.unit = 1">Her ders için</button>
+          <button type="button" [attr.aria-pressed]="fee.unit === 2" (click)="fee.unit = 2">Her ders saati için</button></div>
       }
       @if (fee.model === 4) {
         <p class="label">Kaç ders?</p>
@@ -711,7 +713,9 @@ export class SetupWizardComponent implements OnInit {
     const next = new Date(`${today}T12:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1, 1);
     const fifteenth = new Date(`${today}T12:00:00Z`); fifteenth.setUTCDate(15); if (fifteenth.toISOString().slice(0, 10) <= today) fifteenth.setUTCMonth(fifteenth.getUTCMonth() + 1);
     const label = (date: Date) => new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(date);
-    return [{ value: today, label: 'Bugün' }, { value: fifteenth.toISOString().slice(0, 10), label: label(fifteenth) }, { value: next.toISOString().slice(0, 10), label: label(next) }];
+    const later = [{ value: fifteenth.toISOString().slice(0, 10), label: label(fifteenth) }, { value: next.toISOString().slice(0, 10), label: label(next) }]
+      .sort((a, b) => a.value.localeCompare(b.value));
+    return [{ value: today, label: 'Bugün' }, ...later];
   }
   feeOf(key: string): FeePlan {
     let fee = this.fees.get(key);
@@ -786,7 +790,7 @@ export class SetupWizardComponent implements OnInit {
         const clashes = preview.occurrences.filter(item => item.conflicts.length);
         if (clashes.length) {
           this.pendingKey = key; this.pendingArgs = [courseId, groupId, studentId, teacherUserId];
-          this.conflicts.set(clashes.map(item => `${new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }).format(new Date(item.startsAt))}: ${item.conflicts.join(', ')}`));
+          this.conflicts.set(clashes.map(item => `${new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }).format(new Date(item.startsAt))}: ${item.conflicts.map(code => problemText({ error: { code } })).join(' ')}`));
           return;
         }
       }
