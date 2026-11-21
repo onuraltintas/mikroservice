@@ -15,7 +15,6 @@ import { FinanceSectionComponent } from './sections/finance.component';
 import { TeachersSectionComponent } from './sections/teachers.component';
 import { ReportsSectionComponent } from './sections/reports.component';
 import { SettingsSectionComponent } from './sections/settings.component';
-import { CourseManagementWorkspaceComponent } from '../course-management-workspace.component';
 
 /**
  * Kurs Yönetimi institution panel (19.11.2026, design approved 17.42): one panel, nine sections in a side menu.
@@ -25,17 +24,18 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
 @Component({
   selector: 'staff-course-panel',
   standalone: true,
-  imports: [FormsModule, CourseManagementWorkspaceComponent, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
+  imports: [FormsModule, OverviewSectionComponent, StudentsSectionComponent, CoursesSectionComponent, CalendarSectionComponent,
     AttendanceSectionComponent, FinanceSectionComponent, TeachersSectionComponent, ReportsSectionComponent, SettingsSectionComponent, PanelConfirmDialogComponent, SetupWizardComponent],
   providers: [CoursePanelState],
   styleUrl: './panel.scss',
   styles: `
-    .shell { display: flex; flex-wrap: wrap; min-height: 100%; }
+    .shell { display: flex; flex-wrap: wrap; min-height: 100%; background: var(--ds-page-tint, var(--ds-bg)); }
     nav.side { flex: 1 1 240px; max-width: 260px; min-width: 220px; box-sizing: border-box; padding: 20px 14px; background: var(--ds-nav); display: flex; flex-direction: column; gap: 4px; }
     .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; }
     .brand strong { display: block; font-size: 16px; } .brand span { font-size: 13px; color: var(--ds-muted); }
-    nav.side a { display: flex; align-items: center; min-height: 44px; padding: 0 14px 0 17px; border-radius: 8px; color: var(--ds-text); text-decoration: none; opacity: .85; }
-    nav.side a[aria-current='page'] { background: var(--ds-surface); box-shadow: 0 1px 2px rgba(28,36,48,.08); font-weight: 600; opacity: 1; border-left: 3px solid var(--ds-accent); padding-left: 14px; }
+    nav.side a { display: flex; align-items: center; min-height: 44px; padding: 0 14px 0 17px; border-radius: 10px; color: var(--ds-text); text-decoration: none; opacity: .85; }
+    nav.side a[aria-current='page'] { background: var(--ds-surface); box-shadow: inset 3px 0 var(--ds-accent), 0 1px 2px rgba(28,36,48,.08); font-weight: 600; opacity: 1; }
+    nav.side a:not([aria-current='page']):hover { background: color-mix(in srgb, var(--ds-surface) 60%, transparent); opacity: 1; }
     .menu-group { margin: 14px 8px 4px; font-size: 13px; font-weight: 600; color: var(--ds-muted); }
     nav.side a.setup-link { font-weight: 600; opacity: 1; background: var(--ds-surface); border: 1px dashed var(--ds-accent); margin-bottom: 4px; }
     nav.side select { min-height: 40px; margin: 0 8px 12px; border: 1px solid var(--ds-field); border-radius: 8px; background: var(--ds-surface); color: var(--ds-text); font: inherit; padding: 0 8px; }
@@ -83,10 +83,6 @@ import { CourseManagementWorkspaceComponent } from '../course-management-workspa
             @case ('teachers') { <course-teachers-section /> }
             @case ('reports') { <course-reports-section /> }
             @case ('settings') { <course-settings-section (navigate)="go($event)" /> }
-            @case ('previous') {
-              <p class="banner" role="status">Bu ekran geçiş dönemi içindir: başka üründen kayıt aktarma, telafi dersleri ve işlem kaydı burada. Diğer işler için sol menüyü kullanın.</p>
-              <staff-course-management-workspace [role]="role" />
-            }
           }
         </main>
       </div>
@@ -253,7 +249,8 @@ export class CoursePanelComponent implements OnInit {
   private readHash(): void {
     const slug = (this.document.defaultView?.location.hash ?? '').replace(/^#/, '').split('?')[0];
     const match = SECTIONS.find(item => item.slug === slug);
-    if (!match) return;
+    // The earlier screen was removed on 21.11.2026: a saved #onceki-ekran address opens Genel bakış.
+    if (!match) { if (slug === 'onceki-ekran') this.toOverview(); return; }
     // Before the workspace is open the role is unknown; open() checks the section again.
     if (this.state.workspace() && !this.visibleSections().some(item => item.id === match.id)) this.toOverview();
     else this.section.set(match.id);

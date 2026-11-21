@@ -85,7 +85,7 @@ export class PanelGateComponent implements OnInit {
     .page { padding-top: 28px; padding-bottom: 48px; max-width: 1040px; }
     .head { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-bottom: 24px; }
     h1 { margin: 0; font-size: 30px; } .head p { margin: 0; max-width: 46em; }
-    .code { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px solid var(--ds-field); border-radius: 10px; background: var(--ds-surface); }
+    .code { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 16px; border-radius: 14px; background: var(--mk-soft); color: var(--mk-on-soft); }
     .num { font-variant-numeric: tabular-nums; letter-spacing: .04em; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   `

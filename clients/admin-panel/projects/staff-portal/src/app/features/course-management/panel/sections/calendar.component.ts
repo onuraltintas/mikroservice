@@ -102,7 +102,7 @@ type Editor = {
                   <!-- Live test 20.11.2026: in a short box the name comes first; the start time is small and gives way. -->
                   <span class="when">{{ time(lesson.startsAt) }}</span>
                 } @else {
-                  <span>{{ time(lesson.startsAt) }}–{{ time(lesson.endsAt) }}{{ lesson.roomName ? ', ' + lesson.roomName : '' }}</span>
+                  <span class="when">{{ time(lesson.startsAt) }}–{{ time(lesson.endsAt) }}{{ lesson.roomName ? ', ' + lesson.roomName : '' }}</span>
                 }
               </button>
             }
@@ -241,7 +241,10 @@ type Editor = {
     .slot:hover:not(:disabled) { background: var(--ds-soft); }
     .lesson { position: absolute; left: 4px; right: 4px; box-sizing: border-box; padding: 6px 8px; border: 0; border-left: 3px solid; border-radius: 8px;
       text-align: left; font: inherit; font-size: 13px; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; gap: 2px; z-index: 1; }
-    .lesson strong { font-size: 14px; color: var(--ds-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* The name keeps its line; the time and room below give way when the box is narrow (21.11.2026: the name was cut off). */
+    .lesson strong { flex: none; font-size: 14px; color: var(--ds-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lesson:not(.short) .when { min-height: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .lesson:hover { box-shadow: var(--ds-shadow-hover, none); }
     .tone-0 { background: var(--ds-success-soft); border-color: var(--ds-success); color: var(--ds-success); }
     .tone-1 { background: var(--ds-warning-soft); border-color: var(--ds-warning); color: var(--ds-warning); }
     .tone-2 { background: var(--ds-soft); border-color: var(--ds-primary); color: var(--ds-text); }

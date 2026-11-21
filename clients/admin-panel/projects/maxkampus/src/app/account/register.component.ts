@@ -121,8 +121,9 @@ export function passwordLooksValid(value: string): boolean {
   `,
   styles: `
     .kinds { display: grid; gap: 12px; }
-    .kind { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-height: 72px; padding: 16px 18px; border: 1.5px solid var(--ds-line); border-radius: 12px; background: var(--ds-surface); color: var(--ds-text); font: inherit; text-align: left; cursor: pointer; }
-    .kind:hover { border-color: var(--ds-primary); } .kind strong { font-size: 17px; } .kind span { color: var(--ds-muted); font-size: 14px; }
+    .kind { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-height: 72px; padding: 16px 18px; border: 1.5px solid var(--ds-line); border-radius: 14px; background: var(--ds-surface); color: var(--ds-text); font: inherit; text-align: left; cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+    .kind:hover { border-color: var(--ds-primary); transform: translateY(-2px); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); } .kind strong { font-size: 17px; } .kind span { color: var(--ds-muted); font-size: 14px; }
     .optin { align-items: flex-start; font-size: 14px; line-height: 1.5; } .optin input { flex: none; margin-top: 2px; }
     .tips { margin: 0; padding-left: 20px; }
   `

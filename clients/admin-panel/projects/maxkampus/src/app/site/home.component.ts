@@ -25,7 +25,7 @@ const WEEK: { day: string; items: { text: string; amber?: boolean }[] }[] = [
     @if (store.home(); as home) {
       <section class="hero" aria-labelledby="hero-title">
         <div class="mk-wrap hero__grid">
-          <div class="hero__text">
+          <div class="hero__text mk-enter">
             @if (home.hero?.subtitle) { <span class="hero__tag">{{ home.hero!.subtitle }}</span> }
             <h1 id="hero-title">{{ home.hero?.title || 'Kursunuzun bütün haftası tek ekranda' }}</h1>
             @if (home.hero?.body) { <p class="hero__lead">{{ home.hero!.body }}</p> }
@@ -37,7 +37,7 @@ const WEEK: { day: string; items: { text: string; amber?: boolean }[] }[] = [
           @if (home.hero?.imageUrl) {
             <img class="hero__image" [src]="home.hero!.imageUrl" alt="" width="560" height="380">
           } @else {
-            <div class="week" role="img" aria-label="Haftalık takvim örneği: beş günde yedi ders, yoklaması alınmayan ders yok.">
+            <div class="week mk-enter" style="--i: 2" role="img" aria-label="Haftalık takvim örneği: beş günde yedi ders, yoklaması alınmayan ders yok.">
               <div class="week__head"><strong>Bu hafta</strong><span>18 ders, 3 öğretmen</span></div>
               <div class="week__days">
                 @for (column of week; track column.day) {
@@ -60,9 +60,9 @@ const WEEK: { day: string; items: { text: string; amber?: boolean }[] }[] = [
                 <div class="mk-wrap">
                   <h2 [id]="'s-' + section.slug">{{ section.title }}</h2>
                   @if (section.body) { <p class="mk-lead">{{ section.body }}</p> }
-                  <ul class="mk-grid plain">
+                  <ul class="mk-grid plain mk-tones">
                     @for (item of home.features; track item.id) {
-                      <li class="mk-card feature"><mk-site-icon [name]="item.icon" /><h3>{{ item.title }}</h3><p>{{ item.body }}</p></li>
+                      <li class="mk-card feature mk-lift mk-reveal"><mk-site-icon [name]="item.icon" /><h3>{{ item.title }}</h3><p>{{ item.body }}</p></li>
                     }
                   </ul>
                 </div>
@@ -92,7 +92,7 @@ const WEEK: { day: string; items: { text: string; amber?: boolean }[] }[] = [
                   @if (section.body) { <p class="mk-lead">{{ section.body }}</p> }
                   <ul class="mk-grid plain">
                     @for (item of home.reviews; track item.id) {
-                      <li><figure class="mk-card review">
+                      <li class="mk-reveal"><figure class="mk-card review">
                         <blockquote>{{ item.body }}</blockquote>
                         <figcaption>
                           @if (item.imageUrl) { <img [src]="item.imageUrl" alt="" width="44" height="44"> }
@@ -135,7 +135,7 @@ const WEEK: { day: string; items: { text: string; amber?: boolean }[] }[] = [
                   @if (section.body) { <p class="mk-lead">{{ section.body }}</p> }
                   <ul class="mk-grid plain">
                     @for (post of posts(); track post.id) {
-                      <li class="mk-card post">
+                      <li class="mk-card post mk-lift mk-reveal">
                         @if (post.category) { <span class="mk-pill">{{ post.category }}</span> }
                         <h3><a [routerLink]="['/blog', post.slug]">{{ post.title }}</a></h3>
                         @if (post.subtitle) { <p>{{ post.subtitle }}</p> }

@@ -27,14 +27,17 @@ def check():
     bad = []
     for br, modes in B.items():
         for mode in ('light', 'dark'):
-            t = {**modes['light'], **modes[mode], **STATE[mode]}
+            t = {**modes['light'], **modes[mode], **STATE[mode], **EXTRA.get(br, {}).get('light', {}), **EXTRA.get(br, {}).get(mode, {})}
             for a, b, need in [('text', 'bg', 4.5), ('text', 'surface', 4.5), ('muted', 'bg', 4.5), ('muted', 'surface', 4.5),
                                ('link', 'surface', 4.5), ('link', 'bg', 4.5), ('onPrimary', 'primary', 4.5), ('onPrimary', 'primaryHover', 4.5),
                                ('field', 'surface', 3), ('focus', 'surface', 3), ('focus', 'bg', 3), ('visualText', 'visualBg', 4.5),
                                ('visualMuted', 'visualBg', 4.5), ('danger', 'dangerSoft', 4.5), ('warning', 'warningSoft', 4.5),
                                ('success', 'successSoft', 4.5), ('onAccent', 'accent', 4.5), ('text', 'soft', 4.5), ('link', 'soft', 4.5), ('mathFg', 'mathBg', 4.5),
-                               ('turkishFg', 'turkishBg', 4.5), ('scienceFg', 'scienceBg', 4.5), ('historyFg', 'historyBg', 4.5)]:
-                if a not in t:
+                               ('turkishFg', 'turkishBg', 4.5), ('scienceFg', 'scienceBg', 4.5), ('historyFg', 'historyBg', 4.5),
+                               ('info', 'infoSoft', 4.5), ('muted', 'infoSoft', 4.5), ('violet', 'violetSoft', 4.5), ('orange', 'orangeSoft', 4.5),
+                               ('text', 'nowSoft', 4.5), ('muted', 'nowSoft', 4.5), ('muted', 'pageTint', 4.5), ('muted', 'warningSoft', 4.5),
+                               ('muted', 'dangerSoft', 4.5), ('muted', 'successSoft', 4.5)]:
+                if a not in t or b not in t:
                     continue
                 r = cr(t[a], t[b])
                 if r < need:
@@ -44,6 +47,15 @@ kebab=lambda s: re.sub(r'([A-Z])', lambda m: '-'+m[1].lower(), s)
 SHAPE = {'maxkoc': dict(radius='10px', radiusControl='8px', radiusButton='8px', shadow='0 1px 2px rgba(23, 43, 77, 0.06), 0 8px 20px -10px rgba(23, 43, 77, 0.18)'),
          'eduivme': dict(radius='10px', radiusControl='8px', radiusButton='8px', shadow='0 1px 2px rgba(28, 36, 48, 0.06), 0 8px 20px -12px rgba(28, 36, 48, 0.18)'),
          'ho': dict(radius='18px', radiusControl='14px', radiusButton='999px', shadow='0 1px 2px rgba(11, 60, 50, 0.06), 0 8px 20px -10px rgba(11, 60, 50, 0.18)')}
+# maxkampüs B design (21.11.2026): coloured summary cards and a softer blue-tinted lift. New names only, so the Koçluk and
+# Hızlı Okuma staff panels that share the eduivme brand keep their look; dark stays plain (no shadows).
+EXTRA = {'eduivme': {
+  'light': dict(info='#1F4E8C', infoSoft='#E8EFFB', violet='#6B21A8', violetSoft='#F1E8FB', orange='#9A3412', orangeSoft='#FDEBDD',
+                nowSoft='#FFF6DE', pageTint='#EEF1F6', radiusCard='16px',
+                shadowRaised='0 1px 2px rgba(28, 36, 48, 0.06), 0 12px 28px -14px rgba(31, 78, 140, 0.28)',
+                shadowHover='0 2px 4px rgba(28, 36, 48, 0.07), 0 18px 34px -14px rgba(31, 78, 140, 0.34)'),
+  'dark': dict(info='#9DBEF2', infoSoft='#1C2A3E', violet='#D5B8F7', violetSoft='#2B2140', orange='#F7B68C', orangeSoft='#3A2417',
+               nowSoft='#2E2814', pageTint='#12161C', shadowRaised='none', shadowHover='none')}}
 DARK = ":is(html.dark, [data-sp-theme='dark'], [data-theme='dark'])"
 out = ['''// eduivme tasarım değişkenleri (redesign, 18.11.2026). Kurallar: .claude/skills/eduivme-design/SKILL.md
 // Üretici: tools/brand/design_tokens.py. Elle değiştirme; üreticiyi değiştirip yeniden üret.
@@ -58,9 +70,9 @@ def block(sel, d):
         lines.append(f'  --ds-{kebab(k)}: {v};')
     return '\n'.join(lines)+'\n}\n'
 for br in B:
-    light={**B[br]['light'],**STATE['light'],**SHAPE[br]}
+    light={**B[br]['light'],**STATE['light'],**SHAPE[br],**EXTRA.get(br,{}).get('light',{})}
     out.append(block(f"[data-brand='{br}']", light))
-    dark={**B[br]['dark'],**STATE['dark'],'shadow':'none'}
+    dark={**B[br]['dark'],**STATE['dark'],'shadow':'none',**EXTRA.get(br,{}).get('dark',{})}
     out.append(block(f"{DARK} [data-brand='{br}'],\n[data-brand='{br}']{DARK}", dark))
 out.append('''// Eski bileşenler (--ui-*) marka kapsamı içinde yeni renkleri kullanır; böylece kayıt formları gibi henüz yenilenmemiş
 // parçalar da aynı kimlikte görünür. Seçici iki kez yazıldı: html.dark'taki eski koyu tema değerlerinin (0,1,1) önüne geçer.

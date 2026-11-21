@@ -10,18 +10,18 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
   imports: [RouterLink, BrandMarkComponent],
   styles: `.mk-back { border: 0; background: none; padding: 0; cursor: pointer; font: inherit; }`,
   template: `
-    <div class="ds-auth">
+    <div class="ds-auth mk-auth">
       <aside class="ds-auth__visual" aria-label="maxkampüs">
         <p class="ds-auth__headline">{{ headline() }}</p>
         <p class="ds-auth__sub">Ders programı, yoklama, ödev ve tahsilat tek yerde. Veliler devamsızlığı ve taksiti e-postayla öğrenir.</p>
-        <ul class="ds-auth__points">
-          <li>Öğretmenler yalnız kendi derslerini görür</li>
-          <li>Velilere giden e-postaları siz seçersiniz</li>
-          <li>Kayıtlar kurumunuzundur</li>
+        <ul class="ds-auth__points mk-auth__points">
+          <li><span class="mk-auth__chip mk-auth__chip--a" aria-hidden="true"></span>Öğretmenler yalnız kendi derslerini görür</li>
+          <li><span class="mk-auth__chip mk-auth__chip--b" aria-hidden="true"></span>Velilere giden e-postaları siz seçersiniz</li>
+          <li><span class="mk-auth__chip mk-auth__chip--c" aria-hidden="true"></span>Kayıtlar kurumunuzundur</li>
         </ul>
       </aside>
       <main class="ds-auth__main">
-        <div class="ds-auth__panel">
+        <div class="ds-auth__panel mk-auth__panel mk-enter">
           <button type="button" class="ds-link ds-back-link mk-back" (click)="back()">← Geri</button>
           <a routerLink="/" class="ds-auth__brand" aria-label="maxkampüs ana sayfa">
             <mk-brand-mark [size]="40" />
