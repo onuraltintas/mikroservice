@@ -691,7 +691,7 @@
     "clients/speed-reading/src/app/features/student/student.routes.ts": "36f2ffd040d674acaca89b3c9d7a0dd7b8b9f0adcc50d9ec7da9e62892c91754",
     "clients/speed-reading/src/app/features/student/subscription/student-subscription.component.ts": "51fa00f78768612db074b8c5c8a00f1bf59a4e9aa104eddc5c1af6f4aad34329",
     "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.spec.ts": "2641ee82b59c944726f5b9ce9ecc4d55fe25bdf8d690a19ea6c41476d1d81ae0",
-    "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.ts": "2c69c7b99b032cc5a507577eca4bcfd5ab4d97c0ec4661abe26f5458a137c32f",
+    "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.ts": "376eab09c4ad0b11df12524b7a13eb96924ccf81751a39b22aa10c5bec0596d6",
     "clients/speed-reading/src/app/features/student/ui/index.ts": "301f93a640d5657c343c85dd7fcd048dda1e6017d1a70c101d594c4e571b33d2",
     "clients/speed-reading/src/app/features/student/ui/sp-badge.component.ts": "8dbeb2cabb709074d1c530c41ff873359c36966785d415d528ab5c438d40c92e",
     "clients/speed-reading/src/app/features/student/ui/sp-button.component.ts": "f0af444c78b5479d86edc565807202c44b961c6d77ccddf3b8c841a2be50162b",
