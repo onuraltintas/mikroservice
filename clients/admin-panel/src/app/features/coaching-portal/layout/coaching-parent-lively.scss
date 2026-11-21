@@ -1,0 +1,78 @@
+// Lively parent panel (21.11.2026, user decision: the same lively, colourful design as the student panel). Overrides
+// coaching-parent.scss; colours only through the student tokens; nothing moves with reduced motion (layout scss).
+
+@keyframes cp-rise { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes cp-grow { from { transform: scaleY(0); } }
+@keyframes cp-draw { from { stroke-dashoffset: 1200; } }
+@keyframes cp-flame { 0%, 100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.14) rotate(4deg); } }
+
+.coaching-shell {
+  // Sections come in one after another when a page opens.
+  .cp-page > *, .cp-panel > *, :is(app-parent-coaching-tab, app-parent-speed-reading-tab, app-parent-payments) > * {
+    animation: cp-rise .55s cubic-bezier(.2, .8, .2, 1) both; }
+  @for $i from 1 through 8 {
+    .cp-page > :nth-child(#{$i}), .cp-panel > :nth-child(#{$i}),
+    :is(app-parent-coaching-tab, app-parent-speed-reading-tab, app-parent-payments) > :nth-child(#{$i}) { animation-delay: #{($i - 1) * 70}ms; } }
+
+  .cp-header h1 { font-size: 30px; }
+  .cp-card, .cp-rows, .cp-notices, .cp-bars { border-color: color-mix(in srgb, var(--ui-border) 55%, transparent); box-shadow: var(--coaching-card-shadow); }
+  .cp-card { transition: transform .2s ease, box-shadow .2s ease; }
+
+  // Çocuklarım: each child has its own colour; the card lifts, the "open" link is a solid pill.
+  .cp-child { border-color: transparent; padding: 0; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease;
+    animation: cp-rise .55s cubic-bezier(.2, .8, .2, 1) both;
+    &:hover { transform: translateY(-3px); box-shadow: var(--coaching-raised-shadow); }
+    > header { padding: var(--coaching-space-5); background: var(--cp-tone, var(--coaching-lesson-0)); }
+    > :not(header) { margin: 0 var(--coaching-space-5); }
+    > footer { margin-bottom: var(--coaching-space-2); }
+    h3 { color: var(--cp-tone-text, var(--coaching-lesson-text-0)); } }
+  .cp-children > .cp-child:nth-of-type(4n + 2) { --cp-tone: var(--coaching-lesson-2); --cp-tone-text: var(--coaching-lesson-text-2); animation-delay: 80ms; }
+  .cp-children > .cp-child:nth-of-type(4n + 3) { --cp-tone: var(--coaching-lesson-3); --cp-tone-text: var(--coaching-lesson-text-3); animation-delay: 160ms; }
+  .cp-children > .cp-child:nth-of-type(4n + 4) { --cp-tone: var(--coaching-lesson-1); --cp-tone-text: var(--coaching-lesson-text-1); animation-delay: 240ms; }
+  .cp-child-avatar { width: 56px; height: 56px; border-radius: 18px; background: var(--ui-surface); color: var(--cp-tone-text, var(--coaching-lesson-text-0));
+    font-size: 24px; box-shadow: var(--coaching-card-shadow); }
+  .cp-child .cp-muted { color: var(--ui-text); }
+  .cp-child-products li { background: var(--ui-surface); border: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent); border-radius: 14px; }
+  .cp-product-badge { background: var(--coaching-lesson-0); color: var(--coaching-lesson-text-0);
+    &[data-product=SpeedReading] { background: var(--coaching-lesson-2); color: var(--coaching-lesson-text-2); } }
+  .cp-child-open { padding: 0 var(--coaching-space-4); border-radius: var(--coaching-radius-pill); background: var(--ui-brand); color: var(--ui-brand-contrast);
+    box-shadow: var(--coaching-action-shadow); transition: transform .2s ease;
+    &:hover { transform: translateX(3px); } }
+  .cp-link-form { background: var(--coaching-honey-soft); border-color: transparent; }
+
+  // Child page, Koçluk: the week in blue, facts as coloured tiles, warnings in coral.
+  cs-card.cp-week { background: var(--coaching-lesson-0); border-color: transparent; }
+  .cp-week-head strong { color: var(--coaching-lesson-text-0); font-size: 30px; }
+  .cp-facts div { background: var(--ui-surface); border-radius: 14px; }
+  cs-card.cp-attention { background: var(--coaching-lesson-1); border-color: transparent;
+    > h2 { color: var(--coaching-lesson-text-1); } }
+  .cp-attention .cp-list li::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--coaching-lesson-text-1); }
+
+  // The last 8 weeks: bars grow from the bottom, this week in honey.
+  .cp-bars .cp-bar-track { border-radius: 10px; }
+  .cp-bars .cp-bar-fill { border-radius: 10px; transform-origin: bottom; animation: cp-grow .8s cubic-bezier(.2, .8, .2, 1) both; }
+  @for $i from 1 through 12 { .cp-bars li:nth-child(#{$i}) .cp-bar-fill { animation-delay: #{200 + $i * 60}ms; } }
+  .cp-bars .is-current .cp-bar-fill { background: var(--coaching-honey); }
+
+  // Rows (assignments, sessions, pending requests): a soft hover, the teacher's words in a tinted bubble.
+  .cp-rows > li { transition: background .2s ease; }
+  .cp-quote { border-left: 0; border-radius: 16px; padding: var(--coaching-space-4) var(--coaching-space-5); }
+  .cp-feedback { border-left: 0; padding: var(--coaching-space-2) var(--coaching-space-3); border-radius: 12px; background: var(--ui-brand-soft); }
+
+  // Hızlı okuma: stat tiles take turns through the soft colours; the trend line draws itself.
+  .cp-stat-grid div { border-color: transparent; border-radius: 14px; background: var(--coaching-lesson-0); dd { color: var(--coaching-lesson-text-0); } }
+  .cp-stat-grid div:nth-child(4n + 2) { background: var(--coaching-lesson-2); dd { color: var(--coaching-lesson-text-2); } }
+  .cp-stat-grid div:nth-child(4n + 3) { background: var(--coaching-honey-soft); dd { color: var(--ui-accent-text); } }
+  .cp-stat-grid div:nth-child(4n + 4) { background: var(--coaching-lesson-3); dd { color: var(--coaching-lesson-text-3); } }
+  .cp-trend-wpm, .cp-trend-comprehension { stroke-dasharray: 1200; animation: cp-draw 1.6s .2s ease-out both; }
+  .cp-trend-comprehension { animation-name: none; }
+  .cp-chips li { background: var(--coaching-honey-soft); }
+
+  // Bildirimler: an unread note has a pulsing honey dot.
+  .cp-notices > li { transition: background .2s ease; }
+  .is-unread .cp-dot { background: var(--coaching-honey-deep); animation: coaching-pulse 1.8s ease-out infinite; }
+  .cp-switch input:checked { background: var(--ui-brand); }
+}
+
+// A progress ring on a coloured card keeps a visible track.
+.coaching-shell :is(.cp-week, .today .fact.week) cs-progress-ring .track { stroke: var(--ui-surface); }
