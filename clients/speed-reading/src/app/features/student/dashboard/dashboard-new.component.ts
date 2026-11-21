@@ -53,6 +53,9 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
 
   // Dashboard stats
   todayProgress = signal(0);
+  /** Today's exercises: how many there are and how many are left (hero line and its button). */
+  todayTotal = signal(0);
+  todayRemaining = signal(0);
   currentStreak = signal(0);
   successRate = signal(0);
   currentLevel = signal(0);
@@ -142,6 +145,8 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
           const completed = exercises.filter((e: any) => e.isCompleted).length;
           const total = exercises.length;
           this.todayProgress.set(total > 0 ? Math.round((completed / total) * 100) : 0);
+          this.todayTotal.set(total);
+          this.todayRemaining.set(Math.max(0, total - completed));
         },
         error: (error) => {
           // Silent fail for today exercises if main program fails

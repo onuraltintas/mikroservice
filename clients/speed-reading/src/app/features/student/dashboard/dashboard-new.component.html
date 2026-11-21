@@ -160,7 +160,11 @@
           <div class="db-hero__avatar">{{ getInitials(currentUser?.firstName, currentUser?.lastName) }}</div>
           <div>
             <h1 class="db-hero__title">Merhaba, {{ currentUser?.firstName }}!</h1>
-            <p class="db-hero__sub">Bugün harika bir gün olacak. Hazır mısın?</p>
+            <p class="db-hero__sub">
+              @if (hasProgram() && todayTotal() > 0) {
+                {{ todayRemaining() > 0 ? 'Bugün ' + todayRemaining() + ' egzersiz kaldı.' : 'Bugünün egzersizlerini bitirdin.' }}
+              } @else { Bugün harika bir gün olacak. Hazır mısın? }
+            </p>
             @if (hasProgram()) {
               <div class="db-hero__badge">
                 <span class="material-icons">school</span>
@@ -168,6 +172,15 @@
                 <span class="db-hero__badge-sep" aria-hidden="true"></span>
                 <span>Hafta {{ currentWeek() }}, Gün {{ currentDay() }}</span>
               </div>
+              <!-- The reading line: the orange focus line passes under it once -->
+              <div class="db-hero__lines" aria-hidden="true">
+                <span></span><span></span><span></span><i class="sp-sweep"></i>
+              </div>
+              @if (todayRemaining() > 0) {
+                <a routerLink="/student/daily-exercises" class="db-hero__cta sp-btn-press">
+                  Sıradaki egzersize başla <span class="material-icons" aria-hidden="true">play_arrow</span>
+                </a>
+              }
             }
           </div>
         </div>
@@ -180,21 +193,21 @@
               <div class="db-quick-stat__ring">
                 <svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true">
                   <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
-                  <circle cx="30" cy="30" r="24" fill="none" stroke="white" stroke-width="5"
+                  <circle cx="30" cy="30" r="24" fill="none" stroke-width="5"
                     stroke-linecap="round"
                     [attr.stroke-dasharray]="150.8"
                     [attr.stroke-dashoffset]="150.8 * (1 - todayProgress() / 100)"
                     transform="rotate(-90 30 30)"
-                    class="progress-ring__value"/>
+                    class="progress-ring__value db-quick-stat__ring-fill"/>
                 </svg>
-                <span class="db-quick-stat__pct" [appCountUp]="todayProgress()" cuSuffix="%"></span>
+                <span class="db-quick-stat__pct" [appCountUp]="todayProgress()" cuPrefix="%"></span>
               </div>
               <span class="db-quick-stat__label">Bugün</span>
             </div>
 
             <div class="db-quick-stat db-quick-stat--text">
               <span class="db-quick-stat__big" [appCountUp]="currentStreak()"></span>
-              <span class="db-quick-stat__unit material-icons" aria-hidden="true">local_fire_department</span>
+              <span class="db-quick-stat__unit material-icons sp-flame" aria-hidden="true">local_fire_department</span>
               <span class="db-quick-stat__label">Gün Serisi</span>
             </div>
 

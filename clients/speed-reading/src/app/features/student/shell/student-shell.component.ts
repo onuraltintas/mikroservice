@@ -42,6 +42,23 @@ export class StudentShellComponent implements OnInit, OnDestroy {
 
   user = computed(() => this.authService.currentUserValue);
 
+  /** The reading page stays calm: no bottom menu over the text. */
+  isReadingRoute = computed(() => this.currentUrl().startsWith('/student/reading/'));
+
+  /** Phone bottom menu: the first four pages of the menu (lively design, 21.11.2026). */
+  bottomItems = computed(() => this.menuItems().slice(0, 4));
+
+  private readonly shortLabels: Record<string, string> = {
+    '/student/dashboard': 'Ana sayfa', '/student/daily-exercises': 'Egzersiz', '/student/assignments': 'Ödevler',
+    '/student/reviews': 'Tekrar', '/student/reports': 'Raporlar', '/student/learning-path': 'Yol', '/student/achievements': 'Rozetler'
+  };
+  /** A short name that fits under the bottom-menu icon; the full name stays in the drawer. */
+  shortLabel(item: MenuItem): string { return this.shortLabels[item.route ?? ''] ?? item.label; }
+
+  private readonly navTones = ['mint', 'peach', 'sand', 'sea'] as const;
+  /** Each menu entry gets a soft tone of the same family, in turn. */
+  navTone(index: number): string { return this.navTones[index % this.navTones.length]; }
+
   /** V2: only students link a parent (the page lives at /veli-baglantisi). */
   isStudent = computed(() => this.authService.hasRole('Student'));
 

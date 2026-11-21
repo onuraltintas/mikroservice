@@ -498,3 +498,83 @@
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
+
+
+// ── Lively design (21.11.2026) ───────────────────────────────────────────────
+// Each entry: an icon chip in its own soft tone; the open page is a solid green pill with an orange spark.
+.sp-nav-item {
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 14px;
+  color: var(--sp-text-1);
+  transition: background .2s ease, transform .2s ease, color .2s ease;
+
+  &:not(.sp-nav-item--active):hover { background: var(--sp-surface); transform: translateX(4px); }
+  &:hover .sp-nav-item__chip { transform: rotate(-10deg) scale(1.12); }
+
+  &--active {
+    background: var(--sp-primary);
+    color: var(--sp-on-primary);
+    font-weight: 600;
+    box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--sp-primary) 80%, transparent);
+    .sp-nav-item__chip { background: var(--sp-surface); color: var(--sp-primary); }
+  }
+}
+.sp-nav-item__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  transition: transform .25s cubic-bezier(.3, 1.6, .5, 1);
+  .sp-nav-item__icon { width: auto; font-size: 18px; color: inherit; opacity: 1; }
+}
+.sp-nav-item__spark { width: 8px; height: 8px; flex: none; border-radius: 999px; background: var(--sp-focus-line); }
+.sp-nav-item__badge { font-size: 12px; background: var(--ds-orange); color: var(--sp-surface); }
+
+// Phone bottom menu
+.sp-bottom-nav { display: none; }
+@media (max-width: 640px) {
+  .sp-bottom-nav {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: var(--sp-z-header);
+    display: flex;
+    justify-content: space-around;
+    gap: 4px;
+    padding: 8px;
+    border-radius: 22px;
+    background: var(--sp-surface);
+    box-shadow: var(--sp-shadow-raised);
+    border: 1px solid var(--sp-border);
+  }
+  .sp-bottom-nav__item {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: 14px;
+    color: var(--tone);
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    .material-icons { font-size: 20px; }
+    &--active { background: var(--sp-primary); color: var(--sp-on-primary); }
+  }
+  .sp-bottom-nav__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+  .sp-content { padding-bottom: 104px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-nav-item:not(.sp-nav-item--active):hover, .sp-nav-item:hover .sp-nav-item__chip { transform: none; }
+}
