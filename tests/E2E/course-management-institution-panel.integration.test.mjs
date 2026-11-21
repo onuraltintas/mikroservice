@@ -222,6 +222,10 @@ test('institution panel: switched-off student portal and files, teacher homework
 
     // Files are off: no upload or listing addresses.
     assert.equal((await call(`${ws}/assignments/${assignmentId}/attachments`, teacher)).status, 404);
+    const features = await call('/features', teacher);
+    assert.equal(features.status, 200);
+    assert.deepEqual(await features.json(), { studentPortal: false, assignmentAttachments: false },
+      'the panel learns which switched features are off and hides their buttons');
 
     // E-mails: switched off until the owner turns them on and confirms students and guardians were informed.
     const settingsPath = `${ws}/email-settings`;
@@ -489,6 +493,18 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(solo.status, 200, await solo.clone().text());
     const teacherAfter = await (await call(`${ws}/students/search?take=50`, teacher)).json();
     assert.equal(teacherAfter.items.find(item => item.id === soloId)?.oneToOneTeacherUserId, teacherId, 'the one-to-one teacher sees the student');
+    // Homework in a one-to-one lesson (21.11.2026 live test: it answered 404 because the student has no group).
+    const soloHomework = (who, id = randomUUID()) => call(`${ws}/assignments`, who, 'POST', { id, courseId, groupId: null,
+      studentId: soloId, title: 'TEST birebir ödev', instructions: null, dueAt: new Date(Date.now() + 3 * 86400000).toISOString() });
+    const soloByTeacher = await soloHomework(teacher);
+    assert.equal(soloByTeacher.status, 201, await soloByTeacher.clone().text());
+    const soloByOwnerId = randomUUID();
+    assert.equal((await soloHomework(owner, soloByOwnerId)).status, 201, 'the owner gives homework to a one-to-one student');
+    assert.equal((await call(`${ws}/assignments/${soloByOwnerId}/completions`, teacher)).status, 200,
+      'the one-to-one teacher marks the owner’s homework too');
+    assert.ok((await (await call(`${ws}/assignments?take=200`, teacher)).json()).some(item => item.id === soloByOwnerId),
+      'and sees it in the list');
+    assert.equal((await soloHomework(outsider)).status, 404, 'a teacher outside the workspace cannot');
     assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: pendingId })).status, 200);
     assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: randomUUID() })).status, 400);
   } finally {
