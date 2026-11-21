@@ -48,7 +48,7 @@
             <small>kelime / dakika</small>
           </div>
           @if (result()?.targetWPM) {
-          <span class="target-pill">Hedef hız {{ result()?.targetWPM }} k/dk</span>
+          <span class="target-pill">Hedef hız {{ result()?.targetWPM }} kelime/dk</span>
           }
         </article>
         <article class="primary-metric">
@@ -130,7 +130,7 @@
             <span class="value">%{{ progress() | number:'1.0-0' }}</span>
           </div>
           <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="progress()"></div></div>
-          <p class="sub-text">{{ completedCount() }}/{{ exercises().length }} Egzersiz Tamamlandı</p>
+          <p class="sub-text">{{ completedCount() }}/{{ exercises().length }} egzersiz tamamlandı</p>
         </div>
       </div>
     </div>

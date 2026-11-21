@@ -5,7 +5,7 @@ const template = readFileSync(new URL('./assessment.component.html', import.meta
 const styles = readFileSync(new URL('./assessment.component.scss', import.meta.url), 'utf8');
 const model = readFileSync(new URL('../../../models/student-panel.model.ts', import.meta.url), 'utf8');
 
-assert.match(template, /Okuma hızınız/);
+assert.match(template, /Okuma hızın</);
 assert.match(template, /result\(\)\?\.averageWPM/);
 assert.match(template, /Hedef hız/);
 assert.match(template, /result\(\)\?\.targetWPM/);
