@@ -235,3 +235,7 @@ button:focus-visible {
     align-items: flex-start;
   }
 }
+// B design (21.11.2026): the student beside the average, and recent activities as columns.
+.compare-chart { margin-top: 12px; }
+.activity-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+@media (max-width: 680px) { .activity-charts { grid-template-columns: 1fr; } }

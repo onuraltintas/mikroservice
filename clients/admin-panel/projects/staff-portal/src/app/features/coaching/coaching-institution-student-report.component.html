@@ -11,8 +11,8 @@
       <p class="report-eyebrow">Koçluk, kurum öğrenci raporu</p>
       <h2 id="student-report-title">{{ student.firstName }} {{ student.lastName }}</h2>
       <p class="student-context">
-        {{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }}
-        · {{ student.teacherName || 'Öğretmen atanmamış' }} · {{ student.email }}
+        {{ educationLabel($any(student).educationStatus, student.gradeLevel, 'Sınıf bilgisi yok') }},
+        {{ student.teacherName || 'Öğretmen atanmamış' }}, {{ student.email }}
       </p>
     </div>
     <span class="student-avatar" aria-hidden="true">{{ student.firstName.charAt(0) }}{{ student.lastName.charAt(0) }}</span>
@@ -32,11 +32,17 @@
       <div class="report-error" role="alert"><span>{{ detailError() }}</span><button type="button" data-testid="retry-detail" (click)="retryDetail()">Özeti tekrar yükle</button></div>
     } @else if (detail(); as summary) {
       <div class="summary-grid">
-        <article class="summary-card assignment-card"><span>Ödevler</span><strong>{{ summary.submittedAssignments }} / {{ summary.totalAssignments }}</strong><small>Teslim edilen</small></article>
+        <article class="summary-card assignment-card"><span>Ödevler</span><strong>{{ summary.submittedAssignments }} / {{ summary.totalAssignments }}</strong><staff-meter tone="info" [value]="summary.submittedAssignments" [max]="summary.totalAssignments" [label]="'Teslim edilen ödev: ' + summary.submittedAssignments + ' / ' + summary.totalAssignments" /><small>Teslim edilen</small></article>
         <article class="summary-card exam-card"><span>Sınavlar</span><strong>{{ summary.totalExams }}</strong><small>Sonuç kaydı</small></article>
         <article class="summary-card session-card"><span>Seanslar</span><strong>{{ summary.totalSessions }}</strong><small>Katılım kaydı</small></article>
         <article class="summary-card goal-card"><span>Hedefler</span><strong>{{ summary.totalGoals }}</strong><small>Toplam hedef</small></article>
       </div>
+      @if (examPoints(summary).length || assignmentScorePoints(summary).length) {
+        <div class="report-charts">
+          @if (examPoints(summary).length) { <staff-bars title="Sınav sonuçları (doğru oranı)" tone="violet" [percent]="true" [points]="examPoints(summary)" /> }
+          @if (assignmentScorePoints(summary).length) { <staff-bars title="Ödev puanları" tone="info" [points]="assignmentScorePoints(summary)" /> }
+        </div>
+      }
     }
     @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" [readOnly]="true" [briefOnly]="briefMode()" /> }
   </section>
@@ -44,7 +50,7 @@
   <section class="history-panel" aria-labelledby="history-title">
     <header class="history-heading">
       <div><p class="report-eyebrow">Kayıt dökümü</p><h3 id="history-title">Geçmiş kayıtlar</h3><p>Öğrencinin önceki kurumlarında oluşan Koçluk kayıtları da kapsanır.</p></div>
-      <span class="history-scope">{{ historyTotalCount() }} kayıt · tüm Koçluk geçmişi</span>
+      <span class="history-scope">{{ historyTotalCount() }} kayıt, tüm Koçluk geçmişi</span>
     </header>
 
     <div class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi" (keydown)="moveTabFocus($event)">

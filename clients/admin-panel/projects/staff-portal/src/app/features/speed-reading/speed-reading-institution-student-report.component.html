@@ -4,8 +4,8 @@
       <p class="workspace-eyebrow">Hızlı Okuma, son 30 gün</p>
       <h3 id="student-report-title">Öğrenci ayrıntılı raporu</h3>
       <p>
-        {{ student.firstName }} {{ student.lastName }} ·
-        {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf belirtilmemiş' }} ·
+        {{ student.firstName }} {{ student.lastName }},
+        {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf belirtilmemiş' }},
         @if (teacherScoped) {
           Öğretmen öğrencisi
         } @else {
@@ -39,14 +39,14 @@
       <article class="metric-card">
         <span>Ortalama okuma hızı</span
         ><strong>{{
-          data.readingSpeed.averageWpm > 0 ? formatNumber(data.readingSpeed.averageWpm) + ' WPM' : 'Veri yok'
+          data.readingSpeed.averageWpm > 0 ? formatNumber(data.readingSpeed.averageWpm) + ' kelime/dk' : 'Veri yok'
         }}</strong>
       </article>
       <article class="metric-card">
         <span>Ortalama anlama</span
         ><strong>{{
           data.comprehension.totalQuestionsAttempted
-            ? formatNumber(data.comprehension.averageComprehension) + '%'
+            ? '%' + formatNumber(data.comprehension.averageComprehension)
             : 'Veri yok'
         }}</strong>
       </article>
@@ -61,7 +61,7 @@
         <span>Etkinlik başarısı</span
         ><strong>{{
           data.summary.exercisesCompleted
-            ? formatNumber(data.summary.averageSuccessRate) + '%'
+            ? '%' + formatNumber(data.summary.averageSuccessRate)
             : 'Veri yok'
         }}</strong>
       </article>
@@ -89,12 +89,13 @@
         @if (data.readingSpeed.averageWpm > 0) {
           <p class="benchmark-line">
             {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
-            <strong>{{ data.readingSpeed.benchmark.institutionAverage > 0 ? formatNumber(data.readingSpeed.benchmark.institutionAverage) + ' WPM' : 'Veri yok' }}</strong>
-            · Öğrenci <strong>{{ formatNumber(data.readingSpeed.averageWpm) }} WPM</strong>
+            <strong>{{ data.readingSpeed.benchmark.institutionAverage > 0 ? formatNumber(data.readingSpeed.benchmark.institutionAverage) + ' kelime/dk' : 'Veri yok' }}</strong>,
+            öğrenci <strong>{{ formatNumber(data.readingSpeed.averageWpm) }} kelime/dk</strong>
           </p>
+          <staff-bars class="compare-chart" title="Okuma hızı (kelime/dk)" tone="info" [points]="speedComparison(data)" />
           <p class="performance-level">{{ reportLabel(data.readingSpeed.benchmark.performanceLevel) }}</p>
         } @else {
-          <p class="empty-state">Veri yok · Bu dönemde ölçülmüş okuma hızı bulunmuyor.</p>
+          <p class="empty-state">Veri yok. Bu dönemde ölçülmüş okuma hızı bulunmuyor.</p>
         }
         @if (data.readingSpeed.averageWpm > 0 && data.readingSpeed.recommendations.length > 0) {
           <div class="report-list-block">
@@ -126,9 +127,10 @@
         @if (data.comprehension.totalQuestionsAttempted > 0) {
           <p class="benchmark-line">
             {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
-            <strong>{{ data.comprehension.benchmark.institutionDataAvailable !== false ? formatNumber(data.comprehension.benchmark.institutionAverage) + '%' : 'Veri yok' }}</strong> ·
-            Öğrenci <strong>%{{ formatNumber(data.comprehension.averageComprehension) }}</strong>
+            <strong>{{ data.comprehension.benchmark.institutionDataAvailable !== false ? '%' + formatNumber(data.comprehension.benchmark.institutionAverage) : 'Veri yok' }}</strong>,
+            öğrenci <strong>%{{ formatNumber(data.comprehension.averageComprehension) }}</strong>
           </p>
+          <staff-bars class="compare-chart" title="Anlama" tone="success" [percent]="true" [points]="comprehensionComparison(data)" />
           <p class="performance-level">{{ reportLabel(data.comprehension.benchmark.performanceLevel) }}</p>
           <div class="areas-grid">
             <div class="report-list-block">
@@ -184,6 +186,12 @@
             ><strong>{{ data.activity.studyTime.mostActiveDay || '—' }}</strong> en aktif gün</span
           >
         </div>
+        @if (activityPoints(data, 'wpm').length > 1 || activityPoints(data, 'comprehension').length > 1) {
+          <div class="activity-charts">
+            @if (activityPoints(data, 'wpm').length > 1) { <staff-bars title="Son etkinliklerde hız (kelime/dk)" tone="violet" [points]="activityPoints(data, 'wpm')" /> }
+            @if (activityPoints(data, 'comprehension').length > 1) { <staff-bars title="Son etkinliklerde anlama" tone="orange" [percent]="true" [points]="activityPoints(data, 'comprehension')" /> }
+          </div>
+        }
         @if (data.activity.recentActivities.length > 0) {
           <div class="activity-table-wrap">
             <table>
@@ -206,19 +214,19 @@
                   <tr>
                     <td>{{ formatDate(activity.completedAt) }}</td>
                     <td>{{ activity.contentTitle || activity.activityType }}</td>
-                    <td>{{ activity.wpm === null ? '—' : formatNumber(activity.wpm) + ' WPM' }}</td>
+                    <td>{{ activity.wpm === null ? '—' : formatNumber(activity.wpm) + ' kelime/dk' }}</td>
                     <td>
                       {{
                         activity.comprehension === null
                           ? '—'
-                          : formatNumber(activity.comprehension) + '%'
+                          : '%' + formatNumber(activity.comprehension)
                       }}
                     </td>
-                    <td>{{ activity.successRate === null ? '—' : formatNumber(activity.successRate) + '%' }}</td>
+                    <td>{{ activity.successRate === null ? '—' : '%' + formatNumber(activity.successRate) }}</td>
                     <td>{{ formatDuration(activity.durationSeconds) }}</td>
                     <td>
                       <span class="status" [class.inactive]="activity.isMeasured && !activity.isPassed">{{
-                        !activity.isMeasured ? 'Tamamlandı · Ölçülmedi' : activity.isPassed ? 'Başarılı' : 'Tekrar gerekli'
+                        !activity.isMeasured ? 'Tamamlandı, ölçülmedi' : activity.isPassed ? 'Başarılı' : 'Tekrar gerekli'
                       }}</span>
                     </td>
                   </tr>

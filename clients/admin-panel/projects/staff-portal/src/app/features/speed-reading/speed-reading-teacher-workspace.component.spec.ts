@@ -303,6 +303,6 @@ describe('SpeedReadingTeacherWorkspaceComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci ayrıntılı raporu');
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
-    expect(fixture.nativeElement.textContent).toContain('245 WPM');
+    expect(fixture.nativeElement.textContent).toContain('245 kelime/dk');
   });
 });

@@ -104,7 +104,7 @@
     } @else if (activeSection() === 'students') {
       <section class="roster-section" aria-labelledby="institution-students-title">
         <div class="section-heading">
-          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci · ad, sınıf ve durumla arayıp süzebilirsiniz</p></div>
+          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci; ad, sınıf ve durumla arayıp süzebilirsiniz</p></div>
           <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents() || isMembershipSaving() || !!editingStudentId()">Yenile</button>
         </div>
 
@@ -179,7 +179,7 @@
     } @else if (activeSection() === 'teachers') {
       <section class="roster-section" aria-labelledby="institution-teachers-title">
         <div class="section-heading">
-          <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen · kurumunuza bağlı aktif öğretmenler</p></div>
+          <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen, kurumunuza bağlı aktif öğretmenler</p></div>
           <button type="button" class="outline-button" (click)="loadTeachers()" [disabled]="isLoadingTeachers() || isMembershipSaving()">Yenile</button>
         </div>
         <form class="filter-row invitation-form" (ngSubmit)="sendTeacherInvitation()" aria-label="Koçluk öğretmeni davet et">
