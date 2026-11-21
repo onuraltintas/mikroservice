@@ -6,12 +6,13 @@ import { SiteStore } from '../core/site-store';
 import { BrandMarkComponent } from './brand-mark.component';
 import { NewsletterFormComponent } from './newsletter-form.component';
 import { SiteLinkComponent } from './site-link.component';
+import { ThemeMenuComponent } from '../core/theme-menu.component';
 
 /** maxkampus.com's public frame: header with the editors' menu, the page, footer with legal links and the newsletter. */
 @Component({
   selector: 'mk-site-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, BrandMarkComponent, SiteLinkComponent, NewsletterFormComponent],
+  imports: [RouterOutlet, RouterLink, BrandMarkComponent, SiteLinkComponent, NewsletterFormComponent, ThemeMenuComponent],
   template: `
     <a class="skip" href="#icerik">İçeriğe geç</a>
     <header class="top">
@@ -20,6 +21,7 @@ import { SiteLinkComponent } from './site-link.component';
           <mk-brand-mark [size]="36" />
           <span class="logo__text"><strong>maxkampüs</strong></span>
         </a>
+        <mk-theme-menu class="theme-slot" />
         <button type="button" class="menu-toggle" [attr.aria-expanded]="open()" aria-controls="site-menu" (click)="open.set(!open())">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             @if (open()) { <path d="M6 6l12 12M18 6L6 18"/> } @else { <path d="M4 7h16M4 12h16M4 17h16"/> }</svg>
@@ -94,7 +96,7 @@ import { SiteLinkComponent } from './site-link.component';
     :host ::ng-deep .nav__link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: var(--ds-text); text-decoration: none; font-weight: 500; }
     :host ::ng-deep .nav__link:hover { background: var(--ds-soft); }
     .nav__actions { display: flex; gap: 8px; }
-    .menu-toggle { display: none; margin-left: auto; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ds-line); border-radius: 10px; background: var(--ds-surface); color: var(--ds-text); cursor: pointer; }
+    .theme-slot { order: 3; } .menu-toggle { display: none; margin-left: auto; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ds-line); border-radius: 10px; background: var(--ds-surface); color: var(--ds-text); cursor: pointer; }
     @media (max-width: 900px) {
       .menu-toggle { display: grid; }
       .nav { display: none; position: absolute; top: 72px; left: 0; right: 0; flex-direction: column; align-items: stretch; padding: 12px 24px 20px; background: var(--ds-surface); border-bottom: 1px solid var(--ds-line); }
