@@ -45,6 +45,7 @@
         @if (!item.children) {
         <a [routerLink]="item.route" routerLinkActive="active-menu-item"
             [routerLinkActiveOptions]="{ exact: true }"
+            [attr.data-section]="item.label"
             class="group flex items-center px-3 py-2.5 text-sm font-medium text-[var(--ui-text-muted)] rounded-xl hover:bg-[var(--ui-surface-muted)] hover:text-[var(--ui-brand-text)] transition-all duration-200 relative mb-1"
             [class.justify-center]="layoutService.isSidebarCollapsed()">
 
@@ -67,7 +68,7 @@
         </a>
         } @else {
         <!-- Parent Menu Item (Has Children) -->
-        <div class="relative mb-1">
+        <div class="relative mb-1" [attr.data-section]="item.label">
             <button type="button" (click)="toggleSubmenu(item.label)"
                 [attr.aria-expanded]="isExpanded(item.label)"
                 class="w-full group flex items-center px-3 py-2.5 text-sm font-medium text-[var(--ui-text-muted)] rounded-xl hover:bg-[var(--ui-surface-muted)] hover:text-[var(--ui-brand-text)] transition-all duration-200 relative focus:outline-none"

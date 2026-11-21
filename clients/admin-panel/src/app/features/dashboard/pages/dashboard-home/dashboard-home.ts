@@ -1,104 +1,144 @@
-import { Component, inject, signal, PLATFORM_ID, OnInit } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { IdentityService } from '../../../../core/services/identity.service';
-import { AuthService } from '../../../../core/auth/auth.service';
-import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 import { firstValueFrom } from 'rxjs';
+import { IdentityService } from '../../../../core/services/identity.service';
+import { AuthService, hasRole } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
+import { BillingAdminService, BillingAdminSubscription, BillingOverview } from '../../../../core/services/billing-admin.service';
+import { CoachingAdminOverview, CoachingAdminService } from '../../../../core/services/coaching-admin.service';
+import { AdminPlatformUsageAnalytics, SpeedReadingAdminService } from '../../../../core/services/speed-reading-admin.service';
+import { SupportAdminService } from '../../../../core/services/support-admin.service';
+import { CourseManagementAdminOverview, CourseManagementAdminService } from '../../../course-management/course-management-admin.service';
+import { AdminBarsComponent, AdminMeterComponent, AdminPart, AdminPoint, AdminRingComponent, AdminStatComponent, AdminTone, AdminTrendComponent } from '../../../../shared/components/admin-charts';
 
-interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  inactiveUsers: number;
-  totalRoles: number;
-  systemRoles: number;
-  customRoles: number;
-  totalPermissions: number;
-  systemPermissions: number;
-  customPermissions: number;
-}
+interface UserSummary { totalUsers: number; activeUsers: number; inactiveUsers: number; }
+interface WaitingItem { label: string; value: number | null; tone: AdminTone; route: string; hint: string; }
 
+/**
+ * Yönetim paneli ana sayfası (canlı tasarım, 21.11.2026): bekleyen işler önce, sonra her ürünün kısa özeti ve grafikleri.
+ * Her bölüm yalnız yöneticinin yetkisi varsa yüklenir ve görünür; bir bölüm yüklenemezse yalnız o bölüm bunu söyler.
+ */
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule, AdminStatComponent, AdminBarsComponent, AdminTrendComponent, AdminRingComponent, AdminMeterComponent],
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.scss',
 })
 export class DashboardHomeComponent implements OnInit {
-  private identityService = inject(IdentityService);
-  private authService = inject(AuthService);
-  private platformId = inject(PLATFORM_ID);
+  private readonly identity = inject(IdentityService);
+  private readonly auth = inject(AuthService);
+  private readonly billing = inject(BillingAdminService);
+  private readonly coaching = inject(CoachingAdminService);
+  private readonly speedReading = inject(SpeedReadingAdminService);
+  private readonly support = inject(SupportAdminService);
+  private readonly maxkampus = inject(CourseManagementAdminService);
+  private readonly platformId = inject(PLATFORM_ID);
 
-  loading = signal(true);
-  can = (permission: string) => this.authService.hasPermission(permission);
   readonly permissions = ADMIN_PERMISSIONS;
-  stats = signal<DashboardStats>({
-    totalUsers: 0,
-    activeUsers: 0,
-    inactiveUsers: 0,
-    totalRoles: 0,
-    systemRoles: 0,
-    customRoles: 0,
-    totalPermissions: 0,
-    systemPermissions: 0,
-    customPermissions: 0
+  can = (permission: string) => this.auth.hasPermission(permission);
+  readonly isSystemAdmin = computed(() => hasRole(this.auth.userProfile(), 'SystemAdmin'));
+  readonly firstName = computed(() => this.auth.userProfile()?.firstName ?? '');
+
+  readonly loading = signal(true);
+  readonly users = signal<UserSummary | null>(null);
+  readonly roleCount = signal<number | null>(null);
+  readonly permissionCount = signal<number | null>(null);
+  readonly billingOverview = signal<BillingOverview | null>(null);
+  readonly openSupport = signal<number | null>(null);
+  readonly coachingOverview = signal<CoachingAdminOverview | null>(null);
+  readonly usage = signal<AdminPlatformUsageAnalytics | null>(null);
+  readonly maxkampusOverview = signal<CourseManagementAdminOverview | null>(null);
+  readonly failed = signal<string[]>([]);
+
+  readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    const part = hour < 6 ? 'İyi geceler' : hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';
+    return this.firstName() ? `${part}, ${this.firstName()}` : part;
+  });
+  readonly today = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+
+  /** Bekleyen işler: yalnız yöneticinin görebildiği kutular. */
+  readonly waiting = computed<WaitingItem[]>(() => {
+    const items: WaitingItem[] = [];
+    const b = this.billingOverview();
+    if (this.isSystemAdmin()) {
+      items.push({ label: 'Onay bekleyen ödeme', value: b?.waitingOrders ?? null, tone: 'honey', route: '/dashboard/billing/orders', hint: 'Siparişler' });
+      items.push({ label: 'Bildirilen havale', value: b?.declaredOrders ?? null, tone: 'orange', route: '/dashboard/billing/orders', hint: 'Eşleştir ve onayla' });
+      items.push({ label: 'Eşleşmeyen hesap hareketi', value: b?.unmatchedTransactions ?? null, tone: 'danger', route: '/dashboard/billing/statements', hint: 'Hesap hareketleri' });
+      items.push({ label: 'Para çekme talebi', value: b?.withdrawalRequests ?? null, tone: 'violet', route: '/dashboard/billing/withdrawals', hint: 'Talepler' });
+    }
+    if (this.can(ADMIN_PERMISSIONS.supportView)) {
+      items.push({ label: 'Açık destek talebi', value: this.openSupport(), tone: 'info', route: '/dashboard/notifications/support', hint: 'Destek kutusu' });
+    }
+    return items;
+  });
+  readonly waitingTotal = computed(() => this.waiting().reduce((sum, item) => sum + (item.value ?? 0), 0));
+
+  readonly userParts = computed<AdminPart[]>(() => {
+    const u = this.users();
+    return u ? [{ label: 'Etkin', value: u.activeUsers, tone: 'success' }, { label: 'Pasif', value: u.inactiveUsers, tone: 'honey' }] : [];
   });
 
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      const user = this.authService.userProfile();
-      // Only load stats if user has Admin privileges
-      if (user?.permissions?.includes(ADMIN_PERMISSIONS.usersView)) {
-        this.loadStats();
-      } else {
-        this.loading.set(false);
-      }
-    }
+  readonly activeTrend = computed<AdminPoint[]>(() => this.series(this.usage()?.dailyActiveUsers, 30));
+  readonly activityBars = computed<AdminPoint[]>(() => this.series(this.usage()?.activityVolume, 14));
+
+  readonly subscriptionBars = computed<AdminPoint[]>(() => {
+    const b = this.billingOverview();
+    return b ? [{ label: 'Geçen ay', value: b.approvedLastMonth }, { label: 'Bu ay', value: b.approvedThisMonth }] : [];
+  });
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) void this.load();
+    else this.loading.set(false);
   }
 
-  async loadStats() {
+  async load(): Promise<void> {
     this.loading.set(true);
-    try {
-      const canViewUsers = this.authService.hasPermission(ADMIN_PERMISSIONS.usersView);
-      const canViewRoles = this.authService.hasPermission(ADMIN_PERMISSIONS.rolesView);
-      const canViewPermissions = this.authService.hasPermission(ADMIN_PERMISSIONS.permissionView);
-      const [usersResponse, rolesResponse, permissionsResponse] = await Promise.allSettled([
-        canViewUsers ? firstValueFrom(this.identityService.getUserSummary()) : Promise.resolve(null),
-        canViewRoles ? firstValueFrom(this.identityService.getAllRoles()) : Promise.resolve(null),
-        canViewPermissions ? firstValueFrom(this.identityService.getPermissions()) : Promise.resolve(null)
-      ]);
-
-      const usersResult = usersResponse.status === 'fulfilled' ? usersResponse.value : null;
-      const roles = rolesResponse.status === 'fulfilled' ? rolesResponse.value : null;
-      const permissions = permissionsResponse.status === 'fulfilled' ? permissionsResponse.value : null;
-
-      const totalUsers = usersResult?.totalUsers ?? 0;
-      const activeUsers = usersResult?.activeUsers ?? 0;
-      const rolesData = roles || [];
-      const permsData = permissions || [];
-
-      this.stats.set({
-        totalUsers,
-        activeUsers: activeUsers,
-        inactiveUsers: usersResult?.inactiveUsers ?? 0,
-        totalRoles: rolesData.filter((r: any) => !r.isDeleted).length,
-        systemRoles: rolesData.filter((r: any) => r.isSystemRole && !r.isDeleted).length,
-        customRoles: rolesData.filter((r: any) => !r.isSystemRole && !r.isDeleted).length,
-        totalPermissions: permsData.filter((p: any) => !p.isDeleted).length,
-        systemPermissions: permsData.filter((p: any) => p.isSystem && !p.isDeleted).length,
-        customPermissions: permsData.filter((p: any) => !p.isSystem && !p.isDeleted).length
-      });
-    } catch (error) {
-      console.error('Error loading dashboard stats:', error);
-    } finally {
-      this.loading.set(false);
-    }
+    this.failed.set([]);
+    const failed: string[] = [];
+    const run = async <T>(allowed: boolean, name: string, call: () => Promise<T>, set: (value: T) => void) => {
+      if (!allowed) return;
+      try { set(await call()); } catch { failed.push(name); }
+    };
+    const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+    await Promise.all([
+      run(this.can(ADMIN_PERMISSIONS.usersView), 'Kullanıcılar', () => firstValueFrom(this.identity.getUserSummary()), v => this.users.set(v)),
+      run(this.can(ADMIN_PERMISSIONS.rolesView), 'Roller', () => firstValueFrom(this.identity.getAllRoles()),
+        v => this.roleCount.set((v as { isDeleted?: boolean }[] ?? []).filter(r => !r.isDeleted).length)),
+      run(this.can(ADMIN_PERMISSIONS.permissionView), 'İzinler', () => firstValueFrom(this.identity.getPermissions()),
+        v => this.permissionCount.set((v as { isDeleted?: boolean }[] ?? []).filter(p => !p.isDeleted).length)),
+      run(this.isSystemAdmin(), 'Abonelik ve ödeme', () => firstValueFrom(this.billing.getOverview('')), v => this.billingOverview.set(v)),
+      run(this.can(ADMIN_PERMISSIONS.supportView), 'Destek', () => firstValueFrom(this.support.getAll(1, 1, false)), v => this.openSupport.set(v?.totalCount ?? 0)),
+      run(this.can(ADMIN_PERMISSIONS.coachingView), 'Koçluk', () => firstValueFrom(this.coaching.getOverview(5)), v => this.coachingOverview.set(v)),
+      run(this.can(ADMIN_PERMISSIONS.speedReadingPlatformAnalytics), 'Hızlı Okuma kullanımı',
+        () => firstValueFrom(this.speedReading.getPlatformUsage(monthAgo, new Date().toISOString())), v => this.usage.set(v)),
+      run(this.isSystemAdmin(), 'maxkampüs', () => firstValueFrom(this.maxkampus.getOverview()), v => this.maxkampusOverview.set(v))
+    ]);
+    this.failed.set(failed);
+    this.loading.set(false);
   }
 
-  getActivePercentage(): number {
-    const s = this.stats();
-    if (s.totalUsers === 0) return 0;
-    return Math.round((s.activeUsers / s.totalUsers) * 100);
+  subscriptionName(item: BillingAdminSubscription): string {
+    return [item.accountName, item.subscription?.planName].filter(Boolean).join(', ') || 'Abonelik';
+  }
+
+  subscriptionEnd(item: BillingAdminSubscription): string {
+    const date = item.subscription?.endsAt ? new Date(item.subscription.endsAt) : null;
+    return date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long' }).format(date) : '';
+  }
+
+  share(part: number | undefined, whole: number | undefined): number {
+    return whole ? Math.round((part ?? 0) / whole * 100) : 0;
+  }
+
+  /** Chart rows of the analytics service → last n points with a short Turkish day label. */
+  private series(rows: { name: string; series: { value: number }[] }[] | undefined, take: number): AdminPoint[] {
+    const day = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' });
+    return (rows ?? []).slice(-take).map(row => {
+      const date = new Date(row.name);
+      return { label: Number.isNaN(date.getTime()) ? row.name : day.format(date), value: row.series?.[0]?.value ?? 0 };
+    });
   }
 }
