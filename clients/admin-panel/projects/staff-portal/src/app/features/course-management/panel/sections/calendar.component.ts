@@ -59,7 +59,7 @@ type Editor = {
         @for (teacher of state.teachers(); track teacher.userId) {
           <button type="button" [attr.aria-pressed]="teacherFilter === teacher.userId" (click)="setFilter(teacher.userId, '')">{{ state.teacherName(teacher.userId) }}</button>
         }
-        @for (room of state.rooms(); track room.id) {
+        @for (room of state.activeRooms(); track room.id) {
           <button type="button" [attr.aria-pressed]="roomFilter === room.id" (click)="setFilter('', room.id)">{{ room.name }}</button>
         }
       </div>
@@ -165,7 +165,7 @@ type Editor = {
             }
             @if (form.kind !== 'timeoff') {
               <label class="field">Derslik<select [(ngModel)]="form.roomId" (ngModelChange)="preview.set(null)"><option value="">Seçilmedi</option>
-                @for (room of state.rooms(); track room.id) { <option [value]="room.id">{{ room.branchName }}, {{ room.name }}</option> }</select></label>
+                @for (room of state.activeRooms(); track room.id) { <option [value]="room.id">{{ room.branchName }}, {{ room.name }}</option> }</select></label>
             }
             @if (!editingSeries()) {
               <label class="field">{{ form.kind === 'series' ? 'Başlangıç günü' : 'Gün' }}<input type="date" [(ngModel)]="form.day" [min]="todayIso()" (ngModelChange)="dayChanged(form)"></label>

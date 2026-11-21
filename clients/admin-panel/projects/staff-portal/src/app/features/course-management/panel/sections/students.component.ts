@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { FormsModule } from '@angular/forms';
 import { CourseManagementService, CourseStudentAccount, StudentCsvImportPreview, StudentGuardianLink } from '../../course-management.service';
 import { CoursePanelApi, PanelSentEmail, PanelStudentFilter, PanelStudentPage, PanelStudentRow } from '../panel-api.service';
-import { CoursePanelState, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, writeHashQuery } from '../panel-state';
+import { CoursePanelState, fullRoomNotice, formatDate, formatDateTime, formatMoney, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 import { PanelConfirm } from '../panel-confirm';
 
 const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babası' }, { value: 4, label: 'Yasal vasisi' }, { value: 1, label: 'Velisi' }, { value: 5, label: 'Diğer' }];
@@ -360,14 +360,16 @@ export class StudentsSectionComponent {
   async enroll(): Promise<void> {
     const form = this.editing();
     if (!form?.id || !this.enrollGroupId) return;
+    let full = 0;
     await this.act(async () => {
-      await this.service.enrollStudent(this.state.id(), this.enrollGroupId, form.id);
+      full = (await this.service.enrollStudent(this.state.id(), this.enrollGroupId, form.id))?.fullRoomLessons ?? 0;
       const group = this.state.groups().find(item => item.id === this.enrollGroupId);
       this.editing.set({ ...form, groups: [form.groups, group ? `${group.courseName}, ${group.name}` : ''].filter(Boolean).join('; '),
         groupIds: [...form.groupIds, this.enrollGroupId] });
       this.enrollGroupId = '';
       await this.load();
     }, 'Öğrenci gruba eklendi.');
+    if (full && !this.error()) this.notice.set('Öğrenci gruba eklendi.' + fullRoomNotice(full));
   }
 
   groupLabel(groupId: string, fallback: string): string {

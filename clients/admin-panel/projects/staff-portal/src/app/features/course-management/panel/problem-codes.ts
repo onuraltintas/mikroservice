@@ -36,6 +36,12 @@ export const PROBLEM_TEXTS: Record<string, string> = {
   'Room.InvalidInput': 'Derslik adı ve kapasitesini kontrol edin.',
   'Branch.DuplicateName': 'Aynı adla bir şube var.',
   'Branch.InvalidInput': 'Şube adını kontrol edin.',
+  'Room.InUse': 'Bu derslik geçmiş derslerde kullanıldı; silmek yerine arşive alın.',
+  'Room.HasPlannedLessons': 'Bu derslikte planlı dersler var.',
+  'Room.CapacityBelowLessons': 'Bazı planlı derslerdeki öğrenci sayısı yeni kapasiteyi aşıyor.',
+  'Room.Archived': 'Bu derslik arşivde; ders planlamak için önce arşivden çıkarın.',
+  'Branch.HasRooms': 'Şubede derslik var; önce derslikleri silin ya da arşive alın.',
+  'Branch.HasActiveRooms': 'Şubede kullanılan derslikler var; önce onları arşive alın.',
 
   // Teachers and availability
   'Availability.TimeOffConflict': 'Öğretmen bu saatte izinli.',

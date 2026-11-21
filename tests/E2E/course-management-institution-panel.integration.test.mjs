@@ -442,6 +442,44 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(changeLog.find(item => item.what === 'Ders saati düzeltildi').target, 'TEST Matematik');
     assert.equal(changeLog.find(item => item.what === 'E-posta bildirimi kapatıldı').before, 'LessonChanged');
 
+    // Rooms and branches (21.11.2026): corrected, archived and deleted without breaking the record.
+    const branchId = randomUUID();
+    assert.equal((await call(`${ws}/branches`, owner, 'POST', { id: branchId, name: 'TEST Şube' })).status, 201);
+    const roomId = randomUUID();
+    assert.equal((await call(`${ws}/branches/${branchId}/rooms`, owner, 'POST', { id: roomId, name: 'TEST Derslik', capacity: 10 })).status, 201);
+    assert.equal((await call(`${ws}/branches/${branchId}/rooms`, owner, 'POST', { id: randomUUID(), name: 'TEST Derslik 2', capacity: null })).status, 201);
+    assert.equal((await call(`${ws}/branches/${branchId}`, owner, 'PUT', { name: 'TEST Şube Merkez' })).status, 200);
+    assert.equal((await (await call(`${ws}/rooms/${roomId}`, owner, 'PUT', { name: 'TEST Derslik 2', capacity: 10, force: false })).json()).code,
+      'Room.DuplicateName');
+    const roomLesson = randomUUID();
+    const roomLessonCall = await call(`${ws}/lessons`, owner, 'POST', { id: roomLesson, courseId, groupId, studentId: null, teacherUserId: teacherId,
+      roomId, startsAt: `${turkeyDay(25)}T15:30:00+03:00`, endsAt: `${turkeyDay(25)}T16:00:00+03:00` });
+    assert.equal(roomLessonCall.status, 201, await roomLessonCall.clone().text());
+    const smaller = await call(`${ws}/rooms/${roomId}`, owner, 'PUT', { name: 'TEST Derslik A', capacity: 1, force: false });
+    assert.equal(smaller.status, 409);
+    assert.deepEqual(await smaller.json(), { code: 'Room.CapacityBelowLessons', lessons: 1 });
+    assert.equal((await call(`${ws}/rooms/${roomId}`, owner, 'PUT', { name: 'TEST Derslik A', capacity: 1, force: true })).status, 200);
+    assert.equal((await (await call(`${ws}/branches/${branchId}/archive`, owner, 'POST')).json()).code, 'Branch.HasActiveRooms');
+    assert.equal((await (await call(`${ws}/branches/${branchId}`, owner, 'DELETE')).json()).code, 'Branch.HasRooms');
+    const archiveAsk = await call(`${ws}/rooms/${roomId}/archive`, owner, 'POST');
+    assert.deepEqual(await archiveAsk.json(), { code: 'Room.HasPlannedLessons', lessons: 1 });
+    assert.equal((await call(`${ws}/rooms/${roomId}/archive?force=true`, owner, 'POST')).status, 204);
+    const archivedRoom = (await (await call(`${ws}/rooms`, owner)).json()).find(item => item.id === roomId);
+    assert.ok(archivedRoom.archivedAt, 'the archived room is still listed, marked');
+    assert.equal((await (await call(`${ws}/lessons`, owner, 'POST', { id: randomUUID(), courseId, groupId, studentId: null, teacherUserId: teacherId,
+      roomId, startsAt: `${turkeyDay(26)}T15:30:00+03:00`, endsAt: `${turkeyDay(26)}T16:00:00+03:00` })).json()).code, 'Room.Archived');
+    assert.equal((await call(`${ws}/rooms/${roomId}/restore`, owner, 'POST')).status, 204);
+    const deleteAsk = await call(`${ws}/rooms/${roomId}`, owner, 'DELETE');
+    assert.deepEqual(await deleteAsk.json(), { code: 'Room.HasPlannedLessons', lessons: 1 });
+    const deleted = await call(`${ws}/rooms/${roomId}?force=true`, owner, 'DELETE');
+    assert.equal(deleted.status, 200, await deleted.clone().text());
+    assert.equal((await deleted.json()).freedLessons, 1);
+    const freed = (await (await call(`${ws}/lessons?from=${turkeyDay(25)}T00:00:00%2B03:00&to=${turkeyDay(26)}T00:00:00%2B03:00`, owner)).json())
+      .find(item => item.id === roomLesson);
+    assert.equal(freed.roomId, null, 'the lesson stays, without a room');
+    assert.equal(freed.status, 'Scheduled');
+    assert.equal((await call(`${ws}/branches/${branchId}`, teacher, 'DELETE')).status, 404, 'only the owner manages rooms');
+
     // One-to-one teachers (20.11.2026): last, so the student counts above stay as they were.
     const soloId = randomUUID();
     assert.equal((await call(`${ws}/students`, owner, 'POST', { id: soloId, displayName: 'TEST Birebir', email: null, phoneNumber: null })).status, 201);

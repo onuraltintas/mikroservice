@@ -62,8 +62,8 @@ export interface GuardianContact { id: string; displayName: string; email: strin
 export interface StudentGuardianLink extends GuardianContact { relationship: string; }
 export interface CourseSummary { id: string; name: string; subject: string; }
 export interface CourseGroup { id: string; courseId: string; courseName: string; name: string; teacherUserId: string; }
-export interface CourseBranch { id: string; name: string; }
-export interface CourseRoom { id: string; branchId: string; branchName: string; name: string; capacity: number | null; }
+export interface CourseBranch { id: string; name: string; archivedAt?: string | null; }
+export interface CourseRoom { id: string; branchId: string; branchName: string; name: string; capacity: number | null; archivedAt?: string | null; }
 export interface CourseLesson {
   id: string; seriesId: string | null; timeZoneId: string | null; courseId: string; courseName: string; subject: string; workspaceName: string;
   groupId: string | null; groupName: string | null; roomId: string | null; roomName: string | null; branchName: string | null; teacherUserId: string;
@@ -255,7 +255,7 @@ export class CourseManagementService {
     }));
   }
   enrollStudent(workspaceId: string, groupId: string, studentId: string) {
-    return firstValueFrom(this.http.post<unknown>(`${this.base}/workspaces/${workspaceId}/groups/${groupId}/students/${studentId}`, {}));
+    return firstValueFrom(this.http.post<{ id: string; fullRoomLessons?: number }>(`${this.base}/workspaces/${workspaceId}/groups/${groupId}/students/${studentId}`, {}));
   }
   getLessons(workspaceId: string) {
     return this.getLessonAttendanceForReport(workspaceId);

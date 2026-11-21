@@ -191,8 +191,8 @@ public static class SetupEndpoints
         });
     }
 
-    private static Task<Workspace?> OwnedAsync(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user, CancellationToken ct) =>
+    internal static Task<Workspace?> OwnedAsync(CourseManagementDbContext db, Guid workspaceId, ClaimsPrincipal user, CancellationToken ct) =>
         db.Workspaces.SingleOrDefaultAsync(workspace => workspace.Id == workspaceId && workspace.OwnerUserId == UserId(user), ct);
 
-    private static Guid UserId(ClaimsPrincipal user) => Guid.Parse(user.FindFirstValue("sub")!);
+    internal static Guid UserId(ClaimsPrincipal user) => Guid.Parse(user.FindFirstValue("sub")!);
 }
