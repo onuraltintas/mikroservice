@@ -4,9 +4,11 @@ import { MaxkampusSession } from './core/session.service';
 
 /** /panel and /plan need a maxkampüs session; without one the visitor signs in and comes back. */
 export const signedIn: CanActivateFn = async (_route, state) => {
+  // inject() only works before the first await (NG0203); a signed-out visitor got a blank page instead of /giris.
   const session = inject(MaxkampusSession);
+  const router = inject(Router);
   if (await session.ensure().catch(() => false)) return true;
-  return inject(Router).createUrlTree(['/giris'], { queryParams: { donus: state.url } });
+  return router.createUrlTree(['/giris'], { queryParams: { donus: state.url } });
 };
 
 export const routes: Routes = [
