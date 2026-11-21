@@ -3,7 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CourseManagementService } from '../../course-management.service';
 import { CoursePanelApi, PanelEmailSettings, PanelStudentRow, SetupStepId } from '../panel-api.service';
-import { CoursePanelState, PanelSection, formatMoney, problemText } from '../panel-state';
+import { CoursePanelState, PanelSection, formatMoney, fullRoomNotice, problemText } from '../panel-state';
 import { FEE_MODELS, createFeeAgreementWithInstallments } from '../fee-agreements';
 import { readCsvText } from './students.component';
 
@@ -451,10 +451,10 @@ interface SchedulePlan { days: boolean[]; time: string; duration: number; roomId
       <div class="chips">@for (duration of durations; track duration.value) {
         <button type="button" [attr.aria-pressed]="plan.duration === duration.value" (click)="plan.duration = duration.value">{{ duration.label }}</button>
       }</div>
-      @if (state.rooms().length) {
+      @if (state.activeRooms().length) {
         <p class="label">Derslik</p>
         <div class="chips"><button type="button" [attr.aria-pressed]="!plan.roomId" (click)="plan.roomId = ''">Seçilmedi</button>
-          @for (room of state.rooms(); track room.id) { <button type="button" [attr.aria-pressed]="plan.roomId === room.id" (click)="plan.roomId = room.id">{{ room.name }}</button> }</div>
+          @for (room of state.activeRooms(); track room.id) { <button type="button" [attr.aria-pressed]="plan.roomId === room.id" (click)="plan.roomId = room.id">{{ room.name }}</button> }</div>
       }
       <p class="label">Ne zamana kadar?</p>
       <div class="chips">@for (end of endChoices(); track end.value) {
@@ -693,11 +693,13 @@ export class SetupWizardComponent implements OnInit {
     });
   }
   async toggleGroup(student: PanelStudentRow, groupId: string): Promise<void> {
+    let full = 0;
     await this.act(async () => {
       if (this.inGroup(student, groupId)) await this.api.removeFromGroup(this.state.id(), groupId, student.id);
-      else await this.service.enrollStudent(this.state.id(), groupId, student.id);
+      else full = (await this.service.enrollStudent(this.state.id(), groupId, student.id))?.fullRoomLessons ?? 0;
       await this.reload();
     });
+    if (full) this.notice.set(fullRoomNotice(full).trim());
   }
   async toggleSolo(student: PanelStudentRow, teacherUserId: string): Promise<void> {
     await this.act(async () => {

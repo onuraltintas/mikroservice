@@ -54,7 +54,12 @@ public class SiteIntegrations(HttpClient http, IConfiguration configuration, IHo
         }
     }
 
-    public virtual async Task<bool> QueueEmailAsync(Guid messageId, string recipient, string subject, string html, CancellationToken cancellationToken)
+    public const string NewsletterConfirmationType = "SiteNewsletterConfirmation";
+    public const string ContactNoticeType = "SiteContactNotice";
+    public const string ContactReceiptType = "SiteContactReceipt";
+
+    public virtual async Task<bool> QueueEmailAsync(Guid messageId, string recipient, string subject, string html, CancellationToken cancellationToken,
+        string consumerType = NewsletterConfirmationType)
     {
         var notification = configuration["Services:NotificationService"];
         if (string.IsNullOrWhiteSpace(notification) || string.IsNullOrWhiteSpace(Key))
@@ -64,7 +69,7 @@ public class SiteIntegrations(HttpClient http, IConfiguration configuration, IHo
         }
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{notification.TrimEnd('/')}/api/internal/notifications/email")
         {
-            Content = JsonContent.Create(new { messageId, consumerType = "SiteNewsletterConfirmation", recipient, subject, body = html })
+            Content = JsonContent.Create(new { messageId, consumerType, recipient, subject, body = html })
         };
         request.Headers.TryAddWithoutValidation("X-Internal-Service-Key", Key);
         using var response = await http.SendAsync(request, cancellationToken);
@@ -75,7 +80,8 @@ public class SiteIntegrations(HttpClient http, IConfiguration configuration, IHo
 }
 
 /// <summary>maxkampus.com's contact form and newsletter (19.11.2026).</summary>
-public sealed class SiteForms(SiteDbContext db, SiteIntegrations integrations, TimeProvider clock, IConfiguration configuration)
+public sealed class SiteForms(SiteDbContext db, SiteIntegrations integrations, TimeProvider clock, IConfiguration configuration,
+    ILogger<SiteForms> logger)
 {
     public const int NameLength = 120;
     public const int PhoneLength = 40;
@@ -104,13 +110,71 @@ public sealed class SiteForms(SiteDbContext db, SiteIntegrations integrations, T
         var since = now.AddDays(-1);
         if (await db.ContactMessages.CountAsync(item => item.Site == site && item.Email == email && item.CreatedAt >= since, cancellationToken) >= 3)
             throw new SiteRequestException(429, "Bugün bu adresten yeterince mesaj aldık; size döneceğiz.");
-        db.ContactMessages.Add(new SiteContactMessage
+        var saved = new SiteContactMessage
         {
             Id = Guid.NewGuid(), Site = site, Name = name, Organization = organization, Email = email!, Phone = phone,
             Message = message, ConsentAt = now, CreatedAt = now
-        });
+        };
+        db.ContactMessages.Add(saved);
         await db.SaveChangesAsync(cancellationToken);
+        await SendContactEmailsAsync(site, saved.Id, email!, cancellationToken);
     }
+
+    /// <summary>
+    /// Live test 20.11.2026: the site promises an answer within a working day, yet nobody heard of a new message. The team
+    /// gets a short notice (no message text, no personal data; only a link to the admin panel) when an address is set, and
+    /// the sender gets a receipt without a copy of the message. A failed e-mail never loses the message: it is saved first.
+    /// </summary>
+    private async Task SendContactEmailsAsync(string site, Guid messageId, string sender, CancellationToken cancellationToken)
+    {
+        var brand = site == SiteRules.Maxkampus ? "maxkampüs" : "eduivme";
+        var team = NormalizeEmail(configuration["Site:ContactNotifyEmail"]);
+        if (team is not null)
+            await TryQueueAsync(messageId, team, $"{brand}: yeni iletişim mesajı", NoticeHtml(brand, $"{AdminBase()}/dashboard/{site}/messages"),
+                SiteIntegrations.ContactNoticeType, cancellationToken);
+        await TryQueueAsync(ReceiptId(messageId), sender, $"{brand}: mesajınızı aldık", ReceiptHtml(brand), SiteIntegrations.ContactReceiptType, cancellationToken);
+    }
+
+    private async Task TryQueueAsync(Guid id, string recipient, string subject, string html, string type, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!await integrations.QueueEmailAsync(id, recipient, subject, html, cancellationToken, type))
+                logger.LogWarning("A contact e-mail ({Type}) could not be queued; the message is saved.", type);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(exception, "A contact e-mail ({Type}) could not be queued; the message is saved.", type);
+        }
+    }
+
+    /// <summary>A second, stable id for the receipt, so the notice and the receipt never share one.</summary>
+    private static Guid ReceiptId(Guid messageId)
+    {
+        var bytes = messageId.ToByteArray();
+        bytes[0] ^= 0x5A;
+        return new Guid(bytes);
+    }
+
+    private string AdminBase() => (configuration["Site:AdminPanelUrl"] ?? "https://admin.eduivme.com").TrimEnd('/');
+
+    private static string NoticeHtml(string brand, string link) => $"""
+        <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1C2430;line-height:1.6">
+          <p style="margin:0 0 4px;font-size:14px;color:#4A5563">{WebUtility.HtmlEncode(brand)}</p>
+          <h1 style="margin:0 0 16px;font-size:20px">Yeni iletişim mesajı</h1>
+          <p style="margin:0 0 12px">Sitedeki iletişim formundan yeni bir mesaj geldi. Mesajı yönetim panelinden okuyup yanıtlayın; sitede bir iş günü içinde dönüleceği yazıyor.</p>
+          <p style="margin:20px 0 0"><a href="{WebUtility.HtmlEncode(link)}" style="display:inline-block;padding:12px 18px;background:#1C2430;color:#FFFFFF;border-radius:8px;text-decoration:none">Mesajları aç</a></p>
+        </div>
+        """;
+
+    private static string ReceiptHtml(string brand) => $"""
+        <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1C2430;line-height:1.6">
+          <p style="margin:0 0 4px;font-size:14px;color:#4A5563">{WebUtility.HtmlEncode(brand)}</p>
+          <h1 style="margin:0 0 16px;font-size:20px">Mesajınızı aldık</h1>
+          <p style="margin:0 0 12px">İletişim formundan gönderdiğiniz mesaj bize ulaştı. Bir iş günü içinde bu e-posta adresine dönüyoruz.</p>
+          <p style="margin:0;font-size:14px;color:#4A5563">Bu mesajı siz göndermediyseniz e-postayı yok sayabilirsiniz.</p>
+        </div>
+        """;
 
     /// <summary>Starts a subscription; the address counts only after the confirmation link. Answers the same either way.</summary>
     public async Task SubscribeAsync(string site, SubscribeRequest request, CancellationToken cancellationToken)
@@ -140,7 +204,8 @@ public sealed class SiteForms(SiteDbContext db, SiteIntegrations integrations, T
         await db.SaveChangesAsync(cancellationToken);
         // The link opens a page that confirms with a click: mail scanners that open links must not subscribe anyone.
         var link = $"{PublicBase(site)}/bulten/onay?t={subscriber.Token}";
-        await integrations.QueueEmailAsync(Guid.NewGuid(), email, "maxkampüs bülteni: aboneliğinizi onaylayın", ConfirmationHtml(link), cancellationToken);
+        await integrations.QueueEmailAsync(Guid.NewGuid(), email, "maxkampüs bülteni: aboneliğinizi onaylayın", ConfirmationHtml(link), cancellationToken,
+            SiteIntegrations.NewsletterConfirmationType);
     }
 
     public async Task<bool> ConfirmAsync(string? token, CancellationToken cancellationToken)

@@ -82,6 +82,21 @@ export class CoursePanelApi {
   inviteTeacher(id: string, email: string, displayName: string | null = null) {
     return firstValueFrom(this.http.post<PanelTeacherInvitation>(`${this.ws(id)}/teacher-email-invitations`, { id: crypto.randomUUID(), email, displayName }));
   }
+  // Rooms and branches (21.11.2026): correct, archive, delete. A 409 with `lessons` asks the owner before `force`.
+  updateBranch(id: string, branchId: string, name: string) { return firstValueFrom(this.http.put<void>(`${this.ws(id)}/branches/${branchId}`, { name })); }
+  archiveBranch(id: string, branchId: string) { return firstValueFrom(this.http.post<void>(`${this.ws(id)}/branches/${branchId}/archive`, {})); }
+  restoreBranch(id: string, branchId: string) { return firstValueFrom(this.http.post<void>(`${this.ws(id)}/branches/${branchId}/restore`, {})); }
+  deleteBranch(id: string, branchId: string) { return firstValueFrom(this.http.delete<void>(`${this.ws(id)}/branches/${branchId}`)); }
+  updateRoom(id: string, roomId: string, name: string, capacity: number | null, force = false) {
+    return firstValueFrom(this.http.put<void>(`${this.ws(id)}/rooms/${roomId}`, { name, capacity, force }));
+  }
+  archiveRoom(id: string, roomId: string, force = false) {
+    return firstValueFrom(this.http.post<void>(`${this.ws(id)}/rooms/${roomId}/archive${force ? '?force=true' : ''}`, {}));
+  }
+  restoreRoom(id: string, roomId: string) { return firstValueFrom(this.http.post<void>(`${this.ws(id)}/rooms/${roomId}/restore`, {})); }
+  deleteRoom(id: string, roomId: string, force = false) {
+    return firstValueFrom(this.http.delete<{ freedLessons: number }>(`${this.ws(id)}/rooms/${roomId}${force ? '?force=true' : ''}`));
+  }
   feeAgreements(id: string) {
     return firstValueFrom(this.http.get<{ id: string; studentId: string; courseId: string; model: string; isActive: boolean }[]>(`${this.ws(id)}/finance/fee-agreements`));
   }

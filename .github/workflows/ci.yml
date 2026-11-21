@@ -564,6 +564,7 @@ jobs:
           grep -q '20261119184335_V1TeacherEmailInvitations' artifacts/course-management/course-management-idempotent.sql
           grep -q '20261119212210_V1WorkspaceRetention' artifacts/course-management/course-management-idempotent.sql
           grep -q '20261121000100_V1SetupGuide' artifacts/course-management/course-management-idempotent.sql
+          grep -q '20261121120000_V1RoomArchive' artifacts/course-management/course-management-idempotent.sql
 
       - name: Upload Course Management migration SQL for review
         uses: actions/upload-artifact@v4

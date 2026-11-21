@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { CourseAuditEntry, CourseManagementService, CourseWorkspaceSubscription } from '../../course-management.service';
 import { auditLabel } from '../audit-labels';
 import { CoursePanelApi, PanelEmailPreview, PanelEmailSettings, PanelSentEmail, PanelSupportView } from '../panel-api.service';
+import { PanelConfirm } from '../panel-confirm';
+import { CourseBranch, CourseRoom } from '../../course-management.service';
 import { CoursePanelState, PanelSection, formatDate, formatDateTime, problemText, readHashQuery, writeHashQuery } from '../panel-state';
 
 type Tab = 'emails' | 'branches' | 'support' | 'audit' | 'plan' | 'profile';
@@ -111,9 +113,55 @@ const KINDS: Record<string, { title: string; when: string }> = {
         <div class="row">
           <section class="card grow"><div class="card-head"><h2>Şubeler ve derslikler</h2></div>
             @for (branch of state.branches(); track branch.id) {
-              <div class="rule"><div class="rule-text"><strong>{{ branch.name }}</strong>
-                <span class="muted">{{ roomsLine(branch.id) }}</span></div></div>
+              <div class="place">
+                @if (editing() === 'b:' + branch.id) {
+                  <form class="edit-row" (ngSubmit)="saveBranch(branch.id)">
+                    <label class="field">Şube adı<input name="editBranch" [(ngModel)]="editName" maxlength="120"></label>
+                    <div class="actions"><button type="submit" class="btn btn-small" [disabled]="busy() || !editName.trim()">Kaydet</button>
+                      <button type="button" class="btn-quiet btn-small" (click)="editing.set('')">Vazgeç</button></div>
+                  </form>
+                } @else {
+                  <div class="place-head">
+                    <strong>{{ branch.name }}</strong>@if (branch.archivedAt) { <span class="badge">Arşivde</span> }
+                    @if (!state.readOnly()) {
+                      <span class="actions">
+                        <button type="button" class="btn-quiet btn-small" (click)="editBranch(branch)" [attr.aria-label]="branch.name + ' şubesini düzenle'">Düzenle</button>
+                        @if (branch.archivedAt) { <button type="button" class="btn-quiet btn-small" (click)="restoreBranch(branch)">Arşivden çıkar</button> }
+                        @else { <button type="button" class="btn-quiet btn-small" (click)="archiveBranch(branch)" [attr.aria-label]="branch.name + ' şubesini arşive al'">Arşive al</button> }
+                        <button type="button" class="btn-quiet btn-small danger" (click)="deleteBranch(branch)" [attr.aria-label]="branch.name + ' şubesini sil'">Sil</button>
+                      </span>
+                    }
+                  </div>
+                }
+                <ul class="rooms">
+                  @for (room of roomsOf(branch.id); track room.id) {
+                    <li>
+                      @if (editing() === 'r:' + room.id) {
+                        <form class="edit-row" (ngSubmit)="saveRoom(room)">
+                          <label class="field">Derslik adı<input name="editRoom" [(ngModel)]="editName" maxlength="120"></label>
+                          <label class="field">Kapasite<input name="editCapacity" type="number" min="1" max="500" [(ngModel)]="editCapacity"><span class="hint">Boş: sınır yok.</span></label>
+                          <div class="actions"><button type="submit" class="btn btn-small" [disabled]="busy() || !editName.trim()">Kaydet</button>
+                            <button type="button" class="btn-quiet btn-small" (click)="editing.set('')">Vazgeç</button></div>
+                        </form>
+                      } @else {
+                        <span>{{ room.name }} <span class="muted">{{ room.capacity ? room.capacity + ' kişi' : 'sınır yok' }}</span>
+                          @if (room.archivedAt) { <span class="badge">Arşivde</span> }</span>
+                        @if (!state.readOnly()) {
+                          <span class="actions">
+                            <button type="button" class="btn-quiet btn-small" (click)="editRoom(room)" [attr.aria-label]="room.name + ' dersliğini düzenle'">Düzenle</button>
+                            @if (room.archivedAt) { <button type="button" class="btn-quiet btn-small" (click)="restoreRoom(room)" [attr.aria-label]="room.name + ' dersliğini arşivden çıkar'">Arşivden çıkar</button> }
+                            @else { <button type="button" class="btn-quiet btn-small" (click)="archiveRoom(room)" [attr.aria-label]="room.name + ' dersliğini arşive al'">Arşive al</button> }
+                            <button type="button" class="btn-quiet btn-small danger" (click)="deleteRoom(room)" [attr.aria-label]="room.name + ' dersliğini sil'">Sil</button>
+                          </span>
+                        }
+                      }
+                    </li>
+                  } @empty { <li class="muted">Derslik yok.</li> }
+                </ul>
+              </div>
             } @empty { <p class="empty">Şube yok. Tek yerde ders veriyorsanız "Merkez" adıyla bir şube açın.</p> }
+            <p class="hint" style="margin: 12px 0 0">Arşivdeki derslik yeni derslerde seçilemez; geçmiş derslerde adı görünmeye devam eder.
+              Geçmiş derslerde kullanılan derslik silinemez, arşive alınır.</p>
           </section>
           @if (!state.readOnly()) {
             <div class="side stack">
@@ -122,7 +170,7 @@ const KINDS: Record<string, { title: string; when: string }> = {
                 <div><button type="submit" class="btn-secondary" [disabled]="busy() || !branchName.trim()">Ekle</button></div></form>
               <form class="card card-pad stack" style="gap: 12px" (ngSubmit)="addRoom()"><h2>Derslik ekle</h2>
                 <label class="field">Şube<select name="roomBranch" [(ngModel)]="roomBranchId"><option value="">Şube seçin</option>
-                  @for (branch of state.branches(); track branch.id) { <option [value]="branch.id">{{ branch.name }}</option> }</select></label>
+                  @for (branch of activeBranches(); track branch.id) { <option [value]="branch.id">{{ branch.name }}</option> }</select></label>
                 <label class="field">Derslik adı<input name="room" [(ngModel)]="roomName" maxlength="200"></label>
                 <label class="field">Kapasite<input name="capacity" type="number" min="1" max="500" [(ngModel)]="roomCapacity"><span class="hint">Boş bırakılırsa sınır yok.</span></label>
                 <div><button type="submit" class="btn-secondary" [disabled]="busy() || !roomBranchId || !roomName.trim()">Ekle</button></div></form>
@@ -188,12 +236,22 @@ const KINDS: Record<string, { title: string; when: string }> = {
     .switch[aria-checked='true'] span { left: 23px; background: var(--ds-accent); }
     .days { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
     @media (max-width: 640px) { .rule { grid-template-columns: minmax(0, 1fr) auto; } .rule .field:not(.note) { grid-column: 1 / -1; } }
+    .place { padding: 14px 20px; border-top: 1px solid var(--ds-line); }
+    .place-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .place-head .actions, .rooms .actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px; }
+    .rooms { list-style: none; margin: 8px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--ds-line); display: flex; flex-direction: column; gap: 4px; }
+    .rooms li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 44px; }
+    .rooms .muted { font-size: 14px; }
+    .edit-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; width: 100%; padding: 6px 0; }
+    .edit-row .field { flex: 1 1 160px; }
+    .btn-quiet.danger { color: var(--ds-danger); }
   `
 })
 export class SettingsSectionComponent {
   @Output() readonly navigate = new EventEmitter<PanelSection>();
   readonly state = inject(CoursePanelState);
   private readonly api = inject(CoursePanelApi);
+  private readonly confirm = inject(PanelConfirm);
   private readonly service = inject(CourseManagementService);
   readonly kinds = KINDS;
   readonly hours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
@@ -292,9 +350,97 @@ export class SettingsSectionComponent {
       `Deneme e-postası ${this.testEmail.trim()} adresine gönderildi. Birkaç dakika içinde gelir.`);
   }
 
-  roomsLine(branchId: string): string {
-    const rooms = this.state.rooms().filter(room => room.branchId === branchId);
-    return rooms.length ? rooms.map(room => room.capacity ? `${room.name} (${room.capacity} kişi)` : room.name).join(', ') : 'Derslik yok';
+  // ---- Rooms and branches (21.11.2026): correct, archive, delete ----
+  readonly editing = signal('');
+  editName = ''; editCapacity: number | null = null;
+  activeBranches() { return this.state.branches().filter(branch => !branch.archivedAt); }
+  roomsOf(branchId: string) { return this.state.rooms().filter(room => room.branchId === branchId); }
+
+  editBranch(branch: CourseBranch): void { this.editing.set('b:' + branch.id); this.editName = branch.name; }
+  editRoom(room: CourseRoom): void { this.editing.set('r:' + room.id); this.editName = room.name; this.editCapacity = room.capacity; }
+
+  saveBranch(branchId: string): Promise<void> {
+    return this.act(async () => {
+      await this.api.updateBranch(this.state.id(), branchId, this.editName.trim());
+      this.editing.set(''); await this.state.refreshLists();
+    }, 'Şube kaydedildi.');
+  }
+
+  async saveRoom(room: CourseRoom, force = false): Promise<void> {
+    const capacity = this.editCapacity ? Number(this.editCapacity) : null;
+    const asked = await this.askOnPlanned(() => this.api.updateRoom(this.state.id(), room.id, this.editName.trim(), capacity, force),
+      lessons => `${lessons} planlı derste öğrenci sayısı yeni kapasiteyi (${capacity} kişi) aşıyor. Dersler yerinde kalır. Yine de kaydedeyim mi?`,
+      'Kapasiteyi düşür', 'Derslik kaydedildi.');
+    if (asked === 'confirm') await this.saveRoom(room, true);
+    if (asked === 'done') this.editing.set('');
+  }
+
+  async archiveRoom(room: CourseRoom, force = false): Promise<void> {
+    const asked = await this.askOnPlanned(() => this.api.archiveRoom(this.state.id(), room.id, force),
+      lessons => `${room.name} ${lessons} planlı derste kullanılıyor. Bu dersler bu derslikte kalır; derslik yeni derslerde seçilemez. Arşive alayım mı?`,
+      'Arşive al', `${room.name} arşive alındı.`);
+    if (asked === 'confirm') await this.archiveRoom(room, true);
+  }
+
+  restoreRoom(room: CourseRoom): Promise<void> {
+    return this.act(async () => { await this.api.restoreRoom(this.state.id(), room.id); await this.state.refreshLists(); }, `${room.name} arşivden çıkarıldı.`);
+  }
+
+  async deleteRoom(room: CourseRoom, force = false): Promise<void> {
+    if (!force && !await this.confirm.ask(`${room.name} kalıcı olarak silinsin mi? Bu geri alınamaz.`, { title: 'Dersliği sil', confirmText: 'Sil', danger: true })) return;
+    this.busy.set(true); this.error.set(''); this.notice.set('');
+    try {
+      const result = await this.api.deleteRoom(this.state.id(), room.id, force);
+      await this.state.refreshLists();
+      this.state.changed();
+      this.notice.set(result?.freedLessons ? `${room.name} silindi; ${result.freedLessons} planlı dersin dersliği boşaldı.` : `${room.name} silindi.`);
+    } catch (error) {
+      this.busy.set(false);
+      const body = (error as { error?: { code?: string; lessons?: number } })?.error;
+      if (body?.code === 'Room.InUse') {
+        if (await this.confirm.ask(`${room.name} geçmiş derslerde kullanıldı; kayıtlar bozulmasın diye silinemez. Bunun yerine arşive alayım mı?`,
+          { title: 'Silinemez', confirmText: 'Arşive al' })) await this.archiveRoom(room);
+        return;
+      }
+      if (body?.code === 'Room.HasPlannedLessons' && body.lessons) {
+        if (await this.confirm.ask(`${room.name} ${body.lessons} planlı derste kullanılıyor. Silerseniz bu derslerin dersliği boşalır; dersler iptal edilmez.`,
+          { title: 'Planlı dersler', confirmText: 'Yine de sil', danger: true })) await this.deleteRoom(room, true);
+        return;
+      }
+      this.error.set(problemText(error));
+    } finally { this.busy.set(false); }
+  }
+
+  archiveBranch(branch: CourseBranch): Promise<void> {
+    return this.act(async () => { await this.api.archiveBranch(this.state.id(), branch.id); await this.state.refreshLists(); }, `${branch.name} arşive alındı.`);
+  }
+  restoreBranch(branch: CourseBranch): Promise<void> {
+    return this.act(async () => { await this.api.restoreBranch(this.state.id(), branch.id); await this.state.refreshLists(); }, `${branch.name} arşivden çıkarıldı.`);
+  }
+  async deleteBranch(branch: CourseBranch): Promise<void> {
+    if (!await this.confirm.ask(`${branch.name} kalıcı olarak silinsin mi? Bu geri alınamaz.`, { title: 'Şubeyi sil', confirmText: 'Sil', danger: true })) return;
+    await this.act(async () => { await this.api.deleteBranch(this.state.id(), branch.id); await this.state.refreshLists(); }, `${branch.name} silindi.`);
+  }
+
+  /** Runs a room change; when planned lessons are affected (409 with `lessons`) asks the owner. */
+  private async askOnPlanned(work: () => Promise<unknown>, question: (lessons: number) => string, confirmText: string, done: string)
+    : Promise<'done' | 'confirm' | 'stop'> {
+    this.busy.set(true); this.error.set(''); this.notice.set('');
+    try {
+      await work();
+      await this.state.refreshLists();
+      this.state.changed();
+      this.notice.set(done);
+      return 'done';
+    } catch (error) {
+      const lessons = (error as { error?: { lessons?: number } })?.error?.lessons;
+      if (typeof lessons === 'number' && lessons > 0) {
+        this.busy.set(false);
+        return await this.confirm.ask(question(lessons), { title: 'Planlı dersler', confirmText }) ? 'confirm' : 'stop';
+      }
+      this.error.set(problemText(error));
+      return 'stop';
+    } finally { this.busy.set(false); }
   }
   addBranch(): Promise<void> {
     return this.act(async () => { await this.service.createBranch(this.state.id(), this.branchName.trim()); this.branchName = ''; await this.state.refreshLists(); }, 'Şube eklendi.');
