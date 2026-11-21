@@ -10,6 +10,9 @@
   --mk-hero-muted: #D6DAE0;
   --mk-hero-line: #2E3A49;
   --mk-hero-card: #222C39;
+  // Marks on the graphite side of the account screens (B design, 21.11.2026).
+  --mk-chip-blue: #9DBEF2;
+  --mk-chip-green: #8FE0C2;
 }
 
 :root { color-scheme: light; }
@@ -76,3 +79,19 @@ a { color: var(--ds-link); }
 .mk-pill { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; background: var(--mk-soft); color: var(--mk-on-soft); font-size: 14px; font-weight: 600; }
 .mk-notice { padding: 14px 16px; border: 1px solid var(--ds-line); border-left: 4px solid var(--ds-accent); border-radius: var(--ds-radius-control); background: var(--ds-surface); }
 .mk-success { padding: 14px 16px; border-radius: var(--ds-radius-control); background: var(--ds-success-soft); color: var(--ds-success); }
+
+// Account screens (sign-in, registration, plan, invitation): the B card language, maxkampüs only — the shared ds-auth
+// layout keeps its look in the other products. On a phone the form stays plain on the page.
+.mk-auth { --ds-radius-control: 10px; --ds-radius-button: 10px; }
+.mk-auth .ds-auth__main { background: var(--ds-page-tint, var(--ds-bg)); }
+@media (min-width: 900px) {
+  .mk-auth .mk-auth__panel { padding: 32px; border: 1px solid color-mix(in srgb, var(--ds-line) 70%, transparent);
+    border-radius: var(--ds-radius-card, 16px); background: var(--ds-surface); box-shadow: var(--ds-shadow-raised, var(--ds-shadow)); }
+}
+.mk-auth__points { list-style: none; padding-left: 0; }
+.mk-auth__points li { display: flex; align-items: center; gap: 10px; }
+.mk-auth__points li::before { content: none; display: none; }
+.mk-auth__chip { flex: none; width: 22px; height: 22px; border-radius: 7px; }
+.mk-auth__chip--a { background: var(--ds-accent); }
+.mk-auth__chip--b { background: var(--mk-chip-blue); }
+.mk-auth__chip--c { background: var(--mk-chip-green); }
