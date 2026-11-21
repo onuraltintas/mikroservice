@@ -147,6 +147,11 @@ export class CoursePanelComponent implements OnInit {
     const onHash = () => this.readHash();
     this.document.defaultView?.addEventListener('hashchange', onHash);
     this.destroyRef.onDestroy(() => this.document.defaultView?.removeEventListener('hashchange', onHash));
+    // Live test 21.11.2026: a change made elsewhere (a teacher accepting an invitation, another tab) showed only after a
+    // reload. Coming back to the tab reloads the lists, at most once a minute.
+    const onVisible = () => { if (this.document.visibilityState === 'visible') void this.refreshIfStale(); };
+    this.document.addEventListener('visibilitychange', onVisible);
+    this.destroyRef.onDestroy(() => this.document.removeEventListener('visibilitychange', onVisible));
     try {
       try {
         const profile = await this.service.getProfile();
@@ -190,6 +195,17 @@ export class CoursePanelComponent implements OnInit {
     }
   }
 
+  private refreshedAt = Date.now();
+  private async refreshIfStale(): Promise<void> {
+    if (!this.state.id() || Date.now() - this.refreshedAt < 60_000) return;
+    this.refreshedAt = Date.now();
+    try {
+      await this.state.refreshLists();
+      await this.state.loadSetup();
+      this.state.changed();
+    } catch { /* the next visit tries again */ }
+  }
+
   /** Leaving the guide: "Daha sonra devam et" keeps it closed until the next visit; finishing removes it from the menu. */
   leaveSetup(section: PanelSection): void {
     const id = this.state.id();
@@ -205,7 +221,14 @@ export class CoursePanelComponent implements OnInit {
   private toOverview(): void {
     this.section.set('overview');
     const view = this.document.defaultView;
-    if (view && view.location.hash) view.history.replaceState(view.history.state, '', hashUrl('#genel-bakis'));
+    if (!view || !view.location.hash) return;
+    view.history.replaceState(view.history.state, '', hashUrl('#genel-bakis'));
+    // Live test 21.11.2026: the host app's router finishes its own navigation afterwards and wrote the old address back.
+    // Replacing once more after it settles leaves #genel-bakis in the address bar (hashchange → readHash → overview).
+    setTimeout(() => {
+      const slug = view.location.hash.replace(/^#/, '').split('?')[0];
+      if (slug && slug !== 'genel-bakis' && !this.visibleSections().some(item => item.slug === slug)) view.location.replace(hashUrl('#genel-bakis'));
+    }, 300);
   }
 
   async choose(id: string): Promise<void> {
