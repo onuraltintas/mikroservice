@@ -2364,6 +2364,48 @@
     border: 1px dashed var(--ui-danger);
 }
 
+/* Feedback fix 18 (21.11.2026): a wrong tap flashes red for a moment; with reduced motion only the colour shows. */
+.scan-word.wrong-tap {
+    background-color: var(--sp-danger-light, var(--ui-danger-soft));
+    color: var(--sp-danger, var(--ui-danger));
+    box-shadow: inset 0 0 0 2px var(--sp-danger, var(--ui-danger));
+    animation: scan-wrong-shake 0.35s ease-in-out;
+}
+
+@keyframes scan-wrong-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scan-word.wrong-tap { animation: none; }
+}
+
+.scan-wrong-count {
+    color: var(--sp-danger, var(--ui-danger));
+    font-weight: 600;
+}
+
+/* Feedback fix 19: missed targets on the result screen */
+.scan-missed {
+    margin: 16px 0;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: var(--sp-tone-peach-soft, var(--ui-surface-muted));
+    text-align: left;
+
+    h3 { margin: 0 0 10px; font-size: 1rem; color: var(--sp-text-1, var(--ui-text)); }
+    ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    li {
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: var(--sp-surface, var(--ui-surface));
+        color: var(--sp-text-1, var(--ui-text));
+        font-weight: 600;
+    }
+}
+
 /* Regression Reduction Styles */
 .regression-reduction-container {
     width: 100%;
@@ -8477,4 +8519,39 @@ h1 {
   background: var(--sp-surface);
   color: var(--sp-text-1);
   font-weight: 600;
+}
+
+/* Feedback fixes 20 and 21 (21.11.2026): a short written verdict under the options */
+.answer-feedback {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    background: var(--sp-success-light, var(--ui-success-soft));
+    color: var(--sp-success-text, var(--ui-success));
+}
+
+.answer-feedback--wrong {
+    background: var(--sp-danger-light, var(--ui-danger-soft));
+    color: var(--sp-danger, var(--ui-danger));
+}
+
+/* Feedback fix 22: correct round mark in visual expansion */
+.expansion-feedback--hit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--sp-success-text, var(--ui-success));
+    font-weight: 700;
+
+    svg { width: 20px; height: 20px; }
+}
+
+/* Feedback fix 23: how long until the finish button opens */
+.reading-unlock-hint {
+    margin: 8px 0 0;
+    font-size: 0.875rem;
+    color: var(--sp-text-2, var(--ui-text-muted));
+    font-variant-numeric: tabular-nums;
+    text-align: center;
 }

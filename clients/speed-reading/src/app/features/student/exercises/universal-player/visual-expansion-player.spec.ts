@@ -40,6 +40,8 @@ describe('visual expansion answer UI', () => {
         if (serverAuthoritative) engine.reconcileServerResponse(actions.at(-1), {
           isValid: true, isCorrect: round % 2 === 0, nextStep: round + 1
         });
+        // Feedback fix 22: a correct server-checked round shows a short "Doğru" mark.
+        if (serverAuthoritative) expect(value.getExpansionLastHit()).toBe(round % 2 === 0);
         expect(value.getExpansionCorrectCount()).toBe(Math.ceil((round + 1) / 2));
         expect(value.getExpansionWrongCount()).toBe(Math.floor((round + 1) / 2));
       }

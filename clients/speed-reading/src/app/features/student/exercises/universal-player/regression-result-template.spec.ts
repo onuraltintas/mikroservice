@@ -52,4 +52,55 @@ describe('regression result answer template', () => {
     const fixture = render(true);
     expect(fixture.nativeElement.querySelector('.answers-summary')).toBeNull();
   });
+
+  // Feedback fix 21 (approved 21.11.2026): after a wrong answer the correct option is marked and named.
+  function renderAnswering(feedback: any) {
+    spyOn(ExercisePlayerComponent.prototype, 'getRegressionPhase').and.returnValue('answering');
+    spyOn(ExercisePlayerComponent.prototype, 'getRegressionCurrentQuestion').and.returnValue(
+      { QuestionText: 'Metin neyi anlatıyor?', OptionA: 'Deniz', OptionB: 'Orman', OptionC: 'Dağ', OptionD: 'Çöl' });
+    spyOn(ExercisePlayerComponent.prototype, 'getRegressionCurrentQuestionIndex').and.returnValue(0);
+    spyOn(ExercisePlayerComponent.prototype, 'getRegressionQuestionCount').and.returnValue(3);
+    spyOn(ExercisePlayerComponent.prototype, 'getRegressionBackwardClickCount').and.returnValue(0);
+    const fixture = TestBed.createComponent(ExercisePlayerComponent);
+    const player = fixture.componentInstance;
+    player.isLoading = false;
+    player.engine = { engineType: 'regression_reduction', destroy: () => undefined } as any;
+    player.engineState = { ...player.engineState, isRunning: true, isCompleted: false };
+    player.selectedAnswer = 'A';
+    player.questionFeedback = feedback;
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('marks the correct option and names it after a wrong answer', () => {
+    const fixture = renderAnswering({ isCorrect: false, correctAnswer: 'C' });
+    const correct = fixture.nativeElement.querySelector('.option-button.correct .option-label');
+    expect(correct?.textContent.trim()).toBe('C');
+    expect(fixture.nativeElement.querySelector('.option-button.wrong .option-label')?.textContent.trim()).toBe('A');
+    expect(fixture.nativeElement.querySelector('.answer-feedback')?.textContent).toContain('Doğrusu: C');
+  });
+
+  it('shows no verdict when the answer is hidden (assessment or preview)', () => {
+    const fixture = renderAnswering({ isCorrect: null });
+    expect(fixture.nativeElement.querySelector('.option-button.correct')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.answer-feedback')).toBeNull();
+  });
+
+  // Feedback fix 20: questions after a speed exercise name the correct option after a wrong answer.
+  it('names the correct option for questions after a speed exercise', () => {
+    const fixture = TestBed.createComponent(ExercisePlayerComponent);
+    const player = fixture.componentInstance as any;
+    player.isLoading = false;
+    player.engine = { engineType: 'word_highlight', destroy: () => undefined };
+    player.engineState = { ...player.engineState, isRunning: false, isCompleted: false };
+    player.exercisePhase = 'questions';
+    player.comprehensionQuestions = [{ QuestionId: 'q1', QuestionText: 'Ana fikir nedir?', OptionA: 'Bir', OptionB: 'İki',
+      OptionC: 'Üç', OptionD: 'Dört' }];
+    player.currentQuestionIndex = 0;
+    player.selectedAnswer = 'B';
+    player.questionFeedback = { isCorrect: false, correctAnswer: 'C' };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.answer-option.correct .option-letter')?.textContent.trim()).toBe('C');
+    expect(fixture.nativeElement.querySelector('.answer-feedback')?.textContent).toContain('Doğrusu: C');
+  });
 });

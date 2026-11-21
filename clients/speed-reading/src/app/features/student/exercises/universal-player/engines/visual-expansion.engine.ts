@@ -33,6 +33,8 @@ export class VisualExpansionEngine implements BaseEngine {
     readonly engineType = 'visual_expansion';
     readonly displayName = 'Görsel Genişleme';
     private lastMiss: string | null = null;
+    /** Feedback fix 22 (21.11.2026): a short "Doğru" after a correct round, never in a measured assessment. */
+    private lastHit = false;
 
     state: EngineState = {
         isRunning: false,
@@ -409,6 +411,7 @@ export class VisualExpansionEngine implements BaseEngine {
                 this.config.timing.durationMs = displayDurationMs;
             }
             this.lastMiss = null;
+            this.lastHit = false;
             this.currentStimuli = this.positionStimuli(stimuli.map(String));
             this.maxDegreesReached = Math.max(this.maxDegreesReached, this.currentDegrees);
             this.isStimulusVisible = true;
@@ -439,6 +442,7 @@ export class VisualExpansionEngine implements BaseEngine {
             // Show the right letters after a miss, but never in a measured assessment (the key stays on the server).
             this.lastMiss = !isCorrect && serverCorrect != null && !this.assessmentProtocol && correctAnswers.length
                 ? correctAnswers.join(', ') : null;
+            this.lastHit = isCorrect && serverCorrect != null && !this.assessmentProtocol;
             if (!isPractice) {
                 this.totalAnswers++;
                 if (isCorrect) this.correctAnswers++; else this.state.errors++;
@@ -490,6 +494,11 @@ export class VisualExpansionEngine implements BaseEngine {
     /** The letters of the last missed round ("K, M"), until the next round appears. */
     getLastMiss(): string | null {
         return this.lastMiss;
+    }
+
+    /** True after a correct round, until the next round appears. */
+    getLastHit(): boolean {
+        return this.lastHit;
     }
 
     getLastShownStimuli(): string[] {

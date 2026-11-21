@@ -3284,6 +3284,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.readyCountdown = null;
   }
 
+  getExpansionLastHit(): boolean {
+    return (this.engine as VisualExpansionEngine | null)?.getLastHit?.() ?? false;
+  }
+
   getExpansionLastMiss(): string | null {
     return (this.engine as VisualExpansionEngine | null)?.getLastMiss?.() ?? null;
   }
@@ -4323,6 +4327,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return (this.engine as ReadingComprehensionEngine)?.getLineHeight?.() || 1.8;
   }
 
+  /** Feedback fix 23 (21.11.2026): whole seconds until the finish button opens (0 when it is open or not limited). */
+  getReadingUnlockSeconds(): number {
+    if (!this.engineState.isRunning || this.engineState.isPaused) return 0;
+    const engine = this.engine as { getMinimumReadingMs?: () => number; getMinReadingTime?: () => number } | null;
+    const minimum = engine?.getMinimumReadingMs?.() ?? engine?.getMinReadingTime?.() ?? 0;
+    const left = minimum - (this.engineState.timeElapsed || 0);
+    return left > 0 ? Math.ceil(left / 1000) : 0;
+  }
+
   canCompleteReading(): boolean {
     if (!this.engineState.isRunning || this.engineState.isPaused) return false;
     return (this.engine as ReadingComprehensionEngine)?.canComplete?.() ?? true;
@@ -4585,6 +4598,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   getScanFontSize(): number {
     return this.engine?.engineType === 'scan_find' ? (this.engine as ScanFindEngine).getFontSizePx() : 20;
+  }
+
+  /** Feedback fix 18: the word of a wrong tap flashes briefly. */
+  isScanWrongTap(index: number): boolean {
+    return this.engine?.engineType === 'scan_find' && (this.engine as ScanFindEngine).getWrongTapIndex?.() === index;
+  }
+
+  /** Feedback fix 19: targets the student did not find, for the result screen. */
+  getScanMissedTargets(): string[] {
+    return this.engine?.engineType === 'scan_find' ? (this.engine as ScanFindEngine).getMissedTargets?.() ?? [] : [];
   }
 
   onScanWordClick(index: number): void {

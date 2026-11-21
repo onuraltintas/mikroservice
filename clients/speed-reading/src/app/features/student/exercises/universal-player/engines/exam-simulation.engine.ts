@@ -320,5 +320,7 @@ export class ExamSimulationEngine implements BaseEngine {
     getLineHeight(): number { return this.config.display?.lineHeight || 1.8; }
     getMaximumMs(): number { return this.config.timing?.maxReadingTimeMs || 180000; }
     canComplete(): boolean { return this.state.isRunning && !this.state.isPaused && this.state.timeElapsed >= (this.config.timing?.minReadingTimeMs || 0); }
+    /** Feedback fix 23: the player shows how long until the finish button opens. */
+    getMinimumReadingMs(): number { return this.config.timing?.minReadingTimeMs || 0; }
     getReadingPhase(): string { return this.readingState.phase; }
 }

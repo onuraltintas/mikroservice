@@ -641,10 +641,14 @@
                 </div>
             </div>
 
-            <button class="complete-reading-btn" (click)="completeReading()" [disabled]="!canCompleteReading()">
+            <button class="complete-reading-btn" (click)="completeReading()" [disabled]="!canCompleteReading()"
+                [attr.aria-describedby]="getReadingUnlockSeconds() > 0 ? 'reading-unlock-hint' : null">
                 <span class="material-icons">done</span>
                 {{ engine.engineType === 'skimming' ? 'İncelemeyi bitir, Sorulara geç' : comprehensionQuestions.length ? 'Okudum, Sorulara Geç' : 'Okumayı bitir' }}
             </button>
+            <p class="reading-unlock-hint" id="reading-unlock-hint" *ngIf="getReadingUnlockSeconds() > 0">
+                {{ getReadingUnlockSeconds() }} sn sonra açılır
+            </p>
         </div>
     </div>
 
@@ -703,6 +707,11 @@
             <div class="expansion-feedback" role="status" *ngIf="getExpansionLastMiss() as miss">
                 Doğrusu: {{ miss }}
             </div>
+            <div class="expansion-feedback expansion-feedback--hit" role="status" *ngIf="getExpansionLastHit()">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12l4 4L19 6" fill="none"
+                    stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                Doğru
+            </div>
             <!-- Cevap Giriş Alanı -->
             <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()">
                 <div class="answer-prompt">Gördüğün harfleri yerlerine göre yaz:</div>
@@ -758,6 +767,9 @@
             <div class="score-info">
                 Buldun: {{ engineState.currentStep }} / {{ engineState.totalSteps }}
             </div>
+            <div class="score-info scan-wrong-count" *ngIf="engineState.errors > 0" aria-live="polite">
+                Yanlış dokunuş: {{ engineState.errors }}
+            </div>
             <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
@@ -791,7 +803,7 @@
                 role="button" [tabindex]="engineState.isPaused || word.found ? -1 : 0"
                 (keydown.enter)="onScanWordClick(i)" (keydown.space)="$event.preventDefault(); onScanWordClick(i)"
                 [attr.aria-pressed]="word.found" [attr.aria-disabled]="engineState.isPaused"
-                class="scan-word" [class.found]="word.found"
+                class="scan-word" [class.found]="word.found" [class.wrong-tap]="isScanWrongTap(i)"
                 [class.missed]="word.isTarget && !word.found && engineState.isCompleted">
                 {{ word.text }}
             </span>
@@ -1015,7 +1027,7 @@
             <div class="options-grid">
                 <button class="ep-btn ep-btn--primary option-button" *ngFor="let option of ['A', 'B', 'C', 'D']"
                     [class.selected]="selectedAnswer === option"
-                    [class.correct]="questionFeedback?.isCorrect === true && questionFeedback?.correctAnswer === option"
+                    [class.correct]="questionFeedback?.isCorrect != null && questionFeedback?.correctAnswer === option"
                     [class.wrong]="questionFeedback?.isCorrect === false && selectedAnswer === option"
                     [disabled]="questionFeedback !== null || questionSubmissionPending || engineState.isPaused" (click)="!questionFeedback && (selectedAnswer = option)">
                     <span class="option-label">{{ option }}</span>
@@ -1025,8 +1037,12 @@
                 </button>
             </div>
 
-            <!-- Feedback Gösterimi -->
-            <!-- Feedback Gösterimi removed as per user request -->
+            <!-- Feedback fix 21 (user approved 21.11.2026): after a wrong answer the correct option is marked and named -->
+            <p class="answer-feedback" *ngIf="questionFeedback?.isCorrect != null" role="status"
+                [class.answer-feedback--wrong]="questionFeedback?.isCorrect === false">
+                <ng-container *ngIf="questionFeedback?.isCorrect; else regressionWrong">Doğru.</ng-container>
+                <ng-template #regressionWrong>Yanlış. Doğrusu: {{ questionFeedback?.correctAnswer }}</ng-template>
+            </p>
 
             <!-- Cevabı Gönder butonu - feedback yokken -->
             <button class="ep-btn ep-btn--primary submit-answer-btn" *ngIf="!questionFeedback"
@@ -1102,13 +1118,18 @@
                 <div class="answer-options">
                     <button class="answer-option" *ngFor="let option of ['A', 'B', 'C', 'D']"
                         [class.selected]="selectedAnswer === option"
-                    [class.correct]="questionFeedback?.isCorrect === true && option === questionFeedback?.correctAnswer"
+                    [class.correct]="questionFeedback?.isCorrect != null && option === questionFeedback?.correctAnswer"
                     [class.wrong]="questionFeedback?.isCorrect === false && selectedAnswer === option"
                         [disabled]="questionFeedback !== null || questionSubmissionPending" (click)="selectAnswer(option)">
                         <span class="option-letter">{{ option }}</span>
                         <span class="option-text">{{ getOptionText(option) }}</span>
                     </button>
                 </div>
+                <!-- Feedback fix 20: questions after speed exercises name the correct option after a wrong answer -->
+                <p class="answer-feedback" *ngIf="!isComprehensionLearning() && questionFeedback?.isCorrect != null && questionFeedback?.correctAnswer"
+                    role="status" [class.answer-feedback--wrong]="questionFeedback?.isCorrect === false">
+                    {{ questionFeedback?.isCorrect ? 'Doğru.' : 'Yanlış. Doğrusu: ' + questionFeedback?.correctAnswer }}
+                </p>
                 <div *ngIf="isComprehensionLearning() && questionFeedback" role="status">
                     <strong>{{ questionFeedback.isCorrect ? 'Doğru.' : 'Yanlış. Doğru seçenek: ' + questionFeedback.correctAnswer }}</strong>
                     <p>{{ questionFeedback.explanation }}</p>
@@ -1959,6 +1980,13 @@
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'scan_find' && result?.details?.measurementStatus === 'Measured'">
                 {{ scanningResultMessage() }}
             </div>
+            <section class="scan-missed" *ngIf="engine?.engineType === 'scan_find' && getScanMissedTargets().length > 0"
+                aria-labelledby="scan-missed-title">
+                <h3 id="scan-missed-title">Bulamadığın hedefler</h3>
+                <ul>
+                    <li *ngFor="let target of getScanMissedTargets()">{{ target }}</li>
+                </ul>
+            </section>
             <div class="measurement-not-available" *ngIf="result?.details?.timedOut && engine?.engineType !== 'scan_find'">
                 Okuma süresi doldu. Anlama cevapları kaydedildi; okuma hızı ölçülmedi ve program/ödev ilerlemesi verilmedi.
             </div>

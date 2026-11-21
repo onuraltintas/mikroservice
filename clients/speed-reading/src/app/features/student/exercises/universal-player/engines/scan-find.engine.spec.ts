@@ -449,5 +449,42 @@ describe('ScanFindEngine', () => {
     expect(questions.hasTaskPrompts()).toBeTrue();
     expect(questions.getRoundInfo()).toEqual({ current: 1, total: 1 });
   });
-});
 
+  // Feedback fixes 18 and 19 (21.11.2026)
+  it('flashes a wrong tap briefly and lists missed targets when time runs out', fakeAsync(() => {
+    const engine = new ScanFindEngine();
+    let result: EngineResult | null = null;
+    engine.initialize({ content: { text: 'okul kitap masa' }, targets: { words: ['okul', 'kitap'] }, timeLimit: 3 },
+      callbacks(value => result = value));
+    engine.start();
+    engine.handleInput({ type: 'click_word', wordIndex: 2 });
+    expect(engine.state.errors).toBe(1);
+    expect(engine.getWrongTapIndex()).toBe(2);
+    tick(700);
+    expect(engine.getWrongTapIndex()).toBeNull();
+    engine.handleInput({ type: 'click_word', wordIndex: 0 });
+    tick(3200);
+    expect(result).not.toBeNull();
+    expect(engine.getMissedTargets()).toEqual(['kitap']);
+    expect((result as unknown as EngineResult).details?.['missedTargets']).toEqual(['kitap']);
+    engine.destroy();
+  }));
+
+  it('shows the server-counted wrong tap and the server rounds missed targets', fakeAsync(() => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ serverAuthoritative: true, scanningRounds: [{ textContent: 'okul kitap masa', targets: ['okul', 'kitap'] }] },
+      callbacks(() => undefined));
+    engine.start();
+    const round = (found: string[]) => [{ textContent: 'okul kitap masa', targets: ['okul', 'kitap'], foundTargets: found }];
+    engine.reconcileServerResponse({ action: 'scan_start' }, { isValid: true,
+      feedbackData: { scanningRounds: round([]), currentRound: 0, totalSteps: 2, incorrectCount: 0 } });
+    engine.reconcileServerResponse({ action: 'scan_click', index: 2 } as { action: string }, { isValid: true,
+      feedbackData: { scanningRounds: round([]), currentRound: 0, totalSteps: 2, incorrectCount: 1 } });
+    expect(engine.getWrongTapIndex()).toBe(2);
+    engine.reconcileServerResponse({ action: 'scan_timeout' }, { isValid: true, isCompleted: true,
+      feedbackData: { scanningRounds: round(['okul']), currentRound: 0, totalSteps: 2, incorrectCount: 1, timedOut: true } });
+    expect(engine.getMissedTargets()).toEqual(['kitap']);
+    engine.destroy();
+    tick(700);
+  }));
+});

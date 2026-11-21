@@ -134,3 +134,25 @@ describe('reading phase timing', () => {
     engine.destroy();
   }));
 });
+
+// Feedback fix 23 (21.11.2026): the closed finish button says when it opens.
+describe('reading finish unlock countdown', () => {
+  function player(engine: unknown, timeElapsed: number, isPaused = false): any {
+    const value = Object.create(ExercisePlayerComponent.prototype) as any;
+    value.engine = engine;
+    value.engineState = { isRunning: true, isPaused, timeElapsed };
+    return value;
+  }
+
+  it('counts whole seconds down to the minimum reading time', () => {
+    expect(player({ getMinimumReadingMs: () => 3000 }, 0).getReadingUnlockSeconds()).toBe(3);
+    expect(player({ getMinimumReadingMs: () => 3000 }, 1200).getReadingUnlockSeconds()).toBe(2);
+    expect(player({ getMinReadingTime: () => 10000 }, 9500).getReadingUnlockSeconds()).toBe(1);
+  });
+
+  it('shows nothing once open, without a minimum, or while paused', () => {
+    expect(player({ getMinimumReadingMs: () => 3000 }, 3000).getReadingUnlockSeconds()).toBe(0);
+    expect(player({}, 0).getReadingUnlockSeconds()).toBe(0);
+    expect(player({ getMinimumReadingMs: () => 3000 }, 0, true).getReadingUnlockSeconds()).toBe(0);
+  });
+});
