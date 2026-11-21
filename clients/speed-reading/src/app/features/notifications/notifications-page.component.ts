@@ -126,6 +126,16 @@ export class NotificationsPageComponent implements OnInit, OnDestroy {
     return this.notificationService.getNotificationTypeLabel(type);
   }
 
+  /** Lively design: the icon circle wears a soft tone by kind (assignment peach, achievement sand, program mint, other sea). */
+  toneFor(notification: Notification): 'peach' | 'sand' | 'mint' | 'sea' {
+    if (notification.priority >= 3) return 'peach';
+    const label = this.getNotificationTypeLabel(notification.type).toLocaleLowerCase('tr');
+    if (label.includes('ödev')) return 'peach';
+    if (label.includes('başarı') || label.includes('rozet') || label.includes('seviye')) return 'sand';
+    if (label.includes('program') || label.includes('egzersiz')) return 'mint';
+    return 'sea';
+  }
+
   getPriorityColor(notification: Notification): string {
     return this.notificationService.getPriorityColor(notification.priority);
   }

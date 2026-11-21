@@ -163,37 +163,37 @@ export class NotificationService {
   getNotificationTypeLabel(type: NotificationType): string {
     switch (type) {
       case NotificationType.NewAssignment:
-        return 'Yeni Ödev';
+        return 'Yeni ödev';
       case NotificationType.AssignmentDueSoon:
-        return 'Yaklaşan Ödev';
+        return 'Yaklaşan ödev';
       case NotificationType.AssignmentOverdue:
-        return 'Gecikmiş Ödev';
+        return 'Gecikmiş ödev';
       case NotificationType.ExerciseCompleted:
-        return 'Egzersiz Tamamlandı';
+        return 'Egzersiz tamamlandı';
       case NotificationType.MilestoneAchieved:
-        return 'Milestone';
+        return 'Başarım';
       case NotificationType.WeeklyProgress:
         return 'Haftalık ilerleme';
       case NotificationType.MonthlyProgress:
-        return 'Aylık İlerleme';
+        return 'Aylık ilerleme';
       case NotificationType.DailyReminder:
         return 'Günlük hatırlatma';
       case NotificationType.SystemAnnouncement:
-        return 'Sistem Duyurusu';
+        return 'Sistem duyurusu';
       case NotificationType.TeacherFeedback:
-        return 'Öğretmen Geri Bildirimi';
+        return 'Öğretmen geri bildirimi';
       case NotificationType.AchievementUnlocked:
-        return 'Başarı Kazanıldı';
+        return 'Başarım kazanıldı';
       case NotificationType.GoalCompleted:
         return 'Günlük hedef';
       case NotificationType.StudentActivitySummary:
-        return 'Öğrenci Aktivitesi';
+        return 'Öğrenci etkinliği';
       case NotificationType.StudentProgramCompleted:
-        return 'Program Tamamlandı';
+        return 'Program tamamlandı';
       case NotificationType.NewUserRegistered:
-        return 'Yeni Kayıt';
+        return 'Yeni kayıt';
       case NotificationType.SystemError:
-        return 'Sistem Hatası';
+        return 'Sistem hatası';
       default:
         return 'Bildirim';
     }

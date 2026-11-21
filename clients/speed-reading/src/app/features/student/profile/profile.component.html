@@ -2,11 +2,12 @@
     <div class="sp-card profile-card">
         <div class="sp-card-header">
             <div class="header-content">
-                <div class="avatar-circle">
-                    <span class="material-icons">person</span>
+                <div class="avatar-circle" aria-hidden="true">
+                    @if (initials(); as letters) { <span class="avatar-initials">{{ letters }}</span> }
+                    @else { <span class="material-icons">person</span> }
                 </div>
                 <div class="header-text">
-                    <div class="sp-card-title">Profilim</div>
+                    <h1 class="sp-card-title">Profilim</h1>
                     <div class="sp-card-subtitle">Kişisel bilgilerini düzenle</div>
                 </div>
             </div>
@@ -24,16 +25,16 @@
                     <div class="sp-field">
                         <label for="profile-first-name">Ad</label>
                         <input id="profile-first-name" type="text" formControlName="firstName" placeholder="Adın" autocomplete="given-name">
-                        <div class="sp-error" *ngIf="profileForm.get('firstName')?.hasError('required')">
-                            Ad zorunludur
+                        <div class="sp-error" *ngIf="profileForm.get('firstName')?.hasError('required') && profileForm.get('firstName')?.touched">
+                            Adını yaz.
                         </div>
                     </div>
 
                     <div class="sp-field">
                         <label for="profile-last-name">Soyad</label>
                         <input id="profile-last-name" type="text" formControlName="lastName" placeholder="Soyadın" autocomplete="family-name">
-                        <div class="sp-error" *ngIf="profileForm.get('lastName')?.hasError('required')">
-                            Soyad zorunludur
+                        <div class="sp-error" *ngIf="profileForm.get('lastName')?.hasError('required') && profileForm.get('lastName')?.touched">
+                            Soyadını yaz.
                         </div>
                     </div>
                 </div>
@@ -51,7 +52,7 @@
                     </div>
 
                     <div class="sp-field">
-                        <label for="profile-birth-date">Doğum Tarihi</label>
+                        <label for="profile-birth-date">Doğum tarihi</label>
                         <input id="profile-birth-date" type="date" formControlName="dateOfBirth" autocomplete="bday">
                     </div>
                 </div>
@@ -60,10 +61,10 @@
                     <button class="sp-btn sp-btn-primary" type="submit" [disabled]="profileForm.invalid || saving()">
                         @if (saving()) {
                         <div class="sp-spinner sp-spinner-sm"></div>
-                        Kaydediliyor...
+                        Kaydediliyor…
                         } @else {
                         <span class="material-icons">save</span>
-                        Değişiklikleri Kaydet
+                        Değişiklikleri kaydet
                         }
                     </button>
                 </div>

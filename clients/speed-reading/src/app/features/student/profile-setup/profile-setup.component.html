@@ -2,12 +2,13 @@
 
   <!-- ── Başlık ────────────────────────────────────────────────────────── -->
   <div class="ps-header">
-    <h1 class="ps-header__title">Profilini Oluştur</h1>
+    <h1 class="ps-header__title">Profilini oluştur</h1>
     <p class="ps-header__sub">Sana özel öğrenme deneyimi için birkaç basit adım</p>
   </div>
 
   <!-- ── Adım Göstergesi ───────────────────────────────────────────────── -->
   <div class="ps-steps" aria-label="Adımlar">
+    <span class="ps-steps__sr sr-only" aria-live="polite">Adım {{ currentStep() }} / 3</span>
     <div class="ps-step" [class.ps-step--active]="currentStep() >= 1" [class.ps-step--done]="currentStep() > 1">
       <div class="ps-step__circle">
         @if (currentStep() > 1) {
@@ -50,7 +51,7 @@
         <div class="ps-step-head">
           <span class="material-icons ps-step-head__icon">person</span>
           <div>
-            <h2 class="ps-step-head__title">Seni Tanıyalım</h2>
+            <h2 class="ps-step-head__title">Seni tanıyalım</h2>
           </div>
         </div>
 
@@ -58,7 +59,7 @@
         <div class="ps-field">
           <label class="ps-label" for="dob">
             <span class="material-icons">cake</span>
-            Doğum Tarihin
+            Doğum tarihin
           </label>
           <input
             id="dob"
@@ -69,7 +70,7 @@
             [class.ps-input--error]="basicInfoForm.get('dateOfBirth')?.invalid && basicInfoForm.get('dateOfBirth')?.touched">
 
           @if (basicInfoForm.get('dateOfBirth')?.hasError('required') && basicInfoForm.get('dateOfBirth')?.touched) {
-            <span class="ps-error">Doğum tarihi zorunludur</span>
+            <span class="ps-error">Doğum tarihini seç.</span>
           }
 
           <!-- Yaş grubu bilgisi -->
@@ -102,27 +103,27 @@
         <div class="ps-step-head">
           <span class="material-icons ps-step-head__icon">flag</span>
           <div>
-            <h2 class="ps-step-head__title">Hedeflerini Belirle</h2>
+            <h2 class="ps-step-head__title">Hedeflerini belirle</h2>
           </div>
         </div>
 
         <div class="ps-goals-grid">
 
           <!-- Okuma Hızı — live test #53 (user decision 17.11.2026): not asked; the level test measures it and sets the target. -->
-          <div class="ps-goal-card">
+          <div class="ps-goal-card ps-goal-card--mint">
             <div class="ps-goal-card__icon-wrap">
               <span class="material-icons">speed</span>
             </div>
-            <h3 class="ps-goal-card__title">Okuma Hızı</h3>
+            <h3 class="ps-goal-card__title">Okuma hızı</h3>
             <p class="ps-label-sm">Hedef hızın, seviye belirlemede ölçülen hızına göre belirlenir.</p>
           </div>
 
           <!-- Anlama Oranı -->
-          <div class="ps-goal-card">
+          <div class="ps-goal-card ps-goal-card--sea">
             <div class="ps-goal-card__icon-wrap ps-goal-card__icon-wrap--amber">
               <span class="material-icons">school</span>
             </div>
-            <h3 class="ps-goal-card__title">Anlama Oranı</h3>
+            <h3 class="ps-goal-card__title">Anlama oranı</h3>
             <label class="ps-label-sm">Yüzde (%)</label>
             <input class="ps-input" type="number" formControlName="targetComprehension" min="60" max="100">
             <div class="ps-rec">
@@ -132,11 +133,11 @@
           </div>
 
           <!-- Günlük Çalışma -->
-          <div class="ps-goal-card">
+          <div class="ps-goal-card ps-goal-card--sand">
             <div class="ps-goal-card__icon-wrap ps-goal-card__icon-wrap--green">
               <span class="material-icons">schedule</span>
             </div>
-            <h3 class="ps-goal-card__title">Günlük Çalışma</h3>
+            <h3 class="ps-goal-card__title">Günlük çalışma</h3>
             <label class="ps-label-sm">Dakika</label>
             <input class="ps-input" type="number" formControlName="dailyGoalMinutes" min="10" max="120">
             <div class="ps-rec">
@@ -167,7 +168,7 @@
         <div class="ps-step-head">
           <span class="material-icons ps-step-head__icon ps-step-head__icon--success">check_circle</span>
           <div>
-            <h2 class="ps-step-head__title">Her Şey Hazır!</h2>
+            <h2 class="ps-step-head__title">Her şey hazır</h2>
           </div>
         </div>
 
@@ -190,11 +191,11 @@
               <h3>Hedeflerin</h3>
             </div>
             <div class="ps-summary-row">
-              <span>Okuma Hızı</span>
+              <span>Okuma hızı</span>
               <span>Seviye belirlemeden sonra</span>
             </div>
             <div class="ps-summary-row">
-              <span>Anlama Oranı</span>
+              <span>Anlama oranı</span>
               <span class="ps-summary-row__hl">%{{ goalsForm.value.targetComprehension }}</span>
             </div>
             <div class="ps-summary-row">
@@ -222,7 +223,7 @@
               Oluşturuluyor…
             } @else {
               <span class="material-icons">rocket_launch</span>
-              Profili Oluştur
+              Profili oluştur
             }
           </button>
         </div>

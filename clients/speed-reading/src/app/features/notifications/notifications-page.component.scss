@@ -225,3 +225,54 @@
     }
   }
 }
+
+// Lively design (21.11.2026): rounded cards, tone icon circles, unread items soft mint with an orange dot.
+.notifications-page .notification-item {
+  position: relative;
+  border-radius: 18px;
+  border-color: transparent;
+  background: var(--sp-surface);
+  box-shadow: var(--sp-shadow-sm, var(--sp-shadow-card));
+}
+.notifications-page .notification-item.unread {
+  background: var(--sp-tone-mint-soft);
+  border-left: 0;
+}
+.notifications-page .notification-item.unread::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sp-focus-line);
+}
+.notifications-page .notification-icon {
+  --tone: var(--sp-tone-sea);
+  --tone-soft: var(--sp-tone-sea-soft);
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--tone-soft);
+  color: var(--tone);
+
+  &[data-tone='peach'] { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-tone-peach-soft); }
+  &[data-tone='sand'] { --tone: var(--sp-tone-sand); --tone-soft: var(--sp-tone-sand-soft); }
+  &[data-tone='mint'] { --tone: var(--sp-tone-mint); --tone-soft: var(--sp-tone-mint-soft); }
+}
+.notifications-page .notification-item.unread .notification-icon { background: var(--sp-surface); }
+.notifications-page .empty-state mat-icon {
+  width: 72px;
+  height: 72px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sp-tone-mint-soft);
+  color: var(--sp-tone-mint);
+  font-size: 36px;
+}
+.notifications-page .notification-item.unread .notification-time { padding-right: 20px; }

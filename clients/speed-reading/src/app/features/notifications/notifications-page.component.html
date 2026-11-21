@@ -7,7 +7,7 @@
       (click)="markAllAsRead()"
       [disabled]="unreadNotifications.length === 0">
       <mat-icon>done_all</mat-icon>
-      Tümünü Okundu Olarak İşaretle
+      Tümünü okundu yap
     </button>
   </div>
 
@@ -27,7 +27,7 @@
         [class.urgent-priority]="notification.priority === 4"
         (click)="onNotificationClick(notification)"
       >
-        <div class="notification-icon" [style.color]="getPriorityColor(notification)">
+        <div class="notification-icon" [attr.data-tone]="toneFor(notification)">
           <mat-icon>{{ getNotificationIcon(notification) }}</mat-icon>
         </div>
 
@@ -82,15 +82,15 @@
 
     <div class="empty-state" *ngIf="!loading && getCurrentList().length === 0">
       <mat-icon>notifications_none</mat-icon>
-      <h2>Bildirim bulunamadı</h2>
-      <p *ngIf="selectedTab === 1">Okunmamış bildiriminiz yok</p>
-      <p *ngIf="selectedTab === 2">Okunmuş bildiriminiz yok</p>
-      <p *ngIf="selectedTab === 0">Henüz hiç bildiriminiz yok</p>
+      <h2>Bildirim yok</h2>
+      <p *ngIf="selectedTab === 1">Okunmamış bildirimin yok.</p>
+      <p *ngIf="selectedTab === 2">Okunmuş bildirimin yok.</p>
+      <p *ngIf="selectedTab === 0">Henüz bildirimin yok. Ödev, başarım ya da program haberleri geldiğinde burada görürsün.</p>
     </div>
 
     <div class="loading-state" *ngIf="loading">
       <mat-icon>hourglass_empty</mat-icon>
-      <p>Bildirimler yükleniyor...</p>
+      <p>Bildirimler yükleniyor…</p>
     </div>
   </mat-card>
 </div>

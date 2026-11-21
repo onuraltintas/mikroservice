@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, computed, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -57,6 +57,11 @@ export class ProfileComponent implements OnInit {
     loading = signal(true);
     saving = signal(false);
     currentUser = signal<UserDto | null>(null);
+    /** Lively design: the avatar shows the student's initials. */
+    initials = computed(() => {
+        const user = this.currentUser();
+        return [user?.firstName, user?.lastName].map(part => (part ?? '').trim().charAt(0).toLocaleUpperCase('tr')).join('');
+    });
 
     constructor() {
         this.profileForm = this.fb.group({

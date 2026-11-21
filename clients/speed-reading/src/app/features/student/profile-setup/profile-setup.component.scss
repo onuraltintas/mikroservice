@@ -560,3 +560,47 @@
 @keyframes ps-spin {
   to { transform: rotate(360deg); }
 }
+
+// Lively design (21.11.2026): the three goals in soft tones, a rounder card and an orange focus mark under the current step.
+.ps-card { border-radius: var(--sp-radius-card-lg, 22px); box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card)); }
+
+.ps-goal-card {
+  --tone: var(--sp-tone-mint);
+  --tone-soft: var(--sp-tone-mint-soft);
+  border: 0;
+  border-radius: 18px;
+  background: var(--tone-soft);
+
+  &--sea { --tone: var(--sp-tone-sea); --tone-soft: var(--sp-tone-sea-soft); }
+  &--sand { --tone: var(--sp-tone-sand); --tone-soft: var(--sp-tone-sand-soft); }
+
+  .ps-goal-card__icon-wrap,
+  .ps-goal-card__icon-wrap--amber,
+  .ps-goal-card__icon-wrap--green { background: var(--sp-surface); border-radius: 50%; }
+  .ps-goal-card__icon-wrap .material-icons { color: var(--tone); }
+  .ps-input { background: var(--sp-surface); }
+}
+
+.ps-step--active:not(.ps-step--done) .ps-step__label {
+  position: relative;
+  font-weight: 700;
+  color: var(--sp-text-1);
+}
+.ps-step--active:not(.ps-step--done) .ps-step__label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--sp-focus-line);
+}
+
+.ps-summary-card { border-radius: 18px; }
+.ps-summary-card:first-child { background: var(--sp-tone-mint-soft); }
+.ps-summary-card:last-child { background: var(--sp-tone-sea-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-goal-card:hover { transform: none; }
+}
