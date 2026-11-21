@@ -9,7 +9,7 @@
   } @else if (institution(); as currentInstitution) {
     <header class="workspace-heading">
       <div>
-        <p class="workspace-eyebrow">Hızlı Okuma · Kurum</p>
+        <p class="workspace-eyebrow">Hızlı Okuma, kurum</p>
         <h2 id="reading-institution-title">{{ currentInstitution.institutionName }}</h2>
         <p>
           Kurumunuza bağlı öğretmenleri, öğrencileri ve son 30 günlük öğrenme özetini inceleyin.
@@ -56,7 +56,7 @@
             }}</strong>
           </article>
           <article class="metric-card">
-            <span>Ortalama hız · WPM</span
+            <span>Ortalama hız (kelime/dk)</span
             ><strong>{{
               summary.classAverageWpmDataAvailable
                 ? formatNumber(summary.classAverageWpm)
@@ -67,7 +67,7 @@
             <span>Anlama ortalaması</span
             ><strong>{{
               summary.classAverageComprehensionDataAvailable
-                ? formatNumber(summary.classAverageComprehension) + '%'
+                ? '%' + formatNumber(summary.classAverageComprehension)
                 : 'Veri yok'
             }}</strong>
           </article>
@@ -76,6 +76,12 @@
             ><strong>{{ formatNumber(summary.totalActivitiesCompleted) }}</strong>
           </article>
         </div>
+        @if (summary.studentsAboveAverage + summary.studentsAtAverage + summary.studentsBelowAverage > 0) {
+          <staff-split class="class-split" title="Kurum ortalamasına göre öğrenciler" [parts]="[
+            { label: 'Ortalamanın üstünde', value: summary.studentsAboveAverage, tone: 'success' },
+            { label: 'Ortalamada', value: summary.studentsAtAverage, tone: 'info' },
+            { label: 'Ortalamanın altında', value: summary.studentsBelowAverage, tone: 'orange' }]" />
+        }
       }
     </section>
 
@@ -179,7 +185,7 @@
                 <span>Tamamlanma oranı</span>
                 <strong>{{
                   report.completionStats
-                    ? formatReportNumber(report.completionStats.completionRate) + '%'
+                    ? '%' + formatReportNumber(report.completionStats.completionRate)
                     : 'Veri yok'
                 }}</strong>
               </article>
@@ -192,6 +198,12 @@
                 }}</strong>
               </article>
             </div>
+            @if (report.completionStats; as stats) {
+              <staff-split class="report-split" title="Ödev durumu" [parts]="[
+                { label: 'Tamamlandı', value: stats.completed, tone: 'success' },
+                { label: 'Devam ediyor', value: stats.inProgress, tone: 'info' },
+                { label: 'Başlamadı', value: stats.notStarted, tone: 'orange' }]" />
+            }
             @if (report.performanceStats; as performance) {
               <h5>Ödev puanları</h5>
               <div class="overview-grid report-metrics">
@@ -214,7 +226,7 @@
               </div>
             }
             @if (report.timeStats; as timing) {
-              <h5>Tamamlama süresi · saniye</h5>
+              <h5>Tamamlama süresi (saniye)</h5>
               <div class="overview-grid report-metrics">
                 <article class="metric-card">
                   <span>Ortalama</span
@@ -234,6 +246,8 @@
             }
             @if (report.scoreDistribution.length > 0) {
               <h5>Puan dağılımı</h5>
+              <div class="report-charts">@for (chart of report.scoreDistribution | staffSeriesCharts; track chart.name) { <staff-bars [title]="chart.name" [points]="chart.points" tone="violet" /> }</div>
+              <details class="chart-table"><summary>Tablo olarak gör</summary>
               <div class="report-table-wrap">
                 <table>
                   <thead>
@@ -252,6 +266,7 @@
                   </tbody>
                 </table>
               </div>
+              </details>
             }
             <h5>Öğrenci bazında ödev durumu</h5>
             <div class="report-table-wrap">
@@ -318,7 +333,7 @@
                           <td>{{ item.exerciseTypeName }}</td>
                           <td>{{ formatNumber(item.totalCompletions) }}</td>
                           <td>{{ formatNumber(item.activeStudents) }}</td>
-                          <td>{{ item.performanceLevel === 'not-measured' ? '—' : formatReportNumber(item.averageScore) + '%' }}</td>
+                          <td>{{ item.performanceLevel === 'not-measured' ? '—' : '%' + formatReportNumber(item.averageScore) }}</td>
                           <td>{{ reportLabel(item.performanceLevel) }}</td>
                         </tr>
                       } @empty {
@@ -338,7 +353,7 @@
                       <tr>
                         <th>Düzey</th>
                         <th>Okuma</th>
-                        <th>Ortalama WPM</th>
+                        <th>Ortalama hız (kelime/dk)</th>
                         <th>Anlama</th>
                       </tr>
                     </thead>
@@ -348,7 +363,7 @@
                           <td>{{ item.difficultyLevel }}</td>
                           <td>{{ formatNumber(item.totalReads) }}</td>
                           <td>{{ item.averageWpm > 0 ? formatReportNumber(item.averageWpm) : 'Veri yok' }}</td>
-                          <td>{{ (item.comprehensionDataAvailable ?? item.averageComprehension > 0) ? formatReportNumber(item.averageComprehension) + '%' : 'Veri yok' }}</td>
+                          <td>{{ (item.comprehensionDataAvailable ?? item.averageComprehension > 0) ? '%' + formatReportNumber(item.averageComprehension) : 'Veri yok' }}</td>
                         </tr>
                       } @empty {
                         <tr>
@@ -363,6 +378,8 @@
             <div class="report-columns report-chart-tables">
               <section>
                 <h5>Günlük egzersiz sıklığı</h5>
+                <div class="report-charts">@for (chart of report.exerciseFrequencyChart | staffSeriesCharts; track chart.name) { <staff-bars [title]="chart.name" [points]="chart.points" tone="info" /> }</div>
+                <details class="chart-table"><summary>Tablo olarak gör</summary>
                 <div class="report-table-wrap">
                   <table>
                     <thead>
@@ -385,9 +402,12 @@
                     </tbody>
                   </table>
                 </div>
+                </details>
               </section>
               <section>
                 <h5>Günlük okuma performansı</h5>
+                <div class="report-charts">@for (chart of report.readingPerformanceChart | staffSeriesCharts; track chart.name) { <staff-bars [title]="chart.name" [points]="chart.points" tone="success" /> }</div>
+                <details class="chart-table"><summary>Tablo olarak gör</summary>
                 <div class="report-table-wrap">
                   <table>
                     <thead>
@@ -410,6 +430,7 @@
                     </tbody>
                   </table>
                 </div>
+                </details>
               </section>
             </div>
           }
@@ -430,6 +451,8 @@
             <div class="report-columns">
               <section>
                 <h5>Haftalık etkinlik</h5>
+                <div class="report-charts">@for (chart of report.weeklyProgressChart | staffSeriesCharts; track chart.name) { <staff-bars [title]="chart.name" [points]="chart.points" tone="violet" /> }</div>
+                <details class="chart-table"><summary>Tablo olarak gör</summary>
                 <div class="report-table-wrap">
                   <table>
                     <thead>
@@ -452,9 +475,12 @@
                     </tbody>
                   </table>
                 </div>
+                </details>
               </section>
               <section>
                 <h5>Günlük çalışma süresi</h5>
+                <div class="report-charts">@for (chart of report.activityIntensityChart | staffSeriesCharts; track chart.name) { <staff-bars [title]="chart.name" [points]="chart.points" tone="orange" /> }</div>
+                <details class="chart-table"><summary>Tablo olarak gör</summary>
                 <div class="report-table-wrap">
                   <table>
                     <thead>
@@ -477,9 +503,12 @@
                     </tbody>
                   </table>
                 </div>
+                </details>
               </section>
               <section>
                 <h5>Aylık etkinlik</h5>
+                <div class="report-charts">@for (chart of report.monthlyProgressChart | staffSeriesCharts; track chart.name) { <staff-bars [title]="chart.name" [points]="chart.points" tone="info" /> }</div>
+                <details class="chart-table"><summary>Tablo olarak gör</summary>
                 <div class="report-table-wrap">
                   <table>
                     <thead>
@@ -502,6 +531,7 @@
                     </tbody>
                   </table>
                 </div>
+                </details>
               </section>
             </div>
             <div class="report-columns">
@@ -686,7 +716,7 @@
                   <th>Sınıf</th>
                   <th>Öğretmen</th>
                   <th>Seviye</th>
-                  <th>Hedef WPM</th>
+                  <th>Hedef hız (kelime/dk)</th>
                   <th>Durum</th>
                   <th>Yönetim</th>
                 </tr>

@@ -25,7 +25,7 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Düşük');
     expect(fixture.nativeElement.textContent).not.toContain('low');
-    expect(fixture.nativeElement.textContent).toContain('0%');
+    expect(fixture.nativeElement.textContent).toContain('%0');
   });
 
   it('localizes the indicators in both institution progress lists', () => {
@@ -754,7 +754,7 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Ödev raporu');
     expect(fixture.nativeElement.textContent).toContain('Tamamlanma oranı');
-    expect(fixture.nativeElement.textContent).toContain('50%');
+    expect(fixture.nativeElement.textContent).toContain('%50');
   });
 
   it('shows content and time-progress reports from their institution-scoped endpoints', () => {

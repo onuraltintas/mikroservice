@@ -48,11 +48,11 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
       } @else if (!error()) { <p>Kurumunuzun etkin bir planı olduğunda öğrenci kontenjanı burada görünür.</p> }
     </section>`,
   styles: [`
-    .institution-plan { padding:1rem; border: 1px solid var(--ui-border); border-radius:.8rem; background: var(--ui-warning-soft); color: var(--ui-text); }
+    .institution-plan { padding:1rem; border: 1px solid var(--ui-border); border-radius:.8rem; background: var(--ui-surface); color: var(--ui-text); }
     header, li, nav, .departed { display:flex; gap:.75rem; justify-content:space-between; align-items:center; flex-wrap:wrap; }
     h3 { margin:0; } p, small { color: var(--ui-text-muted); } small { display:block; }
     ul { list-style:none; padding:0; } li, .departed { padding:.8rem 0; border-top: 1px solid var(--ui-border); }
-    button { min-height:2.4rem; border: 1px solid var(--ui-border-strong); border-radius:.5rem; background: var(--ui-warning-soft); padding:.35rem .7rem; color: var(--ui-text); cursor:pointer; }
+    button { min-height:2.4rem; border: 1px solid var(--ui-border-strong); border-radius:.5rem; background: var(--ui-surface); padding:.35rem .7rem; color: var(--ui-text); cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; } .error { color: var(--ui-danger); }
     .hint { font-size:.9rem; } .waiting { color: var(--ui-warning); }
     .upcoming { padding:.6rem .75rem; border-radius:.6rem; background: var(--ui-surface-muted); color: var(--ui-text); }

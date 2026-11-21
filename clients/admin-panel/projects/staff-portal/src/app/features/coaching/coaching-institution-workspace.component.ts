@@ -25,13 +25,14 @@ import { StaffLocationService, StaffPlace } from '../../navigation/staff-locatio
 import { StaffSectionGroup, StaffSectionNavComponent } from '../../navigation/staff-section-nav.component';
 import { CoachingInstitutionExamsComponent } from './coaching-institution-exams.component';
 import { CoachingInstitutionMessagesComponent } from './coaching-institution-messages.component';
+import { StaffMeterComponent, StaffSplitComponent } from '../../shared/staff-charts';
 import { CoachingInstitutionBranchesComponent, CoachingInstitutionBulkImportComponent, CoachingInstitutionWorkloadComponent } from './coaching-institution-reports';
 type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'exams' | 'messages' | 'subscription' | 'finance';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent, CoachingInstitutionExamsComponent, CoachingInstitutionMessagesComponent, CoachingInstitutionBranchesComponent, CoachingInstitutionWorkloadComponent, CoachingInstitutionBulkImportComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent, StaffSectionNavComponent, CoachingInstitutionExamsComponent, CoachingInstitutionMessagesComponent, CoachingInstitutionBranchesComponent, CoachingInstitutionWorkloadComponent, CoachingInstitutionBulkImportComponent, StaffMeterComponent, StaffSplitComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })

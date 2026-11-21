@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Observable, firstValueFrom, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CoachingInstitutionSelection } from './coaching-institution-selection';
+import { StaffBarsComponent, StaffChartPoint } from '../../shared/staff-charts';
 
 export interface InstitutionTeacherWorkload {
   teacherUserId: string; name: string; students: number; awaitingGrading: number; overdue: number;
@@ -49,19 +50,21 @@ export class CoachingInstitutionReportsApi {
 }
 
 const sharedStyles = `
-  :host{display:block;margin:1rem 0}
-  h3{margin:0 0 .3rem;font-size:1rem}
-  p{margin:.25rem 0;font-size:.86rem;line-height:1.5}
-  .muted{color:var(--staff-muted,#64748b);font-size:.82rem}
-  .err{color:#b91c1c} .ok{color:#047857}
+  :host{display:block}
+  :host(:empty){display:none}
+  section{padding:1.1rem;border:1px solid var(--ui-border);border-radius:1rem;background:var(--ui-surface);box-shadow:var(--ds-shadow)}
+  h3{margin:0 0 .3rem;font-size:1.125rem}
+  p{margin:.25rem 0;font-size:.875rem;line-height:1.5}
+  .muted{color:var(--ui-text-muted);font-size:.8125rem}
+  .err{color:var(--ui-danger)} .ok{color:var(--ui-success)}
   .table-scroll{overflow-x:auto;margin-top:.6rem}
-  table{border-collapse:collapse;width:100%;font-size:.84rem}
-  th,td{border-bottom:1px solid var(--staff-border,#e2e8f0);padding:.45rem .5rem;text-align:left;vertical-align:top}
-  th{font-weight:600;white-space:nowrap}
-  td.num,th.num{text-align:right}
-  .warn{color:#b45309;font-weight:600}
-  button{min-height:2.2rem;border:1px solid var(--staff-border,#cbd5e1);border-radius:.5rem;background:transparent;color:inherit;padding:.3rem .75rem;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
-  button.primary{background:var(--staff-accent,#0f766e);border-color:transparent;color:#fff}
+  table{border-collapse:collapse;width:100%;font-size:.875rem}
+  th,td{border-bottom:1px solid var(--ui-border);padding:.55rem .6rem;text-align:left;vertical-align:top}
+  th{font-weight:700;white-space:nowrap;color:var(--ui-text-muted);font-size:.8125rem}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .warn{color:var(--ds-danger);font-weight:700}
+  button{min-height:2.5rem;border:1px solid var(--ui-border);border-radius:.65rem;background:var(--ui-surface);color:inherit;padding:.3rem .85rem;font:inherit;font-size:.875rem;font-weight:700;cursor:pointer}
+  button.primary{background:var(--ds-primary);border-color:transparent;color:var(--ds-on-primary)}
   button:disabled{opacity:.55;cursor:not-allowed}
   .row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.6rem}
 `;
@@ -115,8 +118,16 @@ export class CoachingInstitutionBranchesComponent implements OnInit {
 
 /** Roadmap O13: every teacher of the institution with their students and the work waiting on them. */
 @Component({
-  selector: 'staff-coaching-institution-workload', standalone: true, imports: [CommonModule],
-  styles: [sharedStyles + `.summary{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin-top:.4rem;font-size:.86rem}`],
+  selector: 'staff-coaching-institution-workload', standalone: true, imports: [CommonModule, StaffBarsComponent],
+  styles: [sharedStyles + `.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.6rem;margin:.8rem 0}
+    .summary>span{display:grid;gap:.15rem;padding:.75rem .85rem;border-radius:.85rem;background:var(--ds-info-soft);color:var(--ui-text);font-size:.8125rem;font-weight:600;animation:staff-rise .5s cubic-bezier(.2,.8,.2,1) both}
+    .summary>span b{color:var(--ds-info);font-size:1.4rem;font-variant-numeric:tabular-nums}
+    .summary>span:nth-child(2){animation-delay:60ms}.summary>span:nth-child(3){background:var(--ds-violet-soft);animation-delay:120ms}.summary>span:nth-child(3) b{color:var(--ds-violet)}
+    .summary>span:nth-child(4){animation-delay:180ms}.summary>span:nth-child(5){background:var(--ds-success-soft);animation-delay:240ms}.summary>span:nth-child(5) b{color:var(--ds-success)}
+    .summary>span.warn{background:var(--ds-danger-soft)} .summary>span.warn b{color:var(--ds-danger)}
+    .load-chart{display:block;margin:.4rem 0 .2rem}
+    @keyframes staff-rise{from{opacity:0;transform:translateY(10px)}}
+    @media (prefers-reduced-motion:reduce){.summary>span{animation:none}}`],
   template: `
     <section aria-labelledby="workload-title" data-testid="institution-workload">
       <h3 id="workload-title">Öğretmen iş yükü</h3>
@@ -125,12 +136,13 @@ export class CoachingInstitutionBranchesComponent implements OnInit {
       @else if (error()) { <p class="err" role="alert">{{ error() }}</p> }
       @else if (workload(); as w) {
         <div class="summary">
-          <span>{{ w.teachers }} öğretmen · {{ w.students }} öğrenci</span>
-          <span [class.warn]="w.studentsWithoutTeacher > 0" data-testid="workload-unassigned">{{ w.studentsWithoutTeacher }} öğrencinin öğretmeni yok</span>
-          <span>{{ w.awaitingGrading }} değerlendirme bekliyor</span>
-          <span [class.warn]="w.overdue > 0">{{ w.overdue }} gecikmiş ödev</span>
-          <span>{{ w.pendingInvitations }} bekleyen davet</span>
+          <span><b>{{ w.teachers }}</b> öğretmen, {{ w.students }} öğrenci</span>
+          <span [class.warn]="w.studentsWithoutTeacher > 0" data-testid="workload-unassigned"><b>{{ w.studentsWithoutTeacher }}</b> öğrencinin öğretmeni yok</span>
+          <span><b>{{ w.awaitingGrading }}</b> değerlendirme bekliyor</span>
+          <span [class.warn]="w.overdue > 0"><b>{{ w.overdue }}</b> gecikmiş ödev</span>
+          <span><b>{{ w.pendingInvitations }}</b> bekleyen davet</span>
         </div>
+        @if (loadPoints(w).length) { <staff-bars class="load-chart" title="Öğretmen başına bekleyen iş (değerlendirme ve gecikmiş ödev)" tone="orange" [points]="loadPoints(w)" /> }
         @if (!w.teacherRows.length) { <p class="muted">Kurumda henüz öğretmen yok.</p> }
         @else {
           <div class="table-scroll">
@@ -155,6 +167,10 @@ export class CoachingInstitutionBranchesComponent implements OnInit {
   `
 })
 export class CoachingInstitutionWorkloadComponent implements OnInit {
+  /** Teachers with waiting work, most first; nothing to draw when no one has any. */
+  loadPoints(workload: InstitutionWorkload): StaffChartPoint[] {
+    return workload.teacherRows.map(row => ({ label: row.name, value: row.awaitingGrading + row.overdue })).filter(point => point.value > 0);
+  }
   private readonly api = inject(CoachingInstitutionReportsApi);
   readonly workload = signal<InstitutionWorkload | null>(null);
   readonly loading = signal(true);
