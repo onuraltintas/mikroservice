@@ -112,13 +112,27 @@ public static class SetupEndpoints
                 {
                     var future = await db.LessonSessions.Where(lesson => lesson.WorkspaceId == workspaceId && lesson.GroupId == groupId
                         && lesson.Status == LessonSessionStatus.Scheduled && lesson.StartsAt > now).ToListAsync(ct);
-                    var clashes = 0;
+                    // Live test 21.11.2026: the new teacher's time off and working hours count too, not only their other lessons.
+                    var timeOff = await db.TeacherTimeOffs.AsNoTracking()
+                        .Where(item => item.WorkspaceId == workspaceId && item.TeacherUserId == teacher && item.EndsAt > now)
+                        .Select(item => new { item.StartsAt, item.EndsAt }).ToListAsync(ct);
+                    var windows = await db.TeacherAvailabilityWindows.AsNoTracking()
+                        .Where(item => item.WorkspaceId == workspaceId && item.TeacherUserId == teacher).ToListAsync(ct);
+                    int clashes = 0, overlapping = 0, duringTimeOff = 0, outsideHours = 0;
                     foreach (var lesson in future)
-                        if (await db.LessonSessions.AnyAsync(other => other.WorkspaceId == workspaceId && other.TeacherUserId == teacher
-                                && other.Status == LessonSessionStatus.Scheduled && other.Id != lesson.Id
-                                && other.StartsAt < lesson.EndsAt && lesson.StartsAt < other.EndsAt, ct))
-                            clashes++;
-                    if (clashes > 0 && !request.Force) return Results.Conflict(new { code = "Group.TeacherConflict", clashes });
+                    {
+                        var other = await db.LessonSessions.AnyAsync(item => item.WorkspaceId == workspaceId && item.TeacherUserId == teacher
+                            && item.Status == LessonSessionStatus.Scheduled && item.Id != lesson.Id
+                            && item.StartsAt < lesson.EndsAt && lesson.StartsAt < item.EndsAt, ct);
+                        var off = timeOff.Any(item => item.StartsAt < lesson.EndsAt && lesson.StartsAt < item.EndsAt);
+                        var outside = !LearningEndpoints.FitsTeacherAvailability((lesson.StartsAt, lesson.EndsAt), windows);
+                        if (other) overlapping++;
+                        if (off) duringTimeOff++;
+                        if (outside) outsideHours++;
+                        if (other || off || outside) clashes++;
+                    }
+                    if (clashes > 0 && !request.Force)
+                        return Results.Conflict(new { code = "Group.TeacherConflict", clashes, overlapping, duringTimeOff, outsideHours });
                     foreach (var lesson in future) lesson.ChangeTeacher(teacher);
                     foreach (var series in await db.LessonSeries.Where(item => item.WorkspaceId == workspaceId && item.GroupId == groupId).ToListAsync(ct))
                         series.ChangeTeacher(teacher);

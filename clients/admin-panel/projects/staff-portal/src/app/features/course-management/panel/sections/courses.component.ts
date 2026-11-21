@@ -119,10 +119,11 @@ export class CoursesSectionComponent {
       this.editing.set('');
       this.notice.set(result.movedLessons ? `Grup kaydedildi; ${result.movedLessons} planlı ders yeni öğretmene geçti.` : 'Grup kaydedildi.');
     } catch (error) {
-      const clashes = (error as { error?: { clashes?: number } })?.error?.clashes;
+      const body = (error as { error?: { clashes?: number; overlapping?: number; duringTimeOff?: number; outsideHours?: number } })?.error;
+      const clashes = body?.clashes;
       if (!force && typeof clashes === 'number' && clashes > 0) {
         this.busy.set(false);
-        if (await this.confirm.ask(`Yeni öğretmenin ${clashes} dersi bu grubun dersleriyle aynı saatte. Yine de öğretmeni değiştireyim mi?`,
+        if (await this.confirm.ask(teacherChangeQuestion(clashes, body?.overlapping ?? 0, body?.duringTimeOff ?? 0, body?.outsideHours ?? 0),
           { title: 'Saat çakışması', confirmText: 'Yine de değiştir' })) await this.saveGroup(groupId, true);
         return;
       }
@@ -136,4 +137,14 @@ export class CoursesSectionComponent {
       this.groupName = '';
     }, 'Grup eklendi. Öğrencileri kartlarından bu gruba ekleyebilirsiniz.');
   }
+}
+
+/** Why moving a group's lessons to another teacher needs a confirmation (live test 21.11.2026). */
+export function teacherChangeQuestion(lessons: number, overlapping: number, duringTimeOff: number, outsideHours: number): string {
+  const reasons = [
+    overlapping ? `${overlapping} ders öğretmenin başka bir dersiyle aynı saatte` : '',
+    duringTimeOff ? `${duringTimeOff} ders öğretmenin izinli olduğu saatte` : '',
+    outsideHours ? `${outsideHours} ders öğretmenin çalışma saatleri dışında` : ''
+  ].filter(Boolean);
+  return `Grubun ${lessons} planlı dersi yeni öğretmene uymuyor: ${reasons.join(', ') || 'saatler uygun değil'}. Yine de öğretmeni değiştireyim mi?`;
 }
