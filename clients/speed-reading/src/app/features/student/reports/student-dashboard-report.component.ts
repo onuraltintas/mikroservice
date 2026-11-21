@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { speedReadingReportLabel } from '../../../../../../shared/utils/speed-reading-report-labels';
 import { LineChartComponent } from '../../../shared/components/charts/line-chart.component';
-import { PieChartComponent } from '../../../shared/components/charts/pie-chart.component';
+import { BarChartComponent } from '../../../shared/components/charts/bar-chart.component';
 
 import { RouterModule } from '@angular/router';
 
@@ -20,7 +20,7 @@ import { RouterModule } from '@angular/router';
     CommonModule,
     RouterModule,
     LineChartComponent,
-    PieChartComponent
+    BarChartComponent
   ],
   templateUrl: './student-dashboard-report.component.html',
   styleUrls: ['./student-dashboard-report.component.scss']
@@ -105,16 +105,61 @@ export class StudentDashboardReportComponent implements OnInit {
     }];
   });
 
+  /** Last 30 measured readings, so the line stays readable. */
   wpmProgressData = computed(() => {
-    const points = this.report()?.wpmProgress ?? [];
+    const points = (this.report()?.wpmProgress ?? []).slice(-30);
     if (points.length === 0) return [];
     return [{
-      name: 'WPM',
+      name: 'Okuma hızı',
       series: points.map(point => ({
           name: format(new Date(point.name + 'T00:00:00'), 'd MMM', { locale: tr }),
           value: point.series[0].value
         }))
     }];
+  });
+
+  speedPoints = computed(() => this.wpmProgressData()[0]?.series.length ?? 0);
+
+  /** Last 12 comprehension results as columns (0–100). */
+  comprehensionColumns = computed(() => (this.report()?.comprehensionTrend ?? []).slice(-12).map(point => ({
+    name: format(new Date(point.name + 'T00:00:00'), 'd MMM', { locale: tr }),
+    value: Math.round(point.series[0].value)
+  })));
+
+  /** Reading vs exercise counts for the split bar. */
+  activitySplit = computed(() => {
+    const report = this.report();
+    const reading = report?.readingSessions ?? 0;
+    const exercise = report?.exercisesCompleted ?? 0;
+    return reading + exercise > 0 ? { reading, exercise } : null;
+  });
+
+  /** Study calendar: 12 weeks (Monday first) from the daily activity series; level 0–4 relative to the busiest day. */
+  studyCalendar = computed(() => {
+    const byDate = new Map((this.report()?.activityTrend ?? []).map(point => [point.name, point.series?.[0]?.value ?? 0]));
+    const max = Math.max(1, ...byDate.values());
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7) - 11 * 7);
+    const weeks: { date: string; level: number; future: boolean; title: string }[][] = [];
+    for (let w = 0; w < 12; w++) {
+      const week = [];
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(monday); day.setDate(monday.getDate() + w * 7 + d);
+        const key = format(day, 'yyyy-MM-dd');
+        const value = byDate.get(key) ?? 0;
+        const level = value <= 0 ? 0 : Math.min(4, Math.ceil((value / max) * 4));
+        week.push({ date: key, level, future: day > today,
+          title: `${format(day, 'd MMMM', { locale: tr })}: ${value} etkinlik` });
+      }
+      weeks.push(week);
+    }
+    return weeks;
+  });
+
+  calendarLabel = computed(() => {
+    const days = this.studyCalendar().flat().filter(day => !day.future);
+    const active = days.filter(day => day.level > 0).length;
+    return `Çalışma takvimi: son 12 haftada ${days.length} günün ${active} gününde çalıştın.`;
   });
 
   comprehensionTrendData = computed(() => {

@@ -75,6 +75,25 @@
     </div>
 
     @if (comparison.attempts.length > 0) {
+    <div class="rp-compare">
+      @for (group of comparisonBars(comparison); track group.key) {
+      <div class="rp-compare__group">
+        <h3 class="rp-compare__title">{{ group.title }}</h3>
+        @for (bar of group.bars; track bar.label) {
+        <div class="rp-compare__row">
+          <span class="rp-compare__label">{{ bar.label }}</span>
+          <span class="rp-compare__track" role="img" [attr.aria-label]="bar.label + ': ' + bar.text">
+            <span class="rp-compare__fill sp-grow-x" [class.rp-compare__fill--now]="bar.latest"
+              [style.width.%]="bar.width"></span>
+          </span>
+          <span class="rp-compare__value">{{ bar.text }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    <details class="rp-compare__table">
+    <summary>Tablo olarak gör</summary>
     <div class="rp-assessment-card__table-wrap">
       <table class="rp-assessment-table">
         <thead>
@@ -91,7 +110,7 @@
           <tr>
             <th scope="row">{{ phaseLabel(attempt.phase) }}</th>
             <td>{{ metric(attempt.averageWpm, ' kelime/dk') }}</td>
-            <td>{{ metric(attempt.averageComprehension, '%') }}</td>
+            <td>{{ percent(attempt.averageComprehension) }}</td>
             <td>
               <span [class]="'rp-delta ' + deltaClass(attempt.wpmDeltaFromBaseline)">
                 {{ delta(attempt.wpmDeltaFromBaseline, ' kelime/dk') }}
@@ -106,6 +125,7 @@
         </tbody>
       </table>
     </div>
+    </details>
     } @else {
     <p class="rp-assessment-card__empty">Henüz tamamlanmış bir değerlendirme ölçümü bulunmuyor.</p>
     }

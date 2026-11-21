@@ -24,7 +24,7 @@ export interface LineChartSeries {
       <canvas
         baseChart
         role="img"
-        [attr.aria-label]="chartLabel"
+        [attr.aria-label]="chartLabel + (valueLabel ? ': ' + valueLabel : '')"
         [data]="lineChartData"
         [options]="lineChartOptions"
         [type]="lineChartType">
@@ -48,6 +48,11 @@ export class LineChartComponent implements AfterViewInit, OnChanges {
   @Input() showLegend = true;
   @Input() height = 300;
   @Input() chartLabel = 'Çizgi grafiği';
+  /** Value axis starts at zero unless a trend reads better zoomed (e.g. reading speed). */
+  @Input() beginAtZero = true;
+  @Input() suggestedMax?: number;
+  /** Values for screen readers (design rule: chart values are in the aria-label). */
+  valueLabel = '';
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
@@ -83,29 +88,11 @@ export class LineChartComponent implements AfterViewInit, OnChanges {
     if (isOldFormat) {
       // Old format: ChartSeries[] = [{name, value}, {name, value}, ...]
       labels = (this.data as any[]).map(d => d.name);
-      datasets = [{
-        label: this.yAxisLabel || 'Value',
-        data: (this.data as any[]).map(d => d.value),
-        borderColor: this.chartConfig.chartColors[0],
-        backgroundColor: this.chartConfig.chartColors[0] + '20',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }];
+      datasets = [this.styleSeries(this.yAxisLabel || 'Değer', (this.data as any[]).map(d => d.value), 0)];
     } else {
       // New format: LineChartSeries[] = [{name, series: [{name, value}]}]
       labels = this.data[0]?.series?.map(d => d.name) || [];
-      datasets = this.data.map((series, index) => ({
-        label: series.name,
-        data: series.series?.map(d => d.value) || [],
-        borderColor: this.chartConfig.chartColors[index % this.chartConfig.chartColors.length],
-        backgroundColor: this.chartConfig.chartColors[index % this.chartConfig.chartColors.length] + '20',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }));
+      datasets = this.data.map((series, index) => this.styleSeries(series.name, series.series?.map(d => d.value) || [], index));
     }
 
     this.lineChartData = {
@@ -113,39 +100,47 @@ export class LineChartComponent implements AfterViewInit, OnChanges {
       datasets
     };
 
+    const axes = this.chartConfig.axes(this.beginAtZero) as any;
+    const title = (text: string) => ({ display: !!text, text, color: this.chartConfig.colors.muted,
+      font: { family: this.chartConfig.fontFamily, size: 12, weight: 'bold' as const } });
     this.lineChartOptions = this.chartConfig.getLineChartOptions({
-      plugins: {
-        legend: {
-          display: this.showLegend
-        }
-      },
+      maintainAspectRatio: false,
+      plugins: { legend: { display: this.showLegend && datasets.length > 1 } },
       scales: {
-        x: {
-          title: {
-            display: !!this.xAxisLabel,
-            text: this.xAxisLabel,
-            font: {
-              family: 'Roboto, sans-serif',
-              size: 12,
-              weight: 'bold'
-            }
-          }
-        },
-        y: {
-          title: {
-            display: !!this.yAxisLabel,
-            text: this.yAxisLabel,
-            font: {
-              family: 'Roboto, sans-serif',
-              size: 12,
-              weight: 'bold'
-            }
-          }
-        }
+        x: { ...axes.x, title: title(this.xAxisLabel), ticks: { ...axes.x.ticks, maxTicksLimit: 8, maxRotation: 0 } },
+        y: { ...axes.y, title: title(this.yAxisLabel), suggestedMax: this.suggestedMax }
       }
     });
+    this.valueLabel = this.describe(labels, datasets);
 
     // Update chart if it exists
     this.chart?.update();
+  }
+
+  /** Brand line: pine (or the next brand colour), 12 % fill, small surface-filled points. */
+  private styleSeries(label: string, data: number[], index: number) {
+    const palette = this.chartConfig.chartColors;
+    const color = palette[index % palette.length];
+    return {
+      label, data,
+      borderColor: color,
+      backgroundColor: this.chartConfig.withAlpha(color, 0.12),
+      fill: index === 0,
+      tension: 0.3,
+      borderWidth: 2.5,
+      pointRadius: data.length > 40 ? 0 : 3,
+      pointHoverRadius: 6,
+      pointBackgroundColor: this.chartConfig.colors.surface,
+      pointBorderColor: color,
+      pointBorderWidth: 2
+    };
+  }
+
+  private describe(labels: string[], datasets: { label: string; data: number[] }[]): string {
+    return datasets.map(set => {
+      const pairs = set.data.map((value, i) => `${labels[i] ?? ''} ${Math.round(value)}`);
+      const shown = pairs.length > 12 ? [...pairs.slice(0, 2), '…', ...pairs.slice(-6)] : pairs;
+      return `${set.label}: ${shown.join(', ')}`;
+    }).join('; ');
   }
 }
