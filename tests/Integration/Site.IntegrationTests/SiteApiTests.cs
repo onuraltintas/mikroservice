@@ -47,6 +47,7 @@ public sealed class SiteApiTests : IAsyncLifetime
             builder.UseSetting("JWT_AUDIENCE", Audience);
             builder.UseSetting("JWT_KEY_ID", "tests");
             builder.UseSetting("AllowedHosts", "*");
+            builder.UseSetting("Site:ContactNotifyEmail", "test-ekip@example.com");
             builder.ConfigureTestServices(services => services.AddSingleton<SiteIntegrations>(_integrations));
         });
     }
@@ -218,6 +219,28 @@ public sealed class SiteApiTests : IAsyncLifetime
         for (var i = 0; i < 3; i++)
             Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/site/sites/maxkampus/contact", Contact($"mesaj {i}"))).StatusCode);
         Assert.Equal((HttpStatusCode)429, (await client.PostAsJsonAsync("/api/site/sites/maxkampus/contact", Contact("dördüncü"))).StatusCode);
+
+        // Live test 20.11.2026: the team hears of each message, the sender gets a receipt; neither e-mail carries the message.
+        var notices = _integrations.Sent.Where(item => item.Type == SiteIntegrations.ContactNoticeType).ToList();
+        var receipts = _integrations.Sent.Where(item => item.Type == SiteIntegrations.ContactReceiptType).ToList();
+        Assert.Equal(3, notices.Count);
+        Assert.Equal(3, receipts.Count);
+        Assert.All(notices, item =>
+        {
+            Assert.Equal("test-ekip@example.com", item.Recipient);
+            Assert.Equal("maxkampüs: yeni iletişim mesajı", item.Subject);
+            Assert.Contains("https://admin.eduivme.com/dashboard/maxkampus/messages", item.Html);
+        });
+        Assert.All(receipts, item =>
+        {
+            Assert.Equal("test-iletisim@example.com", item.Recipient);
+            Assert.Equal("maxkampüs: mesajınızı aldık", item.Subject);
+        });
+        Assert.All(notices.Concat(receipts), item =>
+        {
+            Assert.DoesNotContain("mesaj 0", item.Html);
+            Assert.DoesNotContain("test-iletisim@example.com", item.Html);
+        });
         Assert.Equal(HttpStatusCode.NotFound, (await client.PostAsJsonAsync("/api/site/sites/eduivme/contact", Contact("başka site"))).StatusCode);
 
         Assert.Equal(HttpStatusCode.Forbidden, (await Client("Teacher").GetAsync("/api/site-admin/sites/maxkampus/messages")).StatusCode);
@@ -466,6 +489,7 @@ public sealed class SiteApiTests : IAsyncLifetime
         public bool CaptchaOk { get; set; } = true;
         public string? LastAction { get; private set; }
         public List<(string Recipient, string Html)> Emails { get; } = [];
+        public List<(string Recipient, string Subject, string Html, string Type)> Sent { get; } = [];
 
         public override Task<bool> CaptchaAcceptedAsync(string? token, string action, CancellationToken cancellationToken)
         {
@@ -473,9 +497,14 @@ public sealed class SiteApiTests : IAsyncLifetime
             return Task.FromResult(CaptchaOk);
         }
 
-        public override Task<bool> QueueEmailAsync(Guid messageId, string recipient, string subject, string html, CancellationToken cancellationToken)
+        public override Task<bool> QueueEmailAsync(Guid messageId, string recipient, string subject, string html, CancellationToken cancellationToken,
+            string consumerType = NewsletterConfirmationType)
         {
-            lock (Emails) Emails.Add((recipient, html));
+            lock (Emails)
+            {
+                Sent.Add((recipient, subject, html, consumerType));
+                if (consumerType == NewsletterConfirmationType) Emails.Add((recipient, html));
+            }
             return Task.FromResult(true);
         }
     }
