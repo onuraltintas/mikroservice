@@ -833,7 +833,6 @@ public static class LearningEndpoints
                 {
                     room = await db.Rooms.SingleOrDefaultAsync(item => item.Id == roomId && item.WorkspaceId == workspaceId, ct);
                     if (room is null) return Results.NotFound();
-                    if (room.ArchivedAt is not null) return Results.Conflict(new { code = "Room.Archived" });
                     if (room.Capacity is int capacity && participantStudentIds.Count > capacity)
                         return Results.Conflict(new { code = "Room.CapacityExceeded" });
                 }
@@ -1290,6 +1289,7 @@ public static class LearningEndpoints
                 {
                     room = await db.Rooms.SingleOrDefaultAsync(item => item.Id == roomId && item.WorkspaceId == workspaceId, ct);
                     if (room is null) return Results.NotFound();
+                    if (room.ArchivedAt is not null) return Results.Conflict(new { code = "Room.Archived" });
                     if (room.Capacity is int capacity && studentIds.Count > capacity)
                         return Results.Conflict(new { code = "Room.CapacityExceeded" });
                 }
