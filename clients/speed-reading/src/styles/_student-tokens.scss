@@ -98,6 +98,21 @@
   --sp-shadow-hover: var(--ds-shadow);
   --sp-shadow-glow: 0 0 0 3px var(--sp-primary-ghost);
 
+  // LIVELY DESIGN (21.11.2026): soft tones of the same green/orange family for coloured cards, chips and charts.
+  // Each pair is text-on-soft at least 4.5:1 (checked by tools/brand/design_tokens.py); light and dark come from --ds-*.
+  --sp-tone-mint:       var(--ds-mint);
+  --sp-tone-mint-soft:  var(--ds-mint-soft);
+  --sp-tone-sea:        var(--ds-info);
+  --sp-tone-sea-soft:   var(--ds-info-soft);
+  --sp-tone-peach:      var(--ds-orange);
+  --sp-tone-peach-soft: var(--ds-orange-soft);
+  --sp-tone-sand:       var(--ds-sand);
+  --sp-tone-sand-soft:  var(--ds-sand-soft);
+  --sp-focus-line:      var(--ds-accent);
+  --sp-radius-card-lg:  var(--ds-radius-card, 22px);
+  --sp-shadow-raised:   var(--ds-shadow-raised, var(--ds-shadow));
+  --sp-shadow-raised-hover: var(--ds-shadow-hover, var(--ds-shadow));
+
   // TRANSITIONS
   --sp-transition-fast:   var(--ui-transition-fast);
   --sp-transition-normal: var(--ui-transition-normal);

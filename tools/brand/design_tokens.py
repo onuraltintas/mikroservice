@@ -34,7 +34,7 @@ def check():
                                ('visualMuted', 'visualBg', 4.5), ('danger', 'dangerSoft', 4.5), ('warning', 'warningSoft', 4.5),
                                ('success', 'successSoft', 4.5), ('onAccent', 'accent', 4.5), ('text', 'soft', 4.5), ('link', 'soft', 4.5), ('mathFg', 'mathBg', 4.5),
                                ('turkishFg', 'turkishBg', 4.5), ('scienceFg', 'scienceBg', 4.5), ('historyFg', 'historyBg', 4.5),
-                               ('info', 'infoSoft', 4.5), ('muted', 'infoSoft', 4.5), ('violet', 'violetSoft', 4.5), ('orange', 'orangeSoft', 4.5),
+                               ('info', 'infoSoft', 4.5), ('muted', 'infoSoft', 4.5), ('mint', 'mintSoft', 4.5), ('sand', 'sandSoft', 4.5), ('text', 'mintSoft', 4.5), ('text', 'sandSoft', 4.5), ('text', 'orangeSoft', 4.5), ('text', 'infoSoft', 4.5), ('violet', 'violetSoft', 4.5), ('orange', 'orangeSoft', 4.5),
                                ('text', 'nowSoft', 4.5), ('muted', 'nowSoft', 4.5), ('muted', 'pageTint', 4.5), ('muted', 'warningSoft', 4.5),
                                ('muted', 'dangerSoft', 4.5), ('muted', 'successSoft', 4.5)]:
                 if a not in t or b not in t:
@@ -55,7 +55,15 @@ EXTRA = {'eduivme': {
                 shadowRaised='0 1px 2px rgba(28, 36, 48, 0.06), 0 12px 28px -14px rgba(31, 78, 140, 0.28)',
                 shadowHover='0 2px 4px rgba(28, 36, 48, 0.07), 0 18px 34px -14px rgba(31, 78, 140, 0.34)'),
   'dark': dict(info='#9DBEF2', infoSoft='#1C2A3E', violet='#D5B8F7', violetSoft='#2B2140', orange='#F7B68C', orangeSoft='#3A2417',
-               nowSoft='#2E2814', pageTint='#12161C', shadowRaised='none', shadowHover='none')}}
+               nowSoft='#2E2814', pageTint='#12161C', shadowRaised='none', shadowHover='none')},
+# Master Hızlı Okuma lively design (21.11.2026): soft tones of the same green and orange family for coloured cards and charts.
+ 'ho': {
+  'light': dict(mint='#08624F', mintSoft='#DDF1EA', info='#0E6A7A', infoSoft='#DCEFF3', orange='#9A4508', orangeSoft='#FDE8D7',
+                sand='#8A5A00', sandSoft='#FFF1D6', pageTint='#EAF4F0', radiusCard='22px',
+                shadowRaised='0 1px 2px rgba(11, 122, 100, 0.06), 0 14px 30px -16px rgba(11, 122, 100, 0.38)',
+                shadowHover='0 1px 2px rgba(11, 122, 100, 0.08), 0 20px 34px -16px rgba(11, 122, 100, 0.45)'),
+  'dark': dict(mint='#3CC9A8', mintSoft='#163A31', info='#7FD3E2', infoSoft='#12333A', orange='#FFB37A', orangeSoft='#3A2414',
+               sand='#F2C66B', sandSoft='#33290F', pageTint='#0C1413', shadowRaised='none', shadowHover='none')}}
 DARK = ":is(html.dark, [data-sp-theme='dark'], [data-theme='dark'])"
 out = ['''// eduivme tasarım değişkenleri (redesign, 18.11.2026). Kurallar: .claude/skills/eduivme-design/SKILL.md
 // Üretici: tools/brand/design_tokens.py. Elle değiştirme; üreticiyi değiştirip yeniden üret.

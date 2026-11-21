@@ -242,3 +242,42 @@
     animation: sp-fade-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) #{($i - 1) * 50}ms both;
   }
 }
+
+
+// ── Lively design (21.11.2026) ───────────────────────────────────────────────
+// Ölçülü hareket: açılışta bir kez sırayla belirme, üstüne gelince yükselme, grafiklerin çizilerek / büyüyerek gelmesi,
+// odak çizgisinin kayması. Egzersiz ve okuma alanında kullanılmaz. "Hareketi azalt" açıksa hiçbiri oynamaz.
+@keyframes sp-rise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes sp-slide-in { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+@keyframes sp-grow-y { from { transform: scaleY(0); } }
+@keyframes sp-grow-x { from { transform: scaleX(0); } }
+@keyframes sp-draw { from { stroke-dashoffset: var(--sp-dash, 400); } }
+@keyframes sp-pop { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes sp-sweep { from { transform: translateX(-120%); } to { transform: translateX(0); } }
+@keyframes sp-flame { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.12) rotate(3deg); } }
+@keyframes sp-spark { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: .6; } }
+
+.sp-rise { animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--sp-i, 0) * 60ms); }
+.sp-slide-in { animation: sp-slide-in .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--sp-i, 0) * 50ms); }
+.sp-lift { transition: transform .2s ease, box-shadow .2s ease;
+  &:hover { transform: translateY(-3px); box-shadow: var(--sp-shadow-raised-hover); } }
+.sp-grow-y { transform-origin: bottom; animation: sp-grow-y .8s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--sp-i, 0) * 60ms + 200ms); }
+.sp-grow-x { transform-origin: left; animation: sp-grow-x 1s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--sp-i, 0) * 80ms + 200ms); }
+.sp-draw { stroke-dasharray: var(--sp-dash, 400); animation: sp-draw 1.4s .3s cubic-bezier(.2, .8, .2, 1) both; }
+.sp-pop { animation: sp-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: calc(var(--sp-i, 0) * 80ms + 300ms); }
+.sp-sweep { animation: sp-sweep 1.6s .4s cubic-bezier(.45, 0, .2, 1) both; }
+.sp-focus-line { transform-origin: left; animation: sp-grow-x .9s .8s cubic-bezier(.2, .8, .2, 1) both; background: var(--sp-focus-line); }
+.sp-flame { transform-origin: 50% 90%; animation: sp-flame 1.6s ease-in-out infinite; }
+.sp-spark { animation: sp-spark 2.4s ease-in-out infinite; }
+
+// Renkli kart ve etiket tonları: --tone (yazı/çizgi) ve --tone-soft (zemin).
+.sp-tone-mint  { --tone: var(--sp-tone-mint);  --tone-soft: var(--sp-tone-mint-soft); }
+.sp-tone-sea   { --tone: var(--sp-tone-sea);   --tone-soft: var(--sp-tone-sea-soft); }
+.sp-tone-peach { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-tone-peach-soft); }
+.sp-tone-sand  { --tone: var(--sp-tone-sand);  --tone-soft: var(--sp-tone-sand-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-rise, .sp-slide-in, .sp-grow-y, .sp-grow-x, .sp-draw, .sp-pop, .sp-sweep, .sp-focus-line, .sp-flame, .sp-spark {
+    animation: none !important; }
+  .sp-lift:hover { transform: none; }
+}

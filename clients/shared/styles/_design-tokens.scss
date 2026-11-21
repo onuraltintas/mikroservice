@@ -198,6 +198,18 @@
   --ds-radius-control: 14px;
   --ds-radius-button: 999px;
   --ds-shadow: 0 1px 2px rgba(11, 60, 50, 0.06), 0 8px 20px -10px rgba(11, 60, 50, 0.18);
+  --ds-mint: #08624F;
+  --ds-mint-soft: #DDF1EA;
+  --ds-info: #0E6A7A;
+  --ds-info-soft: #DCEFF3;
+  --ds-orange: #9A4508;
+  --ds-orange-soft: #FDE8D7;
+  --ds-sand: #8A5A00;
+  --ds-sand-soft: #FFF1D6;
+  --ds-page-tint: #EAF4F0;
+  --ds-radius-card: 22px;
+  --ds-shadow-raised: 0 1px 2px rgba(11, 122, 100, 0.06), 0 14px 30px -16px rgba(11, 122, 100, 0.38);
+  --ds-shadow-hover: 0 1px 2px rgba(11, 122, 100, 0.08), 0 20px 34px -16px rgba(11, 122, 100, 0.45);
 }
 
 :is(html.dark, [data-sp-theme='dark'], [data-theme='dark']) [data-brand='ho'],
@@ -228,6 +240,17 @@
   --ds-success: #8FE0C2;
   --ds-success-soft: #16302A;
   --ds-shadow: none;
+  --ds-mint: #3CC9A8;
+  --ds-mint-soft: #163A31;
+  --ds-info: #7FD3E2;
+  --ds-info-soft: #12333A;
+  --ds-orange: #FFB37A;
+  --ds-orange-soft: #3A2414;
+  --ds-sand: #F2C66B;
+  --ds-sand-soft: #33290F;
+  --ds-page-tint: #0C1413;
+  --ds-shadow-raised: none;
+  --ds-shadow-hover: none;
 }
 
 // Eski bileşenler (--ui-*) marka kapsamı içinde yeni renkleri kullanır; böylece kayıt formları gibi henüz yenilenmemiş
