@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   CourseBranch, CourseGroup, CourseManagementService, CourseRoom, CourseSummary, CourseWorkspace
 } from '../course-management.service';
-import { CoursePanelApi, PanelMember, PanelSetup, PanelTeacherInvitation } from './panel-api.service';
+import { CoursePanelApi, PanelFeatures, PanelMember, PanelSetup, PanelTeacherInvitation } from './panel-api.service';
 import { PROBLEM_TEXTS } from './problem-codes';
 
 /** Where the panel runs: the maxkampüs site or the eduivme staff portal (kurum.eduivme.com). */
@@ -53,6 +53,8 @@ export class CoursePanelState {
   /** The setup guide's state (owner only); null until loaded. */
   readonly setup = signal<PanelSetup | null>(null);
   readonly myUserId = signal<string>('');
+  /** Switched features; both off until the server says otherwise, so a closed feature never shows a dead button. */
+  readonly features = signal<PanelFeatures>({ studentPortal: false, assignmentAttachments: false });
   readonly site = signal<PanelSite>('eduivme');
   /** Product name for texts shown inside the panel. */
   readonly brand = computed(() => this.site() === 'maxkampus' ? 'maxkampüs' : 'eduivme');
@@ -104,7 +106,7 @@ export class CoursePanelState {
   async open(workspace: CourseWorkspace, myUserId: string): Promise<void> {
     this.workspace.set(workspace);
     this.myUserId.set(myUserId);
-    await this.refreshLists();
+    await Promise.all([this.refreshLists(), this.loadFeatures()]);
   }
 
   async refreshLists(): Promise<void> {
@@ -123,6 +125,13 @@ export class CoursePanelState {
     this.rooms.set(rooms);
     this.branches.set(branches);
     this.members.set(members);
+  }
+
+  private async loadFeatures(): Promise<void> {
+    try {
+      const features = await this.api.features();
+      this.features.set({ studentPortal: features?.studentPortal === true, assignmentAttachments: features?.assignmentAttachments === true });
+    } catch { /* Older server: keep both off. */ }
   }
 
   changed(): void { this.version.update(value => value + 1); }

@@ -221,6 +221,9 @@ api.MapSetupEndpoints();
 api.MapRoomEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
+// Which switched features are on, so the panel hides what this deployment has closed (21.11.2026).
+api.MapGet("/features", () =>
+    Results.Ok(new { features.StudentPortal, features.AssignmentAttachments }));
 api.MapCourseEmailEndpoints(app);
 app.MapSupportAccessEndpoints(api);
 app.MapSupportChangeEndpoints();

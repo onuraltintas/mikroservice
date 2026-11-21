@@ -47,13 +47,17 @@ public static class AssignmentEndpoints
             else
             {
                 var studentId = request.StudentId!.Value;
-                if (!await db.Students.AnyAsync(student => student.Id == studentId && student.WorkspaceId == workspaceId
-                        && student.IsActive, ct)) return Results.NotFound();
-                var enrollment = await (from item in db.Enrollments.AsNoTracking()
+                var student = await db.Students.AsNoTracking().SingleOrDefaultAsync(item => item.Id == studentId
+                    && item.WorkspaceId == workspaceId && item.IsActive, ct);
+                if (student is null) return Results.NotFound();
+                // A one-to-one student has no group: the owner and the student's one-to-one teacher give the homework
+                // (21.11.2026 live test: homework in a one-to-one lesson answered 404).
+                var oneToOne = owner || student.OneToOneTeacherUserId == userId;
+                var enrollment = oneToOne || await (from item in db.Enrollments.AsNoTracking()
                     join courseGroup in db.Groups.AsNoTracking() on item.GroupId equals courseGroup.Id
                     where item.WorkspaceId == workspaceId && item.StudentId == studentId
                         && item.Status == EnrollmentStatus.Active && courseGroup.CourseId == request.CourseId
-                        && courseGroup.WorkspaceId == workspaceId && (owner || courseGroup.TeacherUserId == userId)
+                        && courseGroup.WorkspaceId == workspaceId && courseGroup.TeacherUserId == userId
                     select item.Id).AnyAsync(ct);
                 if (!enrollment) return Results.NotFound();
                 recipientIds = [studentId];
@@ -123,6 +127,8 @@ public static class AssignmentEndpoints
                 assignments = assignments.Where(item => item.TeacherUserId == userId
                     || item.GroupId != null && db.Groups.Any(group => group.Id == item.GroupId
                         && group.WorkspaceId == workspaceId && group.TeacherUserId == userId)
+                    || item.StudentId != null && db.Students.Any(student => student.Id == item.StudentId
+                        && student.WorkspaceId == workspaceId && student.OneToOneTeacherUserId == userId)
                     || item.StudentId != null && db.Enrollments.Any(enrollment => enrollment.WorkspaceId == workspaceId
                         && enrollment.StudentId == item.StudentId && enrollment.Status == EnrollmentStatus.Active
                         && db.Groups.Any(group => group.Id == enrollment.GroupId && group.CourseId == item.CourseId
@@ -397,6 +403,9 @@ public static class AssignmentEndpoints
         if (assignment.GroupId is Guid groupId)
             return await db.Groups.AnyAsync(group => group.Id == groupId && group.WorkspaceId == assignment.WorkspaceId
                 && group.TeacherUserId == userId, ct);
+        if (assignment.StudentId is Guid oneToOneStudentId && await db.Students.AnyAsync(student => student.Id == oneToOneStudentId
+                && student.WorkspaceId == assignment.WorkspaceId && student.OneToOneTeacherUserId == userId, ct))
+            return true;
         return assignment.StudentId is Guid studentId && await (from enrollment in db.Enrollments
             join courseGroup in db.Groups on enrollment.GroupId equals courseGroup.Id
             where enrollment.WorkspaceId == assignment.WorkspaceId && enrollment.StudentId == studentId

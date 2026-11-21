@@ -37,6 +37,7 @@ export interface PanelStudentFilter {
   q?: string; courseId?: string; groupId?: string; teacherId?: string; status?: 'active' | 'archived' | 'all';
   overdue?: boolean | null; sort?: 'name' | '-name' | 'created' | '-created'; skip?: number; take?: number;
 }
+export interface PanelFeatures { studentPortal: boolean; assignmentAttachments: boolean; }
 export type CompletionMark = 0 | 1 | 2 | 3;
 export interface PanelCompletion { studentId: string; studentName: string; completion: 'NotMarked' | 'Done' | 'Partial' | 'NotDone'; note: string | null; markedAt: string | null; }
 export interface PanelEmailRule { kind: string; kindValue: number; enabled: boolean; audience: number; note: string | null; }
@@ -101,6 +102,8 @@ export class CoursePanelApi {
     return firstValueFrom(this.http.get<{ id: string; studentId: string; courseId: string; model: string; isActive: boolean }[]>(`${this.ws(id)}/finance/fee-agreements`));
   }
   setup(id: string) { return firstValueFrom(this.http.get<PanelSetup>(`${this.ws(id)}/setup`)); }
+  /** Which switched features this deployment has on (21.11.2026: homework files are off until a virus scanner runs). */
+  features() { return firstValueFrom(this.http.get<PanelFeatures>(`${this.base}/features`)); }
   saveSetup(id: string, skipped: SetupStepId[], closed: boolean) { return firstValueFrom(this.http.put<void>(`${this.ws(id)}/setup`, { skipped, closed })); }
   saveProfile(id: string, name: string, institutionCategory: number | null) {
     return firstValueFrom(this.http.put<{ name: string; institutionCategory: string | null }>(`${this.ws(id)}/profile`, { name, institutionCategory }));
