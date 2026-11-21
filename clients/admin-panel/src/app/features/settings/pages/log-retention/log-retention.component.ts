@@ -13,18 +13,18 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
     <div class="p-4 md:p-6 min-h-full">
         <!-- Header -->
         <div class="mb-6">
-            <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Log Saklama Ayarları</h1>
+            <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Log saklama ayarları</h1>
             <p class="text-(--ui-text-muted) text-sm">Logların ne kadar süreyle saklanacağını yapılandırın.</p>
         </div>
 
         <!-- Seq Dashboard Link -->
         <div class="bg-(--ui-brand-soft) p-6 rounded-xl border border-(--ui-brand-soft) flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-                <h4 class="text-lg font-bold text-(--ui-brand-text)">Seq Dashboard</h4>
+                <h4 class="text-lg font-bold text-(--ui-brand-text)">Seq paneli</h4>
                 <p class="text-sm text-(--ui-brand-text) mt-1">Gelişmiş analiz, grafikler ve uyarılar için Seq arayüzünü kullanın.</p>
             </div>
             <a [href]="seqUrl" target="_blank" class="px-6 py-3 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) flex items-center gap-2 text-sm font-medium shadow-sm transition-all">
-                Seq Panelini Aç <span class="material-icons text-sm">open_in_new</span>
+                Seq panelini aç <span class="material-icons text-sm">open_in_new</span>
             </a>
         </div>
 
@@ -35,7 +35,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                     <div class="p-4 border-b border-(--ui-border) bg-(--ui-surface-muted) flex justify-between items-center">
                         <h3 class="font-bold text-(--ui-text) flex items-center gap-2">
                             <span class="material-icons text-(--ui-text-muted)">history</span>
-                            Mevcut Politikalar
+                            Mevcut politikalar
                         </h3>
                         <button (click)="loadRetentionPolicies()" class="text-(--ui-brand-text) hover:text-(--ui-brand-text) text-sm font-medium flex items-center gap-1">
                             <span class="material-icons text-sm">refresh</span> Yenile
@@ -46,7 +46,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                         <thead class="bg-(--ui-surface-muted)">
                             <tr>
                                 <th class="px-6 py-3 text-xs font-medium text-(--ui-text-muted)">Süre</th>
-                                <th class="px-6 py-3 text-xs font-medium text-(--ui-text-muted)">Uygulanan Filtre</th>
+                                <th class="px-6 py-3 text-xs font-medium text-(--ui-text-muted)">Uygulanan filtre</th>
                                 <th class="px-6 py-3 text-xs font-medium text-(--ui-text-muted) w-20">İşlem</th>
                             </tr>
                         </thead>
@@ -62,7 +62,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                                         {{ policy.signalTitle || formatSignal(policy.removedSignalExpression) }}
                                     </span>
                                     <span *ngIf="!policy.removedSignalExpression" class="text-(--ui-text-muted) italic">
-                                        Tüm Loglar
+                                        Tüm loglar
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
@@ -88,7 +88,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                     <div class="p-4 border-b border-(--ui-border) bg-(--ui-surface-muted)">
                         <h3 class="font-bold text-(--ui-text) flex items-center gap-2">
                             <span class="material-icons text-(--ui-text-muted)">add_circle</span>
-                            Yeni Politika Ekle
+                            Yeni politika ekle
                         </h3>
                     </div>
                     

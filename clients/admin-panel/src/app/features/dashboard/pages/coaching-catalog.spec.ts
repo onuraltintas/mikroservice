@@ -44,7 +44,7 @@ describe('CoachingCatalogComponent (target catalog)', () => {
     expect(el.querySelector('app-coaching-catalog-import')).toBeNull();
     expect(el.querySelector('app-coaching-outcomes')).toBeNull();
     expect(el.querySelector('main')).toBeNull();
-    expect(el.textContent).toContain('Müfredat Yönetimi');
+    expect(el.textContent).toContain('Müfredat yönetimi');
   });
   it('renders the university programs component in its tab', () => {
     const { fixture, component, service } = create(); fixture.detectChanges(); service.list.mockClear();

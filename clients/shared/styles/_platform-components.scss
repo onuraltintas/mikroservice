@@ -90,9 +90,9 @@
   color: var(--ui-text-muted);
   font-size: 0.75rem;
   font-weight: 750;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-align: start;
-  text-transform: uppercase;
+  text-transform: none; // Tasarım kuralı: büyük harfli etiket yok (21.11.2026).
 }
 
 .ui-table-wrap th,
@@ -235,9 +235,9 @@
   color: var(--ui-text-muted);
   font-size: 0.75rem;
   font-weight: 750;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-align: start;
-  text-transform: uppercase;
+  text-transform: none; // Tasarım kuralı: büyük harfli etiket yok (21.11.2026).
 }
 
 .data-table th,

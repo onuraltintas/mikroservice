@@ -110,7 +110,7 @@ import { productRoleLabel } from '../../../../core/services/user-product-roles';
                                 </div>
 
                                 <div class="group">
-                                    <label for="new-user-role" class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Kullanıcı Rolü</label>
+                                    <label for="new-user-role" class="block text-sm font-medium text-(--ui-text) mb-1.5 ml-0.5">Kullanıcı rolü</label>
                                     <div class="relative">
                                         <select id="new-user-role" formControlName="role"
                                             [class.border-(--ui-danger)]="f['role'].invalid && f['role'].touched"
@@ -157,7 +157,7 @@ import { productRoleLabel } from '../../../../core/services/user-product-roles';
                             
                             <div class="bg-(--ui-surface) rounded-lg border border-(--ui-success-soft) shadow-sm overflow-hidden">
                                 <div class="px-4 py-2 border-b border-(--ui-border) bg-(--ui-surface-muted)">
-                                    <span class="text-xs font-semibold text-(--ui-text-muted)">Kurulum Daveti</span>
+                                    <span class="text-xs font-semibold text-(--ui-text-muted)">Kurulum daveti</span>
                                 </div>
                                 <div class="p-4 flex items-center justify-between">
                                     <span class="font-mono text-xl font-bold text-(--ui-text)">{{ createdUser()?.invitationSent ? 'Kurulum daveti gönderildi' : '' }}</span>
@@ -189,7 +189,7 @@ import { productRoleLabel } from '../../../../core/services/user-product-roles';
                                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 Kaydediliyor...
                             } @else {
-                                Kullanıcı Oluştur
+                                Kullanıcı oluştur
                             }
                         </button>
                     } @else {

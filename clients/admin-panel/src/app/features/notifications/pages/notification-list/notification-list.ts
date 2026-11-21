@@ -253,7 +253,7 @@ export class NotificationListComponent implements OnInit {
             <mat-icon>{{ data.type === 'SupportRequest' ? 'support_agent' : data.type === 'Account' ? 'person' : 'info' }}</mat-icon>
           </div>
           <div>
-            <h2 class="text-xl font-bold mb-0">Bildirim Detayı</h2>
+            <h2 class="text-xl font-bold mb-0">Bildirim detayı</h2>
             <p class="text-[10px] text-(--ui-text-muted) mb-0">{{ getCategoryLabel(data.type) }}</p>
           </div>
         </div>
@@ -269,7 +269,7 @@ export class NotificationListComponent implements OnInit {
         </div>
 
         <div>
-          <label class="text-[11px] font-bold text-(--ui-text-muted) mb-1 block">Mesaj İçeriği</label>
+          <label class="text-[11px] font-bold text-(--ui-text-muted) mb-1 block">Mesaj içeriği</label>
           <p class="text-sm text-(--ui-text) leading-relaxed bg-(--ui-surface-muted) p-5 rounded-2xl border border-(--ui-border) whitespace-pre-wrap">
             {{ data.message }}
           </p>

@@ -156,16 +156,23 @@ import {
     .eyebrow { margin: 0 0 8px; color: var(--ui-text-muted); font-size: 12px; font-weight: 700; letter-spacing: 0; }
     h1 { margin: 0; font-size: 28px; }
     .page-header p:last-child { margin: 8px 0 0; color: var(--ui-text-muted); }
-    button { border: 1px solid var(--ui-brand); border-radius: 8px; background: var(--ui-surface); color: var(--ui-text); padding: 9px 14px; font: inherit; cursor: pointer; }
+    button { border: 1px solid var(--ui-border-strong); border-radius: 999px; font-weight: 600; background: var(--ui-surface); color: var(--ui-text); padding: 9px 14px; font: inherit; cursor: pointer; }
     button:disabled { cursor: wait; opacity: .65; }
     .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
-    article { min-height: 94px; border: 1px solid var(--ui-brand-soft); border-radius: 12px; background: var(--ui-surface); padding: 18px; }
-    article h2 { margin: 0; color: var(--ui-text-muted); font-size: 14px; font-weight: 600; }
-    article p { margin: 12px 0 0; font-size: 28px; font-weight: 700; }
+    /* Lively design (21.11.2026): each count in a soft tone, rising in order; the number in the tone's strong colour. */
+    .metrics article { --tone: var(--ds-violet); --tone-soft: var(--ds-violet-soft); min-height: 94px; border: 0; border-radius: 16px; background: var(--tone-soft); padding: 16px 18px;
+      animation: metric-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+    .metrics article:nth-child(4n + 2) { --tone: var(--ds-info); --tone-soft: var(--ds-info-soft); animation-delay: 50ms; }
+    .metrics article:nth-child(4n + 3) { --tone: var(--ds-warning); --tone-soft: var(--ds-warning-soft); animation-delay: 100ms; }
+    .metrics article:nth-child(4n + 4) { --tone: var(--ds-success); --tone-soft: var(--ds-success-soft); animation-delay: 150ms; }
+    .metrics article h2 { margin: 0; color: var(--ui-text); font-size: 14px; font-weight: 600; }
+    .metrics article p { margin: 10px 0 0; color: var(--tone); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    @keyframes metric-rise { from { opacity: 0; transform: translateY(10px); } }
+    @media (prefers-reduced-motion: reduce) { .metrics article { animation: none; } }
     .status, .privacy-note { color: var(--ui-text-muted); line-height: 1.6; }
     .error { margin: 16px 0; border: 1px solid var(--ui-danger-soft); border-radius: 8px; background: var(--ui-danger-soft); padding: 12px 16px; color: var(--ui-danger); }
     .error p { margin: 0 0 10px; }
-    .subscriptions { margin-top: 30px; border: 1px solid var(--ui-brand-soft); border-radius: 12px; background: var(--ui-surface); padding: 20px; }
+    .subscriptions { margin-top: 30px; border: 0; border-radius: 18px; background: var(--ui-surface); padding: 20px; box-shadow: var(--ds-shadow-raised, var(--ds-shadow)); }
     .section-heading, .pagination, .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .section-heading h2, .subscription-form h3 { margin: 0; font-size: 18px; }
     .section-heading p { margin: 6px 0 16px; color: var(--ui-text-muted); }

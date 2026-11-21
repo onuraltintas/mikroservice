@@ -37,15 +37,15 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
         <!-- Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem Operasyon Merkezi</h1>
-                <p class="text-(--ui-text-muted) text-sm">Sistem parametrelerini ve modül durumlarını dinamik olarak yönetin.</p>
+                <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem ayarları</h1>
+                <p class="text-(--ui-text-muted) text-sm">Sistem ayarlarını ve bölümlerin bakım durumunu buradan yönetin.</p>
             </div>
             @if (canManage()) { <div class="flex gap-2">
                 <button (click)="refreshRedisCache()" class="px-4 py-2 bg-(--ui-brand-soft) text-(--ui-brand-text) rounded-lg hover:bg-(--ui-brand-soft) transition-all flex items-center gap-2 text-sm font-medium">
-                    <span class="material-icons text-sm">cached</span> Önbelleği (Redis) Temizle
+                    <span class="material-icons text-sm">cached</span> Önbelleği yenile
                 </button>
                 <button (click)="showCreateModal = true" class="px-4 py-2 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) transition-all flex items-center gap-2 text-sm font-medium shadow-sm">
-                    <span class="material-icons text-sm">add</span> Yeni Ayar
+                    <span class="material-icons text-sm">add</span> Yeni ayar
                 </button>
             </div> }
         </div>
@@ -53,10 +53,8 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
         <!-- NEW: Maintenance Mode Operations Center -->
         <div class="mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
             <!-- Updated Background for Light/Dark Mode -->
-            <div class="rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden group border border-(--ui-border)">
+            <div class="maintenance-card rounded-3xl p-6 md:p-8 relative overflow-hidden group">
                 <!-- Background Decoration -->
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-(--ui-brand) rounded-full blur-3xl group-hover:bg-(--ui-brand) transition-all duration-700"></div>
-                <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-(--ui-brand) rounded-full blur-3xl group-hover:bg-(--ui-brand) transition-all duration-700"></div>
 
                 <div class="relative">
                     <div class="flex flex-col lg:flex-row items-center justify-between gap-8 mb-8 pb-8 border-b border-(--ui-border)">
@@ -65,15 +63,15 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                             <div class="w-16 h-16 bg-(--ui-brand-soft) rounded-2xl flex items-center justify-center mb-4 border border-(--ui-brand-soft) shadow-inner">
                                 <span class="material-icons text-(--ui-brand-text) text-3xl">construction</span>
                             </div>
-                            <h2 class="text-2xl font-bold text-(--ui-text) mb-2">Bakım Modu Operasyon Merkezi</h2>
+                            <h2 class="text-2xl font-bold text-(--ui-text) mb-2">Bakım modu</h2>
                             <div class="flex items-center gap-4">
                                 <p class="text-(--ui-text-muted) max-w-sm text-sm">Sistemi genel olarak kilitleyebilir veya modülleri tek tek yönetebilirsiniz.</p>
                                 <div class="bg-(--ui-brand-soft) px-3 py-1 rounded-full border border-(--ui-brand-soft)">
-                                    <span class="text-[10px] font-bold text-(--ui-brand-text)">
-                                        Data: {{ configs().length }} Ayar Yüklü
+                                    <span class="text-xs font-bold text-(--ui-brand-text)">
+                                        {{ configs().length }} ayar
                                     </span>
                                 </div>
-                                <button (click)="loadConfigs()" class="p-1.5 hover:bg-(--ui-surface-muted) rounded-lg transition-colors text-(--ui-text-muted)" title="Verileri Yenile">
+                                <button (click)="loadConfigs()" class="p-1.5 hover:bg-(--ui-surface-muted) rounded-lg transition-colors text-(--ui-text-muted)" title="Yenile" aria-label="Ayarları yenile">
                                     <span class="material-icons text-sm">refresh</span>
                                 </button>
                             </div>
@@ -82,7 +80,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                         <!-- GLOBAL MASTER SWITCH -->
                         <div *ngIf="globalConfig() as global" class="bg-(--ui-surface) p-6 rounded-3xl border border-(--ui-border) flex items-center gap-6 shadow-sm backdrop-blur-md">
                             <div class="text-right">
-                                <div class="text-[10px] font-bold text-(--ui-danger) mb-1">Genel Sistem Kilidi</div>
+                                <div class="text-[10px] font-bold text-(--ui-danger) mb-1">Genel sistem kilidi</div>
                                 <div class="text-xs text-(--ui-text-muted)">Tüm trafiği anında keser</div>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer scale-110">
@@ -97,7 +95,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                         <div class="flex-1 w-full flex flex-col sm:flex-row items-center gap-4 bg-(--ui-surface)/50 p-4 rounded-2xl border border-(--ui-border) backdrop-blur-sm">
                             <!-- Service Selector -->
                             <div class="flex-1 w-full">
-                                <label class="block text-[10px] font-bold text-(--ui-text-muted) mb-2 px-1">Bağımsız Modül Yönetimi</label>
+                                <label class="block text-[10px] font-bold text-(--ui-text-muted) mb-2 px-1">Bağımsız modül yönetimi</label>
                                 <div class="relative group/select">
                                     <select 
                                         [(ngModel)]="selectedService" 
@@ -112,7 +110,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
 
                             <!-- Big Toggle Button -->
                             <div *ngIf="selectedServiceConfig() as config" class="sm:border-l border-(--ui-border) sm:pl-8 flex flex-col items-center animate-in zoom-in duration-300 min-w-[140px]">
-                                <label class="block text-[10px] font-bold text-(--ui-text-muted) mb-3">Modül Durumu</label>
+                                <label class="block text-[10px] font-bold text-(--ui-text-muted) mb-3">Modül durumu</label>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" [checked]="config.value === 'true'" (change)="updateValue(config, $event)" [disabled]="!canManage()" class="sr-only peer">
                                     <div class="w-16 h-8 bg-(--ui-surface-muted) peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-(--ui-surface) after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked: peer-checked:from-(--ui-warning) peer-checked:"></div>
@@ -126,12 +124,12 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                             <div *ngIf="!selectedService" class="sm:border-l border-(--ui-border) sm:pl-8 flex flex-col items-center opacity-30 min-w-[140px]">
                                  <label class="block text-[10px] font-bold text-(--ui-text-muted) mb-3">Durum</label>
                                  <div class="w-16 h-8 bg-(--ui-border) rounded-full"></div>
-                                 <span class="mt-2 text-[10px] font-bold text-(--ui-text-muted)">Seçim Yok</span>
+                                 <span class="mt-2 text-[10px] font-bold text-(--ui-text-muted)">Seçim yok</span>
                             </div>
 
                         <!-- Missing Config State: Now with AUTO-CREATE button -->
                         <div *ngIf="selectedService && !selectedServiceConfig()" class="sm:border-l border-(--ui-border) sm:pl-8 flex flex-col items-center min-w-[140px]">
-                            <label class="block text-[10px] font-bold text-(--ui-warning) mb-2 px-1">Bağlantı Eksik</label>
+                            <label class="block text-[10px] font-bold text-(--ui-warning) mb-2 px-1">Bağlantı eksik</label>
                             @if (canManage()) { <button
                                 (click)="quickCreateServiceConfig(selectedService)"
                                 class="px-3 py-2 bg-(--ui-warning-soft) text-(--ui-warning) border border-(--ui-warning-soft) rounded-xl text-[10px] font-bold hover:bg-(--ui-warning) hover:text-white transition-all flex items-center gap-1 group">
@@ -145,7 +143,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                         <div class="w-full lg:w-72 bg-(--ui-surface-muted) rounded-2xl p-4 border border-(--ui-border) self-stretch flex flex-col">
                             <h3 class="text-xs font-bold text-(--ui-text) mb-4 flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 bg-(--ui-warning) rounded-full animate-pulse"></span>
-                    Aktif Bakım Listesi
+                    Aktif bakım listesi
                             </h3>
                             <div class="flex flex-wrap gap-2 overflow-y-auto max-h-32 pr-2">
                                 <div *ngIf="passiveServices().length === 0" class="text-[11px] text-(--ui-text-muted) italic py-2">
@@ -210,7 +208,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                     (click)="selectedGroup.set('All')" 
                     [class]="selectedGroup() === 'All' ? 'bg-(--ui-brand) text-white' : 'bg-(--ui-surface) text-(--ui-text-muted) hover:bg-(--ui-surface-muted)'"
                     class="px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap shadow-sm border border-transparent">
-                    Tüm Ayarlar
+                    Tüm ayarlar
                 </button>
                 <button 
                     *ngFor="let group of groups()" 
@@ -253,7 +251,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                     <p class="text-xs text-(--ui-text-muted) mb-4 line-clamp-2 min-h-[32px]">{{ config.description }}</p>
                     
                     <div class="space-y-3">
-                        <label class="block text-[10px] font-bold text-(--ui-text-muted)">Ayar Değeri</label>
+                        <label class="block text-[10px] font-bold text-(--ui-text-muted)">Ayar değeri</label>
                         
                         <!-- Value Editor based on DataType -->
                         <ng-container [ngSwitch]="config.dataType">
@@ -297,7 +295,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
     <div *ngIf="showCreateModal && canManage()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-(--ui-surface) rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
             <div class="px-6 py-4 border-b border-(--ui-border) flex justify-between items-center bg-(--ui-surface-muted)">
-                <h3 class="font-bold text-(--ui-text)">Yeni Ayar Ekle</h3>
+                <h3 class="font-bold text-(--ui-text)">Yeni ayar ekle</h3>
                 <button (click)="showCreateModal = false" class="text-(--ui-text-muted) hover:text-(--ui-text-muted)">
                     <span class="material-icons">close</span>
                 </button>
@@ -308,7 +306,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                     <input type="text" [ngModel]="newConfig.key" (ngModelChange)="onKeyChange($event)" placeholder="System.MaintenanceMode" class="w-full px-4 py-2 bg-(--ui-surface-muted) border border-(--ui-border) rounded-xl text-sm focus:ring-2 focus:ring-(--ui-brand) outline-none transition-all">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-(--ui-text-muted) mb-1.5">Veri Tipi</label>
+                    <label class="block text-xs font-bold text-(--ui-text-muted) mb-1.5">Veri tipi</label>
                     <select [(ngModel)]="newConfig.dataType" class="w-full px-4 py-2 bg-(--ui-surface-muted) border border-(--ui-border) rounded-xl text-sm focus:ring-2 focus:ring-(--ui-brand) outline-none transition-all">
                         <option [ngValue]="0">Metin (String)</option>
                         <option [ngValue]="1">Sayı (Number)</option>
@@ -317,7 +315,7 @@ const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-(--ui-text-muted) mb-1.5">Başlangıç Değeri</label>
+                    <label class="block text-xs font-bold text-(--ui-text-muted) mb-1.5">Başlangıç değeri</label>
                     <input type="text" [(ngModel)]="newConfig.value" placeholder="true veya değer girin" class="w-full px-4 py-2 bg-(--ui-surface-muted) border border-(--ui-border) rounded-xl text-sm focus:ring-2 focus:ring-(--ui-brand) outline-none transition-all">
                 </div>
                 <div>
@@ -439,7 +437,7 @@ export class ConfigurationsComponent implements OnInit {
     loadConfigs() {
         this.configService.getConfigurations().subscribe({
             next: (data) => this.configs.set(data),
-            error: () => this.toaster.error('Ayarlar yüklenemedi.')
+            error: () => this.toaster.error('Ayarlar yüklenemedi. Bağlantıyı kontrol edip sayfayı yenileyin.')
         });
     }
 
@@ -539,8 +537,8 @@ export class ConfigurationsComponent implements OnInit {
 
     refreshRedisCache() {
         this.configService.refreshCache().subscribe({
-            next: () => this.toaster.success('Redis cache başarıyla yenilendi.'),
-            error: () => this.toaster.error('Cache yenilenemedi.')
+            next: () => this.toaster.success('Önbellek yenilendi.'),
+            error: () => this.toaster.error('Önbellek yenilenemedi. Biraz sonra yeniden deneyin.')
         });
     }
 

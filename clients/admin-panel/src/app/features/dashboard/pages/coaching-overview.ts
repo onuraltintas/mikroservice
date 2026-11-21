@@ -23,19 +23,19 @@ import {
 import { coachingReportCsv, collectCoachingReportPages, downloadCoachingHistoryCsv, renderCoachingReportPrint } from '../../coaching-portal/coaching-history-export';
 
 import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
+import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../shared/components/admin-charts';
 @Component({
   selector: 'app-coaching-overview',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterLink],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, RouterLink, AdminStatComponent, AdminMeterComponent],
   template: `
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-(--ui-text)">Koçluk Özeti</h1>
-          <p class="text-sm text-(--ui-text-muted)">Sistem yöneticisi için salt-okunur operasyon görünümü.</p>
+          <h1 class="text-2xl font-bold text-(--ui-text)">Koçluk özeti</h1>
+          <p class="text-sm text-(--ui-text-muted)">Ödevler, sınavlar, görüşmeler ve hedeflerin genel görünümü. Buradan kayıt değiştirilmez.</p>
         </div>
-        <button type="button" (click)="load()" [disabled]="loading()"
-          class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) disabled:opacity-50">
+        <button type="button" (click)="load()" [disabled]="loading()" class="secondary rounded-full border border-(--ui-border-strong) bg-(--ui-surface) px-4 py-2 text-sm font-semibold text-(--ui-text) disabled:opacity-50">
           Yenile
         </button>
       </div>
@@ -52,13 +52,20 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
       @if (loading() && !overview()) {
         <div class="rounded-xl bg-(--ui-surface) p-6 shadow-sm">Yükleniyor...</div>
       } @else if (overview(); as data) {
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           @for (card of cards(data); track card.label) {
-            <div class="rounded-xl border border-(--ui-border) bg-(--ui-surface) p-5 shadow-sm">
-              <p class="text-sm text-(--ui-text-muted)">{{ card.label }}</p>
-              <p class="mt-2 text-3xl font-bold text-(--ui-text)">{{ card.value }}</p>
-            </div>
+            <admin-stat [label]="card.label" [value]="card.value" [tone]="card.tone" />
           }
+        </div>
+
+        <!-- Lively design (21.11.2026): the three rates as filling bars, values in their accessible names. -->
+        <div class="rates">
+          <div class="rate"><span>Ödev teslimi</span><admin-meter [value]="data.submittedAssignmentStudents" [max]="data.totalAssignmentStudents" tone="info"
+            [label]="'Ödev teslimi: ' + data.submittedAssignmentStudents + '/' + data.totalAssignmentStudents" /><strong>{{ percentage(data.submittedAssignmentStudents, data.totalAssignmentStudents) }}</strong></div>
+          <div class="rate"><span>Tamamlanan hedef</span><admin-meter [value]="data.completedGoals" [max]="data.totalGoals" tone="success"
+            [label]="'Tamamlanan hedef: ' + data.completedGoals + '/' + data.totalGoals" /><strong>{{ percentage(data.completedGoals, data.totalGoals) }}</strong></div>
+          <div class="rate"><span>Biten ödev</span><admin-meter [value]="data.completedAssignments" [max]="data.totalAssignments" tone="honey"
+            [label]="'Biten ödev: ' + data.completedAssignments + '/' + data.totalAssignments" /><strong>{{ percentage(data.completedAssignments, data.totalAssignments) }}</strong></div>
         </div>
 
         <div class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-5 shadow-sm">
@@ -102,7 +109,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
               <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Ödev ortalaması</p><p class="mt-1 text-2xl font-bold">{{ formatPercent(report.averageAssignmentPercentage) }}</p></div>
               <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Sınav ortalaması</p><p class="mt-1 text-2xl font-bold">{{ formatPercent(report.averageExamPercentage) }}</p></div>
               <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Katılım oranı</p><p class="mt-1 text-2xl font-bold">{{ formatPercent(report.attendancePercentage) }}</p></div>
-              <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Hedef ilerlemesi</p><p class="mt-1 text-2xl font-bold">{{ report.averageGoalProgress }}%</p></div>
+              <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Hedef ilerlemesi</p><p class="mt-1 text-2xl font-bold">%{{ report.averageGoalProgress }}</p></div>
               <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Tamamlanan hedef</p><p class="mt-1 text-2xl font-bold">{{ report.completedGoalCount }}/{{ report.goalCount }}</p></div>
               <div class="rounded-lg bg-(--ui-surface-muted) p-4"><p class="text-xs text-(--ui-text-muted)">Seans</p><p class="mt-1 text-2xl font-bold">{{ report.sessionCount }}</p></div>
             </div>
@@ -148,7 +155,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                       <td class="max-w-xs px-4 py-3 text-xs text-(--ui-text-muted)">{{ reasonLabels(warning) }}</td>
                       <td class="px-4 py-3">{{ warning.submittedAssignmentCount }}/{{ warning.assignmentCount }}</td>
                       <td class="px-4 py-3">{{ formatPercent(warning.attendancePercentage) }}</td>
-                      <td class="px-4 py-3">{{ warning.averageGoalProgress }}%</td>
+                      <td class="px-4 py-3">%{{ warning.averageGoalProgress }}</td>
                       <td class="px-4 py-3">@if (canViewStudentDetails()) { <button type="button" class="text-(--ui-brand-text) underline" (click)="openStudent(warning)">Ayrıntı</button> }</td>
                     </tr>
                   } @empty {
@@ -169,7 +176,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                   <p>Ödev ortalaması: {{ formatPercent(progress.averageAssignmentPercentage) }}</p>
                   <p>Sınav: {{ progress.totalExams }} · ortalama {{ formatPercent(progress.averageExamPercentage) }}</p>
                   <p>Seans: {{ progress.totalSessions }} · katılım {{ formatPercent(progress.attendancePercentage) }}</p>
-                  <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı · ilerleme {{ progress.averageGoalProgress }}%</p>
+                  <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı · ilerleme %{{ progress.averageGoalProgress }}</p>
                 </div>
                 <div class="mt-4 grid gap-4 lg:grid-cols-3 text-sm">
                   <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status | coachingLabel }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
@@ -217,7 +224,14 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
         </div>
       }
     </section>
-  `
+  `,
+  styles: [`
+    .rates { display: grid; gap: 12px; padding: 18px 20px; border-radius: 18px; background: var(--ds-surface); box-shadow: var(--ds-shadow-raised, var(--ds-shadow)); }
+    .rate { display: grid; grid-template-columns: 10rem minmax(0, 1fr) 3.2rem; align-items: center; gap: 12px; font-size: .9rem; }
+    .rate span { color: var(--ds-muted); }
+    .rate strong { text-align: right; color: var(--ds-text); font-variant-numeric: tabular-nums; }
+    @media (max-width: 560px) { .rate { grid-template-columns: 7.5rem minmax(0, 1fr) 2.8rem; } }
+  `]
 })
 export class CoachingOverviewComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
@@ -504,11 +518,11 @@ export class CoachingOverviewComponent implements OnInit {
   }
 
   percentage(numerator: number, denominator: number) {
-    return denominator === 0 ? '—' : `${Math.round(numerator / denominator * 100)}%`;
+    return denominator === 0 ? '—' : `%${Math.round(numerator / denominator * 100)}`;
   }
 
   formatPercent(value?: number) {
-    return value === undefined || value === null ? '—' : `${value.toFixed(2)}%`;
+    return value === undefined || value === null ? '—' : `%${value.toLocaleString('tr-TR', { maximumFractionDigits: 1 })}`;
   }
 
   riskLabel(warning: StudentEarlyWarning) {
@@ -551,14 +565,14 @@ export class CoachingOverviewComponent implements OnInit {
 
   cards(data: CoachingAdminOverview) {
     return [
-      { label: 'Toplam ödev', value: data.totalAssignments },
-      { label: 'Aktif ödev', value: data.activeAssignments },
-      { label: 'Toplam sınav', value: data.totalExams },
-      { label: 'Sınav sonucu', value: data.totalExamResults },
-      { label: 'Toplam seans', value: data.totalSessions },
-      { label: 'Yaklaşan seans', value: data.upcomingSessions },
-      { label: 'Toplam hedef', value: data.totalGoals },
-      { label: 'Tamamlanan hedef', value: data.completedGoals }
+      { label: 'Toplam ödev', value: data.totalAssignments, tone: 'info' as AdminTone },
+      { label: 'Etkin ödev', value: data.activeAssignments, tone: 'info' as AdminTone },
+      { label: 'Toplam sınav', value: data.totalExams, tone: 'violet' as AdminTone },
+      { label: 'Sınav sonucu', value: data.totalExamResults, tone: 'violet' as AdminTone },
+      { label: 'Toplam görüşme', value: data.totalSessions, tone: 'orange' as AdminTone },
+      { label: 'Yaklaşan görüşme', value: data.upcomingSessions, tone: 'orange' as AdminTone },
+      { label: 'Toplam hedef', value: data.totalGoals, tone: 'success' as AdminTone },
+      { label: 'Tamamlanan hedef', value: data.completedGoals, tone: 'success' as AdminTone }
     ];
   }
 }

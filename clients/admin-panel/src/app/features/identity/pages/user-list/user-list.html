@@ -9,7 +9,7 @@
         @if (canCreate()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button type="button" (click)="openCreateModal()"
                 class="inline-flex items-center justify-center rounded-md border border-transparent bg-(--ui-brand) px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) shadow-sm hover:bg-(--ui-brand) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 sm:w-auto transition-colors duration-200">
-                Kullanıcı Ekle
+                Kullanıcı ekle
             </button>
         </div> }
     </div>
@@ -67,10 +67,10 @@
                             <tr>
                                 <th scope="col"
                                     class="py-3.5 pl-4 pr-3 text-left text-xs font-medium text-(--ui-text-muted) sm:pl-6">
-                                    E-Posta</th>
+                                    E-posta</th>
                                 <th scope="col"
                                     class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
-                                    İsim Soyisim</th>
+                                    Ad soyad</th>
                                 <th scope="col"
                                     class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
                                     Rol</th>
@@ -79,7 +79,7 @@
                                     Durum</th>
                                 <th scope="col"
                                     class="px-3 py-3.5 text-left text-xs font-medium text-(--ui-text-muted)">
-                                    Son Giriş</th>
+                                    Son giriş</th>
                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                     <span class="sr-only">İşlemler</span>
                                 </th>
@@ -213,7 +213,7 @@
                                                             stroke-width="2"
                                                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                                     </svg>
-                                                    Rol Yönetimi
+                                                    Rol yönetimi
                                                 </button> }
 
                                                 @if (canChangePassword()) { <button (click)="openPasswordModal(user)"
@@ -225,7 +225,7 @@
                                                             stroke-width="2"
                                                             d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                                     </svg>
-                                                    Şifre Değiştir
+                                                    Şifre değiştir
                                                 </button> }
 
                                                 @if (canDelete() && user.isActive) {
@@ -238,7 +238,7 @@
                                                             stroke-width="2"
                                                             d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                                     </svg>
-                                                    Pasif Yap
+                                                    Pasif yap
                                                 </button>
                                                 } @else if (canActivate()) {
                                                 <button (click)="activateUser(user.userId)"
@@ -250,7 +250,7 @@
                                                             stroke-width="2"
                                                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    Aktif Yap
+                                                    Aktif yap
                                                 </button>
                                                 }
 
@@ -264,7 +264,7 @@
                                                             stroke-width="2"
                                                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    E-Posta Doğrula
+                                                    E-posta Doğrula
                                                 </button>
                                                 }
 

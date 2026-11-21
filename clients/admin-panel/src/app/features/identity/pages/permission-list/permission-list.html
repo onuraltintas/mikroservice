@@ -10,7 +10,7 @@
         @if (canCreate()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button type="button" (click)="openCreateModal()"
                 class="inline-flex items-center justify-center rounded-md border border-transparent bg-(--ui-brand) px-4 py-2 text-sm font-medium text-(--ui-brand-contrast) shadow-sm hover:bg-(--ui-brand) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 sm:w-auto transition-colors duration-200">
-                İzin Ekle
+                İzin ekle
             </button>
         </div> }
     </div>
@@ -36,7 +36,7 @@
         <div class="w-full sm:w-48">
             <select (change)="onGroupChange($event)"
                 class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) py-2.5 pl-3 pr-10 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) shadow-sm cursor-pointer transition-colors">
-                <option value="all" class="font-medium text-(--ui-text-muted)">Tüm Gruplar</option>
+                <option value="all" class="font-medium text-(--ui-text-muted)">Tüm gruplar</option>
                 @for (group of groups(); track group) {
                 <option [value]="group">{{ group }}</option>
                 }
@@ -47,7 +47,7 @@
         <div class="w-full sm:w-48">
             <select (change)="onStatusChange($event)"
                 class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) py-2.5 pl-3 pr-10 text-sm focus:border-(--ui-brand) focus:outline-none focus:ring-(--ui-brand) shadow-sm cursor-pointer transition-colors">
-                <option value="all" class="font-medium text-(--ui-text-muted)">Tüm Durumlar</option>
+                <option value="all" class="font-medium text-(--ui-text-muted)">Tüm durumlar</option>
                 <option value="active" class="text-(--ui-success) font-medium">Aktif</option>
                 <option value="passive" class="text-(--ui-danger) font-medium">Pasif</option>
             </select>
@@ -175,7 +175,7 @@
                                                             stroke-width="2"
                                                             d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                                     </svg>
-                                                    Pasife Al
+                                                    Pasife al
                                                 </button>
                                                 }
 
@@ -189,7 +189,7 @@
                                                             stroke-width="2"
                                                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                     </svg>
-                                                    Aktif Yap
+                                                    Aktif yap
                                                 </button> }
 
                                                 @if (canDelete()) { <button (click)="permanentDeletePermission(perm)"
@@ -201,7 +201,7 @@
                                                             stroke-width="2"
                                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
-                                                    Kalıcı Sil
+                                                    Kalıcı sil
                                                 </button> }
                                                 }
                                             </div>

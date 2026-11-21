@@ -29,7 +29,7 @@ type CatalogTab = 'schools' | 'programs';
         <p class="text-sm font-semibold text-(--ui-brand-text)">Koçluk / Hedef kataloğu</p>
         <h1 id="coaching-catalog-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Hedef kataloğu</h1>
         <p class="mt-2 text-sm text-(--ui-text)">Öğrencilerin hedef olarak seçtiği LGS okulları ve üniversite programları. Değişiklikler gerekçeyle kaydedilir; yalnız kullanılmayan kayıtlar kalıcı silinebilir.</p>
-        @if (canDelete()) { <p class="mt-2 text-sm text-(--ui-text)">Dersler, üniteler, konular, kazanımlar ve katalog aktarımı <a routerLink="/dashboard/coaching/curriculum" class="font-medium text-(--ui-brand-text) underline">Müfredat Yönetimi</a> sayfasındadır.</p> }
+        @if (canDelete()) { <p class="mt-2 text-sm text-(--ui-text)">Dersler, üniteler, konular, kazanımlar ve katalog aktarımı <a routerLink="/dashboard/coaching/curriculum" class="font-medium text-(--ui-brand-text) underline">Müfredat yönetimi</a> sayfasındadır.</p> }
       </header>
       <div role="tablist" aria-label="Hedef kataloğu bölümleri" class="flex flex-wrap gap-2 border-b border-(--ui-border) pb-2">
         @for (t of tabs; track t.id) {

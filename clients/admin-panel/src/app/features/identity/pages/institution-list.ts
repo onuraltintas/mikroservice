@@ -17,11 +17,11 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
     <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-(--ui-text)">Kurum Yönetimi</h1>
+          <h1 class="text-2xl font-bold text-(--ui-text)">Kurumlar</h1>
           <p class="text-sm text-(--ui-text-muted)">Kurumların açılışı, kapanışı, lisans limitleri ve aktiflik durumu.</p>
         </div>
         @if (canCreate()) { <button type="button" class="rounded-lg bg-(--ui-brand) px-4 py-2 text-sm font-semibold text-(--ui-brand-contrast)" (click)="showCreate.set(!showCreate())">
-          {{ showCreate() ? 'Vazgeç' : 'Yeni Kurum' }}
+          {{ showCreate() ? 'Vazgeç' : 'Yeni kurum' }}
         </button> }
       </header>
 

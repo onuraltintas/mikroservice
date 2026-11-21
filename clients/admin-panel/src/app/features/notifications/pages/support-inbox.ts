@@ -14,7 +14,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
   imports: [CommonModule, FormsModule],
   template: `
     <section class="space-y-6">
-      <header><h1 class="text-2xl font-bold text-(--ui-text)">Destek Gelen Kutusu</h1><p class="text-sm text-(--ui-text-muted)">Kullanıcı taleplerini filtreleyin, notlandırın ve güvenli e-posta kuyruğundan yanıtlayın. Yanıtlanan talepler 6 ay, yanıtlanmayanlar 3 ay sonra otomatik silinir.</p></header>
+      <header><h1 class="text-2xl font-bold text-(--ui-text)">Destek gelen kutusu</h1><p class="text-sm text-(--ui-text-muted)">Kullanıcı taleplerini filtreleyin, notlandırın ve güvenli e-posta kuyruğundan yanıtlayın. Yanıtlanan talepler 6 ay, yanıtlanmayanlar 3 ay sonra otomatik silinir.</p></header>
       <div class="flex flex-wrap gap-3"><input class="rounded-lg border p-2" [(ngModel)]="search" (keyup.enter)="applyFilters()" placeholder="E-posta veya konu ara"><select class="rounded-lg border p-2" [(ngModel)]="processed" (change)="applyFilters()"><option [ngValue]="undefined">Tümü</option><option [ngValue]="false">Açık</option><option [ngValue]="true">İşlenmiş</option></select><button class="rounded-lg border px-4 py-2" [disabled]="loading()" (click)="applyFilters()">{{ loading() ? 'Yükleniyor…' : 'Yenile' }}</button></div>
       @if (error()) { <div class="rounded-lg bg-(--ui-danger-soft) p-3 text-(--ui-danger)" role="alert">{{ error() }}</div> }
       <div class="overflow-x-auto rounded-xl border bg-(--ui-surface)"><table class="min-w-full text-left text-sm"><thead class="border-b bg-(--ui-surface-muted)"><tr><th class="p-3">Talep</th><th class="p-3">Gönderen</th><th class="p-3">Tarih</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead><tbody>

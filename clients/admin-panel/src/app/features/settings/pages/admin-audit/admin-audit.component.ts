@@ -17,7 +17,7 @@ import {
   template: `
     <main class="p-4 md:p-6 min-h-full" aria-labelledby="audit-title">
       <header class="mb-6">
-        <h1 id="audit-title" class="text-2xl font-bold text-(--ui-text)">Yönetici Denetim Kayıtları</h1>
+        <h1 id="audit-title" class="text-2xl font-bold text-(--ui-text)">Yönetici denetim kayıtları</h1>
         <p class="mt-1 text-sm text-(--ui-text-muted)">Yönetim işlemlerinin servis bazlı, değiştirilemez işlem ve değişen alan geçmişi.</p>
       </header>
 

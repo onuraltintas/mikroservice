@@ -51,7 +51,7 @@ describe('UserDetailsModalComponent access management', () => {
   it('shows the user’s active platform access separately from their roles', () => {
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Platform Erişimleri');
+    expect(fixture.nativeElement.textContent).toContain('Platform erişimleri');
     expect(fixture.nativeElement.textContent).toContain('Koçluk');
     expect(fixture.nativeElement.textContent).toContain('Aktif');
   });

@@ -147,7 +147,7 @@
                     <span class="sidebar-user-name">{{ user()?.lastName }}</span>
                 </div>
                 <p class="sidebar-user-role">
-                    {{ user()?.role || 'Rol' }}
+                    {{ user()?.role | adminRoleLabel:'Rol' }}
                 </p>
             </div>
 

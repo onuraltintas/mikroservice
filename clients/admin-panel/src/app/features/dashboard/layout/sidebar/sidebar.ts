@@ -1,3 +1,4 @@
+import { AdminRoleLabelPipe } from '../../../../shared/components/admin-role-label';
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -10,7 +11,7 @@ import { LayoutService } from '../../services/layout.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [AdminRoleLabelPipe, CommonModule, RouterModule],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss']
 })

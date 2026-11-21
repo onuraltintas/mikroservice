@@ -1,3 +1,4 @@
+import { AdminRoleLabelPipe } from '../../../../shared/components/admin-role-label';
 import { Component, signal, OnInit, inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -14,7 +15,7 @@ import { catchError, of, forkJoin } from 'rxjs';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [AdminRoleLabelPipe, CommonModule, RouterModule],
   templateUrl: './header.html',
   styleUrls: ['./header.scss']
 })

@@ -13,7 +13,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem Logları</h1>
+          <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem logları</h1>
           <p class="text-(--ui-text-muted) text-sm">Uygulama genelindeki hata ve işlem kayıtları</p>
         </div>
         <button (click)="refresh()" class="px-4 py-2 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) transition-colors flex items-center gap-2 text-sm font-medium">
@@ -41,7 +41,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
         <div class="w-44">
           <label class="block text-xs font-medium text-(--ui-text) mb-1">Uygulama</label>
           <select [(ngModel)]="selectedApplication" (change)="onFilterChange()" class="w-full px-3 py-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-(--ui-text) focus:ring-2 focus:ring-(--ui-brand) text-sm outline-none">
-            <option value="">Tüm Uygulamalar</option>
+            <option value="">Tüm uygulamalar</option>
             <option *ngFor="let app of applications()" [value]="app">{{ app }}</option>
           </select>
         </div>
@@ -161,7 +161,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
             <div class="px-6 py-4 border-b border-(--ui-border) flex justify-between items-center bg-(--ui-surface-muted)">
                 <h3 class="font-bold text-(--ui-text) flex items-center gap-2">
                      <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getLevelClass(selectedLog.level)">{{ selectedLog.level }}</span>
-                     Log Detayı
+                     Log detayı
                 </h3>
                 <button (click)="closeDetail()" class="text-(--ui-text-muted) hover:text-(--ui-text-muted)">
                     <span class="material-icons">close</span>

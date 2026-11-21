@@ -40,7 +40,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <span class="text-xs font-bold">Sistem Bakım Modunda</span>
+            <span class="text-xs font-bold">Sistem bakım modunda</span>
         </div>
 
         <!-- Mobile: Icon Only -->
@@ -60,7 +60,7 @@
             [attr.aria-label]="darkModeService.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'"
             class="p-2.5 rounded-xl text-(--ui-text-muted) hover:text-(--ui-brand-text) hover:bg-(--ui-surface-muted) focus:outline-none focus:ring-2 focus:ring-(--ui-brand) focus:ring-offset-2 transition-all duration-200"
             [title]="darkModeService.isDarkMode() ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'">
-            <span class="sr-only">Toggle Dark Mode</span>
+            <span class="sr-only">Koyu temayı aç ya da kapat</span>
             <!-- Sun Icon (showing when dark) -->
             <svg *ngIf="darkModeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-(--ui-warning)"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,7 +101,7 @@
                     <h3 class="text-sm font-bold text-(--ui-text)">Bildirimler</h3>
                     <button type="button" *ngIf="unreadCount > 0" (click)="markAllAsRead()"
                         class="text-xs text-(--ui-brand-text) font-bold hover:underline">
-                        Tümünü Okundu İşaretle
+                        Tümünü okundu işaretle
                     </button>
                 </div>
 
@@ -163,7 +163,7 @@
                 <div class="p-3 bg-(--ui-surface-muted) border-t border-(--ui-border)">
                     <a [routerLink]="['/dashboard/notifications']" (click)="showNotificationMenu.set(false)"
                         class="block w-full text-center py-2 text-xs font-bold text-(--ui-text-muted) hover:text-(--ui-brand-text) transition-colors">
-                        Tüm Bildirimleri Gör
+                        Tüm bildirimleri gör
                     </a>
                 </div>
             </div>
@@ -189,7 +189,7 @@
                         <span class="header-user-name">{{ user()?.lastName }}</span>
                     </div>
                     <p class="header-user-role">
-                        {{ user()?.role }}
+                        {{ user()?.role | adminRoleLabel }}
                     </p>
                 </div>
                 <!-- Chevron -->

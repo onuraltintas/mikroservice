@@ -21,7 +21,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
           
           <!-- Header -->
           <div class="px-6 py-4 border-b border-(--ui-border) flex justify-between items-center bg-(--ui-surface-muted)">
-            <h3 class="text-lg font-bold text-(--ui-text)">Kullanıcı Detayları</h3>
+            <h3 class="text-lg font-bold text-(--ui-text)">Kullanıcı detayları</h3>
             <button (click)="closeModal()" class="text-(--ui-text-muted) hover:text-(--ui-text-muted) transition-colors">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -79,7 +79,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                     <p class="text-(--ui-text) font-medium">{{ user()?.phoneNumber || '-' }}</p>
                   </div>
                   <div class="p-4 rounded-xl bg-(--ui-surface-muted) border border-(--ui-border)">
-                    <p class="text-sm font-semibold text-(--ui-text-muted) mb-1">Son Giriş</p>
+                    <p class="text-sm font-semibold text-(--ui-text-muted) mb-1">Son giriş</p>
                     <p class="text-(--ui-text) font-medium">{{ user()?.lastLoginAt ? (user()?.lastLoginAt | date:'dd.MM.yyyy HH:mm') : 'Henüz giriş yapmadı' }}</p>
                   </div>
                   <div class="p-4 rounded-xl bg-(--ui-surface-muted) border border-(--ui-border)">
@@ -91,7 +91,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                 </div>
 
                 <div class="pt-6 border-t border-(--ui-border)">
-                  <h5 class="text-sm font-bold text-(--ui-text) mb-3">Platform Erişimleri</h5>
+                  <h5 class="text-sm font-bold text-(--ui-text) mb-3">Platform erişimleri</h5>
                   <div class="flex flex-wrap gap-2">
                     @for (access of user()?.productAccesses; track access.product) {
                       <span class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold"
@@ -116,13 +116,13 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                 <div class="pt-6 border-t border-(--ui-border)">
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h5 class="text-sm font-bold text-(--ui-text)">Erişim Yönetimi</h5>
+                      <h5 class="text-sm font-bold text-(--ui-text)">Erişim yönetimi</h5>
                       <p class="mt-1 text-xs text-(--ui-text-muted)">Refresh token değerleri gösterilmez; yalnızca oturum metadata'sı görüntülenir.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                       <button type="button" (click)="revokeAllSessions()" [disabled]="sessions().length === 0"
                         class="rounded-lg border border-(--ui-warning) px-3 py-2 text-xs font-semibold text-(--ui-warning) hover:bg-(--ui-warning-soft) disabled:cursor-not-allowed disabled:opacity-50">
-                        Tüm Oturumları Sonlandır
+                        Tüm oturumları sonlandır
                       </button>
                       <button type="button" (click)="resetMfa()"
                         class="rounded-lg border border-(--ui-danger) px-3 py-2 text-xs font-semibold text-(--ui-danger) hover:bg-(--ui-danger-soft)">
@@ -195,7 +195,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                   <div class="space-y-4 pt-4 border-t border-(--ui-border)">
                     <h5 class="text-lg font-bold text-(--ui-text) flex items-center">
                       <svg class="w-5 h-5 mr-2 text-(--ui-brand-text)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>
-                      Öğretmen Bilgileri
+                      Öğretmen bilgileri
                     </h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -208,7 +208,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                       </div>
                     </div>
                     <div>
-                      <p class="text-xs font-semibold text-(--ui-text-muted) mb-2">Uzmanlık Alanları</p>
+                      <p class="text-xs font-semibold text-(--ui-text-muted) mb-2">Uzmanlık alanları</p>
                       <div class="flex flex-wrap gap-2">
                         @for (subject of user()?.teacherDetails?.subjects; track subject) {
                           <span class="px-3 py-1 bg-(--ui-surface-muted) text-(--ui-text) rounded-lg text-sm border border-(--ui-border) shadow-sm">
@@ -226,11 +226,11 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                   <div class="space-y-4 pt-4 border-t border-(--ui-border)">
                     <h5 class="text-lg font-bold text-(--ui-text) flex items-center">
                       <svg class="w-5 h-5 mr-2 text-(--ui-brand-text)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                      Öğrenci Bilgileri
+                      Öğrenci bilgileri
                     </h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p class="text-xs font-semibold text-(--ui-text-muted)">Sınıf Seviyesi</p>
+                        <p class="text-xs font-semibold text-(--ui-text-muted)">Sınıf seviyesi</p>
                         <p class="text-(--ui-text)">
                           @if (user()?.studentDetails?.gradeLevel; as gradeLevel) {
                             {{ gradeLevel }}. Sınıf
@@ -240,11 +240,11 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                         </p>
                       </div>
                       <div>
-                        <p class="text-xs font-semibold text-(--ui-text-muted)">Öğrenme Stili</p>
+                        <p class="text-xs font-semibold text-(--ui-text-muted)">Öğrenme stili</p>
                         <p class="text-(--ui-text)">{{ user()?.studentDetails?.learningStyle || '-' }}</p>
                       </div>
                       <div>
-                        <p class="text-xs font-semibold text-(--ui-text-muted)">Doğum Tarihi</p>
+                        <p class="text-xs font-semibold text-(--ui-text-muted)">Doğum tarihi</p>
                         <p class="text-(--ui-text)">{{ user()?.studentDetails?.birthDate | date:'dd.MM.yyyy' }}</p>
                       </div>
                       <div>
@@ -258,7 +258,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
             } @else if (error()) {
               <div class="p-4 bg-(--ui-danger-soft) text-(--ui-danger) rounded-xl border border-(--ui-danger-soft) text-center py-12">
                 <svg class="h-12 w-12 mx-auto text-(--ui-danger) mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                <p class="font-bold">Hata Oluştu</p>
+                <p class="font-bold">Hata oluştu</p>
                 <p>{{ error() }}</p>
                 <button (click)="loadUserDetails()" class="mt-4 px-4 py-2 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) transition-colors">Tekrar dene</button>
               </div>
