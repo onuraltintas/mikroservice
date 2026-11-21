@@ -1,0 +1,77 @@
+// Lively student design (21.11.2026, user decision after the maxkoç preview): coloured cards, honey instead of the bright
+// highlighter, a few movements. Global so the Bugün component stays under its 10 kB style budget; every selector is scoped by
+// .coaching-shell, colours only through coaching-student-tokens.scss, nothing moves with reduced motion (layout scss).
+
+// Every student card: no hard line, a soft ink-tinted lift.
+.coaching-shell cs-card { border-color: color-mix(in srgb, var(--ui-border) 55%, transparent); box-shadow: var(--coaching-card-shadow); }
+
+@keyframes coaching-rise { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes coaching-flame { 0%, 100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.14) rotate(4deg); } }
+@keyframes coaching-breathe { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.08); opacity: .6; } }
+
+.coaching-shell .today {
+  .rise { animation: coaching-rise .55s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 80ms); }
+
+  // The three facts become coloured cards under the title: exam (blue), streak (honey), week (mint).
+  .today-head { display: grid; gap: var(--coaching-space-4); justify-content: stretch; align-items: stretch; }
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: var(--coaching-space-4); }
+  .fact { min-height: 88px; padding: var(--coaching-space-4) var(--coaching-space-5); gap: var(--coaching-space-3); border-radius: var(--coaching-radius-card);
+    box-shadow: var(--coaching-card-shadow); transition: transform .2s ease, box-shadow .2s ease;
+    & + & { padding-left: var(--coaching-space-5); border-left: 0; }
+    &:hover { transform: translateY(-3px); box-shadow: var(--coaching-raised-shadow); }
+    > strong { font-size: 32px; }
+    > span { font-size: var(--coaching-text-body); }
+    small { font-size: var(--coaching-text-sm); }
+    cs-progress-ring { --cs-ring-size: 58px; } }
+  .fact.exam { background: var(--coaching-lesson-0); > strong { color: var(--coaching-lesson-text-0); } }
+  .fact.streak { background: var(--coaching-honey-soft); > strong { color: var(--ui-accent-text); } }
+  .fact.week { background: var(--coaching-lesson-2); }
+  .fact > .fact-icon { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; background: var(--ui-surface); color: var(--coaching-lesson-text-0); font-size: 22px;
+    &.flame { color: var(--coaching-honey-deep); app-coaching-icon { transform-origin: 50% 90%; animation: coaching-flame 1.6s ease-in-out infinite; } } }
+
+  // Next step: the honey ring breathes slowly behind the title.
+  .next { border-radius: 24px; box-shadow: var(--coaching-raised-shadow);
+    &::after { border-color: var(--coaching-honey); opacity: .9; animation: coaching-breathe 4s ease-in-out infinite; } }
+
+  // Today's work: each row is a small card with a coloured chip for its kind.
+  .list-head { border-bottom: 0; padding-bottom: var(--coaching-space-3); }
+  .row { grid-template-columns: 40px 52px minmax(0, 1fr) auto; margin-bottom: var(--coaching-space-2); padding: var(--coaching-space-2) var(--coaching-space-3);
+    border: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent); border-radius: 14px; background: var(--ui-surface);
+    transition: transform .2s ease, box-shadow .2s ease;
+    &:hover { background: var(--ui-surface); transform: translateY(-2px); box-shadow: var(--coaching-card-shadow);
+      .row-kind { transform: rotate(-8deg) scale(1.1); } }
+    &.is-late { border-color: var(--ui-accent); } }
+  .row-kind { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; font-size: 20px;
+    background: var(--coaching-lesson-0); color: var(--coaching-lesson-text-0); transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+  .row[data-kind='assignment'] .row-kind { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }
+  .row[data-kind='decision'] .row-kind { background: var(--coaching-lesson-3); color: var(--coaching-lesson-text-3); }
+
+  // Side: the goal in violet, the weekly review in honey, the session as a white card with a solid button.
+  .goal { border-left: 0; border-radius: var(--coaching-radius-card); padding: var(--coaching-space-5); background: var(--coaching-lesson-3);
+    box-shadow: var(--coaching-card-shadow); transition: transform .2s ease, box-shadow .2s ease;
+    strong { color: var(--coaching-lesson-text-3); font-size: var(--coaching-text-lg); }
+    small { color: var(--ui-text); }
+    &.is-quiet { background: var(--ui-surface); strong { color: var(--ui-text); } small { color: var(--ui-text-muted); } }
+    &[data-status='reached'] { background: var(--coaching-lesson-2); strong { color: var(--coaching-lesson-text-2); } }
+    .goal-label { background: var(--ui-surface); }
+    .goal-net { border-top-color: color-mix(in srgb, var(--coaching-lesson-text-3) 25%, transparent); }
+    &:hover { transform: translateY(-3px); box-shadow: var(--coaching-raised-shadow); } }
+  .side-card.review { background: var(--coaching-honey-soft); border-color: transparent;
+    p { color: var(--ui-text); } a { color: var(--ui-accent-text); } }
+  .side-card[data-home-block='session'] a { padding: 0 var(--coaching-space-5); border-radius: var(--coaching-radius-pill); background: var(--ui-brand); color: var(--ui-brand-contrast); }
+}
+
+@media (max-width: 600px) {
+  .coaching-shell .today {
+    .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--coaching-space-3); }
+    .fact { min-height: 0; padding: var(--coaching-space-3); gap: var(--coaching-space-2); flex-wrap: wrap;
+      & + & { padding-left: var(--coaching-space-3); }
+      > strong { font-size: 24px; } > span { font-size: 13px; }
+      &.exam { grid-column: 1 / -1; padding-bottom: var(--coaching-space-3); border-bottom: 0; }
+      &.exam + & { padding-left: var(--coaching-space-3); }
+      cs-progress-ring { --cs-ring-size: 48px; } }
+    .fact > .fact-icon { width: 36px; height: 36px; font-size: 18px; border-radius: 12px; }
+    .row { grid-template-columns: 36px 44px minmax(0, 1fr) auto; gap: var(--coaching-space-2); padding: var(--coaching-space-2); }
+    .row-kind { width: 36px; height: 36px; font-size: 18px; }
+  }
+}

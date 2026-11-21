@@ -10,6 +10,7 @@ import { CoachingScoreEstimateService, ScoreEstimate } from '../../../core/servi
 import { homeGoalCard } from '../growth/growth-model';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
+import { CoachingIconComponent } from '../coaching-icon.component';
 import { CoachingWhatsNewCardComponent } from '../layout/coaching-whats-new-card.component';
 import { CsCardComponent, CsProgressRingComponent, CsStatusChipComponent } from '../ui';
 
@@ -25,7 +26,7 @@ interface RowLink { path: string[]; query: Record<string, string> | null; }
   selector: 'app-coaching-portal-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, DecimalPipe, CsCardComponent, CsProgressRingComponent, CsStatusChipComponent, CoachingWhatsNewCardComponent],
+  imports: [RouterLink, DatePipe, DecimalPipe, CsCardComponent, CsProgressRingComponent, CsStatusChipComponent, CoachingWhatsNewCardComponent, CoachingIconComponent],
   templateUrl: './coaching-portal-home.component.html',
   styleUrl: './coaching-portal-home.component.scss'
 })
@@ -110,6 +111,10 @@ export class CoachingPortalHomeComponent implements OnInit {
     }
   }
 
+  /** The row's icon chip (lively design, 21.11.2026): the colour comes from data-kind in the stylesheet. */
+  kindIcon(item: DailyAgendaItem): 'book' | 'plan' | 'spark' {
+    return item.kind === 'assignment' ? 'plan' : item.kind === 'decision' ? 'spark' : 'book';
+  }
   kindLabel(item: DailyAgendaItem) {
     return item.kind === 'assignment' ? 'Ödev' : item.kind === 'decision' ? 'Haftalık karar' : 'Çalışma';
   }
