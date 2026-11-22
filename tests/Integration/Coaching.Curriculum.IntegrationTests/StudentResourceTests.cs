@@ -34,9 +34,9 @@ public sealed class StudentResourceTests
         Assert.Throws<ArgumentException>(() => StudentResource.Create(student, student, Book(unit: "Chapter"), Now));
         Assert.Throws<ArgumentException>(() => StudentResource.Create(student, student, Book(total: 0), Now));
         Assert.Throws<ArgumentException>(() => StudentResource.Create(student, student, Book(total: 10, doneBefore: 11), Now));
-        var outside = Assert.Throws<ArgumentException>(() => StudentResource.Create(student, student, Book(10, 0, StudentResourceUnits.Page, new("Ünite 1", 5, 11)), Now));
+        var outside = Assert.Throws<ArgumentException>(() => StudentResource.Create(student, student, Book(10, 0, StudentResourceUnits.Page, new StudentResourceSection("Ünite 1", 5, 11)), Now));
         Assert.Contains("1–10", outside.Message);
-        var resource = StudentResource.Create(student, student, Book(20, 0, StudentResourceUnits.Test, new("Ünite 2", 11, 20), new(" Ünite 1 ", 1, 10)), Now);
+        var resource = StudentResource.Create(student, student, Book(20, 0, StudentResourceUnits.Test, new StudentResourceSection("Ünite 2", 11, 20), new StudentResourceSection(" Ünite 1 ", 1, 10)), Now);
         Assert.Equal(new[] { "Ünite 1", "Ünite 2" }, resource.Sections.Select(x => x.Title));
         Assert.True(resource.Contains(1, 20));
         Assert.False(resource.Contains(0, 3));
@@ -47,7 +47,7 @@ public sealed class StudentResourceTests
     public void The_next_part_is_the_first_free_part_of_a_section_or_a_usual_sitting_without_sections()
     {
         var student = Guid.NewGuid();
-        var sectioned = StudentResource.Create(student, student, Book(20, 0, StudentResourceUnits.Page, new("Ünite 1", 1, 10), new("Ünite 2", 11, 20)), Now);
+        var sectioned = StudentResource.Create(student, student, Book(20, 0, StudentResourceUnits.Page, new StudentResourceSection("Ünite 1", 1, 10), new StudentResourceSection("Ünite 2", 11, 20)), Now);
         var next = CoachingStudentResourceService.Next(sectioned, [(1, 10)], [(11, 12)]);
         Assert.Equal(new StudentResourceNext(13, 20, "Ünite 2", null), next);
         Assert.Null(CoachingStudentResourceService.Next(sectioned, [(1, 20)], []));
