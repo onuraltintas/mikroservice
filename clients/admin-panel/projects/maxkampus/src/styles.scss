@@ -15,7 +15,15 @@
   --mk-chip-green: #8FE0C2;
 }
 
-:root { color-scheme: light; }
+// Dark theme (21.11.2026): html.dark comes from theme-boot.js and DarkModeService (the device setting or the visitor's choice).
+[data-brand='eduivme']:is(html.dark) {
+  --mk-soft: #3A3017;
+  --mk-on-soft: #F2D675;
+  --mk-mark: #F5E2B0;
+  --mk-hero-muted: #C9D2DC;
+  --mk-hero-line: #26303D;
+  --mk-hero-card: #1A2029;
+}
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }

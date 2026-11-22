@@ -32,9 +32,9 @@
   height: 56px;
   flex: 0 0 56px;
   border-radius: var(--sp-radius-full);
-  background: linear-gradient(135deg, var(--sp-primary-dark), var(--sp-primary));
-  color: var(--sp-text-inv);
-  box-shadow: var(--sp-shadow-glow);
+  background: var(--sp-surface);
+  color: var(--sp-tone-mint);
+  box-shadow: inset 0 0 0 3px var(--sp-tone-mint);
 
   .material-icons {
     font-size: 28px;
@@ -103,3 +103,8 @@ form {
     }
   }
 }
+
+// Lively design (21.11.2026): a soft mint header band, initials in the avatar.
+.profile-card .sp-card-header { background: var(--sp-tone-mint-soft); border-bottom: 0; }
+.avatar-initials { font-size: 1.25rem; font-weight: 700; letter-spacing: 0; }
+.header-text h1.sp-card-title { margin: 0 0 4px; font-size: 1.5rem; font-weight: 700; color: var(--sp-text-1); }

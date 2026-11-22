@@ -1955,6 +1955,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
+    // Lively design (21.11.2026): a short 3-2-1 before every first start, so the first stimulus does not pass while the
+    // student is still reading the start card. It runs before any timed or server-started step, so no timing changes.
+    // Level assessment keeps its measured protocol unchanged, like the exam branch above.
+    if (this.engineState.currentStep === 0 && this.readyCountdown === null && !this.isPreviewSession() && !this.isAssessmentMode) {
+      await this.runReadyCountdown();
+      if (!this.engine) return;
+    }
+
     if (this.engine instanceof MotionPathEngine && ['tracking', 'saccade'].includes(this.engine.getMode()) && !this.isPreviewSession()) {
       try {
         let valid = false;
@@ -1964,11 +1972,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         this.error = this.getActionValidationErrorMessage(error);
         return;
       }
-    }
-    if (this.engine?.engineType === 'visual_expansion' && this.engineState.currentStep === 0 && this.readyCountdown === null
-      && !this.isPreviewSession()) {
-      await this.runReadyCountdown();
-      if (!this.engine) return;
     }
     this.startReadingTracking(() => this.engine?.start());
 
@@ -3247,6 +3250,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
   }
 
+  /** A short celebration on the result card only for a clearly good, saved result (never in an assessment). */
+  isCelebration(): boolean {
+    return !this.isAssessmentMode && this.resultSaveStatus !== 'failed' && (this.result?.accuracy ?? 0) >= 80;
+  }
+
+  /** Lively design: the start and result cards wear the soft tone of the kind of exercise. */
+  getEngineTone(): 'mint' | 'sand' | 'peach' | 'sea' {
+    switch (this.engine?.engineType) {
+      case 'grid_interaction': case 'motion_path': case 'visual_expansion': case 'target_hunt': case 'focus': case 'attention_training':
+        return 'mint';
+      case 'scan_find': case 'scanning': case 'skimming': case 'error_analysis': return 'peach';
+      case 'text_stream': case 'word_highlight': case 'word_group': case 'text_fade': return 'sand';
+      default: return 'sea';
+    }
+  }
+
   getEngineDisplayName(): string {
     const typeName = this.exercise?.exerciseTypeName;
     const label = exerciseTypeLabel(typeName);
@@ -3263,6 +3282,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     this.readyCountdown = null;
+  }
+
+  getExpansionLastHit(): boolean {
+    return (this.engine as VisualExpansionEngine | null)?.getLastHit?.() ?? false;
   }
 
   getExpansionLastMiss(): string | null {
@@ -4304,6 +4327,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return (this.engine as ReadingComprehensionEngine)?.getLineHeight?.() || 1.8;
   }
 
+  /** Feedback fix 23 (21.11.2026): whole seconds until the finish button opens (0 when it is open or not limited). */
+  getReadingUnlockSeconds(): number {
+    if (!this.engineState.isRunning || this.engineState.isPaused) return 0;
+    const engine = this.engine as { getMinimumReadingMs?: () => number; getMinReadingTime?: () => number } | null;
+    const minimum = engine?.getMinimumReadingMs?.() ?? engine?.getMinReadingTime?.() ?? 0;
+    const left = minimum - (this.engineState.timeElapsed || 0);
+    return left > 0 ? Math.ceil(left / 1000) : 0;
+  }
+
   canCompleteReading(): boolean {
     if (!this.engineState.isRunning || this.engineState.isPaused) return false;
     return (this.engine as ReadingComprehensionEngine)?.canComplete?.() ?? true;
@@ -4566,6 +4598,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   getScanFontSize(): number {
     return this.engine?.engineType === 'scan_find' ? (this.engine as ScanFindEngine).getFontSizePx() : 20;
+  }
+
+  /** Feedback fix 18: the word of a wrong tap flashes briefly. */
+  isScanWrongTap(index: number): boolean {
+    return this.engine?.engineType === 'scan_find' && (this.engine as ScanFindEngine).getWrongTapIndex?.() === index;
+  }
+
+  /** Feedback fix 19: targets the student did not find, for the result screen. */
+  getScanMissedTargets(): string[] {
+    return this.engine?.engineType === 'scan_find' ? (this.engine as ScanFindEngine).getMissedTargets?.() ?? [] : [];
   }
 
   onScanWordClick(index: number): void {

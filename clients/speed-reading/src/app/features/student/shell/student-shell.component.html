@@ -44,30 +44,28 @@
 
       <!-- Nav Items -->
       <nav class="sp-sidebar__nav" role="navigation">
-        @for (item of menuItems(); track item.route) {
+        @for (item of menuItems(); track item.route; let i = $index) {
           <a
             [routerLink]="item.route"
-            class="sp-nav-item"
+            class="sp-nav-item sp-slide-in"
+            [style.--sp-i]="i + 1"
             [class.sp-nav-item--active]="isActive(item.route)"
             (click)="sidebarOpen.set(false)"
             [attr.aria-current]="isActive(item.route) ? 'page' : null">
 
-            <!-- Active indicator bar -->
-            @if (isActive(item.route)) {
-              <span class="sp-nav-item__bar" aria-hidden="true"></span>
-            }
-
-            <!-- Icon -->
-            <span class="sp-nav-item__icon material-icons" aria-hidden="true">
-              {{ item.icon }}
+            <!-- Icon in a chip of its own soft tone -->
+            <span class="sp-nav-item__chip" [ngClass]="'sp-tone-' + navTone(i)" aria-hidden="true">
+              <span class="sp-nav-item__icon material-icons">{{ item.icon }}</span>
             </span>
 
             <!-- Label -->
             <span class="sp-nav-item__label">{{ item.label }}</span>
 
-            <!-- Badge -->
+            <!-- Badge, or the orange spark of the open page -->
             @if (item.badge) {
               <span class="sp-nav-item__badge">{{ item.badge }}</span>
+            } @else if (isActive(item.route)) {
+              <span class="sp-nav-item__spark sp-spark" aria-hidden="true"></span>
             }
           </a>
         }
@@ -214,6 +212,19 @@
       <main class="sp-content" id="main-content" tabindex="-1">
         <router-outlet />
       </main>
+
+      <!-- Phone: the first pages one tap away (the drawer keeps the rest) -->
+      @if (bottomItems().length > 1 && !isReadingRoute()) {
+        <nav class="sp-bottom-nav" aria-label="Alt menü">
+          @for (item of bottomItems(); track item.route; let i = $index) {
+            <a [routerLink]="item.route" class="sp-bottom-nav__item" [ngClass]="'sp-tone-' + navTone(i)"
+              [class.sp-bottom-nav__item--active]="isActive(item.route)" [attr.aria-current]="isActive(item.route) ? 'page' : null">
+              <span class="material-icons" aria-hidden="true">{{ item.icon }}</span>
+              <span class="sp-bottom-nav__label">{{ shortLabel(item) }}</span>
+            </a>
+          }
+        </nav>
+      }
     </div>
   </div>
 }

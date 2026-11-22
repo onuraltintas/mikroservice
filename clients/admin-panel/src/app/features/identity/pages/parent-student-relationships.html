@@ -15,13 +15,13 @@
         <label class="text-sm font-medium text-(--ui-text)">Veli
           <select [(ngModel)]="parentUserId" name="parentUserId" required class="mt-1 block min-h-11 w-full rounded-lg border-(--ui-border)">
             <option value="">Veli seçin</option>
-            @for (parent of parents(); track parent.userId) { <option [value]="parent.userId">{{ parent.fullName }} · {{ parent.email }}</option> }
+            @for (parent of parents(); track parent.userId) { <option [value]="parent.userId">{{ parent.fullName }}, {{ parent.email }}</option> }
           </select>
         </label>
         <label class="text-sm font-medium text-(--ui-text)">Öğrenci
           <select [(ngModel)]="studentUserId" name="studentUserId" required class="mt-1 block min-h-11 w-full rounded-lg border-(--ui-border)">
             <option value="">Öğrenci seçin</option>
-            @for (student of students(); track student.userId) { <option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option> }
+            @for (student of students(); track student.userId) { <option [value]="student.userId">{{ student.fullName }}, {{ student.email }}</option> }
           </select>
         </label>
         <label class="text-sm font-medium text-(--ui-text)">Yakınlık

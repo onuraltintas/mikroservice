@@ -26,7 +26,7 @@ const CORE_LEGAL_DOCUMENTS: { slug: string; title: string; description: string }
     <main class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" aria-labelledby="legal-pages-title">
       <header class="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p class="text-sm font-semibold text-(--ui-brand-text)">eduivme · Platform yönetimi</p>
+          <p class="text-sm font-semibold text-(--ui-brand-text)">eduivme platform yönetimi</p>
           <h1 id="legal-pages-title" class="mt-2 text-2xl font-bold text-(--ui-text)">Ortak yasal sayfalar</h1>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-(--ui-text-muted)">Ortak ve ürüne özel metinler tek Identity kaynağında yönetilir. Koçluk ve Hızlı Okuma yayımlanmış sürümleri buradan alır. Başlangıç metinleri yalnızca düzenleme taslağıdır; işletme bilgileri tamamlanıp hukuk danışmanınızca incelenmeden yayımlanamaz.</p>
         </div>
@@ -100,7 +100,7 @@ const CORE_LEGAL_DOCUMENTS: { slug: string; title: string; description: string }
           <h2 id="legal-revisions-title" class="text-lg font-semibold text-(--ui-text)">Sürüm geçmişi</h2>
           @if (loadingRevisions()) { <p class="text-sm text-(--ui-text-muted)">Sürümler yükleniyor…</p> }
           @else if (!revisions().length) { <p class="text-sm leading-6 text-(--ui-text-muted)">Henüz önceki bir sürüm yok. İlk kayıt etkin sürüm olarak saklanır.</p> }
-          @else { <ol class="space-y-3">@for (revision of revisions(); track revision.id) { <li><details class="rounded-lg border border-(--ui-border) p-3"><summary class="cursor-pointer text-sm font-medium">Sürüm {{ revision.version }}{{ revision.isArchived ? ' · Arşiv kaydı' : '' }} · {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</summary><p class="mt-2 text-xs font-semibold">{{ revision.title }}</p><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs leading-5 text-(--ui-text-muted)">{{ revision.content }}</pre></details></li> }</ol> }
+          @else { <ol class="space-y-3">@for (revision of revisions(); track revision.id) { <li><details class="rounded-lg border border-(--ui-border) p-3"><summary class="cursor-pointer text-sm font-medium">Sürüm {{ revision.version }}{{ revision.isArchived ? ' · Arşiv kaydı' : '' }}, {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</summary><p class="mt-2 text-xs font-semibold">{{ revision.title }}</p><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs leading-5 text-(--ui-text-muted)">{{ revision.content }}</pre></details></li> }</ol> }
         </aside>
       </section>
     </main>

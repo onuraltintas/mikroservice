@@ -43,7 +43,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
           <label>Banka hesabı
             <select [ngModel]="bankAccountId()" (ngModelChange)="bankAccountId.set($event)" name="statementAccount" data-testid="statement-account">
               <option value="">Hesap seçin</option>
-              @for (account of accounts(); track account.id) { <option [value]="account.id">{{ account.bankName }} · {{ account.ibanFormatted }}</option> }
+              @for (account of accounts(); track account.id) { <option [value]="account.id">{{ account.bankName }}, {{ account.ibanFormatted }}</option> }
             </select>
           </label>
           <label>Ekstre dosyası
@@ -135,7 +135,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
                       @if (candidates(line).length) {
                         <select [ngModel]="picked()[line.id] || ''" (ngModelChange)="pick(line.id, $event)" [name]="'order-' + line.id" [attr.aria-label]="'Sipariş seç: ' + line.description">
                           <option value="">Aynı tutarda bekleyen sipariş…</option>
-                          @for (order of candidates(line); track order.order.id) { <option [value]="order.order.id">{{ order.accountName }} · {{ order.order.planName }} · {{ order.order.paymentCode }}</option> }
+                          @for (order of candidates(line); track order.order.id) { <option [value]="order.order.id">{{ order.accountName }}, {{ order.order.planName }}, {{ order.order.paymentCode }}</option> }
                         </select>
                         <button type="button" class="approve" (click)="approve(line, picked()[line.id])" [disabled]="saving() || !picked()[line.id]">Eşleştir ve onayla</button>
                       }
@@ -168,13 +168,13 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   `,
   styles: [BILLING_PAGE_STYLES, `
     .filter { display: flex; flex-direction: column; gap: .25rem; font-size: .8rem; color: var(--ui-text); }
-    .recognised { color: #15803d; }
+    .recognised { color: var(--ds-success); }
     .nowrap { white-space: nowrap; }
     .description { max-width: 28rem; overflow-wrap: anywhere; }
     .preview td, .preview th { white-space: nowrap; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; }
     .preview .picked { background: color-mix(in srgb, var(--ui-brand) 8%, transparent); }
     .actions select { max-width: 16rem; margin-right: .35rem; font-size: .8rem; }
-    .actions .approve { border-color: #15803d; color: #15803d; }
+    .actions .approve { border-color: var(--ds-success); color: var(--ds-success); }
     @media (max-width: 640px) { .actions select { max-width: 100%; margin: 0 0 .35rem; display: block; } }
   `]
 })
@@ -225,7 +225,7 @@ export class BillingStatementsComponent implements OnInit {
           this.imports.set(imports);
           this.pendingOrders.set(orders);
         },
-        error: () => this.error.set('Banka hareketleri yüklenemedi.')
+        error: () => this.error.set('Banka hareketleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
@@ -277,7 +277,7 @@ export class BillingStatementsComponent implements OnInit {
       this.file = null;
       this.toaster.success('Ekstre yüklendi.');
       this.refresh();
-    }, 'Ekstre yüklenemedi.');
+    }, 'Ekstre yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
   }
 
   approve(line: BankTransaction, orderId: string | null | undefined): void {
@@ -297,7 +297,7 @@ export class BillingStatementsComponent implements OnInit {
   }
 
   loadLines(): void {
-    this.billing.getBankTransactions(this.status()).subscribe({ next: lines => this.lines.set(lines), error: () => this.error.set('Banka hareketleri yüklenemedi.') });
+    this.billing.getBankTransactions(this.status()).subscribe({ next: lines => this.lines.set(lines), error: () => this.error.set('Banka hareketleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.') });
   }
 
   private refresh(): void {

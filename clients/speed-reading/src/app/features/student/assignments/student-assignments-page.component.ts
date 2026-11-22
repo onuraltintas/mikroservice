@@ -137,13 +137,13 @@ export class StudentAssignmentsPageComponent implements OnInit {
         const date = new Date(dateStr);
         const now = new Date();
 
-        if (date < now) return 'Süresi Doldu';
+        if (date < now) return 'Süresi doldu';
 
         // If this year, don't show year
         const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
         if (date.getFullYear() !== now.getFullYear()) options.year = 'numeric';
 
-        return date.toLocaleDateString('tr-TR', options);
+        return `Teslim: ${date.toLocaleDateString('tr-TR', options)}`;
     }
 
     formatCompletionDate(dateStr?: string): string {

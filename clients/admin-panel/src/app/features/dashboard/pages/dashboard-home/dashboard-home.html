@@ -1,300 +1,163 @@
-<div class="space-y-8 animate-fade-in-up">
-    <!-- Redesign 18.11.2026: sade karşılama; renkler --ui-* (eduivme). -->
-    <section class="rounded-[var(--ds-radius)] border border-(--ui-border) bg-(--ui-surface) p-6 sm:p-8" aria-labelledby="dashboard-welcome">
-        <h1 id="dashboard-welcome" class="text-[28px] font-bold text-(--ui-text)">Hoş geldiniz</h1>
-        <p class="mt-1 text-(--ui-text-muted)">eduivme yönetim paneli: kullanıcılar, içerik, abonelikler ve sistem ayarları.</p>
-        <div class="mt-6 flex flex-wrap gap-3">
-            <a [routerLink]="['/dashboard/identity/users']" class="ds-btn ds-btn--secondary"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>Kullanıcılar</a>
-            <a [routerLink]="['/dashboard/identity/roles']" class="ds-btn ds-btn--secondary"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>Roller</a>
-            <a [routerLink]="['/dashboard/identity/permissions']" class="ds-btn ds-btn--secondary"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>İzinler</a>
-        </div>
+<div class="home">
+  <!-- Karşılama: grafit kart, bal rengi halka; bekleyen işlerin toplamı tek cümle. -->
+  <section class="welcome" aria-labelledby="dashboard-welcome">
+    <p class="welcome__date">{{ today }}</p>
+    <h1 id="dashboard-welcome">{{ greeting() }}</h1>
+    <p class="welcome__lead">
+      @if (loading()) { Özet hazırlanıyor… }
+      @else if (waiting().length && waitingTotal() > 0) { Bugün ilgilenmen gereken <strong>{{ waitingTotal() }}</strong> iş var. }
+      @else if (waiting().length) { Bekleyen iş yok; her şey yolunda. }
+      @else { eduivme yönetim paneli: kullanıcılar, içerik, abonelikler ve sistem ayarları. }
+    </p>
+    <div class="welcome__actions">
+      @if (can(permissions.usersView)) { <a routerLink="/dashboard/identity/users" class="welcome__link">Kullanıcılar</a> }
+      @if (can(permissions.institutionsView)) { <a routerLink="/dashboard/identity/institutions" class="welcome__link">Kurumlar</a> }
+      @if (isSystemAdmin()) { <a routerLink="/dashboard/billing/overview" class="welcome__link">Abonelik ve ödeme</a> }
+    </div>
+  </section>
+
+  @if (failed().length) {
+    <p class="notice" role="alert">Şu bölümler yüklenemedi: {{ failed().join(', ') }}. Bağlantıyı kontrol edip
+      <button type="button" class="notice__retry" (click)="load()">yeniden dene</button>.</p>
+  }
+
+  <!-- Bekleyen işler -->
+  @if (waiting().length) {
+    <section class="block" aria-labelledby="waiting-title">
+      <h2 id="waiting-title">Bekleyen işler</h2>
+      <div class="waiting">
+        @for (item of waiting(); track item.label) {
+          <a [routerLink]="item.route" class="waiting__item" [attr.aria-label]="item.label + ': ' + (item.value ?? 'bilinmiyor')">
+            <admin-stat [label]="item.label" [value]="item.value" [tone]="item.tone" [hint]="item.hint" />
+          </a>
+        }
+      </div>
     </section>
+  }
 
-    <!-- Section Title -->
-    <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-(--ui-text) flex items-center">
-            <svg class="w-6 h-6 mr-2 text-(--ui-brand-text)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Kimlik Yönetimi Özeti
-        </h2>
+  <div class="grid">
+    <!-- Hızlı Okuma kullanımı -->
+    @if (can(permissions.speedReadingPlatformAnalytics)) {
+      <section class="card card--wide" aria-labelledby="usage-title">
+        <header class="card__head">
+          <h2 id="usage-title">Hızlı Okuma kullanımı</h2>
+          <a routerLink="/dashboard/speed-reading/analytics" class="card__more">Analize git</a>
+        </header>
+        @if (usage(); as u) {
+          <div class="mini-stats">
+            <admin-stat label="Etkin kullanıcı (30 gün)" [value]="u.activeUsers" tone="success" />
+            <admin-stat label="Yeni kullanıcı" [value]="u.newUserDataAvailable ? u.newUsers : null" tone="info" />
+            <admin-stat label="Okuma oturumu" [value]="u.totalReadingSessions" tone="violet" />
+            <admin-stat label="Katılım oranı" [value]="u.engagementRate" [percent]="true" tone="honey" />
+          </div>
+          <div class="pair">
+            <admin-trend title="Günlük etkin kullanıcı" [points]="activeTrend()" tone="success" />
+            <admin-bars title="Son 14 günde etkinlik" [points]="activityBars()" tone="info" />
+          </div>
+        } @else if (loading()) { <div class="skeleton" role="status" aria-label="Yükleniyor"></div> }
+        @else { <p class="empty-line">Kullanım verisi şu an yok.</p> }
+      </section>
+    }
+
+    <!-- Abonelikler -->
+    @if (isSystemAdmin()) {
+      <section class="card" aria-labelledby="subs-title">
+        <header class="card__head">
+          <h2 id="subs-title">Abonelikler</h2>
+          <a routerLink="/dashboard/billing/subscriptions" class="card__more">Tümü</a>
+        </header>
+        @if (billingOverview(); as b) {
+          <div class="mini-stats mini-stats--two">
+            <admin-stat label="Etkin abonelik" [value]="b.currentSubscriptions" tone="success" />
+            <admin-stat label="Bu ay onaylanan ödeme" [value]="b.approvedThisMonth" tone="honey" />
+          </div>
+          <admin-bars title="Onaylanan ödemeler" [points]="subscriptionBars()" tone="honey" />
+          @if (b.endingSoon.length) {
+            <h3 class="sub-title">Yakında bitenler</h3>
+            <ul class="rows">
+              @for (s of b.endingSoon.slice(0, 4); track $index) {
+                <li><span>{{ subscriptionName(s) }}</span><small>{{ subscriptionEnd(s) }}</small></li>
+              }
+            </ul>
+          } @else { <p class="empty-line">Önümüzdeki günlerde biten abonelik yok.</p> }
+        } @else if (loading()) { <div class="skeleton" role="status" aria-label="Yükleniyor"></div> }
+        @else { <p class="empty-line">Abonelik özeti şu an yok.</p> }
+      </section>
+    }
+
+    <!-- Kullanıcılar -->
+    @if (can(permissions.usersView)) {
+      <section class="card" aria-labelledby="users-title">
+        <header class="card__head">
+          <h2 id="users-title">Kullanıcılar</h2>
+          <a routerLink="/dashboard/identity/users" class="card__more">Yönet</a>
+        </header>
+        @if (users()) {
+          <admin-ring [parts]="userParts()" unit="kullanıcı" />
+          <div class="chips">
+            @if (roleCount() !== null) { <a routerLink="/dashboard/identity/roles" class="chip">{{ roleCount() }} rol</a> }
+            @if (permissionCount() !== null) { <a routerLink="/dashboard/identity/permissions" class="chip">{{ permissionCount() }} izin</a> }
+          </div>
+        } @else if (loading()) { <div class="skeleton" role="status" aria-label="Yükleniyor"></div> }
+        @else { <p class="empty-line">Kullanıcı özeti şu an yok.</p> }
+      </section>
+    }
+
+    <!-- Koçluk -->
+    @if (can(permissions.coachingView)) {
+      <section class="card" aria-labelledby="coaching-title">
+        <header class="card__head">
+          <h2 id="coaching-title">Koçluk</h2>
+          <a routerLink="/dashboard/coaching" class="card__more">Özete git</a>
+        </header>
+        @if (coachingOverview(); as c) {
+          <div class="mini-stats mini-stats--two">
+            <admin-stat label="Etkin ödev" [value]="c.activeAssignments" tone="info" />
+            <admin-stat label="Yaklaşan görüşme" [value]="c.upcomingSessions" tone="violet" />
+          </div>
+          <div class="meters">
+            <div class="meter-row"><span>Ödev teslimi</span><admin-meter [value]="c.submittedAssignmentStudents" [max]="c.totalAssignmentStudents" tone="info"
+              [label]="'Ödev teslimi: ' + c.submittedAssignmentStudents + '/' + c.totalAssignmentStudents" /><strong>%{{ share(c.submittedAssignmentStudents, c.totalAssignmentStudents) }}</strong></div>
+            <div class="meter-row"><span>Tamamlanan hedef</span><admin-meter [value]="c.completedGoals" [max]="c.totalGoals" tone="success"
+              [label]="'Tamamlanan hedef: ' + c.completedGoals + '/' + c.totalGoals" /><strong>%{{ share(c.completedGoals, c.totalGoals) }}</strong></div>
+            <div class="meter-row"><span>Biten ödev</span><admin-meter [value]="c.completedAssignments" [max]="c.totalAssignments" tone="honey"
+              [label]="'Biten ödev: ' + c.completedAssignments + '/' + c.totalAssignments" /><strong>%{{ share(c.completedAssignments, c.totalAssignments) }}</strong></div>
+          </div>
+        } @else if (loading()) { <div class="skeleton" role="status" aria-label="Yükleniyor"></div> }
+        @else { <p class="empty-line">Koçluk özeti şu an yok.</p> }
+      </section>
+    }
+
+    <!-- maxkampüs -->
+    @if (isSystemAdmin()) {
+      <section class="card" aria-labelledby="mk-title">
+        <header class="card__head">
+          <h2 id="mk-title">maxkampüs</h2>
+          <a routerLink="/dashboard/maxkampus/overview" class="card__more">Kurumlar</a>
+        </header>
+        @if (maxkampusOverview(); as m) {
+          <div class="mini-stats mini-stats--two">
+            <admin-stat label="Çalışma alanı" [value]="m.workspaceCount" tone="violet" />
+            <admin-stat label="Etkin öğrenci" [value]="m.activeStudentCount" tone="success" />
+            <admin-stat label="Kurs" [value]="m.courseCount" tone="info" />
+            <admin-stat label="Bekleyen davet" [value]="m.pendingInvitationCount" tone="honey" />
+          </div>
+          <admin-ring [parts]="[{ label: 'Kurum', value: m.institutionWorkspaceCount, tone: 'violet' }, { label: 'Bağımsız öğretmen', value: m.independentTeacherWorkspaceCount, tone: 'honey' }]" unit="alan" />
+        } @else if (loading()) { <div class="skeleton" role="status" aria-label="Yükleniyor"></div> }
+        @else { <p class="empty-line">maxkampüs özeti şu an yok.</p> }
+      </section>
+    }
+  </div>
+
+  <!-- Hızlı işlemler -->
+  <section class="block" aria-labelledby="quick-title">
+    <h2 id="quick-title">Hızlı işlemler</h2>
+    <div class="quick">
+      @if (can(permissions.usersCreate)) { <a routerLink="/dashboard/identity/users" [queryParams]="{ action: 'create' }" class="quick__item admin-tone-info"><span class="quick__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>Yeni kullanıcı</a> }
+      @if (can(permissions.institutionsManage)) { <a routerLink="/dashboard/identity/institutions" class="quick__item admin-tone-violet"><span class="quick__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>Yeni kurum</a> }
+      @if (can(permissions.speedReadingContentManage)) { <a routerLink="/dashboard/speed-reading/catalog" class="quick__item admin-tone-success"><span class="quick__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>Hızlı Okuma içeriği</a> }
+      @if (can(permissions.coachingContentManage)) { <a routerLink="/dashboard/coaching/catalog" class="quick__item admin-tone-honey"><span class="quick__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>Koçluk kataloğu</a> }
+      <a routerLink="/dashboard/identity/profile" class="quick__item admin-tone-orange"><span class="quick__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Profil ayarları</a>
     </div>
-
-    <!-- Stats Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Users Card -->
-        <div
-            class="group relative bg-(--ui-surface) rounded-2xl shadow-sm border border-(--ui-border) overflow-hidden hover:shadow-lg transition-all duration-300">
-            <!-- Decorative gradient -->
-            <div
-                class="absolute top-0 right-0 w-32 h-32 bg-(--ui-brand) rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500">
-            </div>
-
-            <div class="relative p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div
-                        class="p-3 bg-(--ui-brand) rounded-xl shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
-                    <span
-                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-(--ui-brand-soft) text-(--ui-brand-text)">
-                        <span class="w-1.5 h-1.5 bg-(--ui-brand) rounded-full mr-1.5 animate-pulse"></span>
-                        Aktif
-                    </span>
-                </div>
-
-                <h3 class="text-lg font-semibold text-(--ui-text) mb-1">Kullanıcılar</h3>
-                <p class="text-sm text-(--ui-text-muted) mb-4">Sistemdeki kullanıcı istatistikleri</p>
-
-                @if (loading()) {
-                <div class="space-y-3">
-                    <div class="h-10 bg-(--ui-surface-muted) rounded-lg animate-pulse"></div>
-                    <div class="h-4 bg-(--ui-surface-muted) rounded w-3/4 animate-pulse"></div>
-                </div>
-                } @else {
-                <div class="space-y-4">
-                    <div class="flex items-end justify-between">
-                        <span class="text-4xl font-bold text-(--ui-text)">{{ stats().totalUsers }}</span>
-                        <span class="text-sm text-(--ui-text-muted)">toplam</span>
-                    </div>
-
-                    <!-- Progress bar -->
-                    <div class="relative">
-                        <div class="flex items-center justify-between text-xs mb-1">
-                            <span class="text-(--ui-success) font-medium">{{ stats().activeUsers }}
-                                aktif</span>
-                            <span class="text-(--ui-text-muted)">{{ stats().inactiveUsers }} pasif</span>
-                        </div>
-                        <div class="w-full bg-(--ui-surface-muted) rounded-full h-2">
-                            <div class="bg-(--ui-success) h-2 rounded-full transition-all duration-500"
-                                [style.width.%]="getActivePercentage()"></div>
-                        </div>
-                    </div>
-                </div>
-                }
-            </div>
-
-            <div
-                class="px-6 py-4 bg-(--ui-surface-muted) border-t border-(--ui-border) flex items-center justify-between">
-                <a [routerLink]="['/dashboard/identity/users']"
-                    class="text-sm font-medium text-(--ui-brand-text) hover:text-(--ui-brand-text) flex items-center group-hover:translate-x-1 transition-transform">
-                    Kullanıcıları Yönet
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- Roles Card -->
-        <div
-            class="group relative bg-(--ui-surface) rounded-2xl shadow-sm border border-(--ui-border) overflow-hidden hover:shadow-lg transition-all duration-300">
-            <!-- Decorative gradient -->
-            <div
-                class="absolute top-0 right-0 w-32 h-32 bg-(--ui-brand) rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500">
-            </div>
-
-            <div class="relative p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div
-                        class="p-3 bg-(--ui-brand) rounded-xl shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <span
-                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-(--ui-brand-soft) text-(--ui-brand-text)">
-                        RBAC
-                    </span>
-                </div>
-
-                <h3 class="text-lg font-semibold text-(--ui-text) mb-1">Roller</h3>
-                <p class="text-sm text-(--ui-text-muted) mb-4">Sistemdeki rol tanımlamaları</p>
-
-                @if (loading()) {
-                <div class="space-y-3">
-                    <div class="h-10 bg-(--ui-surface-muted) rounded-lg animate-pulse"></div>
-                    <div class="h-4 bg-(--ui-surface-muted) rounded w-3/4 animate-pulse"></div>
-                </div>
-                } @else {
-                <div class="space-y-4">
-                    <div class="flex items-end justify-between">
-                        <span class="text-4xl font-bold text-(--ui-text)">{{ stats().totalRoles }}</span>
-                        <span class="text-sm text-(--ui-text-muted)">toplam</span>
-                    </div>
-
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center">
-                            <span class="w-3 h-3 bg-(--ui-brand) rounded-full mr-2 shadow-sm"></span>
-                            <span class="text-sm text-(--ui-text-muted)">{{ stats().systemRoles }}
-                                sistem</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="w-3 h-3 bg-(--ui-brand) rounded-full mr-2 shadow-sm"></span>
-                            <span class="text-sm text-(--ui-text-muted)">{{ stats().customRoles }} özel</span>
-                        </div>
-                    </div>
-                </div>
-                }
-            </div>
-
-            <div
-                class="px-6 py-4 bg-(--ui-surface-muted) border-t border-(--ui-border) flex items-center justify-between">
-                <a [routerLink]="['/dashboard/identity/roles']"
-                    class="text-sm font-medium text-(--ui-brand-text) hover:text-(--ui-brand-text) flex items-center group-hover:translate-x-1 transition-transform">
-                    Rolleri Yönet
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- Permissions Card -->
-        <div
-            class="group relative bg-(--ui-surface) rounded-2xl shadow-sm border border-(--ui-border) overflow-hidden hover:shadow-lg transition-all duration-300">
-            <!-- Decorative gradient -->
-            <div
-                class="absolute top-0 right-0 w-32 h-32 bg-(--ui-warning) rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500">
-            </div>
-
-            <div class="relative p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div
-                        class="p-3 bg-(--ui-warning) rounded-xl shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
-                    <span
-                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-(--ui-warning-soft) text-(--ui-warning)">
-                        Güvenlik
-                    </span>
-                </div>
-
-                <h3 class="text-lg font-semibold text-(--ui-text) mb-1">İzinler</h3>
-                <p class="text-sm text-(--ui-text-muted) mb-4">Sistemdeki erişim izinleri</p>
-
-                @if (loading()) {
-                <div class="space-y-3">
-                    <div class="h-10 bg-(--ui-surface-muted) rounded-lg animate-pulse"></div>
-                    <div class="h-4 bg-(--ui-surface-muted) rounded w-3/4 animate-pulse"></div>
-                </div>
-                } @else {
-                <div class="space-y-4">
-                    <div class="flex items-end justify-between">
-                        <span class="text-4xl font-bold text-(--ui-text)">{{ stats().totalPermissions
-                            }}</span>
-                        <span class="text-sm text-(--ui-text-muted)">toplam</span>
-                    </div>
-
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center">
-                            <span class="w-3 h-3 bg-(--ui-warning) rounded-full mr-2 shadow-sm"></span>
-                            <span class="text-sm text-(--ui-text-muted)">{{ stats().systemPermissions }}
-                                sistem</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="w-3 h-3 bg-(--ui-warning) rounded-full mr-2 shadow-sm"></span>
-                            <span class="text-sm text-(--ui-text-muted)">{{ stats().customPermissions }}
-                                özel</span>
-                        </div>
-                    </div>
-                </div>
-                }
-            </div>
-
-            <div
-                class="px-6 py-4 bg-(--ui-surface-muted) border-t border-(--ui-border) flex items-center justify-between">
-                <a [routerLink]="['/dashboard/identity/permissions']"
-                    class="text-sm font-medium text-(--ui-warning) hover:text-(--ui-warning) flex items-center group-hover:translate-x-1 transition-transform">
-                    İzinleri Yönet
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="mt-8">
-        <h2 class="text-xl font-bold text-(--ui-text) flex items-center mb-6">
-            <svg class="w-6 h-6 mr-2 text-(--ui-brand-text)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Hızlı İşlemler
-        </h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            @if (can(permissions.usersCreate)) { <a [routerLink]="['/dashboard/identity/users']" [queryParams]="{action: 'create'}"
-                class="flex items-center p-4 bg-(--ui-surface) rounded-xl border border-(--ui-border) hover:border-(--ui-brand) hover:shadow-md transition-all group">
-                <div class="p-2.5 bg-(--ui-brand-soft) rounded-lg group-hover:bg-(--ui-brand) transition-colors">
-                    <svg class="w-5 h-5 text-(--ui-brand-text) group-hover:text-white transition-colors"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                </div>
-                <span class="ml-3 text-sm font-medium text-(--ui-text)">Yeni Kullanıcı</span>
-            </a> }
-
-            @if (can(permissions.rolesCreate)) { <a [routerLink]="['/dashboard/identity/roles']" [queryParams]="{action: 'create'}"
-                class="flex items-center p-4 bg-(--ui-surface) rounded-xl border border-(--ui-border) hover:border-(--ui-brand) hover:shadow-md transition-all group">
-                <div
-                    class="p-2.5 bg-(--ui-brand-soft) rounded-lg group-hover:bg-(--ui-brand) transition-colors">
-                    <svg class="w-5 h-5 text-(--ui-brand-text) group-hover:text-white transition-colors"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                </div>
-                <span class="ml-3 text-sm font-medium text-(--ui-text)">Yeni Rol</span>
-            </a> }
-
-            @if (can(permissions.permissionCreate)) { <a [routerLink]="['/dashboard/identity/permissions']" [queryParams]="{action: 'create'}"
-                class="flex items-center p-4 bg-(--ui-surface) rounded-xl border border-(--ui-border) hover:border-(--ui-warning) hover:shadow-md transition-all group">
-                <div
-                    class="p-2.5 bg-(--ui-warning-soft) rounded-lg group-hover:bg-(--ui-warning) transition-colors">
-                    <svg class="w-5 h-5 text-(--ui-warning) group-hover:text-white transition-colors"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                </div>
-                <span class="ml-3 text-sm font-medium text-(--ui-text)">Yeni İzin</span>
-            </a> }
-
-            <a [routerLink]="['/dashboard/identity/profile']"
-                class="flex items-center p-4 bg-(--ui-surface) rounded-xl border border-(--ui-border) hover:border-(--ui-border) hover:shadow-md transition-all group">
-                <div class="p-2.5 bg-(--ui-surface-muted) rounded-lg group-hover:bg-(--ui-text) transition-colors">
-                    <svg class="w-5 h-5 text-(--ui-text-muted) group-hover:text-white transition-colors"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                </div>
-                <span class="ml-3 text-sm font-medium text-(--ui-text)">Profil Ayarları</span>
-            </a>
-        </div>
-    </div>
+  </section>
 </div>

@@ -142,7 +142,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   `,
   styles: [BILLING_PAGE_STYLES, `
     .seat-row > td { background: color-mix(in srgb, var(--ui-brand) 6%, transparent); }
-    .warn { color: #b45309; }
+    .warn { color: var(--ds-warning); }
     .grow { flex: 1 1 16rem; display: flex; flex-direction: column; gap: .25rem; }
     form label { display: flex; flex-direction: column; gap: .25rem; }
   `]
@@ -171,7 +171,7 @@ export class BillingSubscriptionsComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ products, subscriptions }) => { this.products.set(products); this.subscriptions.set(subscriptions); },
-        error: () => this.error.set('Abonelikler yüklenemedi.')
+        error: () => this.error.set('Abonelikler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
@@ -180,7 +180,7 @@ export class BillingSubscriptionsComponent implements OnInit {
     this.error.set('');
     this.billing.getSubscriptions(this.product()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: subscriptions => this.subscriptions.set(subscriptions),
-      error: () => this.error.set('Abonelikler yüklenemedi.')
+      error: () => this.error.set('Abonelikler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -189,7 +189,7 @@ export class BillingSubscriptionsComponent implements OnInit {
     this.error.set('');
     this.granting.set(true);
     if (this.plans().length === 0) {
-      this.billing.getPlans().subscribe({ next: plans => this.plans.set(plans), error: () => this.error.set('Planlar yüklenemedi.') });
+      this.billing.getPlans().subscribe({ next: plans => this.plans.set(plans), error: () => this.error.set('Planlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.') });
     }
   }
 
@@ -242,7 +242,7 @@ export class BillingSubscriptionsComponent implements OnInit {
   toggleSeats(row: BillingAdminSubscription): void {
     this.releasing.set(null);
     if (this.pool()?.subscriptionId === row.subscription.id) { this.pool.set(null); return; }
-    this.billing.getSeats(row.subscription.id).subscribe({ next: pool => this.pool.set(pool), error: () => this.error.set('Koltuklar yüklenemedi.') });
+    this.billing.getSeats(row.subscription.id).subscribe({ next: pool => this.pool.set(pool), error: () => this.error.set('Koltuklar yüklenemedi. Sayfayı yenileyip yeniden deneyin.') });
   }
 
   release(subscriptionId: string, userId: string): void {

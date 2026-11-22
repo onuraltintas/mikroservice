@@ -18,6 +18,7 @@ import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.c
 import { SpeedReadingAssignmentManagementComponent } from './speed-reading-assignment-management.component';
 import { SpeedReadingInstitutionSettingsComponent } from './speed-reading-institution-settings.component';
 import { SpeedReadingInstitutionSeatsComponent } from './speed-reading-institution-seats.component';
+import { StaffBarsComponent, StaffSeriesChartsPipe, StaffSplitComponent } from '../../shared/staff-charts';
 import { speedReadingReportLabel } from '../../../../../../../shared/utils/speed-reading-report-labels';
 
 type MemberStatusFilter = 'all' | 'active' | 'inactive';
@@ -42,7 +43,7 @@ function utcDateInput(daysAgo: number): string {
 @Component({
   selector: 'staff-speed-reading-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent, StaffPendingInvitationsComponent, SpeedReadingAssignmentManagementComponent, SpeedReadingInstitutionSettingsComponent, SpeedReadingInstitutionSeatsComponent],
+  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent, StaffPendingInvitationsComponent, SpeedReadingAssignmentManagementComponent, SpeedReadingInstitutionSettingsComponent, SpeedReadingInstitutionSeatsComponent, StaffBarsComponent, StaffSplitComponent, StaffSeriesChartsPipe],
   templateUrl: './speed-reading-institution-workspace.component.html',
   styleUrl: './speed-reading-institution-workspace.component.scss',
 })
@@ -550,7 +551,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
 
   reportSeriesLabel(series: { name: string; value: number }[]): string {
     return (
-      series.map((item) => `${item.name}: ${this.formatReportNumber(item.value)}`).join(' · ') ||
+      series.map((item) => `${item.name}: ${this.formatReportNumber(item.value)}`).join(', ') ||
       '—'
     );
   }

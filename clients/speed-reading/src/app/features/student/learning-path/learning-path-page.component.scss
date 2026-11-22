@@ -388,3 +388,40 @@
 @media (prefers-reduced-motion: reduce) {
   .current-badge { animation: none; }
 }
+
+// Lively design (21.11.2026): a road of stops: done stops filled mint, the current one with the orange focus line.
+.learning-path-page .page-header .header-content { flex: 1 1 auto; text-align: left; }
+
+.path-item-card {
+    position: relative;
+    border-radius: var(--sp-radius-card-lg, 22px);
+    box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card));
+    overflow: hidden;
+
+    &.completed { background: var(--sp-tone-mint-soft); border-color: transparent; }
+    &.current { border: 2px solid var(--sp-focus-line); }
+    &[aria-disabled='true']:not(.completed) { background: var(--sp-surface); border-style: dashed; box-shadow: none; }
+}
+
+.path-focus-line {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 10px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--sp-focus-line);
+}
+
+.path-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    color: var(--sp-text-2);
+    font-size: 0.875rem;
+
+    .material-icons { font-size: 18px; }
+}
+
+.learning-path-page .page-header > .sp-btn--icon { align-self: flex-start; width: 44px; min-width: 44px; }

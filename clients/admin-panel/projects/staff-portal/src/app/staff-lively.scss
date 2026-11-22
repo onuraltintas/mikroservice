@@ -1,0 +1,106 @@
+// B design for the staff portal (21.11.2026, user decision: the eduivme family's lively look, as on maxkampüs, with a little
+// more movement). Loaded last; colours only through tokens; nothing moves with reduced motion.
+
+@keyframes staff-rise { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes staff-breathe { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.08); opacity: .55; } }
+@keyframes staff-grow { from { transform: scaleY(0); } }
+
+body .portal-shell {
+  // The welcome: a graphite card with an amber ring that breathes; it comes in once.
+  .welcome-block { position: relative; overflow: hidden; max-width: none; padding: 26px 30px; border: 0; border-radius: 20px;
+    background: var(--ds-visual-bg); color: var(--ds-visual-text); box-shadow: var(--ds-shadow-raised, var(--ds-shadow));
+    animation: staff-rise .55s cubic-bezier(.2, .8, .2, 1) both;
+    > * { position: relative; z-index: 1; max-width: 62ch; }
+    &::after { content: ''; position: absolute; right: -64px; top: -64px; width: 210px; height: 210px; border-radius: 50%;
+      border: 18px solid var(--ds-accent); opacity: .85; animation: staff-breathe 4s ease-in-out infinite; pointer-events: none; }
+    .eyebrow { color: var(--ds-accent); font-weight: 750; }
+    h1 { color: var(--ds-visual-text); }
+    .welcome-copy { color: var(--ds-visual-muted); } }
+
+  // The page's own component styles weigh more than the rules above: one more class keeps the text light on graphite.
+  .content-wrap .welcome-block { max-width: none;
+    .eyebrow { color: var(--ds-accent); } h1 { color: var(--ds-visual-text); } .welcome-copy { color: var(--ds-visual-muted); } }
+
+  // The product cards in the side menu lift; the chosen one carries an amber line.
+  .product-choice { transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+  .product-choice:hover { transform: translateX(3px); }
+  .product-choice.active { background: var(--ds-surface); box-shadow: inset 3px 0 var(--ds-accent), var(--ds-shadow-raised, var(--ds-shadow)); }
+}
+
+body .portal-shell.coaching-staff-shell {
+  .welcome-block { padding: 26px 30px; border: 0; border-radius: 20px; background: var(--ds-visual-bg);
+    .eyebrow { color: var(--ds-accent); }
+    h1 { color: var(--ds-visual-text); } }
+  .product-choice.active { box-shadow: inset 3px 0 var(--ds-accent), var(--ds-shadow-raised, var(--ds-shadow)); }
+
+  .coaching-body .coaching-content {
+    // Sections of the workspace rise in order when a section opens.
+    .teacher-workspace > * { animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+    @for $i from 1 through 6 { .teacher-workspace > :nth-child(#{$i}) { animation-delay: #{($i - 1) * 70}ms; } }
+    .workspace-tabs { background: var(--ui-surface); }
+
+    // Takip merkezi: each count wears its meaning's soft colour; the card lifts.
+    .tracking .totals > div { background: var(--coaching-lesson-0); border: 0; border-radius: 18px; box-shadow: var(--coaching-card-shadow);
+      transition: transform .2s ease, box-shadow .2s ease; animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both;
+      &:hover { transform: translateY(-3px); box-shadow: var(--coaching-raised-shadow); }
+      dd { color: var(--coaching-lesson-text-0); } }
+    .tracking .totals > div:nth-child(1) { background: var(--ui-danger-soft); dd { color: var(--ui-danger); } }
+    .tracking .totals > div:nth-child(2) { background: var(--coaching-lesson-1); dd { color: var(--coaching-lesson-text-1); } animation-delay: 60ms; }
+    .tracking .totals > div:nth-child(3) { background: var(--coaching-lesson-0); dd { color: var(--coaching-lesson-text-0); } animation-delay: 120ms; }
+    .tracking .totals > div:nth-child(4) { background: var(--coaching-honey-soft); dd { color: var(--ui-accent-text); } animation-delay: 180ms; }
+    .tracking .totals > div:nth-child(5) { background: var(--coaching-lesson-3); dd { color: var(--coaching-lesson-text-3); } animation-delay: 240ms; }
+    .tracking .totals > div:nth-child(6) { background: var(--coaching-lesson-2); dd { color: var(--coaching-lesson-text-2); } animation-delay: 300ms; }
+    .tracking dt { color: var(--ui-text); }
+
+    // Öğrenciler: plain white rows that lift, the avatar takes a soft colour in turn.
+    .student-row { background: var(--ui-surface); transition: transform .2s ease, box-shadow .2s ease;
+      &:hover { transform: translateY(-2px); box-shadow: var(--coaching-raised-shadow); } }
+    .student-avatar { background: var(--coaching-lesson-0); color: var(--coaching-lesson-text-0); }
+    .student-row:nth-child(4n + 2) .student-avatar { background: var(--coaching-lesson-2); color: var(--coaching-lesson-text-2); }
+    .student-row:nth-child(4n + 3) .student-avatar { background: var(--coaching-lesson-3); color: var(--coaching-lesson-text-3); }
+    .student-row:nth-child(4n + 4) .student-avatar { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }
+    :is(.assignment-card, .session-card, .exam-card) { transition: transform .2s ease, box-shadow .2s ease;
+      &:hover { transform: translateY(-2px); box-shadow: var(--coaching-raised-shadow); } }
+  }
+}
+
+// Hızlı Okuma (teacher and institution): sections rise in order; the summary numbers wear soft colours in turn.
+body .portal-shell :is(.reading-workspace, .reading-institution) {
+  > section { animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+  @for $i from 1 through 6 { > section:nth-of-type(#{$i}) { animation-delay: #{$i * 70}ms; } }
+  :is(.overview-section, .roster-section) { border-radius: 16px; box-shadow: var(--ds-shadow-raised, var(--ds-shadow)); }
+  .metric-card { border-color: transparent; border-radius: 14px; background: var(--ds-info-soft); box-shadow: var(--ds-shadow);
+    transition: transform .2s ease, box-shadow .2s ease; animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both;
+    &:hover { transform: translateY(-3px); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); }
+    span { color: var(--ds-text); font-size: 13px; }
+    strong { color: var(--ds-info); font-size: 24px; } }
+  .metric-card:nth-child(5n + 2) { background: var(--ds-success-soft); strong { color: var(--ds-success); } animation-delay: 60ms; }
+  .metric-card:nth-child(5n + 3) { background: var(--ds-violet-soft); strong { color: var(--ds-violet); } animation-delay: 120ms; }
+  .metric-card:nth-child(5n + 4) { background: var(--ds-warning-soft); strong { color: var(--ds-warning); } animation-delay: 180ms; }
+  .metric-card:nth-child(5n + 5) { background: var(--ds-orange-soft); strong { color: var(--ds-orange); } animation-delay: 240ms; }
+}
+
+// Kurum yönetimi (Koçluk): the summary counts rise in order and lift; the report blocks come in one after another.
+body .portal-shell staff-coaching-institution-workspace .institution-workspace {
+  .metric-grid .metric-card { animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both; transition: transform .2s ease, box-shadow .2s ease;
+    &:hover { transform: translateY(-3px); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); } }
+  @for $i from 2 through 5 { .metric-grid .metric-card:nth-child(#{$i}) { animation-delay: #{($i - 1) * 60}ms; } }
+  .overview-section > *, .recent-panel { animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+  .recent-panel { animation-delay: 200ms; }
+}
+
+// Kurum yönetimi (Hızlı Okuma): the report blocks rise in order like the teacher's.
+body .portal-shell .reading-workspace {
+  > .overview-section, > .institution-reports, > .roster-section { animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both; box-shadow: var(--ds-shadow); }
+  > .institution-reports { animation-delay: 90ms; } > .roster-section { animation-delay: 180ms; }
+}
+
+// Phone: the ring moves to the corner so it never crosses the title.
+@media (max-width: 700px) {
+  body .portal-shell .welcome-block { padding: 22px 20px;
+    &::after { width: 120px; height: 120px; right: -62px; top: -62px; border-width: 12px; opacity: .6; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .portal-shell *, body .portal-shell *::before, body .portal-shell *::after { animation: none !important; transition: none !important; }
+}

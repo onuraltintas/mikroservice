@@ -159,7 +159,7 @@ describe('CoachingTargetProgramsComponent', () => {
       quota: 300, placed: 300, minimumScore: 480, maximumScore: 500, rank: 1500, year: 2025, catalogYear: 2026, isActive: true, source: 'mebi-yks', sourceUrl: null, updatedAt: null };
     http.expectOne(api('/catalog/university-programs')).flush({ data: { items: [program], totalCount: 1, pageNumber: 1, pageSize: 25 } });
     await flushAll(); fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Lisans · Sayısal (SAY)');
+    expect(fixture.nativeElement.textContent).toContain('Lisans, Sayısal (SAY)');
     const component = fixture.componentInstance;
     const open = component.openEdit(program);
     http.expectOne(api('/catalog/university-programs/p1')).flush({ data: { fingerprint: 'F', data: program, goalCount: 0 } }); await open;

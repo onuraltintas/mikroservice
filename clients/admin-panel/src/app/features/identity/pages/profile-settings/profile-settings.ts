@@ -91,7 +91,7 @@ export class ProfileSettingsComponent implements OnInit {
                 this.loading.set(false);
             },
             error: () => {
-                this.toaster.error('Profil bilgileri yüklenemedi.');
+                this.toaster.error('Profil bilgileri yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
                 this.loading.set(false);
             }
         });

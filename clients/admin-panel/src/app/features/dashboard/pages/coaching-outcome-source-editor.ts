@@ -92,7 +92,7 @@ export class CoachingOutcomeSourceEditorComponent {
   private async load(id: string): Promise<void> {
     this.loading.set(true); this.error.set(null); this.message.set(null);
     try { this.apply(await firstValueFrom(this.admin.outcomeSource(id))); }
-    catch (error) { this.error.set(adminErrorMessage(error, 'Kaynak yüklenemedi.')); }
+    catch (error) { this.error.set(adminErrorMessage(error, 'Kaynak yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
     finally { this.loading.set(false); }
   }
 }

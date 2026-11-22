@@ -19,3 +19,12 @@
 .account-navigation a:hover:not([aria-current]) { color: var(--ds-text); }
 .account-navigation mat-icon { width: 18px; height: 18px; font-size: 18px; }
 @media (max-width: 400px) { .account-navigation a { gap: 4px; font-size: 14px; } .account-navigation mat-icon { display: none; } }
+
+// Lively design (21.11.2026): the signature move, once: the read part of the line fills and the focus mark slides to it.
+@keyframes shell-read { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes shell-focus { from { left: 0; opacity: 0; } to { left: 58%; opacity: 1; } }
+.reading-lines__read { transform-origin: left center; animation: shell-read 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
+.reading-lines__focus { animation: shell-focus 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
+@media (prefers-reduced-motion: reduce) {
+  .reading-lines__read, .reading-lines__focus { animation: none; }
+}

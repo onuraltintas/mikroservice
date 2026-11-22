@@ -27,7 +27,7 @@ import { PasswordRequirementsComponent } from '../../../../shared/components/pas
                     </svg>
                 </div>
                 <h3 class="text-lg font-medium leading-6 text-(--ui-text)" id="modal-title">
-                    Şifre Değiştir
+                    Şifre değiştir
                 </h3>
             </div>
             
@@ -37,7 +37,7 @@ import { PasswordRequirementsComponent } from '../../../../shared/components/pas
 
             <form [formGroup]="form" class="space-y-4">
               <div class="relative">
-                <label class="block text-sm font-medium text-(--ui-text)">Yeni Şifre</label>
+                <label class="block text-sm font-medium text-(--ui-text)">Yeni şifre</label>
                 <app-password-requirements [password]="p?.value" describedById="admin-password-rules" />
                 <div class="mt-1 relative rounded-md shadow-sm">
                     <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" aria-describedby="admin-password-rules" maxlength="128" 

@@ -72,7 +72,7 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
               <div class="form-actions"><button type="button" class="secondary" (click)="showPreview(homeDraft)">Önizle</button><button type="button" class="secondary" (click)="cancelHomeEdit()">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div>
             </form>
           }
-          <div class="data-card overflow-x-auto"><table class="data-table"><thead><tr><th>İçerik</th><th>Yayın</th><th></th></tr></thead><tbody>@for (entry of homeEntries(); track entry.id) {<tr><td><strong>{{ entry.title }}</strong><div class="muted">{{ entry.eyebrow }} · {{ entry.summary }}</div></td><td>{{ entry.isPublished ? 'Yayında' : 'Taslak' }}</td><td class="actions"><button type="button" (click)="startHomeEdit(entry)">Düzenle</button><button type="button" (click)="showPreview(toRequest(entry))">Önizle</button><button type="button" (click)="showRevisions(entry)">Sürümler</button><button type="button" (click)="deleteHomeEntry(entry)">Sil</button></td></tr>} @empty {<tr><td colspan="3" class="empty">Bu bölümde içerik yok.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ homePage().totalCount }}</span><button type="button" (click)="changeHomePage(-1)" [disabled]="homePage().pageNumber <= 1">Önceki</button><button type="button" (click)="changeHomePage(1)" [disabled]="homePage().pageNumber >= homeTotalPages()">Sonraki</button></div></div>
+          <div class="data-card overflow-x-auto"><table class="data-table"><thead><tr><th>İçerik</th><th>Yayın</th><th></th></tr></thead><tbody>@for (entry of homeEntries(); track entry.id) {<tr><td><strong>{{ entry.title }}</strong><div class="muted">{{ entry.eyebrow }}, {{ entry.summary }}</div></td><td>{{ entry.isPublished ? 'Yayında' : 'Taslak' }}</td><td class="actions"><button type="button" (click)="startHomeEdit(entry)">Düzenle</button><button type="button" (click)="showPreview(toRequest(entry))">Önizle</button><button type="button" (click)="showRevisions(entry)">Sürümler</button><button type="button" (click)="deleteHomeEntry(entry)">Sil</button></td></tr>} @empty {<tr><td colspan="3" class="empty">Bu bölümde içerik yok.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ homePage().totalCount }}</span><button type="button" (click)="changeHomePage(-1)" [disabled]="homePage().pageNumber <= 1">Önceki</button><button type="button" (click)="changeHomePage(1)" [disabled]="homePage().pageNumber >= homeTotalPages()">Sonraki</button></div></div>
         </section>
       } @else if (tab() === 'faq' || tab() === 'testimonials') {
         <section class="space-y-4" [attr.aria-labelledby]="tab() === 'faq' ? 'faq-cms-heading' : 'testimonials-cms-heading'">
@@ -139,7 +139,7 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
 
           @if (revisionEntry()) {
             <section class="data-card space-y-3" aria-label="İçerik sürüm geçmişi"><div class="flex items-center justify-between"><h3 class="font-semibold">{{ revisionEntry()?.title }} — sürüm geçmişi</h3><button type="button" class="secondary" (click)="revisionEntry.set(null)">Kapat</button></div>
-              @for (revision of revisions(); track revision.id) { <div class="flex items-center justify-between gap-3 border-t py-2"><span>Sürüm {{ revision.version }} · {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</span><button type="button" class="secondary" (click)="restoreRevision(revision)">Geri yükle</button></div> }
+              @for (revision of revisions(); track revision.id) { <div class="flex items-center justify-between gap-3 border-t py-2"><span>Sürüm {{ revision.version }}, {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</span><button type="button" class="secondary" (click)="restoreRevision(revision)">Geri yükle</button></div> }
               @if (revisions().length === 0) { <p class="muted">Henüz geri yüklenebilir bir sürüm yok.</p> }
             </section>
           }
@@ -159,7 +159,7 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
         <section class="space-y-4" aria-labelledby="media-heading">
           <div><h2 id="media-heading" class="text-lg font-semibold">Koçluk görsel kütüphanesi</h2><p class="muted">Görseller Koçluk servisinin VPS üzerindeki ayrı kalıcı dosya alanında tutulur. PNG, JPEG, WebP ve GIF; en fazla 10 MB.</p></div>
           <form class="form-card" (ngSubmit)="uploadMedia()"><div class="form-grid"><label class="wide">Görsel dosyası<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" (change)="selectMediaFile($event)" required /></label><label class="wide">Alternatif metin<input [(ngModel)]="mediaAltText" name="mediaAltText" maxlength="300" placeholder="Ekran okuyucular için kısa açıklama" /></label></div><div class="form-actions"><button type="submit" class="primary" [disabled]="saving() || !selectedMediaFile">{{ saving() ? 'Yükleniyor…' : 'Görseli yükle' }}</button></div></form>
-          <div class="data-card overflow-x-auto"><table class="data-table"><thead><tr><th>Önizleme</th><th>Dosya</th><th>Adres</th><th>Tarih</th><th></th></tr></thead><tbody>@for (asset of media().items; track asset.id) {<tr><td><img [src]="asset.url" [alt]="asset.altText || asset.fileName" class="h-16 w-24 rounded object-cover" /></td><td><strong>{{ asset.fileName }}</strong><div class="muted">{{ asset.contentType }} · {{ asset.sizeBytes / 1024 | number:'1.0-0' }} KB</div><div class="muted">{{ asset.altText }}</div></td><td class="font-mono"><a [href]="asset.url" target="_blank" rel="noopener noreferrer">{{ asset.url }}</a></td><td>{{ asset.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions"><button type="button" (click)="copyMediaEmbed(asset)">İçeriğe ekleme kodu</button><button type="button" (click)="deleteMedia(asset)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Henüz Koçluk görseli yüklenmedi.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ media().totalCount }}</span><button type="button" (click)="changeMediaPage(-1)" [disabled]="media().pageNumber <= 1">Önceki</button><button type="button" (click)="changeMediaPage(1)" [disabled]="media().pageNumber >= mediaPageCount()">Sonraki</button></div></div>
+          <div class="data-card overflow-x-auto"><table class="data-table"><thead><tr><th>Önizleme</th><th>Dosya</th><th>Adres</th><th>Tarih</th><th></th></tr></thead><tbody>@for (asset of media().items; track asset.id) {<tr><td><img [src]="asset.url" [alt]="asset.altText || asset.fileName" class="h-16 w-24 rounded object-cover" /></td><td><strong>{{ asset.fileName }}</strong><div class="muted">{{ asset.contentType }}, {{ asset.sizeBytes / 1024 | number:'1.0-0' }} KB</div><div class="muted">{{ asset.altText }}</div></td><td class="font-mono"><a [href]="asset.url" target="_blank" rel="noopener noreferrer">{{ asset.url }}</a></td><td>{{ asset.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions"><button type="button" (click)="copyMediaEmbed(asset)">İçeriğe ekleme kodu</button><button type="button" (click)="deleteMedia(asset)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Henüz Koçluk görseli yüklenmedi.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ media().totalCount }}</span><button type="button" (click)="changeMediaPage(-1)" [disabled]="media().pageNumber <= 1">Önceki</button><button type="button" (click)="changeMediaPage(1)" [disabled]="media().pageNumber >= mediaPageCount()">Sonraki</button></div></div>
         </section>
       } @else if (tab() === 'newsletter') {
         <section class="space-y-4" aria-labelledby="newsletter-heading">
@@ -307,7 +307,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsEntries(this.kind(), this.pageNumber(), 25, this.search).subscribe({
       next: page => { this.entries.set(page.items); this.totalCount.set(page.totalCount); this.totalPages.set(Math.max(1, Math.ceil(page.totalCount / page.pageSize))); this.loading.set(false); },
-      error: () => { this.entries.set([]); this.error.set('Koçluk içerikleri yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.entries.set([]); this.error.set('Koçluk içerikleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -317,7 +317,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsEntries('Block', 1, 25, '', group).subscribe({
       next: page => { this.homePage.set(page); this.loading.set(false); },
-      error: () => { this.homePage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk ana sayfa içeriği yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.homePage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk ana sayfa içeriği yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
     this.loadMediaChoices();
   }
@@ -327,7 +327,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsEntries('Block', pageNumber, 25, '', group).subscribe({
       next: page => { this.specialPage.set(page); this.loading.set(false); },
-      error: () => { this.specialPage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk içeriği yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.specialPage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk içeriği yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -346,7 +346,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true);
     this.service.getCmsEntries('Block', pageNumber, 25, '', this.selectedHomeGroup).subscribe({
       next: page => { this.homePage.set(page); this.loading.set(false); },
-      error: () => { this.error.set('Koçluk ana sayfa içeriği yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Koçluk ana sayfa içeriği yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
   changeSpecialPage(delta: number) {
@@ -364,7 +364,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getNavigation(menu, true).subscribe({
       next: items => { this.navigation.set(items); this.loading.set(false); },
-      error: () => { this.navigation.set([]); this.error.set('Koçluk menüleri yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.navigation.set([]); this.error.set('Koçluk menüleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -372,7 +372,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsMediaAssets(this.media().pageNumber, 25).subscribe({
       next: page => { this.media.set(page); this.loading.set(false); },
-      error: () => { this.error.set('Koçluk görsel kütüphanesi yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Koçluk görsel kütüphanesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -425,7 +425,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCoachingNewsletterSubscribers(pageNumber, 25, this.newsletterSearch, this.newsletterStatus).subscribe({
       next: page => { this.newsletterPage.set(page); this.loading.set(false); },
-      error: () => { this.error.set('Koçluk bülten aboneleri yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Koçluk bülten aboneleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -566,14 +566,14 @@ export class CoachingCmsComponent implements OnInit {
 
   showRevisions(entry: CoachingCmsEntry) {
     this.revisionEntry.set(entry); this.revisions.set([]);
-    this.service.getCmsRevisions(entry.id).subscribe({ next: revisions => this.revisions.set(revisions), error: () => this.error.set('İçerik sürümleri yüklenemedi.') });
+    this.service.getCmsRevisions(entry.id).subscribe({ next: revisions => this.revisions.set(revisions), error: () => this.error.set('İçerik sürümleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.') });
   }
 
   async restoreRevision(revision: CoachingCmsRevision) {
     const entry = this.revisionEntry(); if (!entry) return;
     if (!await this.toaster.confirm(`Sürüm ${revision.version} geri yüklensin mi? Mevcut içerik sürüm geçmişinde korunur.`, { title: 'Sürümü geri yükle' })) return;
     try { await firstValueFrom(this.service.restoreCmsRevision(entry.id, revision.id)); this.toaster.success('Önceki sürüm geri yüklendi.'); this.revisionEntry.set(null); this.loadEntries(); }
-    catch (error) { this.error.set(this.apiError(error, 'İçerik sürümü geri yüklenemedi.')); }
+    catch (error) { this.error.set(this.apiError(error, 'İçerik sürümü geri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
   }
 
   startNavigationCreate() { this.navigationEditingId = null; this.navigationDraft = this.emptyNavigationDraft(this.selectedMenuValue); this.navigationEditing.set(true); }

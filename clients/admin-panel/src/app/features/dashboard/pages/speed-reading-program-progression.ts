@@ -43,7 +43,7 @@ export class SpeedReadingProgramProgressionComponent implements OnInit {
     this.loading.set(true); this.error.set(null); this.success.set(null); this.settings.set(null);
     this.service.getProgramProgressionSettings().pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => { this.settings.set(value); this.allowEarlyAdvance = value.allowEarlyAdvance; },
-      error: error => this.error.set(getAdminErrorMessage(error, 'İlerleme ayarı yüklenemedi.'))
+      error: error => this.error.set(getAdminErrorMessage(error, 'İlerleme ayarı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'))
     });
   }
   save(): void {

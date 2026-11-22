@@ -64,20 +64,25 @@
           </div>
         </div>
         <staff-coaching-institution-branches (switched)="switchBranch()" />
-        <staff-coaching-institution-workload />
         @if (isLoadingOverview()) {
           <p class="workspace-state" role="status">Kurum özeti yükleniyor…</p>
         } @else if (overview(); as summary) {
           <div class="metric-grid">
-            <article class="metric-card accent-green"><span>Aktif ödev</span><strong>{{ summary.activeAssignments }}</strong><small>{{ summary.totalAssignments }} toplam ödev</small></article>
-            <article class="metric-card accent-blue"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><small>Gönderim durumu</small></article>
-            <article class="metric-card accent-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>{{ summary.totalExamResults }} sonuç kaydı</small></article>
-            <article class="metric-card accent-orange"><span>Seans</span><strong>{{ summary.upcomingSessions }}</strong><small>{{ summary.totalSessions }} toplam seans · yaklaşan</small></article>
-            <article class="metric-card accent-teal"><span>Hedef</span><strong>{{ summary.completedGoals }} / {{ summary.totalGoals }}</strong><small>Tamamlanan hedef</small></article>
+            <article class="metric-card tone-success"><span>Aktif ödev</span><strong>{{ summary.activeAssignments }}</strong><small>{{ summary.totalAssignments }} toplam ödev</small></article>
+            <article class="metric-card tone-info"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><staff-meter tone="info" [value]="summary.submittedAssignmentStudents" [max]="summary.totalAssignmentStudents" [label]="'Gönderilen ödev: ' + summary.submittedAssignmentStudents + ' / ' + summary.totalAssignmentStudents" /><small>Gönderim durumu</small></article>
+            <article class="metric-card tone-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>{{ summary.totalExamResults }} sonuç kaydı</small></article>
+            <article class="metric-card tone-orange"><span>Yaklaşan seans</span><strong>{{ summary.upcomingSessions }}</strong><small>{{ summary.totalSessions }} toplam seans</small></article>
+            <article class="metric-card tone-accent"><span>Hedef</span><strong>{{ summary.completedGoals }} / {{ summary.totalGoals }}</strong><staff-meter tone="accent" [value]="summary.completedGoals" [max]="summary.totalGoals" [label]="'Tamamlanan hedef: ' + summary.completedGoals + ' / ' + summary.totalGoals" /><small>Tamamlanan hedef</small></article>
           </div>
+          @if (summary.totalAssignments > 0) {
+            <staff-split class="assignment-split" title="Ödevlerin durumu" [parts]="[
+              { label: 'Aktif', value: summary.activeAssignments, tone: 'info' },
+              { label: 'Tamamlandı', value: summary.completedAssignments, tone: 'success' },
+              { label: 'İptal edildi', value: summary.cancelledAssignments, tone: 'danger' }]" />
+          }
 
           <section class="recent-panel" aria-labelledby="recent-assignments-title">
-            <div class="section-heading"><div><h3 id="recent-assignments-title">Son ödevler</h3><p>En son oluşturulan ödevler ve gönderim sayıları.</p></div><button type="button" class="link-button" (click)="selectSection('students')">Öğrenci listesini aç →</button></div>
+            <div class="section-heading"><div><h3 id="recent-assignments-title">Son ödevler</h3><p>En son oluşturulan ödevler ve gönderim sayıları.</p></div><button type="button" class="link-button" (click)="selectSection('students')">Öğrenci listesini aç</button></div>
             @if (!summary.recentAssignments.length) {
               <div class="empty-state"><strong>Henüz ödev verisi yok</strong><span>Kurumunuzda oluşturulan ödevler burada görünecek.</span></div>
             } @else {
@@ -86,7 +91,7 @@
                   <thead><tr><th>Ödev</th><th>Durum</th><th>Son tarih</th><th>Gönderim</th></tr></thead>
                   <tbody>
                     @for (assignment of summary.recentAssignments; track assignment.id) {
-                      <tr><td class="primary-cell">{{ assignment.title }}</td><td><span class="status-chip">{{ assignment.status | coachingLabel }}</span></td><td>{{ assignment.dueDate | date:'d MMM y' }}</td><td>{{ assignment.submittedStudentCount }} / {{ assignment.studentCount }}</td></tr>
+                      <tr><td class="primary-cell">{{ assignment.title }}</td><td><span class="status-chip">{{ assignment.status | coachingLabel }}</span></td><td>{{ assignment.dueDate | date:'d MMM y' }}</td><td><span class="submit-cell">{{ assignment.submittedStudentCount }} / {{ assignment.studentCount }}<staff-meter tone="success" [value]="assignment.submittedStudentCount" [max]="assignment.studentCount" [label]="assignment.submittedStudentCount + ' / ' + assignment.studentCount + ' gönderim'" /></span></td></tr>
                     }
                   </tbody>
                 </table>
@@ -94,11 +99,12 @@
             }
           </section>
         }
+        <staff-coaching-institution-workload />
       </section>
     } @else if (activeSection() === 'students') {
       <section class="roster-section" aria-labelledby="institution-students-title">
         <div class="section-heading">
-          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci · ad, sınıf ve durumla arayıp süzebilirsiniz</p></div>
+          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci; ad, sınıf ve durumla arayıp süzebilirsiniz</p></div>
           <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents() || isMembershipSaving() || !!editingStudentId()">Yenile</button>
         </div>
 
@@ -173,7 +179,7 @@
     } @else if (activeSection() === 'teachers') {
       <section class="roster-section" aria-labelledby="institution-teachers-title">
         <div class="section-heading">
-          <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen · kurumunuza bağlı aktif öğretmenler</p></div>
+          <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen, kurumunuza bağlı aktif öğretmenler</p></div>
           <button type="button" class="outline-button" (click)="loadTeachers()" [disabled]="isLoadingTeachers() || isMembershipSaving()">Yenile</button>
         </div>
         <form class="filter-row invitation-form" (ngSubmit)="sendTeacherInvitation()" aria-label="Koçluk öğretmeni davet et">

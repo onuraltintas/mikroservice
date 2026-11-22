@@ -19,7 +19,7 @@ export interface PieChartDataPoint {
       <canvas
         baseChart
         role="img"
-        [attr.aria-label]="chartLabel"
+        [attr.aria-label]="chartLabel + (valueLabel ? ': ' + valueLabel : '')"
         [data]="pieChartData"
         [options]="pieChartOptions"
         [type]="pieChartType">
@@ -38,6 +38,7 @@ export class PieChartComponent implements AfterViewInit, OnChanges {
   private chartConfig = inject(ChartConfigService);
 
   @Input() data: PieChartDataPoint[] = [];
+  valueLabel = '';
   @Input() showLegend = true;
   @Input() doughnut = false;
   @Input() height = 300;
@@ -95,8 +96,9 @@ export class PieChartComponent implements AfterViewInit, OnChanges {
       datasets: [{
         data: values,
         backgroundColor: this.chartConfig.chartColors,
-        borderColor: '#ffffff',
-        borderWidth: 2
+        borderColor: this.chartConfig.colors.surface,
+        borderWidth: 3,
+        hoverOffset: 6
       }]
     };
 
@@ -114,14 +116,16 @@ export class PieChartComponent implements AfterViewInit, OnChanges {
           display: this.showLegend,
           position: 'right',
           labels: {
-            font: {
-              size: this.legendFontSize
-            }
+            font: { family: this.chartConfig.fontFamily, size: this.legendFontSize },
+            color: this.chartConfig.colors.muted,
+            usePointStyle: true
           }
         }
       }
     });
 
+    const total = values.reduce((sum, v) => sum + v, 0) || 1;
+    this.valueLabel = labels.map((label, i) => `${label} %${Math.round(values[i] / total * 100)}`).join(', ');
     this.chart?.update();
   }
 }

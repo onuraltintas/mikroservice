@@ -15,7 +15,7 @@ type BodyTarget = 'create' | 'edit';
     <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-(--ui-text)">E-posta Şablonları</h1>
+          <h1 class="text-2xl font-bold text-(--ui-text)">E-posta şablonları</h1>
           <p class="text-sm text-(--ui-text-muted)">
             Konu ve içerikleri görsel olarak düzenleyin; HTML kaynağı yalnızca gerektiğinde açılır.
           </p>
@@ -101,13 +101,13 @@ type BodyTarget = 'create' | 'edit';
           <div class="list-heading">
             <div>
               <h2>Kayıtlı şablonlar</h2>
-              <p>{{ templates().length }} şablon · Gönderim kodları korunur</p>
+              <p>{{ templates().length }} şablon kayıtlı. Gönderim kodları korunur.</p>
             </div>
           </div>
           @for (template of templates(); track template.id) {
             <button type="button" class="template-card" [class.selected]="selected()?.id === template.id" (click)="select(template)">
               <div class="font-semibold">{{ template.templateName }}</div>
-              <div class="text-xs text-(--ui-text-muted)">{{ categoryLabel(template.category) }} · {{ template.isActive ? 'Aktif' : 'Pasif' }}</div>
+              <div class="text-xs text-(--ui-text-muted)">{{ categoryLabel(template.category) }}, {{ template.isActive ? 'Aktif' : 'Pasif' }}</div>
               <div class="template-subject">{{ template.subject }}</div>
             </button>
           } @empty {

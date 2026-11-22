@@ -11,11 +11,12 @@ import {
   CoachingInstitutionTeacherAnalytics,
   CoachingInstitutionTeacherOverview
 } from './coaching-institution.service';
+import { StaffBarsComponent, StaffChartPoint, StaffMeterComponent, StaffSplitComponent } from '../../shared/staff-charts';
 
 @Component({
   selector: 'staff-coaching-institution-teacher-report',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, StaffBarsComponent, StaffMeterComponent, StaffSplitComponent],
   templateUrl: './coaching-institution-teacher-report.component.html',
   styleUrl: './coaching-institution-teacher-report.component.scss'
 })
@@ -52,6 +53,10 @@ export class CoachingInstitutionTeacherReportComponent implements OnInit {
       this.analyticsRangeError.set('Başlangıç ve bitiş tarihi seçin; aralık en çok 366 gün olabilir.'); return;
     }
     this.analyticsRange.set({ fromDate: this.analyticsFrom, toDate: this.analyticsTo }); this.loadAnalytics();
+  }
+  /** The previous equal period beside the chosen one; the chosen one is drawn last, in the strong colour. */
+  periodPoints(previous: number, current: number): StaffChartPoint[] {
+    return [{ label: 'Önceki dönem', value: previous }, { label: this.periodLabel(), value: current }];
   }
   clearAnalyticsRange(): void { this.analyticsFrom = ''; this.analyticsTo = ''; this.analyticsRangeError.set(null); this.analyticsRange.set(null); this.loadAnalytics(); }
   readonly students = signal<CoachingInstitutionStudent[]>([]);

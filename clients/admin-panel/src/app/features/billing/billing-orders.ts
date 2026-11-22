@@ -58,7 +58,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
               @for (row of orders(); track row.order.id) {
                 <tr [attr.data-testid]="'order-' + row.order.paymentCode">
                   <td><strong>{{ row.accountName }}</strong><div class="muted">{{ row.accountEmail || '—' }}</div></td>
-                  <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }} · {{ row.order.durationDays }} gün</div></td>
+                  <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }}, {{ row.order.durationDays }} gün</div></td>
                   <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency | currencyName }}
                     @if (row.order.vatAmount) { <div class="muted">Net {{ row.order.amount - row.order.vatAmount | number:'1.2-2' }} + KDV (%{{ row.order.vatRate }}) {{ row.order.vatAmount | number:'1.2-2' }}</div> }
                     @if (row.order.couponCode) { <div class="muted">Kupon {{ row.order.couponCode }}: −{{ row.order.discount | number:'1.2-2' }}</div> }</td>
@@ -136,12 +136,12 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
     .amount { font-weight: 600; }
     .note { max-width: 16rem; white-space: pre-line; }
     .link { color: var(--ui-brand); text-decoration: underline; font-size: .8rem; }
-    .actions .approve { border-color: #15803d; color: #15803d; }
+    .actions .approve { border-color: var(--ds-success); color: var(--ds-success); }
     .review-row td { background: color-mix(in srgb, var(--ui-brand) 6%, transparent); }
     .review { display: grid; gap: .75rem; max-width: 46rem; margin-left: auto; font-size: .875rem; color: var(--ui-text); }
     .review label { display: flex; flex-direction: column; gap: .25rem; }
     .invoice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
-    .badge.warn { border-color: #b45309; color: #b45309; }
+    .badge.warn { background: var(--ds-warning-soft); color: var(--ds-warning); }
     @media (max-width: 640px) { .invoice-grid { grid-template-columns: 1fr; } }
   `]
 })
@@ -166,7 +166,7 @@ export class BillingOrdersComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ products, orders }) => { this.products.set(products); this.orders.set(orders); },
-        error: () => this.error.set('Siparişler yüklenemedi.')
+        error: () => this.error.set('Siparişler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
@@ -176,7 +176,7 @@ export class BillingOrdersComponent implements OnInit {
     this.review.set(null);
     this.billing.getOrders(this.status(), this.product()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: orders => this.orders.set(orders),
-      error: () => this.error.set('Siparişler yüklenemedi.')
+      error: () => this.error.set('Siparişler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

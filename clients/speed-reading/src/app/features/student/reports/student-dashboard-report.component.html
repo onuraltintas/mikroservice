@@ -97,110 +97,100 @@
         </div>
     </div>
 
-    <!-- Exercise Distribution - Full Width -->
-    <div class="rp-card chart-card elevated full-width">
-        <div class="rp-card__header">
-            <div class="chart-header">
-                <div>
-                    <h3 class="rp-card__title">Etkinlik Dağılımı</h3>
-                    <p class="rp-card__sub">Okuma ve egzersiz etkinliklerine göre</p>
-                </div>
+    <!-- Lively charts (21.11.2026): speed line, comprehension columns, activity split and study calendar -->
+    <div class="rp-charts">
+        <section class="rp-card chart-card elevated rp-charts__wide sp-rise" style="--sp-i: 0" aria-labelledby="rp-speed-title">
+            <div class="rp-card__header">
+                <h3 class="rp-card__title" id="rp-speed-title">Okuma hızın</h3>
+                <p class="rp-card__sub">Son {{ speedPoints() }} okumanın kelime/dk değeri</p>
             </div>
-        </div>
-        <div class="rp-card__body">
-            <div class="chart-container large">
-                @if (pieChartData().length > 0) {
-                <app-pie-chart [data]="pieChartData()" [showLegend]="true" [height]="400" [legendFontSize]="16"
-                    [padding]="{ right: 50 }">
-                </app-pie-chart>
-                } @else {
-                <div class="chart-empty">
-                    <span class="material-icons">pie_chart</span>
-                    <p>Henüz dağılım verisi yok</p>
-                </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- Exercise Trend - Full Width -->
-    <div class="rp-card chart-card elevated full-width">
-        <div class="rp-card__header">
-            <div class="chart-header">
-                <div>
-                    <h3 class="rp-card__title">Egzersiz Trendi</h3>
-                    <p class="rp-card__sub">Günlük aktivitelerin</p>
-                </div>
-            </div>
-        </div>
-        <div class="rp-card__body">
-            <div class="chart-container large">
-                @if (activityTrendData().length > 0) {
-                <app-line-chart [data]="activityTrendData()" xAxisLabel="Tarih" yAxisLabel="Aktiviteler"
-                    [showLegend]="true" [height]="400">
-                </app-line-chart>
-                } @else {
-                <div class="chart-empty">
-                    <span class="material-icons">show_chart</span>
-                    <p>Henüz aktivite verisi yok</p>
-                </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- Performance Trend - Full Width -->
-    <div class="rp-card chart-card elevated full-width">
-        <div class="rp-card__header">
-            <div class="chart-header">
-                <div>
-                    <h3 class="rp-card__title">Okuma Hızı Trendi</h3>
-                    <p class="rp-card__sub">Zaman içindeki gelişimini takip et</p>
-                </div>
-            </div>
-        </div>
-        <div class="rp-card__body">
-            <div class="chart-container large">
+            <div class="rp-card__body">
                 @if (wpmProgressData().length > 0) {
-                <app-line-chart [data]="wpmProgressData()" xAxisLabel="Tarih" yAxisLabel="Kelime/dk" [showLegend]="true"
-                    [height]="400">
+                <app-line-chart [data]="wpmProgressData()" yAxisLabel="kelime/dk" chartLabel="Okuma hızı"
+                    [beginAtZero]="false" [showLegend]="false" [height]="280">
                 </app-line-chart>
                 } @else {
                 <div class="chart-empty">
-                    <span class="material-icons">trending_up</span>
-                    <p>Henüz performans verisi yok</p>
-                    <small>Egzersiz tamamladıkça ilerlemeni burada görürsün</small>
+                    <span class="material-icons" aria-hidden="true">trending_up</span>
+                    <p>Henüz hız ölçümü yok</p>
+                    <small>Bir okuma egzersizi bitirince hızın burada çizilir.</small>
                 </div>
                 }
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Comprehension Trend - Full Width -->
-    <div class="rp-card chart-card elevated full-width">
-        <div class="rp-card__header">
-            <div class="chart-header">
-                <div>
-                    <h3 class="rp-card__title">Anlama Oranı Trendi</h3>
-                    <p class="rp-card__sub">Okuduğunu anlama başarının değişimi</p>
-                </div>
+        <section class="rp-card chart-card elevated sp-rise" style="--sp-i: 1" aria-labelledby="rp-comp-title">
+            <div class="rp-card__header">
+                <h3 class="rp-card__title" id="rp-comp-title">Anlama</h3>
+                <p class="rp-card__sub">Son okumalardaki soru başarın (%)</p>
             </div>
-        </div>
-        <div class="rp-card__body">
-            <div class="chart-container large">
-                @if (comprehensionTrendData().length > 0) {
-                <app-line-chart [data]="comprehensionTrendData()" xAxisLabel="Tarih" yAxisLabel="Anlama Oranı (%)"
-                    [showLegend]="true" [height]="400">
-                </app-line-chart>
+            <div class="rp-card__body">
+                @if (comprehensionColumns().length > 0) {
+                <app-bar-chart [data]="comprehensionColumns()" chartLabel="Anlama oranı" unit="%" color="info"
+                    [suggestedMax]="100" [height]="240">
+                </app-bar-chart>
                 } @else {
                 <div class="chart-empty">
-                    <span class="material-icons">psychology</span>
-                    <p>Henüz anlama oranı verisi yok</p>
-                    <small>Okuma egzersizlerini tamamlayarak verilerini oluştur</small>
+                    <span class="material-icons" aria-hidden="true">psychology</span>
+                    <p>Henüz anlama ölçümü yok</p>
+                    <small>Okuma sonrası soruları cevaplayınca burada görünür.</small>
                 </div>
                 }
             </div>
-        </div>
+        </section>
+
+        <section class="rp-card chart-card elevated sp-rise" style="--sp-i: 2" aria-labelledby="rp-split-title">
+            <div class="rp-card__header">
+                <h3 class="rp-card__title" id="rp-split-title">Etkinlik dağılımı</h3>
+                <p class="rp-card__sub">Okuma ve egzersiz sayıların</p>
+            </div>
+            <div class="rp-card__body">
+                @if (activitySplit(); as split) {
+                <div class="rp-split">
+                    <div class="rp-split__bar" role="img"
+                        [attr.aria-label]="'Okuma ' + split.reading + ', egzersiz ' + split.exercise">
+                        <span class="rp-split__part rp-split__part--reading sp-grow-x" [style.flex-grow]="split.reading"></span>
+                        <span class="rp-split__part rp-split__part--exercise sp-grow-x" [style.flex-grow]="split.exercise"></span>
+                    </div>
+                    <dl class="rp-split__legend">
+                        <div><dt><span class="rp-dot rp-dot--reading" aria-hidden="true"></span>Okuma</dt><dd>{{ split.reading }}</dd></div>
+                        <div><dt><span class="rp-dot rp-dot--exercise" aria-hidden="true"></span>Egzersiz</dt><dd>{{ split.exercise }}</dd></div>
+                    </dl>
+                </div>
+                } @else {
+                <div class="chart-empty">
+                    <span class="material-icons" aria-hidden="true">donut_small</span>
+                    <p>Henüz etkinlik yok</p>
+                </div>
+                }
+            </div>
+        </section>
+
+        <section class="rp-card chart-card elevated rp-charts__wide sp-rise" style="--sp-i: 3" aria-labelledby="rp-cal-title">
+            <div class="rp-card__header">
+                <h3 class="rp-card__title" id="rp-cal-title">Çalışma takvimin</h3>
+                <p class="rp-card__sub">Son 12 hafta; renk koyulaştıkça o gün daha çok çalıştın</p>
+            </div>
+            <div class="rp-card__body">
+                <div class="rp-cal" role="img" [attr.aria-label]="calendarLabel()">
+                    @for (week of studyCalendar(); track $index) {
+                    <div class="rp-cal__week">
+                        @for (day of week; track day.date) {
+                        <span class="rp-cal__day" [attr.data-level]="day.level" [class.rp-cal__day--future]="day.future"
+                            [title]="day.title"></span>
+                        }
+                    </div>
+                    }
+                </div>
+                <div class="rp-cal__legend" aria-hidden="true">
+                    <span>Az</span>
+                    @for (level of [0, 1, 2, 3, 4]; track level) {
+                    <span class="rp-cal__day" [attr.data-level]="level"></span>
+                    }
+                    <span>Çok</span>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- Recent Milestones -->

@@ -42,6 +42,17 @@ export interface DailyPlatformMetricRow {
   activities: number;
 }
 
+import { AdminBarsComponent, AdminPart, AdminPoint, AdminRingComponent, AdminTone, AdminTrendComponent } from '../../../shared/components/admin-charts';
+
+const shortDay = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' });
+/** Analytics chart rows → chart points with a short Turkish day label. */
+export function analyticsChartPoints(rows: AdminAnalyticsChartData[] | undefined): AdminPoint[] {
+  return (rows ?? []).map(row => {
+    const date = new Date(row.name);
+    return { label: Number.isNaN(date.getTime()) ? row.name : shortDay.format(date), value: row.series[0]?.value ?? 0 };
+  });
+}
+
 export function combineDailyPlatformMetrics(
   data: Pick<AdminPlatformUsageAnalytics, 'dailyActiveUsers' | 'activityVolume'>
 ): DailyPlatformMetricRow[] {
@@ -80,7 +91,7 @@ export function localIsoDate(date: Date): string {
 
 /** H22: exercise types without measured results show "Ölçülmedi", never 0. */
 export function exerciseScoreLabel(score: number | null | undefined): string {
-  return score === null || score === undefined ? 'Ölçülmedi' : `${score}%`;
+  return score === null || score === undefined ? 'Ölçülmedi' : `%${score}`;
 }
 
 export function measurementStatusLabel(status: string): string {
@@ -90,12 +101,11 @@ export function measurementStatusLabel(status: string): string {
 @Component({
   selector: 'app-speed-reading-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, FormsModule, A11yModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule, AdminBarsComponent, AdminTrendComponent, AdminRingComponent],
   template: `
     <main class="space-y-6" aria-labelledby="speed-reading-analytics-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Hızlı Okuma servisi</p>
-        <h1 id="speed-reading-analytics-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Analitik ve öğrenci ilerlemeleri</h1>
+        <h1 id="speed-reading-analytics-title" class="text-2xl font-bold text-(--ui-text)">Hızlı Okuma analizi ve öğrenci ilerlemeleri</h1>
         <p class="mt-2 max-w-3xl text-sm text-(--ui-text-muted)">
           Platform kullanımını, içerik performansını ve program ilerlemelerini servis tarafından hesaplanan gerçek verilerle izleyin.
           Veri bulunmayan alanlar özellikle “veri yok” olarak gösterilir.
@@ -139,10 +149,14 @@ export function measurementStatusLabel(status: string): string {
               <div class="metric-card"><span>Toplam aktivite</span><strong>{{ data.totalActivities }}</strong></div>
             </div>
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div class="data-card"><h3>Kullanıcı büyümesi</h3><p class="muted">{{ data.newUserDataAvailable ? (data.newUsers + ' yeni kullanıcı') : 'Kayıt tarihi verisi mevcut değil.' }}</p><p class="muted">{{ data.userGrowthRateDataAvailable ? ('Büyüme oranı: ' + data.userGrowthRate + '%') : 'Büyüme oranı hesaplanamadı.' }}</p></div>
-              <div class="data-card"><h3>Etkileşim</h3><p class="muted">Etkileşim oranı: {{ data.engagementRate }}%</p><p class="muted">Elde tutma oranı: {{ data.retentionRate }}%</p><p class="muted">Ortalama oturum: {{ data.averageSessionDuration }} dakika</p></div>
+              <div class="data-card"><h3>Kullanıcı büyümesi</h3><p class="muted">{{ data.newUserDataAvailable ? (data.newUsers + ' yeni kullanıcı') : 'Kayıt tarihi verisi mevcut değil.' }}</p><p class="muted">{{ data.userGrowthRateDataAvailable ? ('Büyüme oranı: %' + data.userGrowthRate) : 'Büyüme oranı hesaplanamadı.' }}</p></div>
+              <div class="data-card"><h3>Etkileşim</h3><p class="muted">Etkileşim oranı: %{{ data.engagementRate }}</p><p class="muted">Elde tutma oranı: %{{ data.retentionRate }}</p><p class="muted">Ortalama oturum: {{ data.averageSessionDuration }} dakika</p></div>
             </div>
-            <div class="data-card"><div class="flex items-center justify-between gap-3"><h3 class="mb-0">Günlük kullanım eğilimi</h3><span class="muted">{{ data.dateFrom }} – {{ data.dateTo }}</span></div><div class="mt-3 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Aktif kullanıcı</th><th>Aktivite</th></tr></thead><tbody>@for (row of dailyPlatformMetrics(data); track row.date) {<tr><td>{{ row.date }}</td><td>{{ row.activeUsers }}</td><td>{{ row.activities }}</td></tr>} @empty {<tr><td colspan="3" class="empty">Günlük kullanım verisi yok.</td></tr>}</tbody></table></div></div>
+            <div class="data-card chart-pair">
+              <admin-trend title="Günlük etkin kullanıcı" [points]="chartPoints(data.dailyActiveUsers)" tone="success" />
+              <admin-bars title="Günlük etkinlik" [points]="chartPoints(data.activityVolume)" tone="info" />
+            </div>
+            <div class="data-card"><div class="flex items-center justify-between gap-3"><h3 class="mb-0">Günlük kullanım tablosu</h3><span class="muted">{{ data.dateFrom }} – {{ data.dateTo }}</span></div><div class="mt-3 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Aktif kullanıcı</th><th>Aktivite</th></tr></thead><tbody>@for (row of dailyPlatformMetrics(data); track row.date) {<tr><td>{{ row.date }}</td><td>{{ row.activeUsers }}</td><td>{{ row.activities }}</td></tr>} @empty {<tr><td colspan="3" class="empty">Günlük kullanım verisi yok.</td></tr>}</tbody></table></div></div>
             <div class="data-card"><h3>En çok kullanılan içerikler</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>İçerik</th><th>Tür</th><th>Kullanım</th></tr></thead><tbody>@for (item of data.popularContent; track item.title + item.type) {<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.usageCount }}</td></tr>} @empty {<tr><td colspan="3" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
           </section>
         }
@@ -154,7 +168,11 @@ export function measurementStatusLabel(status: string): string {
             <h2 id="content-title" class="text-lg font-semibold text-(--ui-text)">İçerik analizi</h2>
             <div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Egzersiz</span><strong>{{ data.totalExercises }}</strong></div><div class="metric-card"><span>Okuma metni</span><strong>{{ data.totalReadingTexts }}</strong></div><div class="metric-card"><span>Program şablonu</span><strong>{{ data.totalProgramTemplates }}</strong></div><div class="metric-card"><span>Atama</span><strong>{{ data.assignmentDataAvailable ? data.totalAssignments : 'Veri yok' }}</strong></div></div>
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div class="data-card"><h3>En çok kullanılan içerikler</h3><ul class="simple-list">@for (item of data.mostUsedContent; track item.contentId) {<li><span>{{ item.title }}</span><strong>{{ item.usageCount }}</strong></li>} @empty {<li class="empty">Veri yok.</li>}</ul></div><div class="data-card"><h3>İçerik boşlukları</h3><ul class="simple-list">@for (item of data.contentGaps; track item) {<li>{{ item }}</li>} @empty {<li class="empty">Tespit edilmiş boşluk yok.</li>}</ul></div></div>
-            <div class="data-card"><h3>Zorluk seviyesine göre okuma performansı</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Okuma</th><th>Ort. WPM</th><th>Ort. anlama</th></tr></thead><tbody>@for (item of data.readingAnalysis; track item.difficultyLevel) {<tr><td>{{ item.difficultyLevel }}</td><td>{{ item.totalReads }}</td><td>{{ item.averageWpm }}</td><td>{{ item.averageComprehension }}%</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
+            <div class="data-card chart-pair">
+              <admin-bars title="Seviyeye göre ortalama hız (kelime/dk)" [points]="levelSpeed(data.readingAnalysis)" tone="success" />
+              <admin-bars title="Egzersiz türüne göre ortalama başarı" [points]="exerciseSuccess(data.exerciseAnalysis)" [percent]="true" tone="honey" />
+            </div>
+            <div class="data-card"><h3>Zorluk seviyesine göre okuma performansı</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Okuma</th><th>Ort. kelime/dk</th><th>Ort. anlama</th></tr></thead><tbody>@for (item of data.readingAnalysis; track item.difficultyLevel) {<tr><td>{{ item.difficultyLevel }}</td><td>{{ item.totalReads }}</td><td>{{ item.averageWpm }}</td><td>%{{ item.averageComprehension }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
             <div class="data-card"><h3>Egzersiz türlerine göre başarı</h3><p class="muted">Ortalama yalnızca ölçümlü tamamlamalardan hesaplanır.</p><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Egzersiz türü</th><th>Tamamlanma</th><th>Aktif öğrenci</th><th>Ort. başarı</th></tr></thead><tbody>@for (item of data.exerciseAnalysis; track item.exerciseTypeName) {<tr><td>{{ reportLabel(item.exerciseTypeName) }}</td><td>{{ item.totalCompletions }}</td><td>{{ item.activeStudents }}</td><td>{{ exerciseScoreLabel(item.averageScore) }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
           </section>
         }
@@ -162,19 +180,19 @@ export function measurementStatusLabel(status: string): string {
 
       @if (selectedTab() === 'health') {
         @if (systemHealth(); as data) {
-          <section class="space-y-4" aria-labelledby="health-title"><h2 id="health-title" class="text-lg font-semibold text-(--ui-text)">Öğrenme performansı ve servis sağlığı</h2><div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Sağlık durumu</span><strong>{{ data.healthStatus }}</strong></div><div class="metric-card"><span>Ort. WPM</span><strong>{{ data.averagePlatformWpm }}</strong></div><div class="metric-card"><span>Ort. anlama</span><strong>{{ data.averagePlatformComprehension }}%</strong></div><div class="metric-card"><span>Başarı oranı</span><strong>{{ data.successRate }}%</strong></div></div><div class="data-card"><h3>Toplam ölçümler</h3><p class="muted">Tamamlanan egzersiz: {{ data.totalExercisesCompleted }} · Yanıtlanan soru: {{ data.totalQuestionsAnswered }}</p><p class="muted">{{ data.errorRateDataAvailable ? ('Hata oranı: ' + data.errorRate + '%') : 'Operasyonel hata telemetrisi bu serviste tutulmuyor.' }}</p></div><div class="data-card"><h3>Uyarılar</h3><ul class="simple-list">@for (alert of data.systemAlerts; track alert.detectedAt + alert.alertType) {<li><span>{{ alert.message }}</span><strong>{{ alert.severity }}</strong></li>} @empty {<li class="empty">{{ data.systemAlertsDataAvailable ? 'Uyarı yok.' : 'Uyarı telemetrisi mevcut değil.' }}</li>}</ul></div></section>
+          <section class="space-y-4" aria-labelledby="health-title"><h2 id="health-title" class="text-lg font-semibold text-(--ui-text)">Öğrenme performansı ve servis sağlığı</h2><div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Sağlık durumu</span><strong>{{ data.healthStatus }}</strong></div><div class="metric-card"><span>Ort. kelime/dk</span><strong>{{ data.averagePlatformWpm }}</strong></div><div class="metric-card"><span>Ort. anlama</span><strong>%{{ data.averagePlatformComprehension }}</strong></div><div class="metric-card"><span>Başarı oranı</span><strong>%{{ data.successRate }}</strong></div></div><div class="data-card"><h3>Toplam ölçümler</h3><p class="muted">Tamamlanan egzersiz: {{ data.totalExercisesCompleted }} · Yanıtlanan soru: {{ data.totalQuestionsAnswered }}</p><p class="muted">{{ data.errorRateDataAvailable ? ('Hata oranı: ' + data.errorRate + '%') : 'Operasyonel hata telemetrisi bu serviste tutulmuyor.' }}</p></div><div class="data-card"><h3>Uyarılar</h3><ul class="simple-list">@for (alert of data.systemAlerts; track alert.detectedAt + alert.alertType) {<li><span>{{ alert.message }}</span><strong>{{ alert.severity }}</strong></li>} @empty {<li class="empty">{{ data.systemAlertsDataAvailable ? 'Uyarı yok.' : 'Uyarı telemetrisi mevcut değil.' }}</li>}</ul></div></section>
         }
       }
 
       @if (selectedTab() === 'institutions') {
         @if (institutionAnalytics(); as data) {
-          <section class="space-y-4" aria-labelledby="institutions-title"><h2 id="institutions-title" class="text-lg font-semibold text-(--ui-text)">Kurum karşılaştırması</h2><div class="grid grid-cols-2 gap-3 lg:grid-cols-5"><div class="metric-card"><span>Kurum</span><strong>{{ data.totalInstitutions }}</strong></div><div class="metric-card"><span>Aktif kurum</span><strong>{{ data.activeInstitutions }}</strong></div><div class="metric-card"><span>Kullanıcı</span><strong>{{ data.totalUsers }}</strong></div><div class="metric-card"><span>Öğrenci</span><strong>{{ data.totalStudents }}</strong></div><div class="metric-card"><span>Öğretmen</span><strong>{{ data.totalTeachers }}</strong></div></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Kurum</th><th>Kullanıcı</th><th>Aktivite</th><th>Ort. anlama</th><th>Ort. WPM</th><th>Etkileşim</th></tr></thead><tbody>@for (item of data.institutionComparison; track item.institutionId) {<tr><td>{{ item.institutionName }}</td><td>{{ item.activeUsers }} / {{ item.totalUsers }}</td><td>{{ item.totalActivities }}</td><td>{{ item.averageComprehensionDataAvailable ? (item.averageComprehension + '%') : '—' }}</td><td>{{ item.averageWpmDataAvailable ? item.averageWpm : '—' }}</td><td>{{ item.engagementRate }}%</td></tr>} @empty {<tr><td colspan="6" class="empty">Veri yok.</td></tr>}</tbody></table></div></div></section>
+          <section class="space-y-4" aria-labelledby="institutions-title"><h2 id="institutions-title" class="text-lg font-semibold text-(--ui-text)">Kurum karşılaştırması</h2><div class="grid grid-cols-2 gap-3 lg:grid-cols-5"><div class="metric-card"><span>Kurum</span><strong>{{ data.totalInstitutions }}</strong></div><div class="metric-card"><span>Aktif kurum</span><strong>{{ data.activeInstitutions }}</strong></div><div class="metric-card"><span>Kullanıcı</span><strong>{{ data.totalUsers }}</strong></div><div class="metric-card"><span>Öğrenci</span><strong>{{ data.totalStudents }}</strong></div><div class="metric-card"><span>Öğretmen</span><strong>{{ data.totalTeachers }}</strong></div></div><div class="data-card"><admin-bars title="Kurumlara göre etkinlik" [points]="institutionActivity(data.institutionComparison)" tone="violet" /></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Kurum</th><th>Kullanıcı</th><th>Aktivite</th><th>Ort. anlama</th><th>Ort. kelime/dk</th><th>Etkileşim</th></tr></thead><tbody>@for (item of data.institutionComparison; track item.institutionId) {<tr><td>{{ item.institutionName }}</td><td>{{ item.activeUsers }} / {{ item.totalUsers }}</td><td>{{ item.totalActivities }}</td><td>{{ item.averageComprehensionDataAvailable ? ('%' + item.averageComprehension) : '—' }}</td><td>{{ item.averageWpmDataAvailable ? item.averageWpm : '—' }}</td><td>%{{ item.engagementRate }}</td></tr>} @empty {<tr><td colspan="6" class="empty">Veri yok.</td></tr>}</tbody></table></div></div></section>
         }
       }
 
       @if (selectedTab() === 'programs') {
         @if (programAnalytics(); as data) {
-          <section class="space-y-4" aria-labelledby="programs-title"><h2 id="programs-title" class="text-lg font-semibold text-(--ui-text)">Program analitiği</h2><div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Aktif öğrenci</span><strong>{{ data.platformStats.totalActiveStudents }}</strong></div><div class="metric-card"><span>Ort. başarı</span><strong>{{ data.platformStats.averageSuccessRate }}%</strong></div><div class="metric-card"><span>Ort. seri</span><strong>{{ data.platformStats.averageCurrentStreak }}</strong></div><div class="metric-card"><span>Tamamlanan egzersiz</span><strong>{{ data.platformStats.totalCompletedExercises }}</strong></div></div><div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div class="data-card"><h3>Program dağılımı</h3><ul class="simple-list">@for (item of data.programDistribution; track item.programName) {<li><span>{{ item.programName }}</span><strong>{{ item.studentCount }} ({{ item.percentage }}%)</strong></li>} @empty {<li class="empty">Veri yok.</li>}</ul></div><div class="data-card"><h3>Haftalık ilerleme</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Hafta</th><th>Ort. başarı</th><th>Haftanın tamamlanan günleri</th></tr></thead><tbody>@for (item of data.weeklyProgress; track item.weekNumber) {<tr><td>{{ item.weekNumber }}</td><td>{{ item.averageProgress }}%</td><td>{{ item.completionRate }}%</td></tr>} @empty {<tr><td colspan="3" class="empty">Veri yok.</td></tr>}</tbody></table></div></div></div><div class="data-card"><h3>Son öğrenci aktiviteleri</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Program</th><th>Program günü</th><th>Seri</th><th>Son aktivite</th></tr></thead><tbody>@for (item of data.recentStudentProgress; track item.studentEmail + item.lastActivityDate) {<tr><td>{{ item.studentName }}<div class="muted">{{ item.studentEmail }}</div></td><td>{{ item.programName }}</td><td>{{ programDayLabel(item) }}</td><td>{{ item.currentStreak }} (en uzun {{ item.longestStreak }})</td><td>{{ item.lastActivityDate | date:'dd.MM.yyyy HH:mm' }}</td></tr>} @empty {<tr><td colspan="5" class="empty">Veri yok.</td></tr>}</tbody></table></div></div></section>
+          <section class="space-y-4" aria-labelledby="programs-title"><h2 id="programs-title" class="text-lg font-semibold text-(--ui-text)">Program analitiği</h2><div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Aktif öğrenci</span><strong>{{ data.platformStats.totalActiveStudents }}</strong></div><div class="metric-card"><span>Ort. başarı</span><strong>%{{ data.platformStats.averageSuccessRate }}</strong></div><div class="metric-card"><span>Ort. seri</span><strong>{{ data.platformStats.averageCurrentStreak }}</strong></div><div class="metric-card"><span>Tamamlanan egzersiz</span><strong>{{ data.platformStats.totalCompletedExercises }}</strong></div></div><div class="data-card chart-pair"><admin-ring title="Programlara göre öğrenci" unit="öğrenci" [parts]="programParts(data.programDistribution)" /><admin-trend title="Haftalık ortalama başarı" [points]="weeklyPoints(data.weeklyProgress)" [percent]="true" tone="info" /></div><div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div class="data-card"><h3>Program dağılımı</h3><ul class="simple-list">@for (item of data.programDistribution; track item.programName) {<li><span>{{ item.programName }}</span><strong>{{ item.studentCount }} (%{{ item.percentage }})</strong></li>} @empty {<li class="empty">Veri yok.</li>}</ul></div><div class="data-card"><h3>Haftalık ilerleme</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Hafta</th><th>Ort. başarı</th><th>Haftanın tamamlanan günleri</th></tr></thead><tbody>@for (item of data.weeklyProgress; track item.weekNumber) {<tr><td>{{ item.weekNumber }}</td><td>%{{ item.averageProgress }}</td><td>%{{ item.completionRate }}</td></tr>} @empty {<tr><td colspan="3" class="empty">Veri yok.</td></tr>}</tbody></table></div></div></div><div class="data-card"><h3>Son öğrenci aktiviteleri</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Program</th><th>Program günü</th><th>Seri</th><th>Son aktivite</th></tr></thead><tbody>@for (item of data.recentStudentProgress; track item.studentEmail + item.lastActivityDate) {<tr><td>{{ item.studentName }}<div class="muted">{{ item.studentEmail }}</div></td><td>{{ item.programName }}</td><td>{{ programDayLabel(item) }}</td><td>{{ item.currentStreak }} (en uzun {{ item.longestStreak }})</td><td>{{ item.lastActivityDate | date:'dd.MM.yyyy HH:mm' }}</td></tr>} @empty {<tr><td colspan="5" class="empty">Veri yok.</td></tr>}</tbody></table></div></div></section>
         }
       }
 
@@ -191,18 +209,18 @@ export function measurementStatusLabel(status: string): string {
               <div class="metric-card"><span>Program günü</span><strong>{{ programDayLabel({ programDay: (details.progress.currentWeek - 1) * 7 + details.progress.currentDay, totalDays: details.progress.totalDays }) }}</strong></div>
               <div class="metric-card"><span>Güncel hafta</span><strong>{{ details.progress.currentWeek }}</strong></div>
               <div class="metric-card"><span>Zorluk</span><strong>{{ details.progress.currentDifficultyLevel }}</strong></div>
-              <div class="metric-card"><span>Başarı</span><strong>{{ details.progress.averageSuccessRate }}%</strong></div>
+              <div class="metric-card"><span>Başarı</span><strong>%{{ details.progress.averageSuccessRate }}</strong></div>
             </div>
             <p class="muted mt-4">Tamamlanan gün: {{ details.progress.daysCompleted }} · Tamamlanan egzersiz: {{ details.progress.exercisesCompleted }} · Güncel seri: {{ details.progress.currentStreak }}</p>
-            <p class="muted mt-4">WPM ve anlama yalnızca bu değerleri üreten ölçümlü egzersizlerde görünür. “Veri yok”, bu etkinlik kaydı için değer oluşmadığını gösterir.</p>
+            <p class="muted mt-4">kelime/dk ve anlama yalnızca bu değerleri üreten ölçümlü egzersizlerde görünür. “Veri yok”, bu etkinlik kaydı için değer oluşmadığını gösterir.</p>
             <section class="data-card mt-4" aria-labelledby="reading-question-analytics-title">
               <div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-center"><div><h4 id="reading-question-analytics-title">Okuma sorusu analizi</h4><p class="muted">Öğrencinin kayıtlı okuma sorusu yanıtları, soru türü ve Bloom düzeyine göre gruplanır.</p></div>@if (details.readingQuestionAnalytics.dataAvailable) {<span class="status-chip">{{ details.readingQuestionAnalytics.totalQuestionsAttempted }} yanıt</span>}</div>
               @if (details.readingQuestionAnalytics.dataAvailable) {
-                <div class="mt-3 grid grid-cols-3 gap-3"><div class="metric-card"><span>Toplam cevap</span><strong>{{ details.readingQuestionAnalytics.totalQuestionsAttempted }}</strong></div><div class="metric-card"><span>Doğru cevap</span><strong>{{ details.readingQuestionAnalytics.correctAnswers }}</strong></div><div class="metric-card"><span>Başarı</span><strong>{{ details.readingQuestionAnalytics.successRate }}%</strong></div></div>
-                <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2"><div><h5>Soru türü</h5><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Tür</th><th>Cevap</th><th>Doğru</th><th>Başarı</th></tr></thead><tbody>@for (item of details.readingQuestionAnalytics.questionTypes; track item.type) {<tr><td>{{ item.type }}</td><td>{{ item.questionsAttempted }}</td><td>{{ item.correctAnswers }}</td><td>{{ item.successRate }}%</td></tr>} @empty {<tr><td colspan="4" class="empty">Soru türü kırılımı yok.</td></tr>}</tbody></table></div></div><div><h5>Bloom düzeyi</h5><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Düzey</th><th>Cevap</th><th>Doğru</th><th>Başarı</th></tr></thead><tbody>@for (item of details.readingQuestionAnalytics.bloomLevels; track item.level) {<tr><td>{{ item.level }} · {{ item.label }}</td><td>{{ item.questionsAttempted }}</td><td>{{ item.correctAnswers }}</td><td>{{ item.successRate }}%</td></tr>} @empty {<tr><td colspan="4" class="empty">Bloom kırılımı yok.</td></tr>}</tbody></table></div></div></div>
+                <div class="mt-3 grid grid-cols-3 gap-3"><div class="metric-card"><span>Toplam cevap</span><strong>{{ details.readingQuestionAnalytics.totalQuestionsAttempted }}</strong></div><div class="metric-card"><span>Doğru cevap</span><strong>{{ details.readingQuestionAnalytics.correctAnswers }}</strong></div><div class="metric-card"><span>Başarı</span><strong>%{{ details.readingQuestionAnalytics.successRate }}</strong></div></div>
+                <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2"><div><h5>Soru türü</h5><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Tür</th><th>Cevap</th><th>Doğru</th><th>Başarı</th></tr></thead><tbody>@for (item of details.readingQuestionAnalytics.questionTypes; track item.type) {<tr><td>{{ item.type }}</td><td>{{ item.questionsAttempted }}</td><td>{{ item.correctAnswers }}</td><td>%{{ item.successRate }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Soru türü kırılımı yok.</td></tr>}</tbody></table></div></div><div><h5>Bloom düzeyi</h5><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Düzey</th><th>Cevap</th><th>Doğru</th><th>Başarı</th></tr></thead><tbody>@for (item of details.readingQuestionAnalytics.bloomLevels; track item.level) {<tr><td>{{ item.level }}, {{ item.label }}</td><td>{{ item.questionsAttempted }}</td><td>{{ item.correctAnswers }}</td><td>%{{ item.successRate }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Bloom kırılımı yok.</td></tr>}</tbody></table></div></div></div>
               } @else { <p class="empty mt-3">{{ details.readingQuestionAnalytics.unavailableReason || 'Okuma sorusu yanıtı bulunmuyor.' }}</p> }
             </section>
-            <div class="mt-2 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Egzersiz</th><th>Tür</th><th>Program günü</th><th>Sonuç</th><th>Süre</th><th>Doğru</th><th>Başarı</th><th>WPM</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.exerciseTitle || 'Egzersiz bilgisi yok' }}</td><td>{{ log.exerciseTypeDisplayName || 'Tür bilgisi yok' }}</td><td>{{ log.programDay || ((log.weekNumber - 1) * 7 + log.dayNumber) }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.timeSpentSeconds }} sn</td><td>{{ log.correctCount }} / {{ log.totalAttempts }}</td><td>{{ log.successRate === null ? 'Veri yok' : (log.successRate + '%') }}</td><td>{{ log.averageWpm === null ? 'Veri yok' : (log.averageWpm + ' WPM') }}</td><td>{{ log.averageComprehension === null ? 'Veri yok' : (log.averageComprehension + '%') }}</td><td>{{ measurementStatusLabel(log.measurementStatus) }}</td></tr>} @empty {<tr><td colspan="11" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div>
+            <div class="mt-2 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Egzersiz</th><th>Tür</th><th>Program günü</th><th>Sonuç</th><th>Süre</th><th>Doğru</th><th>Başarı</th><th>Kelime/dk</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.exerciseTitle || 'Egzersiz bilgisi yok' }}</td><td>{{ log.exerciseTypeDisplayName || 'Tür bilgisi yok' }}</td><td>{{ log.programDay || ((log.weekNumber - 1) * 7 + log.dayNumber) }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.timeSpentSeconds }} sn</td><td>{{ log.correctCount }} / {{ log.totalAttempts }}</td><td>{{ log.successRate === null ? 'Veri yok' : ('%' + log.successRate) }}</td><td>{{ log.averageWpm === null ? 'Veri yok' : (log.averageWpm + ' kelime/dk') }}</td><td>{{ log.averageComprehension === null ? 'Veri yok' : ('%' + log.averageComprehension) }}</td><td>{{ measurementStatusLabel(log.measurementStatus) }}</td></tr>} @empty {<tr><td colspan="11" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div>
           </section>
         }
         </section>
@@ -237,10 +255,10 @@ export function measurementStatusLabel(status: string): string {
             @if (!teachersLoading() && teacherGroups().length === 0) { <p class="muted mt-2">Aramanızla eşleşen aktif öğretmen bulunamadı.</p> }
           </div>
           @if (teacherClassOverview(); as overview) {
-            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Öğrenci</span><strong>{{ overview.totalStudents }}</strong></div><div class="metric-card"><span>Aktif öğrenci</span><strong>{{ overview.activeStudentsDataAvailable ? overview.activeStudents : 'Veri yok' }}</strong></div><div class="metric-card"><span>Ort. WPM</span><strong>{{ overview.classAverageWpmDataAvailable ? overview.classAverageWpm : 'Veri yok' }}</strong></div><div class="metric-card"><span>Ort. anlama</span><strong>{{ overview.classAverageComprehensionDataAvailable ? (overview.classAverageComprehension + '%') : 'Veri yok' }}</strong></div></div>
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div class="data-card"><h3>En iyi performans</h3><table class="data-table"><thead><tr><th>Öğrenci</th><th>WPM</th><th>Anlama</th><th>Aktivite</th></tr></thead><tbody>@for (student of overview.topPerformers; track student.studentIdentifier) {<tr><td>{{ student.studentIdentifier }}</td><td>{{ student.averageWpm }}</td><td>{{ student.averageComprehension }}%</td><td>{{ student.activitiesCompleted }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div><div class="data-card"><h3>Destek gerekenler</h3><table class="data-table"><thead><tr><th>Öğrenci</th><th>WPM</th><th>Anlama</th><th>Düzey</th></tr></thead><tbody>@for (student of overview.studentsNeedingSupport; track student.studentIdentifier) {<tr><td>{{ student.studentIdentifier }}</td><td>{{ student.averageWpm }}</td><td>{{ student.averageComprehension }}%</td><td>{{ student.performanceLevel }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
+            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Öğrenci</span><strong>{{ overview.totalStudents }}</strong></div><div class="metric-card"><span>Aktif öğrenci</span><strong>{{ overview.activeStudentsDataAvailable ? overview.activeStudents : 'Veri yok' }}</strong></div><div class="metric-card"><span>Ort. kelime/dk</span><strong>{{ overview.classAverageWpmDataAvailable ? overview.classAverageWpm : 'Veri yok' }}</strong></div><div class="metric-card"><span>Ort. anlama</span><strong>{{ overview.classAverageComprehensionDataAvailable ? (overview.classAverageComprehension + '%') : 'Veri yok' }}</strong></div></div>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div class="data-card"><h3>En iyi performans</h3><table class="data-table"><thead><tr><th>Öğrenci</th><th>Kelime/dk</th><th>Anlama</th><th>Aktivite</th></tr></thead><tbody>@for (student of overview.topPerformers; track student.studentIdentifier) {<tr><td>{{ student.studentIdentifier }}</td><td>{{ student.averageWpm }}</td><td>%{{ student.averageComprehension }}</td><td>{{ student.activitiesCompleted }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div><div class="data-card"><h3>Destek gerekenler</h3><table class="data-table"><thead><tr><th>Öğrenci</th><th>Kelime/dk</th><th>Anlama</th><th>Düzey</th></tr></thead><tbody>@for (student of overview.studentsNeedingSupport; track student.studentIdentifier) {<tr><td>{{ student.studentIdentifier }}</td><td>{{ student.averageWpm }}</td><td>%{{ student.averageComprehension }}</td><td>{{ student.performanceLevel }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
           }
-          @if (teacherAssignmentAnalytics(); as assignments) {<div class="data-card"><h3>Atama analitiği</h3>@if (assignments.completionStats; as completion) {<p class="muted">Tamamlanan: {{ completion.completed }} · Devam eden: {{ completion.inProgress }} · Başlamayan: {{ completion.notStarted }} · Tamamlanma: {{ completion.completionRate }}%</p>} @if (!assignments.dataAvailable) {<p class="empty">{{ assignments.unavailableReason || 'Atama verisi yok.' }}</p>} @else {<div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Durum</th><th>Puan</th><th>Teslim</th></tr></thead><tbody>@for (student of assignments.studentBreakdown; track student.studentId) {<tr><td>{{ student.studentName }}</td><td>{{ student.status }}</td><td>{{ student.score ?? '-' }}</td><td>{{ student.submittedAt ? (student.submittedAt | date:'dd.MM.yyyy HH:mm') : '-' }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div>}</div>}
+          @if (teacherAssignmentAnalytics(); as assignments) {<div class="data-card"><h3>Atama analitiği</h3>@if (assignments.completionStats; as completion) {<p class="muted">Tamamlanan: {{ completion.completed }} · Devam eden: {{ completion.inProgress }} · Başlamayan: {{ completion.notStarted }} · Tamamlanma: %{{ completion.completionRate }}</p>} @if (!assignments.dataAvailable) {<p class="empty">{{ assignments.unavailableReason || 'Atama verisi yok.' }}</p>} @else {<div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Durum</th><th>Puan</th><th>Teslim</th></tr></thead><tbody>@for (student of assignments.studentBreakdown; track student.studentId) {<tr><td>{{ student.studentName }}</td><td>{{ student.status }}</td><td>{{ student.score ?? '-' }}</td><td>{{ student.submittedAt ? (student.submittedAt | date:'dd.MM.yyyy HH:mm') : '-' }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div>}</div>}
           @if (teacherContentAnalysis(); as content) {<div class="data-card"><h3>Öğretmen içerik analizi</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Egzersiz türü</th><th>Tamamlanma</th><th>Aktif öğrenci</th><th>Ort. puan</th></tr></thead><tbody>@for (item of content.exerciseAnalysis; track item.exerciseTypeName) {<tr><td>{{ item.exerciseTypeName }}</td><td>{{ item.totalCompletions }}</td><td>{{ item.activeStudents }}</td><td>{{ exerciseScoreLabel(item.averageScore) }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>}
           @if (teacherTimeProgress(); as progress) {<div class="data-card"><h3>İlerleme eğilimleri</h3><div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div><h4>İyileşen öğrenciler</h4><ul class="simple-list">@for (student of progress.improvingStudents; track student.studentId) {<li><span>{{ student.studentName }}</span><strong>+{{ student.improvement }}</strong></li>} @empty {<li class="empty">Veri yok.</li>}</ul></div><div><h4>Gerileyen öğrenciler</h4><ul class="simple-list">@for (student of progress.decliningStudents; track student.studentId) {<li><span>{{ student.studentName }}</span><strong>{{ student.improvement }}</strong></li>} @empty {<li class="empty">Veri yok.</li>}</ul></div></div></div>}
         </section>
@@ -251,8 +269,17 @@ export function measurementStatusLabel(status: string): string {
   `,
   styles: [`
     .metric-card, .data-card { border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface); padding: 1rem; }
-    .metric-card span { display: block; font-size: .75rem; font-weight: 500; color: var(--ui-text-muted); }
-    .metric-card strong { display: block; margin-top: .5rem; font-size: 1.25rem; font-weight: 700; color: var(--ui-text); }
+    /* Lively design (21.11.2026): counts in soft tones that cycle, numbers in the tone's strong colour, rising once in order. */
+    .metric-card { --tone: var(--ds-success); --tone-soft: var(--ds-success-soft); border: 0; border-radius: 16px; background: var(--tone-soft); animation: metric-rise .5s cubic-bezier(.2,.8,.2,1) both; }
+    .metric-card:nth-child(4n + 2) { --tone: var(--ds-info); --tone-soft: var(--ds-info-soft); animation-delay: 50ms; }
+    .metric-card:nth-child(4n + 3) { --tone: var(--ds-violet); --tone-soft: var(--ds-violet-soft); animation-delay: 100ms; }
+    .metric-card:nth-child(4n + 4) { --tone: var(--ds-warning); --tone-soft: var(--ds-warning-soft); animation-delay: 150ms; }
+    .metric-card span { display: block; font-size: .8125rem; font-weight: 600; color: var(--ui-text); }
+    .metric-card strong { display: block; margin-top: .4rem; font-size: 1.6rem; font-weight: 700; color: var(--tone); font-variant-numeric: tabular-nums; }
+    .chart-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+    @media (max-width: 900px) { .chart-pair { grid-template-columns: minmax(0, 1fr); } }
+    @keyframes metric-rise { from { opacity: 0; transform: translateY(10px); } }
+    @media (prefers-reduced-motion: reduce) { .metric-card { animation: none; } }
     .data-card h3 { margin-bottom: .75rem; font-size: .875rem; font-weight: 600; color: var(--ui-text); }
     .data-card h4, .data-card h5 { margin-bottom: .5rem; font-size: .875rem; font-weight: 600; color: var(--ui-text); }
     .muted { font-size: .875rem; color: var(--ui-text-muted); }
@@ -275,6 +302,25 @@ export function measurementStatusLabel(status: string): string {
   `]
 })
 export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
+  // Lively design (21.11.2026): chart inputs for the tables below them (the tables stay as the accessible detail).
+  readonly chartPoints = analyticsChartPoints;
+  levelSpeed(rows: { difficultyLevel: number; averageWpm: number }[]): AdminPoint[] {
+    return rows.map(row => ({ label: `Seviye ${row.difficultyLevel}`, value: row.averageWpm }));
+  }
+  exerciseSuccess(rows: { exerciseTypeName: string; averageScore: number | null }[]): AdminPoint[] {
+    return rows.filter(row => row.averageScore !== null).map(row => ({ label: this.reportLabel(row.exerciseTypeName), value: row.averageScore ?? 0 }));
+  }
+  programParts(rows: { programName: string; studentCount: number }[]): AdminPart[] {
+    const tones: AdminTone[] = ['success', 'info', 'violet', 'honey', 'orange'];
+    return rows.slice(0, 5).map((row, i) => ({ label: row.programName, value: row.studentCount, tone: tones[i] }));
+  }
+  weeklyPoints(rows: { weekNumber: number; averageProgress: number }[]): AdminPoint[] {
+    return rows.map(row => ({ label: `${row.weekNumber}. hafta`, value: row.averageProgress }));
+  }
+  institutionActivity(rows: { institutionName: string; totalActivities: number }[]): AdminPoint[] {
+    return rows.slice(0, 12).map(row => ({ label: row.institutionName, value: row.totalActivities }));
+  }
+
   private readonly service = inject(SpeedReadingAdminService);
   private readonly authService = inject(AuthService);
   private readonly toaster = inject(ToasterService);
@@ -451,7 +497,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
       next: details => {
         if (requestId === this.progressDetailsRequestId) this.progressDetails.set(details);
       },
-      error: () => this.error.set('Öğrenci ilerleme ayrıntısı yüklenemedi.')
+      error: () => this.error.set('Öğrenci ilerleme ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -617,7 +663,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
         next: teachers => this.teachers.set(teachers),
         error: () => {
           this.teachers.set([]);
-          this.error.set('Öğretmen listesi yüklenemedi.');
+          this.error.set('Öğretmen listesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         }
       });
   }
@@ -635,7 +681,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   private loadAnalyticsRequest<T>(request: Observable<T>, apply: (value: T) => void): void {
     this.request = request.pipe(finalize(() => this.loading.set(false))).subscribe({
       next: apply,
-      error: () => this.error.set('Hızlı Okuma analitik verisi yüklenemedi.')
+      error: () => this.error.set('Hızlı Okuma analitik verisi yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -651,7 +697,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     this.request = this.service.getStudentProgress(this.progressPageNumber, this.progressPageSize, this.progressSearch)
       .pipe(finalize(() => this.loading.set(false))).subscribe({
         next: page => this.progressPage.set(page),
-        error: () => this.error.set('Öğrenci ilerlemeleri yüklenemedi.')
+        error: () => this.error.set('Öğrenci ilerlemeleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 

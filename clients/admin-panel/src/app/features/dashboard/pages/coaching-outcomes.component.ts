@@ -30,7 +30,7 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
       </details>
       <button type="button" (click)="load()">Programları yeniden yükle</button>
       <label>Resmî program<select [(ngModel)]="editionId" (ngModelChange)="openEdition()"><option value="">Program seçin</option>
-        @for (e of editions(); track e.id) { <option [value]="e.id">{{ e.code }} · {{ e.academicYearStart }}–{{ e.academicYearEnd }}</option> }</select></label>
+        @for (e of editions(); track e.id) { <option [value]="e.id">{{ e.code }}, {{ e.academicYearStart }}–{{ e.academicYearEnd }}</option> }</select></label>
       @if (catalog(); as c) { <p><a [href]="c.edition.sourceUrl" target="_blank" rel="noopener noreferrer">Resmî program belgesi</a></p>
         <p>Belge SHA256: {{ c.edition.documentSha256 }}</p>
         @for (group of c.officialTopics; track group.id) { <p>{{ group.name }}: {{ group.lessonPeriods }} resmî ders saati · {{ group.outcomeCount }} kazanım</p> }
@@ -40,7 +40,7 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
           @if (outcome.sourceKind === 'ExamSkill') { <p>MEBİ sınav hazırlık becerisi · Resmî kazanım kodu değildir.</p> }
           @else { <p>Kaynak PDF sayfası: {{ outcome.sourcePage }}</p> }
           <h4>Konu eşleştirmelerini incele</h4><label>Eşleştirme inceleme dayanağı<textarea [(ngModel)]="mappingEvidence" maxlength="500"></textarea></label>
-          @for (m of mappings(); track m.topicId) { <article><p>{{ topicName(m.topicId) }} · {{ m.isApproved ? 'Onaylı' : 'İnceleme bekliyor' }}</p><p>{{ m.evidence }}</p>
+          @for (m of mappings(); track m.topicId) { <article><p>{{ topicName(m.topicId) }}, {{ m.isApproved ? 'Onaylı' : 'İnceleme bekliyor' }}</p><p>{{ m.evidence }}</p>
             <button type="button" [disabled]="mappingEvidence.trim().length < 5" (click)="reviewMapping(m.topicId, !m.isApproved)">{{ m.isApproved ? 'Onayı kaldır' : 'Kapsamı onayla' }}</button></article> }
           <h4>Yeni süre sürümü</h4><p>İlk öğrenme için net dakika girin. Değişiklik eski sürümleri ve planları değiştirmez.</p>
           <div class="fields"><label>Öğrenme (dk)<input type="number" min="0" [max]="maxTopicMinutes" [(ngModel)]="learningMinutes"></label>
@@ -49,7 +49,7 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
           <label>Güven düzeyi<select [(ngModel)]="confidence"><option value="Low">Düşük</option><option value="Medium">Orta</option><option value="High">Yüksek</option></select></label>
           <label>Süre inceleme dayanağı<textarea [(ngModel)]="durationEvidence" maxlength="500"></textarea></label>
           <button type="button" [disabled]="durationEvidence.trim().length < 5 || reason.trim().length < 5" (click)="saveEstimate()">İncelenmiş süre sürümü oluştur</button>
-          @for (e of estimates(); track e.id) { <article><strong>Sürüm {{ e.number }} · {{ e.learningMinutes + e.practiceMinutes + e.checkMinutes }} dk · {{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</strong>
+          @for (e of estimates(); track e.id) { <article><strong>Sürüm {{ e.number }}, {{ e.learningMinutes + e.practiceMinutes + e.checkMinutes }} dk · {{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</strong>
             <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ confidenceLabel(e.confidence) }}</p><p>{{ e.evidence }}</p>
             @if (e.method === 'ReviewedStudy' && !e.isPublished) { <button type="button" [disabled]="reason.trim().length < 5" (click)="publish(e.id)">İncelenmiş süreyi yayınla</button> }
           </article> }

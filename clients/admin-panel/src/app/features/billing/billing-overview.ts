@@ -6,12 +6,13 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { BillingAdminService, BillingOverview, BillingProduct } from '../../core/services/billing-admin.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
+import { AdminBarsComponent, AdminPoint } from '../../shared/components/admin-charts';
 
 /** "Abonelik ve Ödeme › Genel bakış": what waits for a decision, what ends soon and what was approved this month. */
 @Component({
   selector: 'app-billing-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AdminBarsComponent],
   template: `
     <main class="space-y-6" aria-labelledby="billing-overview-title">
       <header>
@@ -60,6 +61,10 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
         </div>
 
         <div class="data-card">
+          <admin-bars [title]="'Onaylanan ödemeler (' + currency(data) + ')'" [points]="approvedBars(data)" tone="honey" />
+        </div>
+
+        <div class="data-card">
           <h2 class="mb-3 font-semibold text-(--ui-text)">14 gün içinde biten abonelikler</h2>
           <div class="overflow-x-auto">
             <table class="data-table">
@@ -84,15 +89,29 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   `,
   styles: [BILLING_PAGE_STYLES, `
     .tiles { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
-    .tile { display: grid; gap: .25rem; border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface); padding: 1rem; color: var(--ui-text); }
-    a.tile:hover { border-color: var(--ui-brand); }
-    a.tile:focus-visible { outline: 3px solid var(--ui-brand); outline-offset: 2px; }
-    .tile strong { font-size: 1.5rem; }
-    .tile-label { font-size: .8rem; color: var(--ui-text-muted); }
+    /* Lively design (21.11.2026): each count wears the soft tone of what it means; links lift on hover. */
+    .tile { display: grid; gap: .25rem; border: 0; border-radius: 16px; background: var(--tone-soft, var(--ui-surface)); padding: 1rem 1.1rem; color: var(--ui-text);
+      text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; animation: tile-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+    .tile:nth-child(2) { animation-delay: 60ms; } .tile:nth-child(3) { animation-delay: 120ms; } .tile:nth-child(4) { animation-delay: 180ms; } .tile:nth-child(5) { animation-delay: 240ms; }
+    [data-testid='tile-orders'] { --tone: var(--ds-warning); --tone-soft: var(--ds-warning-soft); }
+    [data-testid='tile-withdrawals'] { --tone: var(--ds-violet); --tone-soft: var(--ds-violet-soft); }
+    [data-testid='tile-transactions'] { --tone: var(--ds-danger); --tone-soft: var(--ds-danger-soft); }
+    [data-testid='tile-subscriptions'] { --tone: var(--ds-success); --tone-soft: var(--ds-success-soft); }
+    [data-testid='tile-approved'] { --tone: var(--ds-info); --tone-soft: var(--ds-info-soft); }
+    a.tile:hover { transform: translateY(-3px); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); }
+    a.tile:focus-visible { outline: 3px solid var(--ds-accent); outline-offset: 2px; }
+    .tile strong { color: var(--tone, var(--ui-text)); font-size: 1.6rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+    .tile-label { font-size: .85rem; font-weight: 600; color: var(--ui-text); }
+    @keyframes tile-rise { from { opacity: 0; transform: translateY(10px); } }
+    @media (prefers-reduced-motion: reduce) { .tile { animation: none; transition: none; } a.tile:hover { transform: none; } }
   `]
 })
 export class BillingOverviewComponent implements OnInit {
   private readonly billing = inject(BillingAdminService);
+
+  approvedBars(data: BillingOverview): AdminPoint[] {
+    return [{ label: 'Geçen ay', value: data.approvedLastMonth }, { label: 'Bu ay', value: data.approvedThisMonth }];
+  }
 
   readonly overview = signal<BillingOverview | null>(null);
   readonly products = signal<BillingProduct[]>([]);
@@ -110,7 +129,7 @@ export class BillingOverviewComponent implements OnInit {
     this.error.set('');
     this.billing.getOverview(this.product()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: overview => this.overview.set(overview),
-      error: () => { this.overview.set(null); this.error.set('Genel bakış yüklenemedi.'); }
+      error: () => { this.overview.set(null); this.error.set('Genel bakış yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 

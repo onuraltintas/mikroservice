@@ -10,12 +10,12 @@
                         d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </div>
-            Dashboard'a Dön
+            Ana sayfaya dön
         </a>
 
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-2xl font-bold text-(--ui-text)">Profil Ayarları</h1>
+            <h1 class="text-2xl font-bold text-(--ui-text)">Profil ayarları</h1>
             <p class="text-(--ui-text-muted) mt-1">Kişisel bilgilerinizi yönetin ve hesap güvenliğinizi
                 sağlayın.</p>
         </div>
@@ -39,7 +39,7 @@
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-bold text-(--ui-text)">Kişisel Bilgiler</h2>
+                    <h2 class="text-lg font-bold text-(--ui-text)">Kişisel bilgiler</h2>
                 </div>
 
                 <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="p-6">
@@ -62,8 +62,7 @@
 
                         <!-- Email (Read Only) -->
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">E-Posta
-                                Adresi</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">E-posta adresi</label>
                             <div class="relative">
                                 <input type="email" formControlName="email"
                                     class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface-muted) text-(--ui-text-muted) cursor-not-allowed shadow-sm sm:text-sm px-4 py-2.5 transition-all duration-200"
@@ -83,8 +82,7 @@
 
                         <!-- Phone Number -->
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Telefon
-                                Numarası</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Telefon numarası</label>
                             <input type="text" formControlName="phoneNumber"
                                 class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm px-4 py-2.5 transition-all duration-200"
                                 placeholder="05xx xxx xxxx">
@@ -104,7 +102,7 @@
                             </svg>
                             Güncelleniyor...
                             } @else {
-                            Değişiklikleri Kaydet
+                            Değişiklikleri kaydet
                             }
                         </button>
                     </div>
@@ -123,23 +121,21 @@
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-bold text-(--ui-text)">Şifre Yönetimi</h2>
+                    <h2 class="text-lg font-bold text-(--ui-text)">Şifre yönetimi</h2>
                 </div>
 
                 <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()" class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Current Password -->
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Mevcut
-                                Şifre</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Mevcut şifre</label>
                             <input type="password" formControlName="currentPassword"
                                 class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm px-4 py-2.5 transition-all duration-200">
                         </div>
 
                         <!-- New Password -->
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Yeni
-                                Şifre</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Yeni şifre</label>
                             <input type="password" formControlName="newPassword" autocomplete="new-password" maxlength="128" aria-describedby="profile-password-rules"
                                 class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm px-4 py-2.5 transition-all duration-200">
                             <app-password-requirements [password]="passwordForm.get('newPassword')?.value" describedById="profile-password-rules" />
@@ -151,8 +147,7 @@
 
                         <!-- Confirm Password -->
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Yeni Şifre
-                                (Tekrar)</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Yeni şifre (tekrar)</label>
                             <input type="password" formControlName="confirmPassword"
                                 class="block w-full rounded-lg border-(--ui-border) bg-(--ui-surface) text-(--ui-text) shadow-sm focus:border-(--ui-brand) focus:ring-(--ui-brand) sm:text-sm px-4 py-2.5 transition-all duration-200">
                             @if (passwordForm.get('confirmPassword')?.touched && passwordForm.hasError('mismatch')) {
@@ -178,7 +173,7 @@
                             </svg>
                             Güncelleniyor...
                             } @else {
-                            Şifreyi Güncelle
+                            Şifreyi güncelle
                             }
                         </button>
                     </div>
@@ -197,7 +192,7 @@
                                 d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm-7 8a7 7 0 0114 0M19 8v4m2-2h-4" />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-bold text-(--ui-text)">İki Adımlı Doğrulama</h2>
+                    <h2 class="text-lg font-bold text-(--ui-text)">İki adımlı doğrulama</h2>
                 </div>
 
                 <div class="p-6 space-y-4">
@@ -263,7 +258,7 @@
                                 d="M12 4v16m8-8H4" />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-bold text-(--ui-text)">Bağlı Hesaplar</h2>
+                    <h2 class="text-lg font-bold text-(--ui-text)">Bağlı hesaplar</h2>
                 </div>
 
                 <div class="p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

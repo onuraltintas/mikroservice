@@ -71,7 +71,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
 
       @if (selectedTab() === 'age-groups') {
         <section class="space-y-4" aria-labelledby="age-groups-title">
-          <div class="flex items-center justify-between gap-3"><div><h2 id="age-groups-title" class="text-lg font-semibold text-(--ui-text)">Yaş grupları</h2><p class="muted">WPM, anlama ve günlük çalışma hedefleri burada tanımlanır.</p></div><button type="button" (click)="startAgeGroupCreate()" class="rounded-lg bg-(--ui-brand) px-3 py-2 text-sm font-medium text-(--ui-brand-contrast)">Yeni yaş grubu</button></div>
+          <div class="flex items-center justify-between gap-3"><div><h2 id="age-groups-title" class="text-lg font-semibold text-(--ui-text)">Yaş grupları</h2><p class="muted">kelime/dk, anlama ve günlük çalışma hedefleri burada tanımlanır.</p></div><button type="button" (click)="startAgeGroupCreate()" class="rounded-lg bg-(--ui-brand) px-3 py-2 text-sm font-medium text-(--ui-brand-contrast)">Yeni yaş grubu</button></div>
 
           @if (ageEditing()) {
             <div class="dialog-backdrop" (click)="cancelAgeGroupEdit()" aria-hidden="true"></div>
@@ -82,9 +82,9 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
                 <label>Görünen ad<input [(ngModel)]="ageDraft.displayName" name="ageDisplayName" required maxlength="150" /></label>
                 <label>Min. yaş<input type="number" [(ngModel)]="ageDraft.minAge" name="ageMin" min="0" max="120" required /></label>
                 <label>Max. yaş<input type="number" [(ngModel)]="ageDraft.maxAge" name="ageMax" min="0" max="120" /></label>
-                <label>Min. WPM<input type="number" [(ngModel)]="ageDraft.minWpm" name="ageMinWpm" min="0" max="5000" required /></label>
-                <label>Önerilen WPM<input type="number" [(ngModel)]="ageDraft.recommendedWpm" name="ageRecommendedWpm" min="0" max="5000" required /></label>
-                <label>Max. WPM<input type="number" [(ngModel)]="ageDraft.maxWpm" name="ageMaxWpm" min="0" max="5000" required /></label>
+                <label>En az kelime/dk<input type="number" [(ngModel)]="ageDraft.minWpm" name="ageMinWpm" min="0" max="5000" required /></label>
+                <label>Önerilen kelime/dk<input type="number" [(ngModel)]="ageDraft.recommendedWpm" name="ageRecommendedWpm" min="0" max="5000" required /></label>
+                <label>En çok kelime/dk<input type="number" [(ngModel)]="ageDraft.maxWpm" name="ageMaxWpm" min="0" max="5000" required /></label>
                 <label>Önerilen anlama (%)<input type="number" [(ngModel)]="ageDraft.recommendedComprehension" name="ageComprehension" min="0" max="100" required /></label>
                 <label>Günlük dakika<input type="number" [(ngModel)]="ageDraft.recommendedDailyMinutes" name="ageMinutes" min="1" max="1440" required /></label>
                 <label>Varsayılan zorluk<input type="number" [(ngModel)]="ageDraft.defaultDifficultyLevel" name="ageDifficulty" min="1" max="5" required /></label>
@@ -96,7 +96,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
             </form>
           }
 
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Yaş grubu</th><th>Yaş</th><th>WPM hedefi</th><th>Anlama</th><th>Günlük süre</th><th>Durum</th><th></th></tr></thead><tbody>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Yaş grubu</th><th>Yaş</th><th>Hedef kelime/dk</th><th>Anlama</th><th>Günlük süre</th><th>Durum</th><th></th></tr></thead><tbody>
             @for (ageGroup of ageGroups(); track ageGroup.id) {
               <tr><td><strong>{{ ageGroup.displayName }}</strong><div class="muted">{{ ageGroup.name }}</div></td><td>{{ ageGroup.minAge }}{{ ageGroup.maxAge === null ? '+' : '–' + ageGroup.maxAge }}</td><td>{{ ageGroup.minWpm }}–{{ ageGroup.maxWpm }} <span class="muted">({{ ageGroup.recommendedWpm }})</span></td><td>%{{ ageGroup.recommendedComprehension }}</td><td>{{ ageGroup.recommendedDailyMinutes }} dk</td><td>{{ ageGroup.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions"><button type="button" (click)="startAgeGroupEdit(ageGroup)">Düzenle</button><button type="button" (click)="deleteAgeGroup(ageGroup)">Sil</button></td></tr>
             } @empty { <tr><td colspan="7" class="empty">Yaş grubu bulunamadı.</td></tr> }
@@ -131,7 +131,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
             <form (ngSubmit)="saveLevelCatalog()" (click)="$event.stopPropagation()" class="dialog-panel dialog-panel-wide" role="dialog" aria-modal="true" aria-labelledby="level-catalog-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
               <header class="dialog-header"><h3 id="level-catalog-dialog-title">{{ levelCatalogEditingId ? 'Seviye kataloğunu düzenle' : 'Yeni seviye kataloğu' }}</h3><button type="button" class="secondary" (click)="cancelLevelCatalogEdit()">Kapat</button></header>
               <div class="dialog-body"><div class="form-grid"><label>Sürüm kodu<input [(ngModel)]="levelCatalogVersion" name="levelCatalogVersion" required maxlength="100" [disabled]="!!levelCatalogEditingId" /></label><label>Katalog adı<input [(ngModel)]="levelCatalogName" name="levelCatalogName" required maxlength="200" /></label></div>
-              <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>Minimum WPM</th><th>Minimum anlama</th><th></th></tr></thead><tbody>
+              <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>En az kelime/dk</th><th>Minimum anlama</th><th></th></tr></thead><tbody>
                 @for (level of levelDraft; track $index; let index = $index) {<tr><td>{{ index + 1 }}</td><td><input [(ngModel)]="level.code" [name]="'levelCode' + index" required maxlength="50" /></td><td><input [(ngModel)]="level.displayName" [name]="'levelName' + index" required maxlength="100" /></td><td><input type="number" [(ngModel)]="level.minimumWpm" [name]="'levelWpm' + index" min="0" max="2000" required /></td><td><input type="number" [(ngModel)]="level.minimumComprehension" [name]="'levelComprehension' + index" min="0" max="100" required /></td><td><button type="button" (click)="removeLevel(index)" [disabled]="levelDraft.length <= 2" class="danger">Sil</button></td></tr>}
               </tbody></table></div>
               </div>
@@ -141,7 +141,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Sürüm</th><th>Ad</th><th>Durum</th><th>Seviye</th><th>Yayın tarihi</th><th></th></tr></thead><tbody>
             @for (catalog of levelCatalogs(); track catalog.version) {<tr><td><strong>{{ catalog.version }}</strong></td><td>{{ catalog.name }}</td><td>{{ levelCatalogStatus(catalog.status) }}</td><td>{{ catalog.definitions.length }}</td><td>{{ catalog.publishedAt ? (catalog.publishedAt | date:'short') : '—' }}</td><td class="actions">@if (catalog.status === 1 && catalog.id) {<button type="button" (click)="startLevelCatalogEdit(catalog)">Düzenle</button><button type="button" (click)="publishLevelCatalog(catalog)">Yayınla</button>}</td></tr>}
           </tbody></table></div></div>
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>Minimum WPM</th><th>Minimum anlama</th></tr></thead><tbody>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>En az kelime/dk</th><th>Minimum anlama</th></tr></thead><tbody>
             @for (level of levels(); track level.level) {
               <tr><td>{{ level.level }}</td><td>{{ level.code }}</td><td>{{ level.displayName }}</td><td>{{ level.minimumWpm }}</td><td>%{{ level.minimumComprehension }}</td></tr>
             } @empty { <tr><td colspan="5" class="empty">Seviye sözlüğü yüklenemedi.</td></tr> }
@@ -154,7 +154,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
           <div class="data-card"><h3 class="mb-1 font-medium text-(--ui-text)">Kalibrasyon ve normlama kanıtı</h3><p class="muted mb-3">Her öğrenci normal programını kullanır. Açık onamla bir çalışmaya eklenen öğrencinin, katılımcılığı aktifken başlattığı seviye tespitleri ayrıca araştırma ölçümü olarak etiketlenir. En az {{ calibration()?.minimumPublishableSampleSize || 30 }} tamamlanmış ölçüm olmadan eşik yayına hazır sayılmaz.</p>
             <div class="scope-filter" aria-label="Ölçüm kapsamı filtresi">@for (scope of measurementScopes; track scope) {<button type="button" (click)="calibrationScope.set(scope)" [attr.aria-pressed]="calibrationScope() === scope" [class.scope-selected]="calibrationScope() === scope">{{ measurementDataScopeLabel(scope) }}</button>}</div>
             @if (calibration()?.dataAvailable === false) {<p class="empty">{{ calibration()?.unavailableReason }}</p>}
-            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Faz</th><th>Katalog</th><th>Yaş grubu</th><th>N</th><th>WPM ort./medyan</th><th>SS</th><th>Anlama ort./medyan</th><th>Kanıt</th></tr></thead><tbody>
+            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Faz</th><th>Katalog</th><th>Yaş grubu</th><th>N</th><th>Kelime/dk ort./medyan</th><th>SS</th><th>Anlama ort./medyan</th><th>Kanıt</th></tr></thead><tbody>
               @for (segment of filteredCalibrationSegments(); track segment.phase + segment.levelCatalogVersion + segment.ageGroup + segment.cohortCode) {<tr><td>{{ assessmentPhaseName(segment.phase) }}</td><td>{{ segment.levelCatalogVersion }}<div class="muted">{{ segment.studyCode ? 'Araştırma katılımı · ' + segment.studyCode : 'Rutin kullanım' }}{{ segment.cohortCode ? ' · ' + segment.cohortCode : '' }}</div></td><td>{{ segment.ageGroup }}</td><td>{{ segment.sampleSize }}</td><td>{{ segment.meanWpm }} / {{ segment.medianWpm }}</td><td>{{ segment.standardDeviationWpm }}</td><td>%{{ segment.meanComprehension }} / %{{ segment.medianComprehension }}</td><td>{{ segment.isPublishable ? 'Yayına hazır örneklem' : 'Pilot kanıtı' }}</td></tr>}
               @empty {<tr><td colspan="8" class="empty">Henüz tamamlanmış, kalibrasyona uygun değerlendirme yok.</td></tr>}
             </tbody></table></div>
@@ -164,7 +164,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
             <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (study of studyDefinitions(); track study.id) {<tr><td><strong>{{ study.studyCode }}</strong><div class="muted">{{ study.name }}</div></td><td>{{ study.protocolVersion }}</td><td>{{ study.cohortCode }}</td><td>{{ study.consentDocumentVersion }}<div class="muted">{{ study.consentDocumentReference }}</div></td><td>{{ study.isActive ? 'Aktif' : 'Emekli' }}</td><td class="actions"><button type="button" (click)="editStudyDefinition(study)">Düzenle</button>@if (study.isActive) {<button type="button" class="danger" (click)="retireStudyDefinition(study)">Emekliye ayır</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Araştırma çalışması tanımlanmadı.</td></tr>}</tbody></table></div>
           </div>
           <div class="data-card space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-medium text-(--ui-text)">Araştırma katılımcılığı</h3><p class="muted">Öğrenci normal programını kullanmaya devam eder. Onamla katılımcı eklendiğinde yalnızca sonraki seviye tespit ölçümleri çalışma kodu, protokol ve kohortla etiketlenir.</p></div><button type="button" (click)="openStudyDialog()" class="primary">Katılımcı ekle</button></div>
-            @if (studyEditing()) {<div class="dialog-backdrop" (click)="closeStudyDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyEnrollment()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-dialog-title">Katılımcı ekle</h3><button type="button" (click)="closeStudyDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><div class="student-picker"><label>Öğrenci ara<input [(ngModel)]="studyStudentSearch" (ngModelChange)="searchStudyStudents($event)" name="studyStudentSearch" required placeholder="Ad, soyad veya e-posta yazın" autocomplete="off" /></label><input type="hidden" [(ngModel)]="studyDraft.studentId" name="studyStudent" required />@if (studyStudentSearch.trim().length > 0 && studyStudentSearch.trim().length < 2) {<p class="muted">En az iki karakter yazın.</p>} @if (studyStudents().length > 0) {<div class="student-results" role="listbox" aria-label="Öğrenci sonuçları">@for (student of studyStudents(); track student.studentId) {<button type="button" role="option" (click)="selectStudyStudent(student)"><strong>{{ student.displayName }}</strong><span>{{ student.email || student.studentId }}</span></button>}</div>}</div><label>Çalışma<select [(ngModel)]="studyDraft.studyDefinitionId" name="studyDefinition" required><option value="">Çalışma seçin</option>@for (study of activeStudyDefinitions(); track study.id) {<option [value]="study.id">{{ study.studyCode }} · {{ study.cohortCode }} · {{ study.protocolVersion }}</option>}</select></label>@if (selectedStudyDefinition(); as study) {<p class="muted wide">Onam: {{ study.consentDocumentVersion }} · {{ study.consentDocumentReference }}</p>}<label>Onam zamanı<input type="datetime-local" [(ngModel)]="studyDraft.consentRecordedAt" name="studyConsent" required /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving() || !studyDraft.studentId || !studyDraft.studyDefinitionId">Kaydet</button></div></form>}
+            @if (studyEditing()) {<div class="dialog-backdrop" (click)="closeStudyDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyEnrollment()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-dialog-title">Katılımcı ekle</h3><button type="button" (click)="closeStudyDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><div class="student-picker"><label>Öğrenci ara<input [(ngModel)]="studyStudentSearch" (ngModelChange)="searchStudyStudents($event)" name="studyStudentSearch" required placeholder="Ad, soyad veya e-posta yazın" autocomplete="off" /></label><input type="hidden" [(ngModel)]="studyDraft.studentId" name="studyStudent" required />@if (studyStudentSearch.trim().length > 0 && studyStudentSearch.trim().length < 2) {<p class="muted">En az iki karakter yazın.</p>} @if (studyStudents().length > 0) {<div class="student-results" role="listbox" aria-label="Öğrenci sonuçları">@for (student of studyStudents(); track student.studentId) {<button type="button" role="option" (click)="selectStudyStudent(student)"><strong>{{ student.displayName }}</strong><span>{{ student.email || student.studentId }}</span></button>}</div>}</div><label>Çalışma<select [(ngModel)]="studyDraft.studyDefinitionId" name="studyDefinition" required><option value="">Çalışma seçin</option>@for (study of activeStudyDefinitions(); track study.id) {<option [value]="study.id">{{ study.studyCode }}, {{ study.cohortCode }}, {{ study.protocolVersion }}</option>}</select></label>@if (selectedStudyDefinition(); as study) {<p class="muted wide">Onam: {{ study.consentDocumentVersion }}, {{ study.consentDocumentReference }}</p>}<label>Onam zamanı<input type="datetime-local" [(ngModel)]="studyDraft.consentRecordedAt" name="studyConsent" required /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving() || !studyDraft.studentId || !studyDraft.studyDefinitionId">Kaydet</button></div></form>}
             <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Öğrenci</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (enrollment of studyEnrollments(); track enrollment.id) {<tr><td>{{ enrollment.studyCode }}</td><td>{{ enrollment.protocolVersion }}</td><td>{{ enrollment.cohortCode }}</td><td>{{ enrollment.studentName || 'Öğrenci profili' }}<div class="muted">{{ enrollment.studentEmail || enrollment.studentId }}</div></td><td>{{ enrollment.consentRecordedAt | date:'short' }}</td><td>{{ enrollment.isActive ? 'Aktif' : 'Çekildi' }}</td><td>@if (enrollment.isActive) {<button type="button" class="danger" (click)="withdrawStudyEnrollment(enrollment)">Çalışmadan çek</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">Çalışma katılımcısı bulunmuyor.</td></tr>}</tbody></table></div>
           </div>
         </section>
@@ -289,21 +289,21 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   loadAgeGroups(): void {
     this.service.getAgeGroups().subscribe({
       next: value => this.ageGroups.set(value),
-      error: () => this.error.set('Yaş grupları yüklenemedi.')
+      error: () => this.error.set('Yaş grupları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadAssessmentTemplates(): void {
     this.service.getAssessmentTemplates().subscribe({
       next: value => this.assessmentTemplates.set(value),
-      error: () => this.error.set('Seviye tespit şablonları yüklenemedi.')
+      error: () => this.error.set('Seviye tespit şablonları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadExercises(): void {
     this.service.getAllExercises().subscribe({
       next: value => this.exercises.set(value),
-      error: () => this.error.set('Egzersiz listesi yüklenemedi.')
+      error: () => this.error.set('Egzersiz listesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -313,7 +313,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
         this.levelCatalogs.set(value);
         this.levels.set((value.find(item => item.status === 2) ?? value[0])?.definitions ?? []);
       },
-      error: () => this.error.set('Seviye sözlüğü yüklenemedi.')
+      error: () => this.error.set('Seviye sözlüğü yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -395,14 +395,14 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   loadMeasurementCapabilities(): void {
     this.service.getAssessmentMeasurementCapabilities().subscribe({
       next: value => this.measurementCapabilities.set(value),
-      error: () => this.error.set('Motor ölçüm yetenekleri yüklenemedi.')
+      error: () => this.error.set('Motor ölçüm yetenekleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadCalibration(): void {
     this.service.getAssessmentCalibration().subscribe({
       next: value => this.calibration.set(value),
-      error: () => this.error.set('Kalibrasyon kanıtı yüklenemedi.')
+      error: () => this.error.set('Kalibrasyon kanıtı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -421,14 +421,14 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   loadStudyEnrollments(): void {
     this.service.getAssessmentStudyEnrollments().subscribe({
       next: value => this.studyEnrollments.set(value),
-      error: () => this.error.set('Çalışma katılımcıları yüklenemedi.')
+      error: () => this.error.set('Çalışma katılımcıları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadStudyDefinitions(): void {
     this.service.getAssessmentStudies().subscribe({
       next: value => this.studyDefinitions.set(value),
-      error: () => this.error.set('Araştırma çalışmaları yüklenemedi.')
+      error: () => this.error.set('Araştırma çalışmaları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -629,7 +629,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.service.getAssessmentTemplateByAgeGroup(ageGroupId).subscribe({
       next: template => this.applyAssessmentTemplate(template),
       error: response => {
-        if (response.status !== 404) this.error.set('Seviye tespit şablonu yüklenemedi.');
+        if (response.status !== 404) this.error.set('Seviye tespit şablonu yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
       }
     });
   }

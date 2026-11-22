@@ -564,3 +564,17 @@
     width: min(100%, 320px);
   }
 }
+
+// Lively design (21.11.2026): the three facts in soft tones; on the phone they stay in one compact row.
+.info-cards .info-card { border: 0; box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card)); }
+.info-cards .info-card--mint { background: var(--sp-tone-mint-soft); }
+.info-cards .info-card--sea { background: var(--sp-tone-sea-soft); }
+.info-cards .info-card--sand { background: var(--sp-tone-sand-soft); }
+.info-cards .info-card .card-icon { background: var(--sp-surface); }
+
+@media (max-width: 600px) {
+  .info-cards { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .info-cards .info-card { padding: 12px 8px !important; }
+  .info-cards .info-card h3 { font-size: 0.95rem; }
+  .info-cards .info-card p { font-size: 0.75rem; }
+}

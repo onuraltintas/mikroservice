@@ -35,7 +35,7 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                                 </svg>
                             </div>
                             <div>
-                                <h3 id="modal-title" class="text-lg font-semibold text-(--ui-text)">Kullanıcı Düzenle</h3>
+                                <h3 id="modal-title" class="text-lg font-semibold text-(--ui-text)">Kullanıcı düzenle</h3>
                                 <div class="mt-1 flex items-center gap-2">
                                      <span class="inline-flex items-center rounded-md bg-(--ui-surface-muted) px-2 py-1 text-xs font-medium text-(--ui-text-muted) ring-1 ring-inset ring-(--ui-border-strong)">{{ user()?.email }}</span>
                                 </div>
@@ -165,7 +165,7 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                             </svg>
                             Kaydediliyor...
                         } @else {
-                            Değişiklikleri Kaydet
+                            Değişiklikleri kaydet
                         }
                     </button>
                 </div>
@@ -224,7 +224,7 @@ export class EditUserModalComponent implements OnInit {
       this.progression.set(null); this.progressionError.set(null);
       this.progressionService.getStudentProgression(this.user()!.userId).subscribe({
         next: value => { this.progression.set(value); this.progressionMode = value.mode; this.progressionLoading.set(false); },
-        error: error => { this.progressionLoading.set(false); this.progressionError.set(getAdminErrorMessage(error, 'İlerleme izni yüklenemedi.')); }
+        error: error => { this.progressionLoading.set(false); this.progressionError.set(getAdminErrorMessage(error, 'İlerleme izni yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
       });
     }
   }

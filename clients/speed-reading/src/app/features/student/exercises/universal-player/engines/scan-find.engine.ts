@@ -81,6 +81,11 @@ export class ScanFindEngine implements BaseEngine {
     private awaitingServer = false;
     private serverStarted = false;
     private timedOut = false;
+    /** Feedback fix 18 (21.11.2026): the word of the last wrong tap flashes briefly. */
+    private wrongTapIndex: number | null = null;
+    private wrongTapTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Feedback fix 19: targets that were not found, shown on the result screen. */
+    private missedTargets: string[] = [];
     /** The session (or the catalog) set a time limit; without one the engine only keeps a one-hour guard. */
     private timeLimitSent = false;
 
@@ -364,9 +369,40 @@ export class ScanFindEngine implements BaseEngine {
             }
         } else if (!word.isTarget) {
             this.state.errors++;
+            this.flashWrongTap(index);
         }
 
         this.callbacks.onStateChange({ ...this.state });
+    }
+
+    /** Index of the word whose wrong tap is flashing now, or null. */
+    getWrongTapIndex(): number | null {
+        return this.wrongTapIndex;
+    }
+
+    getMissedTargets(): string[] {
+        return [...this.missedTargets];
+    }
+
+    private flashWrongTap(index: number): void {
+        this.wrongTapIndex = index;
+        if (this.wrongTapTimer) clearTimeout(this.wrongTapTimer);
+        this.wrongTapTimer = setTimeout(() => {
+            this.wrongTapIndex = null;
+            this.wrongTapTimer = null;
+            if (this.state.isRunning) this.callbacks.onStateChange({ ...this.state });
+        }, 700);
+    }
+
+    /** Unfound targets of the current round (none when the round's required count was reached). */
+    private collectMissedInRound(): void {
+        if (this.foundUniqueWordsInRound.size >= this.targetCount) return;
+        for (const target of this.targetWords) {
+            if (this.foundUniqueWordsInRound.has(target)) continue;
+            const label = this.targetLabels[target] || this.words.find(word => word.isTarget
+                && this.normalizeWord(word.text, this.config.targets?.caseSensitive === true) === target)?.text || target;
+            if (!this.missedTargets.includes(label)) this.missedTargets.push(label);
+        }
     }
 
     private sendServerAction(action: string, index?: number): void {
@@ -395,7 +431,12 @@ export class ScanFindEngine implements BaseEngine {
             .reduce((sum, round) => sum + round.foundTargets.length, 0) ?? 0;
         this.totalTargetCountAcrossRounds = boundedInteger(feedback.totalSteps, 1, 1, 5000);
         this.state.totalSteps = this.totalTargetCountAcrossRounds;
+        const previousErrors = this.state.errors;
         this.state.errors = boundedInteger(feedback.incorrectCount, 0, 0, 100000);
+        const tappedIndex = (action as { index?: number }).index;
+        if (action.action === 'scan_click' && this.state.errors > previousErrors && typeof tappedIndex === 'number') {
+            this.flashWrongTap(tappedIndex);
+        }
         this.state.timeElapsed = boundedInteger(feedback.searchTimeMs, 0, 0, 3600000);
         this.startTime = Date.now() - this.state.timeElapsed;
         this.generateContent();
@@ -406,6 +447,7 @@ export class ScanFindEngine implements BaseEngine {
     }
 
     private nextRound(): void {
+        this.collectMissedInRound();
         this.totalFoundUniqueAcrossRounds += this.foundCount;
         this.foundUniqueWordsInRound.clear();
         this.currentRoundIndex++;
@@ -472,6 +514,8 @@ export class ScanFindEngine implements BaseEngine {
         this.awaitingServer = false;
         this.serverStarted = false;
         this.timedOut = false;
+        this.missedTargets = [];
+        this.clearWrongTap();
         this.totalFoundUniqueAcrossRounds = 0;
         this.foundUniqueWordsInRound.clear();
         this.generateContent();
@@ -479,7 +523,14 @@ export class ScanFindEngine implements BaseEngine {
     }
 
     destroy(): void {
+        this.clearWrongTap();
         this.stop();
+    }
+
+    private clearWrongTap(): void {
+        if (this.wrongTapTimer) clearTimeout(this.wrongTapTimer);
+        this.wrongTapTimer = null;
+        this.wrongTapIndex = null;
     }
 
     handleInput(input: any): void {
@@ -491,6 +542,8 @@ export class ScanFindEngine implements BaseEngine {
     private complete(): void {
         this.state.isCompleted = true;
         this.state.isRunning = false;
+        if (this.config['serverAuthoritative']) this.collectMissedFromServerRounds();
+        else this.collectMissedInRound();
 
         const foundTargets = Math.min(
             this.totalTargetCountAcrossRounds,
@@ -517,13 +570,29 @@ export class ScanFindEngine implements BaseEngine {
                 timedOut: this.timedOut,
                 // H21 (decision 30.10.2026): a time-out is a finished attempt scored by the targets found.
                 incomplete: false,
-                searchTimeMs: this.state.timeElapsed
+                searchTimeMs: this.state.timeElapsed,
+                missedTargets: [...this.missedTargets]
             }
         };
 
         // The player holds a copy of this state, so it must see isRunning=false or the text stays above the result.
         this.callbacks.onStateChange({ ...this.state });
         this.callbacks.onComplete(result);
+    }
+
+    /** Server mode: every round reports its targets and the ones found. */
+    private collectMissedFromServerRounds(): void {
+        const caseSensitive = this.config.targets?.caseSensitive === true;
+        for (const round of this.config.scanningRounds || []) {
+            const targets = [...new Set((round.targets || []).map(word => this.normalizeWord(word, caseSensitive)))];
+            const found = new Set((round.foundTargets || []).map(word => this.normalizeWord(word, caseSensitive)));
+            if (found.size >= this.requiredTargetCount(targets)) continue;
+            for (const target of targets) {
+                if (found.has(target)) continue;
+                const label = round.targetLabels?.[target] || target;
+                if (!this.missedTargets.includes(label)) this.missedTargets.push(label);
+            }
+        }
     }
 
     getWords() {

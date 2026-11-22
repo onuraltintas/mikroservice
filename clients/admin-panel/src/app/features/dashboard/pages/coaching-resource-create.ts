@@ -42,7 +42,7 @@ type Resource = 'session' | 'exam' | 'goal';
         <form (ngSubmit)="submitSession()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
             <label class="text-sm text-(--ui-text)">Öğretmen
-              <select [(ngModel)]="session.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
+              <select [(ngModel)]="session.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }}, {{ teacher.email }}</option>}</select>
             </label>
             <label class="text-sm text-(--ui-text)">Seans tipi
               <select [(ngModel)]="session.type" name="type" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="OneOnOne">Birebir</option><option value="Group">Grup</option></select>
@@ -50,12 +50,12 @@ type Resource = 'session' | 'exam' | 'goal';
           </div>
           @if (session.type === 'OneOnOne') {
             <label class="block text-sm text-(--ui-text)">Öğrenci
-              <select [(ngModel)]="session.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select>
+              <select [(ngModel)]="session.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }}, {{ student.email }}</option>}</select>
             </label>
           } @else {
             <fieldset>
               <legend class="mb-2 text-sm font-medium text-(--ui-text)">Grup öğrencileri (en az 2)</legend>
-              <div class="grid max-h-56 gap-2 overflow-y-auto rounded-lg border p-3 md:grid-cols-2">@for (student of students(); track student.userId) {<label class="flex items-center gap-2 text-sm"><input type="checkbox" [checked]="selectedStudentIds.has(student.userId)" (change)="toggleStudent(student.userId)" /><span>{{ student.fullName }} · {{ student.email }}</span></label>} @empty {<span class="text-sm text-(--ui-text-muted)">Aktif öğrenci bulunamadı.</span>}</div>
+              <div class="grid max-h-56 gap-2 overflow-y-auto rounded-lg border p-3 md:grid-cols-2">@for (student of students(); track student.userId) {<label class="flex items-center gap-2 text-sm"><input type="checkbox" [checked]="selectedStudentIds.has(student.userId)" (change)="toggleStudent(student.userId)" /><span>{{ student.fullName }}, {{ student.email }}</span></label>} @empty {<span class="text-sm text-(--ui-text-muted)">Aktif öğrenci bulunamadı.</span>}</div>
               <p class="mt-1 text-xs text-(--ui-text-muted)">Seçili: {{ selectedStudentIds.size }}/100</p>
             </fieldset>
           }
@@ -82,7 +82,7 @@ type Resource = 'session' | 'exam' | 'goal';
         <form (ngSubmit)="submitExam()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
             <label class="text-sm text-(--ui-text)">Öğretmen
-              <select [(ngModel)]="exam.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
+              <select [(ngModel)]="exam.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }}, {{ teacher.email }}</option>}</select>
             </label>
             <label class="text-sm text-(--ui-text)">Sınav tipi
               <select [(ngModel)]="exam.type" name="type" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="Mock">Deneme</option><option value="Weekly">Haftalık</option><option value="Monthly">Aylık</option><option value="LGS">LGS</option><option value="YKS">YKS</option><option value="MidTerm">Ara sınav</option><option value="Final">Final</option><option value="Quiz">Kısa sınav</option></select>
@@ -113,10 +113,10 @@ type Resource = 'session' | 'exam' | 'goal';
         <form (ngSubmit)="submitGoal()" class="space-y-5 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-6 shadow-sm">
           <div class="grid gap-4 md:grid-cols-2">
             <label class="text-sm text-(--ui-text)">Öğrenci
-              <select [(ngModel)]="goal.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select>
+              <select [(ngModel)]="goal.studentId" name="studentId" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }}, {{ student.email }}</option>}</select>
             </label>
             <label class="text-sm text-(--ui-text)">Koç (isteğe bağlı)
-              <select [(ngModel)]="goal.teacherId" name="teacherId" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrencinin hedefi</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option>}</select>
+              <select [(ngModel)]="goal.teacherId" name="teacherId" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Öğrencinin hedefi</option>@for (teacher of teachers(); track teacher.userId) {<option [value]="teacher.userId">{{ teacher.fullName }}, {{ teacher.email }}</option>}</select>
             </label>
           </div>
           <div class="grid gap-4 md:grid-cols-2">
@@ -196,7 +196,7 @@ export class CoachingResourceCreateComponent implements OnInit {
     if (teachers.status === 'fulfilled') this.teachers.set(teachers.value.items ?? []);
     if (students.status === 'fulfilled') this.students.set(students.value.items ?? []);
     if (institutions.status === 'fulfilled') this.institutions.set(institutions.value.items ?? []);
-    if (results.every(result => result.status === 'rejected')) this.error.set('Kullanıcı listeleri yüklenemedi.');
+    if (results.every(result => result.status === 'rejected')) this.error.set('Kullanıcı listeleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
     this.loadingUsers.set(false);
   }
 

@@ -21,7 +21,7 @@ describe('Coaching curriculum manager', () => {
   }
   it('shows separate catalog tabs with a direct exam create action and no lesson groups', () => {
     const { fixture, http } = setup(); fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Müfredat Yönetimi');
+    expect(fixture.nativeElement.textContent).toContain('Müfredat yönetimi');
     expect(fixture.nativeElement.textContent).toContain('Henüz kayıt yok');
     expect(fixture.nativeElement.querySelector('[role="tablist"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-label="Müfredat hiyerarşisi"]')).not.toBeNull();

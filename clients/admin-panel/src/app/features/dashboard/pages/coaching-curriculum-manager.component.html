@@ -1,6 +1,6 @@
 <div class="curriculum-workspace">
   <header class="page-header">
-    <div><p class="eyebrow">Koçluk / içerik yönetimi</p><h1>Müfredat Yönetimi</h1><p>Sınav türünden kazanıma kadar tüm ders içeriği burada düzenlenir. Her değişiklik gerekçesiyle işlem geçmişine yazılır.</p></div>
+    <div><p class="eyebrow">Koçluk / içerik yönetimi</p><h1>Müfredat yönetimi</h1><p>Sınav türünden kazanıma kadar tüm ders içeriği burada düzenlenir. Her değişiklik gerekçesiyle işlem geçmişine yazılır.</p></div>
     <nav class="page-links" aria-label="İlgili sayfalar">
       <a routerLink="/dashboard/coaching/outcome-approvals">Onay kuyruğu{{ pendingLinks() !== null ? ' (' + fmt(pendingLinks()) + ' bekleyen)' : '' }}</a>
       <a routerLink="/dashboard/coaching/catalog">Hedef kataloglar (LGS okulları, üniversite programları)</a>
@@ -113,7 +113,7 @@
             <span class="badge" [class.passive]="!n.isActive">{{ n.isActive ? 'Aktif' : 'Pasif' }}</span>
             @if (n.kind === 'topics') {
               <label class="inline-field">Süre (dk)<input type="number" name="rowMinutes" min="1" [max]="maxTopicMinutes" step="1" inputmode="numeric" [value]="inlineValue(n).estimatedMinutes ?? ''" (input)="editMinutes(n, $any($event.target).value)" [disabled]="busy()" [attr.aria-label]="n.name + ' çalışma süresi (dk)'"></label>
-              <label class="inline-field">Sıklık<select name="rowWeight" (change)="editWeight(n, $any($event.target).value)" [disabled]="busy()" [attr.aria-label]="n.name + ' sınavda çıkma sıklığı'">@for (w of [1,2,3,4,5]; track w) { <option [value]="w" [selected]="inlineValue(n).yieldWeight === w">{{ w }} · {{ yieldLabels[w] }}</option> }</select></label>
+              <label class="inline-field">Sıklık<select name="rowWeight" (change)="editWeight(n, $any($event.target).value)" [disabled]="busy()" [attr.aria-label]="n.name + ' sınavda çıkma sıklığı'">@for (w of [1,2,3,4,5]; track w) { <option [value]="w" [selected]="inlineValue(n).yieldWeight === w">{{ w }}, {{ yieldLabels[w] }}</option> }</select></label>
             }
             @if (n.outcomeCount !== undefined && n.outcomeCount !== null && n.kind !== 'programTopics') { <span class="meta">{{ n.outcomeCount }} kazanım</span> }
             @if (n.pendingLinkCount) { <span class="badge warn">{{ n.pendingLinkCount }} bekleyen bağlantı</span> }
@@ -142,7 +142,7 @@
               <label>Sınav türü<select aria-label="Sınav türü" name="exam" [(ngModel)]="form.examCode" [disabled]="creating()"><option [ngValue]="null">Belirtilmedi</option>@for (exam of exams(); track exam.id) { <option [value]="exam.code">{{ exam.name }}</option> }</select></label>
             }
             @if (kind !== 'lessons' && kind !== 'programs' && kind !== 'programTopics') { <label>Görüntüleme sırası<input name="order" type="number" [min]="kind === 'outcomes' ? 1 : 0" step="1" [(ngModel)]="form.displayOrder"><small>Küçük sayı önce gösterilir.</small></label> }
-            @if (kind === 'lessons') { <label class="full">Ders programı<select aria-label="Ders programı" name="curriculum" [(ngModel)]="form.curriculumVersionId" [disabled]="!!selected()?.curriculumVersionId && !creating()"><option [ngValue]="null">Daha sonra bağla</option>@for (p of curricula(); track p.id) { <option [value]="p.id">{{ p.name }} · {{ p.versionLabel }} · {{ p.isPublished ? 'Yayında' : 'Taslak' }}</option> }</select><small>Öğrenci kurulumunda görünmesi için ders yayımlanmış bir ders programına bağlı olmalıdır. Programları “Aktarım ve sürümler” sekmesinden yönetin.</small></label> }
+            @if (kind === 'lessons') { <label class="full">Ders programı<select aria-label="Ders programı" name="curriculum" [(ngModel)]="form.curriculumVersionId" [disabled]="!!selected()?.curriculumVersionId && !creating()"><option [ngValue]="null">Daha sonra bağla</option>@for (p of curricula(); track p.id) { <option [value]="p.id">{{ p.name }}, {{ p.versionLabel }}, {{ p.isPublished ? 'Yayında' : 'Taslak' }}</option> }</select><small>Öğrenci kurulumunda görünmesi için ders yayımlanmış bir ders programına bağlı olmalıdır. Programları “Aktarım ve sürümler” sekmesinden yönetin.</small></label> }
             @if (kind === 'programs') {
               <label>Program kodu<input name="programCode" [(ngModel)]="form.code" required maxlength="100"></label>
               <label>Sınav türü<select aria-label="Sınav türü" name="programExam" [(ngModel)]="form.examCode" required><option [ngValue]="null">Sınav seçin</option>@for (e of exams(); track e.id) { <option [value]="e.code">{{ e.name }}</option> }</select></label>
@@ -167,8 +167,8 @@
               @else { <label>Kaynak sayfa<input name="sourcePage" [(ngModel)]="form.sourcePage" required min="1" step="1" type="number"></label> }
               <label class="full">Açıklama / kaynak notu<textarea name="notes" [(ngModel)]="form.notes" maxlength="8000" rows="2"></textarea></label>
               @if (creating()) {
-                <label class="full">Kaynak program<select aria-label="Kaynak program" name="edition" [(ngModel)]="editionId" (ngModelChange)="selectEdition()" required><option value="">Program seçin</option>@for (edition of editions(); track edition.id) { <option [value]="edition.id">{{ edition.subjectName }} · {{ edition.academicYearStart }}–{{ edition.academicYearEnd }}</option> }</select></label>
-                <label class="full">Programdaki konu grubu<select aria-label="Programdaki konu grubu" name="officialTopic" [(ngModel)]="form.officialTopicId" required><option [ngValue]="null">Konu grubu seçin</option>@for (topic of officialTopics(); track topic.id) { <option [value]="topic.id">{{ topic.name }} · {{ topic.lessonPeriods }} resmî ders saati</option> }</select><small>Program dayanağı seçilir; yönetici girişi resmî doğrulama yerine geçmez.</small></label>
+                <label class="full">Kaynak program<select aria-label="Kaynak program" name="edition" [(ngModel)]="editionId" (ngModelChange)="selectEdition()" required><option value="">Program seçin</option>@for (edition of editions(); track edition.id) { <option [value]="edition.id">{{ edition.subjectName }}, {{ edition.academicYearStart }}–{{ edition.academicYearEnd }}</option> }</select></label>
+                <label class="full">Programdaki konu grubu<select aria-label="Programdaki konu grubu" name="officialTopic" [(ngModel)]="form.officialTopicId" required><option [ngValue]="null">Konu grubu seçin</option>@for (topic of officialTopics(); track topic.id) { <option [value]="topic.id">{{ topic.name }}, {{ topic.lessonPeriods }} resmî ders saati</option> }</select><small>Program dayanağı seçilir; yönetici girişi resmî doğrulama yerine geçmez.</small></label>
               }
             }
             @if (creating() && (kind === 'lessons' || kind === 'units' || kind === 'topics')) { <label class="checkbox full"><input name="activate" type="checkbox" [(ngModel)]="activateAfterCreate">Kaydettikten sonra etkinleştir</label> }
@@ -183,7 +183,7 @@
               <button type="button" (click)="approveTopicLinks()" [disabled]="busy() || form.reason.trim().length < 5">Bağlantıları onayla</button>
               <details class="topic-outcomes" (toggle)="$any($event.target).open && !topicOutcomes().length && loadTopicOutcomes()"><summary>Bağlı kazanımları göster</summary>
                 @if (topicOutcomesLoading()) { <p role="status">Kazanımlar yükleniyor…</p> }
-                <ul>@for (o of topicOutcomes(); track o.id) { <li><button type="button" class="link-button" (click)="select(o)" [disabled]="busy()">{{ o.code }} · {{ o.name }}</button><span class="mapping-actions"><button type="button" (click)="rejectTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını reddet'">Reddet</button><button type="button" class="danger-button" (click)="removeTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını kaldır'">Bağlantıyı kaldır</button></span></li> }
+                <ul>@for (o of topicOutcomes(); track o.id) { <li><button type="button" class="link-button" (click)="select(o)" [disabled]="busy()">{{ o.code }}, {{ o.name }}</button><span class="mapping-actions"><button type="button" (click)="rejectTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını reddet'">Reddet</button><button type="button" class="danger-button" (click)="removeTopicLink(o)" [disabled]="busy() || form.reason.trim().length < 5" [attr.aria-label]="o.name + ' bağlantısını kaldır'">Bağlantıyı kaldır</button></span></li> }
                   @empty { @if (!topicOutcomesLoading()) { <li class="empty">Bağlı kazanım yok.</li> } }</ul>
               </details></section>
             <section class="section-block"><h3>YKS kapsamı</h3><app-yks-scope-editor [topicId]="n.id" (saved)="embeddedSaved('YKS kapsamı kaydedildi.')" /></section>
@@ -222,8 +222,8 @@
               </fieldset><button class="primary" type="submit" [disabled]="busy() || durationForm.invalid || form.reason.trim().length < 5 || !sharesValid()">{{ publishDuration ? 'Yeni süre sürümünü kaydet ve yayınla' : 'Yeni süre sürümünü taslak kaydet' }}</button></form>
               <details class="duration-history"><summary>Önceki süreler ve değişiklik geçmişi</summary>
                 @for (e of n.estimates; track e.id) {
-                  <article><div><strong>Sürüm {{ e.number }} · {{ total(e) }} dk</strong><span class="badge" [class.passive]="!e.isPublished">{{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</span></div>
-                    <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ confidenceLabel(e.confidence) }} · {{ methodLabel(e.method) }}</p><small>{{ e.evidence }}</small>
+                  <article><div><strong>Sürüm {{ e.number }}, {{ total(e) }} dk</strong><span class="badge" [class.passive]="!e.isPublished">{{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</span></div>
+                    <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ confidenceLabel(e.confidence) }}, {{ methodLabel(e.method) }}</p><small>{{ e.evidence }}</small>
                     @if (!e.isPublished && e.method === 'ReviewedStudy') { <button type="button" (click)="publish(e)" [disabled]="busy() || form.reason.trim().length < 5">Bu süre sürümünü yayınla</button> }
                     @if (e.method === 'OfficialBudgetDraft') { <p>İlk bütçe dağılımıdır. İnceleyip yukarıdan yeni süre sürümü oluşturun.</p> }
                     <details><summary>Bu süre sürümü için işlemler</summary>

@@ -32,7 +32,7 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
                   </svg>
                 </div>
                 <div>
-                  <h3 id="modal-title" class="text-lg font-bold text-(--ui-text) leading-tight">Rol Yönetimi</h3>
+                  <h3 id="modal-title" class="text-lg font-bold text-(--ui-text) leading-tight">Rol yönetimi</h3>
                   <p class="text-sm text-(--ui-text-muted)">{{ user()?.fullName }}</p>
                 </div>
               </div>
@@ -47,7 +47,7 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
             
             <!-- Current Roles -->
             <div>
-              <label class="block text-xs font-semibold text-(--ui-text-muted) mb-3">Tanımlı Roller</label>
+              <label class="block text-xs font-semibold text-(--ui-text-muted) mb-3">Tanımlı roller</label>
               <div class="flex flex-wrap gap-2">
                 @for (assignment of assignments(); track assignment.role + ':' + assignment.product) {
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-(--ui-brand-soft) text-(--ui-brand-text) border border-(--ui-brand-soft) group transition-all">
@@ -70,7 +70,7 @@ export const LAST_PRODUCT_ROLE_CONFIRMATION =
 
             <!-- Available Roles -->
             <div>
-              <label class="block text-xs font-semibold text-(--ui-text-muted) mb-3">Rol Ekle</label>
+              <label class="block text-xs font-semibold text-(--ui-text-muted) mb-3">Rol ekle</label>
               <label for="role-product" class="block text-sm font-medium text-(--ui-text) mb-2">Rolün ekleneceği servis</label>
               <select id="role-product" [ngModel]="selectedProduct()" (ngModelChange)="selectedProduct.set($event)" [disabled]="busy()" class="w-full mb-3 rounded-lg border border-(--ui-border) bg-(--ui-surface) p-2 text-sm text-(--ui-text)">
                 <option value="">Servis seçin</option>
@@ -152,7 +152,7 @@ export class RoleManagementModalComponent implements OnInit {
     loadRoles() {
         this.identityService.getRoles().subscribe({
             next: (roles) => this.availableRoles.set(roles),
-            error: (err) => this.toaster.error(getAdminErrorMessage(err, 'Roller yüklenemedi.'))
+            error: (err) => this.toaster.error(getAdminErrorMessage(err, 'Roller yüklenemedi. Sayfayı yenileyip yeniden deneyin.'))
         });
     }
 

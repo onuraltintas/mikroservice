@@ -1,11 +1,38 @@
 // Shell navigation, header and account menu (moved out of the layout component so its style budget stays under 10 kB; every selector is scoped by .coaching-shell).
 /* T2 (31.10.2026): one flat menu, a page title in the header, the account menu and the notification bell. */
 .coaching-shell .coaching-navigation { display: grid; gap: 4px; margin-bottom: 22px;
-  a { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--coaching-radius-control); min-height: 46px; color: var(--coaching-sidebar-text); font-size: 15px; font-weight: 500; transition: background .15s, color .15s;
-    app-coaching-icon { color: var(--coaching-sidebar-muted); font-size: 18px; }
-    &:hover { background: color-mix(in srgb, var(--coaching-sidebar-raised) 60%, transparent); }
-    &.is-active { color: var(--coaching-sidebar-text); background: var(--coaching-sidebar-raised); box-shadow: inset 3px 0 var(--coaching-sidebar-active), var(--coaching-card-shadow); font-weight: 600; app-coaching-icon { color: var(--coaching-sidebar-active); } }
-    .coaching-badge { position: static; margin-left: auto; } } }
+  a { position: relative; display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 14px; min-height: 48px; color: var(--coaching-sidebar-text); font-size: 15px; font-weight: 500;
+    transition: background .2s ease, transform .2s ease, color .2s ease; animation: coaching-nav-in .5s cubic-bezier(.2, .8, .2, 1) both;
+    // Lively design (21.11.2026): every item has its own soft colour chip; the chip tilts under the pointer.
+    app-coaching-icon { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 10px; font-size: 18px;
+      background: var(--coaching-lesson-0); color: var(--coaching-lesson-text-0); transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+    &:hover { background: var(--coaching-sidebar-raised); transform: translateX(4px); app-coaching-icon { transform: rotate(-10deg) scale(1.12); } }
+    &.is-active { color: var(--ui-brand-contrast); background: var(--ui-brand); box-shadow: var(--coaching-action-shadow); font-weight: 700; transform: none;
+      app-coaching-icon { background: var(--ui-surface); color: var(--ui-brand); }
+      &::after { content: ''; width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--coaching-honey); animation: coaching-spark 2.4s ease-in-out infinite; } }
+    .coaching-badge { position: static; margin-left: auto; animation: coaching-pulse 1.8s ease-out infinite; }
+    &.is-active:has(.coaching-badge)::after { margin-left: 8px; } }
+  @for $i from 1 through 9 { a:nth-child(#{$i}) { animation-delay: #{60 + $i * 50}ms; } }
+  a:nth-child(7n + 2) app-coaching-icon { background: var(--coaching-lesson-2); color: var(--coaching-lesson-text-2); }
+  a:nth-child(7n + 3) app-coaching-icon { background: var(--coaching-lesson-3); color: var(--coaching-lesson-text-3); }
+  a:nth-child(7n + 4) app-coaching-icon { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }
+  a:nth-child(7n + 5) app-coaching-icon { background: var(--coaching-lesson-4); color: var(--coaching-lesson-text-4); }
+  a:nth-child(7n + 6) app-coaching-icon { background: var(--coaching-lesson-6); color: var(--coaching-lesson-text-6); }
+  a:nth-child(7n + 7) app-coaching-icon { background: var(--coaching-lesson-5); color: var(--coaching-lesson-text-5); }
+  a.is-active app-coaching-icon { background: var(--ui-surface); color: var(--ui-brand); } }
+.coaching-shell .coaching-brand .brand-symbol { animation: coaching-pop .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes coaching-nav-in { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+@keyframes coaching-spark { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: .6; } }
+@keyframes coaching-pulse { 0% { box-shadow: 0 0 0 0 var(--coaching-pulse-glow); } 70%, 100% { box-shadow: 0 0 0 8px transparent; } }
+@keyframes coaching-pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+// Phone: the bottom menu marks the chosen item with a honey bar and a small bounce.
+@media (max-width: 800px) {
+  .coaching-shell .coaching-mobile-nav a { transition: color .2s ease;
+    &.is-active { background: transparent; color: var(--ui-brand-text);
+      &::before { content: ''; position: absolute; top: -8px; width: 28px; height: 4px; border-radius: 999px; background: var(--coaching-honey); }
+      app-coaching-icon { display: grid; place-items: center; width: 40px; height: 28px; border-radius: 999px; background: var(--ui-brand-soft); animation: coaching-pop .45s cubic-bezier(.3, 1.6, .5, 1) both; } }
+    .coaching-badge { animation: coaching-pulse 1.8s ease-out infinite; } }
+}
 .coaching-shell .coaching-page-title { flex: 1; margin: 0; min-width: 0; font-size: 18px; font-weight: 600; color: var(--ui-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .coaching-shell .coaching-topbar-actions { gap: 12px; }
 .coaching-shell .coaching-bell { position: relative; background: var(--ui-surface); }

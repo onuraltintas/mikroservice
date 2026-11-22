@@ -17,7 +17,7 @@ import {
   template: `
     <main class="p-4 md:p-6 min-h-full" aria-labelledby="audit-title">
       <header class="mb-6">
-        <h1 id="audit-title" class="text-2xl font-bold text-(--ui-text)">Yönetici Denetim Kayıtları</h1>
+        <h1 id="audit-title" class="text-2xl font-bold text-(--ui-text)">Yönetici denetim kayıtları</h1>
         <p class="mt-1 text-sm text-(--ui-text-muted)">Yönetim işlemlerinin servis bazlı, değiştirilemez işlem ve değişen alan geçmişi.</p>
       </header>
 
@@ -84,7 +84,7 @@ import {
           </table>
         </div>
         <footer class="flex items-center justify-between gap-3 px-4 py-3 bg-(--ui-surface-muted) border-t border-(--ui-border)">
-          <span class="text-xs text-(--ui-text-muted)">Toplam {{ totalCount() }} kayıt · Sayfa {{ currentPage() }} / {{ totalPages() }}</span>
+          <span class="text-xs text-(--ui-text-muted)">Toplam {{ totalCount() }} kayıt, sayfa {{ currentPage() }} / {{ totalPages() }}</span>
           <div class="flex gap-2">
             <button type="button" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() <= 1 || loading()" class="px-3 py-2 rounded-lg border disabled:opacity-40">Önceki</button>
             <button type="button" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() >= totalPages() || loading()" class="px-3 py-2 rounded-lg border disabled:opacity-40">Sonraki</button>

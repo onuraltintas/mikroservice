@@ -4,10 +4,7 @@
             <span class="material-icons" aria-hidden="true">arrow_back</span>
         </button>
         <div class="header-content">
-            <h1>
-                <span class="material-icons">map</span>
-                Öğrenme Yolculuğum
-            </h1>
+            <h1>Öğrenme Yolculuğum</h1>
             <p>Kişiselleştirilmiş öğrenme rotanı takip et</p>
         </div>
     </div>
@@ -160,11 +157,20 @@
                 </div>
 
                 <div class="sp-card-actions">
-                    <span class="sp-btn sp-btn--primary" aria-hidden="true">
-                        <span class="material-icons">{{ item.isCompleted ? 'replay' : 'play_arrow' }}</span>
-                        {{ item.isCompleted ? 'Tekrar Yap' : 'Başla' }}
+                    <!-- Lively design (21.11.2026): one strong action (the current stop); done and locked stops stay quiet -->
+                    @if (!item.isUnlocked && !item.isCompleted) {
+                    <span class="path-lock" aria-hidden="true">
+                        <span class="material-icons">lock</span>
+                        Önceki durakları bitirince açılır
                     </span>
+                    } @else {
+                    <span class="sp-btn" [class.sp-btn--primary]="isCurrentItem(item)" [class.sp-btn--outline]="!isCurrentItem(item)" aria-hidden="true">
+                        <span class="material-icons">{{ item.isCompleted ? 'replay' : 'play_arrow' }}</span>
+                        {{ item.isCompleted ? 'Tekrar yap' : 'Başla' }}
+                    </span>
+                    }
                 </div>
+                @if (isCurrentItem(item)) { <span class="path-focus-line sp-focus-line" aria-hidden="true"></span> }
             </div>
             }
         </div>

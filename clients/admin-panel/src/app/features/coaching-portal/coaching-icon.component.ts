@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 
-export type CoachingIcon = 'home' | 'plan' | 'book' | 'clock' | 'spark' | 'chart' | 'target' | 'calendar' | 'bell' | 'wallet' | 'card' | 'arrow' | 'check' | 'menu' | 'close' | 'logout' | 'sun' | 'moon' | 'chat' | 'user';
+export type CoachingIcon = 'home' | 'plan' | 'book' | 'clock' | 'spark' | 'chart' | 'target' | 'calendar' | 'bell' | 'wallet' | 'card' | 'arrow' | 'check' | 'menu' | 'close' | 'logout' | 'sun' | 'moon' | 'chat' | 'user' | 'flame';
 
 @Component({
   selector: 'app-coaching-icon', standalone: true,
@@ -27,6 +27,7 @@ export class CoachingIconComponent {
     card: 'M3 5h18v14H3zM3 9h18M7 15h3',
     arrow: 'M5 12h14m-5-5 5 5-5 5', check: 'm5 12 4 4L19 6',
     menu: 'M4 6h16M4 12h16M4 18h16', close: 'm6 6 12 12M6 18 18 6',
-    logout: 'M9 4H4v16h5M10 12h11m-4-4 4 4-4 4'
+    logout: 'M9 4H4v16h5M10 12h11m-4-4 4 4-4 4',
+    flame: 'M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2.2-4.8.3 1.6 1 2.6 2 3 0-3 .3-5.6.8-8.2'
   };
 }

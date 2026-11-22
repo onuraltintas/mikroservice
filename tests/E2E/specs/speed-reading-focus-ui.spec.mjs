@@ -119,7 +119,8 @@ test('student unanswered session uses server completion without WPM', async ({ p
   await page.goto(`/student/exercises/universal-player/${exerciseId}`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.start-button-large')).toBeVisible();
   await page.clock.install(); await page.clock.pauseAt(new Date());
-  await page.locator('.start-button-large').click(); await page.clock.runFor(3500);
+  // 3 s ready countdown before the first start, then the 3 s session.
+  await page.locator('.start-button-large').click(); await page.clock.runFor(6500);
   await expect.poll(() => completed).toBe(1);
   expect(actions).toEqual(['focus_start', 'complete']);
   await expect(page.locator('.stat-label').filter({ hasText: /^WPM$|^Okuma hızı$/ })).toHaveCount(0);
@@ -182,7 +183,7 @@ test('student higher load practice never starts the scored clock or writes compl
   await expect(page.locator('.start-button-large')).toBeVisible();
   expect(writes).toHaveLength(1);
   await page.clock.install(); await page.clock.pauseAt(new Date());
-  await page.locator('.start-button-large').click();
+  await page.locator('.start-button-large').click(); await page.clock.runFor(3000); // ready countdown
   await expect(page.getByRole('status').filter({ hasText: /Puanlanmayan alıştırma/ })).toBeVisible();
   const pause = page.locator('.mental-registration-container .header-section.right button').first();
   await page.clock.runFor(1000); await pause.click(); await page.clock.runFor(10000);
@@ -191,7 +192,7 @@ test('student higher load practice never starts the scored clock or writes compl
   await pause.click(); await page.clock.runFor(7500);
   await expect(page.locator('.start-button-large')).toBeVisible();
   expect(actions).toEqual([]); expect(writes).toHaveLength(1); expect(dailyCompletions).toBe(0);
-  await page.locator('.start-button-large').click(); await page.clock.runFor(3500);
+  await page.locator('.start-button-large').click(); await page.clock.runFor(6500);
   await expect.poll(() => actions).toEqual(['focus_start', 'complete']);
   await expect(page.getByRole('status').filter({ hasText: /kaydedildi/ })).toBeVisible();
   expect(errors).toEqual([]);

@@ -106,6 +106,8 @@ export class SkimmingEngine implements BaseEngine {
   getLineHeight(): number { return 1.8; }
   getMaximumMs(): number { return this.maximumMs; }
   canComplete(): boolean { return this.state.isRunning && !this.state.isPaused && this.state.timeElapsed >= this.minimumMs; }
+  /** Feedback fix 23: the player shows how long until the finish button opens. */
+  getMinimumReadingMs(): number { return this.minimumMs; }
   private updateTime(): void { this.state.timeElapsed = Math.min(this.maximumMs, Math.max(0, Date.now() - this.startedAt)); }
   private initialState(): EngineState {
     return { isRunning: false, isPaused: false, isCompleted: false, currentStep: 0, totalSteps: 1,

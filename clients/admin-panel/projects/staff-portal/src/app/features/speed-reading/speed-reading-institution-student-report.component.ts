@@ -19,12 +19,13 @@ import {
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherService } from './speed-reading-teacher.service';
 import { ProgramRecommendationPanelComponent } from './program-recommendation-panel.component';
+import { StaffBarsComponent, StaffChartPoint } from '../../shared/staff-charts';
 import { speedReadingReportLabel } from '../../../../../../../shared/utils/speed-reading-report-labels';
 
 @Component({
   selector: 'staff-speed-reading-student-report',
   standalone: true,
-  imports: [CommonModule, ProgramRecommendationPanelComponent],
+  imports: [CommonModule, ProgramRecommendationPanelComponent, StaffBarsComponent],
   templateUrl: './speed-reading-institution-student-report.component.html',
   styleUrl: './speed-reading-institution-student-report.component.scss',
 })
@@ -87,6 +88,28 @@ export class SpeedReadingStudentReportComponent implements OnChanges, OnDestroy 
       },
       complete: () => this.isLoading.set(false),
     });
+  }
+
+  /** The student beside the comparison average; the average is left out when it was not measured. */
+  speedComparison(data: SpeedReadingStudentReport): StaffChartPoint[] {
+    const average = data.readingSpeed.benchmark.institutionAverage;
+    return [{ label: 'Öğrenci', value: data.readingSpeed.averageWpm },
+      ...(average > 0 ? [{ label: this.teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması', value: average }] : [])];
+  }
+
+  comprehensionComparison(data: SpeedReadingStudentReport): StaffChartPoint[] {
+    const benchmark = data.comprehension.benchmark;
+    return [{ label: 'Öğrenci', value: data.comprehension.averageComprehension },
+      ...(benchmark.institutionDataAvailable !== false
+        ? [{ label: this.teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması', value: benchmark.institutionAverage }] : [])];
+  }
+
+  /** Measured recent activities, oldest first, for one measure. */
+  activityPoints(data: SpeedReadingStudentReport, measure: 'wpm' | 'comprehension'): StaffChartPoint[] {
+    return [...data.activity.recentActivities]
+      .filter(activity => activity[measure] !== null && activity.isMeasured)
+      .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+      .map(activity => ({ label: new Date(activity.completedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }), value: activity[measure] as number }));
   }
 
   formatNumber(value: number, fractionDigits = 0): string {

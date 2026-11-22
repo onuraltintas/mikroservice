@@ -5,7 +5,7 @@
     <div>
       <p class="report-eyebrow">Koçluk, kurum öğretmen raporu</p>
       <h2 id="teacher-report-title">{{ teacher.firstName }} {{ teacher.lastName }}</h2>
-      <p>{{ teacher.email }} · yalnızca bu kurumdaki işlemler ve aktif öğrenci bağlantıları</p>
+      <p>{{ teacher.email }}, yalnızca bu kurumdaki işlemler ve aktif öğrenci bağlantıları</p>
     </div>
     <span class="teacher-avatar" aria-hidden="true">{{ teacher.firstName.charAt(0) }}{{ teacher.lastName.charAt(0) }}</span>
   </header>
@@ -18,10 +18,10 @@
       <div class="report-error" role="alert"><span>{{ overviewError() }}</span><button type="button" (click)="retryOverview()">Tekrar dene</button></div>
     } @else if (overview(); as summary) {
       <div class="metric-grid">
-        <article class="metric-card accent-blue"><span>Ödev</span><strong>{{ summary.totalAssignments }}</strong><small>Bu kurumda oluşturulan</small></article>
-        <article class="metric-card accent-teal"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><small>Teslim edilen / atanmış</small></article>
-        <article class="metric-card accent-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>Bu kurumdaki sınavlar</small></article>
-        <article class="metric-card accent-orange"><span>Seans</span><strong>{{ summary.totalSessions }}</strong><small>Bu kurumdaki seanslar</small></article>
+        <article class="metric-card tone-info"><span>Ödev</span><strong>{{ summary.totalAssignments }}</strong><small>Bu kurumda oluşturulan</small></article>
+        <article class="metric-card tone-success"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><staff-meter tone="success" [value]="summary.submittedAssignmentStudents" [max]="summary.totalAssignmentStudents" [label]="'Teslim edilen ödev: ' + summary.submittedAssignmentStudents + ' / ' + summary.totalAssignmentStudents" /><small>Teslim edilen / atanmış</small></article>
+        <article class="metric-card tone-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>Bu kurumdaki sınavlar</small></article>
+        <article class="metric-card tone-orange"><span>Seans</span><strong>{{ summary.totalSessions }}</strong><small>Bu kurumdaki seanslar</small></article>
       </div>
     }
   </section>
@@ -40,6 +40,12 @@
     } @else if (analyticsError()) {
       <div class="report-error" role="alert"><span>{{ analyticsError() }}</span><button type="button" (click)="retryAnalytics()">Tekrar dene</button></div>
     } @else if (analytics(); as period) {
+      <div class="period-charts">
+        <staff-bars title="Ödev" tone="info" [points]="periodPoints(period.previousPeriod.assignments, period.currentPeriod.assignments)" />
+        <staff-bars title="Sınav" tone="violet" [points]="periodPoints(period.previousPeriod.exams, period.currentPeriod.exams)" />
+        <staff-bars title="Seans" tone="orange" [points]="periodPoints(period.previousPeriod.sessions, period.currentPeriod.sessions)" />
+      </div>
+      <details class="chart-table"><summary>Tablo olarak gör</summary>
       <div class="period-table-scroll">
         <table class="period-table">
           <thead><tr><th>Dönem</th><th>Ödev</th><th>Sınav</th><th>Seans</th></tr></thead>
@@ -49,9 +55,15 @@
           </tbody>
         </table>
       </div>
-      <div class="result-distribution" [attr.aria-label]="periodLabel() + ' sınav sonuç dağılımı'">
-        <span>Sınav sonucu dağılımı</span><strong class="low-result">Düşük {{ period.lowResults }}</strong><strong class="medium-result">Orta {{ period.mediumResults }}</strong><strong class="high-result">Yüksek {{ period.highResults }}</strong>
-      </div>
+      </details>
+      @if (period.lowResults + period.mediumResults + period.highResults > 0) {
+        <staff-split class="result-split" [title]="periodLabel() + ', sınav sonuçları'" [parts]="[
+          { label: 'Düşük', value: period.lowResults, tone: 'danger' },
+          { label: 'Orta', value: period.mediumResults, tone: 'orange' },
+          { label: 'Yüksek', value: period.highResults, tone: 'success' }]" />
+      } @else {
+        <p class="inline-status">Bu dönemde sınav sonucu yok.</p>
+      }
     }
   </section>
 

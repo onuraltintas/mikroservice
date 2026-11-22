@@ -113,21 +113,21 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: value => this.scenes.set(value),
-        error: () => this.error.set('Görselleştirme sahneleri yüklenemedi.')
+        error: () => this.error.set('Görselleştirme sahneleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
   loadExercises(): void {
     this.service.getVisualizationExercises().subscribe({
       next: value => this.exercises.set(value),
-      error: () => this.error.set('Görselleştirme egzersizleri yüklenemedi.')
+      error: () => this.error.set('Görselleştirme egzersizleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadAgeGroups(): void {
     this.service.getActiveAgeGroups().subscribe({
       next: value => this.ageGroups.set(value),
-      error: () => this.error.set('Yaş grupları yüklenemedi.')
+      error: () => this.error.set('Yaş grupları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -146,7 +146,7 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
         this.sceneDraft = this.toRequest(value);
         this.sceneEditing.set(true);
       },
-      error: () => this.error.set('Sahne ayrıntıları yüklenemedi.')
+      error: () => this.error.set('Sahne ayrıntıları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

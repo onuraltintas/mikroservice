@@ -50,7 +50,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
           @if (error()) { <p role="alert" class="text-(--ui-danger)">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
           @if (kind === 'students' && selectedStudent(); as student) {
             <article class="space-y-4 rounded-xl border bg-(--ui-surface) p-5">
-              <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-(--ui-text-muted)">{{ student.email }} · {{ educationLabel(student.educationStatus, student.gradeLevel, 'Sınıf yok') }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
+              <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-(--ui-text-muted)">{{ student.email }}, {{ educationLabel(student.educationStatus, student.gradeLevel, 'Sınıf yok') }}, {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
               @if (canManageMemberships()) {
                 <section class="space-y-3 rounded-lg bg-(--ui-surface-muted) p-4 text-sm" aria-labelledby="student-membership-heading">
                   <h3 id="student-membership-heading" class="font-semibold">Kurum üyeliğini yönet</h3>
@@ -78,7 +78,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                     <select [(ngModel)]="editingTeacherUserId" name="editingTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2">
                       <option value="">Öğretmen atama</option>
                       @if (student.teacherUserId && !hasTeacherLookupResult(student.teacherUserId)) { <option [value]="student.teacherUserId">{{ student.teacherName || 'Mevcut öğretmen' }}</option> }
-                      @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
+                      @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}, {{ teacher.email }}</option> }
                     </select>
                   </label>
                   <button type="button" class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-50" [disabled]="savingMembership() || !editingStage || isStudentStage(editingStage) && editingGradeLevel === null" (click)="saveStudentMembership()">{{ savingMembership() ? 'Kaydediliyor…' : 'Eğitim durumunu ve atamayı kaydet' }}</button>
@@ -88,8 +88,8 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
               @if (studentDetail(); as detail) {
                 <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
-                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status | coachingLabel }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
-                  <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score ?? 'puan yok' }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Sonuç yok.</p> }</div>
+                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }}, {{ item.status | coachingLabel }}, {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
+                  <div><h3 class="font-semibold">Son sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }}, {{ item.score ?? 'puan yok' }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Sonuç yok.</p> }</div>
                 </div>
                 <p class="text-xs text-(--ui-text-muted)">Bu öğrenciye erişim aktif kurum üyeliğiyle doğrulanır; ayrıntı kurum değişikliği dâhil tüm koçluk geçmişini kapsar.</p>
               }
@@ -145,7 +145,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 <label class="mt-2 block">Öğrenci ara
                   <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherStudentSearch" (keyup.enter)="loadTeacherStudents(1)" maxlength="100" class="w-full rounded border px-3 py-2" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" (click)="loadTeacherStudents(1)">Ara</button></span>
                 </label>
-                @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }} · {{ student.email }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Atanmış öğrenci yok.</p> }
+                @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }}, {{ student.email }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Atanmış öğrenci yok.</p> }
                 <div class="mt-3 flex items-center gap-3"><span>Toplam {{ teacherStudents()?.totalCount ?? 0 }}</span><button type="button" class="rounded border px-2 py-1" [disabled]="teacherStudentPage <= 1" (click)="loadTeacherStudents(teacherStudentPage - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="teacherStudentPage * 25 >= (teacherStudents()?.totalCount ?? 0)" (click)="loadTeacherStudents(teacherStudentPage + 1)">Sonraki</button></div>
               </div>
             </article>
@@ -170,7 +170,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 <label class="min-w-64 flex-1 text-sm">Davet sırasında öğretmen ata (isteğe bağlı)
                   <select [(ngModel)]="studentInviteTeacherUserId" name="studentInviteTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2">
                     <option value="">Şimdilik atama yapma</option>
-                    @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
+                    @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}, {{ teacher.email }}</option> }
                   </select>
                 </label>
                 <button type="submit" [disabled]="savingMembership()" class="rounded bg-(--ui-brand) px-4 py-2 text-(--ui-brand-contrast) disabled:opacity-50">Öğrenci davet et</button>
@@ -200,7 +200,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
               <label class="mt-3 block text-sm">Atanmış öğretmen
                 <select [(ngModel)]="teacherFilterUserId" (ngModelChange)="loadPage()" class="mt-1 w-full rounded border px-3 py-2">
                   <option value="">Tüm öğretmenler</option>
-                  @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
+                  @for (teacher of teacherLookupResults(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}, {{ teacher.email }}</option> }
                 </select>
               </label>
               @if (teacherLookupError()) { <p role="alert" class="mt-2 text-sm text-(--ui-danger)">{{ teacherLookupError() }}</p> }
@@ -215,7 +215,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                 @for (teacher of teacherPage()?.teachers; track teacher.userId) { <tr class="border-t"><td class="py-2">{{ teacher.firstName }} {{ teacher.lastName }}</td><td>{{ teacher.email }}</td><td>{{ selectedInstitutionName() }}</td><td class="space-x-3"><button type="button" class="text-(--ui-brand-text) underline" (click)="openDetail(teacher.userId)">Ayrıntı</button>@if (canManageMemberships()) { <button type="button" class="text-(--ui-danger) underline disabled:opacity-50" [disabled]="savingMembership()" (click)="removeTeacherFromInstitution(teacher)">Kurumdan çıkar</button> }</td></tr> }
               }
             </tbody></table></div>
-            <div class="mt-3 flex items-center gap-3 text-sm"><span>Toplam {{ totalCount() }} · {{ pageNumber }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="pageNumber <= 1 || loading()" (click)="loadPage(pageNumber - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="pageNumber * 25 >= totalCount() || loading()" (click)="loadPage(pageNumber + 1)">Sonraki</button></div>
+            <div class="mt-3 flex items-center gap-3 text-sm"><span>Toplam {{ totalCount() }}, {{ pageNumber }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="pageNumber <= 1 || loading()" (click)="loadPage(pageNumber - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="pageNumber * 25 >= totalCount() || loading()" (click)="loadPage(pageNumber + 1)">Sonraki</button></div>
           </div>
         }
       } @else { <p class="text-sm text-(--ui-text-muted)">Liste için kurum seçin.</p> }
@@ -324,14 +324,14 @@ export class CoachingPeopleComponent implements OnInit {
           else this.loadPage();
         }
       },
-      error: () => this.error.set('Koçluk yönetim kapsamı yüklenemedi.')
+      error: () => this.error.set('Koçluk yönetim kapsamı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadInstitutions(): void {
     this.institutionService.getAll(1, 100, this.institutionSearch.trim(), true).subscribe({
       next: page => this.institutions.set(page.items ?? []),
-      error: () => this.error.set('Kurumlar yüklenemedi.')
+      error: () => this.error.set('Kurumlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -401,7 +401,7 @@ export class CoachingPeopleComponent implements OnInit {
       },
       error: () => {
         if (requestId !== this.requestId) return;
-        this.error.set('Liste yüklenemedi.');
+        this.error.set('Liste yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         this.loading.set(false);
       }
     });
@@ -432,7 +432,7 @@ export class CoachingPeopleComponent implements OnInit {
           else this.loadStudentHistory(1);
           this.loading.set(false);
         },
-        error: () => { if (requestId === this.requestId) { this.error.set('Öğrenci ayrıntısı yüklenemedi.'); this.loading.set(false); } }
+        error: () => { if (requestId === this.requestId) { this.error.set('Öğrenci ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); } }
       });
     } else {
       forkJoin({
@@ -448,7 +448,7 @@ export class CoachingPeopleComponent implements OnInit {
           if (!this.selectedTeacher()) this.error.set('Öğretmen bu kurumda bulunamadı.');
           this.loading.set(false);
         },
-        error: () => { if (requestId === this.requestId) { this.error.set('Öğretmen ayrıntısı yüklenemedi.'); this.loading.set(false); } }
+        error: () => { if (requestId === this.requestId) { this.error.set('Öğretmen ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); } }
       });
     }
   }
@@ -459,7 +459,7 @@ export class CoachingPeopleComponent implements OnInit {
     this.error.set(null);
     this.service.getStudentRoster(this.institutionId, page, this.teacherStudentSearch, this.detailId).subscribe({
       next: result => { if (requestId === this.teacherStudentsRequestId) { this.teacherStudentPage = page; this.teacherStudents.set(result); } },
-      error: () => { if (requestId === this.teacherStudentsRequestId) this.error.set('Öğrenci listesi yüklenemedi.'); }
+      error: () => { if (requestId === this.teacherStudentsRequestId) this.error.set('Öğrenci listesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 
@@ -723,7 +723,7 @@ export class CoachingPeopleComponent implements OnInit {
       },
       error: () => {
         if (requestId !== this.studentHistoryRequestId) return;
-        this.error.set('Öğrencinin koçluk geçmişi yüklenemedi.');
+        this.error.set('Öğrencinin koçluk geçmişi yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         this.studentHistoryLoading.set(false);
       }
     });

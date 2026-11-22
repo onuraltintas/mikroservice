@@ -2,56 +2,56 @@
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
 .section-heading h3, .section-heading h4 { margin: 0; color: var(--ui-text); font-family: inherit; font-size: 22px; font-weight: 400; }
 .section-heading h4 { font-size: 19px; }
-.section-description, .empty-copy { margin: 7px 0 0; color: var(--ui-text-muted); font-size: 11px; line-height: 1.6; }
-.workspace-eyebrow { margin: 0 0 5px; color: var(--ui-success); font-size: 9px; font-weight: 800; letter-spacing: 0; }
+.section-description, .empty-copy { margin: 7px 0 0; color: var(--ui-text-muted); font-size: 13px; line-height: 1.6; }
+.workspace-eyebrow { margin: 0 0 5px; color: var(--ui-success); font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .assignment-filters { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(150px, .7fr) minmax(120px, .5fr) auto; align-items: end; gap: 9px; margin: 14px 0; }
-.assignment-filters label, .create-form > label, .form-row label { display: grid; gap: 6px; color: var(--ui-text-muted); font-size: 10px; font-weight: 700; }
-.assignment-filters input, .assignment-filters select, .create-form input, .create-form select, .create-form textarea { width: 100%; min-height: 39px; padding: 8px 10px; border: 1px solid var(--ui-border); border-radius: 8px; outline: none; color: var(--ui-text); background: var(--ui-warning-soft); font: inherit; }
+.assignment-filters label, .create-form > label, .form-row label { display: grid; gap: 6px; color: var(--ui-text-muted); font-size: 13px; font-weight: 700; }
+.assignment-filters input, .assignment-filters select, .create-form input, .create-form select, .create-form textarea { width: 100%; min-height: 39px; padding: 8px 10px; border: 1px solid var(--ui-border); border-radius: 8px; outline: none; color: var(--ui-text); background: var(--ui-surface); font: inherit; }
 .create-form textarea { resize: vertical; }
 .assignment-filters input:focus, .assignment-filters select:focus, .create-form input:focus, .create-form select:focus, .create-form textarea:focus { border-color: var(--ui-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-text) 13%, transparent); }
-.primary-button, .secondary-button, .danger-button, .row-action, .pagination button, .inline-error button { min-height: 35px; padding: 0 11px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-warning-soft); font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.primary-button, .secondary-button, .danger-button, .row-action, .pagination button, .inline-error button { min-height: 35px; padding: 0 11px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .primary-button { border-color: var(--ui-success); color: var(--ui-brand-contrast); background: var(--ui-success); }
 .danger-button { border-color: var(--ui-danger); color: var(--ui-brand-contrast); background: var(--ui-danger); }
 .row-action.destructive { color: var(--ui-danger); }
 .primary-button:disabled, .secondary-button:disabled, .danger-button:disabled, .pagination button:disabled { opacity: .55; cursor: not-allowed; }
-.assignment-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-warning-soft); }
+.assignment-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-surface); }
 table { width: 100%; min-width: 780px; border-collapse: collapse; text-align: left; }
-th { padding: 11px 12px; border-bottom: 1px solid var(--ui-border); color: var(--ui-text-muted); font-size: 9px; font-weight: 800; letter-spacing: 0; }
-td { padding: 12px; border-bottom: 1px solid var(--ui-border); color: var(--ui-text-muted); font-size: 10px; vertical-align: top; }
+th { padding: 11px 12px; border-bottom: 1px solid var(--ui-border); color: var(--ui-text-muted); font-size: 13px; font-weight: 800; letter-spacing: 0; }
+td { padding: 12px; border-bottom: 1px solid var(--ui-border); color: var(--ui-text-muted); font-size: 13px; vertical-align: top; }
 tbody tr:last-child td { border-bottom: 0; }
 td strong, td small { display: block; }
-td strong { color: var(--ui-text); font-size: 11px; }
+td strong { color: var(--ui-text); font-size: 13px; }
 td small { margin-top: 4px; color: var(--ui-text-muted); }
 .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .row-action { min-height: 29px; padding: 0 8px; }
-.status { display: inline-flex; padding: 4px 8px; border-radius: 999px; color: var(--ui-success); background: var(--ui-success-soft); font-size: 9px; font-weight: 700; }
+.status { display: inline-flex; padding: 4px 8px; border-radius: 999px; color: var(--ui-success); background: var(--ui-success-soft); font-size: 13px; font-weight: 700; }
 .status.inactive { color: var(--ui-warning); background: var(--ui-warning-soft); }
-.pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 13px; color: var(--ui-text-muted); font-size: 10px; }
-.loading, .empty-state { padding: 20px 10px; color: var(--ui-text-muted); text-align: center; font-size: 11px; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 13px; color: var(--ui-text-muted); font-size: 13px; }
+.loading, .empty-state { padding: 20px 10px; color: var(--ui-text-muted); text-align: center; font-size: 13px; }
 .empty-state h4 { margin: 0 0 5px; color: var(--ui-text); font-family: inherit; font-size: 17px; font-weight: 400; }
 .empty-state p { margin: 0; }
-.inline-error { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--ui-danger); border-radius: 9px; color: var(--ui-danger); background: var(--ui-warning-soft); font-size: 10px; }
-.success-message { padding: 10px 12px; border: 1px solid var(--ui-success); border-radius: 9px; color: var(--ui-success); background: var(--ui-surface-muted); font-size: 10px; }
-.create-panel, .details-panel, .confirmation { margin-top: 16px; padding: 17px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-warning-soft); }
+.inline-error { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--ui-danger); border-radius: 9px; color: var(--ui-danger); background: var(--ui-warning-soft); font-size: 13px; }
+.success-message { padding: 10px 12px; border: 1px solid var(--ui-success); border-radius: 9px; color: var(--ui-success); background: var(--ui-surface-muted); font-size: 13px; }
+.create-panel, .details-panel, .confirmation { margin-top: 16px; padding: 17px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-surface); }
 .create-form { display: grid; gap: 13px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr 170px; gap: 10px; }
 .student-picker { min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--ui-border); border-radius: 9px; }
-.student-picker legend { padding: 0 5px; color: var(--ui-text); font-size: 11px; font-weight: 700; }
+.student-picker legend { padding: 0 5px; color: var(--ui-text); font-size: 13px; font-weight: 700; }
 .student-picker legend span { color: var(--ui-text-muted); font-weight: 400; }
 .student-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; max-height: 250px; overflow: auto; }
 .student-option { display: flex; align-items: flex-start; gap: 8px; padding: 9px; border: 1px solid var(--ui-border); border-radius: 8px; background: white; cursor: pointer; }
 .student-option input { width: auto; min-height: 0; margin-top: 3px; accent-color: var(--ui-success); }
 .student-option strong, .student-option small { display: block; }
-.student-option strong { color: var(--ui-text); font-size: 10px; }
-.student-option small { margin-top: 3px; color: var(--ui-text-muted); font-size: 9px; }
+.student-option strong { color: var(--ui-text); font-size: 13px; }
+.student-option small { margin-top: 3px; color: var(--ui-text-muted); font-size: 13px; }
 .student-pagination { margin-bottom: 2px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .confirmation { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-color: var(--ui-warning); background: var(--ui-warning-soft); }
-.confirmation h4 { margin: 0; color: var(--ui-danger); font-size: 12px; }
-.confirmation p { margin: 5px 0 0; color: var(--ui-danger); font-size: 10px; }
-.details-panel > p { color: var(--ui-text-muted); font-size: 10px; }
+.confirmation h4 { margin: 0; color: var(--ui-danger); font-size: 13px; }
+.confirmation p { margin: 5px 0 0; color: var(--ui-danger); font-size: 13px; }
+.details-panel > p { color: var(--ui-text-muted); font-size: 13px; }
 .add-assignment-student { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin: 12px 0; }
-.add-assignment-student label { color: var(--ui-text-muted); font-size: 10px; font-weight: 700; }
-.add-assignment-student select { min-width: min(100%, 280px); min-height: 35px; padding: 7px 9px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-warning-soft); font: inherit; font-size: 10px; }
-.inline-confirmation { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 10px 0; padding: 9px; border: 1px solid var(--ui-warning); border-radius: 8px; color: var(--ui-danger); background: var(--ui-warning-soft); font-size: 10px; }
+.add-assignment-student label { color: var(--ui-text-muted); font-size: 13px; font-weight: 700; }
+.add-assignment-student select { min-width: min(100%, 280px); min-height: 35px; padding: 7px 9px; border: 1px solid var(--ui-border); border-radius: 8px; color: var(--ui-text); background: var(--ui-surface); font: inherit; font-size: 13px; }
+.inline-confirmation { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 10px 0; padding: 9px; border: 1px solid var(--ui-warning); border-radius: 8px; color: var(--ui-danger); background: var(--ui-warning-soft); font-size: 13px; }
 @media (max-width: 760px) { .assignment-filters { grid-template-columns: 1fr 1fr; } .form-row { grid-template-columns: 1fr; } .student-options { grid-template-columns: 1fr; } .confirmation { align-items: flex-start; flex-direction: column; } .section-heading { align-items: flex-start; } }

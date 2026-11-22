@@ -144,7 +144,7 @@ export class BillingSettingsComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ seller, accounts }) => { this.applySeller(seller); this.accounts.set(accounts); },
-        error: () => this.error.set('Ayarlar yüklenemedi.')
+        error: () => this.error.set('Ayarlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
@@ -192,7 +192,7 @@ export class BillingSettingsComponent implements OnInit {
   }
 
   private reloadAccounts(): void {
-    this.billing.getBankAccounts().subscribe({ next: accounts => this.accounts.set(accounts), error: () => this.error.set('Banka hesapları yüklenemedi.') });
+    this.billing.getBankAccounts().subscribe({ next: accounts => this.accounts.set(accounts), error: () => this.error.set('Banka hesapları yüklenemedi. Sayfayı yenileyip yeniden deneyin.') });
   }
 
   private applySeller(seller: BillingSeller): void {

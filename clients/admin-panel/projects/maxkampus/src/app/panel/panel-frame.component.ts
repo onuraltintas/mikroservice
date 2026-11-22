@@ -3,12 +3,13 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MaxkampusApi, MyBilling } from '../core/api';
 import { MaxkampusSession } from '../core/session.service';
 import { BrandMarkComponent } from '../site/brand-mark.component';
+import { ThemeMenuComponent } from '../core/theme-menu.component';
 
 /** The signed-in frame of maxkampus.com: brand, the owner's plan page, sign-out. */
 @Component({
   selector: 'mk-panel-frame',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, BrandMarkComponent],
+  imports: [RouterLink, RouterLinkActive, BrandMarkComponent, ThemeMenuComponent],
   template: `
     <header class="bar">
       <a routerLink="/panel" class="brand" aria-label="maxkampüs paneli"><mk-brand-mark [size]="30" /><strong>maxkampüs</strong></a>
@@ -17,6 +18,7 @@ import { BrandMarkComponent } from '../site/brand-mark.component';
         @if (session.role() === 'owner') { <a routerLink="/plan" routerLinkActive="on" ariaCurrentWhenActive="page">Planım ve ödemeler</a> }
         <a routerLink="/iletisim">Destek</a>
         <button type="button" (click)="signOut()">Çıkış yap</button>
+        <mk-theme-menu />
       </nav>
     </header>
     @if (switched(); as where) {

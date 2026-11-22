@@ -8,17 +8,19 @@
     @if (view(); as v) {
       <div class="strip" data-testid="today-strip">
         @if (v.exam; as exam) {
-          <div class="fact exam" [attr.aria-label]="(exam.source === 'Estimated' ? 'Tahminen ' : '') + exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
+          <div class="fact exam rise" [attr.aria-label]="(exam.source === 'Estimated' ? 'Tahminen ' : '') + exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
+            <span class="fact-icon" aria-hidden="true"><app-coaching-icon name="calendar" /></span>
             <strong>{{ exam.source === 'Estimated' ? '~' : '' }}{{ exam.daysLeft }}</strong>
             <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name }}@if (exam.source === 'Estimated') { <span data-testid="exam-estimated">, tahmini tarih</span> }</small></span>
           </div>
         }
-        <div class="fact streak" [class.is-on]="v.streak.currentStreak > 0">
+        <div class="fact streak rise" style="--i: 1" [class.is-on]="v.streak.currentStreak > 0">
+          <span class="fact-icon flame" aria-hidden="true"><app-coaching-icon name="flame" /></span>
           <strong>{{ v.streak.currentStreak }}</strong>
           <span>günlük seri<small>{{ v.streak.currentStreak === 0 ? 'Bugün başlat' : v.streak.activeToday ? 'Bugün de çalıştın' : 'Bugün sürdür' }}</small></span>
         </div>
         @if (v.week.planned > 0) {
-        <div class="fact week">
+        <div class="fact week rise" style="--i: 2">
           <cs-progress-ring [value]="v.week.completed" [max]="v.week.planned" [label]="'Bu hafta ' + v.week.planned + ' görevin ' + v.week.completed + ' tanesi bitti'" />
           <span>bu hafta<small>tamamlanan görev</small></span>
         </div>
@@ -39,7 +41,7 @@
     <div class="today-grid">
       <div class="today-main">
         @if (v.nextStep; as next) {
-          <section class="next" data-home-block="next-step" data-testid="next-step" aria-labelledby="next-title">
+          <section class="next rise" style="--i: 3" data-home-block="next-step" data-testid="next-step" aria-labelledby="next-title">
             <p class="next-label">Sıradaki adım</p>
             <h2 id="next-title">{{ next.item.title }}</h2>
             <p class="next-meta">
@@ -68,13 +70,14 @@
           </cs-card>
         }
 
-        <section class="list" data-home-block="today" data-testid="today-list" aria-labelledby="list-title">
+        <section class="list rise" style="--i: 4" data-home-block="today" data-testid="today-list" aria-labelledby="list-title">
           <div class="list-head">
             <h2 id="list-title">Bugünün işleri</h2>
             <span>{{ v.todayCount }} iş@if (v.overdueCount) {, {{ v.overdueCount }} gecikmiş}</span>
           </div>
           @for (row of rows(); track row.item.kind + row.item.recordId) {
-            <a class="row" [class.is-late]="row.overdue" [attr.data-record]="row.item.recordId" [routerLink]="link(row.item).path" [queryParams]="link(row.item).query">
+            <a class="row" [class.is-late]="row.overdue" [attr.data-kind]="row.item.kind" [attr.data-record]="row.item.recordId" [routerLink]="link(row.item).path" [queryParams]="link(row.item).query">
+              <span class="row-kind" aria-hidden="true"><app-coaching-icon [name]="kindIcon(row.item)" /></span>
               <span class="row-time">{{ row.overdue ? (row.item.date | date: 'd MMM') : (clock(row.item.startMinute) || 'Gün içi') }}</span>
               <span class="row-main"><strong>{{ row.item.title }}</strong><small>{{ meta(row, null) }}</small></span>
               @if (row.overdue) { <cs-status-chip label="Gecikti" tone="accent" /> }
@@ -89,7 +92,8 @@
               @if (upcomingError()) { <p class="empty">Yaklaşan işler yüklenemedi. Bölümü kapatıp yeniden aç.</p> }
               @else if (upcoming(); as list) {
                 @for (item of list; track item.kind + item.recordId) {
-                  <a class="row" [routerLink]="link(item).path" [queryParams]="link(item).query">
+                  <a class="row" [attr.data-kind]="item.kind" [routerLink]="link(item).path" [queryParams]="link(item).query">
+                    <span class="row-kind" aria-hidden="true"><app-coaching-icon [name]="kindIcon(item)" /></span>
                     <span class="row-time">{{ item.date | date: 'd MMM' }}</span>
                     <span class="row-main"><strong>{{ item.title }}</strong><small>{{ meta({ item, overdue: false }, null) }}</small></span>
                   </a>
@@ -101,7 +105,7 @@
         </section>
       </div>
 
-      <aside class="today-side" aria-label="Haftan ve hedefin">
+      <aside class="today-side rise" style="--i: 5" aria-label="Haftan ve hedefin">
         <!-- Paket C (#4): the target (school, programme or score) with the score gap; the net line stays as the second line. -->
         @if (goalCard(); as card) {
           @if (card.state === 'none' && v.goal) {

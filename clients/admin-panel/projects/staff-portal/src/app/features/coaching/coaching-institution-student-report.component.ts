@@ -8,6 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
+import { StaffBarsComponent, StaffChartPoint, StaffMeterComponent } from '../../shared/staff-charts';
 import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 import {
   CoachingInstitutionHistoryType,
@@ -20,11 +21,25 @@ import {
 @Component({
   selector: 'staff-coaching-institution-student-report',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent, StudentScoreEstimateComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent, StudentScoreEstimateComponent, StaffBarsComponent, StaffMeterComponent],
   templateUrl: './coaching-institution-student-report.component.html',
   styleUrl: './coaching-institution-student-report.component.scss'
 })
 export class CoachingInstitutionStudentReportComponent implements OnInit {
+  /** Exam results oldest first, as the share of the maximum score. */
+  examPoints(detail: CoachingInstitutionStudentDetail): StaffChartPoint[] {
+    return [...(detail.exams ?? [])].filter(exam => exam.maxScore > 0)
+      .sort((a, b) => a.examDate.localeCompare(b.examDate))
+      .map(exam => ({ label: exam.title, value: Math.round(exam.score / exam.maxScore * 100) }));
+  }
+
+  /** Graded assignments oldest first. */
+  assignmentScorePoints(detail: CoachingInstitutionStudentDetail): StaffChartPoint[] {
+    return [...(detail.assignments ?? [])].filter(assignment => assignment.score != null)
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+      .map(assignment => ({ label: assignment.title, value: assignment.score as number }));
+  }
+
   /** E3 #14: "10. sınıf", "Lise mezunu", "Üniversite öğrencisi" … */
   readonly educationLabel = educationLabel;
   readonly moveTabFocus = moveTabFocus;

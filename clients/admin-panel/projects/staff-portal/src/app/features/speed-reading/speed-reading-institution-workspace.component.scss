@@ -8,11 +8,11 @@
   justify-content: space-between;
   gap: 18px;
 }
-.workspace-heading-actions { display: grid; flex: 0 0 auto; justify-items: end; gap: 8px; }
+.workspace-heading-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; max-width: 34rem; }
 .workspace-eyebrow {
   margin: 0 0 8px;
   color: var(--ui-success);
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0;
 }
@@ -27,7 +27,7 @@
 .workspace-heading p:not(.workspace-eyebrow) {
   margin: 8px 0 0;
   color: var(--ui-text-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .member-count {
@@ -37,7 +37,7 @@
   border-radius: 999px;
   color: var(--ui-success);
   background: var(--ui-success-soft);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 .overview-section,
@@ -47,11 +47,11 @@
   padding: 21px;
   border: 1px solid var(--ui-border);
   border-radius: 15px;
-  background: var(--ui-surface-muted);
+  background: var(--ui-surface);
 }
 .report-scope {
   color: var(--ui-text-muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 .report-tabs {
   display: flex;
@@ -64,9 +64,9 @@
   border: 1px solid var(--ui-border);
   border-radius: 8px;
   color: var(--ui-text);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -86,7 +86,7 @@
   display: grid;
   gap: 6px;
   color: var(--ui-text-muted);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 .report-filters input {
@@ -96,9 +96,9 @@
   border: 1px solid var(--ui-border);
   border-radius: 8px;
   color: var(--ui-text);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
 }
 .report-filters .apply-button {
   min-height: 37px;
@@ -108,7 +108,7 @@
   color: var(--ui-brand-contrast);
   background: var(--ui-success);
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -130,7 +130,7 @@
 .report-content h5 {
   margin: 17px 0 8px;
   color: var(--ui-text);
-  font-size: 11px;
+  font-size: 13px;
 }
 .report-metrics {
   grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
@@ -148,7 +148,7 @@
   overflow: auto;
   border: 1px solid var(--ui-border);
   border-radius: 9px;
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
 }
 .report-table-wrap table {
   min-width: 100%;
@@ -188,11 +188,11 @@
   padding: 12px;
   border: 1px solid var(--ui-border);
   border-radius: 10px;
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
 }
 .metric-card span {
   color: var(--ui-text-muted);
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.4;
 }
 .metric-card strong {
@@ -206,14 +206,14 @@
 .pagination button,
 .inline-error button,
 .role-tabs button {
-  min-height: 35px;
-  padding: 0 11px;
+  min-height: 40px;
+  padding: 0 14px;
   border: 1px solid var(--ui-border);
-  border-radius: 8px;
+  border-radius: 999px;
   color: var(--ui-text);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -237,7 +237,7 @@
   display: grid;
   gap: 6px;
   color: var(--ui-text-muted);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 .roster-filters input,
@@ -249,9 +249,9 @@
   border-radius: 8px;
   outline: none;
   color: var(--ui-text);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
 }
 .roster-filters input:focus,
 .roster-filters select:focus {
@@ -268,8 +268,8 @@
   background: var(--ui-success);
 }
 .invitation-form { margin-bottom: 8px; }
-.invitation-success { margin: 0; padding: 10px 12px; border: 1px solid var(--ui-success); border-radius: 8px; color: var(--ui-success); background: var(--ui-surface-muted); font-size: 11px; }
-.invitation-note { margin: 0 0 14px; color: var(--ui-text-muted); font-size: 10px; line-height: 1.5; }
+.invitation-success { margin: 0; padding: 10px 12px; border: 1px solid var(--ui-success); border-radius: 8px; color: var(--ui-success); background: var(--ui-surface-muted); font-size: 13px; }
+.invitation-note { margin: 0 0 14px; color: var(--ui-text-muted); font-size: 13px; line-height: 1.5; }
 .loading,
 .empty-state,
 .inline-error {
@@ -277,17 +277,17 @@
   border: 1px dashed var(--ui-border);
   border-radius: 10px;
   color: var(--ui-text-muted);
-  background: var(--ui-warning-soft);
-  font-size: 11px;
+  background: var(--ui-surface);
+  font-size: 13px;
 }
 .empty-state h4 {
   margin: 0;
   color: var(--ui-text);
-  font-size: 12px;
+  font-size: 13px;
 }
 .empty-state p {
   margin: 6px 0 0;
-  font-size: 10px;
+  font-size: 13px;
 }
 .inline-error {
   display: flex;
@@ -307,14 +307,14 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 10px;
+  font-size: 13px;
   text-align: left;
 }
 th {
   padding: 11px 10px;
   color: var(--ui-text-muted);
-  background: var(--ui-accent-soft);
-  font-size: 9px;
+  background: var(--ui-surface-muted);
+  font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -330,12 +330,12 @@ td small {
 }
 td strong {
   color: var(--ui-text);
-  font-size: 10px;
+  font-size: 13px;
 }
 td small {
   margin-top: 4px;
   color: var(--ui-text-muted);
-  font-size: 9px;
+  font-size: 13px;
 }
 .status {
   display: inline-flex;
@@ -343,7 +343,7 @@ td small {
   border-radius: 999px;
   color: var(--ui-success);
   background: var(--ui-success-soft);
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
 }
 .status.inactive {
@@ -362,9 +362,9 @@ td small {
   border: 1px solid var(--ui-border);
   border-radius: 7px;
   color: var(--ui-text);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -380,23 +380,23 @@ td small {
   padding: 16px;
   border: 1px solid var(--ui-border);
   border-radius: 11px;
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
 }
 .management-confirmation {
   grid-template-columns: 1fr auto;
   align-items: center;
   border-color: var(--ui-warning);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
 }
 .management-confirmation h4 {
   margin: 0;
   color: var(--ui-text);
-  font-size: 12px;
+  font-size: 13px;
 }
 .management-confirmation p {
   margin: 5px 0 0;
   color: var(--ui-text-muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 .management-actions {
   display: flex;
@@ -411,7 +411,7 @@ td small {
   color: var(--ui-brand-contrast);
   background: var(--ui-success);
   font: inherit;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -432,7 +432,7 @@ td small {
   gap: 6px;
   margin-bottom: 8px;
   color: var(--ui-text-muted);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 .student-editor input,
@@ -444,9 +444,9 @@ td small {
   border-radius: 8px;
   outline: none;
   color: var(--ui-text);
-  background: var(--ui-warning-soft);
+  background: var(--ui-surface);
   font: inherit;
-  font-size: 11px;
+  font-size: 13px;
 }
 .teacher-search-row {
   display: flex;
@@ -462,7 +462,7 @@ td small {
 .field-message {
   margin: -2px 0 9px;
   color: var(--ui-danger);
-  font-size: 10px;
+  font-size: 13px;
 }
 .pagination {
   display: flex;
@@ -470,7 +470,7 @@ td small {
   justify-content: space-between;
   margin-top: 11px;
   color: var(--ui-text-muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 .pagination button:disabled {
   opacity: 0.45;
@@ -521,3 +521,13 @@ button:focus-visible {
     flex-wrap: wrap;
   }
 }
+// B design (21.11.2026): charts above the report tables, the tables one click away; the class split under the summary.
+.class-split { margin-top: 16px; padding: 14px 16px; border-radius: 14px; background: var(--ui-surface-muted); }
+.report-charts { display: grid; gap: 12px; margin-bottom: 10px; }
+.chart-table summary { min-height: 40px; display: flex; align-items: center; color: var(--ui-success); font-size: 13px; font-weight: 700; cursor: pointer; }
+.chart-table[open] summary { margin-bottom: 6px; }
+@media (max-width: 680px) {
+  .workspace-heading { flex-direction: column; align-items: flex-start; }
+  .workspace-heading-actions { justify-content: flex-start; }
+}
+.report-split { display: block; margin: 14px 0 4px; }

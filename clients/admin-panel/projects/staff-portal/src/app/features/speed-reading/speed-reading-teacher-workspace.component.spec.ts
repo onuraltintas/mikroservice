@@ -101,7 +101,7 @@ describe('SpeedReadingTeacherWorkspaceComponent', () => {
       });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Hızlı Okuma · Öğretmen');
+    expect(fixture.nativeElement.textContent).toContain('Hızlı Okuma, öğretmen');
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
     expect(fixture.nativeElement.textContent).toContain('245');
     expect(fixture.nativeElement.textContent).toContain('19');
@@ -303,6 +303,6 @@ describe('SpeedReadingTeacherWorkspaceComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci ayrıntılı raporu');
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
-    expect(fixture.nativeElement.textContent).toContain('245 WPM');
+    expect(fixture.nativeElement.textContent).toContain('245 kelime/dk');
   });
 });

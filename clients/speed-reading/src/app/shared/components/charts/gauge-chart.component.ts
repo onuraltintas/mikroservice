@@ -100,9 +100,10 @@ export class GaugeChartComponent implements AfterViewInit, OnChanges {
         data: [percentage, remaining],
         backgroundColor: [
           this.chartConfig.colors.primary,
-          this.chartConfig.colors.neutral
+          this.chartConfig.withAlpha(this.chartConfig.colors.primary, 0.12)
         ],
         borderWidth: 0,
+        borderRadius: 10,
         circumference: 180,
         rotation: 270
       }]
@@ -111,6 +112,8 @@ export class GaugeChartComponent implements AfterViewInit, OnChanges {
     this.gaugeChartOptions = {
       responsive: true,
       maintainAspectRatio: true,
+      cutout: '78%',
+      animation: this.chartConfig.animation,
       plugins: {
         legend: {
           display: false

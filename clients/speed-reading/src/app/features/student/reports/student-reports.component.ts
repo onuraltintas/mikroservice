@@ -102,6 +102,30 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
     return value === null || value === undefined ? '—' : `${Math.round(value)}${suffix}`;
   }
 
+  percent(value: number | null | undefined): string {
+    return value === null || value === undefined ? '—' : `%${Math.round(value)}`;
+  }
+
+  /** Start vs later phases as horizontal bars (speed and comprehension), latest phase highlighted. */
+  comparisonBars(comparison: AssessmentComparisonDto) {
+    const done = comparison.attempts;
+    const group = (key: 'speed' | 'comprehension', title: string, pick: (a: AssessmentComparisonPointDto) => number | null | undefined,
+      text: (v: number) => string, fixedMax?: number) => {
+      const rows = done.filter(a => pick(a) != null);
+      const max = fixedMax ?? Math.max(1, ...rows.map(a => pick(a) as number));
+      return { key, title, bars: rows.map((a, i) => ({
+        label: this.phaseLabel(a.phase),
+        width: Math.max(2, Math.round(((pick(a) as number) / max) * 100)),
+        text: text(pick(a) as number),
+        latest: i === rows.length - 1 && rows.length > 1
+      })) };
+    };
+    return [
+      group('speed', 'Okuma hızı', a => a.averageWpm, v => `${Math.round(v)} kelime/dk`),
+      group('comprehension', 'Anlama', a => a.averageComprehension, v => `%${Math.round(v)}`, 100)
+    ].filter(g => g.bars.length > 0);
+  }
+
   delta(value: number | null | undefined, suffix = ''): string {
     if (value === null || value === undefined) return '—';
     const sign = value > 0 ? '+' : '';

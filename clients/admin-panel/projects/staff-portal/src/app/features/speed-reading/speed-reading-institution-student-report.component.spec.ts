@@ -27,8 +27,8 @@ describe('SpeedReadingStudentReportComponent', () => {
       benchmark: Object.assign({}, report.comprehension.benchmark, { institutionAverage: 0, institutionDataAvailable: available }) } });
     fixture.detectChanges();
     const line = fixture.nativeElement.querySelector('[aria-labelledby="comprehension-report-title"] .benchmark-line') as HTMLElement;
-    expect(line.textContent).toContain(available ? '0%' : 'Veri yok');
-    if (!available) expect(line.textContent).not.toContain('0%');
+    expect(line.textContent).toContain(available ? '%0' : 'Veri yok');
+    if (!available) expect(line.textContent).not.toContain('%0');
   });
 
   it.each([false, true])('localizes benchmark and category labels in the scoped report (teacher=%s)', teacherScoped => {
@@ -95,7 +95,7 @@ describe('SpeedReadingStudentReportComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
     expect(fixture.nativeElement.textContent).toContain('Mehmet Kaya');
     expect(fixture.nativeElement.textContent).toContain('238');
-    expect(fixture.nativeElement.textContent).toContain('82%');
+    expect(fixture.nativeElement.textContent).toContain('%82');
     expect(fixture.nativeElement.textContent).toContain('Başarıyla sürdürüyor');
     expect(fixture.nativeElement.textContent).toContain('Özet çıkarma çalışmaları önerilir.');
     expect(fixture.nativeElement.textContent).toContain('Akıcı okuma');
@@ -109,11 +109,11 @@ describe('SpeedReadingStudentReportComponent', () => {
     ] } });
     fixture.detectChanges();
     const rows = Array.from(fixture.nativeElement.querySelectorAll('tr')) as HTMLTableRowElement[];
-    expect(rows.find(row => row.textContent?.includes('Bağımsız kelime'))?.textContent).toContain('100%');
-    expect(rows.find(row => row.textContent?.includes('Ölçülen sıfır'))?.cells[4].textContent?.trim()).toBe('0%');
+    expect(rows.find(row => row.textContent?.includes('Bağımsız kelime'))?.textContent).toContain('%100');
+    expect(rows.find(row => row.textContent?.includes('Ölçülen sıfır'))?.cells[4].textContent?.trim()).toBe('%0');
     const unmeasured = rows.find(row => row.textContent?.includes('Ölçülmeyen göz'))?.textContent;
-    expect(unmeasured).toContain('Ölçülmedi');
-    expect(unmeasured).not.toContain('0%');
+    expect(unmeasured).toContain('ölçülmedi');
+    expect(unmeasured).not.toContain('%0');
   });
 
   it('reloads analytics when a different student is selected in the same report view', () => {

@@ -30,7 +30,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 class="text-2xl font-bold text-(--ui-text)">{{ item.title }}</h1>
-              <p class="mt-1 text-sm text-(--ui-text-muted)">{{ item.source | coachingLabel }} · {{ item.status | coachingLabel }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
+              <p class="mt-1 text-sm text-(--ui-text-muted)">{{ item.source | coachingLabel }}, {{ item.status | coachingLabel }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
               <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-(--ui-border) px-4 py-2 text-sm">Yenile</button>
@@ -118,7 +118,7 @@ export class CoachingAssignmentDetailComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: value => this.assignment.set(value),
-        error: () => this.error.set('Ödev detayı yüklenemedi.')
+        error: () => this.error.set('Ödev detayı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 

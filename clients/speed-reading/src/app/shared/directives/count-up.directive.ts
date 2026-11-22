@@ -15,6 +15,7 @@ export class CountUpDirective implements OnChanges, OnDestroy {
   @Input('appCountUp') target: number = 0;
   @Input() cuDuration: number = 1000;   // ms
   @Input() cuDecimals: number = 0;      // ondalık basamak sayısı
+  @Input() cuPrefix: string = '';       // ör. '%' (Türkçede yüzde işareti önde: %86)
   @Input() cuSuffix: string = '';       // ör. '%', 'KDK'
 
   private el = inject(ElementRef<HTMLElement>);
@@ -50,13 +51,13 @@ export class CountUpDirective implements OnChanges, OnDestroy {
     const current = this.startValue + (this.endValue - this.startValue) * eased;
 
     this.el.nativeElement.textContent =
-      current.toFixed(this.cuDecimals) + this.cuSuffix;
+      this.cuPrefix + current.toFixed(this.cuDecimals) + this.cuSuffix;
 
     if (progress < 1) {
       this.rafId = requestAnimationFrame(ts => this.tick(ts));
     } else {
       this.el.nativeElement.textContent =
-        this.endValue.toFixed(this.cuDecimals) + this.cuSuffix;
+        this.cuPrefix + this.endValue.toFixed(this.cuDecimals) + this.cuSuffix;
     }
   }
 

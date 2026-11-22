@@ -435,3 +435,233 @@
     animation: none;
   }
 }
+
+// Master Hızlı Okuma lively design (21.11.2026; plan: claude/ho-ogrenci-tasarim-plani.md, önizleme tuvali).
+// Renkli kartlar, ölçülü hareket ve çizilerek gelen grafikler; egzersiz ve okuma alanında kullanılmaz.
+// Bileşen stillerinin önüne geçmek için #main-content (öğrenci kabuğunun içerik alanı) ile başlar.
+// Renkler yalnız değişkenlerden; "Hareketi azalt" açıksa hiçbir şey oynamaz (en altta).
+
+#main-content {
+  // ── Ana sayfa kartları: büyük köşe, yükselen gölge, açılışta sırayla ─────────────────────────────
+  :is(.dp-widget, .pa-widget, .qa-widget, .aw-widget, .sw-widget, .lb-widget, .ra-widget, .qw-widget) {
+    border: 0;
+    border-radius: var(--sp-radius-card-lg);
+    box-shadow: var(--sp-shadow-raised);
+    animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .db-grid__left > :nth-child(2) > *, .db-grid__right > :nth-child(2) > * { animation-delay: 80ms; }
+  .db-grid__left > :nth-child(3) > *, .db-grid__right > :nth-child(3) > * { animation-delay: 160ms; }
+  .db-grid__right > :nth-child(4) > * { animation-delay: 240ms; }
+  .db-grid__right > :nth-child(5) > * { animation-delay: 320ms; }
+
+  // Kart başlıklarındaki simge kutuları kendi tonlarında
+  .dp-widget__icon-wrap { background: var(--sp-tone-mint-soft); color: var(--sp-tone-mint); }
+  .pa-icon-wrap { background: var(--sp-tone-sea-soft); color: var(--sp-tone-sea); }
+  .aw-icon-wrap { background: var(--sp-tone-sand-soft); color: var(--sp-tone-sand); }
+  .sw-icon-wrap { background: var(--sp-tone-peach-soft); color: var(--sp-tone-peach); }
+  .lb-icon-wrap { background: var(--sp-tone-sand-soft); color: var(--sp-tone-sand); }
+  .ra-icon-wrap { background: var(--sp-tone-peach-soft); color: var(--sp-tone-peach); }
+
+  // ── Bugünkü plan: biten nane, sıradaki turuncu çerçeve ve altında odak çizgisi ───────────────────
+  .dp-widget__progress-fill { transform-origin: left; animation: sp-grow-x 1s .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .dp-timeline__item--done .dp-timeline__card { background: var(--sp-tone-mint-soft); border-color: transparent; }
+  .dp-timeline__item--done .dp-timeline__check { animation: sp-pop .45s .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .dp-timeline__item--active .dp-timeline__card {
+    position: relative;
+    background: var(--sp-surface);
+    border-color: transparent;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sp-focus-line) 45%, transparent), var(--sp-shadow-raised);
+    &::after {
+      content: '';
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 8px;
+      height: 3px;
+      border-radius: 3px;
+      background: var(--sp-focus-line);
+      transform-origin: left;
+      animation: sp-grow-x .9s .8s cubic-bezier(.2, .8, .2, 1) both;
+    }
+  }
+  .dp-timeline__item:not(.dp-timeline__item--done) .dp-timeline__type { color: var(--sp-tone-peach); }
+
+  // ── Performans: dört ölçüm kendi tonunda, halkalar çizilerek ────────────────────────────────────
+  .pa-card { border: 0; border-radius: 18px; transition: transform .2s ease;
+    &:hover { transform: translateY(-3px); } }
+  .pa-card--speed { background: var(--sp-tone-mint-soft); }
+  .pa-card--comp  { background: var(--sp-tone-sea-soft); }
+  .pa-card--eye   { background: var(--sp-tone-sand-soft); }
+  .pa-card--focus { background: var(--sp-tone-peach-soft); }
+  .pa-ring__track { stroke: var(--sp-surface); stroke-width: 5; }
+  .pa-ring__fill { stroke-width: 5; animation: sp-ring-in 1.4s .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .pa-ring__fill--speed { stroke: var(--sp-tone-mint); }
+  .pa-ring__fill--comp  { stroke: var(--sp-tone-sea); }
+  .pa-ring__fill--eye   { stroke: var(--sp-tone-sand); }
+  .pa-ring__fill--focus { stroke: var(--sp-tone-peach); }
+
+  // ── Seri: alevler hafifçe titrer ─────────────────────────────────────────────────────────────────
+  .sw-fire--lit { color: var(--sp-focus-line); animation: sp-flame 1.6s ease-in-out infinite; }
+  .sw-main { border: 0; background: var(--sp-tone-peach-soft); }
+  .sw-streak-num { color: var(--sp-tone-peach); }
+
+  // ── XP ve rozetler ───────────────────────────────────────────────────────────────────────────────
+  .lb-xp-fill { background: var(--sp-tone-sand); transform-origin: left; animation: sp-grow-x 1.1s .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .lb-badge { border: 0; border-radius: 16px; animation: sp-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; transition: transform .2s ease;
+    &:hover { transform: rotate(-4deg) scale(1.05); } }
+  .lb-badge:nth-child(3n + 1) { background: var(--sp-tone-sand-soft); color: var(--sp-tone-sand); animation-delay: .5s; }
+  .lb-badge:nth-child(3n + 2) { background: var(--sp-tone-mint-soft); color: var(--sp-tone-mint); animation-delay: .58s; }
+  .lb-badge:nth-child(3n + 3) { background: var(--sp-tone-sea-soft); color: var(--sp-tone-sea); animation-delay: .66s; }
+
+  // ── Hızlı erişim: her bağlantı kendi tonunda, üstüne gelince kayar ─────────────────────────────
+  .qa-link { border-radius: 14px; transition: transform .2s ease, background .2s ease;
+    &:hover { transform: translateX(4px); } }
+  .qa-link:nth-child(4n + 1) .qa-link__icon { background: var(--sp-tone-mint-soft); color: var(--sp-tone-mint); }
+  .qa-link:nth-child(4n + 2) .qa-link__icon { background: var(--sp-tone-peach-soft); color: var(--sp-tone-peach); }
+  .qa-link:nth-child(4n + 3) .qa-link__icon { background: var(--sp-tone-sea-soft); color: var(--sp-tone-sea); }
+  .qa-link:nth-child(4n + 4) .qa-link__icon { background: var(--sp-tone-sand-soft); color: var(--sp-tone-sand); }
+}
+
+@keyframes sp-ring-in { from { stroke-dashoffset: 126; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #main-content :is(.dp-widget, .pa-widget, .qa-widget, .aw-widget, .sw-widget, .lb-widget, .ra-widget, .qw-widget, .db-hero),
+  #main-content :is(.dp-widget, .pa-widget, .qa-widget, .aw-widget, .sw-widget, .lb-widget, .ra-widget, .qw-widget, .db-hero) * {
+    animation: none !important; transition: none !important; }
+}
+
+// ── Ana sayfa karşılama kartı ────────────────────────────────────────────────────────────────────
+#main-content {
+  .db-hero { border-radius: 24px; box-shadow: 0 22px 40px -24px color-mix(in srgb, var(--sp-primary) 90%, transparent);
+    animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; }
+  .db-hero__lines { position: relative; overflow: hidden; display: flex; gap: 8px; max-width: 360px; margin: 12px 0 4px; padding-bottom: 7px;
+    span { height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--ui-brand-contrast) 45%, transparent); }
+    span:nth-child(1) { flex: 2; } span:nth-child(2) { flex: 4; } span:nth-child(3) { flex: 3; }
+    i { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; border-radius: 4px; background: var(--sp-focus-line); } }
+  .db-hero__cta { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; margin-top: 10px; padding: 0 22px; border-radius: 999px;
+    background: var(--ui-brand-contrast); color: var(--ui-brand); font-weight: 600; text-decoration: none;
+    transition: transform .2s ease, box-shadow .2s ease;
+    &:hover { transform: translateY(-2px); box-shadow: 0 12px 22px -10px rgba(0, 0, 0, .35); }
+    .material-icons { font-size: 20px; } }
+  .db-quick-stat { padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--ui-brand-contrast) 12%, transparent);
+    animation: sp-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .db-quick-stat:nth-child(2) { animation-delay: .1s; } .db-quick-stat:nth-child(3) { animation-delay: .2s; }
+  .db-quick-stat__ring-fill { stroke: var(--sp-focus-line); }
+  .db-quick-stat__unit.sp-flame { color: var(--sp-focus-line); }
+  .progress-ring__value { animation: sp-ring-hero 1.4s .3s cubic-bezier(.2, .8, .2, 1) both; }
+}
+@keyframes sp-ring-hero { from { stroke-dashoffset: 150.8; } }
+
+// Koyu tema: karşılama kartı sade kalır ama koyu çam zeminde (ürünün koyu görsel zemini).
+:is([data-sp-theme='dark']) #main-content .db-hero { --ui-brand: var(--ds-visual-bg); --ui-brand-contrast: var(--ds-visual-text); border: 0; box-shadow: none; }
+#main-content .db-quick-stat__unit { color: var(--ui-brand-contrast); }
+#main-content .db-quick-stat__unit.sp-flame { color: var(--sp-focus-line); }
+
+// ── Günlük egzersizler (21.11.2026) ──────────────────────────────────────────────────────────────
+#main-content {
+  .de-stat { border: 0; border-radius: 18px; box-shadow: var(--sp-shadow-raised); animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; }
+  .de-stat--orange { background: var(--sp-tone-peach-soft); .de-stat__icon, .de-stat__value { color: var(--sp-tone-peach); } }
+  .de-stat--purple { background: var(--sp-tone-sand-soft); animation-delay: 60ms; .de-stat__icon, .de-stat__value { color: var(--sp-tone-sand); } }
+  .de-stat--blue   { background: var(--sp-tone-sea-soft); animation-delay: 120ms; .de-stat__icon, .de-stat__value { color: var(--sp-tone-sea); } }
+  .de-stat--green  { background: var(--sp-tone-mint-soft); animation-delay: 180ms; .de-stat__icon, .de-stat__value { color: var(--sp-tone-mint); } }
+  .de-progress-banner { border: 0; border-radius: 20px; box-shadow: var(--sp-shadow-raised); }
+  .de-progress-bar__fill { transform-origin: left; animation: sp-grow-x 1s .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .de-card { position: relative; border: 0; border-radius: var(--sp-radius-card-lg); box-shadow: var(--sp-shadow-raised); overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+    &:not(.de-card--locked):hover { transform: translateY(-4px); box-shadow: var(--sp-shadow-raised-hover);
+      .de-card__icon-wrap { transform: scale(1.08) rotate(-4deg); } } }
+  .de-card__header { background: var(--tone-soft); color: var(--tone); }
+  .de-card__icon-wrap { background: var(--sp-surface); color: var(--tone); transition: transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+  .de-card__icon { color: inherit; }
+  .de-card__order { background: var(--sp-surface); color: var(--tone); font-weight: 700; }
+  .de-card__done-badge { color: var(--sp-tone-mint); animation: sp-pop .45s .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .de-card__type { color: var(--tone); }
+  .de-card--done .de-card__done-row { color: var(--sp-tone-mint); }
+  .de-card--next { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--sp-focus-line) 45%, transparent), var(--sp-shadow-raised); }
+  .de-card__focus-line { position: absolute; left: 18px; right: 18px; bottom: 8px; height: 4px; border-radius: 4px; background: var(--sp-focus-line);
+    transform-origin: left; animation: sp-grow-x .9s .9s cubic-bezier(.2, .8, .2, 1) both; }
+  .de-card--locked { opacity: .78; }
+  .de-tabs { border: 0; box-shadow: var(--sp-shadow-raised); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #main-content :is(.de-stat, .de-card, .de-progress-bar__fill, .de-card__done-badge, .de-card__focus-line) { animation: none !important; transition: none !important; }
+  #main-content .de-card:hover { transform: none; }
+}
+
+// ── Egzersiz başlangıç ve sonuç kartları (21.11.2026) ────────────────────────────────────────────
+// Yalnız başlangıç (.ready-state) ve sonuç (.completed-state) kartları; egzersizin görev alanına dokunulmaz.
+// :is(app-exercise-player, #ho-lively) seçicisi bileşen stillerinin önüne geçer (kimlik özgüllüğü).
+:is(app-exercise-player, #ho-lively) {
+  .ready-state .start-card { border: 0; border-radius: var(--sp-radius-card-lg); box-shadow: var(--sp-shadow-raised); overflow: hidden;
+    animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; }
+  .ready-state .card-header-content { background: var(--tone-soft); color: var(--sp-text-1); }
+  .ready-state .exercise-icon-large { background: var(--sp-surface); color: var(--tone); animation: sp-pop .55s .2s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .ready-state .exercise-icon-large .material-icons { color: inherit; animation: sp-float 3s ease-in-out 1s infinite; }
+  .ready-state .exercise-subtitle { color: var(--tone); }
+  .ready-state .info-badge { border: 0; background: var(--tone-soft); color: var(--tone); }
+  .ready-state .start-button-large { border-radius: 999px; }
+  .ready-countdown { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 8px 20px 0; padding: 12px 16px; border-radius: 18px;
+    background: var(--sp-tone-mint-soft); color: var(--sp-text-1); font-size: 15px; font-weight: 500; line-height: 1.4; text-align: left; }
+  .ready-countdown__ring { position: relative; display: grid; place-items: center; width: 64px; height: 64px; flex: none; border-radius: 999px;
+    background: var(--sp-surface); box-shadow: inset 0 0 0 5px var(--sp-focus-line); }
+  .ready-countdown__num { font-size: 30px; font-weight: 700; color: var(--sp-tone-mint); animation: sp-count-tick 1s ease-out both; }
+
+  .completed-state .success-badge { position: relative; overflow: hidden; border: 0; border-radius: var(--sp-radius-card-lg); background: var(--tone-soft);
+    animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; }
+  .completed-state .success-badge .badge-icon { background: var(--sp-surface); color: var(--tone); animation: sp-pop .55s .3s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .completed-state .success-badge .level-text { color: var(--sp-text-1); }
+  .completed-state .stats-row .stat-card { border: 0; border-radius: 18px; animation: sp-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .completed-state .stats-row .stat-card:nth-child(1) { background: var(--sp-tone-mint-soft); animation-delay: .4s; .stat-value { color: var(--sp-tone-mint); } }
+  .completed-state .stats-row .stat-card:nth-child(2) { background: var(--sp-tone-sea-soft); animation-delay: .5s; .stat-value { color: var(--sp-tone-sea); } }
+  .completed-state .stats-row .stat-card:nth-child(3) { background: var(--sp-tone-sand-soft); animation-delay: .6s; .stat-value { color: var(--sp-tone-sand); } }
+  .completed-state .stats-row .stat-card:nth-child(4) { background: var(--sp-tone-peach-soft); animation-delay: .7s; .stat-value { color: var(--sp-tone-peach); } }
+  .completed-state .rewards-row .xp-earned { background: var(--sp-tone-sand-soft); color: var(--sp-tone-sand); animation: sp-pop .5s 1s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .completed-state .rewards-row .level-up { background: var(--sp-tone-mint-soft); color: var(--sp-tone-mint); animation: sp-pop .5s 1.1s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .completed-state .answers-summary .answer-item, .completed-state .question-answers-detail .answer-row { animation: sp-rise .45s cubic-bezier(.2, .8, .2, 1) both; }
+  .completed-state :is(.answers-summary .answer-item, .question-answers-detail .answer-row):nth-child(2) { animation-delay: 60ms; }
+  .completed-state :is(.answers-summary .answer-item, .question-answers-detail .answer-row):nth-child(3) { animation-delay: 120ms; }
+  .completed-state :is(.answers-summary .answer-item, .question-answers-detail .answer-row):nth-child(4) { animation-delay: 180ms; }
+  .completed-state :is(.answers-summary .answer-item, .question-answers-detail .answer-row):nth-child(n + 5) { animation-delay: 240ms; }
+  .completed-state .action-row .btn-primary, .completed-state .action-row .btn-secondary { border-radius: 999px; }
+
+  .success-confetti i { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: sp-confetti 2.2s ease-in both; }
+  .success-confetti i:nth-child(1) { left: 10%; background: var(--sp-focus-line); animation-delay: .2s; }
+  .success-confetti i:nth-child(2) { left: 26%; background: var(--sp-tone-sea); animation-delay: .5s; }
+  .success-confetti i:nth-child(3) { left: 45%; background: var(--sp-tone-sand); animation-delay: .1s; }
+  .success-confetti i:nth-child(4) { left: 62%; background: var(--sp-focus-line); animation-delay: .7s; }
+  .success-confetti i:nth-child(5) { left: 78%; background: var(--sp-tone-mint); animation-delay: .35s; }
+  .success-confetti i:nth-child(6) { left: 90%; background: var(--sp-tone-peach); animation-delay: .6s; }
+}
+@keyframes sp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes sp-count-tick { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes sp-confetti { from { transform: translateY(0) rotate(0); opacity: 1; } to { transform: translateY(220px) rotate(340deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  :is(app-exercise-player, #ho-lively) :is(.ready-state, .completed-state), :is(app-exercise-player, #ho-lively) :is(.ready-state, .completed-state) * {
+    animation: none !important; transition: none !important; }
+  :is(app-exercise-player, #ho-lively) .success-confetti { display: none; }
+}
+
+// Lively design step 6 (21.11.2026): the other student pages share the card radius, the soft raised shadow and a calm
+// empty-state icon in a soft circle. Exercise and reading areas are not touched.
+#main-content {
+  .sp-card,
+  .settings-card,
+  .profile-card,
+  .notifications-card {
+    border-radius: var(--sp-radius-card-lg, 22px);
+    box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card));
+  }
+
+  .empty-state > .material-icons,
+  .empty-state .sp-card-content > .material-icons,
+  .empty-state__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--sp-tone-mint-soft);
+    color: var(--sp-tone-mint);
+    font-size: 36px;
+  }
+}

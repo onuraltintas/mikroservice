@@ -30,9 +30,9 @@ type OperationalPage = { items: unknown[]; totalCount: number; totalPages: numbe
         </div>
         @if (canManage()) {
           <div class="flex flex-wrap gap-2">
-            <a routerLink="/dashboard/coaching/operations/new/session" class="rounded-lg bg-(--ui-brand) px-3 py-2 text-sm font-medium text-(--ui-brand-contrast)">Yeni seans</a>
-            <a routerLink="/dashboard/coaching/operations/new/exam" class="rounded-lg bg-(--ui-brand) px-3 py-2 text-sm font-medium text-(--ui-brand-contrast)">Yeni sınav</a>
-            <a routerLink="/dashboard/coaching/operations/new/goal" class="rounded-lg bg-(--ui-brand) px-3 py-2 text-sm font-medium text-(--ui-brand-contrast)">Yeni hedef</a>
+            <a routerLink="/dashboard/coaching/operations/new/session" class="rounded-full border border-(--ui-border-strong) bg-(--ui-surface) px-4 py-2 text-sm font-semibold text-(--ui-text) hover:bg-(--ui-surface-muted)">Yeni seans</a>
+            <a routerLink="/dashboard/coaching/operations/new/exam" class="rounded-full border border-(--ui-border-strong) bg-(--ui-surface) px-4 py-2 text-sm font-semibold text-(--ui-text) hover:bg-(--ui-surface-muted)">Yeni sınav</a>
+            <a routerLink="/dashboard/coaching/operations/new/goal" class="rounded-full border border-(--ui-border-strong) bg-(--ui-surface) px-4 py-2 text-sm font-semibold text-(--ui-text) hover:bg-(--ui-surface-muted)">Yeni hedef</a>
           </div>
         }
       </div>
@@ -71,7 +71,7 @@ type OperationalPage = { items: unknown[]; totalCount: number; totalPages: numbe
         <div class="overflow-x-auto rounded-xl border border-(--ui-border) bg-(--ui-surface) shadow-sm"><table class="min-w-full divide-y divide-(--ui-border) text-sm"><thead class="bg-(--ui-surface-muted) text-left text-xs text-(--ui-text-muted)"><tr><th class="px-4 py-3">Başlık</th><th class="px-4 py-3">Kategori</th><th class="px-4 py-3">İlerleme</th><th class="px-4 py-3">Hedef tarih</th><th class="px-4 py-3">Durum</th>@if (canManage()) { <th class="px-4 py-3">İşlem</th> }</tr></thead><tbody class="divide-y divide-(--ui-border)">@for (item of goals(); track item.id) {<tr><td class="px-4 py-3 font-medium"><a [routerLink]="['/dashboard/coaching/operations/goal', item.id, 'edit']" class="text-(--ui-brand-text) hover:underline">{{ item.title }}</a></td><td class="px-4 py-3">{{ item.category | coachingLabel }}</td><td class="px-4 py-3"><div class="flex items-center gap-2"><input type="number" min="0" max="100" [ngModel]="progressFor(item.id, item.currentProgress)" (ngModelChange)="setProgress(item.id, $event)" class="w-20 rounded border border-(--ui-border) px-2 py-1 text-sm" /><button type="button" (click)="updateGoalProgress(item.id)" [disabled]="actionLoading()" class="text-xs text-(--ui-brand-text) hover:underline">Kaydet</button></div></td><td class="px-4 py-3">{{ item.targetDate ? (item.targetDate | date:'dd.MM.yyyy') : '—' }}</td><td class="px-4 py-3">{{ item.isCompleted ? 'Tamamlandı' : 'Devam ediyor' }}</td>@if (canManage()) { <td class="px-4 py-3"><div class="flex gap-2"><a [routerLink]="['/dashboard/coaching/operations/goal', item.id, 'edit']" class="text-xs text-(--ui-brand-text) hover:underline">Düzenle</a><button type="button" (click)="deleteGoal(item.id)" [disabled]="actionLoading()" class="text-xs text-(--ui-danger) hover:underline">Sil</button></div></td> }</tr>} @empty {<tr><td [attr.colspan]="canManage() ? 6 : 5" class="px-4 py-10 text-center text-(--ui-text-muted)">Kayıt bulunamadı.</td></tr>}</tbody></table></div>
       }
 
-      <div class="flex items-center justify-between text-sm text-(--ui-text-muted)"><span>{{ totalCount() }} kayıt · Sayfa {{ page() }} / {{ totalPages() }}</span><div class="flex gap-2"><button type="button" (click)="goTo(page() - 1)" [disabled]="page() <= 1 || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="goTo(page() + 1)" [disabled]="page() >= totalPages() || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Sonraki</button></div></div>
+      <div class="flex items-center justify-between text-sm text-(--ui-text-muted)"><span>{{ totalCount() }} kayıt, sayfa {{ page() }} / {{ totalPages() }}</span><div class="flex gap-2"><button type="button" (click)="goTo(page() - 1)" [disabled]="page() <= 1 || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="goTo(page() + 1)" [disabled]="page() >= totalPages() || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Sonraki</button></div></div>
     </section>
   `
 })
@@ -123,12 +123,12 @@ export class CoachingOperationalComponent implements OnInit {
     request.pipe(finalize(() => this.loading.set(false))).subscribe({
       next: response => {
         this.totalCount.set(response.totalCount);
-        this.totalPages.set(Math.max(1, response.totalPages));
+        this.totalPages.set(Math.max(1, response.totalPages || 1));
         if (this.resource() === 'sessions') this.sessions.set(response.items as CoachingAdminSessionListItem[]);
         if (this.resource() === 'exams') this.exams.set(response.items as CoachingAdminExamListItem[]);
         if (this.resource() === 'goals') this.goals.set(response.items as CoachingAdminGoalListItem[]);
       },
-      error: () => this.error.set('Koçluk kayıtları yüklenemedi.')
+      error: () => this.error.set('Koçluk kayıtları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

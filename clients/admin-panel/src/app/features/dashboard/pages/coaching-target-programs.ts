@@ -49,7 +49,7 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
       @if (editing(); as e) {
         <form (ngSubmit)="save()" class="grid gap-3 rounded-xl border border-(--ui-brand-soft) bg-(--ui-surface) p-4 sm:grid-cols-2 lg:grid-cols-4" [attr.aria-label]="e.doc ? 'Programı düzenle' : 'Yeni program'">
           <h3 class="font-semibold sm:col-span-2 lg:col-span-4">{{ e.doc ? e.doc.data.universityName + ' · ' + e.doc.data.name : 'Yeni program' }}</h3>
-          @if (e.doc) { <p class="text-sm text-(--ui-text-muted) sm:col-span-2 lg:col-span-4">{{ sourceName(e.doc.data.source) }} · {{ e.doc.goalCount }} öğrenci hedefinde kullanılıyor</p> }
+          @if (e.doc) { <p class="text-sm text-(--ui-text-muted) sm:col-span-2 lg:col-span-4">{{ sourceName(e.doc.data.source) }}, {{ e.doc.goalCount }} öğrenci hedefinde kullanılıyor</p> }
           @if (!e.doc) {
             <label class="grid min-w-0 gap-1 text-sm font-medium sm:col-span-2">Üniversite<input name="universityName" [(ngModel)]="form.universityName" required maxlength="300" class="w-full min-w-0 rounded-lg border p-2"></label>
             <label class="grid min-w-0 gap-1 text-sm font-medium">Program kodu (isteğe bağlı)<input name="programCode" [(ngModel)]="form.programCode" maxlength="50" class="w-full min-w-0 rounded-lg border p-2"></label>
@@ -77,7 +77,7 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
       }
 
       <section class="overflow-hidden rounded-xl border border-(--ui-border) bg-(--ui-surface)" [attr.aria-busy]="loading()" aria-labelledby="programs-count">
-        <h3 id="programs-count" class="border-b px-4 py-3 text-sm font-semibold">{{ total() | number }} program · Sayfa {{ page() }} / {{ pages() }}</h3>
+        <h3 id="programs-count" class="border-b px-4 py-3 text-sm font-semibold">{{ total() | number }} program, sayfa {{ page() }} / {{ pages() }}</h3>
         @if (loading()) { <p role="status" class="p-4">Programlar yükleniyor…</p> }
         @else if (!items().length) { <p class="p-4 text-(--ui-text-muted)">Bu filtrelere uyan program yok.</p> }
         @else {
@@ -85,9 +85,9 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
             @for (p of items(); track p.id) {
               <li class="grid gap-2 p-4 md:grid-cols-[1fr_auto]">
                 <div class="min-w-0">
-                  <p class="break-words font-semibold text-(--ui-text)">{{ p.universityName }} · {{ p.name }}</p>
-                  <p class="break-words text-sm text-(--ui-text-muted)">{{ p.facultyName || 'Fakülte belirtilmemiş' }} · {{ p.city || 'Şehir yok' }} · {{ programType(p.programType) }} · {{ scoreName(p.scoreType) }}@if (p.programCode) { · Kod {{ p.programCode }} }</p>
-                  <p class="text-sm">Taban {{ p.minimumScore == null ? '—' : (p.minimumScore | number:'1.0-5') }} · Sıra {{ p.rank == null ? '—' : (p.rank | number) }} · Kontenjan {{ p.quota ?? '—' }} · {{ p.year || 'Yıl yok' }}</p>
+                  <p class="break-words font-semibold text-(--ui-text)">{{ p.universityName }}, {{ p.name }}</p>
+                  <p class="break-words text-sm text-(--ui-text-muted)">{{ p.facultyName || 'Fakülte belirtilmemiş' }}, {{ p.city || 'Şehir yok' }}, {{ programType(p.programType) }}, {{ scoreName(p.scoreType) }}@if (p.programCode) { · Kod {{ p.programCode }} }</p>
+                  <p class="text-sm">Taban {{ p.minimumScore == null ? '—' : (p.minimumScore | number:'1.0-5') }} · Sıra {{ p.rank == null ? '—' : (p.rank | number) }} · Kontenjan {{ p.quota ?? '—' }}, {{ p.year || 'Yıl yok' }}</p>
                 </div>
                 <div class="flex flex-wrap items-start gap-2">
                   <span class="rounded px-2 py-1 text-xs font-medium" [class]="p.isActive ? 'bg-(--ui-success-soft) text-(--ui-success)' : 'bg-(--ui-surface-muted) text-(--ui-text)'">{{ p.isActive ? 'Etkin' : 'Pasif' }}</span>
@@ -145,7 +145,7 @@ export class CoachingTargetProgramsComponent implements OnInit {
       const result = await firstValueFrom(this.admin.programs({ search: this.search.trim() || undefined, scoreType: this.scoreType || undefined, city: this.city.trim() || undefined,
         year: this.year || undefined, active: this.active === '' ? undefined : this.active === 'true', page, pageSize: this.pageSize }));
       this.items.set(result.items); this.total.set(result.totalCount); this.page.set(page);
-    } catch (error) { this.error.set(adminErrorMessage(error, 'Programlar yüklenemedi.')); }
+    } catch (error) { this.error.set(adminErrorMessage(error, 'Programlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
     finally { this.loading.set(false); }
   }
 

@@ -61,7 +61,7 @@
 
       <div class="content-wrap" [class.coaching-content]="isTeacherWorkspaceSelected">
         <section class="welcome-block">
-          <p class="eyebrow">{{ activeWorkspaceRole === 'institution' ? 'KURUM YÖNETİMİ' : 'ÖĞRETMEN ÇALIŞMA ALANI' }}</p>
+          <p class="eyebrow">{{ activeWorkspaceRole === 'institution' ? 'Kurum yönetimi' : 'Öğretmen çalışma alanı' }}</p>
           <h1>{{ isTeacherWorkspaceSelected ? 'Birlikte, adım adım ilerleyelim.' : activeWorkspaceRole === 'institution' ? 'Kurumunuz için tek çalışma alanı.' : 'Öğrencileriniz için tek çalışma alanı.' }}</h1>
           <p class="welcome-copy">
             @if (isTeacherWorkspaceSelected) { Öğrencilerinin çalışmalarını takip et, geri bildirim ver ve bir sonraki adımı birlikte planla. } @else { {{ currentProductLabel }} erişiminiz, bu üründeki rolünüze göre sınırlandırılmıştır.

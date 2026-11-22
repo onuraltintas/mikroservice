@@ -1,3 +1,4 @@
+import { AdminRoleLabelPipe } from '../../../../shared/components/admin-role-label';
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -10,7 +11,7 @@ import { LayoutService } from '../../services/layout.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [AdminRoleLabelPipe, CommonModule, RouterModule],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss']
 })
@@ -144,7 +145,7 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5M3.75 7.5A2.25 2.25 0 0 1 6 5.25h12a2.25 2.25 0 0 1 2.25 2.25m-16.5 0v9A2.25 2.25 0 0 0 6 18.75h12a2.25 2.25 0 0 0 2.25-2.25v-9" /></svg>'
           },
           {
-            label: 'E-posta Şablonları',
+            label: 'E-posta şablonları',
             route: '/dashboard/notifications/email-templates',
             permission: ADMIN_PERMISSIONS.notificationTemplates,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5A2.25 2.25 0 0 1 19.5 19.5h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0-8.69 5.612a2.25 2.25 0 0 1-2.44 0L2.25 6.75" /></svg>'

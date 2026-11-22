@@ -62,7 +62,7 @@ export class CoachingResourceEditComponent implements OnInit {
         else if (this.resource === 'exam') { const item = value as CoachingAdminExamDetail; this.exam = { title: item.title, type: item.examType, subject: item.subject ?? '', description: item.description ?? '', examDate: this.toLocalDateTime(item.examDate), durationMinutes: item.durationMinutes, maxScore: item.maxScore, targetGradeLevel: item.targetGradeLevel }; }
         else { const item = value as CoachingAdminGoalDetail; this.goal = { version: item.version, title: item.title, description: item.description ?? '', category: item.category, targetDate: item.targetDate ? new Date(item.targetDate).toISOString().slice(0, 10) : '', targetScore: item.targetScore, targetExamType: item.targetExamType ?? '', targetSubject: item.targetSubject ?? '' }; this.goalConflict.set(false); }
       },
-      error: () => this.error.set('Kayıt detayı yüklenemedi.')
+      error: () => this.error.set('Kayıt detayı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

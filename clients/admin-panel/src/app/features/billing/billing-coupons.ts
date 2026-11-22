@@ -5,6 +5,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { BillingAdminService, BillingCoupon, BillingPlan, CouponKind, billingErrorMessage } from '../../core/services/billing-admin.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
+import { AdminMeterComponent } from '../../shared/components/admin-charts';
 
 interface CouponDraft {
   id: string | null;
@@ -22,7 +23,7 @@ interface CouponDraft {
 @Component({
   selector: 'app-billing-coupons',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [AdminMeterComponent, CommonModule, FormsModule],
   template: `
     <main class="space-y-6" aria-labelledby="billing-coupons-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
@@ -70,7 +71,12 @@ interface CouponDraft {
                 <td class="font-mono"><strong>{{ coupon.code }}</strong></td>
                 <td>{{ coupon.kind === 'Percent' ? '%' + coupon.value : (coupon.value | number:'1.2-2') + ' TL' }}</td>
                 <td>{{ validity(coupon.startsAt ? (coupon.startsAt | date:'dd.MM.yyyy') : null, coupon.endsAt ? (lastDay(coupon.endsAt) | date:'dd.MM.yyyy') : null) }}</td>
-                <td>{{ coupon.usedCount }}{{ coupon.maxUses ? ' / ' + coupon.maxUses : '' }}</td>
+                <td>
+                  <span class="usage">{{ coupon.usedCount }}{{ coupon.maxUses ? ' / ' + coupon.maxUses : '' }}
+                    @if (coupon.maxUses) { <admin-meter [value]="coupon.usedCount" [max]="coupon.maxUses" [tone]="coupon.usedCount >= coupon.maxUses ? 'danger' : 'honey'"
+                      [label]="'Kullanım: ' + coupon.usedCount + ' / ' + coupon.maxUses" /> }
+                  </span>
+                </td>
                 <td>{{ planNames(coupon) }}</td>
                 <td><span class="badge" [class.on]="coupon.isActive" [class.off]="!coupon.isActive">{{ coupon.isActive ? 'Etkin' : 'Kapalı' }}</span></td>
                 <td class="actions"><button type="button" (click)="start(coupon)">Düzenle</button></td>
@@ -104,7 +110,7 @@ export class BillingCouponsComponent implements OnInit {
     this.error.set('');
     forkJoin({ coupons: this.billing.getCoupons(), plans: this.billing.getPlans() }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: ({ coupons, plans }) => { this.coupons.set(coupons); this.plans.set(plans); },
-      error: () => this.error.set('Kuponlar yüklenemedi.')
+      error: () => this.error.set('Kuponlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

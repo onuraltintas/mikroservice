@@ -2,14 +2,14 @@
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-            <h1 class="text-2xl font-bold text-(--ui-text) mb-1">Bildirim Yönetimi</h1>
+            <h1 class="text-2xl font-bold text-(--ui-text) mb-1">Bildirim yönetimi</h1>
             <p class="text-sm text-(--ui-text-muted)">Tüm sistem bildirimlerini görüntüleyin ve yönetin.</p>
         </div>
 
         <div class="flex items-center gap-2">
             <button mat-stroked-button color="primary" class="!rounded-xl" (click)="markAllAsRead()">
                 <mat-icon>done_all</mat-icon>
-                Tümünü Okundu İşaretle
+                Tümünü okundu işaretle
             </button>
             <button *ngIf="selection.hasValue()" mat-flat-button color="warn" class="!rounded-xl"
                 (click)="deleteSelected()">
@@ -182,11 +182,11 @@
                 class="w-20 h-20 bg-(--ui-surface-muted) rounded-full flex items-center justify-center mx-auto mb-4">
                 <mat-icon class="!w-10 !h-10 !text-[40px] text-(--ui-text-muted)">notifications_off</mat-icon>
             </div>
-            <h3 class="text-lg font-bold text-(--ui-text) mb-1">Bildirim Bulunamadı</h3>
+            <h3 class="text-lg font-bold text-(--ui-text) mb-1">Bildirim bulunamadı</h3>
             <p class="text-(--ui-text-muted)">Seçtiğiniz filtrelere veya arama kriterine uygun bildirim bulunmuyor.</p>
             <button mat-button color="primary" class="mt-4"
                 (click)="activeCategory.set('All'); activeStatus.set('all'); searchQuery.set('')">
-                Filtreleri Temizle
+                Filtreleri temizle
             </button>
         </div>
     </div>

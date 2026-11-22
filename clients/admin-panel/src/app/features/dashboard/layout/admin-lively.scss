@@ -1,0 +1,158 @@
+// Yönetim paneli: eduivme ailesinin canlı dili (21.11.2026, kullanıcı kararı: personel portalı ve maxkampüs ile aynı aile,
+// daha canlı ve hareketli; grafikler okunur). En son yüklenir; renkler yalnız değişkenlerden; hareket azaltmada hiçbir şey
+// kımıldamaz. Sayfaların kendi bileşen stilleri daha ağır gelir: kurallar "body .admin-shell" ile başlar.
+
+@keyframes admin-rise { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes admin-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes admin-breathe { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.08); opacity: .55; } }
+@keyframes admin-spark { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes admin-spin { to { transform: rotate(360deg); } }
+
+// Ton sınıfları: bir kart ya da kutucuk anlamının yumuşak rengini taşır.
+[data-brand='eduivme'] {
+  --admin-tone-info: var(--ds-info);
+  --admin-tone-info-soft: var(--ds-info-soft);
+  --admin-tone-success: var(--ds-success);
+  --admin-tone-success-soft: var(--ds-success-soft);
+  --admin-tone-violet: var(--ds-violet);
+  --admin-tone-violet-soft: var(--ds-violet-soft);
+  --admin-tone-orange: var(--ds-orange);
+  --admin-tone-orange-soft: var(--ds-orange-soft);
+  --admin-tone-honey: var(--ds-warning);
+  --admin-tone-honey-soft: var(--ds-warning-soft);
+  --admin-tone-danger: var(--ds-danger);
+  --admin-tone-danger-soft: var(--ds-danger-soft);
+  --admin-radius-card: var(--ds-radius-card, 16px);
+  --admin-shadow: var(--ds-shadow-raised, var(--ds-shadow));
+  --admin-shadow-hover: var(--ds-shadow-hover, var(--ds-shadow));
+}
+
+.admin-tone-info { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); }
+.admin-tone-success { --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft); }
+.admin-tone-violet { --tone: var(--admin-tone-violet); --tone-soft: var(--admin-tone-violet-soft); }
+.admin-tone-orange { --tone: var(--admin-tone-orange); --tone-soft: var(--admin-tone-orange-soft); }
+.admin-tone-honey { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); }
+.admin-tone-danger { --tone: var(--admin-tone-danger); --tone-soft: var(--admin-tone-danger-soft); }
+
+body .admin-shell {
+  // Sayfa zemini: hafif mavi-gri ton; içerik kartları beyaz ve yükseltilmiş.
+  main { background: var(--ds-page-tint, var(--ui-page)); }
+
+  // Sayfa açılınca bölümler bir kez, sırayla belirir.
+  main router-outlet + * > * { animation: admin-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+  @for $i from 1 through 10 { main router-outlet + * > :nth-child(#{$i}) { animation-delay: #{($i - 1) * 55}ms; } }
+
+  // Başlıklar: her sayfada aynı boyda, sakin; sayfa başlığının altındaki açıklama ikincil renkte.
+  main h1:is(.text-xl, .text-2xl) { font-size: 1.75rem; line-height: 1.25; font-weight: 700; letter-spacing: -.01em; color: var(--ui-text); }
+  main h1:is(.text-xl, .text-2xl) + p { color: var(--ui-text-muted); }
+
+  // Tablo kutuları: Tailwind'in siyah halkası yerine kartlarla aynı yumuşak gölge.
+  main .ring-1.ring-black { --tw-ring-color: transparent; border-radius: var(--admin-radius-card); box-shadow: var(--admin-shadow); }
+
+  // Kartlar: kenarlık yerine yumuşak gölge, daha yuvarlak köşe; tıklanan kartlar üstüne gelince yükselir.
+  main :is(.data-card, .form-card, .rounded-xl.border, .rounded-2xl.border) {
+    border-color: transparent;
+    border-radius: var(--admin-radius-card);
+    background: var(--ui-surface);
+    box-shadow: var(--admin-shadow);
+  }
+  main :is(a.data-card, a.rounded-xl.border, a.rounded-2xl.border, button.rounded-xl.border) {
+    transition: transform .2s ease, box-shadow .2s ease;
+    &:hover { transform: translateY(-3px); box-shadow: var(--admin-shadow-hover); }
+  }
+
+  // Sayı kutucukları (metric, metric-card): yumuşak tonlar sırayla döner, sayı tonun koyu renginde, bir kez belirir.
+  main :is(.metric, .metric-card) {
+    --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft);
+    border: 0; border-radius: 16px; background: var(--tone-soft); animation: admin-rise .5s cubic-bezier(.2, .8, .2, 1) both;
+    > span { color: var(--ui-text); font-size: .8125rem; font-weight: 600; }
+    > strong { color: var(--tone); font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  }
+  main :is(.metric, .metric-card):nth-child(4n + 2) { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); animation-delay: 50ms; }
+  main :is(.metric, .metric-card):nth-child(4n + 3) { --tone: var(--admin-tone-violet); --tone-soft: var(--admin-tone-violet-soft); animation-delay: 100ms; }
+  main :is(.metric, .metric-card):nth-child(4n + 4) { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); animation-delay: 150ms; }
+
+  // Düğmeler: ana düğme mürekkep renginde ve yuvarlak; ikincil düğme açık; ikisi de hafifçe tepki verir.
+  main :is(button, a).primary,
+  main :is(button, a).bg-\(--ui-brand\) {
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+    &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px -10px var(--ui-brand); }
+  }
+  main :is(button, a).secondary { border-radius: 10px; font-weight: 600; background: var(--ui-surface); }
+
+  // Sınıfsız düğmeler (ör. Koçluk portalıyla paylaşılan sayfalar): yuvarlak ikincil düğme; form gönderen düğme ana düğme.
+  main button:not([class]) {
+    min-height: 40px; padding: 8px 16px; border: 1px solid var(--ui-border-strong); border-radius: 999px; background: var(--ui-surface);
+    color: var(--ui-text); font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; transition: background-color .15s ease;
+    &:hover:not(:disabled) { background: var(--ds-soft); }
+    &:disabled { opacity: .5; cursor: not-allowed; }
+  }
+  main button[type='submit']:not([class]) { border-color: var(--ui-brand); background: var(--ui-brand); color: var(--ui-brand-contrast); }
+  main button[type='submit']:not([class]):hover:not(:disabled) { background: var(--ui-brand); box-shadow: 0 8px 18px -10px var(--ui-brand); }
+
+  // Tablolar: başlık satırı yumuşak zeminde, satırlar üstüne gelince belirginleşir.
+  main table thead th {
+    background: var(--ds-soft, var(--ui-surface-muted));
+    color: var(--ui-text-muted);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  main table thead th:first-child { border-top-left-radius: 10px; }
+  main table thead th:last-child { border-top-right-radius: 10px; }
+  main table tbody tr { transition: background-color .15s ease; }
+  main table tbody tr:hover { background: color-mix(in srgb, var(--ds-accent) 7%, var(--ui-surface)); }
+
+  // Form alanları: biraz daha yuvarlak, odakta bal rengi halka.
+  main :is(input:not([type='checkbox']):not([type='radio']), select, textarea) { border-radius: 10px; }
+  main :is(input, select, textarea, button, a):focus-visible { outline: 3px solid var(--ds-accent); outline-offset: 2px; }
+
+  // Başlığın üstündeki bölüm adı bir üst etiket değil, "nerede olduğunu" söyleyen sakin bir yol: küçük, ikincil renkte.
+  main header > p.text-sm.font-medium:first-child:has(+ h1),
+  main header > p.text-sm.font-medium.text-\(--ui-brand-text\):first-child { color: var(--ui-text-muted); font-size: .8125rem; font-weight: 500; }
+
+  // "Yükleniyor…" satırları: yanında dönen küçük bir halka (hareket azaltmada durur).
+  main [role='status'].muted::before,
+  main p[role='status']:not(:empty).text-sm::before { content: ''; display: inline-block; width: .9em; height: .9em; margin-right: .5em; vertical-align: -.1em;
+    border: 2px solid var(--ds-soft); border-top-color: var(--ds-accent); border-radius: 50%; animation: admin-spin .8s linear infinite; }
+
+  // Boş durum: simge yumuşak bir dairede.
+  main .empty { color: var(--ui-text-muted); }
+
+  // Sistem ayarları › Bakım modu: parlayan süs yerine sakin bir kart, üstte bal rengi şerit.
+  main .maintenance-card { background: var(--ui-surface); box-shadow: var(--admin-shadow); border-top: 4px solid var(--ds-accent); }
+
+  // Yan menü: her bölümün simgesi kendi tonunda bir kutuda; seçili öğede bal rengi çizgi.
+  app-sidebar nav > a > span:first-child,
+  app-sidebar nav > div > button > span:first-child {
+    display: grid; place-items: center; width: 30px; height: 30px; padding: 6px; border-radius: 9px;
+    background: var(--tone-soft, var(--ds-soft)); color: var(--tone, var(--ui-text-muted));
+  }
+  app-sidebar [data-section='Ana Sayfa'] { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); }
+  app-sidebar [data-section='Kullanıcı işlemleri'] { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); }
+  app-sidebar [data-section='Destek ve Bildirim'] { --tone: var(--admin-tone-orange); --tone-soft: var(--admin-tone-orange-soft); }
+  app-sidebar [data-section='Koçluk'] { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); }
+  app-sidebar [data-section='Hızlı Okuma'] { --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft); }
+  app-sidebar [data-section='eduivme sitesi'] { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); }
+  app-sidebar [data-section^='maxkampüs'] { --tone: var(--admin-tone-violet); --tone-soft: var(--admin-tone-violet-soft); }
+  app-sidebar [data-section='Abonelik ve Ödeme'] { --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft); }
+  app-sidebar [data-section='Sistem ayarları'] { --tone: var(--admin-tone-danger); --tone-soft: var(--admin-tone-danger-soft); }
+  app-sidebar .active-menu-item { box-shadow: inset 3px 0 var(--ds-accent); }
+
+  // Üst çubuktaki arama kutusu sayfa zeminine yaslanır.
+  header { box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .admin-shell main :is(.metric, .metric-card),
+  body .admin-shell main [role='status']::before,
+  body .admin-shell main router-outlet + * > *,
+  body .admin-shell main :is(a.data-card, a.rounded-xl.border, a.rounded-2xl.border, button.rounded-xl.border),
+  body .admin-shell main :is(button, a).primary,
+  body .admin-shell main :is(button, a).bg-\(--ui-brand\) { animation: none; transition: none; }
+  body .admin-shell main :is(a.data-card, a.rounded-xl.border, a.rounded-2xl.border, button.rounded-xl.border):hover,
+  body .admin-shell main :is(button, a).primary:hover { transform: none; }
+}

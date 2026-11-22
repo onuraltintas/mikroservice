@@ -5,9 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { Subject, finalize, forkJoin, takeUntil } from 'rxjs';
 import { CoachingAdminService, InstitutionCoachingComparison, InstitutionEarlyWarningReport, StudentEarlyWarning } from '../../../../../../src/app/core/services/coaching-admin.service';
 import { CoachingInstitutionStudent } from './coaching-institution.service';
+import { StaffMeterComponent } from '../../shared/staff-charts';
 
 @Component({
-  selector: 'staff-coaching-institution-analytics', standalone: true, imports: [CommonModule, FormsModule],
+  selector: 'staff-coaching-institution-analytics', standalone: true, imports: [CommonModule, FormsModule, StaffMeterComponent],
   template: `
     <section aria-labelledby="institution-analytics-title">
       <h3 id="institution-analytics-title">Kurum analizi ve erken uyarılar</h3>
@@ -20,23 +21,23 @@ import { CoachingInstitutionStudent } from './coaching-institution.service';
       </form>
       @if (error()) { <p role="alert">{{ error() }}</p> }
       @if (comparison(); as data) {
-        <p role="status">Uygulanan dönem: {{ data.fromDate | date:'dd.MM.yyyy' }} – {{ data.toDate | date:'dd.MM.yyyy' }} · {{ data.gradeLevel ? data.gradeLevel + '. sınıf' : 'Tüm sınıflar' }}</p>
+        <p role="status">Uygulanan dönem: {{ data.fromDate | date:'dd.MM.yyyy' }} – {{ data.toDate | date:'dd.MM.yyyy' }}, {{ data.gradeLevel ? data.gradeLevel + '. sınıf' : 'Tüm sınıflar' }}</p>
         <dl class="metrics">
-          <div><dt>Öğrenci</dt><dd>{{ data.studentCount }}</dd></div>
-          <div><dt>Ödev teslimi</dt><dd>{{ data.submittedAssignmentCount }} / {{ data.assignedAssignmentCount }}</dd></div>
-          <div><dt>Sınav ortalaması</dt><dd>{{ data.averageExamPercentage == null ? 'Veri yok' : '%' + data.averageExamPercentage }}</dd></div>
-          <div><dt>Seans katılımı</dt><dd>{{ data.attendancePercentage == null ? 'Veri yok' : '%' + data.attendancePercentage }}</dd></div>
-          <div><dt>Tamamlanan hedef</dt><dd>{{ data.completedGoalCount }} / {{ data.goalCount }}</dd></div>
+          <div class="tone-info"><dt>Öğrenci</dt><dd>{{ data.studentCount }}</dd></div>
+          <div class="tone-success"><dt>Ödev teslimi</dt><dd>{{ data.submittedAssignmentCount }} / {{ data.assignedAssignmentCount }}</dd><staff-meter tone="success" [value]="data.submittedAssignmentCount" [max]="data.assignedAssignmentCount" [label]="'Ödev teslimi: ' + data.submittedAssignmentCount + ' / ' + data.assignedAssignmentCount" /></div>
+          <div class="tone-violet"><dt>Sınav ortalaması</dt><dd>{{ data.averageExamPercentage == null ? 'Veri yok' : '%' + data.averageExamPercentage }}</dd>@if (data.averageExamPercentage != null) { <staff-meter tone="violet" [value]="data.averageExamPercentage" [max]="100" [label]="'Sınav ortalaması: %' + data.averageExamPercentage" /> }</div>
+          <div class="tone-orange"><dt>Seans katılımı</dt><dd>{{ data.attendancePercentage == null ? 'Veri yok' : '%' + data.attendancePercentage }}</dd>@if (data.attendancePercentage != null) { <staff-meter tone="orange" [value]="data.attendancePercentage" [max]="100" [label]="'Seans katılımı: %' + data.attendancePercentage" /> }</div>
+          <div class="tone-accent"><dt>Tamamlanan hedef</dt><dd>{{ data.completedGoalCount }} / {{ data.goalCount }}</dd><staff-meter tone="accent" [value]="data.completedGoalCount" [max]="data.goalCount" [label]="'Tamamlanan hedef: ' + data.completedGoalCount + ' / ' + data.goalCount" /></div>
         </dl>
       }
       @if (warnings(); as report) {
-        <h4>Öğrenci uyarıları · {{ report.totalCount }} kayıt</h4>
+        <h4>Öğrenci uyarıları ({{ report.totalCount }} kayıt)</h4>
         @if (!report.items.length) { <p>Bu filtrelerde uyarı bulunmuyor.</p> }
         @else {
           <div class="table-scroll"><table><thead><tr><th>Öğrenci</th><th>Öğretmen</th><th>Risk</th><th>Sinyaller</th><th>İşlem</th></tr></thead>
             <tbody>@for (warning of report.items; track warning.studentId) {
               <tr><td>{{ warning.studentName || 'Öğrenci adı bulunamadı' }}</td><td>{{ warning.teacherName || 'Atanmamış' }}</td>
-                <td>{{ riskLabel(warning) }} · {{ warning.riskScore }}</td><td>{{ reasons(warning) }}</td>
+                <td><span class="risk" [class.high]="riskLabel(warning) === 'Yüksek'" [class.medium]="riskLabel(warning) === 'Orta'">{{ riskLabel(warning) }}</span> <span class="score">{{ warning.riskScore }}</span></td><td>{{ reasons(warning) }}</td>
                 <td><button type="button" (click)="openStudent(warning)">Öğrenci raporu</button></td></tr>
             }</tbody></table></div>
         }
@@ -46,13 +47,28 @@ import { CoachingInstitutionStudent } from './coaching-institution.service';
       }
     </section>`,
   styles: [`
-    :host { display: block; } section { padding: 1.25rem; border: 1px solid var(--ui-border); border-radius: .8rem; background: var(--ui-surface); }
-    p { color: var(--ui-text-muted); font-size: .8rem; line-height: 1.6; } .filters { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin: 1.25rem 0; }
-    label { display: grid; gap: .4rem; font-size: .8rem; } input, select, button { padding: .6rem .8rem; border: 1px solid var(--ui-border); border-radius: .5rem; background: white; color: var(--ui-success); font: inherit; }
-    button { cursor: pointer; background: var(--ui-surface-muted); } button:disabled { opacity: .5; cursor: default; } .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: .75rem; }
-    .metrics div { padding: .9rem; border: 1px solid var(--ui-border); border-radius: .5rem; } dt { font-size: .75rem; color: var(--ui-text-muted); } dd { margin: .4rem 0 0; font-weight: 700; }
-    .table-scroll { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: .8rem; text-align: left; } th, td { padding: .75rem; border-bottom: 1px solid var(--ui-border); }
+    :host { display: block; } section { padding: 1.25rem; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); box-shadow: var(--ds-shadow); }
+    h3 { margin: 0; font-size: 1.25rem; } h4 { margin: 1.4rem 0 .6rem; font-size: 1rem; }
+    p { color: var(--ui-text-muted); font-size: .875rem; line-height: 1.6; } .filters { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin: 1.25rem 0; }
+    label { display: grid; gap: .4rem; font-size: .8125rem; font-weight: 700; color: var(--ui-text-muted); }
+    input, select, button { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--ui-border); border-radius: .65rem; background: var(--ui-surface); color: var(--ui-text); font: inherit; }
+    button { cursor: pointer; font-weight: 700; } form button[type=submit] { border-color: transparent; background: var(--ds-primary); color: var(--ds-on-primary); }
+    button:disabled { opacity: .5; cursor: default; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; margin: 0; }
+    .metrics div { display: grid; align-content: start; gap: .45rem; padding: 1rem; border-radius: .9rem; background: var(--tone-soft); --tone: var(--ds-info); --tone-soft: var(--ds-info-soft); --meter-track: var(--ui-surface);
+      animation: staff-rise .5s cubic-bezier(.2, .8, .2, 1) both; }
+    .metrics div:nth-child(2) { animation-delay: 60ms; } .metrics div:nth-child(3) { animation-delay: 120ms; } .metrics div:nth-child(4) { animation-delay: 180ms; } .metrics div:nth-child(5) { animation-delay: 240ms; }
+    .metrics .tone-success { --tone: var(--ds-success); --tone-soft: var(--ds-success-soft); } .metrics .tone-violet { --tone: var(--ds-violet); --tone-soft: var(--ds-violet-soft); }
+    .metrics .tone-orange { --tone: var(--ds-orange); --tone-soft: var(--ds-orange-soft); } .metrics .tone-accent { --tone: var(--ds-warning); --tone-soft: var(--ds-warning-soft); }
+    dt { font-size: .8125rem; font-weight: 700; color: var(--ui-text); } dd { margin: 0; color: var(--tone); font-size: 1.6rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .table-scroll { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: .875rem; text-align: left; } th, td { padding: .75rem; border-bottom: 1px solid var(--ui-border); }
+    th { color: var(--ui-text-muted); font-size: .8125rem; }
+    .risk { display: inline-flex; padding: .15rem .55rem; border-radius: 999px; background: var(--ds-success-soft); color: var(--ds-success); font-weight: 750; }
+    .risk.medium { background: var(--ds-orange-soft); color: var(--ds-orange); } .risk.high { background: var(--ds-danger-soft); color: var(--ds-danger); }
+    .score { color: var(--ui-text-muted); font-variant-numeric: tabular-nums; }
     .pagination { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: 1rem; } [role=alert] { color: var(--ui-danger); }
+    @keyframes staff-rise { from { opacity: 0; transform: translateY(10px); } }
+    @media (prefers-reduced-motion: reduce) { .metrics div { animation: none; } }
   `]
 })
 export class CoachingInstitutionAnalyticsComponent implements OnChanges {

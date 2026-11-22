@@ -91,7 +91,7 @@ const decisionText: Record<LinkDecision, { verb: string; done: string }> = {
       </section>
 
       <section class="overflow-hidden rounded-xl border border-(--ui-border) bg-(--ui-surface)" [attr.aria-busy]="loading()" aria-labelledby="approval-list-title">
-        <h2 id="approval-list-title" class="border-b px-4 py-3 text-sm font-semibold">{{ total() }} bağlantı · Sayfa {{ page() }} / {{ pages() }}</h2>
+        <h2 id="approval-list-title" class="border-b px-4 py-3 text-sm font-semibold">{{ total() }} bağlantı, sayfa {{ page() }} / {{ pages() }}</h2>
         @if (loading()) { <p role="status" class="p-4">Bağlantılar yükleniyor…</p> }
         @else if (!rows().length) { <p class="p-4 text-(--ui-text-muted)">Bu filtrelere uyan bağlantı yok.</p> }
         @else {
@@ -192,7 +192,7 @@ export class CoachingOutcomeApprovalsComponent implements OnInit {
     try {
       const result = await firstValueFrom(this.admin.mappings({ ...this.filter(), page, pageSize: this.pageSize }));
       this.rows.set(result.items); this.total.set(result.totalCount); this.page.set(page);
-    } catch (error) { this.error.set(adminErrorMessage(error, 'Bağlantılar yüklenemedi.')); }
+    } catch (error) { this.error.set(adminErrorMessage(error, 'Bağlantılar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
     finally { this.loading.set(false); }
   }
 
