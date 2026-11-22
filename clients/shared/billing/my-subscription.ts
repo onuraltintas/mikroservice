@@ -597,8 +597,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             <strong>{{ item.planName }}</strong>
             @if (c.organizationName(item); as name) { <span class="bill-tag">{{ name }}</span> }
             <span class="bill-tag" [class.bill-tag--ok]="item.isCurrent">{{ item.isCurrent ? 'Etkin' : 'Sona erdi' }}</span>
-            <div class="bill-muted">{{ c.date(item.startsAt) }} – {{ c.date(item.endsAt) }}
-              @if (item.seatCount) { · {{ item.seatCount }} {{ c.seatUnit(item) }} }
+            <div class="bill-muted">{{ c.date(item.startsAt) }} – {{ c.date(item.endsAt) }}@if (item.seatCount) {, {{ item.seatCount }} {{ c.seatUnit(item) }}}
             </div>
           </div>
           @if (item.seatCount && item.isCurrent) {
@@ -654,7 +653,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         <p>Havale ya da EFT açıklamasına <strong>yalnız bu kodu</strong> {{ c.t.writeCode }}. Sipariş {{ c.date(order.expiresAt) }} tarihine kadar geçerli.</p>
         @for (account of c.bankAccounts; track account.iban) {
           <div class="bill-bank">
-            <div><strong>{{ account.bankName }}</strong> · {{ account.accountHolder }}</div>
+            <div><strong>{{ account.bankName }}</strong>, {{ account.accountHolder }}</div>
             <div><span class="bill-code">{{ account.ibanFormatted }}</span>
               <button type="button" class="bill-copy" (click)="c.copy(account.iban)">{{ c.copied === account.iban ? 'Kopyalandı' : 'Kopyala' }}</button></div>
             @if (account.instructions) { <div class="bill-muted">{{ account.instructions }}</div> }
@@ -687,7 +686,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
     @if (c.plan; as plan) {
       <div class="bill-card">
         <h2>{{ plan.name }}</h2>
-        <p>{{ c.duration(plan.durationDays) }} ·
+        <p>{{ c.duration(plan.durationDays) }},
           @if (c.quote; as quote) {
             <s>{{ c.money(quote.listPrice, quote.currency) }}</s> <strong>{{ c.money(quote.amount, quote.currency) }}</strong> ({{ quote.code }})
           } @else { <strong>{{ c.money(c.breakdown(plan).total, plan.currency) }}</strong> }
@@ -833,8 +832,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
               <strong>{{ order.planName }}</strong>
               @if (order.kind === 'ExtraSeats') { <span class="bill-tag">{{ order.extraSeats }} ek {{ order.buyerType === 'Teacher' ? 'öğrenci' : 'koltuk' }}</span> }
               <span class="bill-tag" [class.bill-tag--ok]="order.status === 'Paid'">{{ c.orderStatus(order) }}</span>
-              <div class="bill-muted">{{ c.date(order.createdAt) }} · {{ c.money(order.amount, order.currency) }} · {{ order.paymentCode }}
-                @if (order.couponCode) { · kupon {{ order.couponCode }} }
+              <div class="bill-muted">{{ c.date(order.createdAt) }}, {{ c.money(order.amount, order.currency) }}, {{ order.paymentCode }}@if (order.couponCode) {, kupon {{ order.couponCode }}}
               </div>
               @if (order.reviewNote && order.status !== 'Paid') { <div class="bill-muted">Gerekçe: {{ order.reviewNote }}</div> }
               @if (order.withdrawal) { <div class="bill-muted">{{ c.withdrawalStatus(order.withdrawal) }}</div> }

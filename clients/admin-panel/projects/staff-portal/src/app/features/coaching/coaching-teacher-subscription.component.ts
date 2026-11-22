@@ -22,7 +22,7 @@ import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from '
         <div>
           <p class="eyebrow">Koçluk, bağımsız öğretmen</p>
           <h2 id="teacher-plan-title">Öğretmen planım</h2>
-          <p>Öğretmen planı, yalnızca Koçlukta size atanmış öğrenciler için koltuk sağlar. Kuruma bağlı öğretmenler kurum lisansını kullanır.</p>
+          <p>Öğretmen planı, yalnızca Koçlukta size atanmış öğrenciler için öğrenci hakkı sağlar. Kuruma bağlı öğretmenler kurum lisansını kullanır.</p>
         </div>
         <button type="button" class="secondary" (click)="load()" [disabled]="loading()">Yenile</button>
       </header>
