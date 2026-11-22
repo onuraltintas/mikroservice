@@ -8,7 +8,7 @@ import { BillingAdminService, BillingOverview, BillingProduct } from '../../core
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
 import { AdminBarsComponent, AdminPoint } from '../../shared/components/admin-charts';
 
-/** "Abonelik ve Ödeme › Genel bakış": what waits for a decision, what ends soon and what was approved this month. */
+/** "Abonelik ve ödeme › Genel bakış": what waits for a decision, what ends soon and what was approved this month. */
 @Component({
   selector: 'app-billing-overview',
   standalone: true,
@@ -16,7 +16,7 @@ import { AdminBarsComponent, AdminPoint } from '../../shared/components/admin-ch
   template: `
     <main class="space-y-6" aria-labelledby="billing-overview-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
         <h1 id="billing-overview-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Genel bakış</h1>
         <p class="mt-2 text-sm text-(--ui-text-muted)">Karar bekleyen işler, yakında biten abonelikler ve onaylanan ödemeler. Aylar Türkiye saatine göredir.</p>
       </header>

@@ -27,7 +27,7 @@ export class BottomNavigationComponent {
 
   navItems: NavItem[] = [
     {
-      label: 'Ana Sayfa',
+      label: 'Ana sayfa',
       icon: 'home',
       route: '/student/dashboard',
       activeRoutes: ['/student/dashboard', '/student']

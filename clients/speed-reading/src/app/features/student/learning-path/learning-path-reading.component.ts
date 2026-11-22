@@ -58,7 +58,7 @@ interface ReadingStart {
           </button>
         } @else {
           <div class="notice">Okuma çalışman kaydedildi. Günlük programın bundan etkilenmedi.</div>
-          <button class="primary" (click)="back()">Öğrenme Yoluna Dön</button>
+          <button class="primary" (click)="back()">Öğrenme yoluna dön</button>
         }
         }
       }

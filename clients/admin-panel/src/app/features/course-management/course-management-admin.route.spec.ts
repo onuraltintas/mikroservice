@@ -33,7 +33,7 @@ describe('Course Management admin entry points', () => {
     });
 
     const component = TestBed.createComponent(SidebarComponent).componentInstance;
-    const menu = () => component.menuItems().find(item => item.label === 'maxkampüs (Kurs Yönetimi)');
+    const menu = () => component.menuItems().find(item => item.label === 'maxkampüs (kurs yönetimi)');
 
     expect(menu()).toBeUndefined();
     // The administrative menus sit under the management permissions every admin has.

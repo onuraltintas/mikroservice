@@ -18,12 +18,12 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
       @if (loading()) { <p role="status">Abonelik yükleniyor…</p> }
       @else if (subscription(); as plan) {
         @if (plan.startsAt) {
-          <p><strong>{{ plan.planName }}</strong> · {{ plan.startsAt | date:'dd.MM.yyyy' }} tarihinde başlıyor, {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar. Koltukları şimdiden ayırabilirsiniz.</p>
+          <p><strong>{{ plan.planName }}</strong>, {{ plan.startsAt | date:'dd.MM.yyyy' }} tarihinde başlıyor, {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar. Koltukları şimdiden ayırabilirsiniz.</p>
         } @else {
-          <p><strong>{{ plan.planName }}</strong> · {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar</p>
+          <p><strong>{{ plan.planName }}</strong>, {{ plan.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar</p>
         }
         @if (plan.upcoming; as next) {
-          <p class="upcoming" data-testid="institution-upcoming">Yenileme: <strong>{{ next.planName }}</strong> {{ next.startsAt | date:'dd.MM.yyyy' }} – {{ next.accessUntil | date:'dd.MM.yyyy' }} · {{ next.usedStudentSeats }} / {{ next.includedStudentSeats }} koltuk ayrılmış. Bugünkü koltuklar yenilemeye taşınır.</p>
+          <p class="upcoming" data-testid="institution-upcoming">Yenileme: <strong>{{ next.planName }}</strong> {{ next.startsAt | date:'dd.MM.yyyy' }} – {{ next.accessUntil | date:'dd.MM.yyyy' }}, {{ next.usedStudentSeats }} / {{ next.includedStudentSeats }} koltuk ayrılmış. Bugünkü koltuklar yenilemeye taşınır.</p>
         }
         <p><strong>{{ plan.usedStudentSeats }} / {{ plan.includedStudentSeats }}</strong> öğrenci koltuğu ayrılmış.@if (plan.extraSeats) { <span data-testid="institution-extra-seats"> ({{ plan.extraSeats }} ek koltuk dahil; lisans bitince sona erer)</span> }</p>
         @if (!plan.startsAt && plan.extraSeatPrice) {
@@ -41,7 +41,7 @@ import { StaffMySubscriptionComponent } from '../../shared/billing/my-subscripti
         <nav aria-label="Kontenjan öğrenci sayfaları"><button type="button" (click)="changePage(-1)" [disabled]="saving() || page() <= 1">Önceki</button><span>Sayfa {{ page() }} / {{ totalPages() }}</span><button type="button" (click)="changePage(1)" [disabled]="saving() || page() >= totalPages()">Sonraki</button></nav>
         @for (seat of plan.students; track seat.studentId) {
           @if (!seat.isCurrentMember && !seat.isSuspended) {
-            <div class="departed"><span>Kurumdan ayrılmış öğrenci · {{ seat.assignedAt | date:'dd.MM.yyyy' }} tarihinde ayrılan koltuk</span>
+            <div class="departed"><span>Kurumdan ayrılmış öğrenci, {{ seat.assignedAt | date:'dd.MM.yyyy' }} tarihinde ayrılan koltuk</span>
               <button type="button" [disabled]="saving()" (click)="setSeat(seat.studentId, true)">Kontenjanı serbest bırak</button></div>
           }
         }

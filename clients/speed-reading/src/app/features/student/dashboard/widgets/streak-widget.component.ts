@@ -53,7 +53,7 @@ export class StreakWidgetComponent implements OnInit {
       date.setDate(today.getDate() - mondayOffset + i);
       const daysAgo = mondayOffset - i;
       return {
-        label: new Intl.DateTimeFormat('tr-TR', { weekday: 'narrow' }).format(date),
+        label: ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'][i],
         active: daysAgo >= 0 && daysAgo < streak,
         isToday: daysAgo === 0
       };

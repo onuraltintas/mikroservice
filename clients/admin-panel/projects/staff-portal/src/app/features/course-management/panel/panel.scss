@@ -118,7 +118,9 @@ th button.sort { all: unset; cursor: pointer; display: inline-flex; gap: 4px; al
 .empty { padding: 28px 20px; text-align: center; color: var(--ds-muted); }
 
 .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding: 16px 20px; }
-.filters .field { flex: 1 1 180px; }
+.filters .field { flex: 1 1 160px; max-width: 280px; }
+// Live test 22.11.2026: a field that wraps alone no longer stretches across the whole row; the search box is the wide one.
+.filters .field:first-child { flex-basis: 260px; max-width: none; }
 .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--ds-line); color: var(--ds-muted); font-size: 14px; }
 .pager .actions { gap: 8px; }
 

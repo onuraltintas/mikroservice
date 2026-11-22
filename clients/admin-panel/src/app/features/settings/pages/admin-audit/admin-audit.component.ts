@@ -10,6 +10,9 @@ import {
   AdminAuditServiceName
 } from '../../../../core/services/settings/admin-audit.service';
 
+/** Silinmiş hesapların kimlikleri; aynı oturumda yeniden sorulmaz. */
+const deletedActorIds = new Set<string>();
+
 @Component({
   selector: 'app-admin-audit',
   standalone: true,
@@ -56,7 +59,7 @@ import {
         <div class="overflow-x-auto">
           <table class="w-full min-w-[1050px] text-left text-sm">
             <thead class="bg-(--ui-surface-muted) text-xs text-(--ui-text-muted)">
-              <tr><th class="px-4 py-3">Zaman</th><th class="px-4 py-3">Aktör</th><th class="px-4 py-3">İşlem</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Tenant</th><th class="px-4 py-3">Değişen alanlar</th><th class="px-4 py-3">Correlation ID</th></tr>
+              <tr><th class="px-4 py-3">Zaman</th><th class="px-4 py-3">Aktör</th><th class="px-4 py-3">İşlem</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Kurum</th><th class="px-4 py-3">Değişen alanlar</th><th class="px-4 py-3">İzleme kimliği</th></tr>
             </thead>
             <tbody class="divide-y divide-(--ui-border)">
               @for (record of records(); track record.id) {
@@ -64,7 +67,7 @@ import {
                   <td class="px-4 py-3 whitespace-nowrap">{{ record.occurredAt | date:'dd.MM.yyyy HH:mm:ss' }}</td>
                   <td class="px-4 py-3">
                     <div class="font-medium">{{ actorLabel(record) }}</div>
-                    @if (actorEmail(record)) { <div class="text-xs text-(--ui-text-muted)">{{ actorEmail(record) }}</div> }
+                    @if (actorEmail(record) && actorEmail(record) !== actorLabel(record)) { <div class="text-xs text-(--ui-text-muted)">{{ actorEmail(record) }}</div> }
                     <div class="text-xs text-(--ui-text-muted)">{{ roleLabels(record.actorRoles) }}</div>
                     <details class="mt-1 text-xs text-(--ui-text-muted)"><summary class="cursor-pointer">Teknik kimlik</summary><span>{{ record.actorUserId }}</span></details>
                   </td>
@@ -241,7 +244,24 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
         value: 'Değer',
         adminNote: 'Yönetici notu',
         replyMessage: 'Yanıt',
-        isActive: 'Aktiflik durumu'
+        isActive: 'Aktiflik durumu',
+        content: 'İçerik',
+        title: 'Başlık',
+        isPublished: 'Yayın durumu',
+        email: 'E-posta',
+        rememberMe: 'Beni hatırla',
+        firstName: 'Ad',
+        lastName: 'Soyad',
+        phoneNumber: 'Telefon',
+        roles: 'Roller',
+        role: 'Rol',
+        password: 'Parola',
+        name: 'Ad',
+        description: 'Açıklama',
+        status: 'Durum',
+        price: 'Fiyat',
+        slug: 'Adres',
+        sortOrder: 'Sıra'
       };
       return fields.map(field => labels[String(field)] || String(field)).join(', ');
     } catch {
@@ -276,10 +296,15 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
   }
 
   private resolveActorLabels(records: AdminAuditRecord[]): void {
-    const ids = [...new Set(records.map(record => record.actorUserId).filter(Boolean))]
+    let ids = [...new Set(records.map(record => record.actorUserId).filter(Boolean))]
       .filter(id => !this.actorLabels()[id] && !this.resolvingActors.has(id));
     if (!ids.length) return;
 
+    // Live test 22.11.2026: a deleted actor answered 404 on every visit. Remember it for this browser session.
+    const known = ids.filter(id => deletedActorIds.has(id));
+    if (known.length) this.actorLabels.update(current => ({ ...current, ...Object.fromEntries(known.map(id => [id, { name: 'Silinmiş kullanıcı' }])) }));
+    ids = ids.filter(id => !deletedActorIds.has(id));
+    if (!ids.length) return;
     ids.forEach(id => this.resolvingActors.add(id));
     // Live test 19.11.2026 (A10): an actor whose account was deleted answers 404; the row then says so.
     forkJoin(ids.map(id => this.identityService.getUserById(id).pipe(
@@ -288,6 +313,7 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
         const id = ids[index];
         this.resolvingActors.delete(id);
         if (profile === 'deleted') {
+          deletedActorIds.add(id);
           this.actorLabels.update(current => ({ ...current, [id]: { name: 'Silinmiş kullanıcı' } }));
         } else if (profile) {
           const name = profile.fullName || `${profile.firstName} ${profile.lastName}`.trim() || profile.email;

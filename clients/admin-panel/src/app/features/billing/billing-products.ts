@@ -17,7 +17,7 @@ interface EntitlementDraft { id: string | null; productId: string; productCode: 
 interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales: boolean; }
 
 /**
- * "Abonelik ve Ödeme › Ürünler ve haklar": what is sold, the access keys each product understands, and the two
+ * "Abonelik ve ödeme › Ürünler ve haklar": what is sold, the access keys each product understands, and the two
  * settings every product has on its own: whether a subscription is needed, and how its bank transfers are approved.
  */
 @Component({
@@ -28,7 +28,7 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
     <main class="space-y-6" aria-labelledby="billing-products-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
           <h1 id="billing-products-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Ürünler ve haklar</h1>
           <p class="mt-2 text-sm text-(--ui-text-muted)">Her ürünün abonelik isteyip istemediğini ve havale/EFT ödemelerinin nasıl onaylanacağını buradan belirlersiniz. Haklar, planların kullanıcıya açtığı erişimlerdir.</p>
         </div>

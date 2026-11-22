@@ -17,6 +17,8 @@ interface DailyPlanItem {
   ageGroup?: string;
   /** Live test #55: the exercise's own estimate ("~5 dk" was written for every one). */
   estimatedDurationMinutes?: number;
+  /** Programdaki sıra; oynatıcı bu sırayla açılır. */
+  order?: number;
 }
 
 interface TodaysPlan {
@@ -31,6 +33,7 @@ interface TodaysPlan {
   isUnlocked: boolean;
   exercises?: DailyPlanItem[];
   isCompleted?: boolean;
+  programProgressId?: string;
 }
 
 @Component({
@@ -107,7 +110,8 @@ export class DailyPlanWidgetComponent implements OnInit {
                 completed: ex.isCompleted,
                 difficultyLevel: ex.difficultyLevel || 1,
                 ageGroup: ex.ageGroupName || '',
-                estimatedDurationMinutes: typeof ex.estimatedDurationMinutes === 'number' ? ex.estimatedDurationMinutes : undefined
+                estimatedDurationMinutes: typeof ex.estimatedDurationMinutes === 'number' ? ex.estimatedDurationMinutes : undefined,
+                order: typeof ex.order === 'number' ? ex.order : index + 1
               }));
 
               this.todaysPlan.set({
@@ -121,7 +125,8 @@ export class DailyPlanWidgetComponent implements OnInit {
                 status: completedCount === totalCount ? 'Completed' : 'InProgress',
                 isUnlocked: true,
                 exercises: mappedExercises,
-                isCompleted: completedCount === totalCount
+                isCompleted: completedCount === totalCount,
+                programProgressId: progressData.programProgressId ?? progressData.id
               });
             } else {
               this.todaysPlan.set(null);
@@ -150,12 +155,16 @@ export class DailyPlanWidgetComponent implements OnInit {
 
     const nextExercise = plan.exercises?.find(ex => !ex.completed);
 
-    if (nextExercise) {
-      // Navigate to daily exercises page
-      this.router.navigate(['/student/daily-exercises']);
-    } else {
-      this.router.navigate(['/student/daily-exercises']);
+    // Live test 22.11.2026: "Başla" opened the list instead of the exercise. It opens the next exercise itself,
+    // with the same program parameters as the daily exercises page.
+    if (nextExercise?.id && plan.programProgressId) {
+      this.router.navigate(['/student/exercises/universal-player', nextExercise.id], {
+        queryParams: { slotOrder: nextExercise.order, programDay: plan.dayNumber, programProgressId: plan.programProgressId },
+        state: { fromDailyExercises: true, practiceMode: false, difficultyLevel: nextExercise.difficultyLevel }
+      });
+      return;
     }
+    this.router.navigate(['/student/daily-exercises']);
   }
 
   goToSeries(): void {

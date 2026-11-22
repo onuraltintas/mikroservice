@@ -75,7 +75,7 @@
 
       @if (isEditing) {
         <fieldset class="participants-fieldset">
-          <legend>Mevcut katılımcılar · {{ selectedStudentIds().length }}</legend>
+          <legend>Mevcut katılımcılar, {{ selectedStudentIds().length }}</legend>
           <ul class="selected-students">
             @for (studentId of selectedStudentIds(); track studentId) {
               <li>{{ studentLabel(studentId) }}
@@ -96,7 +96,7 @@
         </fieldset>
       }
       <fieldset class="participants-fieldset">
-          <legend>{{ isEditing ? 'Öğrenci ekle' : 'Katılımcı öğrenciler · ' + selectedStudentIds().length + ' seçili' }}</legend>
+          <legend>{{ isEditing ? 'Öğrenci ekle' : 'Katılımcı öğrenciler, ' + selectedStudentIds().length + ' seçili' }}</legend>
           <div class="student-search" role="search">
             <label class="visually-hidden" for="session-student-search">Öğrenci ara</label>
             <input #studentSearchInput id="session-student-search" type="search" [value]="studentSearchTerm()" placeholder="Öğrenci adıyla ara">
@@ -106,7 +106,7 @@
             @for (student of students(); track student.userId) {
               <label class="student-option">
                 <input type="checkbox" [checked]="isSelected(student.userId)" (change)="toggleStudent(student.userId)">
-                <span>{{ student.fullName }}@if (student.gradeLevel) { <small> · {{ student.gradeLevel }}. sınıf</small> }</span>
+                <span>{{ student.fullName }}@if (student.gradeLevel) { <small>, {{ student.gradeLevel }}. sınıf</small> }</span>
               </label>
             } @empty {
               <p class="no-students">Bu aramayla eşleşen aktif öğrenci bulunamadı.</p>

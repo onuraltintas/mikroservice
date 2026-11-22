@@ -37,7 +37,7 @@ import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from '
       <section class="card" aria-labelledby="teacher-seats-title">
         <h3 id="teacher-seats-title">Öğrenci kontenjanım</h3>
         @if (seatSummary(); as summary) {
-          <p class="capacity"><strong>{{ summary.usedStudentSeats }} / {{ summary.includedStudentSeats }}</strong> öğrenci koltuğu kullanılıyor · {{ summary.planName }} · {{ summary.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar</p>
+          <p class="capacity"><strong>{{ summary.usedStudentSeats }} / {{ summary.includedStudentSeats }}</strong> öğrenci koltuğu kullanılıyor, {{ summary.planName }}, {{ summary.accessUntil | date:'dd.MM.yyyy' }} tarihine kadar</p>
           @if (students().length > 0) {
             <ul class="student-list">
               @for (student of students(); track student.userId) {
@@ -53,7 +53,7 @@ import { CoachingTeacherSeatSummary, CoachingTeacherSubscriptionService } from '
             </ul>
             <div class="pager">
               <button type="button" class="secondary" (click)="changeStudentPage(-1)" [disabled]="studentPage() <= 1">Önceki</button>
-              <span>Sayfa {{ studentPage() }} / {{ studentTotalPages() }} · {{ studentTotalCount() }} atanmış öğrenci</span>
+              <span>Sayfa {{ studentPage() }} / {{ studentTotalPages() }}, {{ studentTotalCount() }} atanmış öğrenci</span>
               <button type="button" class="secondary" (click)="changeStudentPage(1)" [disabled]="studentPage() >= studentTotalPages()">Sonraki</button>
             </div>
           } @else {

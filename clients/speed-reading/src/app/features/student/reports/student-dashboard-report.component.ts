@@ -1,3 +1,4 @@
+import { ExerciseProgramService } from '../../../core/services/exercise-program.service';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../../core/services/reports.service';
@@ -43,8 +44,16 @@ export class StudentDashboardReportComponent implements OnInit {
     return this.report()?.comprehensionDataAvailable ? Math.round(this.report()?.averageComprehension ?? 0) : null;
   });
 
+  /** Live test 22.11.2026: the card showed the XP level (4) while the program pages said 5. */
+  private exercisePrograms = inject(ExerciseProgramService);
+  programLevel = signal<number | null>(null);
+
   ngOnInit(): void {
     this.loadReport();
+    this.exercisePrograms.getMyProgress({ headers: { 'X-Skip-Error-Toast': 'true' } }).subscribe({
+      next: progress => this.programLevel.set(progress?.currentDifficultyLevel || null),
+      error: () => this.programLevel.set(null)
+    });
   }
 
   loadReport(): void {
@@ -166,7 +175,7 @@ export class StudentDashboardReportComponent implements OnInit {
     const points = this.report()?.comprehensionTrend ?? [];
     if (points.length === 0) return [];
     return [{
-      name: 'Anlama Oranı',
+      name: 'Anlama oranı',
       series: points.map(point => ({
           name: format(new Date(point.name + 'T00:00:00'), 'd MMM', { locale: tr }),
           value: point.series[0].value

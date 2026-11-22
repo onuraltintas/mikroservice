@@ -19,7 +19,7 @@ import { ToasterService } from '../../core/services/toaster.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
 /**
- * "Abonelik ve Ödeme › Banka ekstresi": the admin uploads the bank's export for one account. Lines are stored once;
+ * "Abonelik ve ödeme › Banka ekstresi": the admin uploads the bank's export for one account. Lines are stored once;
  * a line whose payment code and amount fit a waiting order is approved by itself where the product is set to automatic
  * approval, and waits for the admin otherwise. Everything else is listed with the reason.
  */
@@ -30,7 +30,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   template: `
     <main class="space-y-6" aria-labelledby="billing-statements-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
         <h1 id="billing-statements-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Banka ekstresi</h1>
         <p class="mt-2 text-sm text-(--ui-text-muted)">Bankadan indirdiğiniz hesap ekstresini (CSV ya da .xlsx) yükleyin. Açıklamasında ödeme kodu olan ve tutarı siparişle birebir tutan ödemeler eşleşir; ürünü "otomatik onay"da olanlar kendiliğinden onaylanır. Aynı ekstreyi yeniden yüklemek hiçbir satırı iki kez eklemez.</p>
       </header>

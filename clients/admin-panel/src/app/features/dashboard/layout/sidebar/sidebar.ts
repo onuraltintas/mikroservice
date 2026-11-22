@@ -63,7 +63,7 @@ export class SidebarComponent {
     ].some(permission => permissions.includes(permission));
     const items: any[] = [
       {
-        label: 'Ana Sayfa',
+        label: 'Ana sayfa',
         route: '/dashboard',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>'
       }
@@ -112,7 +112,7 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V5l7-3 7 3v16M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" /></svg>'
           },
           {
-            label: 'KVKK Talepleri',
+            label: 'KVKK talepleri',
             route: '/dashboard/identity/privacy-requests',
             permission: ADMIN_PERMISSIONS.privacyView,
             role: 'SystemAdmin',
@@ -129,17 +129,17 @@ export class SidebarComponent {
       });
 
       items.push({
-        label: 'Destek ve Bildirim',
+        label: 'Destek ve bildirim',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" /></svg>',
         children: [
           ...(isSystemAdmin ? [{
-            label: 'Yönetici Denetimi',
+            label: 'Yönetici denetimi',
             route: '/dashboard/settings/admin-audit',
             permission: ADMIN_PERMISSIONS.operationsView,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m5.25-4.5v6c0 5.25-3.75 9-8.25 10.5C7.5 20.25 3.75 16.5 3.75 11.25v-6L12 2.25l8.25 3Z" /></svg>'
           }] : []),
           {
-            label: 'Destek Gelen Kutusu',
+            label: 'Destek gelen kutusu',
             route: '/dashboard/notifications/support',
             permission: ADMIN_PERMISSIONS.supportView,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5M3.75 7.5A2.25 2.25 0 0 1 6 5.25h12a2.25 2.25 0 0 1 2.25 2.25m-16.5 0v9A2.25 2.25 0 0 0 6 18.75h12a2.25 2.25 0 0 0 2.25-2.25v-9" /></svg>'
@@ -158,7 +158,7 @@ export class SidebarComponent {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75c-2.485 0-4.5 1.007-4.5 2.25s2.015 2.25 4.5 2.25 4.5-1.007 4.5-2.25S14.485 6.75 12 6.75Zm0 0V3.75m0 7.5v3m0 3v3m-6.75-7.5c0 1.243 3.022 2.25 6.75 2.25s6.75-1.007 6.75-2.25m-13.5 0v4.5c0 1.243 3.022 2.25 6.75 2.25s6.75-1.007 6.75-2.25v-4.5" /></svg>',
         children: [
           {
-              label: 'Koçluk Özeti',
+              label: 'Koçluk özeti',
               route: '/dashboard/coaching',
               permission: ADMIN_PERMISSIONS.coachingView,
               icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v18h18M7.5 15l3-3 2.25 2.25 4.5-6" /></svg>'
@@ -206,7 +206,7 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" /></svg>'
           },
           {
-            label: 'Ders ve Müfredat Yönetimi',
+            label: 'Ders ve müfredat yönetimi',
             route: '/dashboard/coaching/curriculum',
             permission: ADMIN_PERMISSIONS.coachingContentManage,
             role: 'SystemAdmin',
@@ -349,7 +349,7 @@ export class SidebarComponent {
       if (isSystemAdmin) {
         const site = (label: string, view: string, icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>') => ({ label, icon, route: `/dashboard/maxkampus/site/${view}`, role: 'SystemAdmin', roleOnly: true });
         items.push({
-          label: 'maxkampüs (Kurs Yönetimi)',
+          label: 'maxkampüs (kurs yönetimi)',
           icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" /></svg>',
           children: [
             { label: 'Genel bakış ve kurumlar', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7.5 15l3-3 3 3 5.25-5.25" /></svg>', route: '/dashboard/maxkampus/overview', role: 'SystemAdmin', roleOnly: true },
@@ -369,11 +369,11 @@ export class SidebarComponent {
         });
       }
 
-      // "Abonelik ve Ödeme" (billing service): one section for every product. The service authorizes by the
+      // "Abonelik ve ödeme" (billing service): one section for every product. The service authorizes by the
       // SystemAdmin role alone (decision 14.11.2026: no finer permissions), so these items are role-only.
       if (isSystemAdmin) {
         items.push({
-          label: 'Abonelik ve Ödeme',
+          label: 'Abonelik ve ödeme',
           icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>',
           children: [
             {
@@ -448,13 +448,13 @@ export class SidebarComponent {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>',
         children: [
           {
-            label: 'Sistem Logları',
+            label: 'Sistem kayıtları',
             route: '/dashboard/settings/logs',
             permission: ADMIN_PERMISSIONS.operationsView,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>'
           },
           {
-            label: 'Log Temizleme',
+            label: 'Kayıt temizleme',
             route: '/dashboard/settings/log-retention',
             permission: ADMIN_PERMISSIONS.operationsView,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>'

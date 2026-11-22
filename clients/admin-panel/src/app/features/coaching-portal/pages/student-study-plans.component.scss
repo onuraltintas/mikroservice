@@ -76,3 +76,8 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 .short-run > summary { cursor: pointer; padding: .7rem .9rem; display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline; }
 .short-run[open] > summary { border-bottom: 1px solid var(--ui-border); }
 .short-run > :not(summary) { margin: .5rem; }
+
+// Live test 22.11.2026: "Kısmi kaydet" sits in its own fold under the one main action.
+.task-partial { margin-top: var(--coaching-space-3, 12px); border-top: 1px solid var(--ui-border); padding-top: var(--coaching-space-3, 12px); }
+.task-partial > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--ui-text); }
+.task-partial > summary:focus-visible { outline: 3px solid var(--ui-focus, var(--ui-brand)); outline-offset: 2px; }

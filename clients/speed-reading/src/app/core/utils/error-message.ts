@@ -26,6 +26,8 @@ const englishGenerics = [
   /^an unexpected error occurred\.?$/i,
   /^validation error$/i,
   /^(bad request|forbidden|unauthorized|not found|conflict|too many requests|internal server error|service unavailable)$/i,
+  // Live test 22.11.2026: "Page not found" from the CMS reached a student as "Hata: Page not found".
+  /^(page|resource|item|entity|record|user|content) not found\.?$/i,
   /^http failure/i,
   /^the .+ field is required\.?$/i,
   /^'.+' (must|is not|should)/i,

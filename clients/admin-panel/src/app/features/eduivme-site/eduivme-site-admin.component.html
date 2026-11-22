@@ -73,7 +73,7 @@
               @if (group.canAdd) { <button type="button" class="ds-btn ds-btn--secondary" (click)="add(group)">Ekle</button> }
             </div>
             @if (!group.entries.length) {
-              <p class="site-admin__muted">{{ group.kind === 'plan' && !plans().length ? 'Kurs Yönetimi için henüz plan yok. Planları Abonelik ve Ödeme › Planlar ekranında ekleyin; burada yalnız açıklamaları yazılır.' : (group.kind === 'notice' ? 'Yayında duyuru yok. "Ekle" ile ekleyin; duyurular kurum panelinin ilk sayfasında görünür.' : 'Henüz içerik yok. "Ekle" ile ekleyin; boş bölümler sitede görünmez.') }}</p>
+              <p class="site-admin__muted">{{ group.kind === 'plan' && !plans().length ? 'Kurs Yönetimi için henüz plan yok. Planları Abonelik ve ödeme › Planlar ekranında ekleyin; burada yalnız açıklamaları yazılır.' : (group.kind === 'notice' ? 'Yayında duyuru yok. "Ekle" ile ekleyin; duyurular kurum panelinin ilk sayfasında görünür.' : 'Henüz içerik yok. "Ekle" ile ekleyin; boş bölümler sitede görünmez.') }}</p>
             }
             <ul>
               @for (entry of group.entries; track entry.id; let first = $first; let last = $last) {

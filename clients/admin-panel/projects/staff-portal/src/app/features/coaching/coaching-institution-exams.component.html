@@ -16,7 +16,7 @@
   <div class="exam-list">
     @for (exam of exams().items; track exam.id) {
       <button type="button" class="exam-row" [class.active]="selected()?.id === exam.id" (click)="open(exam)">
-        <strong>{{ exam.title }}</strong><span>{{ exam.examName }} · {{ exam.examDate | date:'dd.MM.yyyy' }}{{ exam.gradeLevel ? ' · ' + exam.gradeLevel + '. sınıf' : '' }} · {{ exam.participants }} öğrenci</span>
+        <strong>{{ exam.title }}</strong><span>{{ exam.examName }}, {{ exam.examDate | date:'dd.MM.yyyy' }}{{ exam.gradeLevel ? ', ' + exam.gradeLevel + '. sınıf' : '' }}, {{ exam.participants }} öğrenci</span>
       </button>
     } @empty { <p>Henüz kurum denemesi yok.</p> }
   </div>
@@ -31,7 +31,7 @@
       </div>
       @if (preview(); as check) {
         <div class="import-preview" role="status">
-          <p>{{ check.rows }} satır okundu · {{ check.accepted.length }} uygun · {{ check.errors.length }} hatalı</p>
+          <p>{{ check.rows }} satır okundu, {{ check.accepted.length }} uygun, {{ check.errors.length }} hatalı</p>
           @if (check.errors.length) { <ul class="import-errors">@for (problem of check.errors; track problem.line) { <li>{{ problem.line }}. satır: {{ problem.message }}</li> }</ul> }
           @if (check.accepted.length && !check.errors.length) {
             <p>{{ check.accepted.length }} sonuç kaydedilecek{{ replacesAny(check) ? '; mevcut sonuçlar güncellenir' : '' }}.</p>

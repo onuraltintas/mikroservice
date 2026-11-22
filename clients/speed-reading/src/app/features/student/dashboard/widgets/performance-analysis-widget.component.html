@@ -5,7 +5,7 @@
       <span class="material-icons">analytics</span>
     </div>
     <div>
-      <h3 class="pa-widget__title">Performans Analizi</h3>
+      <h3 class="pa-widget__title">Performans analizi</h3>
       <p class="pa-widget__sub">Son egzersiz sonuçları</p>
     </div>
     <button class="pa-reports-btn" (click)="navigateToReports()" title="Tüm raporlar">
@@ -42,11 +42,11 @@
         </svg>
         <div class="pa-card__body">
           @if (data.readingSpeed.measured) {
-            <span class="pa-card__value">{{ data.readingSpeed.current | number:'1.0-0' }}<small>kelime/dk</small></span>
+            <span class="pa-card__value">{{ data.readingSpeed.current | number:'1.0-0' }} <small>kelime/dk</small></span>
           } @else {
             <span class="pa-card__value pa-card__value--empty">Ölçülmedi</span>
           }
-          <span class="pa-card__label">Okuma Hızı</span>
+          <span class="pa-card__label">Okuma hızı</span>
           @if (data.readingSpeed.measured) {
           <span class="pa-card__trend" [class.up]="data.readingSpeed.trend==='up'" [class.down]="data.readingSpeed.trend==='down'">
             <span class="material-icons">{{ getTrendIcon(data.readingSpeed.trend) }}</span>
@@ -93,7 +93,7 @@
           } @else {
             <span class="pa-card__value pa-card__value--empty">Ölçülmedi</span>
           }
-          <span class="pa-card__label">Göz Hareketi</span>
+          <span class="pa-card__label">Göz hareketi</span>
         </div>
       </div>
 

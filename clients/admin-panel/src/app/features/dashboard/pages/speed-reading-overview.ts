@@ -32,13 +32,16 @@ import { AdminPart, AdminRingComponent, AdminStatComponent } from '../../../shar
             <span class="sr__label">Çalışma biçimi</span>
             <strong>{{ modeLabel(data.mode) }}</strong>
           </article>
-          <article class="sr__links" aria-label="Bağlantılar">
-            <span class="sr__label">Bağlantılar</span>
+          <article class="sr__links" aria-label="Doğrudan servis bağlantıları">
+            <span class="sr__label">Doğrudan servis bağlantıları</span>
             <ul>
               <li [class.on]="data.coachingIntegrationEnabled"><i aria-hidden="true"></i>Koçluk<span>{{ data.coachingIntegrationEnabled ? 'Açık' : 'Kapalı' }}</span></li>
               <li [class.on]="data.notificationIntegrationEnabled"><i aria-hidden="true"></i>Bildirimler<span>{{ data.notificationIntegrationEnabled ? 'Açık' : 'Kapalı' }}</span></li>
               <li [class.on]="data.subscriptionIntegrationEnabled"><i aria-hidden="true"></i>Abonelik<span>{{ data.subscriptionIntegrationEnabled ? 'Açık' : 'Kapalı' }}</span></li>
             </ul>
+            <!-- Live test 22.11.2026: "Kapalı" read as "not working". These are the old direct links; billing and notifications run
+                 through the central services in the independent mode. -->
+            <small class="sr__note">Bağımsız çalışmada abonelik ve bildirimler merkezi servislerden yürür; bu ayarlar eski doğrudan bağlantılar içindir.</small>
           </article>
           @if (canManageContent()) {
             <article class="sr__ring"><admin-ring title="İçerik" unit="kayıt" [parts]="contentParts()" /></article>
@@ -105,6 +108,7 @@ import { AdminPart, AdminRingComponent, AdminStatComponent } from '../../../shar
     .sr__links ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
     .sr__links li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: var(--ds-soft); font-weight: 600; }
     .sr__links li span { margin-left: auto; color: var(--ds-muted); font-weight: 500; font-size: .875rem; }
+    .sr__note { display: block; margin-top: 8px; color: var(--ds-muted); font-size: .75rem; line-height: 1.4; }
     .sr__links i { width: 10px; height: 10px; border-radius: 50%; background: var(--ds-field); }
     .sr__links li.on { background: var(--ds-success-soft); }
     .sr__links li.on i { background: var(--ds-success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ds-success) 20%, transparent); animation: sr-pulse 2.4s ease-in-out infinite; }

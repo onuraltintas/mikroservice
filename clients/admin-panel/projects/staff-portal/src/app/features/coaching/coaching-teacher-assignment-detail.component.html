@@ -18,7 +18,7 @@
       <div>
         <p class="detail-eyebrow">Koçluk, ödev değerlendirmesi</p>
         <h2 id="assignment-detail-title">{{ item.title }}</h2>
-        <p>{{ item.subject || 'Koçluk ödevi' }} · {{ item.source === 'Digital' ? 'Dijital' : item.source === 'Book' ? 'Kitap' : item.source === 'Mixed' ? 'Kitap ve dijital' : item.source }}</p>
+        <p>{{ item.subject || 'Koçluk ödevi' }}, {{ item.source === 'Digital' ? 'Dijital' : item.source === 'Book' ? 'Kitap' : item.source === 'Mixed' ? 'Kitap ve dijital' : item.source }}</p>
       </div>
       <span class="detail-status" [attr.data-status]="item.status">{{ assignmentStatusLabel(item.status) }}</span>
     </header>
@@ -95,7 +95,7 @@
                   <div class="attachment-row">
                     <div>
                       <strong>{{ attachment.originalFileName }}</strong>
-                      <small>{{ formatFileSize(attachment.sizeBytes) }} · {{ attachmentStatusLabel(attachment.status) }}</small>
+                      <small>{{ formatFileSize(attachment.sizeBytes) }}, {{ attachmentStatusLabel(attachment.status) }}</small>
                     </div>
                     <button type="button" [disabled]="attachment.status !== 'Clean'"
                       [attr.data-testid]="'download-' + attachment.id"

@@ -82,9 +82,11 @@ describe('CoachingPortalLayoutComponent (T2 menu)', () => {
     expect(bell.getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('has no theme toggle in the header; the theme lives in settings', async () => {
+  it('has a light/dark switch in the header that names what it does (user decision 22.11.2026)', async () => {
     const fixture = create(); await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('.coaching-theme-toggle')).toBeNull();
+    const toggle = fixture.nativeElement.querySelector('.coaching-theme-toggle') as HTMLButtonElement;
+    expect(toggle).not.toBeNull();
+    expect(toggle.getAttribute('aria-label')).toMatch(/^(Açık|Koyu) temaya geç$/);
   });
 
   it('opens the account menu from the avatar with settings, payments, personal data and sign-out', async () => {
@@ -92,7 +94,7 @@ describe('CoachingPortalLayoutComponent (T2 menu)', () => {
     const avatar = fixture.nativeElement.querySelector('button.coaching-account-toggle') as HTMLButtonElement;
     avatar.click(); fixture.detectChanges(); await fixture.whenStable();
     const menu = fixture.nativeElement.querySelector('[role=menu]') as HTMLElement;
-    expect(hrefs(menu, 'a')).toEqual(['/coaching-portal/account/settings', '/coaching-portal/account/payments', '/coaching-portal/account/data']);
+    expect(hrefs(menu, 'a')).toEqual(['/coaching-portal/account/settings/profile', '/coaching-portal/account/payments', '/coaching-portal/account/data']);
     expect(menu.textContent).toContain('Profil ve ayarlar');
     expect(menu.textContent).toContain('Ödemeler');
     expect(menu.textContent).toContain('Kişisel verilerim');

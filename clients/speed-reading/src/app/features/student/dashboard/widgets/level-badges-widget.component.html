@@ -24,7 +24,7 @@
 
   <!-- Badges -->
   <div class="lb-badges-section">
-    <h4 class="lb-badges-title">Son başarımlar</h4>
+    <h4 class="lb-badges-title">{{ hasUnlocked() ? 'Başarımların' : 'Sıradaki başarımlar' }}</h4>
     <div class="lb-badges-grid">
       @for (badge of badges().slice(0, 3); track badge.id) {
         <div class="lb-badge" [class.lb-badge--locked]="!badge.unlocked" [title]="badge.description">
@@ -39,7 +39,7 @@
 
   <!-- Action -->
   <a routerLink="/student/achievements" class="lb-view-all">
-    Tüm Başarımlar
+    Tüm başarımlar
     <span class="material-icons">chevron_right</span>
   </a>
 </div>

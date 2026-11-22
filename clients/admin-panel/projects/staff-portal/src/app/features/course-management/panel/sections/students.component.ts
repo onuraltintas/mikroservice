@@ -95,7 +95,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
                       @if (student.emailsMuted) { <span class="badge">E-posta kapalı</span> }</th>
                     <td>{{ groupNames(student) }}</td>
                     @if (state.isOwner()) {
-                      <td>@if (student.guardianCount === 0) { <span class="badge warn">Veli yok</span> } @else if (student.guardianWithoutEmail) { <span class="badge warn">E-postası eksik</span> } @else { {{ student.guardianCount }} }</td>
+                      <td>@if (student.guardianCount === 0) { <span class="badge warn">Veli yok</span> } @else if (student.guardianWithoutEmail) { <span class="badge warn">E-postası eksik</span> } @else { {{ student.guardianCount === 1 ? '1 veli' : student.guardianCount + ' veli' }} }</td>
                       <td class="right num">@if (student.overdueAmount) { <span class="badge bad">{{ money(student.overdueAmount) }}</span> } @else { – }</td>
                     }
                     <td class="num">{{ date(student.createdAt) }}</td>

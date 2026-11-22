@@ -82,7 +82,7 @@
 
     @if (!editingGoalId() && studentTotalPages() > 1) {
       <div class="student-pagination">
-        <span>Öğrenci listesi · {{ studentPageNumber() }} / {{ studentTotalPages() }}</span>
+        <span>Öğrenci listesi, {{ studentPageNumber() }} / {{ studentTotalPages() }}</span>
         <button type="button" (click)="loadMoreStudents()" [disabled]="isLoadingStudents() || studentPageNumber() >= studentTotalPages()">
           Daha fazla öğrenci
         </button>
@@ -110,7 +110,7 @@
           <header class="goal-card-heading">
             <div>
               <h4>{{ goal.title }}</h4>
-              <p>{{ studentLabel(goal.studentId) }} · {{ goalCategoryLabel(goal.category) }}</p>
+              <p>{{ studentLabel(goal.studentId) }}, {{ goalCategoryLabel(goal.category) }}</p>
             </div>
             <span class="goal-state" [attr.data-completed]="goal.isCompleted">{{ goal.isCompleted ? 'Tamamlandı' : 'Devam ediyor' }}</span>
           </header>

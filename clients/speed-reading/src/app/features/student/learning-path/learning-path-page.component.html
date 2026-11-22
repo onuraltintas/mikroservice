@@ -4,7 +4,7 @@
             <span class="material-icons" aria-hidden="true">arrow_back</span>
         </button>
         <div class="header-content">
-            <h1>Öğrenme Yolculuğum</h1>
+            <h1>Kişisel öğrenme yolu</h1>
             <p>Kişiselleştirilmiş öğrenme rotanı takip et</p>
         </div>
     </div>
@@ -36,7 +36,7 @@
                         <span class="material-icons">format_list_numbered</span>
                     </div>
                     <div class="stat-info">
-                        <div class="stat-label">Toplam İçerik</div>
+                        <div class="stat-label">Toplam içerik</div>
                         <div class="stat-value">{{ progressSummary.totalItems }}</div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
                 @if (progressSummary?.totalItems === 0 && !generating) {
                 <button type="button" class="sp-btn sp-btn--primary generate-path-button" (click)="generatePath()">
                     <span class="material-icons">auto_awesome</span>
-                    Önerileri Kontrol Et
+                    Önerileri kontrol et
                 </button>
                 }
                 @if (generating) {

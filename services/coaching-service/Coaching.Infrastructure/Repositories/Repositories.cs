@@ -963,6 +963,24 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
             }
         }
 
+        // Live test 22.11.2026: a student with 7 overdue planned study tasks showed "Risk düşük, sinyal yok". Planned work left
+        // undone in the active plan (days inside the period, before today) is a signal too; only the count is read.
+        var fromDay = DateOnly.FromDateTime(fromDate);
+        var lastDay = DateOnly.FromDateTime(toDate).AddDays(-1);
+        var overdueRows = await context.StudyPlanTasks
+            .AsNoTracking()
+            .Where(item => studentIdList.Contains(item.StudentId)
+                && !item.IsCompleted && item.SkippedAt == null
+                && item.PlannedDate >= fromDay && item.PlannedDate <= lastDay
+                && context.StudyPlanRevisions.Any(revision => revision.Id == item.RevisionId && revision.Status == StudyPlanStatus.Active))
+            .GroupBy(item => item.StudentId)
+            .Select(group => new { StudentId = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+        foreach (var row in overdueRows)
+        {
+            if (accumulators.TryGetValue(row.StudentId, out var accumulator)) accumulator.OverdueStudyTaskCount = row.Count;
+        }
+
         return accumulators.Select(item => item.Value.ToMetrics(item.Key)).ToArray();
     }
 
@@ -977,6 +995,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
         public int GoalCount { get; set; }
         public int CompletedGoalCount { get; set; }
         public int GoalProgressTotal { get; set; }
+        public int OverdueStudyTaskCount { get; set; }
         public DateTime? LastActivityAt { get; private set; }
 
         public void RecordActivity(DateTime activityAt)
@@ -1001,7 +1020,8 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
                 GoalCount,
                 CompletedGoalCount,
                 GoalCount == 0 ? 0 : (int)Math.Round((decimal)GoalProgressTotal / GoalCount),
-                LastActivityAt);
+                LastActivityAt,
+                OverdueStudyTaskCount);
     }
 }
 

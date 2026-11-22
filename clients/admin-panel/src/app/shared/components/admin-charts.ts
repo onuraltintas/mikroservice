@@ -8,7 +8,7 @@ export interface AdminPoint { label: string; value: number; }
 export interface AdminPart { label: string; value: number; tone: AdminTone; }
 
 const numberFormat = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
-export const formatAdminValue = (value: number, percent = false) => (percent ? '%' : '') + numberFormat.format(value);
+export const formatAdminValue = (value: number, percent = false, unit = '') => (percent ? '%' : '') + numberFormat.format(value) + (unit ? ' ' + unit : '');
 
 const reduceMotion = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function'
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,8 +50,10 @@ export class AdminStatComponent {
   readonly tone = input<AdminTone>('info');
   readonly hint = input('');
   readonly percent = input(false);
+  /** Birim, sayının arkasına yazılır (ör. TL). */
+  readonly unit = input('');
   private readonly current = signal<number | null>(null);
-  readonly shown = computed(() => { const v = this.current(); return v === null ? '—' : formatAdminValue(v, this.percent()); });
+  readonly shown = computed(() => { const v = this.current(); return v === null ? '—' : formatAdminValue(v, this.percent(), this.unit()); });
 
   constructor() {
     effect(onCleanup => {
@@ -88,7 +90,7 @@ export class AdminStatComponent {
     :host { display: block; min-width: 0; }
     .bars { margin: 0; }
     figcaption { margin: 0 0 .5rem; color: var(--ds-text); font-size: .875rem; font-weight: 700; }
-    .plot { display: flex; align-items: stretch; gap: 6px; height: var(--admin-bars-height, 160px); padding: 12px 14px 0 10px; border-radius: 14px; background: var(--tone-soft); overflow-x: auto; }
+    .plot { display: flex; align-items: stretch; gap: 6px; height: var(--admin-bars-height, 160px); padding: 12px 14px 0 10px; border-radius: 14px; background: var(--tone-soft); overflow: hidden; }
     .col { display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); flex: 1 0 22px; min-width: 22px; justify-items: center; }
     .plot.dense { gap: 3px; } .plot.dense .col { flex-basis: 10px; min-width: 10px; }
     .val { grid-row: 1; align-self: end; margin-bottom: 3px; color: var(--ds-text); font-size: .75rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -111,9 +113,10 @@ export class AdminBarsComponent {
   readonly title = input('');
   readonly tone = input<AdminTone>('info');
   readonly percent = input(false);
+  readonly unit = input('');
   readonly view = computed(() => {
     const points = this.points(); const max = Math.max(0, ...points.map(p => p.value)); const step = Math.max(1, Math.ceil(points.length / 8));
-    return points.map((p, i) => ({ label: p.label, text: formatAdminValue(p.value, this.percent()),
+    return points.map((p, i) => ({ label: p.label, text: formatAdminValue(p.value, this.percent(), this.unit()),
       height: max > 0 ? Math.max(0, p.value) / max * 100 : 0, peak: max > 0 && p.value === max, showLabel: i % step === 0 }));
   });
   readonly label = computed(() => `${this.title() || 'Grafik'}: ` + (this.view().map(p => `${p.label} ${p.text}`).join(', ') || 'veri yok'));

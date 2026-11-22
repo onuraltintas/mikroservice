@@ -69,9 +69,9 @@
         @if (billingOverview(); as b) {
           <div class="mini-stats mini-stats--two">
             <admin-stat label="Etkin abonelik" [value]="b.currentSubscriptions" tone="success" />
-            <admin-stat label="Bu ay onaylanan ödeme" [value]="b.approvedThisMonth" tone="honey" />
+            <admin-stat label="Bu ay onaylanan ödeme" [value]="b.approvedThisMonth" tone="honey" unit="TL" />
           </div>
-          <admin-bars title="Onaylanan ödemeler" [points]="subscriptionBars()" tone="honey" />
+          <admin-bars title="Onaylanan ödemeler (TL)" [points]="subscriptionBars()" tone="honey" />
           @if (b.endingSoon.length) {
             <h3 class="sub-title">Yakında bitenler</h3>
             <ul class="rows">

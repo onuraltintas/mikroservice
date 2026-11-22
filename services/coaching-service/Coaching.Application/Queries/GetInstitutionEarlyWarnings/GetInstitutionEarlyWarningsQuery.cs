@@ -65,7 +65,8 @@ public sealed record StudentEarlyWarningDto(
     string? StudentEmail = null,
     int? GradeLevel = null,
     string? TeacherName = null,
-    Guid? TeacherUserId = null);
+    Guid? TeacherUserId = null,
+    int OverdueStudyTaskCount = 0);
 
 public enum EarlyWarningRiskLevel
 {
@@ -81,6 +82,7 @@ public static class EarlyWarningReasonCodes
     public const string LowAttendance = "low_attendance";
     public const string LowGoalProgress = "low_goal_progress";
     public const string NoRecentActivity = "no_recent_activity";
+    public const string OverdueStudyTasks = "overdue_study_tasks";
 }
 
 public sealed class GetInstitutionEarlyWarningsQueryHandler(
@@ -203,6 +205,13 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
             reasonCodes.Add(EarlyWarningReasonCodes.LowGoalProgress);
         }
 
+        // Live test 22.11.2026: planned study work left undone (3+ tasks in the period) is a warning sign.
+        if (metrics.OverdueStudyTaskCount >= 3)
+        {
+            score += metrics.OverdueStudyTaskCount >= 6 ? 25 : 15;
+            reasonCodes.Add(EarlyWarningReasonCodes.OverdueStudyTasks);
+        }
+
         if (!metrics.LastActivityAt.HasValue
             || metrics.LastActivityAt.Value < toDate.AddDays(-NoRecentActivityDays))
         {
@@ -235,6 +244,7 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
             attendancePercentage,
             metrics.GoalCount,
             metrics.AverageGoalProgress,
-            metrics.LastActivityAt);
+            metrics.LastActivityAt,
+            OverdueStudyTaskCount: metrics.OverdueStudyTaskCount);
     }
 }

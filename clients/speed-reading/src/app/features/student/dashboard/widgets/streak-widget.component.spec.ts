@@ -15,7 +15,7 @@ describe('StreakWidgetComponent', () => {
       const component = TestBed.createComponent(StreakWidgetComponent).componentInstance;
       component.currentStreak.set(4);
 
-      expect(component.getLast7Days().map(day => day.label)).toEqual(['P', 'S', 'Ç', 'P', 'C', 'C', 'P']);
+      expect(component.getLast7Days().map(day => day.label)).toEqual(['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz']);
       expect(component.getLast7Days().map(day => day.isToday)).toEqual([false, false, false, true, false, false, false]);
       expect(component.getLast7Days().slice(4).every(day => !day.active)).toBeTrue();
     } finally {

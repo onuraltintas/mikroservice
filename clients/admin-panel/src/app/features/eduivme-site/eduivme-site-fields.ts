@@ -19,7 +19,7 @@ export const MAXKAMPUS_ADMIN_VIEWS: SiteAdminViewInfo[] = [
   { view: 'faq', label: 'Sık sorulanlar', description: 'Ana sayfadaki sorular ve yanıtları.' },
   { view: 'blog', label: 'Blog', description: 'maxkampus.com/blog yazıları. Yayın zamanını ileriye kurarak yazıyı zamanlayabilirsiniz.' },
   { view: 'pages', label: 'Sayfalar', description: 'maxkampus.com/sayfa/… içerik sayfaları (hakkımızda gibi) ve iletişim ile fiyatlar sayfalarının metinleri.' },
-  { view: 'plans', label: 'Fiyat sayfası', description: 'Plan adları ve fiyatlar Abonelik ve Ödeme › Planlar ekranından okunur. Burada yalnız açıklama ve "en çok tercih edilen" işareti girilir.' },
+  { view: 'plans', label: 'Fiyat sayfası', description: 'Plan adları ve fiyatlar Abonelik ve ödeme › Planlar ekranından okunur. Burada yalnız açıklama ve "en çok tercih edilen" işareti girilir.' },
   { view: 'menus', label: 'Menüler', description: 'Sitenin üst menüsü ve alt bilgideki bağlantılar.' },
   { view: 'notices', label: 'Panel duyuruları', description: 'Kurum panelinin ilk sayfasında görünen duyurular: herkese, kurum sahiplerine ya da öğretmenlere; başlangıç ve bitiş tarihiyle.' },
   { view: 'media', label: 'Görseller', description: 'Giriş bölümünde, yazılarda ve sayfalarda kullanılabilecek görseller (iki site ortak kullanır).' }

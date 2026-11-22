@@ -94,7 +94,7 @@ export class InstitutionListComponent {
   canCreate = computed(() => this.canManage() && this.authService.userProfile()?.roles.includes('SystemAdmin'));
   institutions = signal<InstitutionDto[]>([]);
   totalCount = signal(0);
-  /** Institution id last copied; "Abonelik ve Ödeme › Elle abonelik ver" asks for it. */
+  /** Institution id last copied; "Abonelik ve ödeme › Elle abonelik ver" asks for it. */
   copiedId = signal<string | null>(null);
   copyId(id: string): void {
     void navigator.clipboard?.writeText(id).then(() => this.copiedId.set(id), () => undefined);

@@ -2,7 +2,7 @@
   <mat-card-header>
     <mat-card-title>
       <mat-icon>auto_awesome</mat-icon>
-      Okuma Profilim
+      Okuma profilim
     </mat-card-title>
       <button mat-icon-button type="button" aria-label="Okuma profilini yenile" (click)="refresh()" matTooltip="Yenile" [disabled]="loading">
       <mat-icon>refresh</mat-icon>
@@ -32,7 +32,7 @@
       <div class="profile-section">
         <div class="section-header">
           <mat-icon>trending_up</mat-icon>
-          <h3>Okuma Seviyesi</h3>
+          <h3>Okuma seviyesi</h3>
         </div>
         <div class="level-display">
           <div class="level-badge" [class]="adaptiveTextService.getLevelColor(profile.currentReadingLevel)">
@@ -91,7 +91,7 @@
             <mat-icon color="primary">menu_book</mat-icon>
             <div class="stat-content">
               <div class="stat-value">{{ profile.totalTextsRead }}</div>
-              <div class="stat-label">Okunan Metin</div>
+              <div class="stat-label">Okunan metin</div>
             </div>
           </div>
 
@@ -112,7 +112,7 @@
       <div class="profile-section" *ngIf="profile.preferredCategories.length > 0 && !compact">
         <div class="section-header">
           <mat-icon>favorite</mat-icon>
-          <h3>Sevdiğim Kategoriler</h3>
+          <h3>Sevdiğim kategoriler</h3>
         </div>
         <mat-chip-set>
           <mat-chip *ngFor="let category of profile.preferredCategories" class="preferred-chip">
@@ -125,7 +125,7 @@
       <div class="profile-section" *ngIf="profile.difficultCategories.length > 0 && !compact">
         <div class="section-header">
           <mat-icon>warning</mat-icon>
-          <h3>Zorluk Çektiğim Kategoriler</h3>
+          <h3>Zorluk çektiğim kategoriler</h3>
         </div>
         <mat-chip-set>
           <mat-chip *ngFor="let category of profile.difficultCategories" class="difficult-chip">

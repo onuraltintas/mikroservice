@@ -37,6 +37,12 @@ type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | '
   styleUrl: './coaching-institution-workspace.component.scss'
 })
 export class CoachingInstitutionWorkspaceComponent implements OnInit {
+  /** Live test 22.11.2026: an assignment every student has turned in counts as completed though its status is still
+   * "active"; "active" and "completed" overlapped (1 + 1 of 1). Ongoing = total − completed − cancelled. */
+  ongoingAssignments(summary: { totalAssignments: number; completedAssignments: number; cancelledAssignments: number }): number {
+    return Math.max(0, summary.totalAssignments - summary.completedAssignments - summary.cancelledAssignments);
+  }
+
   private readonly toaster = coachingToaster();
   @ViewChild(CoachingInstitutionSubscriptionComponent) subscriptionPanel?: Pick<CoachingInstitutionSubscriptionComponent, 'canLeavePage'>;
   @ViewChild(CoachingInstitutionStudentReportComponent) studentReportPanel?: Pick<CoachingInstitutionStudentReportComponent, 'canLeavePage'>;

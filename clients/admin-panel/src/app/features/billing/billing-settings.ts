@@ -25,7 +25,7 @@ interface BankAccountDraft {
 
 const EMPTY_SELLER: BillingSellerRequest = { title: '', address: '', taxOffice: '', taxNumber: '', mersisNumber: '', email: '', phone: '', alertEmail: '' };
 
-/** "Abonelik ve Ödeme › Ayarlar": the seller named in the sales documents and the bank accounts buyers pay into. */
+/** "Abonelik ve ödeme › Ayarlar": the seller named in the sales documents and the bank accounts buyers pay into. */
 @Component({
   selector: 'app-billing-settings',
   standalone: true,
@@ -33,7 +33,7 @@ const EMPTY_SELLER: BillingSellerRequest = { title: '', address: '', taxOffice: 
   template: `
     <main class="space-y-6" aria-labelledby="billing-settings-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
         <h1 id="billing-settings-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Ayarlar</h1>
         <p class="mt-2 text-sm text-(--ui-text-muted)">Satıcı bilgileri ve banka hesapları bütün ürünler için ortaktır. Satıcı bilgileri eksikken ya da etkin banka hesabı yokken hiçbir üründe satın alma açılmaz.</p>
       </header>

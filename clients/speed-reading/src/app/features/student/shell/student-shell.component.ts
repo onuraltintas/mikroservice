@@ -86,7 +86,7 @@ export class StudentShellComponent implements OnInit, OnDestroy {
       this.menuItems.set(this.navService.getStudentMenuItems());
     } else if (isPlatformPreview) {
       this.menuItems.set([{
-        label: 'Egzersiz Kataloğu',
+        label: 'Egzersiz kataloğu',
         icon: 'fitness_center',
         route: '/student/exercises'
       }]);

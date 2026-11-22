@@ -108,3 +108,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .other-account { position: sticky; top: 0; z-index: 70; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
   padding: .7rem 1rem; background: var(--ui-warning-soft, var(--ui-warning-soft)); color: var(--ui-text, var(--ui-text)); border-bottom: 1px solid var(--ui-warning, var(--ui-warning)); font-size: .9rem;
   button { border: 1px solid var(--ui-warning, var(--ui-warning)); border-radius: .5rem; background: var(--ui-surface, var(--ui-surface)); color: inherit; padding: .35rem .8rem; font-weight: 600; cursor: pointer; } }
+
+// Live test 22.11.2026: the maxkampüs note was a white band in the dark theme (it used the text colour as its ground).
+.migration-note.moved-note { display: block; color: var(--ui-text); background: var(--ui-surface-muted); border: 1px solid var(--ui-border); font-size: .9375rem; }
+.migration-note.moved-note a { color: var(--ui-brand-text, var(--ui-brand)); font-weight: 600; }
+// The theme switch outside the Koçluk teacher workspace (kurum, Hızlı Okuma, Kurs Yönetimi) gets the same quiet square.
+.teacher-theme-toggle { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-surface); color: var(--ui-text); cursor: pointer; }
+.teacher-theme-toggle:hover { background: var(--ui-surface-muted); }

@@ -11,7 +11,7 @@
           <div class="fact exam rise" [attr.aria-label]="(exam.source === 'Estimated' ? 'Tahminen ' : '') + exam.daysLeft + ' gün sonra ' + (exam.source === 'Student' ? 'sınavın var' : exam.name)">
             <span class="fact-icon" aria-hidden="true"><app-coaching-icon name="calendar" /></span>
             <strong>{{ exam.source === 'Estimated' ? '~' : '' }}{{ exam.daysLeft }}</strong>
-            <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name }}@if (exam.source === 'Estimated') { <span data-testid="exam-estimated">, tahmini tarih</span> }</small></span>
+            <span>gün kaldı<small>{{ exam.source === 'Student' ? 'Sınavına' : exam.name.split(' · ').join(', ') }}@if (exam.source === 'Estimated') { <span data-testid="exam-estimated">, tahmini tarih</span> }</small></span>
           </div>
         }
         <div class="fact streak rise" style="--i: 1" [class.is-on]="v.streak.currentStreak > 0">
@@ -45,7 +45,7 @@
             <p class="next-label">Sıradaki adım</p>
             <h2 id="next-title">{{ next.item.title }}</h2>
             <p class="next-meta">
-              @if (next.overdue) { <cs-status-chip label="Gecikti" tone="accent" /> }
+              @if (next.overdue) { <cs-status-chip label="Gecikti" tone="warning" /> }
               <span>{{ meta({ item: next.item, overdue: next.overdue }, (next.item.date | date: 'd MMMM')) }}</span>
             </p>
             <a class="next-action" [routerLink]="link(next.item).path" [queryParams]="link(next.item).query">{{ actionLabel(next.item) }}</a>
@@ -79,8 +79,8 @@
             <a class="row" [class.is-late]="row.overdue" [attr.data-kind]="row.item.kind" [attr.data-record]="row.item.recordId" [routerLink]="link(row.item).path" [queryParams]="link(row.item).query">
               <span class="row-kind" aria-hidden="true"><app-coaching-icon [name]="kindIcon(row.item)" /></span>
               <span class="row-time">{{ row.overdue ? (row.item.date | date: 'd MMM') : (clock(row.item.startMinute) || 'Gün içi') }}</span>
-              <span class="row-main"><strong>{{ row.item.title }}</strong><small>{{ meta(row, null) }}</small></span>
-              @if (row.overdue) { <cs-status-chip label="Gecikti" tone="accent" /> }
+              <span class="row-main"><strong>{{ row.item.title }}</strong><small>@if (row.item.lessonName) { <span class="row-lesson" [style.background]="'var(--coaching-lesson-' + lessonTone(row.item.lessonName) + ')'" [style.color]="'var(--coaching-lesson-text-' + lessonTone(row.item.lessonName) + ')'">{{ row.item.lessonName }}</span> }{{ meta(row, null) }}</small></span>
+              @if (row.overdue) { <cs-status-chip label="Gecikti" tone="warning" /> }
             </a>
           } @empty {
             <p class="empty">{{ v.hasActivePlan ? 'Bugün için işin yok. Yaklaşanlara göz atabilir ya da planına bakabilirsin.' : 'Planın olunca günün işleri burada sıralanır.' }}</p>

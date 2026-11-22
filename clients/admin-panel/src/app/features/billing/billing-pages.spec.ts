@@ -83,7 +83,7 @@ describe('Abonelik ve Ödeme pages', () => {
       { provide: ToasterService, useValue: { confirm: vi.fn() } },
       { provide: LayoutService, useValue: { isSidebarCollapsed: signal(false), toggleSidebar: vi.fn() } }] });
     const sidebar = TestBed.createComponent(SidebarComponent).componentInstance;
-    const section = () => sidebar.menuItems().find(item => item.label === 'Abonelik ve Ödeme');
+    const section = () => sidebar.menuItems().find(item => item.label === 'Abonelik ve ödeme');
     expect(section()?.children?.map((child: { route: string }) => child.route))
       .toEqual(['/dashboard/billing/overview', '/dashboard/billing/orders', '/dashboard/billing/statements', '/dashboard/billing/subscriptions', '/dashboard/billing/withdrawals', '/dashboard/billing/coupons', '/dashboard/billing/products', '/dashboard/billing/plans', '/dashboard/billing/settings']);
     // Another manager with every permission still does not see it: the service answers the system admin only.

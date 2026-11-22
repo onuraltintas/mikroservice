@@ -88,7 +88,7 @@ describe('reports without measured speed', () => {
     fixture.componentInstance.report.set({ currentWPM: 0 } as any);
     fixture.detectChanges();
     const card = Array.from(fixture.nativeElement.querySelectorAll('.stat-card'))
-      .find((item: any) => item.textContent.includes('Okuma Hızı')) as HTMLElement;
+      .find((item: any) => item.textContent.includes('Okuma hızı')) as HTMLElement;
     expect(card.querySelector('.stat-value')?.textContent).toContain('Ölçülmedi');
     expect(fixture.componentInstance.wpmProgressData()).toEqual([]);
   });

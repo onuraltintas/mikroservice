@@ -67,7 +67,7 @@ export class DashboardHomeComponent implements OnInit {
       items.push({ label: 'Onay bekleyen ödeme', value: b?.waitingOrders ?? null, tone: 'honey', route: '/dashboard/billing/orders', hint: 'Siparişler' });
       items.push({ label: 'Bildirilen havale', value: b?.declaredOrders ?? null, tone: 'orange', route: '/dashboard/billing/orders', hint: 'Eşleştir ve onayla' });
       items.push({ label: 'Eşleşmeyen hesap hareketi', value: b?.unmatchedTransactions ?? null, tone: 'danger', route: '/dashboard/billing/statements', hint: 'Hesap hareketleri' });
-      items.push({ label: 'Para çekme talebi', value: b?.withdrawalRequests ?? null, tone: 'violet', route: '/dashboard/billing/withdrawals', hint: 'Talepler' });
+      items.push({ label: 'Cayma talebi', value: b?.withdrawalRequests ?? null, tone: 'violet', route: '/dashboard/billing/withdrawals', hint: 'Yanıt bekliyor' });
     }
     if (this.can(ADMIN_PERMISSIONS.supportView)) {
       items.push({ label: 'Açık destek talebi', value: this.openSupport(), tone: 'info', route: '/dashboard/notifications/support', hint: 'Destek kutusu' });

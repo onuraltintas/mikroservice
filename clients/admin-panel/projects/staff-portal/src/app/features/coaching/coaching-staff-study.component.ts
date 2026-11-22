@@ -41,7 +41,7 @@ import { CoachingPlanningPermissionService, PlanningPermission } from '../../../
       @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="loadAvailability()">Tekrar dene</button> }
       @else if (availability(); as hours) {
-        <ul>@for (window of hours.windows; track $index) { <li>{{ day(window.day) }} · {{ time(window.startMinute) }}–{{ time(window.endMinute) }}</li> }</ul>
+        <ul>@for (window of hours.windows; track $index) { <li>{{ day(window.day) }}, {{ time(window.startMinute) }}–{{ time(window.endMinute) }}</li> }</ul>
         @if (!hours.windows.length) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       } @else if (!loading()) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       <!-- Live test 14.11.2026: the wizard was reachable only from "Çalışma takibi"; a teacher reading the report looked for it here. -->

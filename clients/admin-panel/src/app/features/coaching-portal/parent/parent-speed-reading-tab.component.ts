@@ -88,7 +88,7 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
         <h2 id="cp-reading-results-title">Son ölçülen sonuçlar</h2>
         <ul class="cp-rows">
           @for (result of v.recentResults; track $index) {
-            <li><span class="cp-row-main"><strong>{{ result.exerciseName }}</strong><small>{{ result.exerciseType ? result.exerciseType + ', ' : '' }}{{ day(result.date) }}</small></span>
+            <li><span class="cp-row-main"><strong>{{ result.exerciseName }}</strong><small>{{ result.exerciseType ? typeLabel(result.exerciseType) + ', ' : '' }}{{ day(result.date) }}</small></span>
               <span class="cp-row-side">@if (result.wpm !== null) { <strong>{{ result.wpm }} kelime/dk</strong> }@if (result.comprehension !== null) { <span>anlama {{ pct(result.comprehension) }}</span> }@if (result.wpm === null && result.score !== null) { <strong>{{ format(result.score) }} puan</strong> }</span></li>
           } @empty { <li class="cp-muted">Henüz ölçülen sonuç yok. Öğrenme ve tekrar alıştırmaları ölçüme sayılmaz.</li> }
         </ul>
@@ -115,6 +115,15 @@ const programStatus: Record<string, string> = { active: 'Devam ediyor', complete
     } @else { <div class="cp-skeleton" role="status" aria-label="Hızlı okuma ilerlemesi yükleniyor"></div> }`
 })
 export class ParentSpeedReadingTabComponent implements OnInit {
+  /** Veliye teknik egzersiz adı değil, öğrencinin gördüğü tür adı gösterilir (canlı test 22.11.2026). */
+  typeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      takistoskop: 'Hızlı Algı', tachistoscope: 'Hızlı Algı', rsvp: 'Hızlı Kelime Gösterimi', schultetable: 'Schulte Tablosu',
+      'kelime hazinesi': 'Kelime Bilgisi'
+    };
+    return labels[type.trim().toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ')] ?? labels[type.replace(/\s+/g, '').toLowerCase()] ?? type;
+  }
+
   private readonly service = inject(CoachingParentService);
   readonly studentId = input.required<string>();
   readonly childName = input('');

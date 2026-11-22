@@ -33,7 +33,7 @@
                 <input type="checkbox" formControlName="consentGiven" required>
                 <span>
                     <a href="/legal/speed-reading-newsletter-consent" target="_blank" rel="noopener noreferrer">Bülten onay metni</a> kapsamında Hızlı Okuma bültenini e-posta ile almayı kabul ediyorum.
-                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">Ortak Gizlilik Politikası</a>
+                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">Ortak gizlilik politikası</a>
                 </span>
             </label>
             <p *ngIf="newsletterForm.get('consentGiven')?.touched && newsletterForm.get('consentGiven')?.invalid"
@@ -42,7 +42,7 @@
             <button class="ds-btn ds-btn--primary ds-btn--block" type="submit"
                 [disabled]="newsletterForm.invalid || loading || privacyPolicyVersion === null || newsletterConsentVersion === null"
                 class="subscribe-button">
-                <span *ngIf="!loading">Abone Ol</span>
+                <span *ngIf="!loading">Abone ol</span>
                 <span *ngIf="loading">Abone Olunuyor...</span>
             </button>
         </form>

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 const widget = readFileSync(new URL('../src/app/features/student/dashboard/widgets/assignments-widget.component.html', import.meta.url), 'utf8');
 const component = readFileSync(new URL('../src/app/features/student/dashboard/widgets/assignments-widget.component.ts', import.meta.url), 'utf8');
 
-assert.match(widget, /Kişisel Öğrenme Yolu/);
+assert.match(widget, /Kişisel öğrenme yolu/);
 assert.match(component, /getPersonalizedPathAvailability/);
 assert.match(component, /getPersonalizedLearningPathProgress/);
 assert.doesNotMatch(component, /AssignmentService/);

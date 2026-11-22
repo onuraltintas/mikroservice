@@ -108,7 +108,7 @@ describe('StudentStudyPlansComponent', () => {
     component.actualMinutes[task.id]=12;component.remainingMinutes[task.id]=null;component.partial(task);expect(service.recordRealization).not.toHaveBeenCalled();
     expect(component.error()).toContain('kalan süreyi');
     component.selected.set({...active,tasks:[{...task,predecessorTaskId:'old-task',originalTaskId:'root',plannedMinutes:18,actualMinutes:null}]});component.openTask(task.id);fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Yarım kalan çalışmanın devamı. Buraya yalnız bu kısımda yaptığın çalışmayı gir.');
+    expect(fixture.nativeElement.textContent).toContain('Yarım kalan çalışmanın devamı. Önceki kısımda yaptıkların orada kayıtlı kalır; burada yalnız bu kısmı sayarsın.');
   });
   it('can withdraw an erroneous realization with a reason while preserving its history',async()=>{
     const {component,service}=await setup();const task={...component.selected()!.tasks[0],actualMinutes:20,isCompleted:true};

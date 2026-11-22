@@ -85,8 +85,8 @@ const sharedStyles = `
           @for (branch of branches(); track branch.institutionId) {
             <article [class.current]="branch.isCurrent" [attr.data-testid]="'branch-' + branch.institutionId">
               <strong>{{ branch.name }}</strong>
-              <p>{{ branch.students }} öğrenci · {{ branch.teachers }} öğretmen</p>
-              <p [class.warn]="branch.awaitingGrading + branch.overdue > 0">{{ branch.awaitingGrading }} değerlendirme bekliyor · {{ branch.overdue }} gecikmiş ödev</p>
+              <p>{{ branch.students }} öğrenci, {{ branch.teachers }} öğretmen</p>
+              <p [class.warn]="branch.awaitingGrading + branch.overdue > 0">{{ branch.awaitingGrading }} değerlendirme bekliyor, {{ branch.overdue }} gecikmiş ödev</p>
               @if (branch.isCurrent) { <p class="muted">Şu an bu şubedesiniz.</p> }
               @else { <button type="button" class="no-print" [attr.data-testid]="'switch-branch-' + branch.institutionId" (click)="switchTo(branch)">Bu şubeye geç</button> }
             </article>
@@ -218,7 +218,7 @@ const ACTION_LABELS: Record<string, string> = {
     @if (message()) { <p class="ok" role="status">{{ message() }}</p> }
     @if (busy()) { <p class="muted" role="status">İşleniyor…</p> }
     @if (preview(); as p) {
-      <p data-testid="bulk-summary">{{ p.rows.length }} satır · {{ p.toApply }} işlem uygulanacak{{ p.hasErrors ? ' · hatalı satırlar var' : '' }}</p>
+      <p data-testid="bulk-summary">{{ p.rows.length }} satır, {{ p.toApply }} işlem uygulanacak{{ p.hasErrors ? ', hatalı satırlar var' : '' }}</p>
       @if (p.hasErrors) { <p class="err">Hatalı satırları düzeltip dosyayı yeniden yükleyin. Dosyada hata varken hiçbir satır uygulanmaz.</p> }
       <div class="table-scroll">
         <table>

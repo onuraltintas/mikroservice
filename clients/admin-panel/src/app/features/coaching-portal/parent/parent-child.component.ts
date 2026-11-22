@@ -19,7 +19,7 @@ import { ParentSpeedReadingTabComponent } from './parent-speed-reading-tab.compo
   template: `
     <div class="cp-page" aria-labelledby="parent-child-title">
       <div class="cp-toolbar no-print">
-        <a routerLink="/coaching-portal/parent" class="cp-back">← Çocuklarım</a>
+        <a routerLink="/coaching-portal/parent" class="cp-back">Çocuklarıma dön</a>
         @if (link()) { <button type="button" data-testid="print-child" class="cp-secondary" (click)="print()">Yazdır / PDF</button> }
       </div>
       @if (error()) { <p class="cp-alert" role="alert">{{ error() }}</p> }

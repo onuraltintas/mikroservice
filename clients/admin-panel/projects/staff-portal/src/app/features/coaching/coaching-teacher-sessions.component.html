@@ -44,9 +44,9 @@
                 <h5>{{ day.label }}</h5>
                 @for (item of day.sessions; track item.id) {
                   <div class="agenda-item" [attr.data-status]="item.status">
-                    <strong>{{ agendaTime(item) }} · {{ item.subject || 'Koçluk seansı' }}</strong>
-                    <span>{{ sessionTypeLabel(item.type) }} · {{ item.durationMinutes }} dk · {{ item.studentIds.length }} öğrenci
-                      @if (item.seriesId) { · Tekrarlı }</span>
+                    <strong>{{ agendaTime(item) }}, {{ item.subject || 'Koçluk seansı' }}</strong>
+                    <span>{{ sessionTypeLabel(item.type) }}, {{ item.durationMinutes }} dk, {{ item.studentIds.length }} öğrenci
+                      @if (item.seriesId) {, Tekrarlı }</span>
                     <span class="agenda-status">{{ sessionStatusLabel(item.status) }}</span>
                     @if (canEdit(item)) {
                       <button type="button" class="edit-session" (click)="editSession(item.id)">Düzenle</button>
@@ -79,7 +79,7 @@
         <article class="session-card">
           <header class="session-card-heading">
             <div>
-              <span class="session-type">{{ sessionTypeLabel(session.type) }}@if (session.seriesId) { · Tekrarlı }</span>
+              <span class="session-type">{{ sessionTypeLabel(session.type) }}@if (session.seriesId) {, Tekrarlı }</span>
               <h4>{{ session.subject || 'Koçluk seansı' }}</h4>
             </div>
             <span class="session-status" [attr.data-status]="session.status">{{ sessionStatusLabel(session.status) }}</span>
@@ -93,7 +93,7 @@
 
           @if (session.teacherNotes) {
             <div class="teacher-notes" [attr.data-visibility]="session.teacherNotesVisibility || 'CoachPrivate'">
-              <span>Koç notu · {{ teacherNotesVisibilityLabel(session.teacherNotesVisibility) }}</span>
+              <span>Koç notu, {{ teacherNotesVisibilityLabel(session.teacherNotesVisibility) }}</span>
               <p>{{ session.teacherNotes }}</p>
             </div>
           }

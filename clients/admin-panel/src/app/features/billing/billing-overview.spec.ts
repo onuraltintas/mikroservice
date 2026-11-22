@@ -33,7 +33,7 @@ function setup<T>(component: new () => T, overrides: Record<string, unknown> = {
   return { fixture, billing, page: fixture.componentInstance as T, text: () => (fixture.nativeElement as HTMLElement).textContent ?? '' };
 }
 
-describe('Abonelik ve Ödeme › Genel bakış', () => {
+describe('Abonelik ve ödeme › Genel bakış', () => {
   it('shows what waits, what ends soon and what was approved, and filters by product', () => {
     const { fixture, billing, page, text } = setup(BillingOverviewComponent);
     const tile = (id: string) => (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${id}"]`)!.textContent!;
@@ -55,7 +55,7 @@ describe('Abonelik ve Ödeme › Genel bakış', () => {
   });
 });
 
-describe('Abonelik ve Ödeme › Abonelikler: elle verme, uzatma, sonlandırma', () => {
+describe('Abonelik ve ödeme › Abonelikler: elle verme, uzatma, sonlandırma', () => {
   it('gives a plan to a user, or to an institution when the plan is an institution plan, only with a reason', () => {
     const { fixture, billing, page, text } = setup(BillingSubscriptionsComponent);
     page.openGrant();

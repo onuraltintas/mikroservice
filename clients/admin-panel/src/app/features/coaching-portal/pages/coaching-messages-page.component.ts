@@ -12,10 +12,11 @@ import { CoachingMessagesUnreadService } from '../../../core/services/coaching-m
   selector: 'app-coaching-messages-page', standalone: true, imports: [CoachingMessagesComponent],
   template: `
     <div class="cs-messages-page">
+      <h1 class="cs-page-h1">Mesajlar</h1>
       <p class="intro">{{ intro }}</p>
       <edu-coaching-messages [apiUrl]="apiUrl" [viewerRole]="role" [selectedId]="selectedId()" (selectedIdChange)="go($event)" (unreadChange)="unreadChanged()" />
     </div>`,
-  styles: [`.cs-messages-page{max-width:1100px}.intro{margin:0 0 var(--coaching-space-4);color:var(--ui-text-muted);font-size:var(--coaching-text-sm)}`]
+  styles: [`.cs-messages-page{max-width:1100px}.cs-page-h1{margin:0 0 var(--coaching-space-1);font-size:var(--coaching-text-xl, 1.5rem);font-weight:800;color:var(--ui-text)}.intro{margin:0 0 var(--coaching-space-4);color:var(--ui-text-muted);font-size:var(--coaching-text-sm)}`]
 })
 export class CoachingMessagesPageComponent {
   readonly apiUrl = environment.apiUrl;

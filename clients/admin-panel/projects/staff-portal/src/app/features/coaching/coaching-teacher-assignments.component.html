@@ -64,7 +64,7 @@
           <div class="assignment-main">
             <div class="assignment-title-group">
               <h3>{{ assignment.title }}</h3>
-              <p>{{ assignment.type === 'Individual' ? 'Bireysel' : assignment.type === 'Group' ? 'Grup' : assignment.type }} <span aria-hidden="true">·</span> Son tarih {{ assignment.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
+              <p>{{ assignment.type === 'Individual' ? 'Bireysel' : assignment.type === 'Group' ? 'Grup' : assignment.type }}, Son tarih {{ assignment.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
             </div>
             <div class="assignment-meta">
               <span class="delivery-count">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span>

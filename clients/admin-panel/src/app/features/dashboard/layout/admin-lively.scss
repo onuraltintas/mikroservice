@@ -108,6 +108,8 @@ body .admin-shell {
 
   // Form alanları: biraz daha yuvarlak, odakta bal rengi halka.
   main :is(input:not([type='checkbox']):not([type='radio']), select, textarea) { border-radius: 10px; }
+  // Görsel olarak gizli öğeler hiçbir sayfa kuralıyla genişlemesin (yatay kaymaya yol açıyordu).
+  main .sr-only { width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; border: 0 !important; }
   main :is(input, select, textarea, button, a):focus-visible { outline: 3px solid var(--ds-accent); outline-offset: 2px; }
 
   // Başlığın üstündeki bölüm adı bir üst etiket değil, "nerede olduğunu" söyleyen sakin bir yol: küçük, ikincil renkte.
@@ -131,14 +133,14 @@ body .admin-shell {
     display: grid; place-items: center; width: 30px; height: 30px; padding: 6px; border-radius: 9px;
     background: var(--tone-soft, var(--ds-soft)); color: var(--tone, var(--ui-text-muted));
   }
-  app-sidebar [data-section='Ana Sayfa'] { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); }
+  app-sidebar [data-section='Ana sayfa'] { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); }
   app-sidebar [data-section='Kullanıcı işlemleri'] { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); }
-  app-sidebar [data-section='Destek ve Bildirim'] { --tone: var(--admin-tone-orange); --tone-soft: var(--admin-tone-orange-soft); }
+  app-sidebar [data-section='Destek ve bildirim'] { --tone: var(--admin-tone-orange); --tone-soft: var(--admin-tone-orange-soft); }
   app-sidebar [data-section='Koçluk'] { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); }
   app-sidebar [data-section='Hızlı Okuma'] { --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft); }
   app-sidebar [data-section='eduivme sitesi'] { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); }
   app-sidebar [data-section^='maxkampüs'] { --tone: var(--admin-tone-violet); --tone-soft: var(--admin-tone-violet-soft); }
-  app-sidebar [data-section='Abonelik ve Ödeme'] { --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft); }
+  app-sidebar [data-section='Abonelik ve ödeme'] { --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft); }
   app-sidebar [data-section='Sistem ayarları'] { --tone: var(--admin-tone-danger); --tone-soft: var(--admin-tone-danger-soft); }
   app-sidebar .active-menu-item { box-shadow: inset 3px 0 var(--ds-accent); }
 

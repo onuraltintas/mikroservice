@@ -192,7 +192,7 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
     try {
       const records = await collectCoachingHistory((page, pageSize) =>
         this.studentsService.getStudentHistory(this.student.userId, type, page, pageSize, this.historyFilter()));
-      renderCoachingHistoryPrint(target, records, `${this.student.fullName} · ${this.historyLabels[type]} · Koçluk geçmişi`);
+      renderCoachingHistoryPrint(target, records, `${this.student.fullName}, ${this.historyLabels[type]}, Koçluk geçmişi`);
     } catch {
       target.close();
       this.historyError.set('Tam rapor yazdırılamadı. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');

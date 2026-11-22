@@ -68,7 +68,7 @@
           <p class="workspace-state" role="status">Kurum özeti yükleniyor…</p>
         } @else if (overview(); as summary) {
           <div class="metric-grid">
-            <article class="metric-card tone-success"><span>Aktif ödev</span><strong>{{ summary.activeAssignments }}</strong><small>{{ summary.totalAssignments }} toplam ödev</small></article>
+            <article class="metric-card tone-success"><span>Süren ödev</span><strong>{{ ongoingAssignments(summary) }}</strong><small>{{ summary.totalAssignments }} toplam ödev</small></article>
             <article class="metric-card tone-info"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><staff-meter tone="info" [value]="summary.submittedAssignmentStudents" [max]="summary.totalAssignmentStudents" [label]="'Gönderilen ödev: ' + summary.submittedAssignmentStudents + ' / ' + summary.totalAssignmentStudents" /><small>Gönderim durumu</small></article>
             <article class="metric-card tone-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>{{ summary.totalExamResults }} sonuç kaydı</small></article>
             <article class="metric-card tone-orange"><span>Yaklaşan seans</span><strong>{{ summary.upcomingSessions }}</strong><small>{{ summary.totalSessions }} toplam seans</small></article>
@@ -76,7 +76,7 @@
           </div>
           @if (summary.totalAssignments > 0) {
             <staff-split class="assignment-split" title="Ödevlerin durumu" [parts]="[
-              { label: 'Aktif', value: summary.activeAssignments, tone: 'info' },
+              { label: 'Sürüyor', value: ongoingAssignments(summary), tone: 'info' },
               { label: 'Tamamlandı', value: summary.completedAssignments, tone: 'success' },
               { label: 'İptal edildi', value: summary.cancelledAssignments, tone: 'danger' }]" />
           }
@@ -113,7 +113,7 @@
           <label class="filter-field"><span>Davet sırasında öğretmen ata (isteğe bağlı)</span>
             <select data-testid="institution-student-invite-teacher" name="studentInviteTeacherUserId" [(ngModel)]="studentInviteTeacherUserId" [disabled]="isInvitationSending()">
               <option value="">Şimdilik öğretmen atama</option>
-              @for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
+              @for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}, {{ teacher.email }}</option> }
             </select>
           </label>
           <button data-testid="send-institution-student-invite" class="report-button" type="submit" [disabled]="isInvitationSending() || !studentInviteEmail.trim()">{{ isInvitationSending() ? 'Gönderiliyor…' : 'Öğrenci davet et' }}</button>

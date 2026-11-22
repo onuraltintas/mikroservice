@@ -106,8 +106,8 @@
               </div>
               <p class="exam-meta">
                 {{ exam.examDate | date:'dd.MM.yyyy HH:mm' }}
-                <span>·</span> Maks. {{ exam.maxScore }} puan
-                @if (exam.subject) { <span>·</span> {{ exam.subject }} }
+                Maks. {{ exam.maxScore }} puan
+                @if (exam.subject) { {{ exam.subject }} }
               </p>
               @if (exam.description) { <p class="exam-description">{{ exam.description }}</p> }
               <p class="result-count">{{ exam.resultCount }} öğrenci sonucu</p>
@@ -135,7 +135,7 @@
       <div class="panel-heading">
         <div>
           <p class="eyebrow">{{ examTypeLabel(exam.examType) }}</p>
-          <h3 id="exam-results-title">Sınav sonuçları · {{ exam.title }}</h3>
+          <h3 id="exam-results-title">Sınav sonuçları, {{ exam.title }}</h3>
           <p>Öğrenci sonuçlarını ekleyin veya mevcut kayıtları düzeltin.</p>
         </div>
         <button type="button" class="secondary-button" (click)="closeResults()">Sonuçları kapat</button>
@@ -228,7 +228,7 @@
                     <td class="student-name">{{ studentLabel(result.studentId) }}</td>
                     <td>{{ result.score }} / {{ detail.maxScore }}</td>
                     <td>{{ result.correctAnswers ?? 0 }} / {{ result.wrongAnswers ?? 0 }} / {{ result.emptyAnswers ?? 0 }}
-                      @if (result.netSummary) { <p>{{result.netSummary.name}} · <strong>{{result.netSummary.net | number:'1.2-2'}} net</strong></p>
+                      @if (result.netSummary) { <p>{{result.netSummary.name}}, <strong>{{result.netSummary.net | number:'1.2-2'}} net</strong></p>
                         <details><summary>Ders netleri</summary>@for (section of result.netSummary.sections; track section.sectionCode) { <p>{{section.name}}: {{section.net | number:'1.2-2'}} net ({{section.correct}} / {{section.wrong}} / {{section.empty}})</p> }</details> }
                     </td>
                     <td>{{ result.ranking ?? '—' }}</td>

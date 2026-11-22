@@ -129,6 +129,9 @@ export class CoachingPortalHomeComponent implements OnInit {
   }
 
   /** "Saat 14:00, 30 dk" for today; overdue rows add the day they were due. */
+  /** A lesson keeps one colour of the lesson palette (light and dark themes), from its name. */
+  lessonTone(name: string): number { return [...name].reduce((value, c) => (value * 31 + c.charCodeAt(0)) % 997, 0) % 8; }
+
   meta(row: TodayRow, dateText: string | null) {
     const parts = [this.kindLabel(row.item)];
     if (row.overdue && dateText) parts.push(dateText);
