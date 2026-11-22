@@ -103,7 +103,7 @@ test('loads the AGS, ÖABT, YDS and YÖKDİL drafts once, passive and pending ap
     JOIN coaching.study_catalog_lessons l ON l."ExamCode" = e."Code" AND l."Source" = 'coaching-catalog-km3' WHERE e."Code" LIKE 'OABT\\_%'`),
     ['OABT_BED', 'OABT_BIO', 'OABT_COG', 'OABT_DIN', 'OABT_FEN', 'OABT_FIZ', 'OABT_IMAT', 'OABT_KIM', 'OABT_MAT', 'OABT_OKUL', 'OABT_OZEL',
       'OABT_REH', 'OABT_SINIF', 'OABT_SOS', 'OABT_TAR', 'OABT_TDE', 'OABT_TUR'].map(x => `${x}:false:${x}`).join(','));
-  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_OZEL'`), 'ÖABT · Özel Eğitim');
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_OZEL'`), 'ÖABT, Özel Eğitim');
   assert.equal(foreignRows(), foreign, 'existing lessons, units, topics, outcomes, editions, versions and exams are unchanged');
 
   // Passive: nothing a student can see until the team approves it in the admin panel.
@@ -140,7 +140,7 @@ test('a rerun over the state production reached (c1ce79c pack, admin-panel renam
   assert.equal(run(`SELECT "DocumentSha256" FROM coaching.official_curriculum_editions WHERE "Code" = 'km3-yds-en-2026'`),
     'fd815d7a4941a94110038d895a40cb74728acc3b769b5f8c34d3f2bb6a3ae057');
   assert.match(run(pack('verify.sql')), /pending PDF hashes: 0 editions/);
-  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_KIM'`), 'ÖABT · Kimya / Kimya Teknolojisi');
+  assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_exams WHERE "Code" = 'OABT_KIM'`), 'ÖABT, Kimya / Kimya Teknolojisi');
   assert.equal(run(`SELECT "Name" FROM coaching.study_catalog_topics WHERE "SourceId" = 'OABT_OKUL.2.01' AND "Source" = 'coaching-catalog-km3'`),
     'Erken Çocuklukta Fen Eğitimi');
   // What production holds: the 27 editions were written by the c1ce79c pack (its package hash); records the admin panel

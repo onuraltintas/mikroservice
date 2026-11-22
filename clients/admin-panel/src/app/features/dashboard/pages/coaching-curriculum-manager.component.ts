@@ -104,7 +104,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   issueLabel(issue: string) { return QUALITY_ISSUE_LABELS[issue] ?? 'Eksik bilgi'; }
   yieldLabel(weight: number | null | undefined) { return YIELD_LABELS[weight ?? 3] ?? 'Orta'; }
   nodeType(n: Node) {
-    if (n.kind === 'lessons') return ['Ders',n.gradeNumber ? `${n.gradeNumber}. sınıf` : null,n.examCode ? this.examName(n.examCode) : null].filter(Boolean).join(' · ');
+    if (n.kind === 'lessons') return ['Ders',n.gradeNumber ? `${n.gradeNumber}. sınıf` : null,n.examCode ? this.examName(n.examCode) : null].filter(Boolean).join(', ');
     return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind];
   }
   branch() { return this.listing(); }

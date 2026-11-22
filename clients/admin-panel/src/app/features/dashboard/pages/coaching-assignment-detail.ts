@@ -30,7 +30,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 class="text-2xl font-bold text-(--ui-text)">{{ item.title }}</h1>
-              <p class="mt-1 text-sm text-(--ui-text-muted)">{{ item.source | coachingLabel }}, {{ item.status | coachingLabel }} · Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
+              <p class="mt-1 text-sm text-(--ui-text-muted)">{{ item.source | coachingLabel }}, {{ item.status | coachingLabel }}, Son tarih {{ item.dueDate | date:'dd.MM.yyyy HH:mm' }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
               <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-(--ui-border) px-4 py-2 text-sm">Yenile</button>
@@ -47,8 +47,8 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
           </div>
           @if (item.bookTitle) {
             <p class="mt-4 rounded-lg bg-(--ui-brand-soft) p-3 text-sm text-(--ui-brand-text)">
-              Kitap: {{ item.bookTitle }} · sayfa {{ item.bookStartPage }}-{{ item.bookEndPage }}
-              @if (item.bookStartQuestion) { · soru {{ item.bookStartQuestion }}-{{ item.bookEndQuestion }} }
+              Kitap: {{ item.bookTitle }}, sayfa {{ item.bookStartPage }}-{{ item.bookEndPage }}
+              @if (item.bookStartQuestion) {, soru {{ item.bookStartQuestion }}-{{ item.bookEndQuestion }} }
             </p>
           }
         </div>

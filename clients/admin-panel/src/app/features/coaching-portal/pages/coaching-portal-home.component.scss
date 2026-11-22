@@ -146,4 +146,5 @@
   a { margin-left: .5rem; font-weight: 600; } }
 
 // Live test 22.11.2026: the lesson as a small coloured label (subject colours, light background and dark text).
+.row-resource { display: block; color: var(--ui-text-muted); }
 .row-lesson { display: inline-block; margin-right: .4rem; padding: 0 .45rem; border-radius: 999px; font-size: .75rem; font-weight: 700; line-height: 1.5; }

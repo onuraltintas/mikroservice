@@ -32,7 +32,7 @@ type Resource = 'session' | 'exam';
           @if (value.meetingLink) { <a [href]="value.meetingLink" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex text-sm font-medium text-(--ui-brand-text) hover:underline">Online görüşme bağlantısını aç →</a> }
         } @else if (exam(); as value) {
           <h1 class="mt-2 text-2xl font-bold text-(--ui-text)">{{ value.title }}</h1>
-          <p class="text-sm text-(--ui-text-muted)">{{ value.examDate | date:'dd.MM.yyyy HH:mm' }}, {{ value.examType }} · Maksimum {{ value.maxScore }}</p>
+          <p class="text-sm text-(--ui-text-muted)">{{ value.examDate | date:'dd.MM.yyyy HH:mm' }}, {{ value.examType }}, Maksimum {{ value.maxScore }}</p>
           @if (canManage()) { <a [routerLink]="['/dashboard/coaching/operations/exam', value.id, 'edit']" class="mt-2 inline-flex text-sm font-medium text-(--ui-brand-text) hover:underline">Sınavı düzenle →</a> }
         }
       </div>

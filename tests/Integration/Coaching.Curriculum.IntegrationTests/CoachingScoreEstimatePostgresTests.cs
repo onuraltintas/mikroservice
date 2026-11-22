@@ -69,7 +69,7 @@ public sealed class CoachingScoreEstimatePostgresTests
         Assert.Null(estimate.Notice);
         Assert.Equal(new[] { ("YDS_EN", 77.5m, 75m, 80m, 2), ("YOKDIL_SAG", 87.5m, 87.5m, 87.5m, 1) },
             estimate.LanguageScores.Select(x => (x.ExamCode, x.Score, x.ScoreLow, x.ScoreHigh, x.ExamsUsed)).ToArray());
-        Assert.Equal(("YDS · Güz", 200), (estimate.TargetExam!.Name, estimate.TargetExam.DaysLeft));
+        Assert.Equal(("YDS, Güz", 200), (estimate.TargetExam!.Name, estimate.TargetExam.DaysLeft));
 
         await f.Db.StudentLearningContexts.ExecuteDeleteAsync(); await f.Db.ExamResults.ExecuteDeleteAsync();
         f.Db.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.Ags, DateTime.UtcNow.Year + 1, "OABT_OZEL", null)); await f.Db.SaveChangesAsync();

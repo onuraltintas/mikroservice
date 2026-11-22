@@ -23,7 +23,7 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
         <label>JSON dosyası<input type="file" accept=".json,application/json" (change)="readFile($event)"></label>
         <label>Paket JSON<textarea [(ngModel)]="packageText" (ngModelChange)="review.set(null)" rows="6"></textarea></label>
         <button type="button" (click)="previewPackage()">Aktarımı önizle</button>
-        @if (review(); as r) { <p>{{ r.outcomeCount }} kazanım · {{ r.matchedTopics }} eşleşen konu · {{ r.unmatchedTopics.length }} eşleşmeyen konu</p>
+        @if (review(); as r) { <p>{{ r.outcomeCount }} kazanım, {{ r.matchedTopics }} eşleşen konu, {{ r.unmatchedTopics.length }} eşleşmeyen konu</p>
           @for (warning of r.warnings; track warning) { <p>{{ warning }}</p> }
           @for (id of r.unmatchedTopics; track id) { <p>Eşleşmedi: {{ id }}</p> }
           <button type="button" [disabled]="reason.trim().length < 5" (click)="importPackage()">Taslakları aktar</button> }
@@ -33,11 +33,11 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
         @for (e of editions(); track e.id) { <option [value]="e.id">{{ e.code }}, {{ e.academicYearStart }}–{{ e.academicYearEnd }}</option> }</select></label>
       @if (catalog(); as c) { <p><a [href]="c.edition.sourceUrl" target="_blank" rel="noopener noreferrer">Resmî program belgesi</a></p>
         <p>Belge SHA256: {{ c.edition.documentSha256 }}</p>
-        @for (group of c.officialTopics; track group.id) { <p>{{ group.name }}: {{ group.lessonPeriods }} resmî ders saati · {{ group.outcomeCount }} kazanım</p> }
+        @for (group of c.officialTopics; track group.id) { <p>{{ group.name }}: {{ group.lessonPeriods }} resmî ders saati, {{ group.outcomeCount }} kazanım</p> }
         <label>Kazanım<select [(ngModel)]="outcomeId" (ngModelChange)="selectOutcome()"><option value="">Kazanım seçin</option>
           @for (o of c.outcomes; track o.id) { <option [value]="o.id">{{ o.code }} — {{ o.name }}</option> }</select></label>
         @if (selectedOutcome(); as outcome) { <h3>{{ outcome.code }} — {{ outcome.name }}</h3>
-          @if (outcome.sourceKind === 'ExamSkill') { <p>MEBİ sınav hazırlık becerisi · Resmî kazanım kodu değildir.</p> }
+          @if (outcome.sourceKind === 'ExamSkill') { <p>MEBİ sınav hazırlık becerisi, Resmî kazanım kodu değildir.</p> }
           @else { <p>Kaynak PDF sayfası: {{ outcome.sourcePage }}</p> }
           <h4>Konu eşleştirmelerini incele</h4><label>Eşleştirme inceleme dayanağı<textarea [(ngModel)]="mappingEvidence" maxlength="500"></textarea></label>
           @for (m of mappings(); track m.topicId) { <article><p>{{ topicName(m.topicId) }}, {{ m.isApproved ? 'Onaylı' : 'İnceleme bekliyor' }}</p><p>{{ m.evidence }}</p>
@@ -49,8 +49,8 @@ interface ImportReview { fingerprint: string; outcomeCount: number; matchedTopic
           <label>Güven düzeyi<select [(ngModel)]="confidence"><option value="Low">Düşük</option><option value="Medium">Orta</option><option value="High">Yüksek</option></select></label>
           <label>Süre inceleme dayanağı<textarea [(ngModel)]="durationEvidence" maxlength="500"></textarea></label>
           <button type="button" [disabled]="durationEvidence.trim().length < 5 || reason.trim().length < 5" (click)="saveEstimate()">İncelenmiş süre sürümü oluştur</button>
-          @for (e of estimates(); track e.id) { <article><strong>Sürüm {{ e.number }}, {{ e.learningMinutes + e.practiceMinutes + e.checkMinutes }} dk · {{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</strong>
-            <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ confidenceLabel(e.confidence) }}</p><p>{{ e.evidence }}</p>
+          @for (e of estimates(); track e.id) { <article><strong>Sürüm {{ e.number }}, {{ e.learningMinutes + e.practiceMinutes + e.checkMinutes }} dk, {{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</strong>
+            <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol, Güven: {{ confidenceLabel(e.confidence) }}</p><p>{{ e.evidence }}</p>
             @if (e.method === 'ReviewedStudy' && !e.isPublished) { <button type="button" [disabled]="reason.trim().length < 5" (click)="publish(e.id)">İncelenmiş süreyi yayınla</button> }
           </article> }
         }

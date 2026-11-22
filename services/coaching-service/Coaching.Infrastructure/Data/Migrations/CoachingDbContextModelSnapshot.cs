@@ -3489,6 +3489,91 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("student_primary_goals", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentResource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DoneBefore")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ExamCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("LessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LessonName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Publisher")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("SectionsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalUnits")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId", "IsArchived");
+
+                    b.ToTable("student_resources", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_student_resource_kind", "\"Kind\" IN ('QuestionBank','TopicBook','PracticeExams','Other') AND \"Unit\" IN ('Page','Test','Question')");
+
+                            t.HasCheckConstraint("ck_student_resource_sections", "jsonb_typeof(\"SectionsJson\") = 'array'");
+
+                            t.HasCheckConstraint("ck_student_resource_units", "\"TotalUnits\" BETWEEN 1 AND 10000 AND \"DoneBefore\" BETWEEN 0 AND \"TotalUnits\"");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudentTopicState", b =>
                 {
                     b.Property<Guid>("ContextId")
@@ -4194,6 +4279,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<string>("ActualWorkJson")
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("AdviceKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -4257,6 +4346,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("RemainingQuestions")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ResourceFrom")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ResourceTo")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("RevisionId")
                         .HasColumnType("uuid");
 
@@ -4305,6 +4403,8 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("StudentId", "PlannedDate");
 
+                    b.HasIndex("StudentId", "ResourceId");
+
                     b.HasIndex("StudentId", "WorkFromDate", "WorkToDate");
 
                     b.ToTable("study_plan_tasks", "coaching", t =>
@@ -4318,6 +4418,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualMinutes\" IS NOT NULL)");
 
                             t.HasCheckConstraint("ck_study_task_remaining", "(\"RemainingMinutes\" IS NULL OR (NOT \"IsCompleted\" AND \"RemainingMinutes\" BETWEEN 1 AND 1440)) AND (\"RemainingQuestions\" IS NULL OR (\"RemainingMinutes\" IS NOT NULL AND \"RemainingQuestions\" BETWEEN 0 AND 100000)) AND ((\"PredecessorTaskId\" IS NULL AND \"PredecessorVersion\" IS NULL) OR (\"PredecessorTaskId\" IS NOT NULL AND \"PredecessorVersion\" >= 0 AND \"OriginalTaskId\" IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_study_task_resource", "(\"ResourceFrom\" IS NULL AND \"ResourceTo\" IS NULL) OR (\"ResourceId\" IS NOT NULL AND \"ResourceFrom\" >= 1 AND \"ResourceTo\" >= \"ResourceFrom\")");
 
                             t.HasCheckConstraint("ck_study_task_weekly_time", "(\"PlannedStartMinute\" IS NULL AND \"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"PlannedStartMinute\" IS NOT NULL AND \"PlannedStartMinute\" BETWEEN 0 AND 1439 AND \"PlannedStartMinute\"+\"PlannedMinutes\"<=1440 AND ((\"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"WeeklyLessonId\" IS NOT NULL AND \"LessonNameSnapshot\" IS NOT NULL)))");
                         });

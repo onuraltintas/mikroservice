@@ -145,7 +145,7 @@ public sealed class BillingExtras(BillingDbContext db, BillingOrders orders, Tim
         db.Withdrawals.Add(new Withdrawal { Id = Guid.NewGuid(), OrderId = order.Id, Status = WithdrawalStatus.Requested,
             Reason = string.IsNullOrEmpty(text) ? null : text, RequestedBy = userId, RequestedAt = now });
         await orders.NoticeAsync(EduPlatform.Shared.Contracts.Events.Billing.BillingNoticeKinds.WithdrawalRequested, order, null,
-            $"{(await db.Accounts.AsNoTracking().SingleAsync(item => item.Id == order.AccountId, cancellationToken)).DisplayName} · {order.PaymentCode}", cancellationToken);
+            $"{(await db.Accounts.AsNoTracking().SingleAsync(item => item.Id == order.AccountId, cancellationToken)).DisplayName}, {order.PaymentCode}", cancellationToken);
         try
         {
             await db.SaveChangesAsync(cancellationToken);

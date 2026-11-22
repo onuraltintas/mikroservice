@@ -47,8 +47,8 @@ public sealed class BillingNoticeConsumerTests
         var harness = provider.GetRequiredService<ITestHarness>();
         try
         {
-            await harness.Bus.Publish(Notice(BillingNoticeKinds.PaymentDeclared, null, "finans@example.test", ["coaching"], "Ada Öğrenci · EDU-7K4Q2M"));
-            await harness.Bus.Publish(Notice(BillingNoticeKinds.WithdrawalRequested, null, "finans@example.test", ["coaching"], "Ada Öğrenci · EDU-7K4Q2M"));
+            await harness.Bus.Publish(Notice(BillingNoticeKinds.PaymentDeclared, null, "finans@example.test", ["coaching"], "Ada Öğrenci, EDU-7K4Q2M"));
+            await harness.Bus.Publish(Notice(BillingNoticeKinds.WithdrawalRequested, null, "finans@example.test", ["coaching"], "Ada Öğrenci, EDU-7K4Q2M"));
             await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 2);
 
             var declared = mail.Messages.Single(x => x.Subject.Contains("ödeme bildirimi", StringComparison.OrdinalIgnoreCase));

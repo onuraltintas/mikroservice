@@ -261,6 +261,7 @@ public sealed class CoachingScoreEstimateTests
         say.FailedConditions.Single().AnyOf.Select(x => (x.Code, x.Name, x.RawScore))
             .Should().Equal(("AMAT", "AYT Matematik", -0.25m), ("FEN", "AYT Fen Bilimleri", 0.25m));
         (estimate.Target!.ScoreType, estimate.Target.ScoreGap, estimate.Target.NotComputedReason).Should().Be(("SAY", (decimal?)null, "minRawScore"));
+        estimate.Target.ProgramCode.Should().Be("p", "KocApp uyumu: the code to search with in YÖK Atlas");
 
         s.Exam("AYT_SAY", new(2026, 10, 3), answers: [("FIZ", 2, 0)]);
         await s.F.Db.SaveChangesAsync();

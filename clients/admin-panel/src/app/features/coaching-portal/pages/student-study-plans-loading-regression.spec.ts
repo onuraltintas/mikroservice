@@ -7,13 +7,14 @@ import { StudentStudyPlansComponent } from './student-study-plans.component';
 
 describe('Study plan loading regression', () => {
   for (const staffStudentId of [null, 'assigned-student']) {
-    it(`preserves the new manual draft when the active-plan lookup finishes late (${staffStudentId ? 'teacher' : 'student'})`, async () => {
+    it(`keeps the new empty draft open when the active-plan lookup finishes late (${staffStudentId ? 'teacher' : 'student'})`, async () => {
       const firstPage = new Subject<StudyPlanPage>();
       const activePage = new Subject<StudyPlanPage>();
       const active: StudyPlan = { id: 'old-active', title: 'Existing plan', status: 'Active', version: 1, tasks: [] };
       const service = {
         list: vi.fn((_page: number, status?: string) => status === 'Active' ? activePage : status === 'Draft' ? of({items:[],totalCount:0,pageNumber:1,pageSize:20}) : firstPage),
-        get: vi.fn(() => of(active))
+        get: vi.fn(() => of(active)),
+        create: vi.fn(() => of({ id: 'new-draft', title: 'Elle hazırlanan plan', status: 'Draft', version: 0, tasks: [] } as StudyPlan))
       };
       TestBed.configureTestingModule({ imports: [StudentStudyPlansComponent], providers: [
         { provide: CoachingStudyPlanningService, useValue: service },
@@ -28,14 +29,12 @@ describe('Study plan loading regression', () => {
       firstPage.next({ items: [], totalCount: 20, pageNumber: 1, pageSize: 20 });
       firstPage.complete();
       await component.newDraft();
-      component.editTitle = 'Unsaved new plan';
-      component.editTasks[0].title = 'Unsaved work';
+      expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ tasks: [] }), ...(staffStudentId ? [staffStudentId] : []));
+      component.draftTitle = 'Unsaved new name';
       activePage.next({ items: [active], totalCount: 1, pageNumber: 1, pageSize: 20 });
       activePage.complete();
-      expect(component.editing).toBe(true);
-      expect(component.editTitle).toBe('Unsaved new plan');
-      expect(component.editTasks[0].title).toBe('Unsaved work');
-      expect(component.selected()).toBeNull();
+      expect(component.selected()?.id).toBe('new-draft');
+      expect(component.draftTitle).toBe('Unsaved new name');
       expect(service.get).not.toHaveBeenCalled();
       fixture.destroy();
     });

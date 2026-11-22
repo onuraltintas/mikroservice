@@ -99,7 +99,7 @@ public static class WeeklyPlanEngine
                 if (kind != "Refresh" && factor < 1) reasons.Add("Bu dersi kolay bulduğun için süre kısaltıldı");
                 if (reasons.Count == 0) reasons.Add("Müfredat sırasındaki yeni konu");
                 // The work of one outcome, not of one day: the weekly scheduler places it in hour slots over as many days as needed.
-                return outcome with { Kind = kind, Minutes = Math.Clamp(minutes, 1, StudyLimits.MaxTopicMinutes), Reason = string.Join(" · ", reasons) };
+                return outcome with { Kind = kind, Minutes = Math.Clamp(minutes, 1, StudyLimits.MaxTopicMinutes), Reason = string.Join(". ", reasons) };
             }).ToArray();
             return lesson with
             {
@@ -132,7 +132,7 @@ public static class WeeklyPlanEngine
     }
 
     private static string Join(string first, string? rest) =>
-        string.IsNullOrWhiteSpace(rest) || rest == "Müfredat sırasındaki yeni konu" ? first : first + " · " + rest;
+        string.IsNullOrWhiteSpace(rest) || rest == "Müfredat sırasındaki yeni konu" ? first : first + ". " + rest;
 
     /// <summary>Stable topic ordering that keeps the outcomes of a topic together and in their curriculum order.</summary>
     private static WeeklyOutcomeWork[] OrderTopics(IReadOnlyList<WeeklyOutcomeWork> outcomes, Func<Guid, int> key)

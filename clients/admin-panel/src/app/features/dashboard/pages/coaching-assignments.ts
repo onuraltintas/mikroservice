@@ -125,7 +125,7 @@ export class CoachingAssignmentsComponent implements OnInit {
   sourceLabel(source: string) { return source === 'Book' ? 'Kitap' : source === 'Mixed' ? 'Karma' : 'Dijital'; }
   bookRange(assignment: CoachingAdminAssignmentListItem) {
     return assignment.bookTitle && assignment.bookStartPage && assignment.bookEndPage
-      ? `${assignment.bookTitle} · s. ${assignment.bookStartPage}-${assignment.bookEndPage}`
+      ? `${assignment.bookTitle}, s. ${assignment.bookStartPage}-${assignment.bookEndPage}`
       : '—';
   }
 }

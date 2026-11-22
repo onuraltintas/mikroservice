@@ -230,7 +230,7 @@ export class BillingStatementsComponent implements OnInit {
   }
 
   statusLabel(status: BankTransactionStatus): string { return BANK_TRANSACTION_STATUS_LABELS[status] ?? status; }
-  rowLabel(row: string[]): string { return row.filter(cell => cell.trim()).slice(0, 3).map(cell => cell.trim()).join(' · ').slice(0, 60) || '(boş)'; }
+  rowLabel(row: string[]): string { return row.filter(cell => cell.trim()).slice(0, 3).map(cell => cell.trim()).join(', ').slice(0, 60) || '(boş)'; }
 
   isPicked(column: number): boolean {
     const columns = this.mapping();

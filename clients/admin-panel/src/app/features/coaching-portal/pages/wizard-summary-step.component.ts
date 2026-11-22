@@ -1,3 +1,4 @@
+import { CoachingResourcesService, StudentResource } from '../../../core/services/coaching-resources.service';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, EventEmitter, Injector, Input, OnInit, Output, ViewChild, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -96,6 +97,33 @@ export class WizardSummaryStepComponent implements OnInit {
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly learning = inject(CoachingLearningSetupService);
   private readonly toaster = inject(ToasterService);
+  private readonly resourceApi = inject(CoachingResourcesService);
+  /** KocApp uyumu (22.11.2026): the student's resources and the one chosen for each lesson ('' = none). */
+  readonly planResources = signal<StudentResource[]>([]);
+  private readonly resourceChoices = signal<Record<string, string>>({});
+  private resourcesRequested = false;
+  /** Read once, when there is a plan to make. */
+  loadPlanResources() {
+    if (this.resourcesRequested) return;
+    this.resourcesRequested = true;
+    this.resourceApi.list({ studentId: this.staffStudentId }).pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({ next: items => this.planResources.set(items.filter(x => !x.isArchived)), error: () => this.planResources.set([]) });
+  }
+  /** A lesson's own resources first, then the ones without a lesson. */
+  resourcesFor(lessonId: string) {
+    const id = lessonId.toLowerCase();
+    return this.planResources().filter(x => !x.lessonId || x.lessonId.toLowerCase() === id)
+      .sort((a, b) => Number(b.lessonId?.toLowerCase() === id) - Number(a.lessonId?.toLowerCase() === id));
+  }
+  /** The chosen resource of a lesson; by default the first resource tied to it. */
+  resourceChoice(lessonId: string) {
+    const chosen = this.resourceChoices()[lessonId];
+    return chosen ?? this.planResources().find(x => x.lessonId?.toLowerCase() === lessonId.toLowerCase())?.id ?? '';
+  }
+  setResourceChoice(lessonId: string, resourceId: string) { this.resourceChoices.set({ ...this.resourceChoices(), [lessonId]: resourceId ?? '' }); }
+  private chosenResources() {
+    return this.lessons().map(x => ({ lessonId: x.lessonId, resourceId: this.resourceChoice(x.lessonId) })).filter(x => !!x.resourceId);
+  }
   private readonly router = inject(Router);
   private readonly destroy = inject(DestroyRef);
   private readonly injector = inject(Injector);
@@ -422,7 +450,7 @@ export class WizardSummaryStepComponent implements OnInit {
     this.estimateRun++; this.focusEstimate.set(null);
     this.engine.options(student).pipe(takeUntilDestroyed(this.destroy), switchMap(options => { this.options.set(options); return this.engine.preview(this.request(options), student); }),
       finalize(() => this.previewing.set(false))).subscribe({
-      next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); this.estimateFocus(preview.request, student); },
+      next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); this.estimateFocus(preview.request, student); this.loadPlanResources(); },
       error: e => {
         this.notChosen.set(e?.status === 409 && e?.error?.code === LESSONS_NOT_CHOSEN ? e.error.lessons ?? [] : []);
         this.previewError.set(typeof e?.error?.message === 'string' ? e.error.message : 'Yıllık plan hesaplanamadı. Yeniden deneyebilirsin.');
@@ -541,15 +569,16 @@ export class WizardSummaryStepComponent implements OnInit {
    * Student: confirm, create the plan from the checked preview (its fingerprint), publish it with its version, then Planım.
    * Teacher: create the draft only, as the teacher flow always did. After a failed publish only the publish is tried again.
    */
-  async publish() {
+  async publish(confirmed = false) {
     const p = this.preview();
     if (!p || !this.canPublish()) return;
     const staff = !!this.staffStudentId, created = this.created();
-    if (!staff && !await this.toaster.confirm(this.publishConfirmText(p),
+    if (!staff && !confirmed && !await this.toaster.confirm(this.publishConfirmText(p),
       { confirmText: 'Yayımla', cancelText: 'Vazgeç' })) return;
     this.publishing.set(true); this.publishIssue.set(null);
     if (created && !staff) { this.publishCreated(created); return; }
-    this.engine.create({ title: PLAN_TITLE, preview: p.request, fingerprint: p.fingerprint }, this.staffStudentId ?? undefined)
+    const resources = this.planResources().length ? this.chosenResources() : undefined;
+    this.engine.create({ title: PLAN_TITLE, preview: p.request, fingerprint: p.fingerprint, ...(resources ? { resources } : {}) }, this.staffStudentId ?? undefined)
       .pipe(takeUntilDestroyed(this.destroy)).subscribe({
         next: plan => {
           if (staff) { this.publishing.set(false); this.planCreated.emit(plan.id); return; }
@@ -568,6 +597,24 @@ export class WizardSummaryStepComponent implements OnInit {
         }
       });
   }
+  /**
+   * 22.11.2026: the waiting draft (an older wizard plan or an empty calendar draft) is archived, which keeps it in the history, and
+   * the new plan is saved (and, for the student, published) without asking twice.
+   */
+  async archivePendingDraft() {
+    const p = this.preview(); if (!p || this.busy()) return;
+    const staff = !!this.staffStudentId, student = this.staffStudentId ?? null;
+    if (!await this.toaster.confirm(staff ? 'Öğrencinin bekleyen taslağı arşivlenecek (geçmişte durur) ve bu plan taslak olarak kaydedilecek. Devam edilsin mi?'
+      : 'Bekleyen taslağın arşivlenecek (geçmişte durur). ' + this.publishConfirmText(p), { confirmText: staff ? 'Arşivle ve kaydet' : 'Arşivle ve yayımla', cancelText: 'Vazgeç' })) return;
+    this.publishing.set(true); this.publishIssue.set(null);
+    this.planning.list(1, 'Draft', student).pipe(
+      switchMap(page => { const draft = page.items.find(x => x.status === 'Draft'); return draft ? this.planning.archive(draft.id, draft.version, student) : of(null); }),
+      takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({
+      next: () => { this.publishing.set(false); void this.publish(true); },
+      error: e => this.publishIssue.set({ draftExists: true, message: typeof e?.error?.message === 'string' ? e.error.message : 'Bekleyen taslak arşivlenemedi. Yeniden deneyebilirsin.' })
+    });
+  }
+
   /** What publishing does to the plan in force, with the numbers the preview knows. */
   publishConfirmText(p: WeeklyOutcomePreview) {
     const carried = p.protectedTaskCount > 0 ? ` Başladığın ya da sabitlediğin ${p.protectedTaskCount} çalışma yeni plana taşınır.` : '';

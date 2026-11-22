@@ -13,6 +13,7 @@ import { finalize } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { StudentScoreEstimateComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-score-estimate.component';
+import { StudentResourcesComponent } from '../../../../../../src/app/shared/coaching-resources/student-resources.component';
 import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../../../shared/coaching-motivation.component';
 import { CoachingLabelPipe } from '../../../../../../src/app/features/coaching-portal/coaching-labels';
 import {
@@ -34,7 +35,7 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-student-detail',
   standalone: true,
-  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent, CoachingMotivationComponent, StudentScoreEstimateComponent],
+  imports: [CoachingLabelPipe, CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent, CoachingMotivationComponent, StudentScoreEstimateComponent, StudentResourcesComponent],
   templateUrl: './coaching-teacher-student-detail.component.html',
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
@@ -58,6 +59,7 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   readonly profileVisible=signal(false);
   /** Roadmap F1: the score and rank estimate the student and parent see, opened on request. */
   readonly scoreVisible = signal(false);
+  readonly resourcesVisible = signal(false);
   async toggleProfile(){if(this.profileVisible()&&!(await this.profile?.canLeavePage()??true))return;this.profileVisible.update(v=>!v);}
   async canLeavePage(): Promise<boolean> { return (await this.profile?.canLeavePage()??true) && (await this.financePanel?.canLeavePage() ?? true) && (await this.study?.canLeavePage() ?? true); }
   async toggleFinance(): Promise<void> {

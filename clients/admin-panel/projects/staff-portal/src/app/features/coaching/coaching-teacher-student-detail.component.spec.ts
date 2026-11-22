@@ -92,7 +92,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
   });
 
   // Roadmap D5: the motivation card loads on its own; its request is not part of these report checks.
-  afterEach(() => { http.match(request => request.url.endsWith('/motivation') || request.url.endsWith('/planning-permission')); http.verify(); });
+  afterEach(() => { http.match(request => request.url.endsWith('/motivation') || request.url.endsWith('/planning-permission') || request.url.endsWith('/study/resources')); http.verify(); });
   afterEach(() => vi.restoreAllMocks());
   afterEach(() => vi.unstubAllGlobals());
 
@@ -173,11 +173,16 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     http.expectOne('/api/coaching/staff/students/student-1/study/availability').flush({ success: true, data: null });
     http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } });
     const editor = fixture.debugElement.query(By.directive(StudentStudyPlansComponent)).componentInstance as StudentStudyPlansComponent;
-    (await editor.newDraft()); editor.editTitle = 'Kaydedilmemiş hafta';
+    // 22.11.2026: "Yeni taslak" makes an empty draft at once; an unsaved new name is what is protected here.
+    (await editor.newDraft());
+    const draft = { id: 'draft-1', version: 0, status: 'Draft', title: 'Elle hazırlanan plan', tasks: [] };
+    http.expectOne('/api/coaching/staff/students/student-1/study/plans').flush({ success: true, data: draft });
+    http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: { items: [draft], totalCount: 1, pageNumber: 1, pageSize: 20 } });
+    editor.draftTitle = 'Kaydedilmemiş hafta';
     const developmentTabs=Array.from(fixture.nativeElement.querySelectorAll('staff-coaching-study [role="tab"]')) as HTMLButtonElement[];
     developmentTabs[0].click();fixture.detectChanges();developmentTabs.at(-1)!.click();fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent)).componentInstance).toBe(editor);
-    expect(editor.editTitle).toBe('Kaydedilmemiş hafta');
+    expect(editor.draftTitle).toBe('Kaydedilmemiş hafta');
     vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
     const back = vi.spyOn(fixture.componentInstance.back, 'emit');
     if (transition === 'section') toggle.click();
@@ -186,7 +191,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeTruthy();
     expect(back).not.toHaveBeenCalled();
-    expect(editor.editTitle).toBe('Kaydedilmemiş hafta');
+    expect(editor.draftTitle).toBe('Kaydedilmemiş hafta');
   });
 
   it('filters a category and paginates its history', () => {

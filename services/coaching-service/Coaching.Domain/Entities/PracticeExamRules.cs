@@ -59,14 +59,14 @@ public static class PracticeExamRules
         new("TYT", "TYT", 4, Array.AsReadOnly(new PracticeSection[] {
             new("TUR", "Türkçe", 40), new("MAT", "Temel Matematik", 40), new("TAR", "Tarih", 5), new("COG", "Coğrafya", 5),
             new("FEL", "Felsefe", 5), new("DIN", "Din Kültürü ve Ahlak Bilgisi", 5), new("FIZ", "Fizik", 7), new("KIM", "Kimya", 7), new("BIO", "Biyoloji", 6) })),
-        new("AYT_SAY", "AYT · Sayısal", 4, Array.AsReadOnly(new PracticeSection[] {
+        new("AYT_SAY", "AYT, Sayısal", 4, Array.AsReadOnly(new PracticeSection[] {
             new("MAT", "Matematik", 40), new("FIZ", "Fizik", 14), new("KIM", "Kimya", 13), new("BIO", "Biyoloji", 13) })),
-        new("AYT_EA", "AYT · Eşit Ağırlık", 4, Array.AsReadOnly(new PracticeSection[] {
+        new("AYT_EA", "AYT, Eşit Ağırlık", 4, Array.AsReadOnly(new PracticeSection[] {
             new("MAT", "Matematik", 40), new("EDB", "Türk Dili ve Edebiyatı", 24), new("TAR1", "Tarih-1", 10), new("COG1", "Coğrafya-1", 6) })),
-        new("AYT_SOZ", "AYT · Sözel", 4, Array.AsReadOnly(new PracticeSection[] {
+        new("AYT_SOZ", "AYT, Sözel", 4, Array.AsReadOnly(new PracticeSection[] {
             new("EDB", "Türk Dili ve Edebiyatı", 24), new("TAR1", "Tarih-1", 10), new("COG1", "Coğrafya-1", 6),
             new("TAR2", "Tarih-2", 11), new("COG2", "Coğrafya-2", 11), new("FEL", "Felsefe Grubu", 12), new("DIN", "Din Kültürü ve Ahlak Bilgisi", 6) })),
-        new("YDT_EN", "YDT · İngilizce", 4, Array.AsReadOnly(new PracticeSection[] { new("ENG", "İngilizce", 80) })),
+        new("YDT_EN", "YDT, İngilizce", 4, Array.AsReadOnly(new PracticeSection[] { new("ENG", "İngilizce", 80) })),
         // KM1 (01.11.2026). AGS: 80 questions (ÖSYM, 2026-MEB-AGS konu dağılımı, 08.01.2026,
         // https://dokuman.osym.gov.tr/pdfdokuman/2026/MEB-AGS/konudagilimi08012026.pdf: "AGS Konuları (80 soru)", weights
         // Sözel Yetenek %18,75, Sayısal Yetenek %18,75, Tarih %7,5, Türkiye Coğrafyası %7,5, Eğitim Bilimleri ve Türk Millî
@@ -91,7 +91,7 @@ public static class PracticeExamRules
         // https://dokuman.osym.gov.tr/pdfdokuman/2026/YDS-1/kilavuz_yd1d18022026.pdf). Wrong answers do not count: "yalnız doğru
         // cevaplar dikkate alınır, yanlış cevaplar dikkate alınmaz" (2026 e-YDS Kılavuzu, section 3.6,
         // https://dokuman.osym.gov.tr/web/2026/8/2026-elektronik-yabanci-dil-sinavi-2026-e-yds-kilavuzu-1zhshr-05113115.pdf).
-        new("YDS_EN", "YDS · İngilizce", 0, Array.AsReadOnly(new PracticeSection[] { new("ENG", "İngilizce", 80) })),
+        new("YDS_EN", "YDS, İngilizce", 0, Array.AsReadOnly(new PracticeSection[] { new("ENG", "İngilizce", 80) })),
         // YÖKDİL: "Sınavda soru sayısı 80" and English in Fen Bilimleri, Sağlık Bilimleri, Sosyal Bilimler (2026-YÖKDİL/2
         // Kılavuzu, sections 1.1 and 3, https://dokuman.osym.gov.tr/pdfdokuman/2026/YOKDIL-2/kilavuz_ykdl2d16062026.pdf);
         // wrong answers do not count (e-YÖKDİL Kılavuzu, section 3.6,
@@ -100,9 +100,9 @@ public static class PracticeExamRules
     });
 
     private static PracticeExamProfile Oabt(string code, string field) =>
-        new(code, $"ÖABT · {field}", 4, Array.AsReadOnly(new PracticeSection[] { new("ALAN", "Alan Bilgisi ve Alan Eğitimi", 50) }));
+        new(code, $"ÖABT, {field}", 4, Array.AsReadOnly(new PracticeSection[] { new("ALAN", "Alan Bilgisi ve Alan Eğitimi", 50) }));
     private static PracticeExamProfile Yokdil(string code, string field) =>
-        new(code, $"YÖKDİL · {field} · İngilizce", 0, Array.AsReadOnly(new PracticeSection[] { new("ENG", "İngilizce", 80) }));
+        new(code, $"YÖKDİL, {field}, İngilizce", 0, Array.AsReadOnly(new PracticeSection[] { new("ENG", "İngilizce", 80) }));
 
     public static PracticeExamSummary Summarize(PracticeExamInput input)
     {

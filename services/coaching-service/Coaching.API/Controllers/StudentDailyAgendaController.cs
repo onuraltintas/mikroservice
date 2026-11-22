@@ -10,7 +10,11 @@ namespace Coaching.API.Controllers;
 
 public sealed record StudentDailyAgendaItem(string Kind, Guid RecordId, string Title, DateOnly Date,
     int? StartMinute, int? Minutes, string TimeZoneId, Guid? PlanId = null, DateOnly? WeekStart = null, DateTime? DueAt = null,
-    string? LessonName = null);
+    string? LessonName = null)
+{
+    /// <summary>KocApp uyumu (22.11.2026): the student's resource and range of a study task ("Limit Soru Bankası, test 12–15").</summary>
+    public string? ResourceText { get; init; }
+}
 public sealed record StudentDailyAgendaPage(string Mode, IReadOnlyList<StudentDailyAgendaItem> Items,
     int TotalCount, int PageNumber, int PageSize, int TodayCount, int UpcomingCount, int OverdueCount, DateTimeOffset GeneratedAt);
 
@@ -84,6 +88,18 @@ public static class StudentDailyAgendaQuery
         items.AddRange(await studies.Where(x => x.Mode == mode).OrderBy(x => x.Row.PlannedDate).ThenBy(x => x.Row.PlannedStartMinute ?? 1439).ThenBy(x => x.Row.Id)
             .Take(take).Select(x => new StudentDailyAgendaItem("study", x.Row.Id, x.Row.Title, x.Row.PlannedDate,
                 x.Row.PlannedStartMinute, x.Row.PlannedMinutes, zone, planId, null, null, x.Row.LessonNameSnapshot)).ToArrayAsync(ct));
+        // KocApp uyumu (22.11.2026): the resource and range of the study tasks read for this page.
+        var studyIds = items.Where(x => x.Kind == "study").Select(x => x.RecordId).ToArray();
+        if (studyIds.Length > 0)
+        {
+            var links = await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student && Enumerable.Contains(studyIds, x.Id) && x.ResourceId != null)
+                .Join(db.Set<StudentResource>().AsNoTracking(), task => task.ResourceId, resource => (Guid?)resource.Id,
+                    (task, resource) => new { task.Id, resource.Name, resource.Unit, task.ResourceFrom, task.ResourceTo })
+                .ToDictionaryAsync(x => x.Id, ct);
+            for (var i = 0; i < items.Count; i++)
+                if (items[i].Kind == "study" && links.TryGetValue(items[i].RecordId, out var link))
+                    items[i] = items[i] with { ResourceText = Coaching.Infrastructure.StudyPlanning.StudentResourceNames.Text(link.Name, link.Unit, link.ResourceFrom, link.ResourceTo) };
+        }
         var dueRows = await assignments.Where(x => x.Mode == mode).OrderBy(x => x.Row.Assignment.DueDate).ThenBy(x => x.Row.AssignmentId).Take(take)
             .Select(x => new { x.Row.AssignmentId, x.Row.Assignment.Title, x.Row.Assignment.DueDate, x.Row.Assignment.EstimatedDurationMinutes }).ToArrayAsync(ct);
         foreach (var row in dueRows)

@@ -23,8 +23,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     public Task<ManualStudyPlanView?> GetForStudentAsync(Guid student, Guid id, CancellationToken ct = default) => GetCoreAsync(id, ct, student);
     public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken ct = default) => CreateCoreAsync(request, ct);
     public Task<ManualStudyPlanView> CreateForStudentAsync(Guid student, ManualStudyPlanInput request, CancellationToken ct = default) => CreateCoreAsync(request, ct, student);
-    public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int version, ManualStudyPlanInput request, CancellationToken ct = default) => ReplaceCoreAsync(id, version, request, ct);
-    public Task<ManualStudyPlanView> ReplaceForStudentAsync(Guid student, Guid id, int version, ManualStudyPlanInput request, CancellationToken ct = default) => ReplaceCoreAsync(id, version, request, ct, student);
+    public Task<ManualStudyPlanView> RenameDraftAsync(Guid id, StudyPlanRenameInput request, CancellationToken ct = default) => RenameCoreAsync(id, request, ct);
+    public Task<ManualStudyPlanView> RenameForStudentAsync(Guid student, Guid id, StudyPlanRenameInput request, CancellationToken ct = default) => RenameCoreAsync(id, request, ct, student);
     public Task<ManualStudyPlanView> PublishAsync(Guid id, int version, CancellationToken ct = default) => PublishCoreAsync(id, version, ct);
     public Task<ManualStudyPlanView> RestoreArchivedAsync(Guid id,StudyPlanRestoreInput request,CancellationToken ct=default)=>RestoreCoreAsync(id,request,ct);
     public Task<ManualStudyPlanView> RestoreForStudentAsync(Guid student,Guid id,StudyPlanRestoreInput request,CancellationToken ct=default)=>RestoreCoreAsync(id,request,ct,student);
@@ -79,6 +79,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(task.WeeklyLessonId is {} lesson)second.SetWeeklyPlacement(lesson,task.LessonNameSnapshot!,start+first);
             else second.Schedule(task.PlannedDate,start+first);
             if(task.PlanKind is {} kind)second.SetPlanDecision(kind,task.PlanReason);
+            second.KeepLinksOf(task);
             task.CorrectPlanning(task.Title,task.PlannedDate,first);
             if(questions!=task.PlannedQuestions)task.CorrectPlannedQuestions(questions);
             db.StudyPlanTasks.Add(second);
@@ -107,6 +108,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(revision.Status==StudyPlanStatus.Archived)throw Conflict("Geçmiş plan değiştirilemez.");
             if(string.IsNullOrWhiteSpace(request.Title)||request.Title.Trim().Length>200||request.PlannedDate==default||request.StartMinute<0||request.PlannedMinutes<1||request.StartMinute+request.PlannedMinutes>1440)
                 throw new ArgumentException("Başlık, tarih ve süreyi kontrol edin.");
+            if(request.PlannedQuestions is <0 or >100000||request.SourceName?.Trim().Length>300)
+                throw new ArgumentException("Planlanan soru 0–100000, not en fazla 300 karakter olmalıdır.");
             var task=taskId.HasValue?await db.StudyPlanTasks.SingleOrDefaultAsync(x=>x.Id==taskId&&x.RevisionId==id&&x.StudentId==student,ct):null;
             if(taskId.HasValue&&task is null)throw new BusinessRuleException("StudyPlanning.NotFound","Çalışma bulunamadı.");
             if(task?.IsCompleted==true)throw Conflict("Tamamlanan çalışma değiştirilemez.");
@@ -125,10 +128,23 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(await others.AnyAsync(x=>x.PlannedStartMinute<request.StartMinute+request.PlannedMinutes&&x.PlannedStartMinute+x.PlannedMinutes>request.StartMinute,ct))
                 throw Conflict("Bu saat başka bir çalışmayla çakışıyor. Boş bir saat seçin.");
             if(await others.SumAsync(x=>x.PlannedMinutes,ct)+request.PlannedMinutes>1440)throw Conflict("Bir güne 24 saatten fazla çalışma eklenemez.");
+            // KocApp uyumu (22.11.2026): from the curriculum, a topic of the chosen lesson.
+            if(request.TopicId is {} topicId&&(task is not null||!await db.StudyCatalogTopics.AnyAsync(x=>x.Id==topicId&&x.LessonId==lesson!.Id&&x.IsActive,ct)))
+                throw new ArgumentException(task is null?"Konu bu dersin konularından olmalı.":"Mevcut çalışmanın konusu değiştirilemez.");
+            StudentResource? resource=null;
+            if(request.ResourceId is {} resourceId)
+                resource=await db.Set<StudentResource>().SingleOrDefaultAsync(x=>x.Id==resourceId&&x.StudentId==student,ct)
+                    ??throw new ArgumentException("Seçilen kaynak bulunamadı.");
             if(task is null){
-                task=StudyPlanTask.Create(revision,request.PlannedDate,request.Title,request.PlannedMinutes);
-                task.SetWeeklyPlacement(lesson!.Id,lesson.Name,request.StartMinute);db.StudyPlanTasks.Add(task);
+                task=StudyPlanTask.Create(revision,request.PlannedDate,request.Title,request.PlannedMinutes,request.TopicId,false,request.SourceName,request.PlannedQuestions);
+                task.SetWeeklyPlacement(lesson!.Id,lesson.Name,request.StartMinute);
+                // Checked before the task is tracked: a refused range leaves nothing behind.
+                if(resource is not null||request.ResourceFrom.HasValue)task.LinkResource(resource,request.ResourceFrom,request.ResourceTo);
+                db.StudyPlanTasks.Add(task);
             }else{
+                // An edit changes the resource only when it says so (KeepResource false); older callers leave it as it was.
+                if(request.KeepResource==false)task.LinkResource(resource,request.ResourceFrom,request.ResourceTo);
+                if(request.KeepDetails==false){task.CorrectPlannedQuestions(request.PlannedQuestions);task.SetNote(request.SourceName);}
                 // Clear the old time before validating a changed duration against the new time.
                 task.Schedule(request.PlannedDate,null);
                 task.CorrectPlanning(request.Title,request.PlannedDate,request.PlannedMinutes);
@@ -181,9 +197,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 throw new BusinessRuleException("Authorization.Forbidden", "Öğretmen planını öğretmenin onaylamalı.");
             foreach (var slot in preview.Slots)
             {
-                var title = "Tekrar · " + slot.TopicName;
+                var title = "Tekrar: " + slot.TopicName;
                 var task = StudyPlanTask.Create(revision, slot.Date, title.Length > 200 ? title[..200] : title,
-                    slot.Minutes, slot.TopicId, sourceName: slot.EvidenceKey);
+                    slot.Minutes, slot.TopicId, adviceKey: slot.EvidenceKey);
                 task.SetWeeklyPlacement(slot.LessonId, slot.LessonName, slot.StartMinute);
                 db.StudyPlanTasks.Add(task);
             }
@@ -222,7 +238,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(tasks.Length!=ids.Length) throw new BusinessRuleException("StudyPlanning.NotFound","Taşınacak çalışma bulunamadı.");
             if(tasks.Any(x=>x.IsCompleted)) throw Conflict("Tamamlanmış çalışmalar taşınamaz.");
             var first=tasks[0];var cursor=first.PlannedStartMinute;
-            foreach(var task in tasks)
+            // 22.11.2026: an untimed task (from a draft made before the calendar) is placed on its own; it gets its hour here.
+            var untimed=tasks.Length==1&&cursor is null;
+            if(!untimed)foreach(var task in tasks)
             {
                 if(cursor is null || task.PlannedDate!=first.PlannedDate || task.PlannedStartMinute!=cursor
                     || task.WeeklyLessonId!=first.WeeklyLessonId || (task.LessonNameSnapshot??task.Title)!=(first.LessonNameSnapshot??first.Title))
@@ -237,7 +255,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 throw Conflict("Bu saat başka bir çalışmayla çakışıyor. Boş bir saat seçin.");
             if(await others.SumAsync(x=>x.PlannedMinutes,ct)+minutes>1440) throw Conflict("Bir güne 24 saatten fazla çalışma eklenemez.");
             if(first.PlannedDate==request.PlannedDate&&first.PlannedStartMinute==request.StartMinute) return await ViewAsync(revision,ct);
-            var previousDate=first.PlannedDate;var previousStart=first.PlannedStartMinute!.Value;
+            var previousDate=first.PlannedDate;var previousStart=first.PlannedStartMinute??request.StartMinute;
             var start=request.StartMinute;
             foreach(var task in tasks){task.Schedule(request.PlannedDate,start);start+=task.PlannedMinutes;}
             revision.RecordScheduleChange();
@@ -266,6 +284,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
             var tasks = preview.Schedule.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate,
                 names[x.TopicId], x.PlannedMinutes, x.TopicId)).ToList();
+            // KocApp plan, phase 2: a topic with a part in one of the student's resources gets its next free part.
+            await StudentResourcePlanLinks.LinkAsync(db, student, tasks, cancellationToken);
             db.AddRange(StudyOutcomeAllocation.Allocate(tasks, preview.Outcomes ?? []));
             foreach(var continuation in preview.Continuations ?? [])
             {
@@ -317,23 +337,14 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
 
-    private Task<ManualStudyPlanView> ReplaceCoreAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken, Guid? targetStudent = null)
+    /// <summary>Only a draft's name changes here; its work is added, moved and removed on the calendar.</summary>
+    private Task<ManualStudyPlanView> RenameCoreAsync(Guid id, StudyPlanRenameInput request, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             ArgumentNullException.ThrowIfNull(request);
-            var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
-            if (revision.Status != StudyPlanStatus.Draft) throw Conflict("Yalnız taslak plan düzenlenebilir.");
-            if(revision.WeeklySource is not null)throw Conflict("Bu plan haftalık takvimden üretildi. Saat ve kazanımları korumak için taslağı arşivleyip önizlemeden yeniden oluşturun.");
-            // Validate all replacements before changing any persisted task or title.
-            _ = StudyPlanRevision.Create(student, revision.PlanId, revision.RevisionNumber, request.Title);
-            var tasks = await AddManualContinuationsAsync(revision,await ValidateTasksAsync(revision, request, cancellationToken),cancellationToken);
-            var oldTasks = await db.StudyPlanTasks.Where(x => x.RevisionId == id && x.StudentId == student).ToListAsync(cancellationToken);
-            if (oldTasks.Any(x => x.IsCompleted)) throw Conflict("Tamamlanmış çalışmaları içeren taslak değiştirilemez.");
+            var revision = await OwnedAsync(id, student, request.ExpectedVersion, cancellationToken);
+            if (revision.Status != StudyPlanStatus.Draft) throw Conflict("Yalnız taslağın adı değiştirilebilir.");
             revision.RenameDraft(request.Title);
-            var oldIds=oldTasks.Select(x=>x.Id).ToArray();
-            db.RemoveRange(await db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(oldIds,x.TaskId)).ToArrayAsync(cancellationToken));
-            db.StudyPlanTasks.RemoveRange(oldTasks);
-            db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
@@ -585,7 +596,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             .ToListAsync(cancellationToken);
         var history = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt,PlanKind=history[x.Id].PlanKind,PlanReason=history[x.Id].PlanReason }).ToList();
+        var resources = await StudentResourceNames.ForAsync(db, revision.StudentId, history.Values, cancellationToken);
+        tasks = tasks.Select(x => StudentResourceNames.Attach(x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt,PlanKind=history[x.Id].PlanKind,PlanReason=history[x.Id].PlanReason }, history[x.Id], resources)).ToList();
         if(revision.Status==StudyPlanStatus.Archived&&revision.WasPublished)
         {
             var roots=history.Values.Select(x=>x.OriginalTaskId??x.Id).ToArray();

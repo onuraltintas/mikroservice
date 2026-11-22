@@ -37,7 +37,7 @@ describe('CoachingCurriculumManagerService (KM7 contract)', () => {
     expect(label(CONFIDENCE_LABELS, 'Medium')).toBe('Orta');
     expect(sourceLabel('coaching-catalog-km3')).toContain('Koçluk kataloğu');
     expect(sourceLabel('some-new-import')).toBe('Diğer kaynak');
-    expect(examLabel('OABT_TURKCE', [{ code: 'OABT_TURKCE', name: 'ÖABT · Türkçe Öğretmenliği' }])).toBe('ÖABT · Türkçe Öğretmenliği');
+    expect(examLabel('OABT_TURKCE', [{ code: 'OABT_TURKCE', name: 'ÖABT · Türkçe Öğretmenliği' }])).toBe('ÖABT, Türkçe Öğretmenliği');
     expect(examLabel('YOKDIL')).toBe('YÖKDİL');
   });
 });

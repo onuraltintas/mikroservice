@@ -73,8 +73,9 @@ public static partial class BillingRules
         if (trialDays > 0 && buyerType == BuyerType.Institution) return "Kurum planlarında deneme süresi olmaz.";
         if (seatCount is < 1 or > MaxSeats) return "Koltuk sayısı 1 ile 100.000 arasında olmalıdır.";
         if (seatCount is not null && buyerType == BuyerType.Individual) return "Bireysel planda koltuk olmaz.";
-        if (extraSeatPrice is not null && (buyerType != BuyerType.Institution || seatCount is null || extraSeatPrice <= 0 || extraSeatPrice > MaxPrice))
-            return "Ek koltuk fiyatı yalnız koltuklu kurum planlarında, 0'dan büyük ve en çok 1.000.000 olabilir.";
+        // KocApp uyumu (22.11.2026): a teacher whose students outgrow the plan buys extra seats too, like an institution.
+        if (extraSeatPrice is not null && (buyerType == BuyerType.Individual || seatCount is null || extraSeatPrice <= 0 || extraSeatPrice > MaxPrice))
+            return "Ek koltuk fiyatı yalnız koltuklu öğretmen ve kurum planlarında, 0'dan büyük ve en çok 1.000.000 olabilir.";
         if (isContactOnly && price != 0) return "\"İletişime geçin\" planının fiyatı 0 olmalıdır.";
         return null;
     }

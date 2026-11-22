@@ -140,9 +140,10 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         return CreatedAtAction(nameof(Get), new { studentId, id = plan.Id }, new { success = true, data = plan });
     });
 
-    [HttpPut("plans/{id:guid}"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024 * 1024), EnableRateLimiting("study-planning-write")]
-    public Task<IActionResult> Replace(Guid studentId, Guid id, ManualStudyPlanUpdate request, CancellationToken ct) => Respond(async () =>
-        Ok(new { success = true, data = await plans.ReplaceForStudentAsync(studentId, id, request.ExpectedVersion, request.Plan, ct) }));
+    /// <summary>Renames the student's draft; its work is edited on the plan's calendar.</summary>
+    [HttpPut("plans/{id:guid}/title"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Rename(Guid studentId, Guid id, StudyPlanRenameInput request, CancellationToken ct) => Respond(async () =>
+        Ok(new { success = true, data = await plans.RenameForStudentAsync(studentId, id, request, ct) }));
 
     [HttpPost("plans/{id:guid}/publish"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Publish(Guid studentId, Guid id, StudyPlanPublishInput request, CancellationToken ct) => Respond(async () =>

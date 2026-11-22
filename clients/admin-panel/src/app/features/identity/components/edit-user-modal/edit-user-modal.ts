@@ -82,7 +82,7 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                                           <option value="allow">Beklemeden ilerleyebilir</option>
                                           <option value="deny">Ertesi günü beklesin</option>
                                         </select>
-                                        @if (progression(); as policy) { <p class="text-xs text-(--ui-text-muted)">Geçerli izin: {{ policy.allowEarlyAdvance ? 'Beklemeden ilerleyebilir' : 'Takvime bağlı' }} · Genel ayar: {{ policy.defaultAllowEarlyAdvance ? 'Açık' : 'Kapalı' }}</p> }
+                                        @if (progression(); as policy) { <p class="text-xs text-(--ui-text-muted)">Geçerli izin: {{ policy.allowEarlyAdvance ? 'Beklemeden ilerleyebilir' : 'Takvime bağlı' }}, Genel ayar: {{ policy.defaultAllowEarlyAdvance ? 'Açık' : 'Kapalı' }}</p> }
                                         @if (progressionError()) { <p role="alert" class="text-sm text-(--ui-danger)">{{ progressionError() }}</p> }
                                         <button type="button" class="rounded-lg border border-(--ui-brand-soft) px-3 py-2 text-sm font-semibold text-(--ui-brand-text) disabled:opacity-50" (click)="saveProgression()" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">{{ progressionSaving() ? 'Kaydediliyor…' : 'İlerleme iznini kaydet' }}</button>
                                       </div>

@@ -129,7 +129,7 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
                     </article>
                   } @empty { <p class="py-3 text-(--ui-text-muted)">Bu türde geçmiş kayıt yok.</p> }
                 </div>
-                <div class="flex items-center gap-3 text-sm"><span>{{ history.totalCount }} kayıt · {{ studentHistoryPage }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="studentHistoryPage <= 1 || studentHistoryLoading()" (click)="loadStudentHistory(studentHistoryPage - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="studentHistoryPage * 25 >= history.totalCount || studentHistoryLoading()" (click)="loadStudentHistory(studentHistoryPage + 1)">Sonraki</button></div>
+                <div class="flex items-center gap-3 text-sm"><span>{{ history.totalCount }} kayıt, {{ studentHistoryPage }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="studentHistoryPage <= 1 || studentHistoryLoading()" (click)="loadStudentHistory(studentHistoryPage - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="studentHistoryPage * 25 >= history.totalCount || studentHistoryLoading()" (click)="loadStudentHistory(studentHistoryPage + 1)">Sonraki</button></div>
               }
             </section>
           }
@@ -138,8 +138,8 @@ import { CoachingLabelPipe } from '../../coaching-portal/coaching-labels';
               <div><h2 class="text-lg font-semibold">{{ teacher.firstName }} {{ teacher.lastName }}</h2><p class="text-sm text-(--ui-text-muted)">{{ teacher.email }}</p></div>
               @if (canManageMemberships()) { <button type="button" class="rounded border border-(--ui-danger) px-3 py-2 text-sm text-(--ui-danger) disabled:opacity-50" [disabled]="savingMembership()" (click)="removeTeacherFromInstitution(teacher)">Öğretmeni kurumdan çıkar</button> }
               @if (teacherAnalytics(); as analytics) {
-                <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev, son 30 gün: {{ analytics.currentPeriod.assignments }} · önceki dönem: {{ analytics.previousPeriod.assignments }}</p><p>Sınav: {{ analytics.currentPeriod.exams }} · önceki: {{ analytics.previousPeriod.exams }}</p><p>Seans: {{ analytics.currentPeriod.sessions }} · önceki: {{ analytics.previousPeriod.sessions }}</p></div>
-                <div class="text-sm"><h3 class="font-semibold">Sınav sonuç dağılımı (son 30 gün)</h3><p>Düşük (&lt;%50): {{ analytics.lowResults }} · Orta (%50–79): {{ analytics.mediumResults }} · Yüksek (≥%80): {{ analytics.highResults }}</p></div>
+                <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev, son 30 gün: {{ analytics.currentPeriod.assignments }}, önceki dönem: {{ analytics.previousPeriod.assignments }}</p><p>Sınav: {{ analytics.currentPeriod.exams }}, önceki: {{ analytics.previousPeriod.exams }}</p><p>Seans: {{ analytics.currentPeriod.sessions }}, önceki: {{ analytics.previousPeriod.sessions }}</p></div>
+                <div class="text-sm"><h3 class="font-semibold">Sınav sonuç dağılımı (son 30 gün)</h3><p>Düşük (&lt;%50): {{ analytics.lowResults }}, Orta (%50–79): {{ analytics.mediumResults }}, Yüksek (≥%80): {{ analytics.highResults }}</p></div>
               }
               <div class="text-sm"><h3 class="font-semibold">Atanmış öğrenciler</h3>
                 <label class="mt-2 block">Öğrenci ara
@@ -686,7 +686,7 @@ export class CoachingPeopleComponent implements OnInit {
       const records = await collectCoachingHistory((page, pageSize) =>
         this.service.getStudentHistory(student.userId, type, page, pageSize, filter));
       const label = this.historyTypeOptions.find(option => option.value === type)?.label ?? type;
-      renderCoachingHistoryPrint(target, records, `${student.firstName} ${student.lastName} · ${label} · Koçluk geçmişi`);
+      renderCoachingHistoryPrint(target, records, `${student.firstName} ${student.lastName}, ${label}, Koçluk geçmişi`);
     } catch {
       target.close();
       this.error.set('Tam rapor yazdırılamadı. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');

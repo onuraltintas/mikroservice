@@ -190,7 +190,7 @@ public sealed class CoachingPracticeAdaptationService(CoachingDbContext db, ICoa
         _ = await db.Set<WeeklyStudyDraft>().FromSqlInterpolated($"SELECT * FROM coaching.study_weekly_drafts WHERE \"StudentId\"={student} FOR SHARE").AsNoTracking().ToArrayAsync(ct);
     }
 
-    internal static string ReviewKey(PracticeAdviceView advice, Guid topic) => "DenemeTekrar:" + Hash(new { advice.ExamCode, advice.Source, advice.ExamIds, topic })[..32];
+    internal static string ReviewKey(PracticeAdviceView advice, Guid topic) => StudyPlanTask.PracticeReviewKeyPrefix + Hash(new { advice.ExamCode, advice.Source, advice.ExamIds, topic })[..32];
     private static string Fingerprint(ExamResult x) => Hash(new { x.Id, Practice = x.GetPracticeExam(), Analysis = x.GetTopicAnalysis(), x.Exam.Version, x.Exam.ExamDate });
     private PracticeAnalysisView AnalysisView(ExamResult x, bool teacher) => new(x.ExamId, x.Exam.Title, x.Exam.ExamDate,
         x.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", Fingerprint(x), x.GetPracticeExam()!, x.GetTopicAnalysis(),
@@ -214,7 +214,7 @@ public sealed class CoachingPracticeAdaptationService(CoachingDbContext db, ICoa
             var basic = new PracticeAdviceView(x.ExamCode, x.Source, x.ExamIds, []);
             return basic with { Topics = x.Topics.Where(row => catalog.Any(t => t.Id == row.TopicId && Fits(x.ExamCode, row.SectionCode, t.ExamCode, t.LessonName)))
                 .Select(row => { var topic = catalog.Single(t => t.Id == row.TopicId);
-                    return new PracticeAdviceTopicView(row, topic.LessonName, topic.Name, tasks.Any(t => t.TopicId == row.TopicId && t.SourceName == ReviewKey(basic, row.TopicId))); }).ToArray() };
+                    return new PracticeAdviceTopicView(row, topic.LessonName, topic.Name, tasks.Any(t => t.TopicId == row.TopicId && t.AdviceKey == ReviewKey(basic, row.TopicId))); }).ToArray() };
         }).ToArray();
     }
 

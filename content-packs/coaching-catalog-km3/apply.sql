@@ -45,23 +45,23 @@ END $$;
 -- existing exam with the same code keeps its name and status).
 CREATE TEMP TABLE km3_exams (id uuid PRIMARY KEY, code text, name text, display_order int) ON COMMIT DROP;
 INSERT INTO km3_exams VALUES
-    ('f74fe291-fec8-08aa-03a1-4cc31c1fef35', 'OABT_TUR', 'ÖABT · Türkçe', 20),
-    ('b0b08fbc-c8cc-b495-bf33-c285e93333c4', 'OABT_IMAT', 'ÖABT · İlköğretim Matematik', 21),
-    ('a695a5ea-e754-c64b-bbf0-99a83fe8ff3d', 'OABT_FEN', 'ÖABT · Fen Bilimleri', 22),
-    ('c1793888-c21e-82ae-cbcf-1fdd8afdeb36', 'OABT_SOS', 'ÖABT · Sosyal Bilgiler', 23),
-    ('a01ff58b-5bee-5224-a02a-97cab0b7356d', 'OABT_TDE', 'ÖABT · Türk Dili ve Edebiyatı', 24),
-    ('49d3802d-ae03-b81a-983c-e7095c553766', 'OABT_TAR', 'ÖABT · Tarih', 25),
-    ('bca4f575-80ce-15df-34e8-239116bd0db4', 'OABT_COG', 'ÖABT · Coğrafya', 26),
-    ('ef54039b-1b22-e0d2-855e-21dd42b0916c', 'OABT_MAT', 'ÖABT · Matematik', 27),
-    ('61c25e7e-61e1-a6ed-c9c9-011eebf71ada', 'OABT_FIZ', 'ÖABT · Fizik', 28),
-    ('b0c11c91-3a08-2f33-3037-fdb85eeac4c9', 'OABT_KIM', 'ÖABT · Kimya / Kimya Teknolojisi', 29),
-    ('bebc5df4-a18f-fd5d-b398-480d12be2f58', 'OABT_BIO', 'ÖABT · Biyoloji', 30),
-    ('6f5e8c87-4eed-ff58-9ce5-e9d8ce33ed9a', 'OABT_DIN', 'ÖABT · Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri', 31),
-    ('67e898e0-7772-fd52-9dcf-66c1302743d2', 'OABT_REH', 'ÖABT · Rehberlik', 32),
-    ('0c974943-29df-9179-32a5-14744c424f3e', 'OABT_SINIF', 'ÖABT · Sınıf Öğretmenliği', 33),
-    ('3ca96908-1620-7a86-dde8-de62436d8e57', 'OABT_OKUL', 'ÖABT · Okul Öncesi', 34),
-    ('4ef3c367-cbf0-c8c9-ac5e-a8c56e79fdd8', 'OABT_BED', 'ÖABT · Beden Eğitimi', 35),
-    ('76df7afd-18b4-bdb0-8339-9fd95fbe21b8', 'OABT_OZEL', 'ÖABT · Özel Eğitim', 36);
+    ('f74fe291-fec8-08aa-03a1-4cc31c1fef35', 'OABT_TUR', 'ÖABT, Türkçe', 20),
+    ('b0b08fbc-c8cc-b495-bf33-c285e93333c4', 'OABT_IMAT', 'ÖABT, İlköğretim Matematik', 21),
+    ('a695a5ea-e754-c64b-bbf0-99a83fe8ff3d', 'OABT_FEN', 'ÖABT, Fen Bilimleri', 22),
+    ('c1793888-c21e-82ae-cbcf-1fdd8afdeb36', 'OABT_SOS', 'ÖABT, Sosyal Bilgiler', 23),
+    ('a01ff58b-5bee-5224-a02a-97cab0b7356d', 'OABT_TDE', 'ÖABT, Türk Dili ve Edebiyatı', 24),
+    ('49d3802d-ae03-b81a-983c-e7095c553766', 'OABT_TAR', 'ÖABT, Tarih', 25),
+    ('bca4f575-80ce-15df-34e8-239116bd0db4', 'OABT_COG', 'ÖABT, Coğrafya', 26),
+    ('ef54039b-1b22-e0d2-855e-21dd42b0916c', 'OABT_MAT', 'ÖABT, Matematik', 27),
+    ('61c25e7e-61e1-a6ed-c9c9-011eebf71ada', 'OABT_FIZ', 'ÖABT, Fizik', 28),
+    ('b0c11c91-3a08-2f33-3037-fdb85eeac4c9', 'OABT_KIM', 'ÖABT, Kimya / Kimya Teknolojisi', 29),
+    ('bebc5df4-a18f-fd5d-b398-480d12be2f58', 'OABT_BIO', 'ÖABT, Biyoloji', 30),
+    ('6f5e8c87-4eed-ff58-9ce5-e9d8ce33ed9a', 'OABT_DIN', 'ÖABT, Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri', 31),
+    ('67e898e0-7772-fd52-9dcf-66c1302743d2', 'OABT_REH', 'ÖABT, Rehberlik', 32),
+    ('0c974943-29df-9179-32a5-14744c424f3e', 'OABT_SINIF', 'ÖABT, Sınıf Öğretmenliği', 33),
+    ('3ca96908-1620-7a86-dde8-de62436d8e57', 'OABT_OKUL', 'ÖABT, Okul Öncesi', 34),
+    ('4ef3c367-cbf0-c8c9-ac5e-a8c56e79fdd8', 'OABT_BED', 'ÖABT, Beden Eğitimi', 35),
+    ('76df7afd-18b4-bdb0-8339-9fd95fbe21b8', 'OABT_OZEL', 'ÖABT, Özel Eğitim', 36);
 CREATE TEMP TABLE km3_lessons (id uuid PRIMARY KEY, source_id text, name text, exam text) ON COMMIT DROP;
 INSERT INTO km3_lessons VALUES
     ('57208796-5531-c476-e71d-bb2d935c9db3', 'AGS_SOZ', 'Sözel Yetenek (AGS)', 'AGS'),
@@ -1546,8 +1546,8 @@ BEGIN
         LEFT JOIN km3_editions k ON k.id = e."Id"
         WHERE (e."Code" IN (SELECT code FROM km3_editions) OR k.id IS NOT NULL)
           AND (k.id IS NULL OR (e."Code", e."ExamCode", e."GradeNumber", e."SubjectName", e."AcademicYearStart", e."AcademicYearEnd", e."SourceUrl",
-                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" IN ('f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab', 'e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c') THEN '059584e6d2499f8368021d2ca1ff534ca68ba29eb8418f2a988e8b18f02d1c07' ELSE e."PackageSha256" END)
-              IS DISTINCT FROM (k.code::varchar, k.exam::varchar, NULL::int, k.subject::varchar, 2026, 2027, k.source_url::varchar, k.scope_url::varchar, '059584e6d2499f8368021d2ca1ff534ca68ba29eb8418f2a988e8b18f02d1c07'::varchar))
+                  e."ScopeEvidenceUrl", CASE WHEN e."PackageSha256" IN ('f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab', 'e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c', '059584e6d2499f8368021d2ca1ff534ca68ba29eb8418f2a988e8b18f02d1c07') THEN '693a56fd45c7852068a0d175c41b85006ccd1970d5d0580275e2b3de1723560a' ELSE e."PackageSha256" END)
+              IS DISTINCT FROM (k.code::varchar, k.exam::varchar, NULL::int, k.subject::varchar, 2026, 2027, k.source_url::varchar, k.scope_url::varchar, '693a56fd45c7852068a0d175c41b85006ccd1970d5d0580275e2b3de1723560a'::varchar))
         UNION ALL SELECT 'official topic ' || o."Code" FROM coaching.official_curriculum_topics o
         JOIN km3_official k ON k.id = o."Id"
         WHERE (o."EditionId", o."Code", CASE WHEN o."Name" = k.previous_name THEN k.name ELSE o."Name" END, o."OutcomeCount", o."LessonPeriods")
@@ -1594,7 +1594,7 @@ WITH x AS (INSERT INTO coaching.study_catalog_topics ("Id", "Source", "SourceId"
 INSERT INTO km3_inserted SELECT 'topics', count(*) FROM x;
 WITH x AS (INSERT INTO coaching.official_curriculum_editions ("Id", "Code", "ExamCode", "GradeNumber", "SubjectName", "AcademicYearStart",
         "AcademicYearEnd", "SourceUrl", "DocumentSha256", "ScopeEvidenceUrl", "PackageSha256")
-    SELECT k.id, k.code, k.exam, NULL, k.subject, 2026, 2027, k.source_url, k.document_sha, k.scope_url, '059584e6d2499f8368021d2ca1ff534ca68ba29eb8418f2a988e8b18f02d1c07' FROM km3_editions k
+    SELECT k.id, k.code, k.exam, NULL, k.subject, 2026, 2027, k.source_url, k.document_sha, k.scope_url, '693a56fd45c7852068a0d175c41b85006ccd1970d5d0580275e2b3de1723560a' FROM km3_editions k
     WHERE NOT EXISTS (SELECT 1 FROM coaching.official_curriculum_editions e WHERE e."Id" = k.id) RETURNING 1)
 INSERT INTO km3_inserted SELECT 'editions', count(*) FROM x;
 INSERT INTO coaching.official_curriculum_lesson_bindings ("EditionId", "LessonId")

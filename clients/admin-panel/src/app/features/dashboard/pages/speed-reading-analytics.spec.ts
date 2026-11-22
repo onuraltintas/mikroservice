@@ -183,6 +183,6 @@ describe('SpeedReadingAnalyticsComponent teacher directory', () => {
 
     expect(component.teacherGroups().map(group => group.institutionName)).toEqual(['Atatürk Okulu', 'Kuruma bağlı olmayanlar']);
     expect(component.teacherId).toBe('teacher-1');
-    expect(component.displayTeacher(schoolTeacher)).toBe('Ayşe Yılmaz · ayse@example.com');
+    expect(component.displayTeacher(schoolTeacher)).toBe('Ayşe Yılmaz, ayse@example.com');
   });
 });

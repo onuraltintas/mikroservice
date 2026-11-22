@@ -12,5 +12,8 @@ export function studentShell(route, path) {
   if (path.endsWith('/students/me/onboarding')) return respond(completedOnboarding);
   if (path.endsWith('/profiles/me/navigation')) return respond({ showAssignments: true, showSessions: true, showFees: true });
   if (path.endsWith('/messages/unread-count')) return route.fulfill({ json: { count: 0 } });
+  // 16.11.2026 (#24): the plan wizard and the weekly routine open only when the student may plan. These fixtures are a
+  // student without a teacher, who plans freely; without this answer the guard sent every test back to "Planım".
+  if (path.endsWith('/study-planning/permission')) return respond({ hasTeacher: false, allowedByTeacher: false, studentMayPlan: true });
   return null;
 }

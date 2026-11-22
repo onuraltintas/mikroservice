@@ -12,7 +12,8 @@ public sealed class CoachingTopicSearchApiTests
     public void Api_RequiresStudentAndLimitsTraffic()
     {
         var type = typeof(StudyTopicCatalogController);
-        Assert.Equal("Student", Assert.Single(type.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>()).Roles);
+        // KocApp uyumu (22.11.2026): a teacher ties resource sections to topics too.
+        Assert.Equal("Student,Teacher", Assert.Single(type.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>()).Roles);
         Assert.Equal("target-catalog-search", Assert.Single(type.GetCustomAttributes(typeof(EnableRateLimitingAttribute), false).Cast<EnableRateLimitingAttribute>()).PolicyName);
     }
     [Theory]

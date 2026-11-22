@@ -28,6 +28,8 @@ export class CoachingTeacherStudyOverviewComponent{
   async canLeavePage(){return this.wizardMode?(await this.assistant?.canLeavePage()??true):(await this.editor?.canLeavePage()??true);}
   async open(student:TeacherStudyStudent,filter:'all'|'pending'|'completed'|'overdue'='all',planId?:string){if(await this.canLeavePage()){this.wizardMode=false;this.detail.set({student,filter,planId});}}
   async createWithWizard(){if(await this.canLeavePage())this.wizardMode=true;}
+  /** "Plan listesine dön" asks before unsaved wizard choices are dropped, as leaving the page does. */
+  async closeWizard(){if(await this.assistant?.canLeavePage()??true)this.wizardMode=false;}
   planCreated(planId:string){this.wizardMode=false;this.detail.update(value=>value?{...value,filter:'all',planId}:value);this.load(this.data().pageNumber);}
   async back(){if(!await this.canLeavePage())return;this.detail.set(null);this.load(this.data().pageNumber);}
   load(page=1){

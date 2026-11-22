@@ -69,7 +69,7 @@ public sealed class WeeklyPlanEngineTests
         Assert.Equal(new[] { weak, first, focus, focus }, plain[0].Outcomes.Select(x => x.TopicId));
         // A focus topic that is also an exam-error topic keeps both reasons.
         var both = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid> { focus }, new HashSet<Guid> { focus });
-        Assert.StartsWith("Öne almak istediğin konu · Son denemelerde", both[0].Outcomes[0].Reason);
+        Assert.StartsWith("Öne almak istediğin konu. Son denemelerde", both[0].Outcomes[0].Reason);
         // A teacher's choice says so (review of PR #132, S2).
         var teacher = WeeklyPlanEngine.Shape(lessons, none, preferences, new HashSet<Guid>(), new HashSet<Guid> { focus }, WeeklyPlanEngine.TeacherFocusReason);
         Assert.Equal("Öğretmeninin öne aldığı konu", teacher[0].Outcomes[0].Reason);

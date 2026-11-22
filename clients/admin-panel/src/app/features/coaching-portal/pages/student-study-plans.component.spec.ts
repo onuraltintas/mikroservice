@@ -40,7 +40,7 @@ describe('StudentStudyPlansComponent', () => {
     const { component, service } = await setup(); const selected = component.selected();
     service.list.mockReturnValueOnce(throwError(() => ({ status: 503 })));
     await component.newDraft();
-    expect(component.selected()).toBe(selected); expect(component.editing).toBe(false);
+    expect(component.selected()).toBe(selected); expect(service.create).not.toHaveBeenCalled();
     expect(component.error()).toContain('Taslak'); expect(component.busy()).toBe(false);
   });
   const active: StudyPlan = { id: 'plan', version: 4, title: 'Planım', status: 'Active', tasks: [
@@ -51,7 +51,7 @@ describe('StudentStudyPlansComponent', () => {
     const service = {
       list: vi.fn(() => of({ items: [{ ...active, tasks: undefined }], totalCount: 1, pageNumber: 1, pageSize: 20 })),
       get: vi.fn(() => of(active)), create: vi.fn(() => of({ ...active, status: 'Draft' })),
-      replace: vi.fn(() => of({ ...active, status: 'Draft' })), publish: vi.fn(() => of(active)),
+      rename: vi.fn(() => of({ ...active, status: 'Draft', version: 5 })), publish: vi.fn(() => of(active)),
       setRemainingScope:vi.fn(()=>of({...active,version:5})),
       recordRealization:vi.fn(()=>of({...active,version:5})),
       complete: vi.fn(() => of({ ...active, version: 5 })), reschedule: vi.fn(() => of({ ...active, version: 5 })),
@@ -96,12 +96,9 @@ describe('StudentStudyPlansComponent', () => {
     component.saveCorrection();expect(component.correction?.minutes).toBe(25);expect(component.correction?.reason).toBe('Yanlış süre girildi');
     expect(service.recordRealization).toHaveBeenLastCalledWith('plan','task',{expectedVersion:5,actualMinutes:25,actualQuestions:10,isCompleted:true,reason:'Yanlış süre girildi',workedOn:component.today},true);
   });
-  it('declares remaining scope without fabricating actual work and filters preserved continuations out of manual replacements',async()=>{
+  it('declares remaining scope without fabricating actual work',async()=>{
     const{component,service}=await setup();const task=component.selected()!.tasks[0];component.remainingMinutes[task.id]=18;component.remainingQuestions[task.id]=6;
     component.saveRemainingScope(task);expect(service.setRemainingScope).toHaveBeenCalledWith('plan','task',4,18,6,null);expect(service.recordRealization).not.toHaveBeenCalled();expect(service.complete).not.toHaveBeenCalled();
-    component.remainingMinutes[task.id]=null;component.remainingQuestions[task.id]=null;
-    service.get.mockReturnValueOnce(of({...active,status:'Draft',tasks:[{...task,predecessorTaskId:'old'}]}));await component.open('plan');
-    expect(component.editTasks).toHaveLength(0);
   });
   it('requires a declared remaining scope and shows the predecessor without copying previous actual work',async()=>{
     const {component,service,fixture}=await setup();const task=component.selected()!.tasks[0];
@@ -151,8 +148,51 @@ describe('StudentStudyPlansComponent', () => {
     component.calendarForm!.title='Soru çözümü';
     service.saveCalendarTask.mockReturnValueOnce(throwError(()=>({status:409,error:{message:'Saat dolu'}})));
     await component.saveCalendarForm();expect(component.calendarForm).not.toBeNull();
-    expect(service.saveCalendarTask).toHaveBeenCalledWith('plan',null,{expectedVersion:4,title:'Soru çözümü',plannedDate:'2026-10-22',startMinute:1110,plannedMinutes:30,lessonId:'math'});
+    expect(service.saveCalendarTask).toHaveBeenCalledWith('plan',null,{expectedVersion:4,title:'Soru çözümü',plannedDate:'2026-10-22',startMinute:1110,plannedMinutes:30,lessonId:'math',
+      topicId:null,resourceId:null,resourceFrom:null,resourceTo:null,keepResource:null,plannedQuestions:null,sourceName:null,keepDetails:null});
     await component.saveCalendarForm();expect(component.calendarForm).toBeNull();fixture.detectChanges();
+  });
+  it('22.11.2026: the calendar dialog sets the planned questions and a note, and an edit changes them', async () => {
+    const {component,service}=await setup();
+    await component.calendarCommand({kind:'add',taskIds:[],date:'2026-10-22',startMinute:1110});
+    Object.assign(component.calendarForm!,{title:'TEST soru çözümü',questions:-2,note:'Kitap s.20'});
+    await component.saveCalendarForm();expect(component.error()).toContain('Planlanan soru');expect(service.saveCalendarTask).not.toHaveBeenCalled();
+    component.calendarForm!.questions=30;await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan',null,expect.objectContaining({plannedQuestions:30,sourceName:'Kitap s.20',keepDetails:null}));
+    component.selected.set({...active,tasks:[{...active.tasks[0],plannedStartMinute:600,plannedQuestions:30,sourceName:'Kitap s.20'}]});
+    await component.calendarCommand({kind:'edit',taskIds:['task'],date:'2026-10-06',startMinute:600});
+    expect([component.calendarForm!.questions,component.calendarForm!.note]).toEqual([30,'Kitap s.20']);
+    Object.assign(component.calendarForm!,{questions:null,note:'  '});await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan','task',expect.objectContaining({plannedQuestions:null,sourceName:null,keepDetails:false}));
+  });
+  it('KocApp uyumu: adds a calendar study from the curriculum or from a resource range, and changes an edited study\'s range',async()=>{
+    const {component,service}=await setup();
+    component.resources.set([{id:'r1',version:0,name:'TEST Soru Bankası',publisher:null,lessonName:'Matematik',lessonId:'math',examCode:'LGS',kind:'QuestionBank',unit:'Test',totalUnits:40,
+      doneBefore:0,doneUnits:4,percent:10,plannedUnits:0,isArchived:false,canDelete:false,createdAt:'2026-11-22T10:00:00Z',updatedAt:null,sections:[],next:{fromUnit:5,toUnit:6,sectionTitle:null,topicId:null}},
+      {id:'r2',version:0,name:'TEST Türkçe Kitabı',publisher:null,lessonName:'Türkçe',lessonId:'tr',examCode:'LGS',kind:'TopicBook',unit:'Page',totalUnits:100,
+      doneBefore:0,doneUnits:0,percent:0,plannedUnits:0,isArchived:false,canDelete:true,createdAt:'2026-11-22T10:00:00Z',updatedAt:null,sections:[],next:null}]);
+    await component.calendarCommand({kind:'add',taskIds:[],date:'2026-10-22',startMinute:1110});
+    const form=component.calendarForm!;
+    component.calendarTopics={math:[{id:'t1',name:'Çarpanlar',lessonName:'Matematik',unitName:'Sayılar',gradeNumber:8,examCode:'LGS',estimatedMinutes:60}]};
+    component.setCalendarSource('topic');component.setCalendarTopic('t1');
+    expect(form.title).toBe('Çarpanlar');
+    await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan',null,expect.objectContaining({topicId:'t1',resourceId:null}));
+    await component.calendarCommand({kind:'add',taskIds:[],date:'2026-10-23',startMinute:1110});
+    // Only the lesson's resources (and the ones without a lesson) are offered.
+    expect(component.calendarResources().map(x=>x.id)).toEqual(['r1']);
+    component.setCalendarSource('resource');component.setCalendarResource('r1');component.suggestCalendarNext();
+    expect([component.calendarForm!.resourceFrom,component.calendarForm!.resourceTo,component.calendarForm!.title]).toEqual([5,6,'TEST Soru Bankası']);
+    component.calendarForm!.resourceTo=41;
+    await component.saveCalendarForm();expect(component.error()).toContain('Kaynak aralığını');
+    component.calendarForm!.resourceTo=6;
+    await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan',null,expect.objectContaining({topicId:null,resourceId:'r1',resourceFrom:5,resourceTo:6,keepResource:null}));
+    await component.calendarCommand({kind:'edit',taskIds:['task'],date:'2026-10-06',startMinute:540});
+    expect(component.calendarForm!.source).toBe('free');
+    component.setCalendarSource('resource');component.setCalendarResource('r1');component.calendarForm!.resourceFrom=7;component.calendarForm!.resourceTo=8;
+    await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan','task',expect.objectContaining({resourceId:'r1',resourceFrom:7,resourceTo:8,keepResource:false,topicId:null}));
   });
   it('updates untouched completion defaults after changing duration while preserving a real input',async()=>{
     const {component,service}=await setup();
@@ -220,7 +260,7 @@ describe('StudentStudyPlansComponent', () => {
   });
   it('opens the exact task from a weekly decision link without completing or editing work',async ()=>{
     const{component,service}=await setup('plan','task');expect(component.selectedTaskIds()).toEqual(['task']);expect(component.visibleTasks().map(x=>x.id)).toEqual(['task']);
-    expect(service.complete).not.toHaveBeenCalled();expect(service.replace).not.toHaveBeenCalled();
+    expect(service.complete).not.toHaveBeenCalled();expect(service.rename).not.toHaveBeenCalled();
   });
   it('opens the exact tracking task even outside the first page without altering work', async () => {
     const { component, service, fixture } = await setup();
@@ -230,13 +270,13 @@ describe('StudentStudyPlansComponent', () => {
     expect(service.get).toHaveBeenLastCalledWith('plan', 'student-3');
     expect(component.planView()).toBe('calendar'); expect(component.selectedTaskIds()).toEqual(['task']);
     expect(component.visibleTasks().map(t => t.id)).toEqual(['task']);
-    expect(service.replace).not.toHaveBeenCalled(); expect(service.complete).not.toHaveBeenCalled();
+    expect(service.rename).not.toHaveBeenCalled(); expect(service.complete).not.toHaveBeenCalled();
   });
   it('refreshes an externally updated plan without discarding draft or completion inputs', async () => {
     const { component, service } = await setup();
     const count = service.get.mock.calls.length;
-    component.dirty = true; await component.refreshAfterExternalChange(); expect(service.get).toHaveBeenCalledTimes(count);
-    component.dirty = false; component.actualMinutes['task'] = 17; await component.refreshAfterExternalChange();
+    component.calendarForm = {} as never; await component.refreshAfterExternalChange(); expect(service.get).toHaveBeenCalledTimes(count);
+    component.calendarForm = null; component.actualMinutes['task'] = 17; await component.refreshAfterExternalChange();
     expect(service.get).toHaveBeenCalledTimes(count); expect(component.actualMinutes['task']).toBe(17);
     component.actualMinutes['task'] = active.tasks[0].plannedMinutes; await component.refreshAfterExternalChange(); expect(service.get).toHaveBeenCalledTimes(count + 1);
   });
@@ -248,14 +288,14 @@ describe('StudentStudyPlansComponent', () => {
     // T4: on the student page the full weekly calendar is the "Haftalık tablo" from the plan menu.
     component.boardOpen.set(true);fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('app-study-plan-calendar')).not.toBeNull();
-    expect(JSON.stringify(generated)).toBe(before);expect(service.replace).not.toHaveBeenCalled();expect(service.complete).not.toHaveBeenCalled();
+    expect(JSON.stringify(generated)).toBe(before);expect(service.rename).not.toHaveBeenCalled();expect(service.complete).not.toHaveBeenCalled();
   });
   it('uses existing completion inputs from calendar details and preserves unrelated unsaved work on updates',async ()=>{
     const{component,service,fixture}=await setup();const generated:StudyPlan={...active,weeklySource:{draftVersion:1,learningContextVersion:2,startDate:'2026-10-01',endDate:'2027-06-01',reuseFreedSlots:false,fingerprint:'saved',activeRevisionId:null,activeRevisionVersion:null},tasks:[active.tasks[0],{...active.tasks[0],id:'second'}]};
     service.get.mockReturnValue(of(generated));await component.open('plan');component.boardOpen.set(true);component.selectCalendarTasks(['task','second']);fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelectorAll('.board-detail app-plan-task-row')).toHaveLength(2);
     component.actualMinutes['second']=17;component.actualQuestions['second']=0;service.complete.mockReturnValue(of({...generated,version:5,tasks:generated.tasks.map(t=>t.id==='task'?{...t,isCompleted:true,actualMinutes:25}:t)}));
     component.complete(generated.tasks[0],25,0);fixture.detectChanges(); await fixture.whenStable();expect(component.planView()).toBe('calendar');expect(component.actualMinutes['second']).toBe(17);expect(component.actualQuestions['second']).toBe(0);expect(component.selectedTaskIds()).toEqual(['task','second']);
-    expect(service.complete).toHaveBeenCalledWith('plan','task',4,25,0);expect(component.selected()?.tasks[0].isCompleted).toBe(true);expect(service.replace).not.toHaveBeenCalled();
+    expect(service.complete).toHaveBeenCalledWith('plan','task',4,25,0);expect(component.selected()?.tasks[0].isCompleted).toBe(true);expect(service.rename).not.toHaveBeenCalled();
   });
   it('focuses the details again when another calendar card is selected',async()=>{
     const{component,fixture}=await setup();component.planView.set('calendar');component.boardOpen.set(true);component.selectCalendarTasks(['task']);fixture.detectChanges(); await fixture.whenStable();
@@ -264,7 +304,7 @@ describe('StudentStudyPlansComponent', () => {
   });
   it('shows generated weekly drafts with their times and publish controls without a manual editor',async ()=>{
     const{component,service,fixture}=await setup();service.get.mockReturnValue(of({...active,status:'Draft',weeklySource:{startDate:'2027-05-24',endDate:'2027-06-01'},tasks:[{...active.tasks[0],plannedStartMinute:1080,lessonName:'Matematik'}]} as any));
-    await component.open('plan');fixture.detectChanges(); await fixture.whenStable();expect(component.editing).toBe(false);expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();
+    await component.open('plan');fixture.detectChanges(); await fixture.whenStable();expect(fixture.nativeElement.querySelector('[data-testid="draft-guide"]')).toBeNull();expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();
   });
   it('shows the student the outcome by name, without its code, estimate version or empty fields (live test #11)', async () => {
     const { component, service, fixture } = await setup();
@@ -281,9 +321,9 @@ describe('StudentStudyPlansComponent', () => {
     service.get.mockReturnValue(of({ ...active, id: 'new-plan' }));
     await component.open('new-plan');
     expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { plan: 'new-plan' }, queryParamsHandling: 'merge', replaceUrl: true }));
+    service.list.mockReturnValueOnce(of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 }));
     service.create.mockReturnValue(of({ ...active, id: 'draft-plan', status: 'Draft' }));
-    await component.newDraft(); component.editTitle = 'Yeni plan';
-    component.editTasks[0].title = 'Test'; component.saveDraft();
+    await component.newDraft();
     expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { plan: 'draft-plan' } }));
   });
   it('protects unsaved completion inputs on navigation, refresh and plan switching', async () => {
@@ -363,15 +403,76 @@ describe('StudentStudyPlansComponent', () => {
     component.publish();
     expect(service.publish).toHaveBeenCalledWith('plan', 4);
   });
-  it('retains draft source and planned questions and submits them when saved', async () => {
+  it('22.11.2026: a manual draft opens on its calendar with the steps, its name and publishing; the old form is gone', async () => {
     const { fixture, component, service } = await setup();
-    const draft = { ...active, status: 'Draft' as const, tasks: [{ ...active.tasks[0], sourceName: 'Kitap s.20', plannedQuestions: 25 }] };
+    const draft = { ...active, status: 'Draft' as const, tasks: [{ ...active.tasks[0], sourceName: 'Kitap s.20', plannedQuestions: 25, plannedStartMinute: null }] };
     service.get.mockReturnValue(of(draft)); await component.open('plan'); fixture.detectChanges(); await fixture.whenStable();
-    expect(component.editTasks[0]).toMatchObject({ sourceName: 'Kitap s.20', plannedQuestions: 25 });
-    const sourceLabel = Array.from(fixture.nativeElement.querySelectorAll('label')).find((label: any) => label.textContent.includes('Kaynak / sayfa')) as HTMLLabelElement;
-    expect(sourceLabel?.querySelector('input')).toBeTruthy();
-    component.dirty = true; component.saveDraft();
-    expect(service.replace).toHaveBeenCalledWith('plan', 4, { title: 'Planım', tasks: [expect.objectContaining({ sourceName: 'Kitap s.20', plannedQuestions: 25 })] });
+    const element = fixture.nativeElement as HTMLElement;
+    expect(component.boardOpen()).toBe(true);
+    expect(element.querySelector('app-study-plan-calendar')).not.toBeNull();
+    // A draft made before the calendar: its untimed work is shown on the calendar and keeps its note and questions.
+    expect(element.textContent).toContain('Saati belirtilmemiş');
+    const panel = element.querySelector('[data-testid="draft-panel"]') as HTMLElement;
+    expect(panel.textContent).toContain('1 çalışma, toplam 30 dk');
+    expect(panel.textContent).toContain('Taslak yayımlanana kadar aktif planın değişmez.');
+    const guide = element.querySelector('[data-testid="draft-guide"]') as HTMLDetailsElement;
+    expect(guide.open).toBe(false);
+    for (const step of ['＋ Çalışma ekle', 'Serbest çalışma', 'Müfredattan konu', 'Kaynaktan', 'ikiye bölünebilir', 'Planı yayımla']) expect(guide.textContent).toContain(step);
+    expect(element.textContent).not.toContain('Taslağı kaydet');
+    expect(element.textContent).not.toContain('Yeni çalışma planı');
+    expect(element.querySelector('#plan-title')).toBeNull();
+    // Only the name is edited apart from the calendar.
+    component.draftTitle = '  ';
+    component.renameDraft(); expect(service.rename).not.toHaveBeenCalled(); expect(component.error()).toContain('1–200');
+    component.draftTitle = 'Haftalık TEST planı';
+    expect(await component.canLeavePage()).toBe(true);
+    component.renameDraft();
+    expect(service.rename).toHaveBeenCalledWith('plan', 4, 'Haftalık TEST planı');
+  });
+  it('22.11.2026: with no active plan the draft being prepared opens instead of the empty page', async () => {
+    const { component, service } = await setup();
+    component.selected.set(null);
+    const draft = { ...active, id: 'draft', status: 'Draft' as const, tasks: [] };
+    service.list.mockImplementation(((_p: number, status?: string) => of({ items: status === 'Draft' ? [{ ...draft, tasks: undefined }] : [], totalCount: status === 'Draft' ? 1 : 0, pageNumber: 1, pageSize: 20 })) as never);
+    service.get.mockReturnValue(of(draft));
+    component.loadList(); await Promise.resolve(); await Promise.resolve();
+    expect(service.list).toHaveBeenCalledWith(1, 'Draft');
+    expect(component.selected()?.id).toBe('draft');
+  });
+  it('22.11.2026: a student without a plan can start one by hand; one whose teacher plans for her is told so and changes nothing', async () => {
+    const { fixture, component, service } = await setup();
+    component.selected.set(null); fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    service.list.mockReturnValue(of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 }));
+    service.create.mockReturnValue(of({ ...active, id: 'empty', status: 'Draft', tasks: [] }));
+    (element.querySelector('[data-testid="empty-manual-draft"]') as HTMLButtonElement).click(); await fixture.whenStable();
+    expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ tasks: [] }));
+    expect(component.selected()?.id).toBe('empty');
+    // A student whose teacher plans for her.
+    service.create.mockClear(); component.planningClosed.set(true); component.selected.set(null); fixture.detectChanges();
+    expect(element.querySelector('[data-testid="empty-teacher-plans"]')?.textContent).toContain('Planını öğretmenin hazırlıyor');
+    expect(element.querySelector('[data-testid="empty-manual-draft"]')).toBeNull();
+    expect([...element.querySelectorAll('button')].some(b => b.textContent?.trim() === 'Planını oluştur')).toBe(false);
+    await component.newDraft(); expect(service.create).not.toHaveBeenCalled();
+    // The teacher's draft is shown without the actions the server would refuse.
+    service.get.mockReturnValue(of({ ...active, status: 'Draft', tasks: [{ ...active.tasks[0], plannedStartMinute: 600 }] }));
+    await component.open('plan'); fixture.detectChanges(); await fixture.whenStable();
+    expect(element.querySelector('[data-testid="draft-by-teacher"]')).not.toBeNull();
+    expect(element.querySelector('[data-testid="draft-panel"]')).toBeNull();
+    expect(element.querySelector('[data-testid="draft-publish"]')).toBeNull();
+    expect(element.textContent).not.toContain('＋ Çalışma ekle');
+    component.publishConfirmed = true; component.publish(); expect(service.publish).not.toHaveBeenCalled();
+    await component.calendarCommand({ kind: 'add', taskIds: [], date: '2026-10-06', startMinute: 600 }); expect(component.calendarForm).toBeNull();
+  });
+  it('an empty draft says what to do first and cannot be published', async () => {
+    const { fixture, component, service } = await setup();
+    service.get.mockReturnValue(of({ ...active, status: 'Draft' as const, tasks: [] }));
+    await component.open('plan'); fixture.detectChanges(); await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('[data-testid="draft-panel"]')?.textContent).toContain('Boş taslak');
+    expect((element.querySelector('[data-testid="draft-guide"]') as HTMLDetailsElement).open).toBe(true);
+    expect(element.querySelector('[data-testid="draft-empty-publish"]')?.textContent).toContain('en az bir çalışma ekle');
+    component.publishConfirmed = true; component.publish(); expect(service.publish).not.toHaveBeenCalled();
   });
   it('shows why the plan engine chose a task (roadmap O7)', async () => {
     const { fixture, component, service } = await setup();
@@ -387,14 +488,13 @@ describe('StudentStudyPlansComponent', () => {
     component.complete(active.tasks[0], 25, 0);
     expect(service.complete).toHaveBeenCalledWith('plan', 'task', 4, 25, 0);
   });
-  it('archives only a clean draft after explicit confirmation so regeneration is possible', async () => {
+  it('archives a draft only after explicit confirmation so regeneration is possible', async () => {
     const { component, service } = await setup();
     const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
     component.selected.set({ ...active, status: 'Draft' });
     await component.archiveDraft(); expect(service.archive).not.toHaveBeenCalled();
     confirm.mockResolvedValue(true);
-    component.dirty = true; await component.archiveDraft(); expect(service.archive).not.toHaveBeenCalled();
-    component.dirty = false; await component.archiveDraft();
+    await component.archiveDraft();
     expect(service.archive).toHaveBeenCalledWith('plan', 4);
     expect(component.selected()?.status).toBe('Archived');
     expect(component.knownDraftId()).toBeNull();
@@ -432,18 +532,18 @@ describe('StudentStudyPlansComponent', () => {
     pending.complete();
     expect(component.busy()).toBe(false);
   });
-  it('does not discard an unsaved draft when selecting another plan', async () => {
+  it('does not discard an unsaved draft name when selecting another plan', async () => {
     const { component, service } = await setup();
-    await component.newDraft();
-    component.dirty = true;
+    const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
+    component.selected.set({ ...active, status: 'Draft' }); component.draftTitle = 'Yeni ad';
     service.get.mockClear();
     await component.open('plan');
     expect(service.get).not.toHaveBeenCalled();
-    expect(component.error()).toContain('kaydet');
+    confirm.mockRestore();
   });
   it('asks before leaving unsaved work and protects browser refresh', async () => {
     const { component } = await setup();
-    component.dirty = true;
+    component.calendarForm = {} as never;
     const confirm = vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);
     expect(await component.canLeavePage()).toBe(false);
     confirm.mockResolvedValue(true);
@@ -463,7 +563,6 @@ describe('StudentStudyPlansComponent', () => {
   it('blocks navigation and warns on refresh during an in-flight write', async () => {
     const { component } = await setup();
     component.busy.set(true);
-    component.dirty = false;
     expect(await component.canLeavePage()).toBe(false);
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event as BeforeUnloadEvent);

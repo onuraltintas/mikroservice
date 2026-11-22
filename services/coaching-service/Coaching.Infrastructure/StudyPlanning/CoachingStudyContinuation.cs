@@ -87,6 +87,7 @@ internal static class CoachingStudyContinuation
         var prior=placement.Source;
         var copy=StudyPlanTask.Create(plan,placement.Date,prior.Title,placement.Minutes,prior.TopicId,prior.IsPinned,prior.SourceName,prior.RemainingMinutes.HasValue?prior.RemainingQuestions:prior.PlannedQuestions);
         if(carry)copy.CarryFrom(prior);
+        copy.KeepLinksOf(prior);
         if(prior.PlanKind is {} kind)copy.SetPlanDecision(kind,prior.PlanReason);
         if(placement.Start is {} at)
         {

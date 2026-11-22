@@ -356,7 +356,6 @@ public sealed class WeeklyOutcomePlanTests
         var created=await service.CreateAsync(new("Yıllık plan",Input,preview.Fingerprint),default);
         var access=new CoachingAccessPolicy(f.User);var manual=new CoachingManualStudyPlanService(f.Db,access,new CoachingAutomaticStudyPlanPreviewService(f.Db,access),new CurriculumManagementTests.NoopPublisher());
         var read=(await manual.GetAsync(created.Id))!;Assert.Equal(1080,read.Tasks[0].PlannedStartMinute);
-        await Assert.ThrowsAsync<BusinessRuleException>(()=>manual.ReplaceDraftAsync(created.Id,created.Version,new("Elle değiştir",[new(Input.StartDate,"Yeni",30,null,false)])));
         var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();weekly.Replace(weekly.TimeZoneId,weekly.Slots.Select(x=>x with {DurationMinutes=60}).ToArray());await f.Db.SaveChangesAsync();
         await Assert.ThrowsAsync<BusinessRuleException>(()=>manual.PublishAsync(created.Id,created.Version));
         Assert.NotEqual(created.Id,(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive)).Id);

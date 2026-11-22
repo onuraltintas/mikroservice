@@ -13,8 +13,10 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class WeeklyOutcomePlanFingerprintTests
 {
     private const string EngineOneOnMain = "e7c37d8b58cd37375e95dee65f01cb8cfdcbbba75f7c7f35b63aade86a615642";
-    private const string EngineTwoOnMain = "239755fb05f2a8dc8e26f169dc6fca257af21cabfa0eb0c855be3b29e13f166b";
-    private const string EngineTwoWithFocus = "13923c739d07dd2f38e087cc0920a5e89ab5a7aeb7dbc825e918a9cfc95baf9a";
+    // 22.11.2026: engine 2's reasons are joined as sentences ("a. b", no "·" in what people read), a deliberate, one-time change:
+    // a preview opened before that release and saved after it is asked to be recalculated ("Yeniden hesapla").
+    private const string EngineTwoOnMain = "ae1ebac67254399801280ca116affad919bf09b127101a930f886b161b0834f6";
+    private const string EngineTwoWithFocus = "ecdd5b3518a944236ba7e93f38b7a6990fa0f808bfa6e4bb0b7f4dbfd2cfb6fc";
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider { public override DateTimeOffset GetUtcNow() => now; }
     private static Guid Id(int n) => new($"0000000a-0000-0000-0000-{n:D12}");
@@ -64,7 +66,8 @@ public sealed class WeeklyOutcomePlanFingerprintTests
         var one = await service.PreviewAsync(new(new(2027, 5, 24), new(2027, 6, 1), version, true), default);
         var two = await service.PreviewAsync(new(new(2027, 5, 24), new(2027, 6, 1), version, true, WeeklyPlanEngine.CurrentVersion), default);
         Assert.Equal(1, two.ProtectedTaskCount);
-        Assert.Equal((EngineOneOnMain, EngineTwoOnMain), (one.Fingerprint, two.Fingerprint));
+        Assert.True(EngineOneOnMain == one.Fingerprint, $"Engine 1 fingerprint: {one.Fingerprint}");
+        Assert.True(EngineTwoOnMain == two.Fingerprint, $"Engine 2 fingerprint: {two.Fingerprint}");
         // Paket H4a: a request with focus topics has its own fingerprint (recorded when the focus was added); without them it is unchanged.
         var focused = await service.PreviewAsync(new(new(2027, 5, 24), new(2027, 6, 1), version, true, WeeklyPlanEngine.CurrentVersion) { FocusTopicIds = [second.Id] }, default);
         Assert.True(EngineTwoWithFocus == focused.Fingerprint, $"Fingerprint with focus topics: {focused.Fingerprint}");

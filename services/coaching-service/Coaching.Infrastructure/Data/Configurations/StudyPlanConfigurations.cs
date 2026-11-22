@@ -42,6 +42,8 @@ public sealed class StudyPlanTaskConfiguration : IEntityTypeConfiguration<StudyP
             table.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
             table.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND (\"ActualMinutes\" IS NOT NULL OR \"CompletionSourceTaskId\" IS NOT NULL) AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"CompletedAt\" IS NULL AND \"CompletionSourceTaskId\" IS NULL)");
             table.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualMinutes\" IS NOT NULL)");
+            // KocApp uyumu (22.11.2026): a range needs its resource and goes forward.
+            table.HasCheckConstraint("ck_study_task_resource", "(\"ResourceFrom\" IS NULL AND \"ResourceTo\" IS NULL) OR (\"ResourceId\" IS NOT NULL AND \"ResourceFrom\" >= 1 AND \"ResourceTo\" >= \"ResourceFrom\")");
             table.HasCheckConstraint("ck_study_task_weekly_time","(\"PlannedStartMinute\" IS NULL AND \"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"PlannedStartMinute\" IS NOT NULL AND \"PlannedStartMinute\" BETWEEN 0 AND 1439 AND \"PlannedStartMinute\"+\"PlannedMinutes\"<=1440 AND ((\"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"WeeklyLessonId\" IS NOT NULL AND \"LessonNameSnapshot\" IS NOT NULL)))");
         });
         builder.HasKey(x => x.Id);
@@ -55,6 +57,8 @@ public sealed class StudyPlanTaskConfiguration : IEntityTypeConfiguration<StudyP
         builder.Property(x=>x.LessonNameSnapshot).HasMaxLength(300);
         builder.Property(x=>x.PlanKind).HasMaxLength(20);
         builder.Property(x=>x.PlanReason).HasMaxLength(300);
+        builder.Property(x=>x.AdviceKey).HasMaxLength(64);
+        builder.HasIndex(x=>new { x.StudentId,x.ResourceId });
         builder.Property(x => x.Version).IsConcurrencyToken();
         builder.HasOne<StudyPlanRevision>().WithMany().HasForeignKey(x => new { x.RevisionId, x.StudentId })
             .HasPrincipalKey(x => new { x.Id, x.StudentId }).OnDelete(DeleteBehavior.Restrict);

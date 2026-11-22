@@ -80,6 +80,27 @@ export interface MySubscriptionOptions {
 export const BILLING_MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 export const BILLING_RECEIPT_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
+/** KocApp uyumu (22.11.2026): a teacher's own seats are "öğrenci", an institution's "koltuk". */
+export type SeatUnit = 'koltuk' | 'öğrenci';
+
+/**
+ * KocApp uyumu (22.11.2026): teacher plans that differ only in their students and period ("3 öğrenci, 3 ay") are sold as one
+ * package with two choices; two or more such plans make a tier set. Contact-only plans stay ordinary cards.
+ */
+export function billingTeacherTiers(plans: readonly BillingPlan[]): BillingPlan[] {
+  const tiers = plans.filter(plan => plan.buyerType === 'Teacher' && !!plan.seatCount && !plan.isContactOnly);
+  return tiers.length >= 2 ? tiers : [];
+}
+/** The features every tier lists, in the first tier's order: "her pakette her şey var". */
+export function billingCommonFeatures(plans: readonly BillingPlan[]): string[] {
+  if (!plans.length) return [];
+  return plans[0].features.filter(feature => plans.every(plan => plan.features.includes(feature)));
+}
+/** What a plan's price is per 30 days, rounded to the lira. */
+export function billingMonthly(plan: Pick<BillingPlan, 'price' | 'priceWithVat' | 'durationDays'>): number {
+  return Math.round((plan.priceWithVat ?? plan.price) * 30 / plan.durationDays);
+}
+
 /** How the page addresses the reader: "sen" on student and parent sites, "siz" on staff and management sites. */
 export type BillingVoice = 'sen' | 'siz';
 
@@ -88,13 +109,15 @@ export interface BillingTexts {
   paidPrefix: string; paidSuffix: string; docsHint: string; contactPlan: string; pendingPlan: string; activePlan: string;
   withdrawPrefix: string; withdrawSuffix: string; tryFree: string; trialName: string; contractName: string;
   paidNotice: string; cancelledNotice: string; withdrawalNotice: string; retry: string;
-  orderNotice: (code: string) => string; seatOrderNotice: (code: string) => string; trialNotice: (days: number) => string;
+  orderNotice: (code: string) => string; seatOrderNotice: (code: string, unit?: SeatUnit) => string; trialNotice: (days: number) => string;
+  /** KocApp uyumu (22.11.2026): the extra student price under the teacher packages. */
+  tierExtra: (price: string) => string;
   withdrawal: Record<WithdrawalStatus, string>;
 }
 
 export const BILLING_TEXTS: Record<BillingVoice, BillingTexts> = {
   sen: {
-    loading: '{{ c.t.loading }}', loadFailed: 'Abonelik bilgilerin yüklenemedi.',
+    loading: 'Abonelik bilgilerin yükleniyor…', loadFailed: 'Abonelik bilgilerin yüklenemedi.',
     open: 'Bu ürün şu anda abonelik gerektirmiyor; hesabınla kullanabilirsin.', noActive: 'Etkin bir aboneliğin yok.',
     nameLabel: 'Adın ve soyadın (sözleşmede yer alır)', writeCode: 'yaz',
     paidPrefix: 'Ödemeni', paidSuffix: 'tarihinde bildirdin.', docsHint: 'Sözleşme metinleri için adını ve soyadını yaz.',
@@ -104,7 +127,8 @@ export const BILLING_TEXTS: Record<BillingVoice, BillingTexts> = {
     paidNotice: 'Ödeme bildirimin alındı. Onaylandığında aboneliğin başlar ve sana haber veririz.', cancelledNotice: 'Siparişten vazgeçtin.',
     withdrawalNotice: 'Cayma talebin alındı. Sonucu e-postayla bildireceğiz.', retry: 'İşlem tamamlanamadı. Lütfen tekrar dene.',
     orderNotice: code => `Siparişin oluşturuldu. Havale açıklamasına ${code} kodunu yaz.`,
-    seatOrderNotice: code => `Ek koltuk siparişin oluşturuldu. Havale açıklamasına ${code} kodunu yaz.`,
+    seatOrderNotice: (code, unit = 'koltuk') => `Ek ${unit} siparişin oluşturuldu. Havale açıklamasına ${code} kodunu yaz.`,
+    tierExtra: price => `Dönem içinde öğrencin artarsa her ek öğrenci ${price}; tutar dönemin kalan günlerine göre hesaplanır.`,
     trialNotice: days => `${days} günlük ücretsiz denemen başladı.`,
     withdrawal: { Requested: 'Cayma talebin inceleniyor', Approved: 'Cayma talebin kabul edildi', Rejected: 'Cayma talebin reddedildi' }
   },
@@ -119,7 +143,8 @@ export const BILLING_TEXTS: Record<BillingVoice, BillingTexts> = {
     paidNotice: 'Ödeme bildiriminiz alındı. Onaylandığında aboneliğiniz başlar ve size haber veririz.', cancelledNotice: 'Siparişten vazgeçtiniz.',
     withdrawalNotice: 'Cayma talebiniz alındı. Sonucu e-postayla bildireceğiz.', retry: 'İşlem tamamlanamadı. Lütfen tekrar deneyin.',
     orderNotice: code => `Siparişiniz oluşturuldu. Havale açıklamasına ${code} kodunu yazın.`,
-    seatOrderNotice: code => `Ek koltuk siparişiniz oluşturuldu. Havale açıklamasına ${code} kodunu yazın.`,
+    seatOrderNotice: (code, unit = 'koltuk') => `Ek ${unit} siparişiniz oluşturuldu. Havale açıklamasına ${code} kodunu yazın.`,
+    tierExtra: price => `Dönem içinde öğrenciniz artarsa her ek öğrenci ${price}; tutar dönemin kalan günlerine göre hesaplanır.`,
     trialNotice: days => `${days} günlük ücretsiz denemeniz başladı.`,
     withdrawal: { Requested: 'Cayma talebiniz inceleniyor', Approved: 'Cayma talebiniz kabul edildi', Rejected: 'Cayma talebiniz reddedildi' }
   }
@@ -196,6 +221,12 @@ export class MySubscriptionController {
 
   // Seats of a teacher or institution subscription.
   pool: SeatPool | null = null;
+  /** A teacher's own pool is counted in students, an institution's in seats. */
+  poolUnit: SeatUnit = 'koltuk';
+
+  // KocApp uyumu (22.11.2026): the teacher package chosen by students and period.
+  tierSeats: number | null = null;
+  tierDays: number | null = null;
   seatCount = 1;
   seatQuote: SeatQuote | null = null;
   seatAccepted = false;
@@ -250,6 +281,29 @@ export class MySubscriptionController {
   get history(): BillingOrder[] { return this.orders.filter(order => order.status !== 'Pending'); }
   get plans(): BillingPlan[] { return billingPlansFor(this.catalog?.plans ?? [], this.options.roles, this.organizations.length > 0, this.options.individualPlans ?? true); }
   get canBuy(): boolean { return !!this.me?.salesOpen && !!this.catalog?.salesOpen; }
+  get teacherTiers(): BillingPlan[] { return billingTeacherTiers(this.plans); }
+  /** The plans shown as cards: all but the teacher tiers. */
+  get otherPlans(): BillingPlan[] { const tiers = new Set(this.teacherTiers); return this.plans.filter(plan => !tiers.has(plan)); }
+  get tierSeatOptions(): number[] { return [...new Set(this.teacherTiers.map(plan => plan.seatCount!))].sort((a, b) => a - b); }
+  get tierDayOptions(): number[] { return [...new Set(this.teacherTiers.map(plan => plan.durationDays))].sort((a, b) => a - b); }
+  get tierFeatures(): string[] { return billingCommonFeatures(this.teacherTiers); }
+  /** The chosen tier; a period the chosen student count is not sold for falls back to its first period. */
+  get tierPlan(): BillingPlan | null {
+    const seats = this.tierSeats ?? this.tierSeatOptions[0];
+    const forSeats = this.teacherTiers.filter(plan => plan.seatCount === seats).sort((a, b) => a.durationDays - b.durationDays);
+    const days = this.tierDays ?? this.tierDayOptions[0];
+    return forSeats.find(plan => plan.durationDays === days) ?? forSeats[0] ?? null;
+  }
+  tierSold(days: number): boolean {
+    const seats = this.tierSeats ?? this.tierSeatOptions[0];
+    return this.teacherTiers.some(plan => plan.seatCount === seats && plan.durationDays === days);
+  }
+  chooseTierSeats(seats: number): void { this.tierSeats = seats; this.options.changed(); }
+  chooseTierDays(days: number): void { this.tierDays = days; this.options.changed(); }
+  monthly(plan: BillingPlan): string { return billingMoney(billingMonthly(plan), plan.currency); }
+  /** A teacher's own subscription is counted in students; an institution's in seats. */
+  seatUnit(subscription: BillingSubscription): SeatUnit { return this.organizationName(subscription) ? 'koltuk' : 'öğrenci'; }
+  planUnit(plan: BillingPlan): SeatUnit { return plan.buyerType === 'Teacher' ? 'öğrenci' : 'koltuk'; }
   get bankAccounts(): BillingBankAccount[] { return this.catalog?.bankAccounts ?? []; }
   get price(): number { return this.quote?.amount ?? this.plan?.priceWithVat ?? this.plan?.price ?? 0; }
   breakdown(plan: BillingPlan): { net: number; vat: number; total: number; rate: number | null } { return billingBreakdown(plan, this.quote); }
@@ -441,6 +495,7 @@ export class MySubscriptionController {
   }
 
   async openSeats(subscription: BillingSubscription): Promise<void> {
+    this.poolUnit = this.seatUnit(subscription);
     await this.run(async () => {
       this.pool = await this.http.get<SeatPool>(`${this.base}/subscriptions/${subscription.id}/seats`);
       this.seatCount = 1;
@@ -454,7 +509,7 @@ export class MySubscriptionController {
   async quoteSeats(): Promise<void> {
     if (!this.pool) return;
     if (this.buyerName.trim().length < 3) { this.error = this.t.contractName; this.options.changed(); return; }
-    if (!(this.seatCount >= 1)) { this.error = 'Ek koltuk sayısı en az 1 olmalı.'; this.options.changed(); return; }
+    if (!(this.seatCount >= 1)) { this.error = `Ek ${this.poolUnit} sayısı en az 1 olmalı.`; this.options.changed(); return; }
     await this.run(async () => {
       this.seatQuote = await this.http.get<SeatQuote>(
         `${this.base}/subscriptions/${this.pool!.subscriptionId}/seat-quote?count=${Math.floor(this.seatCount)}&buyerName=${encodeURIComponent(this.buyerName.trim())}`);
@@ -469,7 +524,7 @@ export class MySubscriptionController {
         { count: this.seatQuote!.count, documentsVersion: this.seatQuote!.documents.version, buyerName: this.buyerName.trim() });
       this.pool = null;
       this.seatQuote = null;
-      this.notice = this.t.seatOrderNotice(order.paymentCode);
+      this.notice = this.t.seatOrderNotice(order.paymentCode, this.poolUnit);
       await this.load();
     });
   }
@@ -543,11 +598,11 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             @if (c.organizationName(item); as name) { <span class="bill-tag">{{ name }}</span> }
             <span class="bill-tag" [class.bill-tag--ok]="item.isCurrent">{{ item.isCurrent ? 'Etkin' : 'Sona erdi' }}</span>
             <div class="bill-muted">{{ c.date(item.startsAt) }} – {{ c.date(item.endsAt) }}
-              @if (item.seatCount) { · {{ item.seatCount }} koltuk }
+              @if (item.seatCount) { · {{ item.seatCount }} {{ c.seatUnit(item) }} }
             </div>
           </div>
           @if (item.seatCount && item.isCurrent) {
-            <button type="button" class="bill-btn" [disabled]="c.busy" (click)="c.openSeats(item)">Koltuklar</button>
+            <button type="button" class="bill-btn" [disabled]="c.busy" (click)="c.openSeats(item)">{{ c.seatUnit(item) === 'öğrenci' ? 'Öğrenci hakları' : 'Koltuklar' }}</button>
           }
         </div>
       }
@@ -555,22 +610,22 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
 
     @if (c.pool; as pool) {
       <div class="bill-card">
-        <h2>Koltuklar: {{ pool.planName }}</h2>
-        <p>{{ pool.used }} / {{ pool.capacity }} koltuk dolu.
-          @if (pool.extraSeats > 0) { Bunun {{ pool.extraSeats }} tanesi ek koltuk ({{ c.date(pool.extraSeatsUntil) }} tarihine kadar). }
+        <h2>{{ c.poolUnit === 'öğrenci' ? 'Öğrenci hakları' : 'Koltuklar' }}: {{ pool.planName }}</h2>
+        <p>{{ pool.used }} / {{ pool.capacity }} {{ c.poolUnit === 'öğrenci' ? 'öğrenci hakkı kullanılıyor' : 'koltuk dolu' }}.
+          @if (pool.extraSeats > 0) { Bunun {{ pool.extraSeats }} tanesi ek {{ c.poolUnit }} ({{ c.date(pool.extraSeatsUntil) }} tarihine kadar). }
         </p>
         @if (pool.extraSeatPrice !== null) {
           <div class="bill-form">
             <label>{{ c.t.nameLabel }}
               <input type="text" maxlength="200" autocomplete="name" [value]="c.buyerName" (input)="c.setBuyerName($any($event.target).value)" />
             </label>
-            <label>Ek koltuk sayısı
+            <label>Ek {{ c.poolUnit }} sayısı
               <input type="number" min="1" [value]="c.seatCount" (input)="c.setSeatCount($any($event.target).value)" />
             </label>
             <button type="button" class="bill-btn" [disabled]="c.busy" (click)="c.quoteSeats()">Tutarı hesapla</button>
           </div>
           @if (c.seatQuote; as quote) {
-            <p><strong>{{ c.money(quote.amount, quote.currency) }}</strong> · kalan {{ quote.daysLeft }} gün için {{ quote.count }} ek koltuk.</p>
+            <p><strong>{{ c.money(quote.amount, quote.currency) }}</strong>, kalan {{ quote.daysLeft }} gün için {{ quote.count }} ek {{ c.poolUnit }}.</p>
             <details class="bill-doc"><summary>Ön bilgilendirme formu</summary><pre>{{ quote.documents.preInformation }}</pre></details>
             <details class="bill-doc"><summary>Mesafeli satış sözleşmesi</summary><pre>{{ quote.documents.distanceSales }}</pre></details>
             <label class="bill-check"><input type="checkbox" [checked]="c.seatAccepted" (change)="c.acceptSeats($any($event.target).checked)" />
@@ -578,7 +633,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             <button type="button" class="bill-btn bill-btn--primary" [disabled]="c.busy || !c.seatAccepted" (click)="c.orderSeats()">Havale ile öde</button>
           }
         } @else {
-          <p class="bill-muted">Bu planda ek koltuk satılmıyor.</p>
+          <p class="bill-muted">Bu planda ek {{ c.poolUnit }} satılmıyor.</p>
         }
         <button type="button" class="bill-btn" (click)="c.closeSeats()">Kapat</button>
       </div>
@@ -690,8 +745,54 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
       <div class="bill-card">
         <h2>Planlar</h2>
         @if (!c.canBuy) { <p class="bill-muted">Satın alma şu anda kapalı.</p> }
+        @if (c.teacherTiers.length) {
+          <!-- KocApp uyumu (22.11.2026): one teacher package, chosen by students and period. -->
+          <section class="bill-tiers" data-testid="bill-tiers" aria-labelledby="bill-tiers-title">
+            <h3 id="bill-tiers-title">Öğretmen paketleri</h3>
+            <p>Her pakette bütün özellikler var. Paketler yalnız öğrenci sayısında ayrılır.</p>
+            @if (c.tierFeatures.length) { <ul class="bill-tier-features">@for (feature of c.tierFeatures; track feature) { <li>{{ feature }}</li> }</ul> }
+            <fieldset class="bill-choice">
+              <legend>Öğrenci sayısı</legend>
+              @for (seats of c.tierSeatOptions; track seats) {
+                <label><input type="radio" name="bill-tier-seats" [checked]="c.tierPlan?.seatCount === seats" (change)="c.chooseTierSeats(seats)" /><span>{{ seats }} öğrenci</span></label>
+              }
+            </fieldset>
+            @if (c.tierDayOptions.length > 1) {
+              <fieldset class="bill-choice">
+                <legend>Süre</legend>
+                @for (days of c.tierDayOptions; track days) {
+                  <label [class.is-off]="!c.tierSold(days)"><input type="radio" name="bill-tier-days" [checked]="c.tierPlan?.durationDays === days" [disabled]="!c.tierSold(days)" (change)="c.chooseTierDays(days)" /><span>{{ c.duration(days) }}</span></label>
+                }
+              </fieldset>
+            }
+            @if (c.tierPlan; as plan) {
+              <article class="bill-plan bill-tier" data-testid="bill-tier-plan" aria-live="polite">
+                <h4>{{ plan.name }}</h4>
+                <p class="bill-price">{{ c.money(plan.price, plan.currency) }}
+                  <span class="bill-muted">{{ (plan.vatRate != null ? '+ KDV ' : '') + '/ ' + c.duration(plan.durationDays) }}</span></p>
+                @if (plan.durationDays > 30) { <p class="bill-muted">Aylık {{ c.monthly(plan) }} karşılığı</p> }
+                <p class="bill-muted">{{ plan.seatCount }} öğrenciye kadar</p>
+                @if (plan.description) { <p>{{ plan.description }}</p> }
+                @if (plan.extraSeatPrice != null) { <p class="bill-muted">{{ c.t.tierExtra(c.money(plan.extraSeatPrice, plan.currency)) }}</p> }
+                @if (c.hasActiveFor(plan)) {
+                  <p class="bill-muted">{{ c.t.activePlan }}</p>
+                } @else if (c.hasPendingFor(plan)) {
+                  <p class="bill-muted">{{ c.t.pendingPlan }}</p>
+                } @else {
+                  <div class="bill-actions">
+                    <button type="button" class="bill-btn bill-btn--primary" [disabled]="!c.canBuy || c.busy" (click)="c.choose(plan)">Satın al</button>
+                    @if (plan.trialDays > 0 && c.subscriptions.length === 0) {
+                      <button type="button" class="bill-btn" [disabled]="!c.canBuy || c.busy" (click)="c.startTrial(plan)">{{ plan.trialDays }} {{ c.t.tryFree }}</button>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </section>
+        }
+        @if (c.otherPlans.length) {
         <div class="bill-plans">
-          @for (plan of c.plans; track plan.id) {
+          @for (plan of c.otherPlans; track plan.id) {
             <article class="bill-plan">
               <h3>{{ plan.name }}</h3>
               @if (plan.productCodes.length > 1) { <span class="bill-tag bill-tag--ok">Paket</span> }
@@ -702,7 +803,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
                 <p class="bill-muted">KDV dahil {{ c.money(plan.priceWithVat ?? plan.price, plan.currency) }}</p>
               }
               @if (plan.description) { <p>{{ plan.description }}</p> }
-              @if (plan.seatCount) { <p class="bill-muted">{{ plan.seatCount }} koltuk</p> }
+              @if (plan.seatCount) { <p class="bill-muted">{{ plan.seatCount }} {{ c.planUnit(plan) }}</p> }
               <ul>@for (feature of plan.features; track feature) { <li>{{ feature }}</li> }</ul>
               @if (plan.isContactOnly) {
                 <p class="bill-muted">{{ c.t.contactPlan }}</p>
@@ -719,6 +820,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             </article>
           }
         </div>
+        }
       </div>
     }
 
@@ -729,7 +831,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
           <div class="bill-row">
             <div>
               <strong>{{ order.planName }}</strong>
-              @if (order.kind === 'ExtraSeats') { <span class="bill-tag">{{ order.extraSeats }} ek koltuk</span> }
+              @if (order.kind === 'ExtraSeats') { <span class="bill-tag">{{ order.extraSeats }} ek {{ order.buyerType === 'Teacher' ? 'öğrenci' : 'koltuk' }}</span> }
               <span class="bill-tag" [class.bill-tag--ok]="order.status === 'Paid'">{{ c.orderStatus(order) }}</span>
               <div class="bill-muted">{{ c.date(order.createdAt) }} · {{ c.money(order.amount, order.currency) }} · {{ order.paymentCode }}
                 @if (order.couponCode) { · kupon {{ order.couponCode }} }
@@ -794,6 +896,20 @@ export const MY_SUBSCRIPTION_STYLES = `
 .bill-pay dd { margin: 0; }
 .bill-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; overflow-wrap: anywhere; }
 .bill-bank { padding: .5rem 0; border-top: 1px solid var(--bill-border, #d7dce5); }
+.bill-tiers { display: grid; gap: .75rem; margin: 0 0 1rem; padding: 1rem; border: 1px solid var(--bill-accent, #1d4ed8); border-radius: .625rem; }
+.bill-tiers > p { margin: 0; }
+.bill-tier-features { display: flex; flex-wrap: wrap; gap: .375rem .5rem; margin: 0; padding: 0; list-style: none; }
+.bill-tier-features li { padding: .125rem .625rem; border-radius: 999px; background: var(--bill-soft, #eef1f6); font-size: .875rem; }
+.bill-choice { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; border: 0; }
+.bill-choice legend { width: 100%; margin-bottom: .375rem; padding: 0; font-weight: 600; }
+.bill-choice label { position: relative; }
+.bill-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.bill-choice span { display: inline-flex; align-items: center; min-height: 2.75rem; padding: .25rem 1rem; border: 1px solid var(--bill-border, #b9c1cf); border-radius: 999px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.bill-choice input:checked + span { border-color: var(--bill-accent, #1d4ed8); background: var(--bill-accent, #1d4ed8); color: var(--bill-on-accent, #fff); font-weight: 600; }
+.bill-choice input:focus-visible + span { outline: 3px solid #f59e0b; outline-offset: 2px; }
+.bill-choice .is-off span { opacity: .5; cursor: not-allowed; text-decoration: line-through; }
+.bill-tier h4 { margin: 0; font-size: 1rem; }
+.bill-tier p { margin: 0; }
 .bill-plans { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
 .bill-plan { border: 1px solid var(--bill-border, #d7dce5); border-radius: .625rem; padding: 1rem; display: grid; gap: .375rem; align-content: start; }
 .bill-plan ul { margin: 0; padding-left: 1.125rem; }

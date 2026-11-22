@@ -225,7 +225,7 @@ public sealed class StudyRoutinePostgresTests
         await using (var db = new CoachingDbContext(pg.Options))
         {
             var export = await new CoachingDataExportRepository(db).ExportStudentDataAsync(student, DateTimeOffset.UtcNow, default);
-            Assert.Equal("1.13", export.SchemaVersion);
+            Assert.Equal("1.14", export.SchemaVersion);
             Assert.NotNull(export.StudyRoutine);
             Assert.Equal(StudySchoolShift.Morning, export.StudyRoutine.Answers.SchoolShift);
             Assert.Equal(Derived(Morning()), export.StudyRoutine.Windows.Select(x => (x.Day, x.StartMinute, x.EndMinute)));
@@ -515,7 +515,7 @@ public sealed class StudyRoutinePostgresTests
         await using (var db = new CoachingDbContext(pg.Options))
         {
             var export = await new CoachingDataExportRepository(db).ExportStudentDataAsync(student, DateTimeOffset.UtcNow, default);
-            Assert.Equal("1.13", export.SchemaVersion);
+            Assert.Equal("1.14", export.SchemaVersion);
             Assert.Equal((StudyExamFocus.Ayt, StudyTempo.Relaxed), (export.StudyPlanPreferences!.ExamFocus!.Value, export.StudyPlanPreferences.Tempo!.Value));
             Assert.Equal(StudyTempo.Relaxed, export.StudyRoutine!.Answers.Tempo);
         }

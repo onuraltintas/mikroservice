@@ -95,7 +95,7 @@ public static class CoachingExamSessions
                             join e in db.Set<StudyCatalogExam>().AsNoTracking() on s.ExamId equals e.Id
                             where s.Id == id && e.IsActive && s.Date > today
                             select new { e.Name, s.Label, s.Date }).SingleOrDefaultAsync(ct);
-        return chosen is null ? null : new($"{chosen.Name} · {chosen.Label}", chosen.Date, "Session");
+        return chosen is null ? null : new($"{chosen.Name}, {chosen.Label}", chosen.Date, "Session");
     }
 
     /// <summary>

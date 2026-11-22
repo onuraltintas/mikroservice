@@ -35,19 +35,22 @@ test('the old topic-plan address opens the wizard; a saved topic draft is publis
   await expect(page.getByRole('heading', { name: 'Planını adım adım hazırla', exact: true })).toBeVisible();
   await expect(page.getByText('Konulardan plan', { exact: false })).toHaveCount(0);
   await page.goto('/coaching-portal/plan');
-  // T4: with no active plan Planım offers the saved plans under "Kayıtlı planlarım"; a draft opens in its editor and is published there.
-  await page.getByText('Kayıtlı planlarım', { exact: true }).click();
-  await page.getByRole('button', { name: /LGS kazanım pilotu/ }).click();
-  await expect(page.getByRole('heading', { name: 'Taslağını düzenle', exact: true })).toBeVisible();
+  // T4: with no active plan Planım offers the saved plans under "Kayıtlı planlarım". 22.11.2026: a draft opens on its calendar
+  // with the draft box above it and the publish box under it (the old draft form was removed).
+  // 22.11.2026: with no active plan the waiting draft opens by itself (before, it was picked under "Kayıtlı planlarım").
+  await expect(page.locator('.plan-head .plan-status')).toContainText('LGS kazanım pilotu');
+  await expect(page.getByTestId('draft-panel')).toContainText('Taslak hazırlanıyor');
+  await expect(page.locator('app-study-plan-calendar')).toBeVisible();
   await page.getByRole('checkbox', { name: /Planımı kontrol ettim/ }).check();
   await page.getByRole('button', { name: 'Planı yayımla', exact: true }).click();
   await page.getByRole('button', { name: 'Çarpanlar ve Katlar, ayrıntıları aç', exact: true }).click();
   const sheet = page.getByRole('dialog', { name: 'Çarpanlar ve Katlar' });
-  await expect(sheet.getByText(/M.8.1.1.1.*süre sürümü 2/)).toBeVisible();
+  // Live test #11 (17.11.2026): the student sees the outcome by name; its code and estimate version are for the teacher.
+  await expect(sheet).toContainText(outcome.name); await expect(sheet).not.toContainText('M.8.1.1.1'); await expect(sheet).not.toContainText('süre sürümü');
   await sheet.getByLabel('Gerçek süre (dk)', { exact: true }).fill('32');
   await sheet.getByLabel('Gerçek soru (isteğe bağlı)', { exact: true }).fill('12');
   await sheet.getByRole('button', { name: 'Tamamla', exact: true }).click();
-  await expect(sheet.getByText(/Tamamlandı · 32 dk/)).toBeVisible(); expect(completed).toHaveLength(1);
+  await expect(sheet.getByText(/Tamamlandı, 32 dk/)).toBeVisible(); expect(completed).toHaveLength(1);
   await page.screenshot({ path: `../../artifacts/coaching-outcomes/student-${test.info().project.name}.png`, fullPage: true });
 });
 
@@ -70,7 +73,7 @@ test('administrator previews a draft package and must supply an import reason', 
   await outcomes.getByText('Kazanım paketi aktar', { exact: true }).click();
   await outcomes.getByLabel('Paket JSON', { exact: true }).fill('{"code":"pilot"}');
   await outcomes.getByRole('button', { name: 'Aktarımı önizle', exact: true }).click();
-  await expect(outcomes.getByText(/52 kazanım · 13 eşleşen konu/)).toBeVisible();
+  await expect(outcomes.getByText(/52 kazanım, 13 eşleşen konu/)).toBeVisible();
   await expect(outcomes.getByRole('button', { name: 'Taslakları aktar', exact: true })).toBeDisabled();
   await outcomes.getByLabel('İşlem gerekçesi', { exact: true }).fill('LGS pilot kontrolü');
   await outcomes.getByRole('button', { name: 'Taslakları aktar', exact: true }).click();

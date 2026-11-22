@@ -45,12 +45,12 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
             return CreatedAtAction(nameof(Get), new { id = result.Id }, new { success = true, data = result });
         });
 
-    [HttpPut("{id:guid}")]
-    [RequestSizeLimit(1024 * 1024)]
+    /// <summary>Renames a draft; its work is edited on the plan's calendar.</summary>
+    [HttpPut("{id:guid}/title")]
+    [RequestSizeLimit(1024)]
     [EnableRateLimiting("study-planning-write")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public Task<IActionResult> Replace(Guid id, [FromBody] ManualStudyPlanUpdate request, CancellationToken cancellationToken = default)
-        => Respond(async () => Ok(new { success = true, data = await plans.ReplaceDraftAsync(id, request.ExpectedVersion, request.Plan, cancellationToken) }));
+    public Task<IActionResult> Rename(Guid id, [FromBody] StudyPlanRenameInput request, CancellationToken cancellationToken = default)
+        => Respond(async () => Ok(new { success = true, data = await plans.RenameDraftAsync(id, request, cancellationToken) }));
 
     [HttpPost("{id:guid}/publish")]
     [RequestSizeLimit(1024)]

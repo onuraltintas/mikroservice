@@ -17,6 +17,10 @@ export interface StudyTaskInput {
 export interface StudyWorkDay { workedOn:string;minutes:number;questions:number|null;isLegacyDate:boolean }
 export interface StudyRealizationChange { workedOn?:string|null;reassignFromDate?:string|null;previousWorkDays?:StudyWorkDay[]|null;workDays?:StudyWorkDay[]|null; at:string; actorUserId:string; action:string; previousMinutes:number|null; previousQuestions:number|null; previouslyCompleted:boolean; previousCompletedAt:string|null; minutes:number; questions:number|null; completed:boolean; reason:string|null;previousRemainingMinutes?:number|null;remainingMinutes?:number|null;previousRemainingQuestions?:number|null;remainingQuestions?:number|null }
 export interface StudyTask extends StudyTaskInput {
+  /** KocApp uyumu (22.11.2026): a range of the student's own resource ("test 12–15"); set on the calendar. */
+  resourceId?: string | null; resourceFrom?: number | null; resourceTo?: number | null;
+  /** The practice-exam review this task was added for. */
+  adviceKey?: string | null;
   completionSourceTaskId?:string|null;
   continuation?:{revisionId:string;revisionVersion:number;taskId:string;isCompleted:boolean;hasOwnCompletion:boolean;remainingMinutes:number|null;remainingQuestions:number|null;requiresExplicitScope:boolean}|null;
   workDays?:StudyWorkDay[];
@@ -32,6 +36,8 @@ export interface StudyTask extends StudyTaskInput {
   skippedAt?:string|null;
   /** Roadmap O7: what the plan engine chose (Learn, Review, Refresh, Spaced) and why. */
   planKind?:string|null;planReason?:string|null;
+  /** KocApp uyumu (22.11.2026): the resource's name and unit for the range above. */
+  resourceName?:string|null;resourceUnit?:string|null;
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
 export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:number|null;startDate:string;endDate:string;reuseFreedSlots:boolean;fingerprint:string;activeRevisionId:string|null;activeRevisionVersion:number|null;timeZoneId?:string;
@@ -55,7 +61,11 @@ export interface GoalTarget { goalId: string; version: number; targetSchoolId: s
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number | null; sourceKind?: 'Official' | 'ExamSkill' }
 
-export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDate:string;startMinute:number;plannedMinutes:number;lessonId:string|null}
+export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDate:string;startMinute:number;plannedMinutes:number;lessonId:string|null;
+  /** KocApp uyumu (22.11.2026): a new task from the curriculum (topicId) or from a resource range; keepResource false changes an edited task's range. */
+  topicId?:string|null;resourceId?:string|null;resourceFrom?:number|null;resourceTo?:number|null;keepResource?:boolean|null;
+  /** 22.11.2026 (the old plan form removed): planned questions and the "Not / sayfa" line; keepDetails false changes them on an edit. */
+  plannedQuestions?:number|null;sourceName?:string|null;keepDetails?:boolean|null}
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {
@@ -124,8 +134,9 @@ export class CoachingStudyPlanningService {
   create(plan: StudyPlanInput, studentId: string | null = null) {
     return this.http.post<ApiResult<StudyPlan>>(this.plansUrl(studentId), plan).pipe(map(result => result.data));
   }
-  replace(id: string, expectedVersion: number, plan: StudyPlanInput, studentId: string | null = null) {
-    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}`, { expectedVersion, plan }).pipe(map(result => result.data));
+  /** 22.11.2026: a draft's work is edited on its calendar; apart from that only its name changes. */
+  rename(id: string, expectedVersion: number, title: string, studentId: string | null = null) {
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/title`, { expectedVersion, title }).pipe(map(result => result.data));
   }
   publish(id: string, expectedVersion: number, studentId: string | null = null) {
     return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/publish`, { expectedVersion }).pipe(map(result => result.data));

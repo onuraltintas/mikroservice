@@ -4,7 +4,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   BILLING_NAME_SETTLE_MS, BillingHttp, BillingOrder, BillingPlan, MyBilling, MySubscriptionController, billingBreakdown, billingDuration, billingError, billingMoney,
-  billingOrderStatus, billingPlansFor, billingReceiptProblem
+  billingOrderStatus, billingPlansFor, billingReceiptProblem, billingTeacherTiers, billingCommonFeatures, billingMonthly
 } from '../../../../../shared/billing/my-subscription';
 import { AuthService } from '../../core/auth/auth.service';
 import { MySubscriptionComponent } from './my-subscription.component';
@@ -249,5 +249,59 @@ describe('Aboneliğim (shared billing page)', () => {
     expect(text).toContain('Bu plan için bekleyen bir siparişin var.');
     expect(fixture.componentInstance.c.buyerName).toBe('Deneme Öğrenci');
     http.verify();
+  });
+
+  it('KocApp uyumu: sells teacher plans as one package chosen by students and period, everything in every package', async () => {
+    const all = ['Otomatik plan', 'Puan tahmini', 'Veli paneli'];
+    const tier = (id: string, seatCount: number, durationDays: number, price: number, features = all) =>
+      plan({ id, name: `TEST ${seatCount} öğrenci`, buyerType: 'Teacher', seatCount, durationDays, price, extraSeatPrice: 100, features, trialDays: 14 });
+    const plans = [tier('t3a', 3, 90, 897), tier('t3y', 3, 365, 2990), tier('t5a', 5, 90, 1497, [...all, 'TEST fazla']), tier('t50y', 50, 365, 24990),
+      plan({ id: 'kurum', buyerType: 'Teacher', seatCount: 100, isContactOnly: true }), plan({ id: 'bireysel' })];
+    expect(billingTeacherTiers(plans).map(x => x.id)).toEqual(['t3a', 't3y', 't5a', 't50y']);
+    expect(billingTeacherTiers([plans[0]])).toEqual([]);
+    expect(billingCommonFeatures(billingTeacherTiers(plans))).toEqual(all);
+    expect(billingMonthly(plans[0])).toBe(299);
+
+    const { c } = controller({ 'GET /api/billing/v1/catalog/coaching': catalog(plans) }, ['Teacher']);
+    await c.load();
+    expect(c.otherPlans.map(x => x.id)).toEqual(['kurum', 'bireysel']);
+    expect(c.tierSeatOptions).toEqual([3, 5, 50]);
+    expect(c.tierDayOptions).toEqual([90, 365]);
+    expect(c.tierPlan!.id).toBe('t3a');
+    expect(c.monthly(c.tierPlan!)).toMatch(/^299/);
+    c.chooseTierDays(365);
+    expect(c.tierPlan!.id).toBe('t3y');
+    // 5 students are sold for 3 months only: the year is off and the package falls back to 3 months.
+    c.chooseTierSeats(5);
+    expect([c.tierSold(365), c.tierSold(90), c.tierPlan!.id]).toEqual([false, true, 't5a']);
+    c.chooseTierSeats(50);
+    expect(c.tierPlan!.id).toBe('t50y');
+    expect(c.planUnit(c.tierPlan!)).toBe('öğrenci');
+    expect(c.t.tierExtra('100,00 TL')).toContain('ek öğrenci 100,00 TL');
+  });
+
+  it('KocApp uyumu: a teacher counts the own pool in students and buys extra students', async () => {
+    const sub = { id: 's1', planId: 't3a', planName: 'TEST 3 öğrenci', productCodes: ['coaching'], status: 'Active' as const,
+      startsAt: '2026-11-01T00:00:00Z', endsAt: '2027-02-01T00:00:00Z', isCurrent: true, seatCount: 3 };
+    const { c, calls } = controller({
+      'GET /api/billing/v1/me': me({ subscriptions: [sub] }),
+      'GET /api/billing/v1/subscriptions/s1/seats': { subscriptionId: 's1', planName: 'TEST 3 öğrenci', endsAt: sub.endsAt, capacity: 3, used: 3, extraSeats: 0,
+        extraSeatsUntil: null, extraSeatPrice: 100, seats: [] },
+      'GET /api/billing/v1/subscriptions/s1/seat-quote': { count: 1, amount: 80, currency: 'TRY', daysLeft: 72, documents },
+      'POST /api/billing/v1/subscriptions/s1/seat-orders': order({ kind: 'ExtraSeats', extraSeats: 1, buyerType: 'Teacher', paymentCode: 'EDU-AAAAAA' })
+    }, ['Teacher']);
+    await c.load();
+    expect(c.seatUnit(sub)).toBe('öğrenci');
+    await c.openSeats(sub);
+    expect(c.poolUnit).toBe('öğrenci');
+    c.setSeatCount('0');
+    await c.quoteSeats();
+    expect(c.error).toBe('Ek öğrenci sayısı en az 1 olmalı.');
+    c.setSeatCount('1');
+    await c.quoteSeats();
+    c.acceptSeats(true);
+    await c.orderSeats();
+    expect(calls.find(call => call.url.endsWith('/seat-orders'))!.body).toEqual({ count: 1, documentsVersion: '2026-11-15', buyerName: 'Deneme Öğrenci' });
+    expect(c.notice).toBe('Ek öğrenci siparişin oluşturuldu. Havale açıklamasına EDU-AAAAAA kodunu yaz.');
   });
 });

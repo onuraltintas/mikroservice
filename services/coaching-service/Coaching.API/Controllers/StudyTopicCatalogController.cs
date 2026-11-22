@@ -8,7 +8,8 @@ namespace Coaching.API.Controllers;
 
 [ApiController]
 [ApiVersion(1.0)]
-[Authorize(Roles = "Student")]
+// KocApp uyumu (22.11.2026): a teacher ties a resource's sections to topics too; the catalog holds nothing personal.
+[Authorize(Roles = "Student,Teacher")]
 [EnableRateLimiting("target-catalog-search")]
 [Route("api/coaching/study-planning/topics")]
 public sealed class StudyTopicCatalogController(IStudyTopicSearchService topics) : ControllerBase

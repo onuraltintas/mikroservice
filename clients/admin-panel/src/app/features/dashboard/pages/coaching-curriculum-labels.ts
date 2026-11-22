@@ -10,8 +10,8 @@ export const QUALITY_ISSUE_LABELS: Record<string, string> = {
 };
 export const SOURCE_KIND_LABELS: Record<string, string> = { Official: 'Resmî program kazanımı', ExamSkill: 'Sınav hazırlık becerisi' };
 export const SOURCE_LABELS: Record<string, string> = {
-  'approved-catalog': 'Onaylı ders kataloğu', 'admin-manual': 'Yönetici girişi', 'coaching-catalog-km2': 'Koçluk kataloğu · YKS/LGS taslağı',
-  'coaching-catalog-km3': 'Koçluk kataloğu · AGS, ÖABT, YDS, YÖKDİL taslağı', 'mebi-yks': 'MEBİ YKS tercih verisi', 'mebi-lgs': 'MEBİ LGS okul verisi',
+  'approved-catalog': 'Onaylı ders kataloğu', 'admin-manual': 'Yönetici girişi', 'coaching-catalog-km2': 'Koçluk kataloğu: YKS/LGS taslağı',
+  'coaching-catalog-km3': 'Koçluk kataloğu: AGS, ÖABT, YDS, YÖKDİL taslağı', 'mebi-yks': 'MEBİ YKS tercih verisi', 'mebi-lgs': 'MEBİ LGS okul verisi',
   'meb-ttkb': 'MEB öğretim programı', osym: 'ÖSYM kılavuzu', 'outcome-import': 'Kazanım paketi aktarımı'
 };
 export const SCORE_TYPE_LABELS: Record<string, string> = { TYT: 'TYT', SAY: 'Sayısal', EA: 'Eşit ağırlık', SOZ: 'Sözel', 'SÖZ': 'Sözel', DIL: 'Dil', 'DİL': 'Dil' };
@@ -27,13 +27,13 @@ export function sourceLabel(source: string | null | undefined): string {
   if (!source) return 'Kaynak belirtilmedi';
   return SOURCE_LABELS[source] ?? (source.startsWith('coaching-catalog') ? 'Koçluk kataloğu' : 'Diğer kaynak');
 }
-/** An exam code as admins read it: "OABT_TURKCE" → "ÖABT · Türkçe" (from the exam list when known). */
+/** An exam code as admins read it: "OABT_TURKCE" → "ÖABT, Türkçe" (from the exam list when known). */
 export function examLabel(code: string | null | undefined, exams: { code: string; name: string }[] = []): string {
   if (!code) return 'Sınav belirtilmedi';
   const exam = exams.find(x => x.code === code);
   if (code.startsWith('OABT_')) {
-    const name = exam?.name.replace(/^ÖABT\s*[·:-]?\s*/i, '').replace(/\s*\(ÖABT\)\s*/i, '').trim();
-    return name ? `ÖABT · ${name}` : 'ÖABT alanı';
+    const name = exam?.name.replace(/^ÖABT\s*[·:,-]?\s*/i, '').replace(/\s*\(ÖABT\)\s*/i, '').trim();
+    return name ? `ÖABT, ${name}` : 'ÖABT alanı';
   }
   return EXAM_FALLBACK[code] ?? exam?.name ?? 'Diğer sınav';
 }

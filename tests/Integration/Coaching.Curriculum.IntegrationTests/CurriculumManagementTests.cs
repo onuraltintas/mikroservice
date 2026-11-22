@@ -230,7 +230,7 @@ public sealed class CurriculumManagementTests
 
     // Historical schema snapshots synthesize the fields absent from their original shape.
     internal static IQueryable<StudyPlanTask> LegacyStudyTasks(CoachingDbContext db) => db.StudyPlanTasks.FromSqlRaw(
-        """SELECT task.*, NULL::uuid AS "CompletionSourceTaskId", NULL::uuid AS "OriginalTaskId", '[]'::jsonb AS "RealizationHistoryJson",NULL::integer AS "RemainingMinutes",NULL::integer AS "RemainingQuestions",NULL::uuid AS "PredecessorTaskId",NULL::integer AS "PredecessorVersion",NULL::jsonb AS "ActualWorkJson",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkFromDate",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkToDate",NULL::timestamptz AS "SkippedAt",NULL::varchar AS "PlanKind",NULL::varchar AS "PlanReason" FROM coaching.study_plan_tasks AS task""");
+        """SELECT task.*, NULL::uuid AS "CompletionSourceTaskId", NULL::uuid AS "OriginalTaskId", '[]'::jsonb AS "RealizationHistoryJson",NULL::integer AS "RemainingMinutes",NULL::integer AS "RemainingQuestions",NULL::uuid AS "PredecessorTaskId",NULL::integer AS "PredecessorVersion",NULL::jsonb AS "ActualWorkJson",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkFromDate",CASE WHEN task."ActualMinutes" IS NOT NULL THEN task."PlannedDate" END AS "WorkToDate",NULL::timestamptz AS "SkippedAt",NULL::varchar AS "PlanKind",NULL::varchar AS "PlanReason",NULL::uuid AS "ResourceId",NULL::integer AS "ResourceFrom",NULL::integer AS "ResourceTo",NULL::varchar AS "AdviceKey" FROM coaching.study_plan_tasks AS task""");
 
     internal sealed class Fixture : IAsyncDisposable
     {

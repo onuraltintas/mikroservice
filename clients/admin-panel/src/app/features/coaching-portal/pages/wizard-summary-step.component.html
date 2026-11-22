@@ -200,11 +200,28 @@
     <div class="notice error" role="alert" data-testid="publish-issue"><p>{{ issue.message }}</p>
       <div class="actions">
         @if (issue.stale) { <button type="button" class="secondary" (click)="retry()" [disabled]="busy()">Yeniden hesapla</button> }
+        <!-- 22.11.2026: a waiting draft no longer ends the wizard; it can be archived (kept in the history) and the new plan saved. -->
+        @if (issue.draftExists) { <button type="button" data-testid="archive-pending-draft" (click)="archivePendingDraft()" [disabled]="busy()">{{ staffStudentId ? 'Bekleyen taslağı arşivle ve bu planı kaydet' : 'Bekleyen taslağı arşivle ve bu planı yayımla' }}</button> }
         @if (!staffStudentId && (issue.draftExists || created())) {
           <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : staleDraftId() ? { plan: staleDraftId() } : {}">Planım'ı aç</a>
         }
       </div>
     </div>
+  }
+
+  <!-- KocApp uyumu (22.11.2026): the resource each lesson's learning tasks work through. -->
+  @if (preview() && planResources().length) {
+    <section class="plan-resources" data-testid="plan-resources" aria-labelledby="plan-resources-title">
+      <h3 id="plan-resources-title">Kaynaklar</h3>
+      <p class="muted">Seçilen kaynak o dersin çalışmalarına sırayla bağlanır: önce konunun bölümü, yoksa kaynağın sıradaki boş kısmı.</p>
+      @for (lesson of lessons(); track lesson.lessonId) {
+        <label>{{ lesson.lessonName }}
+          <select [name]="'plan-resource-' + lesson.lessonId" [ngModel]="resourceChoice(lesson.lessonId)" (ngModelChange)="setResourceChoice(lesson.lessonId, $event)" [disabled]="busy()">
+            <option value="">Kaynak kullanma</option>
+            @for (resource of resourcesFor(lesson.lessonId); track resource.id) { <option [value]="resource.id">{{ resource.name }}, %{{ resource.percent }} bitti</option> }
+          </select></label>
+      }
+    </section>
   }
 
   <div class="step-actions">

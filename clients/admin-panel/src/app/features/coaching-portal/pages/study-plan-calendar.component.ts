@@ -51,7 +51,11 @@ export class StudyPlanCalendarComponent implements OnChanges {
     if(!changes['plan'])return;
     this.colors=lessonColors(this.plan.tasks);this.blocks=calendarBlocks(this.plan.tasks);this.byDate=new Map();
     for(const block of this.blocks){const list=this.byDate.get(block.date)??[];list.push(block);this.byDate.set(block.date,list);}
-    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.lastScrollTop=null;this.initialScroll=true;this.focusWork();}
+    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.lastScrollTop=null;this.initialScroll=true;this.focusWork();return;}
+    // 22.11.2026: work saved on a day outside the shown range (added in the dialog, or moved there) is brought into view.
+    const before=changes['plan'].previousValue as StudyPlan|undefined;if(!before||before.id!==this.plan.id)return;
+    const old=new Map(before.tasks.map(t=>[t.id,t.plannedDate])),changed=this.plan.tasks.find(t=>old.get(t.id)!==t.plannedDate);
+    if(changed&&!this.days().some(d=>dateKey(d)===changed.plannedDate))this.goToDate(changed.plannedDate);
   }
   rows(day:Date){return this.byDate.get(dateKey(day))??[];}
   timed(day:Date){return this.rows(day).filter(b=>b.startMinute!==null);}

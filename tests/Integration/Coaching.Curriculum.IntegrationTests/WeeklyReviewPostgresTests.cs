@@ -172,7 +172,7 @@ public sealed class WeeklyReviewPostgresTests
         await service.SaveDecisionAsync(student, Week, Guid.NewGuid(), new(null, "Tekrar", "", Week.AddDays(7), "Planned"), default);
         var export = new CoachingDataExportRepository(pg.Db);
         var studentData = await export.ExportStudentDataAsync(student, Now, default);
-        Assert.Equal("1.13", studentData.SchemaVersion); Assert.Single(studentData.WeeklyReflections!); Assert.Single(studentData.WeeklyDecisions!);
+        Assert.Equal("1.14", studentData.SchemaVersion); Assert.Single(studentData.WeeklyReflections!); Assert.Single(studentData.WeeklyDecisions!);
         Assert.Single((await export.ExportStudentDataAsync(teacher, Now, default)).WeeklyDecisions!);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.GetService<IMigrator>().MigrateAsync("20261020100033_PracticeTopicAdaptation"));
         Assert.Equal(before, await Snapshot(pg));
@@ -198,7 +198,7 @@ public sealed class WeeklyReviewPostgresTests
     }
     private static async Task<string> Snapshot(CurriculumPostgresTests.Pg pg) => JsonSerializer.Serialize(new {
         Plans = await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(p)-'ArchivedAt'-'WasPublished'-'AutomaticOutcomeEvidence')::text AS "Value" FROM coaching.study_plan_revisions p ORDER BY "Id" """).ToArrayAsync(),
-        Tasks = await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'PlanKind'-'PlanReason'-'SkippedAt'-'OriginalTaskId'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t ORDER BY "Id" """).ToArrayAsync(),
+        Tasks = await pg.Db.Database.SqlQueryRaw<string>("""SELECT (to_jsonb(t)-'PlanKind'-'PlanReason'-'SkippedAt'-'ResourceId'-'ResourceFrom'-'ResourceTo'-'AdviceKey'-'OriginalTaskId'-'RealizationHistoryJson'-'RemainingMinutes'-'RemainingQuestions'-'PredecessorTaskId'-'PredecessorVersion'-'ActualWorkJson'-'WorkFromDate'-'WorkToDate'-'CompletionSourceTaskId')::text AS "Value" FROM coaching.study_plan_tasks t ORDER BY "Id" """).ToArrayAsync(),
         Links = await pg.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().OrderBy(x => x.TaskId).ToArrayAsync()
     });
 }

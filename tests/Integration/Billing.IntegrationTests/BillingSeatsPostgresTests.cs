@@ -187,9 +187,45 @@ public sealed class BillingSeatsPostgresTests : IAsyncLifetime
         var pool = await Seats(view).GetMySeatsAsync(_teacher, subscription.Id);
         Assert.Equal(2, pool!.Used);
         Assert.Null(await Seats(view).GetMySeatsAsync(new BillingUser(Guid.NewGuid(), null, ["Teacher"]), subscription.Id));
-        // A teacher plan sells no extra seats.
+        // A teacher plan without an extra seat price sells no extra seats.
         Assert.Equal("Billing.SeatOrderInvalid", (await Assert.ThrowsAsync<BusinessRuleException>(
             () => Seats(view).QuoteSeatOrderAsync(_teacher, subscription.Id, 1, "Deneme Öğretmen"))).Code);
+    }
+
+    [Fact]
+    public async Task A_teacher_plan_with_an_extra_seat_price_sells_extra_seats_to_the_teacher_with_withdrawal()
+    {
+        // KocApp uyumu (22.11.2026): 300 TL per extra seat for 30 days, ten lira a day.
+        Guid plan;
+        await using (var db = Db())
+        {
+            var catalog = new BillingCatalog(db, _clock);
+            var entitlements = (await catalog.GetProductsAsync()).SelectMany(item => item.Entitlements).ToDictionary(item => item.Key, item => item.Id);
+            plan = (await catalog.CreatePlanAsync(new PlanRequest("TEST Öğretmen 3 öğrenci", null, BuyerType.Teacher, 900, 30, 0, 2, 300, false, true, true, 0, [],
+                [new PlanEntitlementRequest(entitlements["coaching.teacher"], EntitlementHolder.Buyer, null),
+                 new PlanEntitlementRequest(entitlements["coaching.student"], EntitlementHolder.SeatHolder, null)]), Admin)).Id;
+        }
+        await BuyAsync(_teacher, plan);
+        var subscriptionId = await SubscriptionIdAsync();
+        foreach (var student in Enumerable.Range(0, 2).Select(_ => Guid.NewGuid())) Assert.True((await AssignAsync(student, _teacher.Id)).Done);
+        var third = Guid.NewGuid();
+        Assert.Equal("PoolFull", (await AssignAsync(third, _teacher.Id)).Code);
+
+        _clock.Now = _clock.Now.AddDays(10);
+        await using (var db = Db())
+        {
+            var seats = Seats(db);
+            var quote = await seats.QuoteSeatOrderAsync(_teacher, subscriptionId, 1, "Deneme Öğretmen");
+            Assert.Equal((200m, 20), (quote!.Amount, quote.DaysLeft));
+            Assert.Contains("Deneme Öğretmen", quote.Documents.PreInformation);
+            Assert.DoesNotContain("yetkili", quote.Documents.PreInformation);
+            Assert.False(quote.Documents.Business, "a teacher buys as a consumer: pre-information form, distance-sales contract and withdrawal");
+            var order = (await seats.CreateSeatOrderAsync(_teacher, subscriptionId, new CreateSeatOrderRequest(1, SalesDocumentTexts.Version, "Deneme Öğretmen")))!;
+            Assert.Equal((OrderKind.ExtraSeats, BuyerType.Teacher, 200m), (order.Kind, order.BuyerType, order.Amount));
+            await Orders(db).ApproveOrderAsync(order.Id, Admin, null);
+            Assert.Equal(3, (await seats.GetSeatsAsync(subscriptionId))!.Capacity);
+        }
+        Assert.Equal("Assigned", (await AssignAsync(third, _teacher.Id)).Code);
     }
 
     [Fact]

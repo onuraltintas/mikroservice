@@ -118,10 +118,15 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
                 .Select(x => new GoalCatalogTargetView(x.Name, x.City + " / " + x.District, x.IsActive))
                 .SingleOrDefaultAsync(cancellationToken);
         else if (goal.TargetUniversityProgramId is { } programId)
-            target = await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == programId)
-                .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name,
-                    (x.FacultyName ?? "") + " · " + (x.ProgramType ?? "") + " · " + (x.ScoreType ?? ""), x.IsActive, x.ScoreType))
+        {
+            // 22.11.2026: parts joined with commas, and a missing faculty or type leaves no empty ", ," behind.
+            var program = await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == programId)
+                .Select(x => new { x.UniversityName, x.Name, x.FacultyName, x.ProgramType, x.ScoreType, x.IsActive })
                 .SingleOrDefaultAsync(cancellationToken);
+            target = program is null ? null : new GoalCatalogTargetView(program.UniversityName + ", " + program.Name,
+                string.Join(", ", new[] { program.FacultyName, program.ProgramType, program.ScoreType }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                program.IsActive, program.ScoreType);
+        }
         // Paket D (#9): a primary goal that no longer matches the exam in the study settings is marked (a teacher's goal is kept).
         var mismatch = false;
         if (await db.Set<StudentPrimaryGoal>().AsNoTracking().AnyAsync(x => x.StudentId == goal.StudentId && x.GoalId == goal.Id, cancellationToken)

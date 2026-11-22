@@ -14,7 +14,8 @@
     "commit": "c1ce79c1",
     "packageSha256": "f1713ce2020e1ec20f3d91cf14a39708cb4ff6a9b7895745c47387a09068c8ab",
     "alsoAcceptedPackageSha256": {
-      "5056431e": "e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c"
+      "5056431e": "e7c92b1910de085bac0aee0d1979721de104a18582e05422d4ac78335ac3838c",
+      "0cccee94": "059584e6d2499f8368021d2ca1ff534ca68ba29eb8418f2a988e8b18f02d1c07"
     },
     "maxMinutes": 1440,
     "maxMinutesNote": "c1ce79c ve 5056431e konu süresini 1440 dakikada sınırladı; 01.11.2026 kararıyla sınır 4320 oldu. Üretimdeki 1440 değerleri ve onların kazanım notları eşit sayılır; yeni süreleri content-packs/coaching-catalog-km3-minutes/v1 yazar.",
@@ -233,7 +234,7 @@
         { "name": "Dalgalar ve Optik", "pct": 16 },
         { "name": "Modern Fizik", "pct": 20 }
       ] }] },
-    { "code": "OABT_KIM", "exam": "OABT", "field": "Kimya/Kimya Teknolojisi", "examName": "ÖABT · Kimya / Kimya Teknolojisi", "name": "Kimya / Kimya Teknolojisi (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
+    { "code": "OABT_KIM", "exam": "OABT", "field": "Kimya/Kimya Teknolojisi", "examName": "ÖABT, Kimya / Kimya Teknolojisi", "name": "Kimya / Kimya Teknolojisi (ÖABT)", "budget": "OABT_90", "doc": "AGS2025",
       "units": [{ "name": "Alan Bilgisi Testi", "topics": [
         { "name": "Temel Kimya", "pct": 32 },
         { "name": "Analitik Kimya", "pct": 20 },
@@ -251,7 +252,7 @@
         { "name": "Genetik", "pct": 20 }
       ] }] },
     { "code": "OABT_DIN", "exam": "OABT", "field": "Din Kültürü ve Ahlâk Bilgisi / İmam-Hatip Lisesi Meslek Dersleri",
-      "examName": "ÖABT · Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri",
+      "examName": "ÖABT, Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri",
       "name": "Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri (ÖABT)", "budget": "OABT_70", "doc": "AGS2025",
       "note": "Belgedeki tablo üç sütunlu (Ortak Alan Bilgisi; Temel İslam Bilimleri; İslam Tarihi, Felsefe ve Din Bilimleri) ve toplam satırı %20 / %80; sütun yerleşimi metinden kesin okunamadığı için konular tek ünitede, satırdaki değerlerin toplamıyla verildi (Fıkıh: %4 + %10).",
       "units": [{ "name": "Alan Bilgisi Testi", "topics": [

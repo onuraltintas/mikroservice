@@ -34,8 +34,8 @@ internal static class GoalExamFit
         !LearningPurposes.IsExamPreparation(context.Purpose) || !(await PlanAsync(db, goal, context, ct)).Removes;
 
     /// <summary>
-    /// E4 #26: the parts of the goal the exam would remove, as the student reads them ("Ankara Üniversitesi · Bilgisayar
-    /// Mühendisliği", "YKS Sayısal hedef puanın (420)", "AYT · Sayısal net hedefin (60)"); nothing is changed.
+    /// E4 #26: the parts of the goal the exam would remove, as the student reads them ("Ankara Üniversitesi, Bilgisayar
+    /// Mühendisliği", "YKS Sayısal hedef puanın (420)", "AYT, Sayısal net hedefin (60)"); nothing is changed.
     /// </summary>
     public static async Task<IReadOnlyList<string>> DescribeRemovalsAsync(CoachingDbContext db, AcademicGoal goal, StudentLearningContext context, CancellationToken ct)
     {
@@ -120,7 +120,7 @@ internal static class GoalExamFit
     private static async Task<string> SchoolNameAsync(CoachingDbContext db, Guid id, CancellationToken ct) =>
         await db.TargetSchools.AsNoTracking().Where(x => x.Id == id).Select(x => x.Name).SingleOrDefaultAsync(ct) ?? "Hedef okulun";
     private static async Task<string> ProgramNameAsync(CoachingDbContext db, Guid id, CancellationToken ct) =>
-        await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == id).Select(x => x.UniversityName + " · " + x.Name).SingleOrDefaultAsync(ct) ?? "Hedef bölümün";
+        await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == id).Select(x => x.UniversityName + ", " + x.Name).SingleOrDefaultAsync(ct) ?? "Hedef bölümün";
     private static string ScoreName(string type) => CoachingStudentOnboardingService.ScoreTypeName(type);
     private static string NetName(string code) => PracticeExamRules.Profiles.SingleOrDefault(x => x.Code == code)?.Name ?? code;
     private static string Number(decimal value) => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',');

@@ -232,7 +232,7 @@ public sealed class CoachingStudentOnboardingTests
         var withOwn = await s.Service.SaveTargetAsync(new("program", s.Programs["Fizik"], [new("SAY", 410)]), default);
         withOwn.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.MinimumScore == null && x.Scores.Single().Score == 410m);
         var view = await s.Service.SaveTargetAsync(new("program", s.Programs["Bilgisayar Mühendisliği"], null), default);
-        view.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.Name == "Ankara Üniversitesi · Bilgisayar Mühendisliği"
+        view.Answers.Target.Should().Match<OnboardingTarget>(x => x.Kind == "program" && x.Name == "Ankara Üniversitesi, Bilgisayar Mühendisliği"
             && x.MinimumScore == 470m && x.Scores.Count == 0);
         (await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync()).TargetScore.Should().BeNull();
     }
@@ -524,7 +524,7 @@ public sealed class CoachingStudentOnboardingTests
         s.Published.OfType<GoalUpdatedEvent>().Should().ContainSingle();
         var updated = await s.F.Db.AcademicGoals.AsNoTracking().SingleAsync();
         updated.NetTargets.Select(x => x.ExamCode).Should().Equal("TYT");
-        updated.Title.Should().Be("Ankara Üniversitesi · Bilgisayar Mühendisliği");
+        updated.Title.Should().Be("Ankara Üniversitesi, Bilgisayar Mühendisliği");
     }
 
     // ---------- Older target scores (no score type stored) ----------

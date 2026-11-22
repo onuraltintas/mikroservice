@@ -26,7 +26,10 @@ const pixelsPerMinute=2;
 const calendar=page=>page.getByRole('region',{name:'Kayıtlı çalışma planı takvimi',exact:true});
 // T4: Planım lists the plan as day rows; the yearly calendar is the "Haftalık tablo" board behind the plan menu, and a
 // selected card lists its tasks as rows whose details open in a sheet.
-async function board(page){await page.locator('summary[aria-label="Plan işlemleri"]').click();await page.getByRole('button',{name:'Haftalık tablo',exact:true}).click();await expect(calendar(page)).toBeVisible();}
+// 22.11.2026: a draft opens on its calendar by itself; an active plan opens it from the menu.
+async function board(page){const menu=page.locator('summary[aria-label="Plan işlemleri"]');await menu.click();
+  const toggle=page.getByRole('button',{name:/^Haftalık tablo(yu kapat)?$/});if((await toggle.textContent()).trim()==='Haftalık tablo')await toggle.click();else await menu.click();
+  await expect(calendar(page)).toBeVisible();}
 async function open(page){await page.goto('/coaching-portal/plan?plan=annual');await expect(page.locator('.plan-head .plan-status')).toBeVisible();await board(page);}
 const selectedRows=page=>page.locator('.board-detail app-plan-task-row');
 const sheet=(page,title)=>page.getByRole('dialog',{name:title,exact:true});
@@ -42,10 +45,12 @@ test('yearly calendar focuses occupied hours, keeps overlapping lessons visible 
   },pixelsPerMinute)).toBeLessThanOrEqual(1);
   const math=grid.locator('.timed-block').filter({hasText:'Matematik'}).first(),turkish=grid.locator('.day-track[data-date="2027-01-04"] .timed-block').filter({hasText:'Türkçe'});
   const hour18=await grid.locator('.time-axis span').nth(18).boundingBox();expect(Math.abs((await math.boundingBox()).y-hour18.y)).toBeLessThanOrEqual(2);
-  await expect(math).toBeInViewport();
+  // A draft's box sits above the board; the page is scrolled to the calendar's hours before they are checked.
+  await grid.getByTestId('plan-time-scroller').scrollIntoViewIfNeeded();await expect(math).toBeInViewport();
   const a=await math.boundingBox(),b=await turkish.boundingBox();expect(a.x+a.width<=b.x+1||b.x+b.width<=a.x+1).toBe(true);
   expect(await math.evaluate(el=>getComputedStyle(el).backgroundColor)).not.toBe(await turkish.evaluate(el=>getComputedStyle(el).backgroundColor));
-  await math.click();await expect(selectedRows(page)).toHaveCount(2);await expect((await details(page,'Konu a')).getByText('süre sürümü 2',{exact:false})).toBeVisible();await closeSheet(page,'Konu a');
+  await math.click();await expect(selectedRows(page)).toHaveCount(2);// Live test #11 (17.11.2026): the student sees the outcome by name; the estimate version is for the teacher only.
+  const konuA=await details(page,'Konu a');await expect(konuA).toContainText('Örnek kazanım a');await expect(konuA).not.toContainText('süre sürümü');await closeSheet(page,'Konu a');
   await page.locator('summary[aria-label="Plan işlemleri"]').click();await page.getByRole('button',{name:'Haftalık tabloyu kapat',exact:true}).click();
   await page.getByRole('tablist',{name:'Plan görünümü',exact:true}).getByRole('tab',{name:'Liste',exact:true}).click();await expect(page.locator('.plan-tasks app-plan-task-row')).toHaveCount(6);
   expect(f.writes).toHaveLength(0);expect(f.getAnnual().version).toBe(4);
@@ -63,7 +68,7 @@ test('month and day navigate real occupied dates and never repeat the weekly tem
 });
 test('legacy completed work remains available in list and untimed calendar with no invented hour',async({context,page})=>{
   const f=await fixture(context);await page.goto('/coaching-portal/plan?plan=annual');await page.locator('summary[aria-label="Plan işlemleri"]').click();await page.getByText(/^Plan seçimi/).click();await page.getByRole('button',{name:'Eski çalışma planım Aktif',exact:true}).click();await page.locator('summary[aria-label="Plan işlemleri"]').click();
-  await expect(page.locator('.plan-head .plan-status')).toContainText('Eski çalışma planım');await expect((await details(page,'Tamamlanan eski çalışma')).getByText('Tamamlandı · 25 dk',{exact:false})).toBeVisible();await closeSheet(page,'Tamamlanan eski çalışma');
+  await expect(page.locator('.plan-head .plan-status')).toContainText('Eski çalışma planım');await expect((await details(page,'Tamamlanan eski çalışma')).getByText('Tamamlandı, 25 dk',{exact:false})).toBeVisible();await closeSheet(page,'Tamamlanan eski çalışma');
   await board(page);const grid=calendar(page);await expect(grid.getByText('Saati belirtilmemiş',{exact:true})).toBeVisible();
   // An editable active plan keeps its empty hour grid for adding work, but the untimed legacy task is never given an hour there.
   await expect(grid.locator('.untimed-block')).toHaveCount(1);await expect(grid.locator('.timed-block')).toHaveCount(0);
@@ -71,7 +76,7 @@ test('legacy completed work remains available in list and untimed calendar with 
 });
 test('a first lesson on Sunday stays horizontally visible in a narrow week',async({context,page})=>{
   const f=await fixture(context),tasks=f.getAnnual().tasks;f.getAnnual().tasks=[...tasks.slice(0,2).map(t=>({...t,plannedDate:'2027-01-10'})),{...tasks[0],id:'done',plannedDate:'2027-01-04',plannedStartMinute:480,isCompleted:true,actualMinutes:25,actualQuestions:0,completedAt:'2026-10-16T10:00:00Z'}];await open(page);
-  await expect(calendar(page).locator('.day-track[data-date="2027-01-10"] .timed-block').first()).toBeInViewport({ratio:.95});expect(f.writes).toHaveLength(0);
+  await calendar(page).getByTestId('plan-time-scroller').scrollIntoViewIfNeeded();await expect(calendar(page).locator('.day-track[data-date="2027-01-10"] .timed-block').first()).toBeInViewport({ratio:.95});expect(f.writes).toHaveLength(0);
 });
 // Paket H5: when today is among the shown days and has a study, the calendar ends on today's first study (after the usual focus).
 test('opens on today\'s first study when today is in the shown week',async({context,page})=>{
@@ -89,7 +94,7 @@ test('calendar details reuse completion and rescheduling endpoints and preserve 
   // The sheet shows one task at a time, so the unsaved inputs of Konu b must survive closing its sheet and completing Konu a.
   let second=await details(page,'Konu b');await second.getByLabel('Gerçek süre (dk)',{exact:true}).fill('32');await second.getByLabel('Gerçek soru (isteğe bağlı)',{exact:true}).fill('2');await closeSheet(page,'Konu b');
   const first=await details(page,'Konu a');await first.getByLabel('Gerçek süre (dk)',{exact:true}).fill('17');await first.getByLabel('Gerçek soru (isteğe bağlı)',{exact:true}).fill('0');await first.getByRole('button',{name:'Tamamla',exact:true}).click();
-  await expect(first).toContainText('Tamamlandı · 17 dk');await closeSheet(page,'Konu a');
+  await expect(first).toContainText('Tamamlandı, 17 dk');await closeSheet(page,'Konu a');
   second=await details(page,'Konu b');await expect(second.getByLabel('Gerçek süre (dk)',{exact:true})).toHaveValue('32');await expect(second.getByLabel('Gerçek soru (isteğe bağlı)',{exact:true})).toHaveValue('2');
   await second.getByLabel('Yeni tarih',{exact:true}).fill('2027-01-05');await second.getByRole('button',{name:'Tarihi değiştir',exact:true}).click();await expect(second).toContainText('05.01.2027');
   expect(f.writes).toHaveLength(2);expect(f.writes[0].body).toEqual({expectedVersion:4,actualMinutes:17,actualQuestions:0});expect(f.writes[1].body).toEqual({expectedVersion:5,plannedDate:'2027-01-05'});expect(f.old.version).toBe(7);expect(f.old.tasks[0].actualMinutes).toBe(25);

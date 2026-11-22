@@ -147,7 +147,7 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
         var roles = controller.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
             .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles;
         Assert.Contains("InstitutionAdmin", roles);
-        foreach (var method in new[] { "Create", "Replace", "Publish", "Archive", "Reschedule", "ReplaceGoalTarget", "ReplaceGoalScoreTarget" })
+        foreach (var method in new[] { "Create", "Rename", "Publish", "Archive", "Reschedule", "ReplaceGoalTarget", "ReplaceGoalScoreTarget" })
         {
             var writeRoles = controller.GetMethod(method)!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
                 .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles;

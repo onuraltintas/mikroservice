@@ -144,7 +144,7 @@ for (const l of lessons) {
   const editionCode = `km3-${l.code.toLowerCase().replace(/_/g, '-')}-2026`;
   const scopeUrl = (l.evidenceDoc ? data.documents[l.evidenceDoc] : l.exam === 'OABT' ? data.documents.GUIDE2026 : l.doc).url;
   const examCode = l.exam === 'OABT' ? l.code : l.exam; // KM1: ÖABT lessons carry their field code (OABT_IMAT, …)
-  if (l.exam === 'OABT') rows.exams.push([uuid(`exam:${l.code}`), l.code, l.examName ?? `ÖABT · ${l.field}`, 20 + rows.exams.length]);
+  if (l.exam === 'OABT') rows.exams.push([uuid(`exam:${l.code}`), l.code, l.examName ?? `ÖABT, ${l.field}`, 20 + rows.exams.length]);
   rows.lessons.push([lessonId, l.code, l.name, examCode]);
   rows.editions.push([editionId, editionCode, examCode, `${l.name} — sınav hazırlık kapsamı`, l.doc.url, scopeUrl, l.doc.sha256 ?? PENDING_PDF_SHA]);
   rows.bindings.push([editionId, lessonId]);

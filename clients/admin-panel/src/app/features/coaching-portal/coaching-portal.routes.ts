@@ -88,6 +88,11 @@ export const COACHING_PORTAL_ROUTES: Routes = [
         path: 'wizard', canActivate: [studentMayPlan], canDeactivate: [async (component: StudentStudyPlanAssistantComponent) => await component.canLeavePage()],
         loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
       },
+      // KocApp uyumu (22.11.2026): the student's books and sets.
+      {
+        path: 'resources',
+        loadComponent: () => import('../../shared/coaching-resources/student-resources.component').then(m => m.StudentResourcesComponent)
+      },
       // Paket H4: the yearly preview is the wizard's Özet step now; the old address (and its links) lead there.
       {
         path: 'preview', pathMatch: 'full',

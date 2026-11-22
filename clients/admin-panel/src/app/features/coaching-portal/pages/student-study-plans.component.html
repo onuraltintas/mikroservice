@@ -1,6 +1,6 @@
 <ng-template #planPicker>
       <div class="plan-controls"><div class="plan-filter"><label for="plan-filter">Gösterilen planlar</label>
-      <select id="plan-filter" [(ngModel)]="filter" (ngModelChange)="loadList()" [disabled]="loading() || busy() || dirty">
+      <select id="plan-filter" [(ngModel)]="filter" (ngModelChange)="loadList()" [disabled]="loading() || busy()">
         <option value="Active">Aktif plan</option><option value="Draft">Taslak</option><option value="Archived">Geçmiş planlar</option><option value="">Tüm planlar</option>
       </select>
       </div><button type="button" class="secondary" (click)="loadList(page().pageNumber)" [disabled]="loading() || busy()">Listeyi yenile</button>
@@ -17,47 +17,56 @@
       </div>
       @if (page().totalCount > page().pageSize) {
       <div class="pagination">
-        <button type="button" (click)="loadList(page().pageNumber - 1)" [disabled]="loading() || busy() || dirty || page().pageNumber <= 1">Önceki</button>
+        <button type="button" (click)="loadList(page().pageNumber - 1)" [disabled]="loading() || busy() || page().pageNumber <= 1">Önceki</button>
         <span>{{ page().pageNumber }}, {{ page().totalCount }} plan</span>
-        <button type="button" (click)="loadList(page().pageNumber + 1)" [disabled]="loading() || busy() || dirty || page().pageNumber * page().pageSize >= page().totalCount">Sonraki</button>
+        <button type="button" (click)="loadList(page().pageNumber + 1)" [disabled]="loading() || busy() || page().pageNumber * page().pageSize >= page().totalCount">Sonraki</button>
       </div>
       }
       </details>
 </ng-template>
 
-<ng-template #draftEditor>
-        @for(task of selected()?.tasks ?? [];track task.id){@if(task.predecessorTaskId){<p class="muted">Korunan devam çalışması: {{task.title}}, {{task.plannedMinutes}} dk, {{task.plannedDate | date:'dd.MM.yyyy'}} {{task.plannedStartMinute==null?'':clock(task.plannedStartMinute)}}. Taslağı kaydederken güncel kaynaktan korunur.</p>}}
-        <h2>{{ selected() ? 'Taslağını düzenle' : 'Yeni çalışma planı' }}</h2>
-        <p class="muted">Taslak kaydetmek aktif planını değiştirmez. Yayımlamak ayrı bir adımdır.</p>
-        <form #draftForm="ngForm" (ngSubmit)="saveDraft()">
-          <fieldset [disabled]="busy()">
-            <label for="plan-title">Plan başlığı</label><input id="plan-title" name="planTitle" [(ngModel)]="editTitle" (ngModelChange)="dirty = true" required maxlength="200">
-            @for (task of editTasks; track $index; let i = $index) {
-              <div class="draft-task">
-                <label>Çalışma başlığı<input [name]="'title-' + i" [(ngModel)]="task.title" (ngModelChange)="dirty = true" required maxlength="200"></label>
-                <label>Kaynak / sayfa (isteğe bağlı)<input [name]="'source-' + i" [(ngModel)]="task.sourceName" (ngModelChange)="dirty = true" maxlength="300"></label>
-                <div class="fields">
-                  <label>Tarih<input type="date" [name]="'date-' + i" [(ngModel)]="task.plannedDate" (ngModelChange)="dirty = true" required></label>
-                  <label>Başlangıç saati (isteğe bağlı)<input type="time" step="1800" [name]="'start-' + i" [ngModel]="task.plannedStartMinute==null?'':clock(task.plannedStartMinute)" (ngModelChange)="setDraftTime(task,$event)"></label>
-                  <label>Süre (dk)<input type="number" [name]="'minutes-' + i" [(ngModel)]="task.plannedMinutes" (ngModelChange)="dirty = true" min="1" max="1440" step="1" required></label>
-                  <label>Planlanan soru (isteğe bağlı)<input type="number" [name]="'questions-' + i" [(ngModel)]="task.plannedQuestions" (ngModelChange)="dirty = true" min="0" max="100000" step="1"></label>
-                </div>
-                <label class="check"><input type="checkbox" [name]="'pin-' + i" [(ngModel)]="task.isPinned" (ngModelChange)="dirty = true">Sabit çalışma</label>
-                <button type="button" class="secondary" (click)="removeTask(i)">Çalışmayı kaldır</button>
-              </div>
-            }
-            <div class="actions"><button type="button" class="secondary" (click)="addTask()" [disabled]="editTasks.length >= 500">Çalışma ekle</button>
-              <button type="submit" [disabled]="draftForm.invalid">Taslağı kaydet</button>
-              <button type="button" class="secondary" (click)="discardChanges()">Değişikliklerden vazgeç</button></div>
-          </fieldset>
-        </form>
-        @if (selected()?.status === 'Draft') {
-          <div class="actions"><button type="button" class="secondary" [disabled]="busy() || dirty" (click)="archiveDraft()">Taslağı arşivle</button>
-            <p class="muted">Eski bir taslağı kaldırıp planı yeniden hazırlayabilirsin. Geçmişin silinmez.</p></div>
-          <div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3><p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p>
-            <label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy() || dirty">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label>
-            <button type="button" (click)="publish()" [disabled]="busy() || dirty || !publishConfirmed || !selected()?.tasks?.length">Planı yayımla</button></div>
-        }
+<!-- 22.11.2026: the old "Yeni çalışma planı" form was removed. A draft is made on its calendar; this box names it, explains the
+     steps and publishes or archives it. It serves weekly drafts and manual ones alike. -->
+<ng-template #draftPanel let-plan>
+  <section class="draft-panel" data-testid="draft-panel" aria-labelledby="draft-panel-title">
+    <div class="draft-head">
+      <h3 id="draft-panel-title">{{ plan.tasks.length ? 'Taslak hazırlanıyor' : 'Boş taslak' }}</h3>
+      <p class="muted">{{ plan.tasks.length }} çalışma, toplam {{ draftMinutes(plan) }} dk. {{ staffStudentId ? 'Taslak yayımlanana kadar öğrencinin aktif planı değişmez.' : 'Taslak yayımlanana kadar aktif planın değişmez.' }} Yayımlama bölümü takvimin altında.</p>
+    </div>
+    @if (!plan.weeklySource) {
+      <details class="draft-guide" data-testid="draft-guide" [open]="!plan.tasks.length">
+        <summary>Takvimde plan nasıl hazırlanır?</summary>
+        <ol>
+          <li><strong>Çalışma ekleme.</strong> Takvimin üstündeki “＋ Çalışma ekle” düğmesi ya da boş bir saat kullanılır: sağ tık, telefonda ⋯ menüsü, klavyede Shift F10.</li>
+          <li><strong>Ders ve kaynak.</strong> Pencerede önce ders, sonra çalışmanın neye göre olduğu seçilir: “Serbest çalışma”, “Müfredattan konu” ya da “Kaynaktan” (kitap ya da testten bir aralık).</li>
+          <li><strong>Gün, saat ve süre.</strong> Başlık, gün, başlangıç saati ve süre girilip kaydedilir; istenirse planlanan soru ve not eklenir. Aynı saatte iki çalışma olamaz.</li>
+          <li><strong>Düzenleme.</strong> Kart sürüklenerek ya da menüden taşınır; uzun bir çalışma ikiye bölünebilir, düzenlenebilir veya silinebilir.</li>
+          <li><strong>Yayımlama.</strong> Plan hazır olunca takvimin altındaki onay kutusu işaretlenip “Planı yayımla”ya basılır.</li>
+        </ol>
+      </details>
+    }
+    <details class="draft-rename-box" [open]="draftTitleChanged()">
+      <summary>Taslağın adını değiştir</summary>
+      <div class="fields draft-rename">
+        <label>Taslağın adı<input data-testid="draft-title" [(ngModel)]="draftTitle" maxlength="200" [disabled]="busy()"></label>
+        <button type="button" class="secondary" (click)="renameDraft()" [disabled]="busy() || !draftTitleChanged()">Adı kaydet</button>
+      </div>
+    </details>
+  </section>
+</ng-template>
+
+<!-- The last step of a draft, under its calendar: publish it or archive it. -->
+<ng-template #draftPublish let-plan>
+  <div class="publish-box" data-testid="draft-publish"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3>
+    @if (plan.tasks.length) {
+      <p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p>
+      <label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label>
+    } @else {
+      <p data-testid="draft-empty-publish">{{ staffStudentId ? 'Yayımlamak için takvime en az bir çalışma eklenmeli.' : 'Yayımlamak için takvime en az bir çalışma ekle.' }}</p>
+    }
+    <div class="actions"><button type="button" (click)="publish()" [disabled]="busy() || !publishConfirmed || !plan.tasks.length">Planı yayımla</button>
+      <button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>
+  </div>
 </ng-template>
 
 <ng-template #taskDetail let-task let-plan="plan">
@@ -70,7 +79,9 @@
               @if (staffStudentId) { <p>{{ outcome.code }} — {{ withoutFinalStop(outcome.name) }}, {{ outcome.allocatedMinutes }} dk, süre sürümü {{ outcome.estimateNumber }}@if (outcome.origin === 'StudentOverride') {<span>, Öğrencinin süre seçimi</span>}</p> }
               @else { <p>{{ withoutFinalStop(outcome.name) }}, {{ outcome.allocatedMinutes }} dk</p> }
             }
-            @if (task.sourceName) { <p>Kaynak: {{ task.sourceName.startsWith('DenemeTekrar:') ? 'Deneme analizine göre konu tekrarı' : task.sourceName }}</p> }
+            @if (resourceText(task); as text) { <p data-testid="task-resource">Kaynak: {{ text }}</p> }
+            @if (task.adviceKey) { <p>Deneme analizine göre konu tekrarı</p> }
+            @if (task.sourceName) { <p>{{ task.resourceName ? 'Not' : 'Kaynak' }}: {{ task.sourceName.startsWith('DenemeTekrar:') ? 'Deneme analizine göre konu tekrarı' : task.sourceName }}</p> }
             @if(task.predecessorTaskId){<p>{{ staffStudentId ? 'Devam çalışması: önceki gerçekleşmeler kaynak görevde korunur. Buraya yalnız bu devam görevindeki yeni çalışma toplamını gir. Konuların süre payları kaynak çalışmayla birlikte korunur.' : 'Yarım kalan çalışmanın devamı. Önceki kısımda yaptıkların orada kayıtlı kalır; burada yalnız bu kısmı sayarsın.' }}</p>}
             @if(task.remainingMinutes!=null){<p>Kalan iş: {{task.remainingMinutes}} dk@if(task.remainingQuestions!=null){, {{task.remainingQuestions}} soru}</p>}
             @if(task.completionSourceTaskId && staffStudentId){<p>Tamamlanma aynı çalışma zincirindeki kayıtla doğrulandı. Fiili süre ve sorular yapıldıkları kayıtta korunur.</p>}
@@ -104,10 +115,12 @@
                 <p role="alert" class="notice error" [id]="'completion-error-' + task.id">{{ completionError()?.message }}</p>
               }
               } @else { <p class="muted">Öğrencinin çalışma kaydı bekleniyor.</p> }
+              @if (canChangePlan()) {
               <div class="fields">
                 <label>Yeni tarih<input type="date" [(ngModel)]="targetDates[task.id]" [disabled]="busy()"></label>
                 <button type="button" class="secondary" (click)="reschedule(task, targetDates[task.id])" [disabled]="busy()">Tarihi değiştir</button>
               </div>
+              }
             }
             @if(plan.status==='Archived' && !readOnly && !task.isCompleted){<div class="fields"><label>Kalan çalışma süresi (dk)<input type="number" [(ngModel)]="remainingMinutes[task.id]" min="1" max="1440" [disabled]="busy()"></label><label>Kalan soru<input type="number" [(ngModel)]="remainingQuestions[task.id]" min="0" max="100000" [disabled]="busy()"></label><button type="button" (click)="saveRemainingScope(task)" [disabled]="busy()">{{ remainingLabel }}</button></div>}
             @if((task.actualMinutes != null || task.realizationHistory?.length) && plan.status !== 'Draft' && !readOnly && !staffStudentId) {
@@ -155,7 +168,7 @@
       <p>{{ readOnly ? 'Planları ve öğrencinin kaydettiği çalışmaları incele.' : 'Taslağı hazırla, kontrol ederek yayımla ve günlük çalışmaları takip et.' }}</p></div>
     @if (!readOnly) {
     @if (!staffStudentId) { <button type="button" class="assistant-entry secondary" (click)="openWizard()">Plan sihirbazını aç ↗</button> }
-    <button type="button" (click)="newDraft()" [disabled]="busy() || dirty || loading()">{{ knownDraftId() || selected()?.status === 'Draft' ? 'Taslağı düzenle' : 'Yeni taslak' }}</button>
+    <button type="button" (click)="newDraft()" [disabled]="busy() || loading()">{{ knownDraftId() || selected()?.status === 'Draft' ? 'Taslağı aç' : 'Yeni taslak' }}</button>
     }
   </header>
   @if (error()) { <p role="alert" class="notice error">{{ error() }}</p> }
@@ -163,27 +176,28 @@
   <div class="workspace">
     <section class="panel plan-toolbar" aria-label="Plan seçimi"><ng-container *ngTemplateOutlet="planPicker" /></section>
     <div class="panel detail" [attr.aria-busy]="busy()">
-      @if (editing) { <ng-container *ngTemplateOutlet="draftEditor" />
-      } @else if (selected(); as plan) {
+      @if (selected(); as plan) {
         <div class="detail-heading"><h2>{{ plan.title }}</h2><span class="badge">{{ statusLabel(plan.status) }}</span>
           <button type="button" class="secondary" (click)="open(plan.id)" [disabled]="busy()">Planı yenile</button></div>
         @if(plan.weeklySource;as source){
           <p class="muted">Haftalık takvimden üretilen plan, {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saatler ve konular korunur. Planı baştan dağıtmak istersen taslağı kaldırıp yeniden oluştur.</p>
           <app-plan-extend [source]="source" [active]="plan.status==='Active'" [readOnly]="readOnly || planningClosed()" [staffStudentId]="staffStudentId ?? null" (extended)="openExtended($event)" />
-          @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3><p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }
+        @if(plan.status==='Draft'&&canChangePlan()){<ng-container *ngTemplateOutlet="draftPanel; context: { $implicit: plan }" />}
+        @else if(plan.status==='Draft'&&!readOnly){<p class="notice" data-testid="draft-by-teacher">Bu taslağı öğretmenin hazırlıyor. Yayımlandığında aktif planın olur ve çalışmaların burada görünür.</p>}
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; planın takvimi korunur. Kayıtlı gerçekleşmeler gerekçeyle düzeltilebilir.</p>
-          @if(!readOnly){<div class="publish-box"><label class="check"><input type="checkbox" [(ngModel)]="restoreConfirmed" [disabled]="busy()">Mevcut aktif planın arşivlenmesini ve bu planın yeniden etkinleştirilmesini onaylıyorum.</label><button type="button" (click)="restore()" [disabled]="busy()||!restoreConfirmed">Planı yeniden aktif et</button></div>}
+          @if(canChangePlan()){<div class="publish-box"><label class="check"><input type="checkbox" [(ngModel)]="restoreConfirmed" [disabled]="busy()">Mevcut aktif planın arşivlenmesini ve bu planın yeniden etkinleştirilmesini onaylıyorum.</label><button type="button" (click)="restore()" [disabled]="busy()||!restoreConfirmed">Planı yeniden aktif et</button></div>}
         }
         <p class="muted">Başlanmış, sabit veya açık karara bağlı çalışmalar yeni planda devam görevleriyle korunur. Kısmi kayıtların kalan süresini planı yenilemeden önce belirt.</p>
         <div class="plan-view-switch" role="group" aria-label="Plan görünümü"><button type="button" class="secondary" [attr.aria-pressed]="planView()==='calendar'" (click)="planView.set('calendar')" [disabled]="busy()">Takvim</button><button type="button" class="secondary" [attr.aria-pressed]="planView()==='list'" (click)="planView.set('list')" [disabled]="busy()">Liste</button></div>
         <label>Çalışma durumu<select [(ngModel)]="taskFilter" (ngModelChange)="changeTaskFilter()" [disabled]="busy()"><option value="all">Tüm çalışmalar</option><option value="today">Bugün</option><option value="pending">Bekleyen</option><option value="completed">Tamamlanan</option><option value="overdue">Geciken</option></select></label>
         @if(planView()==='calendar'){
-          <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="!readOnly" [student]="!staffStudentId" (calendarAction)="calendarCommand($event)" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
+          <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="canChangePlan()" [student]="!staffStudentId" (calendarAction)="calendarCommand($event)" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
           @if(selectedTaskIds().length){<div #calendarTaskDetail class="calendar-task-detail" tabindex="-1"><h3>Seçilen çalışmalar</h3><button type="button" class="secondary" (click)="selectedTaskIds.set([])" [disabled]="busy()">Ayrıntıları kapat</button></div>}
         }
         @for (task of visibleTasks(); track task.id) { <ng-container *ngTemplateOutlet="taskDetail; context: { $implicit: task, plan: plan }" /> }
         @if(planView()==='list'&&plan.weeklySource&&filteredTasks().length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }}, {{ filteredTasks().length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=filteredTasks().length||busy()">Sonraki çalışmalar</button></div>}
+        @if(plan.status==='Draft'&&canChangePlan()){<ng-container *ngTemplateOutlet="draftPublish; context: { $implicit: plan }" />}
       } @else { <div class="empty"><h2>{{ staffStudentId ? 'Plana buradan devam et' : 'Planına buradan devam et' }}</h2><p>Listeden bir plan seç veya yeni bir taslak oluştur.</p></div> }
       @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     </div>
@@ -193,12 +207,10 @@
 <section class="study-plans student" aria-label="Planım" [attr.aria-busy]="busy()">
   @if (error()) { <p role="alert" class="notice error">{{ error() }}</p> }
   @if (success()) { <p role="status" class="notice success">{{ success() }}</p> }
-  @if (editing) {
-    <div class="panel detail"><ng-container *ngTemplateOutlet="draftEditor" /></div>
-  } @else if (selected(); as plan) {
+  @if (selected(); as plan) {
     <div class="plan-head">
       <p class="plan-status"><strong>{{ plan.title }}</strong><span class="badge">{{ statusLabel(plan.status) }}</span>
-        <span class="progress">{{ planProgress().done }}/{{ planProgress().total }} çalışma tamamlandı</span></p>
+        @if (plan.status !== 'Draft') { <span class="progress">{{ planProgress().done }}/{{ planProgress().total }} çalışma tamamlandı</span> }</p>
       <details class="plan-menu" #planMenu>
         <summary aria-label="Plan işlemleri"><span aria-hidden="true">⋯</span><span class="menu-label">Plan işlemleri</span></summary>
         <div class="menu-body">
@@ -206,7 +218,7 @@
             <!-- Live test 16.11.2026 (#24): a student whose teacher plans for her does not see the actions that make or change a plan. -->
             @if (!planningClosed()) {
             <button type="button" class="secondary" (click)="planMenu.open = false; openWizard()">Plan sihirbazı</button>
-            <button type="button" class="secondary" (click)="planMenu.open = false; newDraft()" [disabled]="busy() || dirty || loading()">{{ knownDraftId() || plan.status === 'Draft' ? 'Taslağı düzenle' : 'Yeni taslak' }}</button>
+            <button type="button" class="secondary" (click)="planMenu.open = false; newDraft()" [disabled]="busy() || loading()">{{ knownDraftId() || plan.status === 'Draft' ? 'Taslağı aç' : 'Yeni taslak' }}</button>
             }
             <button type="button" class="secondary" [attr.aria-pressed]="boardOpen()" (click)="planMenu.open = false; boardOpen.set(!boardOpen())">{{ boardOpen() ? 'Haftalık tabloyu kapat' : 'Haftalık tablo' }}</button>
             <button type="button" class="secondary" (click)="planMenu.open = false; open(plan.id)" [disabled]="busy()">Planı yenile</button>
@@ -218,13 +230,14 @@
         @if(plan.weeklySource;as source){
           <p class="muted">Haftalık takvimden üretilen plan, {{ source.startDate | date:'dd.MM.yyyy' }} – {{ source.endDate | date:'dd.MM.yyyy' }}. Saatler ve konular korunur. Planı baştan dağıtmak istersen taslağı kaldırıp yeniden oluştur.</p>
           <app-plan-extend [source]="source" [active]="plan.status==='Active'" [readOnly]="readOnly || planningClosed()" [staffStudentId]="staffStudentId ?? null" (extended)="openExtended($event)" />
-          @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3><p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }
+        @if(plan.status==='Draft'&&canChangePlan()){<ng-container *ngTemplateOutlet="draftPanel; context: { $implicit: plan }" />}
+        @else if(plan.status==='Draft'&&!readOnly){<p class="notice" data-testid="draft-by-teacher">Bu taslağı öğretmenin hazırlıyor. Yayımlandığında aktif planın olur ve çalışmaların burada görünür.</p>}
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; planın takvimi korunur. Kayıtlı gerçekleşmeler gerekçeyle düzeltilebilir.</p>
-          @if(!readOnly){<div class="publish-box"><label class="check"><input type="checkbox" [(ngModel)]="restoreConfirmed" [disabled]="busy()">Mevcut aktif planın arşivlenmesini ve bu planın yeniden etkinleştirilmesini onaylıyorum.</label><button type="button" (click)="restore()" [disabled]="busy()||!restoreConfirmed">Planı yeniden aktif et</button></div>}
+          @if(canChangePlan()){<div class="publish-box"><label class="check"><input type="checkbox" [(ngModel)]="restoreConfirmed" [disabled]="busy()">Mevcut aktif planın arşivlenmesini ve bu planın yeniden etkinleştirilmesini onaylıyorum.</label><button type="button" (click)="restore()" [disabled]="busy()||!restoreConfirmed">Planı yeniden aktif et</button></div>}
         }
     @if (boardOpen()) {
-      <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="!readOnly" [student]="true" (calendarAction)="calendarCommand($event)" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
+      <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="canChangePlan()" [student]="true" (calendarAction)="calendarCommand($event)" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
       <div class="plan-tasks board-detail" #calendarTaskDetail tabindex="-1" aria-label="Seçilen çalışmalar">
         @for (task of plan.tasks; track task.id) { @if (selectedTaskIds().includes(task.id)) { <ng-container *ngTemplateOutlet="taskRow; context: { $implicit: task }" /> } }
       </div>
@@ -270,6 +283,7 @@
         </div>
       }
     }
+    @if(plan.status==='Draft'&&canChangePlan()){<ng-container *ngTemplateOutlet="draftPublish; context: { $implicit: plan }" />}
     <cs-bottom-sheet [title]="sheetTask()?.title ?? ''" [open]="!!sheetTask()" (openChange)="$event || closeTask()">
       @if (sheetTask(); as task) { <ng-container *ngTemplateOutlet="taskDetail; context: { $implicit: task, plan: plan }" /> }
     </cs-bottom-sheet>
@@ -278,8 +292,15 @@
   } @else {
     <div class="plan-empty">
       <h2>Henüz bir planın yok</h2>
-      <p>Boş saatlerini ve haftalık düzenini gir, sana uygun planı birlikte hazırlayalım.</p>
-      <button type="button" (click)="openEditFlow()">Planını oluştur</button>
+      @if (planningClosed()) {
+        <!-- A student whose teacher plans for her has nothing to start here; the wizard would send her back. -->
+        <p data-testid="empty-teacher-plans">Planını öğretmenin hazırlıyor. Plan yayımlandığında burada görünür.</p>
+      } @else {
+        <p>Boş saatlerini ve haftalık düzenini gir, sana uygun planı birlikte hazırlayalım.</p>
+        <button type="button" (click)="openEditFlow()">Planını oluştur</button>
+        <!-- 22.11.2026: the plan can also be made by hand, on an empty calendar. -->
+        <button type="button" class="secondary" data-testid="empty-manual-draft" (click)="newDraft()" [disabled]="busy() || loading()">Takvimde kendim hazırlayacağım</button>
+      }
       @if (page().items.length) { <details class="plan-menu inline"><summary>Kayıtlı planlarım</summary><div class="menu-body"><ng-container *ngTemplateOutlet="planPicker" /></div></details> }
     </div>
   }
@@ -294,9 +315,42 @@
       <div class="dialog-heading"><h2 id="calendar-dialog-title">{{ form.kind==='add'?'Çalışma ekle':form.kind==='edit'?'Çalışmayı düzenle':form.kind==='complete'?'Çalışmayı tamamla':form.kind==='split'?'Çalışmayı ikiye böl':'Çalışmayı sil' }}</h2><button type="button" class="secondary" aria-label="Pencereyi kapat" (click)="closeCalendarForm()" [disabled]="busy()">✕</button></div>
       @if(form.taskIds.length>1){<label>İşlem yapılacak çalışma<select [ngModel]="form.taskId" (ngModelChange)="chooseCalendarTask($event)" [disabled]="busy()">@for(task of calendarTaskOptions();track task.id){<option [value]="task.id">{{ task.title }}, {{ task.plannedMinutes }} dk</option>}</select></label><p class="muted">Karttaki her kazanım ayrı bir çalışmadır. İşlem yalnız seçtiğin çalışmaya uygulanır.</p>}
       @if(form.kind==='add'||form.kind==='edit'){
-        @if(form.kind==='add'){<label>Ders<select [(ngModel)]="form.lessonId" [disabled]="busy()||calendarLessonsLoading"><option [ngValue]="null">{{ calendarLessonsLoading?'Dersler yükleniyor…':'Ders seç' }}</option>@for(lesson of calendarLessons;track lesson.id){<option [value]="lesson.id">{{ lesson.name }}</option>}</select></label>}
+        @if(form.kind==='add'){<label>Ders<select [ngModel]="form.lessonId" (ngModelChange)="setCalendarLesson($event)" [disabled]="busy()||calendarLessonsLoading"><option [ngValue]="null">{{ calendarLessonsLoading?'Dersler yükleniyor…':'Ders seç' }}</option>@for(lesson of calendarLessons;track lesson.id){<option [value]="lesson.id">{{ lesson.name }}</option>}</select></label>
+          <!-- 22.11.2026: an empty lesson list says why, instead of an empty select and a general error on save. -->
+          @if(!calendarLessonsLoading&&!calendarLessons.length){<p class="notice" data-testid="calendar-no-lessons">@if(staffStudentId){Öğrencinin seçili dersi yok. Öğrenci çalışma tercihlerinde derslerini seçince çalışma eklenebilir.}@else{Seçili dersin yok. Önce Çalışma tercihlerim sayfasında derslerini seç. <button type="button" class="link-button" (click)="openSettings()">Çalışma tercihlerimi aç</button>}</p>}}
+        <!-- KocApp uyumu (22.11.2026): a new task comes from the curriculum, from a resource or is free; an edit can change its resource range. -->
+        <fieldset class="calendar-source" data-testid="calendar-source">
+          <legend>{{ form.kind==='add' ? 'Çalışma neye göre?' : 'Kaynak' }}</legend>
+          <div class="source-options">
+            <label><input type="radio" name="calendar-source" [checked]="form.source==='free'" (change)="setCalendarSource('free')" [disabled]="busy()"><span>{{ form.kind==='add' ? 'Serbest çalışma' : 'Kaynak yok' }}</span></label>
+            @if(form.kind==='add'){<label><input type="radio" name="calendar-source" [checked]="form.source==='topic'" (change)="setCalendarSource('topic')" [disabled]="busy()||!form.lessonId"><span>Müfredattan konu</span></label>}
+            <label><input type="radio" name="calendar-source" [checked]="form.source==='resource'" (change)="setCalendarSource('resource')" [disabled]="busy()||!resources().length"><span>Kaynaktan</span></label>
+          </div>
+          @if(!resources().length){<p class="muted">{{ staffStudentId ? 'Öğrencinin kaynağı yok; öğrenci sayfasındaki Kaynaklar bölümünden eklenebilir.' : 'Henüz kaynağın yok; Planım › Kaynaklarım sayfasından ekleyebilirsin.' }}</p>}
+          @if(form.source==='topic'){
+            <label>Konu<select [ngModel]="form.topicId ?? ''" (ngModelChange)="setCalendarTopic($event)" [disabled]="busy()||calendarTopicsLoading">
+              <option value="">{{ calendarTopicsLoading ? 'Konular yükleniyor…' : 'Konu seç' }}</option>
+              @for(topic of calendarTopicList();track topic.id){<option [value]="topic.id">{{ topic.name }}</option>}
+            </select></label>
+          }
+          @if(form.source==='resource'){
+            <label>Kaynak<select [ngModel]="form.resourceId ?? ''" (ngModelChange)="setCalendarResource($event)" [disabled]="busy()">
+              <option value="">Kaynak seç</option>
+              @for(resource of calendarResources();track resource.id){<option [value]="resource.id">{{ resource.name }}@if(resource.lessonName){, {{ resource.lessonName }}}</option>}
+            </select></label>
+            @if(calendarResource(); as resource){
+              <div class="fields">
+                <label>İlk {{ unitWord(resource.unit) }}<input type="number" [(ngModel)]="form.resourceFrom" min="1" [max]="resource.totalUnits" step="1" inputmode="numeric" [disabled]="busy()"></label>
+                <label>Son {{ unitWord(resource.unit) }}<input type="number" [(ngModel)]="form.resourceTo" min="1" [max]="resource.totalUnits" step="1" inputmode="numeric" [disabled]="busy()"></label>
+              </div>
+              <p class="muted">%{{ resource.percent }} bitti, {{ resource.doneUnits }} / {{ resource.totalUnits }} {{ unitWord(resource.unit) }}.</p>
+              @if(resource.next){<button type="button" class="secondary" (click)="suggestCalendarNext()" [disabled]="busy()">Sıradakini yaz ({{ unitWord(resource.unit) }} {{ resource.next.fromUnit }}–{{ resource.next.toUnit }}@if(resource.next.sectionTitle){, {{ resource.next.sectionTitle }}})</button>}
+            }
+          }
+        </fieldset>
         <label>Çalışma başlığı<input [(ngModel)]="form.title" maxlength="200" [disabled]="busy()" placeholder="Örn. konu tekrarı, soru çözümü, deneme analizi"></label>
         <div class="fields"><label>Gün<input type="date" [(ngModel)]="form.date" [disabled]="busy()"></label><label>Başlangıç<input type="time" [(ngModel)]="form.time" step="1800" [disabled]="busy()"></label><label>Süre (dk)<input type="number" [(ngModel)]="form.minutes" min="0" max="1440" [disabled]="busy()||calendarDurationLocked()"></label></div>
+        <div class="fields"><label>Planlanan soru (isteğe bağlı)<input type="number" [(ngModel)]="form.questions" min="0" max="100000" step="1" inputmode="numeric" [disabled]="busy()"></label><label>Not / sayfa (isteğe bağlı)<input [(ngModel)]="form.note" maxlength="300" [disabled]="busy()" placeholder="Örn. kitap s. 20–25"></label></div>
         @if(calendarDurationLocked()){<p class="muted">Kazanım süreleri ve bağlantıları korunur. Daha fazla çalışma için yeni kart ekleyebilirsin.</p>}
         <p class="muted">Yeni çalışma konu tekrarı, soru çözümü veya deneme analizi olabilir. Ödev ve karar kayıtları kendi ekranlarından yönetilir.</p>
       }@else if(form.kind==='complete'){

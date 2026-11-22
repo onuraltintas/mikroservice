@@ -120,7 +120,7 @@ public sealed class PracticeAdaptationPostgresTests
         await Assert.ThrowsAsync<ArgumentException>(() => f.Plans.ApplyPracticeAsync(new(preview.Fingerprint, request, false), f.Service, null, default));
         var saved = await f.Plans.ApplyPracticeAsync(new(preview.Fingerprint, request, true), f.Service, null, default);
         Assert.Equal(before, await f.Snapshot());
-        Assert.Equal(3, saved.Tasks.Count); Assert.Equal(2, saved.Tasks.Count(x => x.SourceName?.StartsWith("DenemeTekrar:") == true));
+        Assert.Equal(3, saved.Tasks.Count); Assert.Equal(2, saved.Tasks.Count(x => x.AdviceKey?.StartsWith("DenemeTekrar:") == true && x.SourceName == null));
         var replay = await f.Plans.ApplyPracticeAsync(new(preview.Fingerprint, request, true), f.Service, null, default);
         Assert.Equal(saved.Tasks.Count, replay.Tasks.Count);
         Assert.True((await f.Service.GetAsync(null, default)).Advice.Single().Topics.Single().AlreadyPlanned);
@@ -249,7 +249,7 @@ public sealed class PracticeAdaptationPostgresTests
         }
         public PracticeAdjustmentRequest Request() => new("LGS","StudentReported",new(2026,11,3),false,[new(Topic.Id,60)]);
         public async Task<string> Snapshot() => JsonSerializer.Serialize(new {
-            Tasks = await Db.StudyPlanTasks.AsNoTracking().Where(x => x.SourceName == null).OrderBy(x => x.Id).ToArrayAsync(),
+            Tasks = await Db.StudyPlanTasks.AsNoTracking().Where(x => x.AdviceKey == null) /* the practice-review tasks carry their key in AdviceKey (KocApp uyumu) */.OrderBy(x => x.Id).ToArrayAsync(),
             Links = await Db.Set<StudyPlanTaskOutcome>().AsNoTracking().OrderBy(x => x.TaskId).ToArrayAsync() });
         public ValueTask DisposeAsync() => Pg.DisposeAsync();
     }

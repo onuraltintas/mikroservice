@@ -36,8 +36,10 @@ public sealed class BillingRulesTests
     [InlineData(BuyerType.Individual, 100, 30, 0, 5, null, false, false)]
     // Institutions do not get a trial.
     [InlineData(BuyerType.Institution, 100, 30, 7, 50, null, false, false)]
-    // Extra seats are sold only on institution plans that have seats.
-    [InlineData(BuyerType.Teacher, 100, 30, 0, 10, 20, false, false)]
+    // Extra seats are sold only on teacher and institution plans that have seats (KocApp uyumu, 22.11.2026: teachers too).
+    [InlineData(BuyerType.Teacher, 100, 30, 0, 10, 20, false, true)]
+    [InlineData(BuyerType.Teacher, 100, 30, 0, null, 20, false, false)]
+    [InlineData(BuyerType.Individual, 100, 30, 0, null, 20, false, false)]
     [InlineData(BuyerType.Institution, 100, 30, 0, null, 20, false, false)]
     [InlineData(BuyerType.Individual, -1, 30, 0, null, null, false, false)]
     [InlineData(BuyerType.Individual, 100, 0, 0, null, null, false, false)]

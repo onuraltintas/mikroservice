@@ -22,7 +22,13 @@ public sealed record WeeklyOutcomePlanRequest(DateOnly StartDate,DateOnly EndDat
     [property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingNull)] DateOnly? KeepUntil=null);
 public sealed record WeeklyExamDateRequest(DateOnly? ExamDate);
 public sealed record WeeklyLeftOutTopic(Guid LessonId,string LessonName,Guid TopicId,string TopicName,int Minutes);
-public sealed record WeeklyOutcomePlanSave([Required,MaxLength(200)] string Title,[Required] WeeklyOutcomePlanRequest Preview,[Required] string Fingerprint);
+public sealed record WeeklyOutcomePlanSave([Required,MaxLength(200)] string Title,[Required] WeeklyOutcomePlanRequest Preview,[Required] string Fingerprint,
+    IReadOnlyList<WeeklyResourceChoice>? Resources=null);
+/// <summary>
+/// KocApp uyumu (22.11.2026): the resource the plan works through for a lesson. Each learning task of the lesson gets the next free
+/// part of it (the section of its topic first). It does not change the schedule, so it is not part of the preview.
+/// </summary>
+public sealed record WeeklyResourceChoice(Guid LessonId,Guid ResourceId);
 public sealed record WeeklyLessonIssue(Guid LessonId,string LessonName,string Message);
 public sealed record WeeklyExamReference(string Name,DateOnly? Date);
 // EndDateSource: Student (her own exam date), Session (the session she chose), Catalog (the admin's exam date), Estimated (G2: the year

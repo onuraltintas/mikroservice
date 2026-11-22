@@ -382,18 +382,19 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             if(preview.Fingerprint!=request.Fingerprint)throw Conflict("Haftalık taslak, kazanımlar, süreler veya mevcut çalışmalar değişti. Yeniden önizleyin.");
             if(!preview.CanCreate)throw new ArgumentException("Bütün dersler tarihe sığmalı ve kazanım/süre eksikleri giderilmelidir. Önizlemedeki seçeneklerle planı yeniden hazırlayın.");
             if(await db.StudyPlanRevisions.AnyAsync(x=>x.StudentId==student&&x.Status==StudyPlanStatus.Draft,ct))throw new BusinessRuleException(WeeklyOutcomePlanCodes.DraftExists,"Önce mevcut plan taslağınızı yayımlayın veya arşivleyin.");
-            revision.SetWeeklySource(prepared.Source);var tasks=new List<StudyPlanTask>();var links=new List<StudyPlanTaskOutcome>();
+            revision.SetWeeklySource(prepared.Source);var tasks=new List<StudyPlanTask>();var links=new List<StudyPlanTaskOutcome>();var learning=new List<StudyPlanTask>();
             var v2=request.Preview.EngineVersion==WeeklyPlanEngine.CurrentVersion;
             // Paket I5: the back-to-back outcomes of one topic are one task (a session); each outcome keeps its own link and minutes.
             foreach(var session in WeeklyOutcomeScheduler.Sessions(preview.Schedule.Tasks,v2?WeeklyPlanEngine.TopicSessionMinutes:0))
             {
                 var slice=session[0];var sessionMinutes=session.Sum(x=>x.Minutes);
                 int? sessionQuestions=session.Any(x=>x.PlannedQuestions.HasValue)?session.Sum(x=>x.PlannedQuestions??0):null;
-                var title=slice.Kind=="Spaced"?"Tekrar · "+slice.Outcome.TopicName:slice.Outcome.TopicName;
+                var title=slice.Kind=="Spaced"?"Tekrar: "+slice.Outcome.TopicName:slice.Outcome.TopicName;
                 var task=StudyPlanTask.Create(revision,slice.Date,title.Length>200?title[..200]:title,sessionMinutes,slice.Outcome.TopicId,plannedQuestions:sessionQuestions);
                 task.SetWeeklyPlacement(slice.LessonId,slice.LessonName,slice.StartMinute);if(v2)task.SetPlanDecision(slice.Kind,slice.Reason);tasks.Add(task);
                 // A spaced review revisits finished curriculum; it must not count as new outcome coverage.
                 if(slice.Kind=="Spaced")continue;
+                learning.Add(task);
                 foreach(var part in session)
                 {
                     var link=StudyPlanTaskOutcome.Create(task.Id,part.Outcome.OutcomeId,part.Outcome.EstimateId,part.Minutes,"Catalog");link.CaptureText(part.Outcome.Code,part.Outcome.Name);links.Add(link);
@@ -404,6 +405,8 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                 var copy=CoachingStudyContinuation.Copy(revision,placement,!prepared.KeptOnly.Contains(placement.Source.Id));tasks.Add(copy);
                 links.AddRange(prepared.PinnedLinks.Where(x=>x.TaskId==placement.Source.Id).Select(x=>CoachingStudyContinuation.CopyLink(copy,x)));
             }
+            // KocApp plan, phase 2: a topic with a part in one of the student's resources gets its next free part.
+            await StudentResourcePlanLinks.LinkAsync(db,student,learning,ct,request.Resources);
             db.Add(revision);db.AddRange(tasks);db.AddRange(links);await db.SaveChangesAsync(ct);return new(revision.Id,revision.Version);
         }
         if(!db.Database.IsRelational())return Save();

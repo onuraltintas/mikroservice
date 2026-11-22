@@ -71,7 +71,7 @@ describe('student route redirects', () => {
       expect(paths).toContain(path);
     }
     const plan = COACHING_PORTAL_ROUTES.find(r => r.path === 'plan')!;
-    expect(plan.children!.map(c => c.path)).toEqual(['', 'weekly', 'hours', 'wizard', 'preview']);
+    expect(plan.children!.map(c => c.path)).toEqual(['', 'weekly', 'hours', 'wizard', 'resources', 'preview']);
     const growth = COACHING_PORTAL_ROUTES.find(r => r.path === 'growth')!;
     expect(growth.children!.map(c => c.path)).toEqual(['', 'exams', 'goals', 'week']);
     const settings = COACHING_PORTAL_ROUTES.find(r => r.path === 'account/settings')!;
@@ -102,7 +102,7 @@ describe('student route redirects', () => {
   });
 
   it('describes each hub with tabs that point inside it', () => {
-    expect(STUDENT_HUBS.plan.tabs.map(t => t.label)).toEqual(['Planım', 'Planı düzenle']);
+    expect(STUDENT_HUBS.plan.tabs.map(t => t.label)).toEqual(['Planım', 'Planı düzenle', 'Kaynaklarım']);
     expect(STUDENT_HUBS.growth.tabs.map(t => t.label)).toEqual(['Denemeler', 'Hedefim', 'Haftam']);
     expect(STUDENT_HUBS.settings.tabs.map(t => t.label)).toEqual(['Profilim', 'Hesabım', 'Çalışma tercihlerim', 'Bildirimler', 'Görünüm']);
     expect(STUDENT_HUBS.payments.tabs).toEqual([]);

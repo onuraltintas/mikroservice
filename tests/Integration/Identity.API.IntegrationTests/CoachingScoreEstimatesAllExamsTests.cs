@@ -199,7 +199,7 @@ public sealed class CoachingScoreEstimatesAllExamsTests
         p16.Score.Should().BeInRange(60, 100); p17.Score.Should().BeInRange(60, 100);
         p16.Score.Should().NotBe(p17.Score, "the sub-test weights differ");
         estimate.Goal!.ScoreType.Should().Be("P2_16");
-        p16.Name.Should().Be("MEB-AGS P2-16 · Din Kültürü ve Ahlak Bilgisi");
+        p16.Name.Should().Be("MEB-AGS P2-16, Din Kültürü ve Ahlak Bilgisi");
     }
 
     // ---------- LGS: approximate ----------
@@ -367,7 +367,7 @@ public sealed class CoachingScoreEstimatesAllExamsTests
             await s.F.Db.SaveChangesAsync();
             var goal = (await s.Service.EstimateAsync(s.Student, s.Student, null, default)).Goal!;
             (goal.ScoreType, goal.Reason).Should().Be(("P2_IMAT", "missingExam"));
-            goal.MissingExams.Should().Equal("ÖABT · İlköğretim Matematik");
+            goal.MissingExams.Should().Equal("ÖABT, İlköğretim Matematik");
         }
         await using (var s = await Setup.CreateAsync(agsPack: true))
         {

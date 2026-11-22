@@ -161,6 +161,16 @@ public sealed class StudyPlanTask : AggregateRoot
     // Roadmap O7: what kind of work the plan engine chose (Learn, Review, Refresh, Spaced) and why.
     public string? PlanKind { get; private set; }
     public string? PlanReason { get; private set; }
+    /// <summary>KocApp uyumu (22.11.2026): the student's resource this task works through, and its range in the resource's unit.</summary>
+    public Guid? ResourceId { get; private set; }
+    public int? ResourceFrom { get; private set; }
+    public int? ResourceTo { get; private set; }
+    /// <summary>
+    /// KocApp uyumu (22.11.2026): the practice-exam review this task was added for ("DenemeTekrar:…"). It used to be written into
+    /// <see cref="SourceName"/>, the "Kaynak / sayfa" field the student reads; it is kept apart now.
+    /// </summary>
+    public string? AdviceKey { get; private set; }
+    public const string PracticeReviewKeyPrefix = "DenemeTekrar:";
     public static readonly IReadOnlySet<string> PlanKinds = new HashSet<string>(StringComparer.Ordinal) { "Learn", "Review", "Refresh", "Spaced" };
     private StudyPlanTask() { }
 
@@ -173,8 +183,10 @@ public sealed class StudyPlanTask : AggregateRoot
     }
 
     public static StudyPlanTask Create(StudyPlanRevision revision, DateOnly plannedDate, string title,
-        int plannedMinutes, Guid? topicId = null, bool isPinned = false, string? sourceName = null, int? plannedQuestions = null)
+        int plannedMinutes, Guid? topicId = null, bool isPinned = false, string? sourceName = null, int? plannedQuestions = null,
+        string? adviceKey = null)
     {
+        if (adviceKey is { Length: 0 or > 64 }) throw new ArgumentOutOfRangeException(nameof(adviceKey));
         ArgumentNullException.ThrowIfNull(revision);
         if (revision.Status == StudyPlanStatus.Archived) throw new InvalidOperationException("Cannot add tasks to archived revisions.");
         if (plannedMinutes is < 1 or > 1440) throw new ArgumentOutOfRangeException(nameof(plannedMinutes));
@@ -183,7 +195,34 @@ public sealed class StudyPlanTask : AggregateRoot
         var source = string.IsNullOrWhiteSpace(sourceName) ? null : StudyCatalogText.Require(sourceName, 300);
         return new StudyPlanTask { RevisionId = revision.Id, StudentId = revision.StudentId,
             PlannedDate = plannedDate, Title = StudyCatalogText.Require(title, 200), PlannedMinutes = plannedMinutes,
-            TopicId = topicId, IsPinned = isPinned, SourceName = source, PlannedQuestions = plannedQuestions };
+            TopicId = topicId, IsPinned = isPinned, SourceName = source, PlannedQuestions = plannedQuestions, AdviceKey = adviceKey };
+    }
+
+    /// <summary>
+    /// KocApp uyumu (22.11.2026): points the task at a range of the student's own resource ("Test 12–15"); null unlinks it. A
+    /// resource without a range is allowed ("bu kitaptan çalış").
+    /// </summary>
+    public void LinkResource(StudentResource? resource, int? from, int? to)
+    {
+        if (resource is null)
+        {
+            if (from.HasValue || to.HasValue) throw new ArgumentException("Aralık yazmak için önce bir kaynak seçilmeli.");
+            ResourceId = null; ResourceFrom = null; ResourceTo = null;
+            return;
+        }
+        if (resource.StudentId != StudentId) throw new ArgumentException("Kaynak bu öğrencinin değil.");
+        if (from.HasValue != to.HasValue) throw new ArgumentException("Aralığın başı ve sonu birlikte yazılmalı.");
+        if (from is { } first && to is { } last && !resource.Contains(first, last))
+            throw new ArgumentException($"Aralık kaynağın içinde olmalı (1–{resource.TotalUnits}).");
+        ResourceId = resource.Id; ResourceFrom = from; ResourceTo = to;
+    }
+
+    /// <summary>A copy of a task (carried over, split) keeps the source's resource range and review key.</summary>
+    public void KeepLinksOf(StudyPlanTask source)
+    {
+        if (source.StudentId != StudentId) throw new ArgumentException("Yalnız aynı öğrencinin çalışması kopyalanabilir.");
+        ResourceId = source.ResourceId; ResourceFrom = source.ResourceFrom; ResourceTo = source.ResourceTo;
+        AdviceKey ??= source.AdviceKey;
     }
 
     // Copies retain the root identity without changing or deleting the source record.
@@ -340,6 +379,13 @@ public sealed class StudyPlanTask : AggregateRoot
             throw new ArgumentException("Çalışmanın tarihi ve saat aralığı geçerli olmalıdır.");
         FreezeLegacyWorkDate();
         PlannedDate=plannedDate; PlannedStartMinute=startMinute; SkippedAt=null; UpdatedAt=DateTime.UtcNow;
+    }
+
+    /// <summary>22.11.2026: the "Not / sayfa" line of a task, edited on the plan's calendar.</summary>
+    public void SetNote(string? note)
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be corrected.");
+        SourceName = string.IsNullOrWhiteSpace(note) ? null : StudyCatalogText.Require(note, 300); UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>Paket H5: the first half of a split task keeps its share of the planned questions.</summary>

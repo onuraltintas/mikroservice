@@ -17,6 +17,8 @@ export interface ScoreTypeEstimate {
 export interface ScoreTargetGap {
   targetName: string; scoreType: string; targetScore: number | null; targetRank: number | null; targetPercentile: number | null;
   scoreGap: number | null; netGap: number | null; rankGap: number | null; reached: boolean;
+  /** KocApp uyumu (22.11.2026): ÖSYM programme code of a target programme, to search with in YÖK Atlas. */
+  programCode?: string | null;
   /** 01.11.2026: 'minRawScore' when the target's score type is not computed (see ScoreEstimate.notComputed). */
   notComputedReason?: string | null;
   /**

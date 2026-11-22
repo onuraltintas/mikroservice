@@ -227,6 +227,13 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.deepEqual(await features.json(), { studentPortal: false, assignmentAttachments: false },
       'the panel learns which switched features are off and hides their buttons');
 
+    // Mehmet's guardian is added before e-mails are switched on: the sender runs in the background, and an e-mail it picks up
+    // before the address exists is skipped ("Alıcı e-postası yok"), which made this test fail now and then (22.11.2026).
+    const guardianEmail = 'veli.mehmet@example.test';
+    const guardian = await call(`${ws}/students/${studentB}/guardians`, owner, 'POST', { guardianId: randomUUID(),
+      displayName: 'TEST Veli', email: guardianEmail, phoneNumber: null, relationship: 1 });
+    assert.equal(guardian.status, 201, await guardian.clone().text());
+
     // E-mails: switched off until the owner turns them on and confirms students and guardians were informed.
     const settingsPath = `${ws}/email-settings`;
     const defaults = await (await call(settingsPath, owner)).json();
@@ -250,10 +257,6 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal(preview.institutionName, 'TEST Kurs');
     assert.equal(preview.note, 'TEST Sorularınız için arayın.');
 
-    const guardianEmail = 'veli.mehmet@example.test';
-    const guardian = await call(`${ws}/students/${studentB}/guardians`, owner, 'POST', { guardianId: randomUUID(),
-      displayName: 'TEST Veli', email: guardianEmail, phoneNumber: null, relationship: 1 });
-    assert.equal(guardian.status, 201, await guardian.clone().text());
 
     const waitFor = async (predicate, what) => {
       for (let attempt = 0; attempt < 60; attempt++) {
