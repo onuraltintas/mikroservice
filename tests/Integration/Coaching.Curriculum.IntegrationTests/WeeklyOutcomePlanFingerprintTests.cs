@@ -16,7 +16,7 @@ public sealed class WeeklyOutcomePlanFingerprintTests
     // 22.11.2026: engine 2's reasons are joined as sentences ("a. b", no "·" in what people read), a deliberate, one-time change:
     // a preview opened before that release and saved after it is asked to be recalculated ("Yeniden hesapla").
     private const string EngineTwoOnMain = "ae1ebac67254399801280ca116affad919bf09b127101a930f886b161b0834f6";
-    private const string EngineTwoWithFocus = "13923c739d07dd2f38e087cc0920a5e89ab5a7aeb7dbc825e918a9cfc95baf9a";
+    private const string EngineTwoWithFocus = "ecdd5b3518a944236ba7e93f38b7a6990fa0f808bfa6e4bb0b7f4dbfd2cfb6fc";
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider { public override DateTimeOffset GetUtcNow() => now; }
     private static Guid Id(int n) => new($"0000000a-0000-0000-0000-{n:D12}");
