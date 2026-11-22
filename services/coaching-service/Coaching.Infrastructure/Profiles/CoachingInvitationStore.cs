@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Profiles;
+using Coaching.Application.Subscriptions;
 using Coaching.Domain.Profiles;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Contracts.Events.Identity;
@@ -10,8 +11,32 @@ using Microsoft.Extensions.Configuration;
 namespace Coaching.Infrastructure.Profiles;
 
 public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccountDirectory accounts,
-    CoachingProfileStore profiles, TimeProvider clock, ICoachingEventPublisher events, IConfiguration configuration)
+    CoachingProfileStore profiles, TimeProvider clock, ICoachingEventPublisher events, IConfiguration configuration,
+    ICoachingBillingAccess? billing = null, ICoachingBillingSeats? billingSeats = null)
 {
+    // User decision 23.11.2026: students use Koçluk free; an independent teacher or an institution needs a plan with a free
+    // seat for each new student. Students who are already theirs stay; the rule is checked when a student is invited and
+    // when the student accepts (the seat is taken then).
+    public const string TeacherNeedsPlan = "Yeni öğrenci eklemek için bir öğretmen paketi seçin. Paketinizi Hesabım bölümündeki Öğretmen planım sayfasından alabilirsiniz.";
+    public const string TeacherPlanFull = "Paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için ek öğrenci alın ya da daha büyük bir paket seçin.";
+    public const string InstitutionNeedsPlan = "Yeni öğrenci eklemek için kurumunuzun bir paketi olmalı. Paketi kurum aboneliği sayfasından seçebilirsiniz.";
+    public const string InstitutionPlanFull = "Kurum paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için ek öğrenci alın ya da daha büyük bir paket seçin.";
+    public const string TeacherHasNoSeat = "Davet eden öğretmenin paketinde boş yer kalmadığı için bu davet şu an kabul edilemiyor. Öğretmenine haber ver.";
+    public const string InstitutionHasNoSeat = "Davet eden kurumun paketinde boş yer kalmadığı için bu davet şu an kabul edilemiyor. Kurumuna haber ver.";
+
+    /// <summary>
+    /// Whose seat a student invitation uses: the institution's when the institution invites, the teacher's when an
+    /// independent teacher invites. An institution teacher's invitation is for a student who already is the institution's.
+    /// </summary>
+    public static CoachingSeatOwner? SeatOwner(string role, Guid? institution, Guid? teacher, bool institutionInvitation) =>
+        role != "Student" ? null
+        : institutionInvitation && institution is { } id ? CoachingSeatOwner.Institution(id)
+        : !institutionInvitation && institution is null && teacher is { } owner ? CoachingSeatOwner.Teacher(owner)
+        : null;
+
+    private async Task<bool> StaffSeatsRequiredAsync(Guid user, CancellationToken ct) =>
+        billing is { Enabled: true } && billingSeats is { Enabled: true } && (await billing.GetAsync(user, ct)).StaffSeatsRequired;
+
     public async Task<CoachingInvitation> SendInstitutionAsync(Guid actor, Guid institution, string email,
         string role, Guid? teacherUserId, string? message, CancellationToken ct)
     {
@@ -50,6 +75,13 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         Guid? teacher, bool institutionInvitation, string? message, CancellationToken ct)
     {
         await RequireActiveSubscriptionAsync(institution, teacher, false, ct);
+        if (SeatOwner(role, institution, teacher, institutionInvitation) is { } seatOwner && await StaffSeatsRequiredAsync(actor, ct))
+        {
+            var pool = await billingSeats!.GetPoolAsync(seatOwner, ct);
+            var forTeacher = seatOwner.TeacherId is not null;
+            if (pool is null) throw CoachingProfileStore.Conflict(forTeacher ? TeacherNeedsPlan : InstitutionNeedsPlan);
+            if (pool.Used >= pool.Capacity) throw CoachingProfileStore.Conflict(forTeacher ? TeacherPlanFull : InstitutionPlanFull);
+        }
         var now = clock.GetUtcNow().UtcDateTime;
         var invitation = CoachingInvitation.Create(actor, email, role, institution, teacher, institutionInvitation, message, now);
         var duplicates = await db.CoachingInvitations.Where(x => x.RecipientEmail == invitation.RecipientEmail
@@ -118,6 +150,14 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
         if (currentInstitution.HasValue && currentInstitution != invitation.InstitutionId
             || !invitation.IsInstitutionInvitation && currentInstitution != invitation.InstitutionId)
             throw CoachingProfileStore.Conflict("Davet mevcut kurum üyeliğinizle uyuşmuyor.");
+        // The new student takes a seat of the inviter's plan before anything changes; no free seat, no joining.
+        if (SeatOwner(invitation.Role, invitation.InstitutionId, invitation.TeacherUserId, invitation.IsInstitutionInvitation) is { } seatOwner
+            && await StaffSeatsRequiredAsync(actor, ct))
+        {
+            var seat = await billingSeats!.AssignAsync(seatOwner, actor, invitation.InviterUserId, ct);
+            if (!seat.Done) throw CoachingProfileStore.Conflict(seatOwner.TeacherId is not null ? TeacherHasNoSeat : InstitutionHasNoSeat);
+            billing!.Forget(actor);
+        }
         await profiles.ProvisionAsync(actor, invitation.Role, ct);
         if (invitation.IsInstitutionInvitation)
             await profiles.SetMembershipAsync(invitation.InviterUserId, invitation.InstitutionId!.Value, actor, role, true, ct);

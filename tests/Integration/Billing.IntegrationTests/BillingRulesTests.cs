@@ -13,6 +13,15 @@ public sealed class BillingRulesTests
     public void Iban_is_stored_without_spaces_and_only_when_turkish(string input, string? expected) =>
         Assert.Equal(expected, BillingRules.NormalizeIban(input));
 
+    [Theory]
+    [InlineData(true, false, BuyerType.Individual, true)]
+    [InlineData(false, false, BuyerType.Teacher, false)]
+    [InlineData(false, true, BuyerType.Individual, false)]
+    [InlineData(false, true, BuyerType.Teacher, true)]
+    [InlineData(false, true, BuyerType.Institution, true)]
+    public void While_only_teachers_and_institutions_pay_only_their_plans_are_sold(bool require, bool staff, BuyerType buyer, bool sold) =>
+        Assert.Equal(sold, BillingRules.Sells(require, staff, buyer));
+
     [Fact]
     public void Iban_is_shown_in_groups_of_four() =>
         Assert.Equal("TR33 0006 1005 1978 6457 8413 26", BillingRules.FormatIban("TR330006100519786457841326"));

@@ -320,6 +320,34 @@ public sealed class BillingOrdersPostgresTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task While_only_teachers_and_institutions_pay_their_plans_are_sold_and_individual_plans_are_not()
+    {
+        // User decision 23.11.2026: students use Koçluk free, teachers and institutions buy plans with seats.
+        await OpenSalesAsync(requireSpeedReading: false);
+        await using (var db = Db())
+            await new BillingCatalog(db, _clock, _events).UpdateProductSettingsAsync(BillingSeed.Coaching,
+                new ProductSettingsRequest(false, BankTransferApproval.Manual, null, true), Admin);
+        Assert.Contains(_events.Messages.OfType<BillingProductSettingsChangedV1>(),
+            item => item is { ProductCode: "coaching", RequireSubscription: false, StaffSeatsRequired: true });
+
+        var teacher = new BillingUser(Guid.NewGuid(), "ogretmen@example.invalid", ["Teacher"]);
+        var order = await OrderAsync(teacher, _teacherPlan);
+        Assert.Equal(OrderStatus.Pending, order.Status);
+        await using (var db = Db())
+        {
+            var student = await Assert.ThrowsAsync<BusinessRuleException>(() => Orders(db).CreateOrderAsync(Student(), Request(_bundle)));
+            Assert.Equal("Billing.SubscriptionNotRequired", student.Code);
+            var catalog = await new BillingCatalog(db, _clock, _events).GetPublicCatalogAsync("coaching");
+            Assert.True(catalog!.StaffSeatsRequired);
+            Assert.DoesNotContain(catalog.Plans, plan => plan.BuyerType == BuyerType.Individual);
+            Assert.Contains(catalog.Plans, plan => plan.Id == _teacherPlan);
+        }
+        var access = await AccessAsync(Guid.NewGuid(), "coaching");
+        Assert.False(access.RequireSubscription);
+        Assert.True(access.StaffSeatsRequired);
+    }
+
+    [Fact]
     public async Task A_waiting_order_drops_after_fourteen_days_and_the_queue_lists_declared_payments_first()
     {
         await OpenSalesAsync();

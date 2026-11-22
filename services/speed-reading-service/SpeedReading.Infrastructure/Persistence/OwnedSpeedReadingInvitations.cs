@@ -126,6 +126,16 @@ public sealed class OwnedSpeedReadingInvitations(
             ToRecord(invitation));
     }
 
+    public async Task<Guid?> InstitutionSeatNeededAsync(Guid invitationId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var invitation = await db.Invitations.AsNoTracking().SingleOrDefaultAsync(item => item.Id == invitationId, cancellationToken);
+        if (invitation is not { Status: SpeedReadingInvitationStatus.Pending, Role: SpeedReadingInstitutionMemberRole.Student, InstitutionId: { } institutionId })
+            return null;
+        var member = await db.InstitutionMemberships.AsNoTracking().AnyAsync(item => item.InstitutionId == institutionId
+            && item.UserId == userId && item.Role == SpeedReadingInstitutionMemberRole.Student && item.IsActive, cancellationToken);
+        return member ? null : institutionId;
+    }
+
     public async Task<SpeedReadingInvitationAcceptResult> AcceptAsync(
         Guid invitationId,
         Guid userId,

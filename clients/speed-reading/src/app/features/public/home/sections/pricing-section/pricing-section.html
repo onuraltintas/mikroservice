@@ -7,8 +7,23 @@
 
     @if (loading) {
       <p class="loading-state" role="status"><span class="ds-spinner" aria-hidden="true"></span> Planlar yükleniyor</p>
-    } @else if (plans.length) {
+    } @else if (plans.length || institution) {
       <div class="pricing-grid">
+        @if (institution; as packages) {
+          <article class="pricing-card" data-testid="institution-packages">
+            <h3>Kurum paketleri</h3>
+            <p class="plan-description">{{ packages.minSeats }}–{{ packages.maxSeats }} öğrenci, {{ packages.periods }}. Öğrenciler ücretsiz çalışır; ödemeyi kurum yapar.</p>
+            <p class="price"><span class="amount">₺{{ packages.lowestPrice.toLocaleString('tr-TR') }}</span><span class="period">'den başlayan</span></p>
+            @if (packages.features.length) {
+              <ul class="features-list">
+                @for (feature of packages.features; track feature) {
+                  <li><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ feature }}</li>
+                }
+              </ul>
+            }
+            <a class="ds-btn ds-btn--block ds-btn--primary cta-button" routerLink="/auth/register-school">Kurum olarak kaydol</a>
+          </article>
+        }
         @for (plan of plans; track plan.id) {
           <article class="pricing-card" [class.popular]="isPopular(plan)">
             @if (isPopular(plan)) { <p class="popular-badge">En çok tercih edilen</p> }

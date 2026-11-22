@@ -8,6 +8,13 @@ public static partial class BillingRules
     public const string DefaultCurrency = "TRY";
 
     /// <summary>
+    /// Whether a plan for this buyer is sold in a product: every plan while a subscription is required; while only teachers
+    /// and institutions pay (students free, 23.11.2026), their plans and not individual ones.
+    /// </summary>
+    public static bool Sells(bool requireSubscription, bool staffSeatsRequired, BuyerType buyer) =>
+        requireSubscription || staffSeatsRequired && buyer != BuyerType.Individual;
+
+    /// <summary>
     /// The line written on an order whose approval is taken back, as the buyer reads it in their payment history:
     /// a withdrawal (cayma) and a plain reversal are named differently, and the time is Turkey's, not UTC.
     /// </summary>

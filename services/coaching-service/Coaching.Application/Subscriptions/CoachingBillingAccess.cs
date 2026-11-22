@@ -7,8 +7,10 @@ namespace Coaching.Application.Subscriptions;
 /// <summary>
 /// Whether a student may use Koçluk, as the billing service ("Abonelik ve Ödeme") sees it.
 /// <paramref name="Known"/> false: billing could not be asked and nothing was remembered, so the student is let in.
+/// <paramref name="StaffSeatsRequired"/>: students use Koçluk free, and a new student of an independent teacher or an
+/// institution takes a seat of their plan (user decision 23.11.2026).
 /// </summary>
-public sealed record CoachingBillingDecision(bool Allowed, bool RequireSubscription, DateTime? EndsAt, bool Known);
+public sealed record CoachingBillingDecision(bool Allowed, bool RequireSubscription, DateTime? EndsAt, bool Known, bool StaffSeatsRequired = false);
 
 /// <summary>Asks the billing service about a student's access to Koçluk and remembers the answer for a short time.</summary>
 public interface ICoachingBillingAccess
@@ -30,10 +32,11 @@ public static class CoachingBillingRules
     /// <summary>A missing answer (billing does not sell the product) and a product that asks for no subscription are both open.</summary>
     public static CoachingBillingDecision Decide(BillingProductAccessResponse? access, DateTime now)
     {
-        if (access is null || !access.RequireSubscription) return new(true, false, null, true);
+        if (access is null) return new(true, false, null, true);
+        if (!access.RequireSubscription) return new(true, false, null, true, access.StaffSeatsRequired);
         var ends = (access.Entitlements ?? []).Where(item => item.Key == StudentEntitlement && item.EndsAt > now)
             .Select(item => (DateTime?)item.EndsAt).DefaultIfEmpty(null).Max();
-        return new(ends is not null, true, ends, true);
+        return new(ends is not null, true, ends, true, access.StaffSeatsRequired);
     }
 
     public static CoachingSubscriptionAccessSummary Summary(CoachingBillingDecision decision) =>
