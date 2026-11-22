@@ -128,12 +128,12 @@ test('subtopic edit move and safe deletion keep old usage visible',async({contex
 test('outcome durations show simple inputs with collapsible history and preserved used duration',async({context,page})=>{
   const f=await catalog(context);await page.goto('/dashboard/coaching/curriculum');await tab(page,'Kazanımlar');
   await page.getByRole('button',{name:'Pozitif tam sayıların çarpanlarını bulur. düzenle',exact:true}).click();
-  await expect(page.getByText('Sürüm 1 · 60 dk',{exact:true})).not.toBeVisible();
+  await expect(page.getByText('Sürüm 1, 60 dk',{exact:true})).not.toBeVisible();
   await page.getByLabel('Öğrenme (dk)',{exact:true}).fill('25');await page.getByLabel('Alıştırma (dk)',{exact:true}).fill('40');await page.getByLabel('Kısa kontrol (dk)',{exact:true}).fill('10');
   await page.getByLabel('Süre dayanağı',{exact:true}).fill('Öğretmen gözlemine göre çalışma süresi');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('İncelenen süreyi yayınla');
   await page.getByLabel('Yeni süre sürümünü inceleyip yayınlamayı onaylıyorum.',{exact:true}).check();await page.getByRole('button',{name:'Yeni süre sürümünü kaydet ve yayınla',exact:true}).click();
-  await expect(page.getByText('Yeni süre sürümü yayınlandı.',{exact:true})).toBeVisible();await page.getByText('Önceki süreler ve değişiklik geçmişi',{exact:true}).click();await expect(page.getByText('Sürüm 2 · 75 dk',{exact:true})).toBeVisible();
-  const used=page.locator('.duration-history article').filter({hasText:'Sürüm 1 · 60 dk'});await used.getByText('Bu süre sürümü için işlemler',{exact:true}).click();await expect(used.getByText('Bu sürüm öğrenci planında kullanılmış; kalıcı silinemez.',{exact:true})).toBeVisible();
+  await expect(page.getByText('Yeni süre sürümü yayınlandı.',{exact:true})).toBeVisible();await page.getByText('Önceki süreler ve değişiklik geçmişi',{exact:true}).click();await expect(page.getByText('Sürüm 2, 75 dk',{exact:true})).toBeVisible();
+  const used=page.locator('.duration-history article').filter({hasText:'Sürüm 1, 60 dk'});await used.getByText('Bu süre sürümü için işlemler',{exact:true}).click();await expect(used.getByText('Bu sürüm öğrenci planında kullanılmış; kalıcı silinemez.',{exact:true})).toBeVisible();
   expect(f.nodes.find(x=>x.id==='outcome').estimates.find(x=>x.id==='estimate-1').learningMinutes).toBe(20);
 });
 

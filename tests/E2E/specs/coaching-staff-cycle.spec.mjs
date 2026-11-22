@@ -82,6 +82,7 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   const title = `Koç haftası ${randomUUID()}`;
   const source = `Matematik kitabı s.20–25 ${'x'.repeat(250)}`;
   // 22.11.2026: the empty draft is named in its box and its work is added on the calendar.
+  await teacherEditor.getByText('Taslağın adını değiştir', { exact: true }).click();
   await teacherEditor.getByTestId('draft-title').fill(title);
   await teacherEditor.getByRole('button', { name: 'Adı kaydet', exact: true }).click();
   await teacherEditor.getByRole('button', { name: '＋ Çalışma ekle', exact: true }).click();

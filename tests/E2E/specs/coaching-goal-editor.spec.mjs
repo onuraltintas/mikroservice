@@ -49,7 +49,7 @@ test('Hedefim shows the current target first, changes it with the wizard steps a
   const { saves, calls } = await fixtures(context);
   await page.goto('/coaching-portal/growth/goals');
   const editor = page.getByRole('region', { name: 'Hedefini düzenle' });
-  await expect(editor.getByText('Ankara Fen Lisesi · taban 480,5')).toBeVisible();
+  await expect(editor.getByText('Ankara Fen Lisesi, taban 480,5')).toBeVisible();
   await expect(page.getByText('72,5 net')).toBeVisible();
   const before = { estimate: calls.estimate, goalTarget: calls.goalTarget };
 
@@ -74,7 +74,7 @@ test('"Vazgeç" keeps the saved target and sends nothing', async ({ page, contex
   await editor.getByRole('button', { name: /^Değiştir/ }).click();
   await editor.getByRole('button', { name: 'Hedef puan gireceğim', exact: true }).click();
   await editor.getByRole('button', { name: 'Vazgeç', exact: true }).click();
-  await expect(editor.getByText('Ankara Fen Lisesi · taban 480,5')).toBeVisible();
+  await expect(editor.getByText('Ankara Fen Lisesi, taban 480,5')).toBeVisible();
   await expect(editor.getByRole('spinbutton')).toHaveCount(0);
   expect(saves).toEqual([]);
 });

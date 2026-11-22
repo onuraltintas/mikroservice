@@ -91,10 +91,9 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 .source-options label:has(input:disabled) { opacity: .55; cursor: not-allowed; }
 
 /* 22.11.2026: a draft is made on its calendar; this box names it, explains the steps and publishes it. */
-.draft-panel { border: 1px solid var(--ui-border); border-radius: 10px; padding: 1rem; margin: 1rem 0; background: var(--ui-surface, transparent); }
-.draft-panel > h3 { margin: 0 0 .25rem; }
+.draft-panel { border: 1px solid var(--ui-border); border-radius: 10px; padding: .75rem 1rem; margin: .75rem 0; background: var(--ui-surface); }
+.draft-head h3 { margin: 0 0 .2rem; }
+.draft-head p { margin: 0; }
 .draft-rename { align-items: end; }
-.draft-guide { margin-top: .75rem; }
-.draft-guide summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
-.draft-guide ol { margin: .5rem 0 0; padding-left: 1.25rem; display: grid; gap: .4rem; }
-.draft-panel .publish-box { margin-top: 1rem; }
+.draft-guide summary, .draft-rename-box summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.draft-guide ol { margin: .25rem 0 .5rem; padding-left: 1.25rem; display: grid; gap: .4rem; }

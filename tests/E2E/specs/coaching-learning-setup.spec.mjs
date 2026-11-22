@@ -24,6 +24,8 @@ async function fixtures(context) {
     const request = route.request(); const url = new URL(request.url()); const path = url.pathname;
     const respond = data => route.fulfill({ json: { success: true, data } });
     if (path === '/api/auth/refresh-token') return route.fulfill({ json: { accessToken: token(), tokenType: 'Bearer', expiresInMinutes: 15 } });
+    // 16.11.2026 (#24): a student without a teacher plans freely; without this answer the screens treated her as teacher-planned.
+    if (path.endsWith('/study-planning/permission')) return respond({ hasTeacher: false, allowedByTeacher: false, studentMayPlan: true });
     // Paket C: the first-login wizard is finished, so the guard lets the student into the panel (shape as in coaching-goal-editor.spec.mjs).
     if (path.endsWith('/students/me/onboarding')) return respond(onboarding);
     // The shell's own calls on load.
@@ -115,7 +117,7 @@ test('incomplete setup leaves the existing active plan accessible', async ({ pag
   await expect(page.locator('.plan-head .plan-status')).toContainText('Mevcut koç planı');
   await page.getByRole('tab', { name: 'Liste', exact: true }).click();
   await page.getByRole('button', { name: 'Önceki çalışma, ayrıntıları aç', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Önceki çalışma' }).getByText(/Tamamlandı · 25 dk/)).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Önceki çalışma' }).getByText(/Tamamlandı, 25 dk/)).toBeVisible();
 });
 
 // Paket H6 (09.11.2026): a student who knows the programme but not its score type finds it next to the score type question.
@@ -130,8 +132,8 @@ test('the score type can be found by the programme name and only sets the form f
   const search = page.getByRole('searchbox', { name: 'Bölüm adı', exact: true });
   await expect(search).toBeFocused();
   await search.fill('hukuk');
-  await expect(page.getByRole('button', { name: 'Hukuk · Sayısal', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Hukuk · Eşit Ağırlık', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Hukuk, Sayısal', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Hukuk, Eşit Ağırlık', exact: true }).click();
   await expect(page.getByRole('combobox', { name: 'Hangi puan türüyle yerleşmek istiyorsun?', exact: true })).toHaveValue('EA');
   await expect(page.getByText('Bu bölüm Eşit Ağırlık puanla öğrenci alıyor; puan türün Eşit Ağırlık olarak seçildi.')).toBeVisible();
   await expect(helper).toHaveAttribute('aria-expanded', 'false');

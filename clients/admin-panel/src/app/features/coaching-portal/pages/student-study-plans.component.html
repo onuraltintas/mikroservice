@@ -29,12 +29,9 @@
      steps and publishes or archives it. It serves weekly drafts and manual ones alike. -->
 <ng-template #draftPanel let-plan>
   <section class="draft-panel" data-testid="draft-panel" aria-labelledby="draft-panel-title">
-    <h3 id="draft-panel-title">{{ plan.tasks.length ? 'Taslak hazırlanıyor' : 'Boş taslak' }}</h3>
-    <p class="muted">{{ staffStudentId ? 'Taslak yayımlanana kadar öğrencinin aktif planı değişmez.' : 'Taslak yayımlanana kadar aktif planın değişmez.' }}
-      {{ plan.tasks.length }} çalışma, toplam {{ draftMinutes(plan) }} dk.</p>
-    <div class="fields draft-rename">
-      <label>Taslağın adı<input data-testid="draft-title" [(ngModel)]="draftTitle" maxlength="200" [disabled]="busy()"></label>
-      <button type="button" class="secondary" (click)="renameDraft()" [disabled]="busy() || !draftTitleChanged()">Adı kaydet</button>
+    <div class="draft-head">
+      <h3 id="draft-panel-title">{{ plan.tasks.length ? 'Taslak hazırlanıyor' : 'Boş taslak' }}</h3>
+      <p class="muted">{{ plan.tasks.length }} çalışma, toplam {{ draftMinutes(plan) }} dk. {{ staffStudentId ? 'Taslak yayımlanana kadar öğrencinin aktif planı değişmez.' : 'Taslak yayımlanana kadar aktif planın değişmez.' }} Yayımlama bölümü takvimin altında.</p>
     </div>
     @if (!plan.weeklySource) {
       <details class="draft-guide" data-testid="draft-guide" [open]="!plan.tasks.length">
@@ -42,23 +39,34 @@
         <ol>
           <li><strong>Çalışma ekleme.</strong> Takvimin üstündeki “＋ Çalışma ekle” düğmesi ya da boş bir saat kullanılır: sağ tık, telefonda ⋯ menüsü, klavyede Shift F10.</li>
           <li><strong>Ders ve kaynak.</strong> Pencerede önce ders, sonra çalışmanın neye göre olduğu seçilir: “Serbest çalışma”, “Müfredattan konu” ya da “Kaynaktan” (kitap ya da testten bir aralık).</li>
-          <li><strong>Gün, saat ve süre.</strong> Başlık, gün, başlangıç saati ve süre girilip kaydedilir. Aynı saatte iki çalışma olamaz.</li>
+          <li><strong>Gün, saat ve süre.</strong> Başlık, gün, başlangıç saati ve süre girilip kaydedilir; istenirse planlanan soru ve not eklenir. Aynı saatte iki çalışma olamaz.</li>
           <li><strong>Düzenleme.</strong> Kart sürüklenerek ya da menüden taşınır; uzun bir çalışma ikiye bölünebilir, düzenlenebilir veya silinebilir.</li>
-          <li><strong>Yayımlama.</strong> Plan hazır olunca aşağıdaki onay kutusu işaretlenip “Planı yayımla”ya basılır.</li>
+          <li><strong>Yayımlama.</strong> Plan hazır olunca takvimin altındaki onay kutusu işaretlenip “Planı yayımla”ya basılır.</li>
         </ol>
       </details>
     }
-    <div class="publish-box"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3>
-      @if (plan.tasks.length) {
-        <p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p>
-        <label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label>
-      } @else {
-        <p data-testid="draft-empty-publish">{{ staffStudentId ? 'Yayımlamak için takvime en az bir çalışma eklenmeli.' : 'Yayımlamak için takvime en az bir çalışma ekle.' }}</p>
-      }
-      <div class="actions"><button type="button" (click)="publish()" [disabled]="busy() || !publishConfirmed || !plan.tasks.length">Planı yayımla</button>
-        <button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>
-    </div>
+    <details class="draft-rename-box" [open]="draftTitleChanged()">
+      <summary>Taslağın adını değiştir</summary>
+      <div class="fields draft-rename">
+        <label>Taslağın adı<input data-testid="draft-title" [(ngModel)]="draftTitle" maxlength="200" [disabled]="busy()"></label>
+        <button type="button" class="secondary" (click)="renameDraft()" [disabled]="busy() || !draftTitleChanged()">Adı kaydet</button>
+      </div>
+    </details>
   </section>
+</ng-template>
+
+<!-- The last step of a draft, under its calendar: publish it or archive it. -->
+<ng-template #draftPublish let-plan>
+  <div class="publish-box" data-testid="draft-publish"><h3>{{staffStudentId?'Planı yayımla':'Planını yayımla'}}</h3>
+    @if (plan.tasks.length) {
+      <p>{{staffStudentId?'Bu taslak öğrencinin aktif planı olacak. Önceki plan arşivlenecek; çalışma geçmişi silinmeyecek.':'Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.'}}</p>
+      <label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">{{staffStudentId?'Planı kontrol ettim, yayımlamayı onaylıyorum.':'Planımı kontrol ettim, yayımlamayı onaylıyorum.'}}</label>
+    } @else {
+      <p data-testid="draft-empty-publish">{{ staffStudentId ? 'Yayımlamak için takvime en az bir çalışma eklenmeli.' : 'Yayımlamak için takvime en az bir çalışma ekle.' }}</p>
+    }
+    <div class="actions"><button type="button" (click)="publish()" [disabled]="busy() || !publishConfirmed || !plan.tasks.length">Planı yayımla</button>
+      <button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>
+  </div>
 </ng-template>
 
 <ng-template #taskDetail let-task let-plan="plan">
@@ -186,6 +194,7 @@
         }
         @for (task of visibleTasks(); track task.id) { <ng-container *ngTemplateOutlet="taskDetail; context: { $implicit: task, plan: plan }" /> }
         @if(planView()==='list'&&plan.weeklySource&&filteredTasks().length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }}, {{ filteredTasks().length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=filteredTasks().length||busy()">Sonraki çalışmalar</button></div>}
+        @if(plan.status==='Draft'&&!readOnly){<ng-container *ngTemplateOutlet="draftPublish; context: { $implicit: plan }" />}
       } @else { <div class="empty"><h2>{{ staffStudentId ? 'Plana buradan devam et' : 'Planına buradan devam et' }}</h2><p>Listeden bir plan seç veya yeni bir taslak oluştur.</p></div> }
       @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     </div>
@@ -270,6 +279,7 @@
         </div>
       }
     }
+    @if(plan.status==='Draft'&&!readOnly){<ng-container *ngTemplateOutlet="draftPublish; context: { $implicit: plan }" />}
     <cs-bottom-sheet [title]="sheetTask()?.title ?? ''" [open]="!!sheetTask()" (openChange)="$event || closeTask()">
       @if (sheetTask(); as task) { <ng-container *ngTemplateOutlet="taskDetail; context: { $implicit: task, plan: plan }" /> }
     </cs-bottom-sheet>

@@ -45,6 +45,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   // 22.11.2026: "Yeni taslak" opens an empty draft on its calendar; work is added there and the draft is named in its box.
   await page.getByRole('button', { name: 'Yeni taslak', exact: true }).click();
   const title = `Browser plan ${randomUUID()}`;
+  await page.getByText('Taslağın adını değiştir', { exact: true }).click();
   await page.getByTestId('draft-title').fill(title);
   await page.getByRole('button', { name: 'Adı kaydet', exact: true }).click();
   await page.getByRole('button', { name: '＋ Çalışma ekle', exact: true }).click();

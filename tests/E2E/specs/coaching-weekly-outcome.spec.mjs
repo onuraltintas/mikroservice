@@ -77,7 +77,7 @@ test('the old preview address opens the Özet step; the week, each course and th
   await expect(page.getByTestId('wizard-progress')).toHaveText('Adım 4 / 4');
   // The draft has cards: Fill mode, ending on the first (relaxed) tempo's date.
   expect(f.proposals[0]).toEqual({mode:'Fill',examFocus:null,finishBy:'2027-06-19'});
-  await expect(page.getByTestId('proposal-day')).toHaveText([/Pazartesi\s*18:00–19:00 · Matematik/,/Salı\s*18:00–19:00 · Türkçe\s*Yeni/]);
+  await expect(page.getByTestId('proposal-day')).toHaveText([/Pazartesi\s*18:00–19:00, Matematik/,/Salı\s*18:00–19:00, Türkçe\s*Yeni/]);
   await expect(page.getByTestId('shortage-notice')).toContainText('haftada yaklaşık 2,5 saat gerekiyor');
   await page.screenshot({path:`../../artifacts/weekly-outcome-week-${test.info().project.name}.png`,fullPage:false});
   await page.getByRole('button',{name:'Bu haftayla devam et',exact:true}).click();
@@ -93,14 +93,14 @@ test('the old preview address opens the Özet step; the week, each course and th
   await page.getByRole('combobox',{name:'Ders',exact:true}).selectOption({label:'Türkçe'});
   await page.getByRole('searchbox',{name:'Konu ara',exact:true}).fill('para');
   await page.getByRole('button',{name:'Paragraf konusunu öne al',exact:true}).click();
-  await expect(page.getByRole('list',{name:'Öne alınacak konular'})).toContainText('Türkçe · Paragraf');
+  await expect(page.getByRole('list',{name:'Öne alınacak konular'})).toContainText('Türkçe, Paragraf');
   await expect(page.getByRole('button',{name:'Planımı yayımla',exact:true})).toBeDisabled();
   await page.getByRole('button',{name:'Bu konularla yeniden hesapla',exact:true}).click();
   await expect(rows.nth(1)).toContainText('Bitiş: 1 Mayıs');
   expect(f.previews.at(-1).focusTopicIds).toEqual(['paragraf']);
   await page.getByRole('button',{name:'Planımı yayımla',exact:true}).click();
   const dialog=page.getByRole('dialog');
-  await expect(dialog).toContainText('Yayımlarsan bugünden sonraki çalışmaların bu plana göre değişir. Tamamladığın çalışmalar korunur.');
+  await expect(dialog).toContainText('Yayımlarsan bu plan, yayındaki planın yerini alır: bugünden sonraki bekleyen çalışmaların bu plana göre yeniden dağıtılır. Tamamladığın çalışmalar korunur.');
   await dialog.getByRole('button',{name:'Yayımla',exact:true}).click();
   await expect(page).toHaveURL(/\/coaching-portal\/plan\?plan=generated$/);
   const create=f.writes.find(x=>x.path.endsWith('/drafts')),publish=f.writes.find(x=>x.path.endsWith('/publish'));
