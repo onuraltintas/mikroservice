@@ -219,6 +219,7 @@ api.MapLegacyInstitutionImportEndpoints();
 api.MapLearningEndpoints();
 api.MapSetupEndpoints();
 api.MapRoomEndpoints();
+api.MapGroupEndpoints();
 api.MapFinanceEndpoints();
 api.MapAssignmentEndpoints();
 // Which switched features are on, so the panel hides what this deployment has closed (21.11.2026).
