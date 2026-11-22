@@ -142,7 +142,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   `,
   styles: [BILLING_PAGE_STYLES, `
     .seat-row > td { background: color-mix(in srgb, var(--ui-brand) 6%, transparent); }
-    .warn { color: #b45309; }
+    .warn { color: var(--ds-warning); }
     .grow { flex: 1 1 16rem; display: flex; flex-direction: column; gap: .25rem; }
     form label { display: flex; flex-direction: column; gap: .25rem; }
   `]

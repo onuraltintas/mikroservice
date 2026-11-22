@@ -136,12 +136,12 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
     .amount { font-weight: 600; }
     .note { max-width: 16rem; white-space: pre-line; }
     .link { color: var(--ui-brand); text-decoration: underline; font-size: .8rem; }
-    .actions .approve { border-color: #15803d; color: #15803d; }
+    .actions .approve { border-color: var(--ds-success); color: var(--ds-success); }
     .review-row td { background: color-mix(in srgb, var(--ui-brand) 6%, transparent); }
     .review { display: grid; gap: .75rem; max-width: 46rem; margin-left: auto; font-size: .875rem; color: var(--ui-text); }
     .review label { display: flex; flex-direction: column; gap: .25rem; }
     .invoice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
-    .badge.warn { border-color: #b45309; color: #b45309; }
+    .badge.warn { background: var(--ds-warning-soft); color: var(--ds-warning); }
     @media (max-width: 640px) { .invoice-grid { grid-template-columns: 1fr; } }
   `]
 })

@@ -168,13 +168,13 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   `,
   styles: [BILLING_PAGE_STYLES, `
     .filter { display: flex; flex-direction: column; gap: .25rem; font-size: .8rem; color: var(--ui-text); }
-    .recognised { color: #15803d; }
+    .recognised { color: var(--ds-success); }
     .nowrap { white-space: nowrap; }
     .description { max-width: 28rem; overflow-wrap: anywhere; }
     .preview td, .preview th { white-space: nowrap; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; }
     .preview .picked { background: color-mix(in srgb, var(--ui-brand) 8%, transparent); }
     .actions select { max-width: 16rem; margin-right: .35rem; font-size: .8rem; }
-    .actions .approve { border-color: #15803d; color: #15803d; }
+    .actions .approve { border-color: var(--ds-success); color: var(--ds-success); }
     @media (max-width: 640px) { .actions select { max-width: 100%; margin: 0 0 .35rem; display: block; } }
   `]
 })
