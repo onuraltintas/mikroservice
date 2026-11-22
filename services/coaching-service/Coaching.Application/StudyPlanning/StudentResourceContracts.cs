@@ -14,7 +14,9 @@ public sealed record StudentResourceInput(
     [Range(1, StudentResource.MaxUnits)] int TotalUnits,
     [Range(0, StudentResource.MaxUnits)] int DoneBefore = 0,
     IReadOnlyList<StudentResourceSectionInput>? Sections = null,
-    [Range(0, int.MaxValue)] int? ExpectedVersion = null);
+    [Range(0, int.MaxValue)] int? ExpectedVersion = null,
+    Guid? LessonId = null,
+    [MaxLength(30)] string? ExamCode = null);
 
 public sealed record StudentResourceSectionInput([Required, MaxLength(200)] string Title,
     [Range(1, StudentResource.MaxUnits)] int FromUnit, [Range(1, StudentResource.MaxUnits)] int ToUnit, Guid? TopicId = null);
@@ -37,4 +39,5 @@ public sealed record StudentResourceNext(int FromUnit, int ToUnit, string? Secti
 
 public sealed record StudentResourceView(Guid Id, int Version, string Name, string? Publisher, string? LessonName, string Kind,
     string Unit, int TotalUnits, int DoneBefore, int DoneUnits, int Percent, int PlannedUnits, bool IsArchived, bool CanDelete,
-    DateTime CreatedAt, DateTime? UpdatedAt, IReadOnlyList<StudentResourceSectionView> Sections, StudentResourceNext? Next);
+    DateTime CreatedAt, DateTime? UpdatedAt, IReadOnlyList<StudentResourceSectionView> Sections, StudentResourceNext? Next,
+    Guid? LessonId = null, string? ExamCode = null);

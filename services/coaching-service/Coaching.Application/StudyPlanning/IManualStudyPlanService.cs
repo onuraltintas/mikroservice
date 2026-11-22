@@ -77,7 +77,11 @@ public sealed record StudyPlanPage(IReadOnlyList<StudyPlanSummary> Items, int To
 
 public sealed record CalendarTaskSaveInput([property:JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,
     [Required,MaxLength(200)] string Title, DateOnly PlannedDate, [Range(0,1439)] int StartMinute,
-    [Range(1,1440)] int PlannedMinutes, Guid? LessonId = null);
+    [Range(1,1440)] int PlannedMinutes, Guid? LessonId = null,
+    // KocApp uyumu (22.11.2026): a new task from the curriculum (a topic of the lesson) or from a resource range; an edit can
+    // change the resource range when KeepResource is false. Left out, a new task is free and an edited task keeps its resource.
+    Guid? TopicId = null, Guid? ResourceId = null, [Range(1, StudentResource.MaxUnits)] int? ResourceFrom = null,
+    [Range(1, StudentResource.MaxUnits)] int? ResourceTo = null, bool? KeepResource = null);
 
 public interface IManualStudyPlanService
 {

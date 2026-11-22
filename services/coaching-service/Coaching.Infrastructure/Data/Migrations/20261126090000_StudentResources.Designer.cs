@@ -3510,6 +3510,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("DoneBefore")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ExamCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
@@ -3517,6 +3521,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("LessonId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("LessonName")
                         .HasMaxLength(100)

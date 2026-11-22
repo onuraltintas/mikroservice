@@ -27,7 +27,7 @@ public sealed record StudentResourceSection(string Title, int FromUnit, int ToUn
 
 /// <summary>What a resource is: written by the student or a teacher, checked by <see cref="StudentResource"/>.</summary>
 public sealed record StudentResourceDetails(string Name, string? Publisher, string? LessonName, string Kind, string Unit, int TotalUnits,
-    int DoneBefore, IReadOnlyList<StudentResourceSection>? Sections);
+    int DoneBefore, IReadOnlyList<StudentResourceSection>? Sections, Guid? LessonId = null, string? ExamCode = null);
 
 /// <summary>
 /// KocApp uyumu (22.11.2026): a book or a set a student works through ("Limit Matematik Soru Bankası, 480 sayfa"). Its progress is
@@ -44,6 +44,10 @@ public sealed class StudentResource : AggregateRoot
     public string Name { get; private set; } = string.Empty;
     public string? Publisher { get; private set; }
     public string? LessonName { get; private set; }
+    /// <summary>The catalog lesson the resource belongs to (its name is kept in <see cref="LessonName"/>); null for a free-text lesson.</summary>
+    public Guid? LessonId { get; private set; }
+    /// <summary>The exam the resource prepares for (LGS, TYT, AYT, AGS, YDS…); the lesson's exam by default.</summary>
+    public string? ExamCode { get; private set; }
     public string Kind { get; private set; } = StudentResourceKinds.QuestionBank;
     public string Unit { get; private set; } = StudentResourceUnits.Page;
     public int TotalUnits { get; private set; }
@@ -116,8 +120,12 @@ public sealed class StudentResource : AggregateRoot
             if (section.TopicId == Guid.Empty) throw new ArgumentException("Bölümün konusu geçersiz.");
             return section with { Title = title };
         }).OrderBy(x => x.FromUnit).ToArray();
+        if (details.LessonId == Guid.Empty) throw new ArgumentException("Ders geçersiz.");
+        var exam = Optional(details.ExamCode, 30, "Sınav türü en çok 30 karakter olabilir.")?.ToUpperInvariant();
+        if (exam is not null && !exam.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-')) throw new ArgumentException("Sınav türü geçersiz.");
         // A shorter book may not cut through ranges the plan already points at; the service checks the tasks.
         Name = name; Publisher = publisher; LessonName = lesson; Kind = details.Kind; Unit = details.Unit;
+        LessonId = details.LessonId; ExamCode = exam;
         TotalUnits = details.TotalUnits; DoneBefore = details.DoneBefore;
         SectionsJson = JsonSerializer.Serialize(clean);
     }

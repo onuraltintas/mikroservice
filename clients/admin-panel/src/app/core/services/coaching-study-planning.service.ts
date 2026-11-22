@@ -61,7 +61,9 @@ export interface GoalTarget { goalId: string; version: number; targetSchoolId: s
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number | null; sourceKind?: 'Official' | 'ExamSkill' }
 
-export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDate:string;startMinute:number;plannedMinutes:number;lessonId:string|null}
+export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDate:string;startMinute:number;plannedMinutes:number;lessonId:string|null;
+  /** KocApp uyumu (22.11.2026): a new task from the curriculum (topicId) or from a resource range; keepResource false changes an edited task's range. */
+  topicId?:string|null;resourceId?:string|null;resourceFrom?:number|null;resourceTo?:number|null;keepResource?:boolean|null}
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {

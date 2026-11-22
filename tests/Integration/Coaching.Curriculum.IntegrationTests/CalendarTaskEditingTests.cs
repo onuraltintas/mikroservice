@@ -32,6 +32,29 @@ public sealed class CalendarTaskEditingTests
         Assert.Single(await f.Db.Set<StudyPlanTaskOutcome>().ToArrayAsync());Assert.Single(await f.Db.Set<WeeklyDecision>().ToArrayAsync());
     }
     [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task KocAppUyumu_a_calendar_task_comes_from_the_curriculum_or_from_a_resource_range()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var topic=await f.Seed();
+        var revision=await f.Db.StudyPlanRevisions.SingleAsync();f.User.UserId=revision.StudentId;f.User.Roles=["Student"];
+        var policy=new CoachingAccessPolicy(f.User);var service=new CoachingManualStudyPlanService(f.Db,policy,new CoachingAutomaticStudyPlanPreviewService(f.Db,policy),new CurriculumManagementTests.NoopPublisher());
+        var book=StudentResource.Create(revision.StudentId,revision.StudentId,new("TEST Soru Bankası",null,null,StudentResourceKinds.QuestionBank,StudentResourceUnits.Test,40,0,null),DateTime.UtcNow);
+        f.Db.Add(book);await f.Db.SaveChangesAsync();
+        var input=new CalendarTaskSaveInput(revision.Version,"Çarpanlar",new(2027,1,5),600,30,topic.LessonId,TopicId:topic.Id,ResourceId:book.Id,ResourceFrom:3,ResourceTo:4);
+        // A topic of another lesson, or a range past the book, is refused.
+        await Assert.ThrowsAsync<ArgumentException>(()=>service.SaveCalendarTaskAsync(revision.Id,null,input with {TopicId=Guid.NewGuid()}));
+        await Assert.ThrowsAsync<ArgumentException>(()=>service.SaveCalendarTaskAsync(revision.Id,null,input with {ResourceTo=41}));
+        var added=await service.SaveCalendarTaskAsync(revision.Id,null,input);
+        var row=added.Tasks.Single(x=>x.Title=="Çarpanlar"&&x.PlannedDate==new DateOnly(2027,1,5));
+        Assert.Equal((topic.Id,book.Id,3,4,"TEST Soru Bankası","Test"),(row.TopicId!.Value,row.ResourceId!.Value,row.ResourceFrom!.Value,row.ResourceTo!.Value,row.ResourceName,row.ResourceUnit));
+        // An edit keeps the range unless it changes it.
+        var kept=await service.SaveCalendarTaskAsync(revision.Id,row.Id,new CalendarTaskSaveInput(added.Version,"Çarpanlar tekrar",new(2027,1,5),600,30,topic.LessonId));
+        Assert.Equal(3,kept.Tasks.Single(x=>x.Id==row.Id).ResourceFrom);
+        var moved=await service.SaveCalendarTaskAsync(revision.Id,row.Id,new CalendarTaskSaveInput(kept.Version,"Çarpanlar tekrar",new(2027,1,5),600,30,topic.LessonId,ResourceId:book.Id,ResourceFrom:5,ResourceTo:6,KeepResource:false));
+        Assert.Equal(5,moved.Tasks.Single(x=>x.Id==row.Id).ResourceFrom);
+        var cleared=await service.SaveCalendarTaskAsync(revision.Id,row.Id,new CalendarTaskSaveInput(moved.Version,"Çarpanlar tekrar",new(2027,1,5),600,30,topic.LessonId,KeepResource:false));
+        Assert.Null(cleared.Tasks.Single(x=>x.Id==row.Id).ResourceId);
+    }
+    [CurriculumPostgresTests.LocalPostgresFact]
     public async Task CalendarEditsAreVersionedRejectConflictsAndPreserveCompletedHistory()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();

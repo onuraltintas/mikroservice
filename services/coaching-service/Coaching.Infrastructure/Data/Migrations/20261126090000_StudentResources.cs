@@ -7,7 +7,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 {
     /// <summary>
     /// KocApp uyumu (22.11.2026): the student's books and sets (student_resources) and, on a study task, the resource range it
-    /// works through. The practice-exam review key ("DenemeTekrar:…") that was written into the student-facing "Kaynak / sayfa"
+    /// works through; a resource belongs to a catalog lesson and an exam when they are chosen. The practice-exam review key ("DenemeTekrar:…") that was written into the student-facing "Kaynak / sayfa"
     /// field (SourceName) moves to its own column AdviceKey; Down moves it back. Nothing else changes.
     /// </summary>
     public partial class StudentResources : Migration
@@ -26,6 +26,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Publisher = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: true),
                     LessonName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    LessonId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ExamCode = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
                     Kind = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Unit = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     TotalUnits = table.Column<int>(type: "integer", nullable: false),

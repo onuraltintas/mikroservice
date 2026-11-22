@@ -47,5 +47,6 @@ export class CoachingWeeklyOutcomePlanService {
   focusEstimate(request:WeeklyOutcomeRequest,studentId?:string){return this.preview({...request,prioritizeWhenShort:true},studentId);}
   /** Student only: her own exam date; null returns to the date the admin set. */
   setExamDate(examDate:string|null){return this.http.put<{data:WeeklyOutcomeOptions}>(this.url+'/exam-date',{examDate}).pipe(map(r=>r.data));}
-  create(request:{title:string;preview:WeeklyOutcomeRequest;fingerprint:string},studentId?:string){return this.http.post<{data:{id:string;version:number}}>(this.scopedUrl(studentId)+'/drafts',request).pipe(map(r=>r.data));}
+  /** KocApp uyumu: resources, one per lesson, the plan's learning tasks work through; left out, each lesson takes its first own resource. */
+  create(request:{title:string;preview:WeeklyOutcomeRequest;fingerprint:string;resources?:{lessonId:string;resourceId:string}[]},studentId?:string){return this.http.post<{data:{id:string;version:number}}>(this.scopedUrl(studentId)+'/drafts',request).pipe(map(r=>r.data));}
 }

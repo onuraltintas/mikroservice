@@ -1,3 +1,4 @@
+import { CoachingResourcesService, StudentResource } from '../../../core/services/coaching-resources.service';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, EventEmitter, Injector, Input, OnInit, Output, ViewChild, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -96,6 +97,33 @@ export class WizardSummaryStepComponent implements OnInit {
   private readonly planning = inject(CoachingStudyPlanningService);
   private readonly learning = inject(CoachingLearningSetupService);
   private readonly toaster = inject(ToasterService);
+  private readonly resourceApi = inject(CoachingResourcesService);
+  /** KocApp uyumu (22.11.2026): the student's resources and the one chosen for each lesson ('' = none). */
+  readonly planResources = signal<StudentResource[]>([]);
+  private readonly resourceChoices = signal<Record<string, string>>({});
+  private resourcesRequested = false;
+  /** Read once, when there is a plan to make. */
+  loadPlanResources() {
+    if (this.resourcesRequested) return;
+    this.resourcesRequested = true;
+    this.resourceApi.list({ studentId: this.staffStudentId }).pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({ next: items => this.planResources.set(items.filter(x => !x.isArchived)), error: () => this.planResources.set([]) });
+  }
+  /** A lesson's own resources first, then the ones without a lesson. */
+  resourcesFor(lessonId: string) {
+    const id = lessonId.toLowerCase();
+    return this.planResources().filter(x => !x.lessonId || x.lessonId.toLowerCase() === id)
+      .sort((a, b) => Number(b.lessonId?.toLowerCase() === id) - Number(a.lessonId?.toLowerCase() === id));
+  }
+  /** The chosen resource of a lesson; by default the first resource tied to it. */
+  resourceChoice(lessonId: string) {
+    const chosen = this.resourceChoices()[lessonId];
+    return chosen ?? this.planResources().find(x => x.lessonId?.toLowerCase() === lessonId.toLowerCase())?.id ?? '';
+  }
+  setResourceChoice(lessonId: string, resourceId: string) { this.resourceChoices.set({ ...this.resourceChoices(), [lessonId]: resourceId ?? '' }); }
+  private chosenResources() {
+    return this.lessons().map(x => ({ lessonId: x.lessonId, resourceId: this.resourceChoice(x.lessonId) })).filter(x => !!x.resourceId);
+  }
   private readonly router = inject(Router);
   private readonly destroy = inject(DestroyRef);
   private readonly injector = inject(Injector);
@@ -422,7 +450,7 @@ export class WizardSummaryStepComponent implements OnInit {
     this.estimateRun++; this.focusEstimate.set(null);
     this.engine.options(student).pipe(takeUntilDestroyed(this.destroy), switchMap(options => { this.options.set(options); return this.engine.preview(this.request(options), student); }),
       finalize(() => this.previewing.set(false))).subscribe({
-      next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); this.estimateFocus(preview.request, student); },
+      next: preview => { this.preview.set(preview); this.focus(() => this.previewTitle); this.estimateFocus(preview.request, student); this.loadPlanResources(); },
       error: e => {
         this.notChosen.set(e?.status === 409 && e?.error?.code === LESSONS_NOT_CHOSEN ? e.error.lessons ?? [] : []);
         this.previewError.set(typeof e?.error?.message === 'string' ? e.error.message : 'Yıllık plan hesaplanamadı. Yeniden deneyebilirsin.');
@@ -549,7 +577,8 @@ export class WizardSummaryStepComponent implements OnInit {
       { confirmText: 'Yayımla', cancelText: 'Vazgeç' })) return;
     this.publishing.set(true); this.publishIssue.set(null);
     if (created && !staff) { this.publishCreated(created); return; }
-    this.engine.create({ title: PLAN_TITLE, preview: p.request, fingerprint: p.fingerprint }, this.staffStudentId ?? undefined)
+    const resources = this.planResources().length ? this.chosenResources() : undefined;
+    this.engine.create({ title: PLAN_TITLE, preview: p.request, fingerprint: p.fingerprint, ...(resources ? { resources } : {}) }, this.staffStudentId ?? undefined)
       .pipe(takeUntilDestroyed(this.destroy)).subscribe({
         next: plan => {
           if (staff) { this.publishing.set(false); this.planCreated.emit(plan.id); return; }

@@ -11,6 +11,7 @@ import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus
 import {clock} from './weekly-calendar';
 import {planDayItems} from './plan-short-runs';
 import {CoachingLearningSetupService,LearningLesson} from '../../../core/services/coaching-learning-setup.service';
+import type {StudyTopic} from '../../../core/services/coaching-study-planning.service';
 import {lessonColors,lessonKey} from './study-plan-colors';
 import {computed} from '@angular/core';
 import {CalendarAction,StudyPlanCalendarComponent} from './study-plan-calendar.component';
@@ -98,13 +99,45 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   taskColor(task:StudyTask){return this.taskColors().get(lessonKey(task));}
   @ViewChild('taskDialog') private taskDialogElement?:ElementRef<HTMLElement>;
-  calendarForm:{kind:CalendarAction['kind'];taskId:string|null;taskIds:string[];date:string;time:string;title:string;minutes:number;lessonId:string|null;actualMinutes:number;actualQuestions:number|null;workedOn?:string}|null=null;
+  calendarForm:{kind:CalendarAction['kind'];taskId:string|null;taskIds:string[];date:string;time:string;title:string;minutes:number;lessonId:string|null;actualMinutes:number;actualQuestions:number|null;workedOn?:string;
+    /** KocApp uyumu (22.11.2026): where a new task comes from, and the resource range of a new or edited task. */
+    source:'free'|'topic'|'resource';topicId:string|null;resourceId:string|null;resourceFrom:number|null;resourceTo:number|null}|null=null;
+  /** The topics of a lesson (first 200, curriculum order) for "Müfredattan konu". */
+  calendarTopics:Record<string,StudyTopic[]>={};calendarTopicsLoading=false;
+  calendarTopicList():StudyTopic[]{const lesson=this.calendarForm?.lessonId;return lesson?this.calendarTopics[lesson]??[]:[];}
+  /** Resources of the lesson first, then the ones without a lesson; another lesson's resources stay out. */
+  calendarResources(){const lesson=this.calendarForm?.lessonId;return this.resources().filter(x=>!x.isArchived&&(!x.lessonId||!lesson||x.lessonId===lesson)).sort((a,b)=>Number(b.lessonId===lesson)-Number(a.lessonId===lesson));}
+  async loadCalendarTopics(lessonId:string|null){
+    if(!lessonId||this.calendarTopics[lessonId])return;
+    this.calendarTopicsLoading=true;this.changeDetector.markForCheck();
+    try{
+      const setup=this.injector.get(CoachingLearningSetupService),student=this.staffStudentId,all:StudyTopic[]=[];
+      for(let page=1;page<=4;page++){
+        const catalog=await firstValueFrom((student?setup.catalogForStudent(student,lessonId,page):setup.catalog(lessonId,page)).pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef)),{defaultValue:null});
+        const items=catalog?.topics?.items??[];all.push(...items);if(items.length<50)break;
+      }
+      this.calendarTopics={...this.calendarTopics,[lessonId]:all};
+    }catch{this.calendarTopics={...this.calendarTopics,[lessonId]:[]};}
+    finally{this.calendarTopicsLoading=false;this.changeDetector.markForCheck();}
+  }
+  setCalendarSource(source:'free'|'topic'|'resource'){const form=this.calendarForm;if(!form)return;form.source=source;if(source!=='topic')form.topicId=null;if(source!=='resource'){form.resourceId=null;form.resourceFrom=null;form.resourceTo=null;}
+    if(source==='topic')void this.loadCalendarTopics(form.lessonId);this.changeDetector.markForCheck();}
+  setCalendarLesson(id:string|null){const form=this.calendarForm;if(!form)return;form.lessonId=id;form.topicId=null;if(form.resourceId&&!this.calendarResources().some(x=>x.id===form.resourceId)){form.resourceId=null;form.resourceFrom=null;form.resourceTo=null;}
+    if(form.source==='topic')void this.loadCalendarTopics(id);}
+  setCalendarTopic(id:string|null){const form=this.calendarForm;if(!form)return;form.topicId=id||null;const topic=(this.calendarTopics[form.lessonId??'']??[]).find(x=>x.id===id);if(topic&&!form.title.trim())form.title=topic.name.slice(0,200);}
+  setCalendarResource(id:string|null){const form=this.calendarForm;if(!form)return;form.resourceId=id||null;form.resourceFrom=null;form.resourceTo=null;}
+  calendarResource(){const id=this.calendarForm?.resourceId;return id?this.resources().find(x=>x.id===id)??null:null;}
+  /** "Sıradakini yaz": the resource's next free part; an empty title takes the section's (or the resource's) name. */
+  suggestCalendarNext(){const form=this.calendarForm,next=this.calendarResource()?.next;if(!form||!next)return;form.resourceFrom=next.fromUnit;form.resourceTo=next.toUnit;
+    if(!form.title.trim())form.title=(next.sectionTitle??this.calendarResource()!.name).slice(0,200);}
   calendarLessons:LearningLesson[]=[];calendarLessonsLoading=false;
   async calendarCommand(action:CalendarAction){
     const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived'||action.kind==='complete'&&(!!this.staffStudentId||plan.status!=='Active'))return;
     const tasks=plan.tasks.filter(t=>action.taskIds.includes(t.id)&&(action.kind==='split'?canSplitTask(t):!t.isCompleted)),task=tasks[0];
     if(action.kind!=='add'&&!task)return;
-    this.calendarForm={kind:action.kind,taskId:task?.id??null,taskIds:tasks.map(t=>t.id),date:action.date,time:clock(action.startMinute),title:'',minutes:30,lessonId:null,actualMinutes:30,actualQuestions:null};
+    this.calendarForm={kind:action.kind,taskId:task?.id??null,taskIds:tasks.map(t=>t.id),date:action.date,time:clock(action.startMinute),title:'',minutes:30,lessonId:null,actualMinutes:30,actualQuestions:null,
+      source:'free',topicId:null,resourceId:null,resourceFrom:null,resourceTo:null};
+    if(action.kind==='add'||action.kind==='edit')this.loadResources();
     // The dialog is a plain field: Angular is told that it opened. Without this the change was sometimes seen only by the
     // test runner's later check (NG0100 in CI on 17.11.2026); in the browser the click that opens it already redraws.
     this.changeDetector.markForCheck();
@@ -122,7 +155,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   }
   chooseCalendarTask(id:string){
     const task=this.selected()?.tasks.find(t=>t.id===id),form=this.calendarForm;if(!task||!form)return;
-    Object.assign(form,{taskId:id,date:task.plannedDate,time:clock(task.plannedStartMinute??540),title:task.title,minutes:task.plannedMinutes,lessonId:task.weeklyLessonId??null,actualMinutes:this.actualMinutes[id]??task.plannedMinutes,actualQuestions:this.actualQuestions[id]??null});
+    Object.assign(form,{taskId:id,date:task.plannedDate,time:clock(task.plannedStartMinute??540),title:task.title,minutes:task.plannedMinutes,lessonId:task.weeklyLessonId??null,actualMinutes:this.actualMinutes[id]??task.plannedMinutes,actualQuestions:this.actualQuestions[id]??null,
+      source:task.resourceId?'resource':'free',topicId:null,resourceId:task.resourceId??null,resourceFrom:task.resourceFrom??null,resourceTo:task.resourceTo??null});
   }
   /** Paket H5: the confirmation names the two halves before the task is split. */
   splitText(){
@@ -166,9 +200,16 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       this.mutate(this.service.deleteCalendarTask(plan.id,task.id,plan.version,...this.studentArgument),'Bekleyen çalışma silindi.');return;
     }
     if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(form.time)||!form.date||!form.title.trim()||form.title.trim().length>200||!Number.isInteger(form.minutes)||form.minutes<1||form.minutes>1440||form.kind==='add'&&!form.lessonId){this.error.set('Ders, başlık, tarih ve süreyi kontrol et.');return;}
+    // KocApp uyumu: a topic for "Müfredattan", a resource (and a whole range or none) for "Kaynaktan".
+    const res=this.calendarResource(),from=form.resourceFrom,to=form.resourceTo;
+    if(form.kind==='add'&&form.source==='topic'&&!form.topicId){this.error.set('Müfredattan bir konu seç.');return;}
+    if(form.source==='resource'&&(!res||(from==null)!==(to==null)||from!=null&&(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to!<from||to!>res.totalUnits))){
+      this.error.set(res?`Kaynak aralığını kontrol et (1–${res.totalUnits}).`:'Bir kaynak seç.');return;}
     const [h,m]=form.time.split(':').map(Number),start=h*60+m;
     if(start+form.minutes>1440||plan.tasks.some(t=>t.id!==form.taskId&&t.plannedDate===form.date&&t.plannedStartMinute!=null&&t.plannedStartMinute<start+form.minutes&&t.plannedStartMinute+t.plannedMinutes>start)){this.error.set('Çalışma günün dışına taşıyor veya başka bir çalışmayla çakışıyor.');return;}
-    this.mutate(this.service.saveCalendarTask(plan.id,form.taskId,{expectedVersion:plan.version,title:form.title.trim(),plannedDate:form.date,startMinute:start,plannedMinutes:form.minutes,lessonId:form.lessonId},...this.studentArgument),'Çalışma takvime kaydedildi.');
+    const link=form.source==='resource'?{resourceId:form.resourceId,resourceFrom:from,resourceTo:to}:{resourceId:null,resourceFrom:null,resourceTo:null};
+    this.mutate(this.service.saveCalendarTask(plan.id,form.taskId,{expectedVersion:plan.version,title:form.title.trim(),plannedDate:form.date,startMinute:start,plannedMinutes:form.minutes,lessonId:form.lessonId,
+      topicId:form.kind==='add'&&form.source==='topic'?form.topicId:null,...link,keepResource:form.kind==='edit'?false:null},...this.studentArgument),'Çalışma takvime kaydedildi.');
   }
   @Input() autoOpenActive=false;
   @Input() initialPlanId:string|null=null;

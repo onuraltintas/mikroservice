@@ -312,7 +312,37 @@
       <div class="dialog-heading"><h2 id="calendar-dialog-title">{{ form.kind==='add'?'Çalışma ekle':form.kind==='edit'?'Çalışmayı düzenle':form.kind==='complete'?'Çalışmayı tamamla':form.kind==='split'?'Çalışmayı ikiye böl':'Çalışmayı sil' }}</h2><button type="button" class="secondary" aria-label="Pencereyi kapat" (click)="closeCalendarForm()" [disabled]="busy()">✕</button></div>
       @if(form.taskIds.length>1){<label>İşlem yapılacak çalışma<select [ngModel]="form.taskId" (ngModelChange)="chooseCalendarTask($event)" [disabled]="busy()">@for(task of calendarTaskOptions();track task.id){<option [value]="task.id">{{ task.title }}, {{ task.plannedMinutes }} dk</option>}</select></label><p class="muted">Karttaki her kazanım ayrı bir çalışmadır. İşlem yalnız seçtiğin çalışmaya uygulanır.</p>}
       @if(form.kind==='add'||form.kind==='edit'){
-        @if(form.kind==='add'){<label>Ders<select [(ngModel)]="form.lessonId" [disabled]="busy()||calendarLessonsLoading"><option [ngValue]="null">{{ calendarLessonsLoading?'Dersler yükleniyor…':'Ders seç' }}</option>@for(lesson of calendarLessons;track lesson.id){<option [value]="lesson.id">{{ lesson.name }}</option>}</select></label>}
+        @if(form.kind==='add'){<label>Ders<select [ngModel]="form.lessonId" (ngModelChange)="setCalendarLesson($event)" [disabled]="busy()||calendarLessonsLoading"><option [ngValue]="null">{{ calendarLessonsLoading?'Dersler yükleniyor…':'Ders seç' }}</option>@for(lesson of calendarLessons;track lesson.id){<option [value]="lesson.id">{{ lesson.name }}</option>}</select></label>}
+        <!-- KocApp uyumu (22.11.2026): a new task comes from the curriculum, from a resource or is free; an edit can change its resource range. -->
+        <fieldset class="calendar-source" data-testid="calendar-source">
+          <legend>{{ form.kind==='add' ? 'Çalışma neye göre?' : 'Kaynak' }}</legend>
+          <div class="source-options">
+            <label><input type="radio" name="calendar-source" [checked]="form.source==='free'" (change)="setCalendarSource('free')" [disabled]="busy()"><span>{{ form.kind==='add' ? 'Serbest çalışma' : 'Kaynak yok' }}</span></label>
+            @if(form.kind==='add'){<label><input type="radio" name="calendar-source" [checked]="form.source==='topic'" (change)="setCalendarSource('topic')" [disabled]="busy()||!form.lessonId"><span>Müfredattan konu</span></label>}
+            <label><input type="radio" name="calendar-source" [checked]="form.source==='resource'" (change)="setCalendarSource('resource')" [disabled]="busy()||!resources().length"><span>Kaynaktan</span></label>
+          </div>
+          @if(!resources().length){<p class="muted">{{ staffStudentId ? 'Öğrencinin kaynağı yok; öğrenci sayfasındaki Kaynaklar bölümünden eklenebilir.' : 'Henüz kaynağın yok; Planım › Kaynaklarım sayfasından ekleyebilirsin.' }}</p>}
+          @if(form.source==='topic'){
+            <label>Konu<select [ngModel]="form.topicId ?? ''" (ngModelChange)="setCalendarTopic($event)" [disabled]="busy()||calendarTopicsLoading">
+              <option value="">{{ calendarTopicsLoading ? 'Konular yükleniyor…' : 'Konu seç' }}</option>
+              @for(topic of calendarTopicList();track topic.id){<option [value]="topic.id">{{ topic.name }}</option>}
+            </select></label>
+          }
+          @if(form.source==='resource'){
+            <label>Kaynak<select [ngModel]="form.resourceId ?? ''" (ngModelChange)="setCalendarResource($event)" [disabled]="busy()">
+              <option value="">Kaynak seç</option>
+              @for(resource of calendarResources();track resource.id){<option [value]="resource.id">{{ resource.name }}@if(resource.lessonName){, {{ resource.lessonName }}}</option>}
+            </select></label>
+            @if(calendarResource(); as resource){
+              <div class="fields">
+                <label>İlk {{ unitWord(resource.unit) }}<input type="number" [(ngModel)]="form.resourceFrom" min="1" [max]="resource.totalUnits" step="1" inputmode="numeric" [disabled]="busy()"></label>
+                <label>Son {{ unitWord(resource.unit) }}<input type="number" [(ngModel)]="form.resourceTo" min="1" [max]="resource.totalUnits" step="1" inputmode="numeric" [disabled]="busy()"></label>
+              </div>
+              <p class="muted">%{{ resource.percent }} bitti, {{ resource.doneUnits }} / {{ resource.totalUnits }} {{ unitWord(resource.unit) }}.</p>
+              @if(resource.next){<button type="button" class="secondary" (click)="suggestCalendarNext()" [disabled]="busy()">Sıradakini yaz ({{ unitWord(resource.unit) }} {{ resource.next.fromUnit }}–{{ resource.next.toUnit }}@if(resource.next.sectionTitle){, {{ resource.next.sectionTitle }}})</button>}
+            }
+          }
+        </fieldset>
         <label>Çalışma başlığı<input [(ngModel)]="form.title" maxlength="200" [disabled]="busy()" placeholder="Örn. konu tekrarı, soru çözümü, deneme analizi"></label>
         <div class="fields"><label>Gün<input type="date" [(ngModel)]="form.date" [disabled]="busy()"></label><label>Başlangıç<input type="time" [(ngModel)]="form.time" step="1800" [disabled]="busy()"></label><label>Süre (dk)<input type="number" [(ngModel)]="form.minutes" min="0" max="1440" [disabled]="busy()||calendarDurationLocked()"></label></div>
         @if(calendarDurationLocked()){<p class="muted">Kazanım süreleri ve bağlantıları korunur. Daha fazla çalışma için yeni kart ekleyebilirsin.</p>}

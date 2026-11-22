@@ -6,6 +6,7 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 import { CoachingWeeklyDraftService, WeeklyProposal, WeeklyProposalMode } from '../../../core/services/coaching-weekly-draft.service';
 import { CoachingWeeklyOutcomePlanService, WeeklyOutcomePreview, WeeklyOutcomeRequest } from '../../../core/services/coaching-weekly-outcome-plan.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { CoachingResourcesService } from '../../../core/services/coaching-resources.service';
 import { SummaryChoices, WizardSummaryStepComponent } from './wizard-summary-step.component';
 import { WeeklySlot, Weekday } from './weekly-calendar';
 
@@ -30,7 +31,10 @@ describe('WizardSummaryStepComponent', () => {
       lessons: [{ lessonId: 'math', lessonName: 'Matematik', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 600, scheduledMinutes: 600, remainingMinutes: 0, finishDate: '2027-04-20', extraWeeklyMinutes: 0 },
         { lessonId: 'tur', lessonName: 'Türkçe', outcomeCount: 3, weeklyMinutes: 60, requiredMinutes: 900, scheduledMinutes: 810, remainingMinutes: 90, finishDate: null, extraWeeklyMinutes: 30 }] }, ...over });
 
-  async function setup(opts: { proposal?: (mode: WeeklyProposalMode) => WeeklyProposal; slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
+  const resourceRow = (id: string, lessonId: string | null, name: string) => ({ id, version: 0, name, publisher: null, lessonName: null, lessonId, examCode: 'LGS',
+    kind: 'QuestionBank' as const, unit: 'Test' as const, totalUnits: 40, doneBefore: 0, doneUnits: 0, percent: 0, plannedUnits: 0, isArchived: false, canDelete: true,
+    createdAt: '2026-11-22T10:00:00Z', updatedAt: null, sections: [], next: null });
+  async function setup(opts: { resources?: ReturnType<typeof resourceRow>[]; proposal?: (mode: WeeklyProposalMode) => WeeklyProposal; slots?: WeeklySlot[]; staff?: boolean; finishBy?: string | null; windows?: { day: string; startMinute: number; endMinute: number }[] | null; tempoNote?: string; replaceOnOpen?: boolean; tempo?: 'Relaxed' | 'Balanced' | 'Intense'; choices?: SummaryChoices } = {}) {
     const slots = opts.slots ?? [saved];
     const weekly = { get: vi.fn(() => of({ draft: slots.length ? { version: 3, timeZoneId: 'Europe/Istanbul', slots } : null, lessons: [], maxDayMinutes: 480 })),
       save: vi.fn((_v: number | null, _tz: string, next: WeeklySlot[]) => of({ version: 4, timeZoneId: 'Europe/Istanbul', slots: next })),
@@ -51,7 +55,8 @@ describe('WizardSummaryStepComponent', () => {
       catalogForStudent: vi.fn((..._a: unknown[]) => of({ curriculum: null, lessons: [], missingDurationCount: 0, warnings: [], topics: { totalCount: 0, pageNumber: 1, pageSize: 50, items: [] } })) };
     TestBed.configureTestingModule({ imports: [WizardSummaryStepComponent], providers: [provideRouter([]),
       { provide: CoachingWeeklyDraftService, useValue: weekly }, { provide: CoachingWeeklyOutcomePlanService, useValue: engine },
-      { provide: CoachingStudyPlanningService, useValue: planning }, { provide: CoachingLearningSetupService, useValue: learning }] });
+      { provide: CoachingStudyPlanningService, useValue: planning }, { provide: CoachingLearningSetupService, useValue: learning },
+      { provide: CoachingResourcesService, useValue: { list: vi.fn(() => of(opts.resources ?? [])) } }] });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(WizardSummaryStepComponent), c = fixture.componentInstance;
     c.staffStudentId = opts.staff ? 'student-1' : null; c.finishBy = opts.finishBy === undefined ? '2027-05-12' : opts.finishBy; c.context = context;
@@ -416,6 +421,19 @@ describe('WizardSummaryStepComponent', () => {
     (el.querySelector('[data-testid="focus-preview"]') as HTMLButtonElement).click(); await fixture.whenStable(); fixture.detectChanges();
     expect(engine.preview).toHaveBeenLastCalledWith(expect.objectContaining({ focusTopicIds: ['paragraf'] }), undefined);
     expect((el.querySelector('[data-testid="publish-plan"]') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('KocApp uyumu: offers each lesson its resources, the lesson\'s own one chosen, and sends the choice with the plan', async () => {
+    const { el, fixture, engine, c } = await setup({ staff: true, resources: [resourceRow('free', null, 'TEST Genel Deneme'), resourceRow('m1', 'math', 'TEST Matematik Soru Bankası'),
+      resourceRow('t1', 'tur', 'TEST Türkçe Paragraf')] });
+    await keep(fixture);
+    const section = el.querySelector('[data-testid="plan-resources"]')!;
+    expect(text(section)).toContain('Seçilen kaynak');
+    expect(c.resourcesFor('math').map(x => x.id)).toEqual(['m1', 'free']);
+    expect([c.resourceChoice('math'), c.resourceChoice('tur')]).toEqual(['m1', 't1']);
+    c.setResourceChoice('tur', '');
+    button(el, 'Planı oluştur')!.click(); await fixture.whenStable();
+    expect(engine.create).toHaveBeenCalledWith(expect.objectContaining({ resources: [{ lessonId: 'math', resourceId: 'm1' }] }), 'student-1');
   });
 
   it('chooses at most 50 topics', async () => {

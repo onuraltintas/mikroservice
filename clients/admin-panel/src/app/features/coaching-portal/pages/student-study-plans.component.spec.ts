@@ -151,8 +151,38 @@ describe('StudentStudyPlansComponent', () => {
     component.calendarForm!.title='Soru çözümü';
     service.saveCalendarTask.mockReturnValueOnce(throwError(()=>({status:409,error:{message:'Saat dolu'}})));
     await component.saveCalendarForm();expect(component.calendarForm).not.toBeNull();
-    expect(service.saveCalendarTask).toHaveBeenCalledWith('plan',null,{expectedVersion:4,title:'Soru çözümü',plannedDate:'2026-10-22',startMinute:1110,plannedMinutes:30,lessonId:'math'});
+    expect(service.saveCalendarTask).toHaveBeenCalledWith('plan',null,{expectedVersion:4,title:'Soru çözümü',plannedDate:'2026-10-22',startMinute:1110,plannedMinutes:30,lessonId:'math',
+      topicId:null,resourceId:null,resourceFrom:null,resourceTo:null,keepResource:null});
     await component.saveCalendarForm();expect(component.calendarForm).toBeNull();fixture.detectChanges();
+  });
+  it('KocApp uyumu: adds a calendar study from the curriculum or from a resource range, and changes an edited study\'s range',async()=>{
+    const {component,service}=await setup();
+    component.resources.set([{id:'r1',version:0,name:'TEST Soru Bankası',publisher:null,lessonName:'Matematik',lessonId:'math',examCode:'LGS',kind:'QuestionBank',unit:'Test',totalUnits:40,
+      doneBefore:0,doneUnits:4,percent:10,plannedUnits:0,isArchived:false,canDelete:false,createdAt:'2026-11-22T10:00:00Z',updatedAt:null,sections:[],next:{fromUnit:5,toUnit:6,sectionTitle:null,topicId:null}},
+      {id:'r2',version:0,name:'TEST Türkçe Kitabı',publisher:null,lessonName:'Türkçe',lessonId:'tr',examCode:'LGS',kind:'TopicBook',unit:'Page',totalUnits:100,
+      doneBefore:0,doneUnits:0,percent:0,plannedUnits:0,isArchived:false,canDelete:true,createdAt:'2026-11-22T10:00:00Z',updatedAt:null,sections:[],next:null}]);
+    await component.calendarCommand({kind:'add',taskIds:[],date:'2026-10-22',startMinute:1110});
+    const form=component.calendarForm!;
+    component.calendarTopics={math:[{id:'t1',name:'Çarpanlar',lessonName:'Matematik',unitName:'Sayılar',gradeNumber:8,examCode:'LGS',estimatedMinutes:60}]};
+    component.setCalendarSource('topic');component.setCalendarTopic('t1');
+    expect(form.title).toBe('Çarpanlar');
+    await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan',null,expect.objectContaining({topicId:'t1',resourceId:null}));
+    await component.calendarCommand({kind:'add',taskIds:[],date:'2026-10-23',startMinute:1110});
+    // Only the lesson's resources (and the ones without a lesson) are offered.
+    expect(component.calendarResources().map(x=>x.id)).toEqual(['r1']);
+    component.setCalendarSource('resource');component.setCalendarResource('r1');component.suggestCalendarNext();
+    expect([component.calendarForm!.resourceFrom,component.calendarForm!.resourceTo,component.calendarForm!.title]).toEqual([5,6,'TEST Soru Bankası']);
+    component.calendarForm!.resourceTo=41;
+    await component.saveCalendarForm();expect(component.error()).toContain('Kaynak aralığını');
+    component.calendarForm!.resourceTo=6;
+    await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan',null,expect.objectContaining({topicId:null,resourceId:'r1',resourceFrom:5,resourceTo:6,keepResource:null}));
+    await component.calendarCommand({kind:'edit',taskIds:['task'],date:'2026-10-06',startMinute:540});
+    expect(component.calendarForm!.source).toBe('free');
+    component.setCalendarSource('resource');component.setCalendarResource('r1');component.calendarForm!.resourceFrom=7;component.calendarForm!.resourceTo=8;
+    await component.saveCalendarForm();
+    expect(service.saveCalendarTask).toHaveBeenLastCalledWith('plan','task',expect.objectContaining({resourceId:'r1',resourceFrom:7,resourceTo:8,keepResource:false,topicId:null}));
   });
   it('updates untouched completion defaults after changing duration while preserving a real input',async()=>{
     const {component,service}=await setup();

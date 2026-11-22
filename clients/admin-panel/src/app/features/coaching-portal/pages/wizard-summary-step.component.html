@@ -207,6 +207,21 @@
     </div>
   }
 
+  <!-- KocApp uyumu (22.11.2026): the resource each lesson's learning tasks work through. -->
+  @if (preview() && planResources().length) {
+    <section class="plan-resources" data-testid="plan-resources" aria-labelledby="plan-resources-title">
+      <h3 id="plan-resources-title">Kaynaklar</h3>
+      <p class="muted">Seçilen kaynak o dersin çalışmalarına sırayla bağlanır: önce konunun bölümü, yoksa kaynağın sıradaki boş kısmı.</p>
+      @for (lesson of lessons(); track lesson.lessonId) {
+        <label>{{ lesson.lessonName }}
+          <select [name]="'plan-resource-' + lesson.lessonId" [ngModel]="resourceChoice(lesson.lessonId)" (ngModelChange)="setResourceChoice(lesson.lessonId, $event)" [disabled]="busy()">
+            <option value="">Kaynak kullanma</option>
+            @for (resource of resourcesFor(lesson.lessonId); track resource.id) { <option [value]="resource.id">{{ resource.name }}, %{{ resource.percent }} bitti</option> }
+          </select></label>
+      }
+    </section>
+  }
+
   <div class="step-actions">
     @if (canGoBack) { <button type="button" class="secondary" (click)="back.emit()" [disabled]="busy()">Geri</button> }
     @if (!staffStudentId) { <a class="button-link secondary" routerLink="/coaching-portal/plan/weekly">Takvimde düzenle</a> }

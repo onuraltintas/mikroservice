@@ -19,6 +19,7 @@ public sealed class StudentResourceConfiguration : IEntityTypeConfiguration<Stud
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Publisher).HasMaxLength(120);
         builder.Property(x => x.LessonName).HasMaxLength(100);
+        builder.Property(x => x.ExamCode).HasMaxLength(30);
         builder.Property(x => x.Kind).HasMaxLength(20).IsRequired();
         builder.Property(x => x.Unit).HasMaxLength(20).IsRequired();
         builder.Property(x => x.SectionsJson).HasColumnType("jsonb").IsRequired();

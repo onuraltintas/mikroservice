@@ -406,7 +406,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                 links.AddRange(prepared.PinnedLinks.Where(x=>x.TaskId==placement.Source.Id).Select(x=>CoachingStudyContinuation.CopyLink(copy,x)));
             }
             // KocApp plan, phase 2: a topic with a part in one of the student's resources gets its next free part.
-            await StudentResourcePlanLinks.LinkAsync(db,student,learning,ct);
+            await StudentResourcePlanLinks.LinkAsync(db,student,learning,ct,request.Resources);
             db.Add(revision);db.AddRange(tasks);db.AddRange(links);await db.SaveChangesAsync(ct);return new(revision.Id,revision.Version);
         }
         if(!db.Database.IsRelational())return Save();

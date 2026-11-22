@@ -13,10 +13,13 @@ export interface StudentResource {
   id: string; version: number; name: string; publisher: string | null; lessonName: string | null; kind: ResourceKind; unit: ResourceUnit;
   totalUnits: number; doneBefore: number; doneUnits: number; percent: number; plannedUnits: number; isArchived: boolean; canDelete: boolean;
   createdAt: string; updatedAt: string | null; sections: StudentResourceSection[]; next: StudentResourceNext | null;
+  /** The catalog lesson and the exam the resource belongs to. */
+  lessonId?: string | null; examCode?: string | null;
 }
 export interface StudentResourceInput {
   name: string; publisher: string | null; lessonName: string | null; kind: ResourceKind; unit: ResourceUnit; totalUnits: number; doneBefore: number;
   sections: { title: string; fromUnit: number; toUnit: number; topicId?: string | null }[]; expectedVersion?: number | null;
+  lessonId?: string | null; examCode?: string | null;
 }
 export interface ResourceCopyResult { copied: number; skipped: number }
 export interface TeacherStudentChoice { userId: string; fullName: string }
@@ -37,6 +40,30 @@ export const RESOURCE_UNITS: { value: ResourceUnit; label: string }[] = [
 /** "sayfa", "test", "soru": the unit as a lower-case word (Turkish counts take the singular). */
 export function resourceUnitWord(unit: ResourceUnit | string | null | undefined): string {
   return unit === 'Test' ? 'test' : unit === 'Question' ? 'soru' : 'sayfa';
+}
+/** "ÖABT", "YÖKDİL"; other exam codes (LGS, TYT, AYT, AGS, YDS) as they are. */
+export function resourceExamLabel(code: string | null | undefined): string {
+  if (!code) return '';
+  if (code === 'OABT' || code.startsWith('OABT_')) return 'ÖABT';
+  if (code.startsWith('YOKDIL')) return 'YÖKDİL';
+  if (code.startsWith('AYT')) return 'AYT';
+  return code;
+}
+/**
+ * Sections from a lesson's topics, in their order, the units shared out as evenly as they go (the first ones get the remainder).
+ * With fewer units than topics, only as many topics as units get a section.
+ */
+export function sectionsFromTopics(topics: { id: string; name: string }[], total: number): { title: string; fromUnit: number; toUnit: number; topicId: string }[] {
+  const used = topics.slice(0, Math.max(0, Math.min(topics.length, total)));
+  if (!used.length) return [];
+  const size = Math.floor(total / used.length), extra = total % used.length;
+  let from = 1;
+  return used.map((topic, i) => {
+    const to = from + size - 1 + (i < extra ? 1 : 0);
+    const section = { title: topic.name.slice(0, 200), fromUnit: from, toUnit: to, topicId: topic.id };
+    from = to + 1;
+    return section;
+  });
 }
 export function resourceKindLabel(kind: ResourceKind | string): string { return RESOURCE_KINDS.find(x => x.value === kind)?.label ?? 'Diğer'; }
 /** "Limit Soru Bankası, test 12–15"; the name alone without a range. */

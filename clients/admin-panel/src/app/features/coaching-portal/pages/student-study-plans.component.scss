@@ -81,3 +81,11 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 .task-partial { margin-top: var(--coaching-space-3, 12px); border-top: 1px solid var(--ui-border); padding-top: var(--coaching-space-3, 12px); }
 .task-partial > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--ui-text); }
 .task-partial > summary:focus-visible { outline: 3px solid var(--ui-focus, var(--ui-brand)); outline-offset: 2px; }
+
+/* KocApp uyumu: where a calendar task comes from. */
+.calendar-source { display: grid; gap: .6rem; margin: 0; padding: .75rem; border: 1px solid var(--ui-border); border-radius: 8px; }
+.calendar-source legend { padding: 0 .25rem; font-weight: 700; }
+.source-options { display: flex; flex-wrap: wrap; gap: .5rem; }
+.source-options label { display: inline-flex; gap: .4rem; align-items: center; min-height: 44px; padding: 0 .8rem; border: 1px solid var(--ui-border-strong); border-radius: 999px; cursor: pointer; }
+.source-options label:has(input:checked) { border-color: var(--ui-brand); background: var(--ui-brand-soft); font-weight: 700; }
+.source-options label:has(input:disabled) { opacity: .55; cursor: not-allowed; }

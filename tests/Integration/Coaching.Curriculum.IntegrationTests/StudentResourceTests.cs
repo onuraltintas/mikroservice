@@ -151,6 +151,21 @@ public sealed class StudentResourceTests
         Assert.Equal((book.Id, 14, 15), (second.ResourceId!.Value, second.ResourceFrom!.Value, second.ResourceTo!.Value));
         Assert.Null(third.ResourceId);
         Assert.Null(free.ResourceId);
+
+        // The teacher chose a resource for the lesson: its tasks take that resource's free units in turn.
+        var bank = StudentResource.Create(student, student, new("TEST Soru Bankası", null, "Matematik", StudentResourceKinds.QuestionBank,
+            StudentResourceUnits.Test, 5, 0, null, topic.LessonId, "LGS"), Now);
+        db.Add(bank); await db.SaveChangesAsync();
+        Assert.Equal((topic.LessonId, "LGS"), (bank.LessonId!.Value, bank.ExamCode));
+        var a = StudyPlanTask.Create(plan, new(2026, 11, 26), "Çarpanlar", 40, topic.Id); a.SetWeeklyPlacement(topic.LessonId, "Matematik", 540);
+        var b = StudyPlanTask.Create(plan, new(2026, 11, 27), "Çarpanlar", 40, topic.Id); b.SetWeeklyPlacement(topic.LessonId, "Matematik", 540);
+        var c = StudyPlanTask.Create(plan, new(2026, 11, 28), "Deneme çözümü", 40); c.SetWeeklyPlacement(topic.LessonId, "Matematik", 540);
+        await StudentResourcePlanLinks.LinkAsync(db, student, [a, b, c], default, [new WeeklyResourceChoice(topic.LessonId, bank.Id)]);
+        Assert.Equal((bank.Id, 1, 2), (a.ResourceId!.Value, a.ResourceFrom!.Value, a.ResourceTo!.Value));
+        Assert.Equal((bank.Id, 3, 4), (b.ResourceId!.Value, b.ResourceFrom!.Value, b.ResourceTo!.Value));
+        Assert.Equal((bank.Id, 5, 5), (c.ResourceId!.Value, c.ResourceFrom!.Value, c.ResourceTo!.Value));
+        await Assert.ThrowsAsync<ArgumentException>(() => StudentResourcePlanLinks.LinkAsync(db, student, [], default,
+            [new WeeklyResourceChoice(topic.LessonId, Guid.NewGuid())]));
     }
 
     private sealed class Identity(params Guid[] students) : ICoachingIdentityAuthorizationClient

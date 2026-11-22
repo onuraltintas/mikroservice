@@ -126,10 +126,22 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(await others.AnyAsync(x=>x.PlannedStartMinute<request.StartMinute+request.PlannedMinutes&&x.PlannedStartMinute+x.PlannedMinutes>request.StartMinute,ct))
                 throw Conflict("Bu saat başka bir çalışmayla çakışıyor. Boş bir saat seçin.");
             if(await others.SumAsync(x=>x.PlannedMinutes,ct)+request.PlannedMinutes>1440)throw Conflict("Bir güne 24 saatten fazla çalışma eklenemez.");
+            // KocApp uyumu (22.11.2026): from the curriculum, a topic of the chosen lesson.
+            if(request.TopicId is {} topicId&&(task is not null||!await db.StudyCatalogTopics.AnyAsync(x=>x.Id==topicId&&x.LessonId==lesson!.Id&&x.IsActive,ct)))
+                throw new ArgumentException(task is null?"Konu bu dersin konularından olmalı.":"Mevcut çalışmanın konusu değiştirilemez.");
+            StudentResource? resource=null;
+            if(request.ResourceId is {} resourceId)
+                resource=await db.Set<StudentResource>().SingleOrDefaultAsync(x=>x.Id==resourceId&&x.StudentId==student,ct)
+                    ??throw new ArgumentException("Seçilen kaynak bulunamadı.");
             if(task is null){
-                task=StudyPlanTask.Create(revision,request.PlannedDate,request.Title,request.PlannedMinutes);
-                task.SetWeeklyPlacement(lesson!.Id,lesson.Name,request.StartMinute);db.StudyPlanTasks.Add(task);
+                task=StudyPlanTask.Create(revision,request.PlannedDate,request.Title,request.PlannedMinutes,request.TopicId);
+                task.SetWeeklyPlacement(lesson!.Id,lesson.Name,request.StartMinute);
+                // Checked before the task is tracked: a refused range leaves nothing behind.
+                if(resource is not null||request.ResourceFrom.HasValue)task.LinkResource(resource,request.ResourceFrom,request.ResourceTo);
+                db.StudyPlanTasks.Add(task);
             }else{
+                // An edit changes the resource only when it says so (KeepResource false); older callers leave it as it was.
+                if(request.KeepResource==false)task.LinkResource(resource,request.ResourceFrom,request.ResourceTo);
                 // Clear the old time before validating a changed duration against the new time.
                 task.Schedule(request.PlannedDate,null);
                 task.CorrectPlanning(request.Title,request.PlannedDate,request.PlannedMinutes);

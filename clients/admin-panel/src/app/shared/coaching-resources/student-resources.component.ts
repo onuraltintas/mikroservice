@@ -3,9 +3,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { CoachingStudyPlanningService, StudyTopic } from '../../core/services/coaching-study-planning.service';
+import { CoachingLearningSetupService, LearningLesson } from '../../core/services/coaching-learning-setup.service';
 import {
   CoachingResourcesService, RESOURCE_KINDS, RESOURCE_UNITS, ResourceKind, ResourceTarget, ResourceUnit, StudentResource, StudentResourceInput,
-  TeacherStudentChoice, resourceKindLabel, resourceUnitWord
+  TeacherStudentChoice, resourceExamLabel, resourceKindLabel, resourceUnitWord, sectionsFromTopics
 } from '../../core/services/coaching-resources.service';
 
 interface SectionDraft { title: string; fromUnit: number | null; toUnit: number | null; topicId: string | null; topicName?: string | null;
@@ -13,10 +14,13 @@ interface SectionDraft { title: string; fromUnit: number | null; toUnit: number 
 interface ResourceDraft {
   id: string | null; version: number | null; name: string; publisher: string; lessonName: string; kind: ResourceKind; unit: ResourceUnit;
   totalUnits: number | null; doneBefore: number | null; sections: SectionDraft[];
+  /** A catalog lesson ('' for none, FREE_LESSON for a lesson written by hand) and the exam. */
+  lessonId: string; examCode: string;
 }
+const FREE_LESSON = '__free';
 
 const blank = (): ResourceDraft => ({ id: null, version: null, name: '', publisher: '', lessonName: '', kind: 'QuestionBank', unit: 'Page',
-  totalUnits: null, doneBefore: 0, sections: [] });
+  totalUnits: null, doneBefore: 0, sections: [], lessonId: '', examCode: '' });
 
 /** What the draft is missing, in the reader's words; null when it can be saved. */
 export function resourceDraftProblem(draft: ResourceDraft, sen = true): string | null {
@@ -61,8 +65,22 @@ export function resourceDraftProblem(draft: ResourceDraft, sen = true): string |
           <label>Ad<input name="name" [(ngModel)]="d.name" maxlength="200" required autocomplete="off" placeholder="Örneğin: Matematik Soru Bankası"></label>
           <div class="res-grid">
             <label>Yayınevi <small>(isteğe bağlı)</small><input name="publisher" [(ngModel)]="d.publisher" maxlength="120" autocomplete="off"></label>
-            <label>Ders <small>(isteğe bağlı)</small><input name="lesson" [(ngModel)]="d.lessonName" maxlength="100" autocomplete="off"></label>
             <label>Tür<select name="kind" [(ngModel)]="d.kind">@for (kind of kinds; track kind.value) { <option [value]="kind.value">{{ kind.label }}</option> }</select></label>
+          </div>
+          <!-- KocApp uyumu: a resource belongs to one of the student's lessons and to an exam. -->
+          <div class="res-grid">
+            <label>Ders
+              <select name="lessonId" [ngModel]="d.lessonId" (ngModelChange)="chooseLesson($event)" [disabled]="lessonsLoading()">
+                <option value="">{{ lessonsLoading() ? 'Dersler yükleniyor…' : 'Ders seçilmedi' }}</option>
+                @for (lesson of lessons(); track lesson.id) { <option [value]="lesson.id">{{ lesson.name }}@if (lesson.examCode) {, {{ examLabel(lesson.examCode) }}}</option> }
+                <option [value]="freeLesson">Listede yok, kendim yazacağım</option>
+              </select></label>
+            @if (d.lessonId === freeLesson) { <label>Dersin adı<input name="lesson" [(ngModel)]="d.lessonName" maxlength="100" autocomplete="off"></label> }
+            <label>Sınav türü
+              <select name="examCode" [(ngModel)]="d.examCode">
+                <option value="">Belirtilmedi</option>
+                @for (exam of examOptions(d); track exam) { <option [value]="exam">{{ examLabel(exam) }}</option> }
+              </select></label>
           </div>
           <fieldset class="res-units">
             <legend>İlerleme neyle sayılsın?</legend>
@@ -77,6 +95,9 @@ export function resourceDraftProblem(draft: ResourceDraft, sen = true): string |
           <fieldset class="res-sections">
             <legend>Bölümler <small>(isteğe bağlı)</small></legend>
             <p class="res-muted">{{ sen() ? 'Üniteleri ya da konuları aralıklarıyla yazarsan' : 'Üniteleri ya da konuları aralıklarıyla yazarsanız' }} ilerleme bölüm bölüm görünür ve plana sıradaki bölüm önerilir.</p>
+            @if (isCatalogLesson(d)) {
+              <button type="button" class="res-secondary" (click)="sectionsFromLesson()" [disabled]="busy() || topicsLoading() || !d.totalUnits">{{ topicsLoading() ? 'Konular yükleniyor…' : 'Dersin konularından bölümleri oluştur' }}</button>
+            }
             @for (section of d.sections; track $index; let i = $index) {
               <div class="res-section">
                 <label>Bölüm adı<input [name]="'section-title-' + i" [(ngModel)]="section.title" maxlength="200" required autocomplete="off"></label>
@@ -85,7 +106,13 @@ export function resourceDraftProblem(draft: ResourceDraft, sen = true): string |
                 <button type="button" class="res-link" (click)="removeSection(i)">Bölümü kaldır</button>
                 <!-- KocApp plan, phase 2: a section tied to a topic gets the topic's plan tasks (its next free part). -->
                 <div class="res-topic">
-                  @if (section.topicId) {
+                  @if (isCatalogLesson(d) && lessonTopics(d.lessonId)) {
+                    <label>Konu <small>(isteğe bağlı)</small>
+                      <select [name]="'section-topic-select-' + i" [ngModel]="section.topicId ?? ''" (ngModelChange)="pickTopicId(section, $event, d.lessonId)">
+                        <option value="">Konu seçilmedi</option>
+                        @for (topic of lessonTopics(d.lessonId)!; track topic.id) { <option [value]="topic.id">{{ topic.name }}</option> }
+                      </select></label>
+                  } @else if (section.topicId) {
                     <p>Konu: <b>{{ section.topicName || 'Seçili konu' }}</b> <button type="button" class="res-link" (click)="clearTopic(section)">Konuyu kaldır</button></p>
                   } @else {
                     <label>Konu <small>(isteğe bağlı; plan bu konunun çalışmalarına bu bölümü önerir)</small>
@@ -121,6 +148,7 @@ export function resourceDraftProblem(draft: ResourceDraft, sen = true): string |
             <div class="res-card-head">
               <h3>{{ item.name }}</h3>
               <span class="res-tag">{{ kindLabel(item.kind) }}</span>
+              @if (item.examCode) { <span class="res-tag">{{ examLabel(item.examCode) }}</span> }
               @if (item.isArchived) { <span class="res-tag">Arşivde</span> }
             </div>
             @if (item.publisher || item.lessonName) { <p class="res-muted">{{ meta(item) }}</p> }
@@ -263,6 +291,14 @@ export class StudentResourcesComponent implements OnInit {
   readonly units = RESOURCE_UNITS;
   readonly word = resourceUnitWord;
   readonly kindLabel = resourceKindLabel;
+  readonly examLabel = resourceExamLabel;
+  readonly freeLesson = FREE_LESSON;
+  private readonly setup = inject(CoachingLearningSetupService);
+  readonly lessons = signal<LearningLesson[]>([]);
+  readonly lessonsLoading = signal(false);
+  readonly topicsLoading = signal(false);
+  private lessonsRequested = false;
+  private readonly topicCache = signal<Record<string, StudyTopic[]>>({});
   readonly headingId = `resources-${Math.random().toString(36).slice(2, 9)}`;
 
   readonly canEdit = computed(() => this.audience() !== 'parent' && !this.readonly());
@@ -309,12 +345,79 @@ export class StudentResourcesComponent implements OnInit {
   }
   range(from: number, to: number) { return from === to ? `${from}` : `${from}–${to}`; }
 
-  startNew() { this.clear(); this.draft.set(blank()); }
+  startNew() { this.clear(); this.draft.set(blank()); this.loadLessons(); }
+
+  /** The student's lessons (her learning setup), read once when a form opens. */
+  private loadLessons() {
+    if (this.lessonsRequested || this.audience() === 'parent') return;
+    this.lessonsRequested = true; this.lessonsLoading.set(true);
+    const student = this.studentId();
+    (student ? this.setup.catalogForStudent(student) : this.setup.catalog()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: catalog => { this.lessons.set(catalog?.lessons ?? []); this.lessonsLoading.set(false); this.prefetchTopics(); },
+      error: () => { this.lessons.set([]); this.lessonsLoading.set(false); }
+    });
+  }
+  isCatalogLesson(d: ResourceDraft) { return !!d.lessonId && d.lessonId !== FREE_LESSON; }
+  lessonTopics(lessonId: string) { return this.topicCache()[lessonId] ?? null; }
+  examOptions(d: ResourceDraft): string[] {
+    return [...new Set([...this.lessons().map(x => x.examCode).filter((x): x is string => !!x), ...(d.examCode ? [d.examCode] : [])])];
+  }
+  chooseLesson(id: string) {
+    const d = this.draft(); if (!d) return;
+    d.lessonId = id;
+    const lesson = this.lessons().find(x => x.id === id);
+    if (lesson) { d.lessonName = lesson.name; if (!d.examCode && lesson.examCode) d.examCode = lesson.examCode; }
+    if (id === '') d.lessonName = '';
+    this.draft.set({ ...d });
+    this.prefetchTopics();
+  }
+  /** The lesson's topics (up to 200, in curriculum order) for the section pickers. */
+  private prefetchTopics(): Promise<StudyTopic[]> {
+    const d = this.draft(); if (!d || !this.isCatalogLesson(d)) return Promise.resolve([]);
+    const lessonId = d.lessonId, cached = this.topicCache()[lessonId];
+    if (cached) return Promise.resolve(cached);
+    this.topicsLoading.set(true);
+    const student = this.studentId(), all: StudyTopic[] = [];
+    return new Promise(resolve => {
+      const page = (n: number) => (student ? this.setup.catalogForStudent(student, lessonId, n) : this.setup.catalog(lessonId, n))
+        .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: catalog => {
+            const items = catalog?.topics?.items ?? []; all.push(...items);
+            if (items.length >= 50 && all.length < 200 && all.length < (catalog?.topics?.totalCount ?? 0)) { page(n + 1); return; }
+            this.topicCache.set({ ...this.topicCache(), [lessonId]: all }); this.topicsLoading.set(false); resolve(all);
+          },
+          error: () => { this.topicsLoading.set(false); resolve([]); }
+        });
+      page(1);
+    });
+  }
+  /** "Dersin konularından bölümleri oluştur": one section per topic, the units shared out evenly; they can be edited after. */
+  async sectionsFromLesson() {
+    const d = this.draft(); if (!d || !this.isCatalogLesson(d)) return;
+    const total = Number(d.totalUnits);
+    if (!Number.isInteger(total) || total < 1) { this.error.set(this.v('Önce toplamı yaz.', 'Önce toplamı yazın.')); return; }
+    const topics = await this.prefetchTopics();
+    const current = this.draft(); if (!current || current.lessonId !== d.lessonId) return;
+    if (!topics.length) { this.error.set('Bu dersin konuları bulunamadı.'); return; }
+    current.sections = sectionsFromTopics(topics, total).map(x => ({ ...x, topicName: x.title }));
+    this.draft.set({ ...current });
+    this.clear();
+    this.notice.set(`${current.sections.length} bölüm oluşturuldu. ${this.v('Aralıkları kitaba göre düzeltebilirsin.', 'Aralıkları kitaba göre düzeltebilirsiniz.')}`);
+  }
+  pickTopicId(section: SectionDraft, id: string, lessonId: string) {
+    const topic = (this.topicCache()[lessonId] ?? []).find(x => x.id === id);
+    section.topicId = topic?.id ?? null; section.topicName = topic?.name ?? null;
+    if (topic && !section.title.trim()) section.title = topic.name.slice(0, 200);
+    this.draft.set({ ...this.draft()! });
+  }
   edit(item: StudentResource) {
     this.clear();
     this.draft.set({ id: item.id, version: item.version, name: item.name, publisher: item.publisher ?? '', lessonName: item.lessonName ?? '',
       kind: item.kind, unit: item.unit, totalUnits: item.totalUnits, doneBefore: item.doneBefore,
-      sections: item.sections.map(x => ({ title: x.title, fromUnit: x.fromUnit, toUnit: x.toUnit, topicId: x.topicId ?? null, topicName: x.topicName ?? null })) });
+      sections: item.sections.map(x => ({ title: x.title, fromUnit: x.fromUnit, toUnit: x.toUnit, topicId: x.topicId ?? null, topicName: x.topicName ?? null })),
+      lessonId: item.lessonId ?? (item.lessonName ? FREE_LESSON : ''), examCode: item.examCode ?? '' });
+    this.loadLessons();
+    this.prefetchTopics();
   }
   cancel() { this.draft.set(null); this.error.set(null); }
   addSection() {
@@ -343,7 +446,8 @@ export class StudentResourcesComponent implements OnInit {
     const problem = resourceDraftProblem(d, this.sen());
     if (problem) { this.error.set(problem); return; }
     const input: StudentResourceInput = {
-      name: d.name.trim(), publisher: d.publisher.trim() || null, lessonName: d.lessonName.trim() || null, kind: d.kind, unit: d.unit,
+      name: d.name.trim(), publisher: d.publisher.trim() || null, lessonName: d.lessonId === '' ? null : d.lessonName.trim() || null, kind: d.kind, unit: d.unit,
+      lessonId: this.isCatalogLesson(d) ? d.lessonId : null, examCode: d.examCode || null,
       totalUnits: Number(d.totalUnits), doneBefore: Number(d.doneBefore ?? 0),
       sections: d.sections.map(x => ({ title: x.title.trim(), fromUnit: Number(x.fromUnit), toUnit: Number(x.toUnit), topicId: x.topicId })),
       expectedVersion: d.version

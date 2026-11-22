@@ -52,7 +52,7 @@ public sealed class CoachingStudentResourceService(CoachingDbContext db, ICoachi
             throw Conflict($"Bir öğrencinin en çok {MaxResourcesPerStudent} kaynağı olabilir. Biten kaynaklar silinebilir ya da arşivlenebilir.");
         var actor = access.CurrentUserId ?? throw new BusinessRuleException("Authorization.Forbidden", "Oturum bulunamadı.");
         await RequireTopicsAsync(input, ct);
-        var resource = StudentResource.Create(student, actor, Details(input), clock.GetUtcNow().UtcDateTime);
+        var resource = StudentResource.Create(student, actor, await DetailsAsync(input, ct), clock.GetUtcNow().UtcDateTime);
         db.Add(resource);
         await db.SaveChangesAsync(ct);
         return (await ViewsAsync(student, [resource], ct))[0];
@@ -67,7 +67,7 @@ public sealed class CoachingStudentResourceService(CoachingDbContext db, ICoachi
         var furthest = await db.StudyPlanTasks.Where(x => x.StudentId == student && x.ResourceId == id).MaxAsync(x => x.ResourceTo, ct);
         if (furthest is { } last && input.TotalUnits < last)
             throw Conflict($"Plandaki bir çalışma bu kaynağın {last}. birimine kadar gidiyor; toplam bundan az olamaz.");
-        resource.Update(Details(input), clock.GetUtcNow().UtcDateTime);
+        resource.Update(await DetailsAsync(input, ct), clock.GetUtcNow().UtcDateTime);
         await db.SaveChangesAsync(ct);
         return (await ViewsAsync(student, [resource], ct))[0];
     }
@@ -107,7 +107,8 @@ public sealed class CoachingStudentResourceService(CoachingDbContext db, ICoachi
         var existing = await db.Set<StudentResource>().AsNoTracking().Where(x => Enumerable.Contains(targets, x.StudentId))
             .Select(x => new { x.StudentId, x.Name }).ToArrayAsync(ct);
         var now = clock.GetUtcNow().UtcDateTime;
-        var details = new StudentResourceDetails(source.Name, source.Publisher, source.LessonName, source.Kind, source.Unit, source.TotalUnits, 0, source.Sections);
+        var details = new StudentResourceDetails(source.Name, source.Publisher, source.LessonName, source.Kind, source.Unit, source.TotalUnits, 0, source.Sections,
+            source.LessonId, source.ExamCode);
         var copied = 0;
         foreach (var target in targets)
         {
@@ -153,7 +154,7 @@ public sealed class CoachingStudentResourceService(CoachingDbContext db, ICoachi
         var percent = (int)Math.Floor(doneUnits * 100m / resource.TotalUnits);
         return new StudentResourceView(resource.Id, resource.Version, resource.Name, resource.Publisher, resource.LessonName, resource.Kind,
             resource.Unit, resource.TotalUnits, resource.DoneBefore, doneUnits, percent, plannedUnits, resource.IsArchived, ranges.Count == 0,
-            resource.CreatedAt, resource.UpdatedAt, sections, resource.IsArchived ? null : Next(resource, done, planned));
+            resource.CreatedAt, resource.UpdatedAt, sections, resource.IsArchived ? null : Next(resource, done, planned), resource.LessonId, resource.ExamCode);
     }
 
     private static int SectionDone(StudentResourceSection section, int doneBefore, IReadOnlyList<(int From, int To)> done)
@@ -206,14 +207,27 @@ public sealed class CoachingStudentResourceService(CoachingDbContext db, ICoachi
     private async Task RequireTopicsAsync(StudentResourceInput input, CancellationToken ct)
     {
         var topics = (input.Sections ?? []).Where(x => x?.TopicId is not null).Select(x => x.TopicId!.Value).Distinct().ToArray();
-        if (topics.Length > 0 && await db.StudyCatalogTopics.CountAsync(x => Enumerable.Contains(topics, x.Id) && x.IsActive, ct) != topics.Length)
-            throw new ArgumentException("Bölümlerde seçilen konulardan biri kullanılamıyor.");
+        if (topics.Length > 0 && await db.StudyCatalogTopics.CountAsync(x => Enumerable.Contains(topics, x.Id) && x.IsActive
+                && (input.LessonId == null || x.LessonId == input.LessonId), ct) != topics.Length)
+            throw new ArgumentException(input.LessonId is null ? "Bölümlerde seçilen konulardan biri kullanılamıyor."
+                : "Bölümlerin konuları kaynağın dersinden olmalı.");
     }
 
-    private static StudentResourceDetails Details(StudentResourceInput input) => new(input.Name, input.Publisher, input.LessonName, input.Kind,
-        input.Unit, input.TotalUnits, input.DoneBefore,
-        (input.Sections ?? []).Select(x => x is null ? throw new ArgumentException("Boş bölüm gönderilemez.")
-            : new StudentResourceSection(x.Title, x.FromUnit, x.ToUnit, x.TopicId)).ToArray());
+    /// <summary>A catalog lesson gives the resource its name and, unless another is chosen, its exam.</summary>
+    private async Task<StudentResourceDetails> DetailsAsync(StudentResourceInput input, CancellationToken ct)
+    {
+        var lessonName = input.LessonName; var exam = input.ExamCode;
+        if (input.LessonId is { } lessonId)
+        {
+            var lesson = await db.StudyCatalogLessons.AsNoTracking().SingleOrDefaultAsync(x => x.Id == lessonId && x.IsActive, ct)
+                ?? throw new ArgumentException("Seçilen ders kullanılamıyor.");
+            lessonName = lesson.Name.Length > 100 ? lesson.Name[..100] : lesson.Name;
+            exam = string.IsNullOrWhiteSpace(exam) ? lesson.ExamCode : exam;
+        }
+        return new(input.Name, input.Publisher, lessonName, input.Kind, input.Unit, input.TotalUnits, input.DoneBefore,
+            (input.Sections ?? []).Select(x => x is null ? throw new ArgumentException("Boş bölüm gönderilemez.")
+                : new StudentResourceSection(x.Title, x.FromUnit, x.ToUnit, x.TopicId)).ToArray(), input.LessonId, exam);
+    }
 
     private static BusinessRuleException Conflict(string message) => new("StudyPlanning.Conflict", message);
 }
@@ -250,28 +264,43 @@ public static class StudentResourceNames
 }
 
 /// <summary>
-/// KocApp plan, phase 2: when a plan is made, a learning task of a topic that a section of one of the student's resources is tied
-/// to gets the next free part of that section (a usual sitting: 10 pages, 2 tests or 40 questions). Done parts and parts given
-/// to earlier tasks of the same plan are skipped; a task that already points at a resource keeps it.
+/// KocApp plan, phase 2: when a plan is made, a learning task gets the next free part of a resource. A lesson the teacher (or the
+/// student) chose a resource for (by default the first resource tied to the lesson) takes it from that resource: the section of the task's topic first, else the first free units.
+/// Other tasks take a part only from a section tied to their topic. A part is a usual sitting (10 pages, 2 tests or 40 questions);
+/// done parts and parts given to earlier tasks of the same plan are skipped; a task that already points at a resource keeps it.
 /// </summary>
 public static class StudentResourcePlanLinks
 {
     public static int Sitting(string unit) => unit switch { StudentResourceUnits.Test => 2, StudentResourceUnits.Question => 40, _ => 10 };
 
-    public static async Task LinkAsync(CoachingDbContext db, Guid student, IReadOnlyList<StudyPlanTask> tasks, CancellationToken ct)
+    public static async Task LinkAsync(CoachingDbContext db, Guid student, IReadOnlyList<StudyPlanTask> tasks, CancellationToken ct,
+        IReadOnlyList<WeeklyResourceChoice>? choices = null)
     {
-        var open = tasks.Where(x => x.TopicId.HasValue && x.ResourceId is null && x.StudentId == student).ToArray();
+        var resources = await db.Set<StudentResource>().AsNoTracking().Where(x => x.StudentId == student && !x.IsArchived)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(ct);
+        // Without a choice (null) each lesson takes the first resource tied to it; an empty list means "no resource" for every lesson.
+        var chosen = choices is null
+            ? tasks.Where(x => x.WeeklyLessonId.HasValue).Select(x => x.WeeklyLessonId!.Value).Distinct()
+                .Select(lesson => resources.FirstOrDefault(x => x.LessonId == lesson) is { } own ? new WeeklyResourceChoice(lesson, own.Id) : null)
+                .OfType<WeeklyResourceChoice>().ToArray()
+            : choices.Where(x => x is not null).ToArray();
+        if (chosen.Length > 50 || chosen.GroupBy(x => x.LessonId).Any(x => x.Count() > 1))
+            throw new ArgumentException("Her ders için en çok bir kaynak seçilebilir.");
+        var open = tasks.Where(x => x.ResourceId is null && x.StudentId == student
+            && (x.TopicId.HasValue || x.WeeklyLessonId is { } lesson && chosen.Any(c => c.LessonId == lesson))).ToArray();
+        var byLesson = new Dictionary<Guid, StudentResource>();
+        foreach (var choice in chosen)
+            byLesson[choice.LessonId] = resources.SingleOrDefault(x => x.Id == choice.ResourceId)
+                ?? throw new ArgumentException("Plan için seçilen kaynak bulunamadı ya da arşivde.");
         if (open.Length == 0) return;
-        var topics = open.Select(x => x.TopicId!.Value).ToHashSet();
-        var resources = (await db.Set<StudentResource>().AsNoTracking().Where(x => x.StudentId == student && !x.IsArchived)
-                .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(ct))
-            .Where(x => x.Sections.Any(section => section.TopicId is { } topic && topics.Contains(topic))).ToArray();
-        if (resources.Length == 0) return;
-        var ids = resources.Select(x => x.Id).ToArray();
+        var topics = open.Where(x => x.TopicId.HasValue).Select(x => x.TopicId!.Value).ToHashSet();
+        var useful = resources.Where(x => byLesson.ContainsValue(x) || x.Sections.Any(section => section.TopicId is { } topic && topics.Contains(topic))).ToArray();
+        if (useful.Length == 0) return;
+        var ids = useful.Select(x => x.Id).ToArray();
         var done = await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student && x.IsCompleted && x.ResourceId != null
                 && Enumerable.Contains(ids, x.ResourceId!.Value) && x.ResourceFrom != null)
             .Select(x => new { Id = x.ResourceId!.Value, From = x.ResourceFrom!.Value, To = x.ResourceTo!.Value }).ToArrayAsync(ct);
-        var taken = resources.ToDictionary(x => x.Id, resource =>
+        var taken = useful.ToDictionary(x => x.Id, resource =>
         {
             var map = new bool[resource.TotalUnits + 1];
             for (var unit = 1; unit <= Math.Min(resource.DoneBefore, resource.TotalUnits); unit++) map[unit] = true;
@@ -281,19 +310,33 @@ public static class StudentResourcePlanLinks
         });
         foreach (var task in open.OrderBy(x => x.PlannedDate).ThenBy(x => x.PlannedStartMinute ?? 0))
         {
-            foreach (var resource in resources)
+            if (task.WeeklyLessonId is { } lesson && byLesson.TryGetValue(lesson, out var own))
             {
-                var map = taken[resource.Id];
-                var section = resource.Sections.FirstOrDefault(x => x.TopicId == task.TopicId
-                    && Enumerable.Range(x.FromUnit, x.ToUnit - x.FromUnit + 1).Any(unit => !map[unit]));
-                if (section is null) continue;
-                var from = Enumerable.Range(section.FromUnit, section.ToUnit - section.FromUnit + 1).First(unit => !map[unit]);
+                // The chosen resource: the section of the task's topic first, else the first free units anywhere in it.
+                if (!Take(task, own, own.Sections.Where(x => x.TopicId == task.TopicId && task.TopicId.HasValue).Select(x => (x.FromUnit, x.ToUnit)))
+                    && !own.Sections.Any(x => x.TopicId == task.TopicId && task.TopicId.HasValue))
+                    Take(task, own, [(1, own.TotalUnits)]);
+                continue;
+            }
+            foreach (var resource in useful.Where(x => !byLesson.ContainsValue(x) || x.Sections.Count > 0))
+                if (Take(task, resource, resource.Sections.Where(x => x.TopicId == task.TopicId && task.TopicId.HasValue).Select(x => (x.FromUnit, x.ToUnit))))
+                    break;
+        }
+
+        bool Take(StudyPlanTask task, StudentResource resource, IEnumerable<(int From, int To)> spans)
+        {
+            var map = taken[resource.Id];
+            foreach (var (first, last) in spans)
+            {
+                var from = Enumerable.Range(first, last - first + 1).FirstOrDefault(unit => !map[unit]);
+                if (from == 0) continue;
                 var to = from;
-                while (to < section.ToUnit && to - from + 1 < Sitting(resource.Unit) && !map[to + 1]) to++;
+                while (to < last && to - from + 1 < Sitting(resource.Unit) && !map[to + 1]) to++;
                 for (var unit = from; unit <= to; unit++) map[unit] = true;
                 task.LinkResource(resource, from, to);
-                break;
+                return true;
             }
+            return false;
         }
     }
 }
