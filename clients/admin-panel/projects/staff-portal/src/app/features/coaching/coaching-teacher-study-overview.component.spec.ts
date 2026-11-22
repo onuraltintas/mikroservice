@@ -24,7 +24,9 @@ describe('teacher study overview',()=>{
     const f=TestBed.createComponent(CoachingTeacherStudyOverviewComponent),http=TestBed.inject(HttpTestingController);f.detectChanges();
     const data={items:[{studentId:'s',fullName:'Öğrenci Test',hasActivePlan:false,hasDraft:false,completedTasks:0,pendingTasks:1,overdueTasks:1,actualMinutes:0,tasks:[{taskId:'task',planId:'old-plan',title:'Geciken konu',plannedDate:'2026-10-01',plannedStartMinute:null,plannedMinutes:30,isCompleted:false,isOverdue:true,actualMinutes:null}]}],totalCount:1,pageNumber:1,pageSize:25};
     http.expectOne(r=>r.url.endsWith('/study-overview')).flush(data);f.detectChanges();
-    const c=f.componentInstance;c.display='overdue';expect(c.workItems()[0].task.title).toBe('Geciken konu');(await c.open(data.items[0],'overdue'));f.detectChanges();http.expectOne(r=>r.url.includes('/study/plans')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});http.expectOne(r=>r.params.get('status')==='Active').flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});f.detectChanges();
+    const c=f.componentInstance;c.display='overdue';expect(c.workItems()[0].task.title).toBe('Geciken konu');(await c.open(data.items[0],'overdue'));f.detectChanges();http.expectOne(r=>r.url.includes('/study/plans')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});http.expectOne(r=>r.params.get('status')==='Active').flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});
+    // 22.11.2026: with no active plan the student's draft is looked for (and opened when there is one).
+    http.expectOne(r=>r.params.get('status')==='Draft').flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});f.detectChanges();
     // 22.11.2026: "Yeni taslak" makes an empty draft at once and opens it on its calendar; an unsaved new name is protected.
     (f.nativeElement.querySelector('app-student-study-plans .page-heading button') as HTMLButtonElement).click();
     const draft={id:'draft-1',version:0,status:'Draft',title:'Elle hazırlanan plan',tasks:[]};
@@ -55,6 +57,8 @@ describe('teacher study overview',()=>{
     http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/availability')).flush(null,{status:404,statusText:'Not Found'});
     // Paket H4: the wizard also reads the student's routine (read only for a teacher).
     http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/routine')).flush({success:true,data:null});
+    // 22.11.2026: the wizard tells the teacher at the start about a waiting draft of the student.
+    http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/plans')&&r.params.get('status')==='Draft').flush({success:true,data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});
     http.expectOne(r=>r.url.endsWith('/coaching/staff/students/student-42/study/plan-preferences')).flush({success:true,data:{examFocus:null,tempo:null,version:null,updatedAt:null}});
     f.detectChanges();expect(f.nativeElement.querySelectorAll('a[href*="/coaching-portal"]').length).toBe(0);
     http.verify();

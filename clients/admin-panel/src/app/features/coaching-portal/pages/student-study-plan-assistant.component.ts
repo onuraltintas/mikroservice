@@ -145,6 +145,10 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
       this.prefsLoaded = true; this.applyStored(); this.start();
     });
     if (!this.staffStudentId) this.checkPlans();
+    // 22.11.2026: the teacher is told about the student's waiting draft at the start (the summary offers to archive it).
+    else this.planning.list(1, 'Draft', this.staffStudentId).pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroy)).subscribe(page => {
+      const draft = page?.items.find(x => x.status === 'Draft'); this.pendingDraft.set(draft ? { id: draft.id, title: draft.title } : null);
+    });
   }
 
   /** The active plan (edit mode, its end for the tempo) and a pending draft (offered first). */
@@ -164,10 +168,10 @@ export class StudentStudyPlanAssistantComponent implements OnInit {
     this.weekly.get(this.staffStudentId ?? undefined).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: page => {
         this.lessons.set(page.lessons); this.draftHasCards = !!page.draft?.slots.length; this.maxDayMinutes = page.maxDayMinutes ?? DEFAULT_MAX_DAY_MINUTES; this.busy.set(false);
-        if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Bu öğrenci henüz eğitim bağlamını tamamlamamış. Önce öğrenci kurulumunu tamamla.' : 'Önce çalışma düzeninden ders seçmelisin.');
+        if (!page.lessons.length) this.error.set(this.staffStudentId ? 'Öğrenci henüz derslerini seçmemiş. Plan sihirbazı, öğrenci çalışma tercihlerinde derslerini seçince kullanılabilir.' : 'Önce çalışma düzeninden ders seçmelisin.');
         this.start();
       },
-      error: () => { this.busy.set(false); this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni yüklenemedi. Yeniden deneyebilirsin.' : 'Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
+      error: () => { this.busy.set(false); this.error.set(this.staffStudentId ? 'Öğrencinin haftalık düzeni yüklenemedi. Sayfa yenilenip yeniden denenebilir.' : 'Haftalık düzenin yüklenemedi. Yeniden deneyebilirsin.'); }
     });
   }
   loadLearning() {

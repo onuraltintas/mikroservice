@@ -200,6 +200,8 @@
     <div class="notice error" role="alert" data-testid="publish-issue"><p>{{ issue.message }}</p>
       <div class="actions">
         @if (issue.stale) { <button type="button" class="secondary" (click)="retry()" [disabled]="busy()">Yeniden hesapla</button> }
+        <!-- 22.11.2026: a waiting draft no longer ends the wizard; it can be archived (kept in the history) and the new plan saved. -->
+        @if (issue.draftExists) { <button type="button" data-testid="archive-pending-draft" (click)="archivePendingDraft()" [disabled]="busy()">{{ staffStudentId ? 'Bekleyen taslağı arşivle ve bu planı kaydet' : 'Bekleyen taslağı arşivle ve bu planı yayımla' }}</button> }
         @if (!staffStudentId && (issue.draftExists || created())) {
           <a routerLink="/coaching-portal/plan" [queryParams]="created() ? { plan: created()!.id } : staleDraftId() ? { plan: staleDraftId() } : {}">Planım'ı aç</a>
         }

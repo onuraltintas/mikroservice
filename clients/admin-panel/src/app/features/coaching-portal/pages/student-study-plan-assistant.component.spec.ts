@@ -452,7 +452,8 @@ describe('StudentStudyPlanAssistantComponent', () => {
       const { fixture, el, routines, weekly, learning, planning, prefs } = await setup({ staff: 'student-1', routine: routineOf(answers), availability: hours });
       expect(el.querySelector('h1')?.textContent).toBe('Öğrenci için plan hazırla');
       expect(routines.get).toHaveBeenCalledWith('student-1'); expect(learning.getForStudent).toHaveBeenCalledWith('student-1');
-      expect(planning.list).not.toHaveBeenCalled();
+      // The teacher is not asked what to change; only the student's waiting draft is read (22.11.2026), for a notice.
+      expect(planning.list.mock.calls).toEqual([[1, 'Draft', 'student-1']]);
       expect(title(el)).toBe('Öğrencinin saatleri');
       expect(button(el, 'Değiştir')).toBeUndefined();
       await click(fixture, 'Devam'); expect(title(el)).toBe('Öğrencinin dersleri');

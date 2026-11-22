@@ -2,7 +2,7 @@
   @if(detail();as selected){
     <button type="button" (click)="back()">Toplu takibe dön</button><h3>{{ selected.student.fullName }}, Çalışma planı</h3>
     <staff-coaching-planning-permission [studentId]="selected.student.studentId" />
-    @if(wizardMode){<button type="button" (click)="wizardMode=false">Plan listesine dön</button>@defer(on immediate){<app-student-study-plan-assistant #wizard [staffStudentId]="selected.student.studentId" (planCreated)="planCreated($event)" />}@placeholder{<p role="status">Plan sihirbazı hazırlanıyor…</p>}}
+    @if(wizardMode){<button type="button" (click)="closeWizard()">Plan listesine dön</button>@defer(on immediate){<app-student-study-plan-assistant #wizard [staffStudentId]="selected.student.studentId" (planCreated)="planCreated($event)" />}@placeholder{<p role="status">Plan sihirbazı hazırlanıyor…</p>}}
     @else{<button type="button" (click)="createWithWizard()">Sihirbazla otomatik plan hazırla</button><app-student-study-plans [staffStudentId]="selected.student.studentId" [autoOpenActive]="true" [initialPlanId]="selected.planId??null" [taskFilter]="selected.filter" />}
   }@else{
     <h3>Çalışma takibi</h3><p>Atanmış öğrencilerinizin tamamlanan, bekleyen ve geciken çalışmalarını seçilen dönem için birlikte izleyin. Güncel kayıtlar için listeyi yenileyin.</p>

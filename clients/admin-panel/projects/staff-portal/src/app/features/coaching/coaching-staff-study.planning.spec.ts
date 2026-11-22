@@ -55,4 +55,14 @@ describe('CoachingStaffStudyComponent planning permission', () => {
     expect(fixture.componentInstance.planning()?.allowedByTeacher).toBe(false);
     expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent).toContain('Ayar kaydedilemedi');
   });
+
+  // 22.11.2026: the wizard's draft opens afterwards (its id goes to the plan list), and a new student starts clean.
+  it('opens the draft the wizard made and forgets it for another student', async () => {
+    const fixture = await mount({ forStudent: () => of(state(false)), set: vi.fn() });
+    const c = fixture.componentInstance;
+    c.wizardMode.set(true); c.wizardCreated('draft-9');
+    expect(c.wizardMode()).toBe(false); expect(c.createdPlanId()).toBe('draft-9');
+    c.studentId = 'student-2'; c.ngOnChanges();
+    expect(c.createdPlanId()).toBeNull();
+  });
 });

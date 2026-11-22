@@ -47,11 +47,13 @@ import { CoachingPlanningPermissionService, PlanningPermission } from '../../../
       <!-- Live test 14.11.2026: the wizard was reachable only from "Çalışma takibi"; a teacher reading the report looked for it here. -->
       @if (wizardMode()) {
         <button type="button" (click)="closeWizard()">Plan listesine dön</button>
-        @defer (on immediate) { <app-student-study-plan-assistant #wizard [staffStudentId]="studentId" (planCreated)="wizardMode.set(false)" /> }
+        @defer (on immediate) { <app-student-study-plan-assistant #wizard [staffStudentId]="studentId" (planCreated)="wizardCreated($event)" /> }
         @placeholder { <p role="status">Plan sihirbazı hazırlanıyor…</p> }
       } @else {
         @if (!readOnly) { <button type="button" data-testid="report-open-wizard" (click)="wizardMode.set(true)">Sihirbazla otomatik plan hazırla</button> }
-        <app-student-study-plans [staffStudentId]="studentId" [readOnly]="readOnly" />
+        <!-- 22.11.2026: the draft the wizard just made opens, with its publish box, instead of an empty list. -->
+        @if (createdPlanId()) { <p class="notice" role="status" data-testid="wizard-draft-ready">Sihirbazın hazırladığı plan öğrencinin taslağı olarak kaydedildi. Takvimde kontrol edilip aşağıdaki “Planı yayımla” bölümünden yayımlanabilir.</p> }
+        <app-student-study-plans [staffStudentId]="studentId" [readOnly]="readOnly" [initialPlanId]="createdPlanId()" />
       }
       }
       </div>
@@ -68,6 +70,8 @@ export class CoachingStaffStudyComponent implements OnChanges {
   @ViewChild(PracticeProgressComponent) private practice?: PracticeProgressComponent;
   @ViewChild('wizard') private assistant?: StudentStudyPlanAssistantComponent;
   readonly wizardMode = signal(false);
+  readonly createdPlanId = signal<string | null>(null);
+  wizardCreated(planId: string) { this.createdPlanId.set(planId); this.wizardMode.set(false); }
   async closeWizard(): Promise<void> { if (await this.assistant?.canLeavePage() ?? true) this.wizardMode.set(false); }
   async canLeavePage(): Promise<boolean> {
     if (this.wizardMode()) return await this.assistant?.canLeavePage() ?? true;
@@ -106,7 +110,7 @@ export class CoachingStaffStudyComponent implements OnChanges {
         error: () => { this.planningError.set('Ayar kaydedilemedi. Yetkiyi ve bağlantıyı kontrol edin.'); this.planning.update(state => state ? { ...state } : state); } });
   }
 
-  ngOnChanges(): void { this.loadAvailability(); this.loadPlanning(); }
+  ngOnChanges(): void { this.createdPlanId.set(null); this.loadAvailability(); this.loadPlanning(); }
   loadAvailability(): void {
     this.request?.unsubscribe(); this.availability.set(null); this.error.set(null);
     if (this.briefOnly || !this.studentId) { this.loading.set(false); return; }

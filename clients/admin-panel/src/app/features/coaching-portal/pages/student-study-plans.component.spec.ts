@@ -429,6 +429,41 @@ describe('StudentStudyPlansComponent', () => {
     component.renameDraft();
     expect(service.rename).toHaveBeenCalledWith('plan', 4, 'Haftalık TEST planı');
   });
+  it('22.11.2026: with no active plan the draft being prepared opens instead of the empty page', async () => {
+    const { component, service } = await setup();
+    component.selected.set(null);
+    const draft = { ...active, id: 'draft', status: 'Draft' as const, tasks: [] };
+    service.list.mockImplementation(((_p: number, status?: string) => of({ items: status === 'Draft' ? [{ ...draft, tasks: undefined }] : [], totalCount: status === 'Draft' ? 1 : 0, pageNumber: 1, pageSize: 20 })) as never);
+    service.get.mockReturnValue(of(draft));
+    component.loadList(); await Promise.resolve(); await Promise.resolve();
+    expect(service.list).toHaveBeenCalledWith(1, 'Draft');
+    expect(component.selected()?.id).toBe('draft');
+  });
+  it('22.11.2026: a student without a plan can start one by hand; one whose teacher plans for her is told so and changes nothing', async () => {
+    const { fixture, component, service } = await setup();
+    component.selected.set(null); fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    service.list.mockReturnValue(of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 }));
+    service.create.mockReturnValue(of({ ...active, id: 'empty', status: 'Draft', tasks: [] }));
+    (element.querySelector('[data-testid="empty-manual-draft"]') as HTMLButtonElement).click(); await fixture.whenStable();
+    expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ tasks: [] }));
+    expect(component.selected()?.id).toBe('empty');
+    // A student whose teacher plans for her.
+    service.create.mockClear(); component.planningClosed.set(true); component.selected.set(null); fixture.detectChanges();
+    expect(element.querySelector('[data-testid="empty-teacher-plans"]')?.textContent).toContain('Planını öğretmenin hazırlıyor');
+    expect(element.querySelector('[data-testid="empty-manual-draft"]')).toBeNull();
+    expect([...element.querySelectorAll('button')].some(b => b.textContent?.trim() === 'Planını oluştur')).toBe(false);
+    await component.newDraft(); expect(service.create).not.toHaveBeenCalled();
+    // The teacher's draft is shown without the actions the server would refuse.
+    service.get.mockReturnValue(of({ ...active, status: 'Draft', tasks: [{ ...active.tasks[0], plannedStartMinute: 600 }] }));
+    await component.open('plan'); fixture.detectChanges(); await fixture.whenStable();
+    expect(element.querySelector('[data-testid="draft-by-teacher"]')).not.toBeNull();
+    expect(element.querySelector('[data-testid="draft-panel"]')).toBeNull();
+    expect(element.querySelector('[data-testid="draft-publish"]')).toBeNull();
+    expect(element.textContent).not.toContain('＋ Çalışma ekle');
+    component.publishConfirmed = true; component.publish(); expect(service.publish).not.toHaveBeenCalled();
+    await component.calendarCommand({ kind: 'add', taskIds: [], date: '2026-10-06', startMinute: 600 }); expect(component.calendarForm).toBeNull();
+  });
   it('an empty draft says what to do first and cannot be published', async () => {
     const { fixture, component, service } = await setup();
     service.get.mockReturnValue(of({ ...active, status: 'Draft' as const, tasks: [] }));

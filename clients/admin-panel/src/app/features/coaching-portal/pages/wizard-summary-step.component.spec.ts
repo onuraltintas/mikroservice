@@ -46,6 +46,8 @@ describe('WizardSummaryStepComponent', () => {
       preview: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf(request))),
       focusEstimate: vi.fn((request: WeeklyOutcomeRequest, _s?: string) => of(previewOf({ ...request, prioritizeWhenShort: true }))), create: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1 })) };
     const planning = { publish: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 2, title: 'x', status: 'Active', tasks: [] })),
+      list: vi.fn((..._a: unknown[]) => of({ items: [{ id: 'old-draft', version: 3, title: 'Elle hazırlanan plan', status: 'Draft' }], totalCount: 1, pageNumber: 1, pageSize: 20 })),
+      archive: vi.fn((..._a: unknown[]) => of({ id: 'old-draft', version: 4, title: 'Elle hazırlanan plan', status: 'Archived', tasks: [] })),
       get: vi.fn((..._a: unknown[]) => of({ id: 'new-plan', version: 1, title: 'x', status: 'Draft', tasks: [] })) };
     const learning = { save: vi.fn((_r: unknown) => of({ context: { ...context, version: 6 }, nextStep: 'Preview', isReady: true, missingFields: [], warnings: [] })),
       catalog: vi.fn((_l: string | null, page = 1) => of({ curriculum: null, lessons: [], missingDurationCount: 0, warnings: [], topics: { totalCount: 3, pageNumber: page, pageSize: 2,
@@ -223,6 +225,40 @@ describe('WizardSummaryStepComponent', () => {
     const issue = el.querySelector('[data-testid="publish-issue"]')!;
     expect(text(issue)).toContain('Bekleyen bir plan taslağın var. Önce Planım\'da o taslağı yayımla ya da kaldır.');
     expect(issue.querySelector('a')?.getAttribute('href')).toBe('/coaching-portal/plan?plan=new-plan');
+  });
+
+  // 22.11.2026: a waiting draft no longer ends the wizard: it is archived (kept in the history) and the plan published, once confirmed.
+  it('archives the waiting draft and publishes the new plan when the student agrees', async () => {
+    const { el, fixture, engine, planning, toaster, navigate } = await setup();
+    await keep(fixture);
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.DraftExists', message: 'Bekleyen taslak.' } })));
+    button(el, 'Planımı yayımla')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    const archive = el.querySelector('[data-testid="archive-pending-draft"]') as HTMLButtonElement;
+    expect(archive.textContent).toContain('Bekleyen taslağı arşivle ve bu planı yayımla');
+    toaster.confirm.mockClear(); toaster.confirm.mockResolvedValueOnce(false);
+    archive.click(); await fixture.whenStable();
+    expect(planning.archive).not.toHaveBeenCalled();
+    archive.click(); await fixture.whenStable(); await fixture.whenStable();
+    expect(toaster.confirm).toHaveBeenCalledTimes(2);
+    expect(String(toaster.confirm.mock.calls[1][0])).toContain('Bekleyen taslağın arşivlenecek (geçmişte durur).');
+    expect(planning.list).toHaveBeenCalledWith(1, 'Draft', null);
+    expect(planning.archive).toHaveBeenCalledWith('old-draft', 3, null);
+    expect(engine.create).toHaveBeenCalledTimes(2);
+    expect(planning.publish).toHaveBeenCalledWith('new-plan', 1);
+    expect(navigate).toHaveBeenCalledWith(['/coaching-portal/plan'], { queryParams: { plan: 'new-plan' } });
+  });
+
+  it('the teacher archives the student\'s waiting draft and saves the plan as the student\'s draft', async () => {
+    const { el, fixture, engine, planning, events } = await setup({ staff: true });
+    await keep(fixture);
+    engine.create.mockReturnValueOnce(throwError(() => ({ status: 409, error: { code: 'StudyPlanning.DraftExists', message: 'Bekleyen taslak.' } })));
+    (el.querySelector('[data-testid="publish-plan"]') as HTMLButtonElement).click();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(text(el.querySelector('[data-testid="publish-issue"]'))).toContain('Öğrencinin bekleyen bir plan taslağı var.');
+    (el.querySelector('[data-testid="archive-pending-draft"]') as HTMLButtonElement).click(); await fixture.whenStable(); await fixture.whenStable();
+    expect(planning.archive).toHaveBeenCalledWith('old-draft', 3, 'student-1');
+    expect(planning.publish).not.toHaveBeenCalled();
+    expect(events.planCreated).toHaveBeenCalledWith('new-plan');
   });
 
   // Paket I5 (user decision 14.11.2026): what is short, by how much, and ready ways to close it.

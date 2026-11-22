@@ -1,22 +1,24 @@
 <section class="study-plans assistant-page" aria-labelledby="assistant-title">
   <header class="page-heading">
-    <div><p class="eyebrow">{{ staffStudentId ? 'ÖĞRENCİ İÇİN PLAN SİHİRBAZI' : 'PLAN SİHİRBAZI' }}</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
-      <p>{{ staffStudentId ? 'Öğrencinin saatleri, dersleri ve sınav tarihiyle haftalık düzen ve yıllık plan hazırla.' : 'Birkaç soruyla haftanı ve sınava kadar planını kur; yayımlamadan önce hepsini görürsün.' }}</p></div>
+    <div><p class="eyebrow">Plan sihirbazı</p><h1 id="assistant-title">{{ staffStudentId ? 'Öğrenci için plan hazırla' : 'Planını adım adım hazırla' }}</h1>
+      <p>{{ staffStudentId ? 'Öğrencinin saatleri, dersleri ve sınav tarihiyle haftalık düzen ve yıllık plan hazırlanır. Plan öğrencinin taslağı olarak kaydedilir; kontrol edildikten sonra yayımlanır.' : 'Birkaç soruyla haftanı ve sınava kadar planını kur; yayımlamadan önce hepsini görürsün.' }}</p></div>
   </header>
 
   @if (purposeRetired()) {
     @if (staffStudentId) { <p class="notice" role="status" data-testid="retired-purpose">Öğrencinin çalışma amacı artık desteklenmiyor; öğrencinin hazırlandığı sınavı seçmesi gerekiyor.</p> }
-    @else { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }} <a routerLink="/coaching-portal/account/settings">Çalışma amacını seç →</a></p> }
+    @else { <p class="notice" role="status" data-testid="retired-purpose">{{ retiredPurposeNotice }} <a routerLink="/coaching-portal/account/settings">Çalışma amacını seç</a></p> }
   }
   @if (purposeNotForEducation() && !purposeRetired()) {
     @if (staffStudentId) { <p class="notice" role="status" data-testid="grade-purpose">Öğrencinin seçili sınavı eğitim durumuna ya da sınıfına uymuyor; öğrencinin çalışma tercihlerini güncellemesi gerekiyor.</p> }
     @else { <p class="notice" role="status" data-testid="grade-purpose">Seçili sınavın eğitim durumuna ya da sınıfına uymuyor; çalışma tercihlerini güncelle. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p> }
   }
-  @if (error() && !(purposeRetired() && !lessons().length)) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla →</a> }</p> }
+  @if (error() && !(purposeRetired() && !lessons().length)) { <p class="notice error" role="alert">{{ error() }} @if (!lessons().length && !staffStudentId) { <a routerLink="/coaching-portal/account/settings">Çalışma düzenini tamamla</a> }</p> }
   @if (learningError()) { <p class="notice error" role="alert">{{ learningError() }}</p> }
   @if (!learningContext() && !staffStudentId && learningLoaded()) {
     <p class="starting-status" data-testid="preferences-missing">Planını hazırlamak için önce çalışma tercihlerini tamamla. <a routerLink="/coaching-portal/account/settings">Çalışma tercihlerim</a></p>
   }
+  <!-- 22.11.2026: the teacher learns at the start that the student has a waiting draft, not only when the plan is saved. -->
+  @if (staffStudentId && pendingDraft(); as draft) { <p class="notice" role="status" data-testid="staff-pending-draft">Öğrencinin yayımlanmamış bir taslağı var: “{{ draft.title }}”. Bu plan kaydedilirken o taslak arşivlenebilir; geçmişte durur.</p> }
   @if (availabilityLoadError()) { <p class="notice error" role="alert" data-testid="availability-load-error">{{ availabilityLoadError() }} <button type="button" class="secondary" (click)="loadHours()" [disabled]="availabilityLoading()">Yeniden dene</button></p> }
   @if (busy() || (step() === null && !error() && !availabilityLoadError() && !purposeRetired() && learningContext() !== null) || (tempoLoading() && step() !== 'tempo')) {
     <p role="status" class="muted">{{ staffStudentId ? 'Öğrencinin bilgileri yükleniyor…' : 'Bilgilerin yükleniyor…' }}</p>
@@ -28,7 +30,7 @@
   @if (step() === 'draft') {
     <section class="panel wizard-panel" data-testid="pending-draft" aria-labelledby="draft-title">
       <h2 id="draft-title" tabindex="-1" #stepTitle>Bekleyen bir plan taslağın var</h2>
-      <p>“{{ pendingDraft()?.title }}” henüz yayımlanmadı. Önce onu açıp yayımlayabilir ya da yeni bir plan hazırlayabilirsin; yeni planı yayımlamak için o taslağı yayımlaman ya da kaldırman gerekir.</p>
+      <p>“{{ pendingDraft()?.title }}” henüz yayımlanmadı. Onu açıp tamamlayabilir ya da yeni bir plan hazırlayabilirsin. Yeni planı yayımlarken bekleyen taslağı arşivlemen istenir; arşivlenen taslak geçmişte durur.</p>
       <div class="step-actions">
         <button type="button" class="secondary" (click)="continueWithoutDraft()">Yine de yeni plan hazırla</button>
         <a class="button-link primary-link" routerLink="/coaching-portal/plan" [queryParams]="{ plan: pendingDraft()?.id }">Bekleyen taslağını aç / yayımla</a>

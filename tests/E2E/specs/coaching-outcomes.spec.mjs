@@ -37,8 +37,8 @@ test('the old topic-plan address opens the wizard; a saved topic draft is publis
   await page.goto('/coaching-portal/plan');
   // T4: with no active plan Planım offers the saved plans under "Kayıtlı planlarım". 22.11.2026: a draft opens on its calendar
   // with the draft box above it and the publish box under it (the old draft form was removed).
-  await page.getByText('Kayıtlı planlarım', { exact: true }).click();
-  await page.getByRole('button', { name: /LGS kazanım pilotu/ }).click();
+  // 22.11.2026: with no active plan the waiting draft opens by itself (before, it was picked under "Kayıtlı planlarım").
+  await expect(page.locator('.plan-head .plan-status')).toContainText('LGS kazanım pilotu');
   await expect(page.getByTestId('draft-panel')).toContainText('Taslak hazırlanıyor');
   await expect(page.locator('app-study-plan-calendar')).toBeVisible();
   await page.getByRole('checkbox', { name: /Planımı kontrol ettim/ }).check();

@@ -135,6 +135,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   calendarLessons:LearningLesson[]=[];calendarLessonsLoading=false;
   async calendarCommand(action:CalendarAction){
     const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived'||action.kind==='complete'&&(!!this.staffStudentId||plan.status!=='Active'))return;
+    if(action.kind!=='complete'&&!this.canChangePlan())return;
     const tasks=plan.tasks.filter(t=>action.taskIds.includes(t.id)&&(action.kind==='split'?canSplitTask(t):!t.isCompleted)),task=tasks[0];
     if(action.kind!=='add'&&!task)return;
     this.calendarForm={kind:action.kind,taskId:task?.id??null,taskIds:tasks.map(t=>t.id),date:action.date,time:clock(action.startMinute),title:'',minutes:30,lessonId:null,actualMinutes:30,actualQuestions:null,
@@ -202,7 +203,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       if(this.staffStudentId!==scope||this.selected()?.id!==plan.id||this.busy())return;
       this.mutate(this.service.deleteCalendarTask(plan.id,task.id,plan.version,...this.studentArgument),'Bekleyen çalışma silindi.');return;
     }
-    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(form.time)||!form.date||!form.title.trim()||form.title.trim().length>200||!Number.isInteger(form.minutes)||form.minutes<1||form.minutes>1440||form.kind==='add'&&!form.lessonId){this.error.set('Ders, başlık, tarih ve süreyi kontrol et.');return;}
+    if(form.kind==='add'&&!form.lessonId){this.error.set('Ders seç.');return;}
+    if(!form.title.trim()||form.title.trim().length>200){this.error.set('Çalışma başlığını yaz (en fazla 200 karakter).');return;}
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(form.time)||!form.date||!Number.isInteger(form.minutes)||form.minutes<1||form.minutes>1440){this.error.set('Gün, başlangıç saati ve süreyi kontrol et. Süre 1–1440 dakika olmalıdır.');return;}
     // KocApp uyumu: a topic for "Müfredattan", a resource (and a whole range or none) for "Kaynaktan".
     const res=this.calendarResource(),from=form.resourceFrom,to=form.resourceTo;
     if(form.kind==='add'&&form.source==='topic'&&!form.topicId){this.error.set('Müfredattan bir konu seç.');return;}
@@ -225,6 +228,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   planToday(){const zone=this.selected()?.weeklySource?.timeZoneId||'Europe/Istanbul';try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch{return this.today;}}
   private openedOnToday=false;
   openWizard(){void this.router?.navigate(['/coaching-portal/plan/wizard']);}
+  openSettings(){this.calendarForm=null;void this.router?.navigate(['/coaching-portal/account/settings']);}
   isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
   changeTaskFilter(){this.taskPage=1;this.planView.set('list');this.selectedTaskIds.set([]);}
   taskTitles:Record<string,string>={};
@@ -268,13 +272,13 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   draftTitle = '';
   publishConfirmed = false;
   restoreConfirmed=false;
-  restore(){const plan=this.selected();if(!plan||plan.status!=='Archived'||!this.restoreConfirmed||this.readOnly||this.busy())return;
+  restore(){const plan=this.selected();if(!plan||plan.status!=='Archived'||!this.restoreConfirmed||!this.canChangePlan()||this.busy())return;
     this.mutate(this.service.list(1,'Active',...this.studentArgument).pipe(switchMap(page=>this.service.restore(plan.id,plan.version,page.items[0]??null,...this.studentArgument))),'Plan yeniden etkinleştirildi. Önceki aktif plan ve çalışmalar arşivde korundu.');}
   readonly today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   workDates:Record<string,string|undefined>={};
   actualMinutes: Record<string, number> = {};
   actualQuestions: Record<string, number | null> = {};
-  moveCalendar(move:CalendarMove){const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived')return;
+  moveCalendar(move:CalendarMove){const plan=this.selected();if(!plan||!this.canChangePlan()||this.busy()||plan.status==='Archived')return;
     this.mutate(this.service.move(plan.id,plan.version,move.taskIds,move.plannedDate,move.startMinute,...this.studentArgument),'Dersin günü ve saati güncellendi. Kazanımlar korundu.');}
   targetDates: Record<string, string> = {};
 
@@ -331,14 +335,31 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
         const active = page.items.find(plan => plan.status === 'Active');
         if (active) await this.open(active.id);
         else if (!this.filter) this.service.list(1, 'Active',...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
-          .subscribe({ next: async plans => { if (plans.items.length && !this.selected()) await this.open(plans.items[0].id); },
+          .subscribe({ next: async plans => { if (plans.items.length) { if (!this.selected()) await this.open(plans.items[0].id); } else this.openDraftInstead(page.items.find(plan => plan.status === 'Draft')?.id ?? null); },
             error: error => this.showError(error, 'Aktif plan yüklenemedi. Tekrar dene.') });
+        else this.openDraftInstead(null);
       }
       if (pageNumber === 1 && (!this.filter || this.filter === 'Draft')) {
         this.knownDraftId.set(page.items.find(plan => plan.status === 'Draft')?.id ?? null);
       }
     }, error: error => this.showError(error, 'Planlar yüklenemedi. Tekrar dene.') });
   }
+
+  /**
+   * 22.11.2026: with no active plan, the draft being prepared opens (not "Henüz bir planın yok"). A known draft opens at once;
+   * otherwise the drafts are read.
+   */
+  private openDraftInstead(known: string | null) {
+    if (this.selected()) return;
+    if (known) { void this.open(known); return; }
+    this.service.list(1, 'Draft', ...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: async drafts => { const draft = drafts.items.find(plan => plan.status === 'Draft'); this.knownDraftId.set(draft?.id ?? null); if (draft && !this.selected()) await this.open(draft.id); },
+      error: () => { /* the empty page stays; "Kayıtlı planlarım" still lists the plans */ }
+    });
+  }
+
+  /** A student whose teacher plans for her reads her plans and records her work; she does not change a plan (the server refuses it). */
+  canChangePlan() { return !this.readOnly && !(this.studentMode && this.planningClosed()); }
 
   async open(id: string) {
     if (!await this.canLeaveEditor()) return;
@@ -349,7 +370,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   }
 
   async newDraft() {
-    if (this.readOnly) return;
+    if (!this.canChangePlan()) return;
     if (!await this.canLeaveEditor()) return;
     let draftId = this.selected()?.status === 'Draft' ? this.selected()!.id : this.knownDraftId();
     if (!draftId && !this.staffStudentId) {
@@ -375,13 +396,13 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   draftTitleChanged() { const plan = this.selected(); return plan?.status === 'Draft' && !this.readOnly && this.draftTitle.trim() !== plan.title; }
   renameDraft() {
     const plan = this.selected(), title = this.draftTitle.trim();
-    if (this.readOnly || !plan || plan.status !== 'Draft' || this.busy() || title === plan.title) return;
+    if (!this.canChangePlan() || !plan || plan.status !== 'Draft' || this.busy() || title === plan.title) return;
     if (!title || title.length > 200) { this.error.set('Taslağın adı 1–200 karakter olmalıdır.'); return; }
     this.mutate(this.service.rename(plan.id, plan.version, title, ...this.studentArgument), 'Taslağın adı kaydedildi.');
   }
 
   publish() {
-    if (this.readOnly) return;
+    if (!this.canChangePlan()) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || !plan.tasks.length || !this.publishConfirmed || this.busy()) return;
     // Live test #9: the first plan has no earlier plan to speak of.
@@ -389,7 +410,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.mutate(this.service.publish(plan.id, plan.version, ...this.studentArgument), earlier ? 'Plan yayımlandı. Önceki planın geçmişi korundu.' : 'Plan yayımlandı.');
   }
   async archiveDraft() {
-    if (this.readOnly) return;
+    if (!this.canChangePlan()) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || this.busy() || typeof window === 'undefined') return;
     if (!await this.toaster.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksin.')) return;
@@ -454,7 +475,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   }
 
   reschedule(task: StudyTask, plannedDate: string) {
-    if (this.readOnly) return;
+    if (!this.canChangePlan()) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
     if (!plannedDate) { this.error.set('Yeni çalışma tarihini seç.'); return; }

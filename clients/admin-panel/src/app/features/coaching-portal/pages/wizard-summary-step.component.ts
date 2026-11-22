@@ -569,11 +569,11 @@ export class WizardSummaryStepComponent implements OnInit {
    * Student: confirm, create the plan from the checked preview (its fingerprint), publish it with its version, then Planım.
    * Teacher: create the draft only, as the teacher flow always did. After a failed publish only the publish is tried again.
    */
-  async publish() {
+  async publish(confirmed = false) {
     const p = this.preview();
     if (!p || !this.canPublish()) return;
     const staff = !!this.staffStudentId, created = this.created();
-    if (!staff && !await this.toaster.confirm(this.publishConfirmText(p),
+    if (!staff && !confirmed && !await this.toaster.confirm(this.publishConfirmText(p),
       { confirmText: 'Yayımla', cancelText: 'Vazgeç' })) return;
     this.publishing.set(true); this.publishIssue.set(null);
     if (created && !staff) { this.publishCreated(created); return; }
@@ -597,6 +597,24 @@ export class WizardSummaryStepComponent implements OnInit {
         }
       });
   }
+  /**
+   * 22.11.2026: the waiting draft (an older wizard plan or an empty calendar draft) is archived, which keeps it in the history, and
+   * the new plan is saved (and, for the student, published) without asking twice.
+   */
+  async archivePendingDraft() {
+    const p = this.preview(); if (!p || this.busy()) return;
+    const staff = !!this.staffStudentId, student = this.staffStudentId ?? null;
+    if (!await this.toaster.confirm(staff ? 'Öğrencinin bekleyen taslağı arşivlenecek (geçmişte durur) ve bu plan taslak olarak kaydedilecek. Devam edilsin mi?'
+      : 'Bekleyen taslağın arşivlenecek (geçmişte durur). ' + this.publishConfirmText(p), { confirmText: staff ? 'Arşivle ve kaydet' : 'Arşivle ve yayımla', cancelText: 'Vazgeç' })) return;
+    this.publishing.set(true); this.publishIssue.set(null);
+    this.planning.list(1, 'Draft', student).pipe(
+      switchMap(page => { const draft = page.items.find(x => x.status === 'Draft'); return draft ? this.planning.archive(draft.id, draft.version, student) : of(null); }),
+      takeUntilDestroyed(this.destroy), finalize(() => this.publishing.set(false))).subscribe({
+      next: () => { this.publishing.set(false); void this.publish(true); },
+      error: e => this.publishIssue.set({ draftExists: true, message: typeof e?.error?.message === 'string' ? e.error.message : 'Bekleyen taslak arşivlenemedi. Yeniden deneyebilirsin.' })
+    });
+  }
+
   /** What publishing does to the plan in force, with the numbers the preview knows. */
   publishConfirmText(p: WeeklyOutcomePreview) {
     const carried = p.protectedTaskCount > 0 ? ` Başladığın ya da sabitlediğin ${p.protectedTaskCount} çalışma yeni plana taşınır.` : '';
