@@ -79,6 +79,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if(task.WeeklyLessonId is {} lesson)second.SetWeeklyPlacement(lesson,task.LessonNameSnapshot!,start+first);
             else second.Schedule(task.PlannedDate,start+first);
             if(task.PlanKind is {} kind)second.SetPlanDecision(kind,task.PlanReason);
+            second.KeepLinksOf(task);
             task.CorrectPlanning(task.Title,task.PlannedDate,first);
             if(questions!=task.PlannedQuestions)task.CorrectPlannedQuestions(questions);
             db.StudyPlanTasks.Add(second);
@@ -183,7 +184,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             {
                 var title = "Tekrar · " + slot.TopicName;
                 var task = StudyPlanTask.Create(revision, slot.Date, title.Length > 200 ? title[..200] : title,
-                    slot.Minutes, slot.TopicId, sourceName: slot.EvidenceKey);
+                    slot.Minutes, slot.TopicId, adviceKey: slot.EvidenceKey);
                 task.SetWeeklyPlacement(slot.LessonId, slot.LessonName, slot.StartMinute);
                 db.StudyPlanTasks.Add(task);
             }
@@ -266,6 +267,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
             var tasks = preview.Schedule.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate,
                 names[x.TopicId], x.PlannedMinutes, x.TopicId)).ToList();
+            // KocApp plan, phase 2: a topic with a part in one of the student's resources gets its next free part.
+            await StudentResourcePlanLinks.LinkAsync(db, student, tasks, cancellationToken);
             db.AddRange(StudyOutcomeAllocation.Allocate(tasks, preview.Outcomes ?? []));
             foreach(var continuation in preview.Continuations ?? [])
             {
@@ -561,8 +564,19 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     {
         if (request.Tasks is null || request.Tasks.Count > 500 || request.Tasks.Any(x => x is null))
             throw new ArgumentException("Plan en fazla 500 çalışma içerebilir.");
-        var tasks = request.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.SourceName, x.PlannedQuestions)).ToArray();
+        var tasks = request.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.SourceName, x.PlannedQuestions,
+            x.AdviceKey is { } key && key.StartsWith(StudyPlanTask.PracticeReviewKeyPrefix, StringComparison.Ordinal) ? key : null)).ToArray();
         for(var i=0;i<tasks.Length;i++) if(request.Tasks[i].PlannedStartMinute is {} start) tasks[i].Schedule(tasks[i].PlannedDate,start);
+        // KocApp uyumu (22.11.2026): a task may point at a range of the student's own resource.
+        var resourceIds = request.Tasks.Where(x => x.ResourceId.HasValue).Select(x => x.ResourceId!.Value).Distinct().ToArray();
+        var resources = resourceIds.Length == 0 ? new Dictionary<Guid, StudentResource>()
+            : await db.Set<StudentResource>().Where(x => x.StudentId == revision.StudentId && Enumerable.Contains(resourceIds, x.Id)).ToDictionaryAsync(x => x.Id, cancellationToken);
+        for (var i = 0; i < tasks.Length; i++)
+        {
+            var input = request.Tasks[i];
+            if (input.ResourceId is not { } resourceId) { tasks[i].LinkResource(null, input.ResourceFrom, input.ResourceTo); continue; }
+            tasks[i].LinkResource(resources.GetValueOrDefault(resourceId) ?? throw new ArgumentException("Seçilen kaynak bulunamadı."), input.ResourceFrom, input.ResourceTo);
+        }
         foreach(var day in tasks.GroupBy(x=>x.PlannedDate))
         {
             var timed=day.Where(x=>x.PlannedStartMinute.HasValue).OrderBy(x=>x.PlannedStartMinute).ToArray();
@@ -585,7 +599,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             .ToListAsync(cancellationToken);
         var history = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        tasks = tasks.Select(x => x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt,PlanKind=history[x.Id].PlanKind,PlanReason=history[x.Id].PlanReason }).ToList();
+        var resources = await StudentResourceNames.ForAsync(db, revision.StudentId, history.Values, cancellationToken);
+        tasks = tasks.Select(x => StudentResourceNames.Attach(x with { RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(history[x.Id].RealizationHistoryJson), WorkDays=history[x.Id].WorkDays,CompletionSourceTaskId=history[x.Id].CompletionSourceTaskId,SkippedAt=history[x.Id].SkippedAt,PlanKind=history[x.Id].PlanKind,PlanReason=history[x.Id].PlanReason }, history[x.Id], resources)).ToList();
         if(revision.Status==StudyPlanStatus.Archived&&revision.WasPublished)
         {
             var roots=history.Values.Select(x=>x.OriginalTaskId??x.Id).ToArray();

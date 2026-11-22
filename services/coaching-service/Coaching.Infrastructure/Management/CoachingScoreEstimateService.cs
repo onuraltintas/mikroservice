@@ -68,6 +68,11 @@ public sealed record ScoreTargetGap(string TargetName, string ScoreType, decimal
     public int? ScoreYear { get; init; }
     /// <summary>Paket C (#4): true when the taban is the student's own target score (a programme without a published taban).</summary>
     public bool OwnTargetScore { get; init; }
+    /// <summary>
+    /// KocApp uyumu (22.11.2026): the ÖSYM programme code of a target programme. YÖK Atlas has no stable page address per
+    /// programme, so the views show the code to search with in YÖK Atlas's "Program Kodu" field.
+    /// </summary>
+    public string? ProgramCode { get; init; }
 }
 public sealed record ScoreEstimate(IReadOnlyList<ScoreTypeEstimate> Estimates, ScoreTargetGap? Target, string? Notice)
 {
@@ -438,7 +443,8 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
         var kind = entry is TargetSchool ? "school" : "program";
         // Paket C (#3): a programme without a published taban uses the target score the student entered for it.
         var ownTaban = entry.MinimumScore is null ? own.FirstOrDefault(x => TargetScoreType(x.ScoreType) == scoreType)?.Score : null;
-        return (Gap(name, scoreType, entry.MinimumScore ?? ownTaban, entry.Rank, entry.Percentile, kind, entry.ScoreYear, ownTaban is not null), []);
+        var main = Gap(name, scoreType, entry.MinimumScore ?? ownTaban, entry.Rank, entry.Percentile, kind, entry.ScoreYear, ownTaban is not null);
+        return (entry is TargetUniversityProgram { ProgramCode: { Length: > 0 } code } ? main with { ProgramCode = code } : main, []);
 
         ScoreTargetGap ScoreGap(string type, decimal wanted)
         {

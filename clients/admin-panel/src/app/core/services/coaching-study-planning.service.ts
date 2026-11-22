@@ -13,6 +13,10 @@ export interface StudyTaskInput {
   sourceName?: string | null;
   plannedQuestions?: number | null;
   plannedStartMinute?:number|null;
+  /** KocApp uyumu (22.11.2026): a range of the student's own resource ("test 12–15"). */
+  resourceId?: string | null; resourceFrom?: number | null; resourceTo?: number | null;
+  /** The practice-exam review this task was added for; kept as it is when a draft is saved again. */
+  adviceKey?: string | null;
 }
 export interface StudyWorkDay { workedOn:string;minutes:number;questions:number|null;isLegacyDate:boolean }
 export interface StudyRealizationChange { workedOn?:string|null;reassignFromDate?:string|null;previousWorkDays?:StudyWorkDay[]|null;workDays?:StudyWorkDay[]|null; at:string; actorUserId:string; action:string; previousMinutes:number|null; previousQuestions:number|null; previouslyCompleted:boolean; previousCompletedAt:string|null; minutes:number; questions:number|null; completed:boolean; reason:string|null;previousRemainingMinutes?:number|null;remainingMinutes?:number|null;previousRemainingQuestions?:number|null;remainingQuestions?:number|null }
@@ -32,6 +36,8 @@ export interface StudyTask extends StudyTaskInput {
   skippedAt?:string|null;
   /** Roadmap O7: what the plan engine chose (Learn, Review, Refresh, Spaced) and why. */
   planKind?:string|null;planReason?:string|null;
+  /** KocApp uyumu (22.11.2026): the resource's name and unit for the range above. */
+  resourceName?:string|null;resourceUnit?:string|null;
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
 export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:number|null;startDate:string;endDate:string;reuseFreedSlots:boolean;fingerprint:string;activeRevisionId:string|null;activeRevisionVersion:number|null;timeZoneId?:string;

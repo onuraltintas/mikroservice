@@ -2,6 +2,7 @@ import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { trNumber } from '../../../../../../shared/utils/tr-number';
 import { FormsModule } from '@angular/forms';
 import { GoalCardComponent } from '../growth/goal-card.component';
+import { OfficialLinksComponent } from '../growth/official-links.component';
 import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimate, ScoreTypeNotComputed, diplomaRankNote, estimateMethodNote, notComputedText, rawScoresText, scoreGroup, scoreTypeNote, P3_NOTE } from '../../../core/services/coaching-score-estimate.service';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
@@ -13,7 +14,7 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
  * and the score type the student works towards marked. The copy addresses nobody, so staff pages can reuse it.
  */
 @Component({
-  selector: 'app-student-score-estimate', standalone: true, imports: [FormsModule, GoalCardComponent],
+  selector: 'app-student-score-estimate', standalone: true, imports: [FormsModule, GoalCardComponent, OfficialLinksComponent],
   template: `
     <section class="panel" aria-labelledby="score-estimate-heading" data-testid="score-estimate">
       <h2 id="score-estimate-heading">Puan ve sıralama tahmini</h2>
@@ -76,6 +77,8 @@ const DIPLOMA_KEY = 'coaching.diplomaGrade';
           @if (diplomaNote(result); as note) { <p><small>{{ note }}</small></p> }
           <p><small>Bu bir tahmindir. Gerçek puan ve sıralama her yıl adayların sonuçlarına göre değişir.</small></p>
         }
+        <!-- KocApp uyumu (22.11.2026): the teacher's view of a student; the student has the same card on Gelişimim › Hedefim. -->
+        @if (studentId) { <app-official-links [estimate]="result" audience="staff" [level]="3" /> }
       }
     </section>`
 })

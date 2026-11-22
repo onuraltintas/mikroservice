@@ -79,7 +79,7 @@ public sealed class BillingSeats(BillingDbContext db, BillingOrders orders, IBil
             OrderedByUserId = user.Id,
             BeneficiaryUserId = subscription.BeneficiaryUserId,
             PlanName = terms.Name,
-            BuyerType = BuyerType.Institution,
+            BuyerType = terms.BuyerType,
             ListPrice = terms.Amount - terms.VatAmount,
             Discount = 0,
             VatRate = terms.VatRate,
@@ -110,7 +110,8 @@ public sealed class BillingSeats(BillingDbContext db, BillingOrders orders, IBil
     }
 
     /// <summary><see cref="Amount"/> is what the buyer pays, VAT included when the plan's price is net.</summary>
-    private sealed record SeatTerms(string Name, decimal Amount, string Currency, int DaysLeft, SalesDocuments Documents, decimal? VatRate, decimal VatAmount);
+    private sealed record SeatTerms(string Name, decimal Amount, string Currency, int DaysLeft, SalesDocuments Documents, decimal? VatRate, decimal VatAmount,
+        BuyerType BuyerType);
 
     /// <summary>What extra seats cost now and the documents that say so; throws when they cannot be bought.</summary>
     private async Task<SeatTerms> SeatTermsAsync(BillingUser user, Subscription subscription, Account account, int count, string? buyerName, DateTime now,
@@ -121,7 +122,8 @@ public sealed class BillingSeats(BillingDbContext db, BillingOrders orders, IBil
         if (subscription.Status != SubscriptionStatus.Active || subscription.EndsAt <= now || subscription.StartsAt > now || subscription.SeatCount is null)
             throw new BusinessRuleException("Billing.SeatOrderInvalid", "Ek koltuk yalnız süren, koltuklu bir aboneliğe alınabilir.");
         var plan = await db.Plans.AsNoTracking().SingleAsync(item => item.Id == subscription.PlanId, cancellationToken);
-        if (account.Type != AccountType.Organization || plan.ExtraSeatPrice is not { } price)
+        // KocApp uyumu (22.11.2026): a teacher's own subscription takes extra seats as well as an institution's.
+        if ((account.Type != AccountType.Organization && plan.BuyerType != BuyerType.Teacher) || plan.ExtraSeatPrice is not { } price)
             throw new BusinessRuleException("Billing.SeatOrderInvalid", "Bu planda ek koltuk satılmıyor.");
         await orders.EnsureSalesOpenAsync(cancellationToken);
         // Extra seats already running end with the period they were bought in; new ones join them.
@@ -136,9 +138,10 @@ public sealed class BillingSeats(BillingDbContext db, BillingOrders orders, IBil
             .Select(item => new { item.Name, item.BusinessSales }).ToListAsync(cancellationToken);
         var vat = BillingRules.Vat(amount, plan.VatRate);
         var documents = SalesDocumentTexts.Render(new SalesTerms(await orders.SellerAsync(cancellationToken),
-            $"{account.DisplayName} (yetkili: {BillingOrders.RequireBuyerName(buyerName)})", user.Email, name, products.Select(item => item.Name).ToArray(),
+            account.Type == AccountType.Organization ? $"{account.DisplayName} (yetkili: {BillingOrders.RequireBuyerName(buyerName)})"
+                : BillingOrders.RequireBuyerName(buyerName), user.Email, name, products.Select(item => item.Name).ToArray(),
             daysLeft, amount + vat, plan.Currency, now, plan.VatRate, vat, products.Count > 0 && products.All(item => item.BusinessSales)));
-        return new SeatTerms(name.Length > 200 ? name[..200] : name, amount + vat, plan.Currency, daysLeft, documents, plan.VatRate, vat);
+        return new SeatTerms(name.Length > 200 ? name[..200] : name, amount + vat, plan.Currency, daysLeft, documents, plan.VatRate, vat, plan.BuyerType);
     }
 
     /// <summary>The subscription and its account when the caller owns it: their own account, or an institution they administer.</summary>

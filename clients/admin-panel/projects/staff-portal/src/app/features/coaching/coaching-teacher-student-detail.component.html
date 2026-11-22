@@ -21,6 +21,9 @@
   @if(profileVisible()){<staff-coaching-student-profile [studentId]="student.userId" />}
   <button type="button" data-testid="toggle-score-estimate" (click)="scoreVisible.set(!scoreVisible())" [attr.aria-expanded]="scoreVisible()">Puan ve sıralama tahmini</button>
   @if (scoreVisible()) { <app-student-score-estimate [studentId]="student.userId" /> }
+  <!-- KocApp uyumu (22.11.2026): the student's books and sets; the teacher adds and edits them. -->
+  <button type="button" data-testid="toggle-resources" (click)="resourcesVisible.set(!resourcesVisible())" [attr.aria-expanded]="resourcesVisible()">Kaynaklar</button>
+  @if (resourcesVisible()) { <app-student-resources [studentId]="student.userId" audience="staff" /> }
   <section class="summary-section" aria-label="Öğrenci ilerleme özeti">
     <div class="section-heading">
       <div><p class="report-eyebrow">Genel bakış</p><h3>İlerleme özeti</h3></div>

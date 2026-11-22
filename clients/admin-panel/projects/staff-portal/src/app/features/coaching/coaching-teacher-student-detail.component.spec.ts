@@ -92,7 +92,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
   });
 
   // Roadmap D5: the motivation card loads on its own; its request is not part of these report checks.
-  afterEach(() => { http.match(request => request.url.endsWith('/motivation') || request.url.endsWith('/planning-permission')); http.verify(); });
+  afterEach(() => { http.match(request => request.url.endsWith('/motivation') || request.url.endsWith('/planning-permission') || request.url.endsWith('/study/resources')); http.verify(); });
   afterEach(() => vi.restoreAllMocks());
   afterEach(() => vi.unstubAllGlobals());
 

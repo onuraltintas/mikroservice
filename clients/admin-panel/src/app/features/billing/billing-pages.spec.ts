@@ -202,6 +202,18 @@ describe('Abonelik ve Ödeme pages', () => {
     }));
   });
 
+  it('plans: KocApp uyumu, a teacher plan keeps its extra seat price; an individual plan drops it', () => {
+    const { component } = setup(BillingPlansComponent);
+    component.start(teacherPlan);
+    const draft = component.draft()!;
+    Object.assign(draft, { hasSeats: true, seatCount: 3, hasExtraSeats: true, extraSeatPrice: 100 });
+    component.syncBuyer();
+    expect(component.toRequest(draft).extraSeatPrice).toBe(100);
+    draft.buyerType = 'Individual';
+    component.syncBuyer();
+    expect([draft.hasExtraSeats, component.toRequest(draft).extraSeatPrice]).toEqual([false, null]);
+  });
+
   it('plans: a net price gets a VAT rate (20 by default) and the form shows what the buyer pays', () => {
     const { component, billing } = setup(BillingPlansComponent);
     component.start();

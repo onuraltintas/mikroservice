@@ -79,7 +79,7 @@
             <a class="row" [class.is-late]="row.overdue" [attr.data-kind]="row.item.kind" [attr.data-record]="row.item.recordId" [routerLink]="link(row.item).path" [queryParams]="link(row.item).query">
               <span class="row-kind" aria-hidden="true"><app-coaching-icon [name]="kindIcon(row.item)" /></span>
               <span class="row-time">{{ row.overdue ? (row.item.date | date: 'd MMM') : (clock(row.item.startMinute) || 'Gün içi') }}</span>
-              <span class="row-main"><strong>{{ row.item.title }}</strong><small>@if (row.item.lessonName) { <span class="row-lesson" [style.background]="'var(--coaching-lesson-' + lessonTone(row.item.lessonName) + ')'" [style.color]="'var(--coaching-lesson-text-' + lessonTone(row.item.lessonName) + ')'">{{ row.item.lessonName }}</span> }{{ meta(row, null) }}</small></span>
+              <span class="row-main"><strong>{{ row.item.title }}</strong><small>@if (row.item.lessonName) { <span class="row-lesson" [style.background]="'var(--coaching-lesson-' + lessonTone(row.item.lessonName) + ')'" [style.color]="'var(--coaching-lesson-text-' + lessonTone(row.item.lessonName) + ')'">{{ row.item.lessonName }}</span> }{{ meta(row, null) }}</small>@if (row.item.resourceText) { <small class="row-resource" data-testid="agenda-resource">{{ row.item.resourceText }}</small> }</span>
               @if (row.overdue) { <cs-status-chip label="Gecikti" tone="warning" /> }
             </a>
           } @empty {

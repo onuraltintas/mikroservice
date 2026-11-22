@@ -18,6 +18,7 @@ import {CalendarMove,calendarTaskOverdue,canSplitTask,splitRanges,taskSourceBadg
 import {effect} from '@angular/core';
 import {PlanTaskRowComponent} from './plan-task-row.component';
 import {CsBottomSheetComponent,CsSegmentedTabsComponent,CsTabOption} from '../ui';
+import {CoachingResourcesService,StudentResource,resourceRangeText,resourceUnitWord} from '../../../core/services/coaching-resources.service';
 
 const WEEKDAYS=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
 const isoDay=(date:Date)=>date.toISOString().slice(0,10);
@@ -190,6 +191,30 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private initialized = false;
   private get studentArgument(): [string] | [] { return this.staffStudentId ? [this.staffStudentId] : []; }
   private readonly service = inject(CoachingStudyPlanningService);
+  private readonly resourceApi = inject(CoachingResourcesService, { optional: true });
+  /** KocApp uyumu (22.11.2026): the student's resources a draft task can point at; read when a draft is edited. */
+  readonly resources = signal<StudentResource[]>([]);
+  private resourcesRequested = false;
+  readonly unitWord = resourceUnitWord;
+  resourceText(task: StudyTask) { return task.resourceName ? resourceRangeText(task.resourceName, task.resourceUnit, task.resourceFrom, task.resourceTo) : null; }
+  resourceOf(task: StudyTaskInput) { return this.resources().find(x => x.id === task.resourceId) ?? null; }
+  private loadResources() {
+    if (this.resourcesRequested || this.readOnly || !this.resourceApi) return;
+    this.resourcesRequested = true;
+    this.resourceApi.list({ studentId: this.staffStudentId }).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: items => this.resources.set(items), error: () => this.resources.set([]) });
+  }
+  /** A resource chosen or cleared: a stale range goes with it. */
+  setTaskResource(task: StudyTaskInput, id: string | null) {
+    task.resourceId = id || null; task.resourceFrom = null; task.resourceTo = null; this.dirty = true;
+  }
+  /** KocApp plan, phase 2: the resource's next part (the first free section or a usual sitting) fills the range and an empty title. */
+  suggestNext(task: StudyTaskInput) {
+    const next = this.resourceOf(task)?.next; if (!next) return;
+    task.resourceFrom = next.fromUnit; task.resourceTo = next.toUnit;
+    if (!task.title.trim() && next.sectionTitle) task.title = next.sectionTitle.slice(0, 200);
+    this.dirty = true;
+  }
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly router = inject(Router, { optional: true });
@@ -318,6 +343,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.error.set(null);
     this.success.set(null);
     this.addTask();
+    this.loadResources();
   }
 
   addTask() {
@@ -349,9 +375,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (!this.editTitle.trim() || this.editTitle.length > 200 || this.editTasks.some(task =>
       !task.title.trim() || task.title.length > 200 || !task.plannedDate || !Number.isInteger(task.plannedMinutes)
       || task.plannedMinutes < 1 || task.plannedMinutes > 1440 || (task.sourceName?.trim().length ?? 0) > 300
+      || ((task.resourceFrom != null) !== (task.resourceTo != null))
+      || (task.resourceFrom != null && (!task.resourceId || !Number.isInteger(task.resourceFrom) || !Number.isInteger(task.resourceTo) || task.resourceFrom < 1 || task.resourceTo! < task.resourceFrom
+        || (this.resourceOf(task) != null && task.resourceTo! > this.resourceOf(task)!.totalUnits)))
       || (task.plannedStartMinute!=null&&(!Number.isInteger(task.plannedStartMinute)||task.plannedStartMinute<0||task.plannedStartMinute+task.plannedMinutes>1440))
       || (task.plannedQuestions != null && (!Number.isInteger(task.plannedQuestions) || task.plannedQuestions < 0 || task.plannedQuestions > 100000)))) {
-      this.error.set('Başlık, tarih, süre, kaynak ve soru sayılarını kontrol et. Süre 1–1440 dakika, soru sayısı 0–100000 olmalıdır.');
+      this.error.set('Başlık, tarih, süre, kaynak aralığı ve soru sayılarını kontrol et. Süre 1–1440 dakika, soru sayısı 0–100000 olmalıdır.');
       return;
     }
     const input = { title: this.editTitle.trim(), tasks: this.editTasks.map(task => ({ ...task, title: task.title.trim(), sourceName: task.sourceName?.trim() || null })) };
@@ -464,8 +493,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.editing = plan.status === 'Draft' && !this.readOnly && !plan.weeklySource;
     this.taskPage=1;
     this.editTitle = plan.title;
-    this.editTasks = plan.tasks.filter(task=>!task.predecessorTaskId).map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions,plannedStartMinute }) =>
-      ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null,plannedStartMinute:plannedStartMinute??null }));
+    this.editTasks = plan.tasks.filter(task=>!task.predecessorTaskId).map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions,plannedStartMinute,resourceId,resourceFrom,resourceTo,adviceKey }) =>
+      ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null,plannedStartMinute:plannedStartMinute??null,
+        resourceId: resourceId ?? null, resourceFrom: resourceFrom ?? null, resourceTo: resourceTo ?? null, adviceKey: adviceKey ?? null }));
+    if (this.editing) this.loadResources();
     this.actualMinutes = Object.fromEntries(plan.tasks.map(task => {
       const old = previous?.tasks.find(item => item.id === task.id);
       const changed = old && minutes[task.id] !== (old.actualMinutes ?? old.plannedMinutes);

@@ -9,6 +9,8 @@ export interface DailyAgendaItem {
   planId: string | null; weekStart: string | null;
   /** Live test 22.11.2026: the study task's lesson, for its colour label (absent for assignments and decisions). */
   lessonName?: string | null;
+  /** KocApp uyumu (22.11.2026): the resource and range of a study task ("Limit Soru Bankası, test 12–15"). */
+  resourceText?: string | null;
 }
 export interface DailyAgendaPage {
   mode: AgendaMode; items: DailyAgendaItem[]; totalCount: number; pageNumber: number; pageSize: number;

@@ -27,6 +27,8 @@ describe('teacher study overview',()=>{
     const c=f.componentInstance;c.display='overdue';expect(c.workItems()[0].task.title).toBe('Geciken konu');(await c.open(data.items[0],'overdue'));f.detectChanges();http.expectOne(r=>r.url.includes('/study/plans')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});http.expectOne(r=>r.params.get('status')==='Active').flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});f.detectChanges();
     (f.nativeElement.querySelector('app-student-study-plans .page-heading button') as HTMLButtonElement).click();await vi.waitFor(()=>expect(f.nativeElement.querySelector('app-student-study-plans input[name=planTitle]')).not.toBeNull());f.detectChanges();
     const confirm=vi.spyOn(TestBed.inject(ToasterService), 'confirm').mockResolvedValue(false);(await c.back());expect(c.detail()).not.toBeNull();confirm.mockResolvedValue(true);(await c.back());expect(c.detail()).toBeNull();
+    // KocApp uyumu: the new draft's editor read the student's resources for its picker.
+    http.match(r=>r.url.endsWith('/study/resources')).forEach(r=>r.flush({data:[]}));
     http.expectOne(r=>r.url.endsWith('/study-overview')).flush(data);confirm.mockRestore();c.fromDate='2030-01-02';c.toDate='2030-01-01';(await c.load());expect(c.error()).toContain('tarih');http.verify();
   });
   it('shows scoped bulk totals, exposes student plan management and recovers on retry',async()=>{

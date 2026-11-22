@@ -23,6 +23,9 @@
     @if (financeVisible()) { <app-coaching-finance mode="staff" [studentId]="student.userId" /> }
     <button class="study-toggle" type="button" data-testid="toggle-score-estimate" (click)="scoreVisible.set(!scoreVisible())" [attr.aria-expanded]="scoreVisible()">Puan ve sıralama tahmini</button>
     @if (scoreVisible()) { <app-student-score-estimate [studentId]="student.userId" /> }
+    <!-- KocApp uyumu (22.11.2026): the institution reads the student's books and sets; her teacher edits them. -->
+    <button class="study-toggle" type="button" data-testid="toggle-resources" (click)="resourcesVisible.set(!resourcesVisible())" [attr.aria-expanded]="resourcesVisible()">Kaynaklar</button>
+    @if (resourcesVisible()) { <app-student-resources [studentId]="student.userId" audience="staff" [readonly]="true" /> }
     <button class="study-toggle" type="button" (click)="toggleStudy()" [attr.aria-expanded]="studyVisible() && !briefMode()">Haftalık plan ve çalışma raporu</button>
     <button class="study-toggle" type="button" data-testid="open-session-brief" (click)="openSessionBrief()" [attr.aria-pressed]="studyVisible() && briefMode()">Seans hazırlık özeti</button>
     <div class="section-heading"><div><p class="report-eyebrow">Genel bakış</p><h3>İlerleme özeti</h3></div></div>

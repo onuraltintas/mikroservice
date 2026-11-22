@@ -8,6 +8,7 @@ import { CoachingMotivationApi, CoachingMotivationComponent } from '../../../../
 import { CoachingDatePipe, CoachingLabelPipe, coachingLabel } from '../coaching-labels';
 import { StudentExamOverviewComponent } from '../growth/student-exam-overview.component';
 import { StudentGoalSummaryComponent } from '../growth/student-goal-summary.component';
+import { StudentResourcesComponent } from '../../../shared/coaching-resources/student-resources.component';
 import { CsCardComponent, CsProgressRingComponent, CsStatusChipComponent } from '../ui';
 import { CoachingParentService, PARENT_PAGE_SIZE } from './coaching-parent.service';
 import { ParentBar, ParentWeekBarsComponent } from './parent-charts.component';
@@ -28,7 +29,7 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
   selector: 'app-parent-coaching-tab',
   standalone: true,
   imports: [RouterLink, ParentPlanWeekComponent, CoachingDatePipe, CoachingLabelPipe, CoachingMotivationComponent, CsCardComponent, CsProgressRingComponent, CsStatusChipComponent,
-    ParentWeekBarsComponent, StudentExamOverviewComponent, StudentGoalSummaryComponent, ParentPaymentsComponent],
+    ParentWeekBarsComponent, StudentExamOverviewComponent, StudentGoalSummaryComponent, ParentPaymentsComponent, StudentResourcesComponent],
   template: `
     <div class="cp-top">
       <cs-card tone="raised" class="cp-week" data-testid="parent-week">
@@ -80,6 +81,10 @@ const emptyList = <T>(): PagedList<T> => ({ items: [], total: null, page: 0, loa
     <section class="cp-section cs-growth-parent" aria-labelledby="cp-exams-title">
       <h2 id="cp-exams-title">Denemeler</h2>
       <app-student-exam-overview [studentId]="studentId()" [readonly]="true" audience="parent" [childName]="name()" />
+    </section>
+    <!-- KocApp uyumu (22.11.2026): the child's books and sets and how much of each is done. -->
+    <section class="cp-section" data-testid="parent-resources">
+      <app-student-resources [studentId]="studentId()" audience="parent" [childName]="name()" />
     </section>
 
     @if (hasReview()) {

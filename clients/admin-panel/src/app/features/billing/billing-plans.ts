@@ -111,10 +111,9 @@ interface PlanDraft {
             <div class="form-grid">
               <label class="check"><input type="checkbox" [(ngModel)]="plan.hasSeats" (ngModelChange)="syncSeats()" name="planHasSeats" /> Plan koltuk içerir</label>
               <label>Koltuk sayısı<input type="number" [(ngModel)]="plan.seatCount" name="planSeatCount" min="1" max="100000" [disabled]="!plan.hasSeats" /></label>
-              @if (plan.buyerType === 'Institution') {
-                <label class="check"><input type="checkbox" [(ngModel)]="plan.hasExtraSeats" name="planHasExtraSeats" [disabled]="!plan.hasSeats" /> Ek koltuk satılabilir</label>
-                <label>Ek koltuk fiyatı (TL, dönem boyu)<input type="number" [(ngModel)]="plan.extraSeatPrice" name="planExtraSeatPrice" min="0.01" step="0.01" [disabled]="!plan.hasSeats || !plan.hasExtraSeats" /></label>
-              }
+              <!-- KocApp uyumu (22.11.2026): a teacher plan sells extra students too ("ek öğrenci" on the teacher's page). -->
+              <label class="check"><input type="checkbox" [(ngModel)]="plan.hasExtraSeats" name="planHasExtraSeats" [disabled]="!plan.hasSeats" /> Ek koltuk satılabilir</label>
+              <label>Ek koltuk fiyatı (TL, dönem boyu)<input type="number" [(ngModel)]="plan.extraSeatPrice" name="planExtraSeatPrice" min="0.01" step="0.01" [disabled]="!plan.hasSeats || !plan.hasExtraSeats" /></label>
             </div>
           }
 
@@ -251,12 +250,12 @@ export class BillingPlansComponent implements OnInit {
     });
   }
 
-  /** A seat belongs to a teacher or an institution; an institution gets no trial. */
+  /** A seat (and an extra seat) belongs to a teacher or an institution; an institution gets no trial. */
   syncBuyer(): void {
     const plan = this.draft();
     if (!plan) return;
     if (plan.buyerType === 'Individual') { plan.hasSeats = false; this.syncSeats(); }
-    if (plan.buyerType !== 'Institution') { plan.hasExtraSeats = false; plan.extraSeatPrice = null; }
+    if (plan.buyerType === 'Individual') { plan.hasExtraSeats = false; plan.extraSeatPrice = null; }
     if (plan.buyerType === 'Institution') { plan.hasTrial = false; plan.trialDays = 0; }
   }
 

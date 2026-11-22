@@ -35,7 +35,23 @@
             @for (task of editTasks; track $index; let i = $index) {
               <div class="draft-task">
                 <label>Çalışma başlığı<input [name]="'title-' + i" [(ngModel)]="task.title" (ngModelChange)="dirty = true" required maxlength="200"></label>
-                <label>Kaynak / sayfa (isteğe bağlı)<input [name]="'source-' + i" [(ngModel)]="task.sourceName" (ngModelChange)="dirty = true" maxlength="300"></label>
+                <!-- KocApp uyumu (22.11.2026): a task works through a range of one of the student's resources. -->
+                @if (resources().length) {
+                  <div class="fields task-resource">
+                    <label>Kaynak (isteğe bağlı)<select [name]="'resource-' + i" [ngModel]="task.resourceId ?? ''" (ngModelChange)="setTaskResource(task, $event)">
+                      <option value="">Kaynak seçilmedi</option>
+                      @for (resource of resources(); track resource.id) { <option [value]="resource.id">{{ resource.name }}@if (resource.lessonName) {, {{ resource.lessonName }}}</option> }
+                    </select></label>
+                    @if (resourceOf(task); as resource) {
+                      <label>İlk {{ unitWord(resource.unit) }}<input type="number" [name]="'resource-from-' + i" [(ngModel)]="task.resourceFrom" (ngModelChange)="dirty = true" min="1" [max]="resource.totalUnits" step="1" inputmode="numeric"></label>
+                      <label>Son {{ unitWord(resource.unit) }}<input type="number" [name]="'resource-to-' + i" [(ngModel)]="task.resourceTo" (ngModelChange)="dirty = true" min="1" [max]="resource.totalUnits" step="1" inputmode="numeric"></label>
+                      @if (resource.next) {
+                        <button type="button" class="secondary" (click)="suggestNext(task)">Sıradakini yaz ({{ unitWord(resource.unit) }} {{ resource.next.fromUnit }}–{{ resource.next.toUnit }})</button>
+                      }
+                    }
+                  </div>
+                }
+                <label>{{ resources().length ? 'Kaynak notu (isteğe bağlı)' : 'Kaynak / sayfa (isteğe bağlı)' }}<input [name]="'source-' + i" [(ngModel)]="task.sourceName" (ngModelChange)="dirty = true" maxlength="300"></label>
                 <div class="fields">
                   <label>Tarih<input type="date" [name]="'date-' + i" [(ngModel)]="task.plannedDate" (ngModelChange)="dirty = true" required></label>
                   <label>Başlangıç saati (isteğe bağlı)<input type="time" step="1800" [name]="'start-' + i" [ngModel]="task.plannedStartMinute==null?'':clock(task.plannedStartMinute)" (ngModelChange)="setDraftTime(task,$event)"></label>
@@ -70,7 +86,9 @@
               @if (staffStudentId) { <p>{{ outcome.code }} — {{ withoutFinalStop(outcome.name) }}, {{ outcome.allocatedMinutes }} dk, süre sürümü {{ outcome.estimateNumber }}@if (outcome.origin === 'StudentOverride') {<span>, Öğrencinin süre seçimi</span>}</p> }
               @else { <p>{{ withoutFinalStop(outcome.name) }}, {{ outcome.allocatedMinutes }} dk</p> }
             }
-            @if (task.sourceName) { <p>Kaynak: {{ task.sourceName.startsWith('DenemeTekrar:') ? 'Deneme analizine göre konu tekrarı' : task.sourceName }}</p> }
+            @if (resourceText(task); as text) { <p data-testid="task-resource">Kaynak: {{ text }}</p> }
+            @if (task.adviceKey) { <p>Deneme analizine göre konu tekrarı</p> }
+            @if (task.sourceName) { <p>{{ task.resourceName ? 'Not' : 'Kaynak' }}: {{ task.sourceName.startsWith('DenemeTekrar:') ? 'Deneme analizine göre konu tekrarı' : task.sourceName }}</p> }
             @if(task.predecessorTaskId){<p>{{ staffStudentId ? 'Devam çalışması: önceki gerçekleşmeler kaynak görevde korunur. Buraya yalnız bu devam görevindeki yeni çalışma toplamını gir. Konuların süre payları kaynak çalışmayla birlikte korunur.' : 'Yarım kalan çalışmanın devamı. Önceki kısımda yaptıkların orada kayıtlı kalır; burada yalnız bu kısmı sayarsın.' }}</p>}
             @if(task.remainingMinutes!=null){<p>Kalan iş: {{task.remainingMinutes}} dk@if(task.remainingQuestions!=null){, {{task.remainingQuestions}} soru}</p>}
             @if(task.completionSourceTaskId && staffStudentId){<p>Tamamlanma aynı çalışma zincirindeki kayıtla doğrulandı. Fiili süre ve sorular yapıldıkları kayıtta korunur.</p>}

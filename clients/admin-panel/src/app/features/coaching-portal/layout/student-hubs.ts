@@ -11,7 +11,9 @@ export const STUDENT_HUBS: Record<'plan' | 'growth' | 'settings' | 'payments', S
   plan: { label: 'Planım', tabs: [
     { label: 'Planım', path: `${root}/plan`, exact: true },
     // Review of PR 135 (S8): "Planı düzenle" opens the plan wizard; the calendar pages (free hours, weekly lessons) belong to it.
-    { label: 'Planı düzenle', path: `${root}/plan/wizard`, match: [`${root}/plan/hours`, `${root}/plan/weekly`, `${root}/plan/preview`] }
+    { label: 'Planı düzenle', path: `${root}/plan/wizard`, match: [`${root}/plan/hours`, `${root}/plan/weekly`, `${root}/plan/preview`] },
+    // KocApp uyumu (22.11.2026): the books and sets the student works through, with their progress.
+    { label: 'Kaynaklarım', path: `${root}/plan/resources` }
   ] },
   growth: { label: 'Gelişimim', tabs: [
     { label: 'Denemeler', path: `${root}/growth/exams` },

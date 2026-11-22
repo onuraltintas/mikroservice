@@ -83,7 +83,7 @@ public sealed class Plan
     public int TrialDays { get; set; }
     /// <summary>Seats included in the plan; null = a plan without seats.</summary>
     public int? SeatCount { get; set; }
-    /// <summary>Price of one extra seat for the whole period, on institution plans; null = no extra seats.</summary>
+    /// <summary>Price of one extra seat for the whole period, on teacher and institution plans; null = no extra seats.</summary>
     public decimal? ExtraSeatPrice { get; set; }
     /// <summary>Shown with "contact us"; cannot be bought online.</summary>
     public bool IsContactOnly { get; set; }

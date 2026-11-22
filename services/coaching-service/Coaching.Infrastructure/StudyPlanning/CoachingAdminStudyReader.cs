@@ -67,8 +67,9 @@ public sealed class CoachingAdminStudyReader(CoachingDbContext db, ICoachingAdmi
         if (tasks.Count > 1000) throw new BusinessRuleException("StudyPlanning.ReportLimit", "Bu revizyon çok fazla görev içeriyor; ayrıntı inceleme sınırı aşıldı.");
         var histories = await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student && x.RevisionId == revisionId)
             .ToDictionaryAsync(x => x.Id, ct);
-        return new(plan.Id, plan.Version, plan.Title, plan.Status, tasks.Select(x => x with {
-            RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(histories[x.Id].RealizationHistoryJson), WorkDays=histories[x.Id].WorkDays,CompletionSourceTaskId=histories[x.Id].CompletionSourceTaskId }).ToArray());
+        var resources = await StudentResourceNames.ForAsync(db, student, histories.Values, ct);
+        return new(plan.Id, plan.Version, plan.Title, plan.Status, tasks.Select(x => StudentResourceNames.Attach(x with {
+            RealizationHistory = System.Text.Json.JsonSerializer.Deserialize<StudyRealizationChange[]>(histories[x.Id].RealizationHistoryJson), WorkDays=histories[x.Id].WorkDays,CompletionSourceTaskId=histories[x.Id].CompletionSourceTaskId }, histories[x.Id], resources)).ToArray());
     }
     public async Task<StudentStudyReport> ReportAsync(Guid student, DateOnly from, DateOnly to, CancellationToken ct)
     {

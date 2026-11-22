@@ -17,6 +17,8 @@ describe('shared staff plan editor', () => {
     http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: page });
     const component = fixture.componentInstance;
     await component.newDraft(); component.editTitle = 'Koç haftalık planı';
+    // KocApp uyumu: the draft editor reads the student's resources once, for the resource picker.
+    http.expectOne('/api/coaching/staff/students/student-1/study/resources').flush({ success: true, data: [] });
     component.editTasks = [{ title: 'Matematik', plannedDate: '2026-10-19', plannedMinutes: 30, topicId: null, isPinned: false }];
     component.saveDraft();
     const create = http.expectOne('/api/coaching/staff/students/student-1/study/plans');
@@ -34,6 +36,35 @@ describe('shared staff plan editor', () => {
     expect(text).not.toContain('Gerçek süre');
     expect(text).not.toContain('Fiili çalışma günü');
     expect(text).toContain('Yalnız kalan kapsamı kaydet');
+  });
+
+  it('KocApp uyumu: points a draft task at a resource range, fills the next part and sends it with the plan', async () => {
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(StudentStudyPlansComponent);
+    fixture.componentRef.setInput('staffStudentId', 'student-1');
+    fixture.detectChanges(); await fixture.whenStable();
+    http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: page });
+    const component = fixture.componentInstance;
+    await component.newDraft(); component.editTitle = 'Kaynaklı plan';
+    http.expectOne('/api/coaching/staff/students/student-1/study/resources').flush({ success: true, data: [{
+      id: 'r1', version: 0, name: 'TEST Soru Bankası', publisher: null, lessonName: 'Matematik', kind: 'QuestionBank', unit: 'Test', totalUnits: 40,
+      doneBefore: 0, doneUnits: 0, percent: 0, plannedUnits: 0, isArchived: false, canDelete: true, createdAt: '2026-11-22T10:00:00Z', updatedAt: null,
+      sections: [], next: { fromUnit: 1, toUnit: 2, sectionTitle: 'Ünite 1', topicId: null } }] });
+    fixture.detectChanges(); await fixture.whenStable();
+    const task = component.editTasks[0];
+    component.setTaskResource(task, 'r1');
+    component.suggestNext(task);
+    expect([task.resourceId, task.resourceFrom, task.resourceTo, task.title]).toEqual(['r1', 1, 2, 'Ünite 1']);
+    task.resourceTo = 41;
+    component.saveDraft();
+    expect(component.error()).toContain('kaynak aralığı');
+    task.resourceTo = 2;
+    component.saveDraft();
+    const create = http.expectOne('/api/coaching/staff/students/student-1/study/plans');
+    expect(create.request.body.tasks[0]).toEqual(expect.objectContaining({ resourceId: 'r1', resourceFrom: 1, resourceTo: 2 }));
+    create.flush({ success: true, data: { id: 'plan-1', version: 0, status: 'Draft', title: 'Kaynaklı plan', tasks: [] } });
+    http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: page });
+    expect(component.resourceText({ resourceName: 'TEST Soru Bankası', resourceUnit: 'Test', resourceFrom: 1, resourceTo: 2 } as never)).toBe('TEST Soru Bankası, test 1–2');
   });
 
   it('keeps the institution read-only and cancels a previous student request', async () => {

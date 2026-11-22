@@ -23,7 +23,7 @@ test('a result may be saved without a score, and a missing score is never read a
 test('a plan task leaves its empty fields out of the answer', async () => {
   const contract = await read(service + 'Coaching.Application/StudyPlanning/IManualStudyPlanService.cs');
   const view = contract.slice(contract.indexOf('record ManualStudyTaskView('), contract.indexOf('record StudyTaskOutcomeView('));
-  assert.equal(view.match(/JsonIgnore\(Condition = JsonIgnoreCondition\.WhenWritingNull\)/g).length, 21);
+  assert.equal(view.match(/JsonIgnore\(Condition = JsonIgnoreCondition\.WhenWritingNull\)/g).length, 27);
   assert.doesNotMatch(view, /(?<!WhenWritingNull\)\] )(?:Guid|int|string|DateTime)\? \w+/);
 });
 

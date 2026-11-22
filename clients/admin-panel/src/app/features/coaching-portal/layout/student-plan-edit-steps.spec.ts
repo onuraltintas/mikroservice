@@ -76,7 +76,7 @@ describe('Planı düzenle steps (T4)', () => {
   });
 
   it('gives the plan hub two tabs: the plan and its editing flow', () => {
-    expect(STUDENT_HUBS.plan.tabs.map(tab => tab.label)).toEqual(['Planım', 'Planı düzenle']);
+    expect(STUDENT_HUBS.plan.tabs.map(tab => tab.label)).toEqual(['Planım', 'Planı düzenle', 'Kaynaklarım']);
     const edit = STUDENT_HUBS.plan.tabs[1];
     // Review of PR 135 (S8): "Planı düzenle" opens the plan wizard; the calendar pages belong to the same tab.
     expect(edit.path).toBe('/coaching-portal/plan/wizard');

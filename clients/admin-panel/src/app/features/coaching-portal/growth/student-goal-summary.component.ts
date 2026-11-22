@@ -5,6 +5,7 @@ import { CoachingScoreEstimateService, ESTIMATE_LABEL, EXACT_LABEL, ScoreEstimat
 import { CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent } from '../ui';
 import { goalGauge, goalScore } from './growth-model';
 import { GoalCardComponent } from './goal-card.component';
+import { OfficialLinksComponent } from './official-links.component';
 import { possessive } from '../parent/parent-model';
 
 const DIPLOMA_KEY = 'coaching.diplomaGrade';
@@ -20,7 +21,7 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 @Component({
   selector: 'app-student-goal-summary',
   standalone: true,
-  imports: [FormsModule, CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent, GoalCardComponent],
+  imports: [FormsModule, CsCardComponent, CsEmptyStateComponent, CsStatusChipComponent, GoalCardComponent, OfficialLinksComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'cs-growth-goal' },
   template: `
@@ -109,6 +110,8 @@ const whole = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
           <button type="submit" class="cs-growth-secondary">Hesapla</button>
         </form>
       }
+      <!-- KocApp uyumu (22.11.2026): official exam sites and the target programme's YÖK Atlas code. -->
+      <app-official-links [estimate]="result" [audience]="parent() ? 'parent' : 'student'" />
     }`
 })
 export class StudentGoalSummaryComponent implements OnInit {

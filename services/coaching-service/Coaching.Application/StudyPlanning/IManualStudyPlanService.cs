@@ -6,7 +6,9 @@ namespace Coaching.Application.StudyPlanning;
 
 public sealed record ManualStudyTaskInput(DateOnly PlannedDate, [Required] string Title,
     int PlannedMinutes, Guid? TopicId, bool IsPinned, [MaxLength(300)] string? SourceName = null,
-    [Range(0, 100000)] int? PlannedQuestions = null, [Range(0,1439)] int? PlannedStartMinute = null);
+    [Range(0, 100000)] int? PlannedQuestions = null, [Range(0,1439)] int? PlannedStartMinute = null,
+    Guid? ResourceId = null, [Range(1, StudentResource.MaxUnits)] int? ResourceFrom = null, [Range(1, StudentResource.MaxUnits)] int? ResourceTo = null,
+    [MaxLength(64)] string? AdviceKey = null);
 public sealed record ManualStudyPlanInput([Required] string Title,
     [Required] IReadOnlyList<ManualStudyTaskInput> Tasks);
 public sealed record ManualStudyPlanUpdate([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion, [Required] ManualStudyPlanInput Plan);
@@ -59,7 +61,13 @@ public sealed record ManualStudyTaskView(Guid Id,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] StudyContinuationView? Continuation=null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTime? SkippedAt=null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PlanKind=null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PlanReason=null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PlanReason=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? ResourceId=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ResourceFrom=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ResourceTo=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ResourceName=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ResourceUnit=null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? AdviceKey=null);
 public sealed record StudyTaskOutcomeView(Guid OutcomeId, string Code, string Name, Guid EstimateId, int EstimateNumber,
     int AllocatedMinutes, string Origin);
 public sealed record ManualStudyPlanView(Guid Id, int Version, string Title, StudyPlanStatus Status,

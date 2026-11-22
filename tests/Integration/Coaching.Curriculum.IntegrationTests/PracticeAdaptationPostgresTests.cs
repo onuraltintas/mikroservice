@@ -120,7 +120,7 @@ public sealed class PracticeAdaptationPostgresTests
         await Assert.ThrowsAsync<ArgumentException>(() => f.Plans.ApplyPracticeAsync(new(preview.Fingerprint, request, false), f.Service, null, default));
         var saved = await f.Plans.ApplyPracticeAsync(new(preview.Fingerprint, request, true), f.Service, null, default);
         Assert.Equal(before, await f.Snapshot());
-        Assert.Equal(3, saved.Tasks.Count); Assert.Equal(2, saved.Tasks.Count(x => x.SourceName?.StartsWith("DenemeTekrar:") == true));
+        Assert.Equal(3, saved.Tasks.Count); Assert.Equal(2, saved.Tasks.Count(x => x.AdviceKey?.StartsWith("DenemeTekrar:") == true && x.SourceName == null));
         var replay = await f.Plans.ApplyPracticeAsync(new(preview.Fingerprint, request, true), f.Service, null, default);
         Assert.Equal(saved.Tasks.Count, replay.Tasks.Count);
         Assert.True((await f.Service.GetAsync(null, default)).Advice.Single().Topics.Single().AlreadyPlanned);

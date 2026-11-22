@@ -43,7 +43,9 @@ public sealed record CoachingDataExportDto(
     // The stored answers as they are, only when they can no longer be read into StudyRoutine.
     string? StudyRoutineUnreadableAnswersJson = null,
     // Schema 1.13 (Paket H4a): the plan preferences (exam focus and tempo), when saved.
-    Coaching.Application.StudyPlanning.StudyPlanPreferencesView? StudyPlanPreferences = null)
+    Coaching.Application.StudyPlanning.StudyPlanPreferencesView? StudyPlanPreferences = null,
+    // Schema 1.14 (KocApp uyumu, 22.11.2026): the student's books and sets with their progress.
+    IReadOnlyList<Coaching.Application.StudyPlanning.StudentResourceView>? StudyResources = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
