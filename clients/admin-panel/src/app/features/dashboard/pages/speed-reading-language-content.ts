@@ -156,7 +156,7 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
     this.service.getExamQuestions(this.questionPage, this.pageSize, this.questionExamType, this.questionDifficulty, this.questionCategory, this.questionSearch, this.questionAgeGroupId || undefined)
       .pipe(finalize(() => this.loading.set(false))).subscribe({
         next: value => this.questions.set(value),
-      error: () => this.error.set('Soru bankası yüklenemedi.')
+      error: () => this.error.set('Soru bankası yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
     this.service.getExamQuestionQualitySummary().subscribe({
       next: value => this.questionQualitySummary.set(value),
@@ -236,7 +236,7 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
     this.service.getVocabulary(this.vocabularySearch, this.vocabularyCategory, this.vocabularyDifficulty, this.vocabularyAgeGroupId || undefined, this.vocabularyPage, this.pageSize)
       .pipe(finalize(() => this.loading.set(false))).subscribe({
         next: value => this.vocabulary.set(value),
-        error: () => this.error.set('Kelime havuzu yüklenemedi.')
+        error: () => this.error.set('Kelime havuzu yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
@@ -297,7 +297,7 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
   private loadAgeGroups(): void {
     this.service.getActiveAgeGroups().subscribe({
       next: value => this.ageGroups.set(value),
-      error: () => this.error.set('Yaş grupları yüklenemedi.')
+      error: () => this.error.set('Yaş grupları yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

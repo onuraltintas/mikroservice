@@ -126,7 +126,7 @@ export class SpeedReadingInstitutionRosterComponent {
         if (!this.institutionId) return;
         this.institutions.getById(this.institutionId).subscribe({
           next: institution => this.institutionName.set(institution.name),
-          error: () => this.error.set('Kurum adı yüklenemedi.')
+          error: () => this.error.set('Kurum adı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
         });
         this.load();
         this.loadTeachers();
@@ -152,7 +152,7 @@ export class SpeedReadingInstitutionRosterComponent {
       },
       error: () => {
         if (requestId !== this.memberRequestId) return;
-        this.error.set('Hızlı Okuma üyeleri yüklenemedi.'); this.loading.set(false);
+        this.error.set('Hızlı Okuma üyeleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false);
       }
     });
   }
@@ -165,7 +165,7 @@ export class SpeedReadingInstitutionRosterComponent {
         if (requestId === this.teacherRequestId) this.teachers.set(result.items.filter(item => item.isActive));
       },
       error: () => {
-        if (requestId === this.teacherRequestId) this.error.set('Kurum öğretmenleri yüklenemedi.');
+        if (requestId === this.teacherRequestId) this.error.set('Kurum öğretmenleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
       }
     });
   }

@@ -61,6 +61,17 @@ body .admin-shell {
     &:hover { transform: translateY(-3px); box-shadow: var(--admin-shadow-hover); }
   }
 
+  // Sayı kutucukları (metric, metric-card): yumuşak tonlar sırayla döner, sayı tonun koyu renginde, bir kez belirir.
+  main :is(.metric, .metric-card) {
+    --tone: var(--admin-tone-success); --tone-soft: var(--admin-tone-success-soft);
+    border: 0; border-radius: 16px; background: var(--tone-soft); animation: admin-rise .5s cubic-bezier(.2, .8, .2, 1) both;
+    > span { color: var(--ui-text); font-size: .8125rem; font-weight: 600; }
+    > strong { color: var(--tone); font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  }
+  main :is(.metric, .metric-card):nth-child(4n + 2) { --tone: var(--admin-tone-info); --tone-soft: var(--admin-tone-info-soft); animation-delay: 50ms; }
+  main :is(.metric, .metric-card):nth-child(4n + 3) { --tone: var(--admin-tone-violet); --tone-soft: var(--admin-tone-violet-soft); animation-delay: 100ms; }
+  main :is(.metric, .metric-card):nth-child(4n + 4) { --tone: var(--admin-tone-honey); --tone-soft: var(--admin-tone-honey-soft); animation-delay: 150ms; }
+
   // Düğmeler: ana düğme mürekkep renginde ve yuvarlak; ikincil düğme açık; ikisi de hafifçe tepki verir.
   main :is(button, a).primary,
   main :is(button, a).bg-\(--ui-brand\) {
@@ -126,6 +137,7 @@ body .admin-shell {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body .admin-shell main :is(.metric, .metric-card),
   body .admin-shell main [role='status']::before,
   body .admin-shell main router-outlet + * > *,
   body .admin-shell main :is(a.data-card, a.rounded-xl.border, a.rounded-2xl.border, button.rounded-xl.border),

@@ -178,7 +178,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
           achievements: result.achievements?.totalCount ?? 0
         });
       },
-      error: () => this.error.set('Hızlı okuma servis özeti yüklenemedi.')
+      error: () => this.error.set('Hızlı okuma servis özeti yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 }

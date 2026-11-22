@@ -45,8 +45,8 @@ describe('report display helpers', () => {
 
   it('marks exercise types without measured results instead of showing 0', () => {
     expect(exerciseScoreLabel(null)).toBe('Ölçülmedi');
-    expect(exerciseScoreLabel(80)).toBe('80%');
-    expect(exerciseScoreLabel(0)).toBe('0%');
+    expect(exerciseScoreLabel(80)).toBe('%80');
+    expect(exerciseScoreLabel(0)).toBe('%0');
   });
 });
 
