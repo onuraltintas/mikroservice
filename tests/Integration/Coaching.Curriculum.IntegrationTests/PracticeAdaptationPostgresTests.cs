@@ -249,7 +249,7 @@ public sealed class PracticeAdaptationPostgresTests
         }
         public PracticeAdjustmentRequest Request() => new("LGS","StudentReported",new(2026,11,3),false,[new(Topic.Id,60)]);
         public async Task<string> Snapshot() => JsonSerializer.Serialize(new {
-            Tasks = await Db.StudyPlanTasks.AsNoTracking().Where(x => x.SourceName == null).OrderBy(x => x.Id).ToArrayAsync(),
+            Tasks = await Db.StudyPlanTasks.AsNoTracking().Where(x => x.AdviceKey == null) /* the practice-review tasks carry their key in AdviceKey (KocApp uyumu) */.OrderBy(x => x.Id).ToArrayAsync(),
             Links = await Db.Set<StudyPlanTaskOutcome>().AsNoTracking().OrderBy(x => x.TaskId).ToArrayAsync() });
         public ValueTask DisposeAsync() => Pg.DisposeAsync();
     }
