@@ -36,29 +36,30 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
             Assert.Single(draft.Tasks);
             Assert.True(draft.Tasks[0].IsPinned);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.CreateDraftAsync(input));
-            var edited = await service.ReplaceDraftAsync(draft.Id, draft.Version, input with { Title = "Yeni başlık" });
+            var edited = await service.RenameDraftAsync(draft.Id, new(draft.Version, "Yeni başlık"));
             Assert.Equal("Yeni başlık", edited.Title);
             Assert.True(edited.Version > draft.Version);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.PublishAsync(draft.Id, draft.Version));
-            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceDraftAsync(draft.Id, edited.Version,
-                input with { Tasks = [new(default, "Geçersiz", 45, null, false)] }));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateDraftAsync(input with { Tasks = [new(default, "Geçersiz", 45, null, false)] }));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.RenameDraftAsync(draft.Id, new(edited.Version, "   ")));
             Assert.Equal("Yeni başlık", (await service.GetAsync(draft.Id))!.Title);
             var active = await service.PublishAsync(draft.Id, edited.Version);
             Assert.Equal(StudyPlanStatus.Active, active.Status);
-            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceDraftAsync(active.Id, active.Version, input));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.RenameDraftAsync(active.Id, new(active.Version, "Yayındaki")));
             var next = await service.CreateDraftAsync(input);
             await service.PublishAsync(next.Id, next.Version);
             Assert.Equal(StudyPlanStatus.Archived, (await service.GetAsync(active.Id))!.Status);
             Assert.Single((await service.GetAsync(active.Id))!.Tasks);
             Assert.Equal(1, await db.StudyPlanRevisions.CountAsync(x => x.IsActive));
             var empty = await service.CreateDraftAsync(input with { Tasks = [] });
-            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceDraftAsync(empty.Id, empty.Version,
+            // The task checks run before the "one draft at a time" rule.
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateDraftAsync(
                 input with { Tasks = [new(new DateOnly(2026, 10, 5), "Konu", 45, Guid.NewGuid(), false)] }));
-            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceDraftAsync(empty.Id, empty.Version,
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateDraftAsync(
                 input with { Tasks = Enumerable.Repeat(new ManualStudyTaskInput(new DateOnly(2026, 10, 5), "Konu", 45, null, false), 501).ToArray() }));
-            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceDraftAsync(empty.Id, empty.Version,
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateDraftAsync(
                 input with { Tasks = [new(new DateOnly(2026, 10, 5), "Konu", 1440, null, false), new(new DateOnly(2026, 10, 5), "Konu", 1, null, false)] }));
-            // Empty replacement input retains the protected continuation, so it is no longer an empty plan.
+            // An empty new draft still carries the protected continuation, so it is no longer an empty plan.
             Assert.Contains(empty.Tasks,x=>x.OriginalTaskId==active.Tasks[0].Id);
             var owner=actor.UserId;
             actor.UserId=Guid.NewGuid();
@@ -207,7 +208,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
 
     [Theory]
     [InlineData("create")]
-    [InlineData("replace")]
+    [InlineData("rename")]
     [InlineData("publish")]
     [InlineData("complete")]
     [InlineData("reschedule")]
@@ -230,7 +231,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
             var result = operation switch
             {
                 "create" => await service.CreateDraftAsync(input),
-                "replace" => await service.ReplaceDraftAsync(draft!.Id, draft.Version, input with { Title = "Düzenlenmiş" }),
+                "rename" => await service.RenameDraftAsync(draft!.Id, new(draft.Version, "Düzenlenmiş")),
                 "complete" => await service.CompleteTaskAsync(draft!.Id, draft.Tasks[0].Id, draft.Version, 25),
                 "reschedule" => await service.RescheduleTaskAsync(draft!.Id, draft.Tasks[0].Id, draft.Version, new DateOnly(2026, 10, 6)),
                 _ => await service.PublishAsync(draft!.Id, draft.Version)

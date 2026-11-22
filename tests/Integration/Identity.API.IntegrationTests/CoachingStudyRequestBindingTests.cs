@@ -13,7 +13,7 @@ public sealed class CoachingStudyRequestBindingTests
     public static IEnumerable<object[]> Requests()
     {
         var plan = new ManualStudyPlanInput("Plan", [new(new(2026, 10, 2), "Review", 30, null, false)]);
-        yield return [plan]; yield return [new ManualStudyPlanUpdate(0, plan)];
+        yield return [plan]; yield return [new StudyPlanRenameInput(0, "Plan")];
         yield return [new StudyPlanPublishInput(0)]; yield return [new StudyTaskCompleteInput(0, 25)];
         yield return [new StudyTaskRescheduleInput(0, new(2026, 10, 3))];
         yield return [new StudyAvailabilityUpdate(null, "Europe/Istanbul", [new(DayOfWeek.Monday, 600, 660)])];

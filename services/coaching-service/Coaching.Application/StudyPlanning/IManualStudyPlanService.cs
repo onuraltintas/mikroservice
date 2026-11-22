@@ -6,12 +6,11 @@ namespace Coaching.Application.StudyPlanning;
 
 public sealed record ManualStudyTaskInput(DateOnly PlannedDate, [Required] string Title,
     int PlannedMinutes, Guid? TopicId, bool IsPinned, [MaxLength(300)] string? SourceName = null,
-    [Range(0, 100000)] int? PlannedQuestions = null, [Range(0,1439)] int? PlannedStartMinute = null,
-    Guid? ResourceId = null, [Range(1, StudentResource.MaxUnits)] int? ResourceFrom = null, [Range(1, StudentResource.MaxUnits)] int? ResourceTo = null,
-    [MaxLength(64)] string? AdviceKey = null);
+    [Range(0, 100000)] int? PlannedQuestions = null, [Range(0,1439)] int? PlannedStartMinute = null);
 public sealed record ManualStudyPlanInput([Required] string Title,
     [Required] IReadOnlyList<ManualStudyTaskInput> Tasks);
-public sealed record ManualStudyPlanUpdate([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion, [Required] ManualStudyPlanInput Plan);
+/// <summary>A draft's new name; the plan itself is edited on its calendar (the "planı baştan yaz" form was removed on 22.11.2026).</summary>
+public sealed record StudyPlanRenameInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion, [Required, MaxLength(200)] string Title);
 public sealed record StudyPlanPublishInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion);
 public sealed record StudyPlanRestoreInput([property:JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,
     [property:JsonRequired] Guid? ExpectedActiveRevisionId, [property:JsonRequired] [Range(0,int.MaxValue)] int? ExpectedActiveRevisionVersion);
@@ -81,7 +80,10 @@ public sealed record CalendarTaskSaveInput([property:JsonRequired] [Range(0,int.
     // KocApp uyumu (22.11.2026): a new task from the curriculum (a topic of the lesson) or from a resource range; an edit can
     // change the resource range when KeepResource is false. Left out, a new task is free and an edited task keeps its resource.
     Guid? TopicId = null, Guid? ResourceId = null, [Range(1, StudentResource.MaxUnits)] int? ResourceFrom = null,
-    [Range(1, StudentResource.MaxUnits)] int? ResourceTo = null, bool? KeepResource = null);
+    [Range(1, StudentResource.MaxUnits)] int? ResourceTo = null, bool? KeepResource = null,
+    // 22.11.2026 (the old plan form removed): the planned questions and the note ("Not / sayfa") are set on the calendar too.
+    // An edit changes them only when KeepDetails is false; older callers leave them as they were.
+    [Range(0, 100000)] int? PlannedQuestions = null, [MaxLength(300)] string? SourceName = null, bool? KeepDetails = null);
 
 public interface IManualStudyPlanService
 {
@@ -94,7 +96,7 @@ public interface IManualStudyPlanService
     Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default);
-    Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default);
+    Task<ManualStudyPlanView> RenameDraftAsync(Guid id, StudyPlanRenameInput request, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> RestoreArchivedAsync(Guid id, StudyPlanRestoreInput request, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default);

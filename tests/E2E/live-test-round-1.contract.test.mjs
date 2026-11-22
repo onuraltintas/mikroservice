@@ -102,7 +102,8 @@ test('#44: a session cancelled with the teacher link says why', () => {
 
 test('second group: teacher-facing plan texts, institution name on invitations, no plan actions for a student without permission', () => {
   const plans = read('clients/admin-panel/src/app/features/coaching-portal/pages/student-study-plans.component.html');
-  assert.equal(plans.split("staffStudentId?'Planı yayımla':'Planını yayımla'").length - 1, 3);
+  // 22.11.2026: one draft panel (weekly and manual drafts, both pages) holds the publish box.
+  assert.equal(plans.split("staffStudentId?'Planı yayımla':'Planını yayımla'").length - 1, 1);
   assert.match(plans, /@if \(!planningClosed\(\)\) \{\s*<button type="button" class="secondary" \(click\)="planMenu\.open = false; openWizard\(\)"/);
   assert.equal(plans.split('[readOnly]="readOnly || planningClosed()"').length - 1, 2);
   assert.match(read('services/coaching-service/Coaching.API/Controllers/CoachingInvitationsController.cs'), /institutionName = x\.InstitutionId is \{ \} institution/);

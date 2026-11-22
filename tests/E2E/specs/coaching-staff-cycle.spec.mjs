@@ -81,14 +81,20 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await teacherEditor.getByRole('button', { name: 'Yeni taslak', exact: true }).click();
   const title = `Koç haftası ${randomUUID()}`;
   const source = `Matematik kitabı s.20–25 ${'x'.repeat(250)}`;
-  await teacherEditor.getByLabel('Plan başlığı', { exact: true }).fill(title);
-  await teacherEditor.getByLabel('Çalışma başlığı', { exact: true }).fill('Kesirler tekrarı');
-  await teacherEditor.getByLabel('Tarih', { exact: true }).fill('2026-10-19');
-  await teacherEditor.getByLabel('Süre (dk)', { exact: true }).fill('45');
-  await teacherEditor.getByLabel('Kaynak / sayfa (isteğe bağlı)', { exact: true }).fill(source);
-  await teacherEditor.getByLabel('Planlanan soru (isteğe bağlı)', { exact: true }).fill('30');
-  await teacherEditor.getByRole('button', { name: 'Taslağı kaydet', exact: true }).click();
-  await teacherEditor.getByLabel('Planımı kontrol ettim, yayımlamayı onaylıyorum.').check();
+  // 22.11.2026: the empty draft is named in its box and its work is added on the calendar.
+  await teacherEditor.getByTestId('draft-title').fill(title);
+  await teacherEditor.getByRole('button', { name: 'Adı kaydet', exact: true }).click();
+  await teacherEditor.getByRole('button', { name: '＋ Çalışma ekle', exact: true }).click();
+  const add = teacherPage.getByRole('dialog', { name: 'Çalışma ekle', exact: true });
+  await add.getByLabel('Çalışma başlığı', { exact: true }).fill('Kesirler tekrarı');
+  await add.getByLabel('Gün', { exact: true }).fill('2026-10-19');
+  await add.getByLabel('Başlangıç', { exact: true }).fill('18:00');
+  await add.getByLabel('Süre (dk)', { exact: true }).fill('45');
+  await add.getByLabel('Not / sayfa (isteğe bağlı)', { exact: true }).fill(source);
+  await add.getByLabel('Planlanan soru (isteğe bağlı)', { exact: true }).fill('30');
+  await add.getByRole('button', { name: 'Kaydet', exact: true }).click();
+  await expect(add).toHaveCount(0);
+  await teacherEditor.getByLabel('Planı kontrol ettim, yayımlamayı onaylıyorum.').check();
   await teacherEditor.getByRole('button', { name: 'Planı yayımla', exact: true }).click();
   await expect(teacherEditor.getByText('Öğrencinin çalışma kaydı bekleniyor.')).toBeVisible();
   await expect(teacherEditor.getByLabel('Gerçek süre (dk)', { exact: true })).toHaveCount(0);

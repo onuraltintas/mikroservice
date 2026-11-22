@@ -381,6 +381,13 @@ public sealed class StudyPlanTask : AggregateRoot
         PlannedDate=plannedDate; PlannedStartMinute=startMinute; SkippedAt=null; UpdatedAt=DateTime.UtcNow;
     }
 
+    /// <summary>22.11.2026: the "Not / sayfa" line of a task, edited on the plan's calendar.</summary>
+    public void SetNote(string? note)
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be corrected.");
+        SourceName = string.IsNullOrWhiteSpace(note) ? null : StudyCatalogText.Require(note, 300); UpdatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>Paket H5: the first half of a split task keeps its share of the planned questions.</summary>
     public void CorrectPlannedQuestions(int? plannedQuestions)
     {

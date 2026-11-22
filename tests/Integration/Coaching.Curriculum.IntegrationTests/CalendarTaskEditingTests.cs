@@ -54,6 +54,34 @@ public sealed class CalendarTaskEditingTests
         var cleared=await service.SaveCalendarTaskAsync(revision.Id,row.Id,new CalendarTaskSaveInput(moved.Version,"Çarpanlar tekrar",new(2027,1,5),600,30,topic.LessonId,KeepResource:false));
         Assert.Null(cleared.Tasks.Single(x=>x.Id==row.Id).ResourceId);
     }
+    /// <summary>22.11.2026: the old plan form is gone. A draft starts empty and is made on its calendar, with questions and a note.</summary>
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task An_empty_draft_is_made_on_its_calendar_and_an_old_untimed_task_gets_its_hour_there()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var topic=await f.Seed();
+        var student=(await f.Db.StudyPlanRevisions.SingleAsync()).StudentId;f.User.UserId=student;f.User.Roles=["Student"];
+        var policy=new CoachingAccessPolicy(f.User);var service=new CoachingManualStudyPlanService(f.Db,policy,new CoachingAutomaticStudyPlanPreviewService(f.Db,policy),new CurriculumManagementTests.NoopPublisher());
+        var draft=await service.CreateDraftAsync(new("Elle hazırlanan plan",[]));
+        Assert.Equal(StudyPlanStatus.Draft,draft.Status);
+        var input=new CalendarTaskSaveInput(draft.Version,"TEST soru çözümü",new(2027,1,5),600,40,topic.LessonId,PlannedQuestions:30,SourceName:"Kitap s.20");
+        await Assert.ThrowsAsync<ArgumentException>(()=>service.SaveCalendarTaskAsync(draft.Id,null,input with {PlannedQuestions=-1}));
+        var added=await service.SaveCalendarTaskAsync(draft.Id,null,input);var row=added.Tasks.Single();
+        Assert.Equal((30,"Kitap s.20",600),(row.PlannedQuestions!.Value,row.SourceName,row.PlannedStartMinute!.Value));
+        // An edit keeps them unless it says otherwise.
+        var kept=await service.SaveCalendarTaskAsync(draft.Id,row.Id,input with {ExpectedVersion=added.Version,Title="TEST tekrar"});
+        Assert.Equal(30,kept.Tasks.Single().PlannedQuestions);
+        var changed=await service.SaveCalendarTaskAsync(draft.Id,row.Id,input with {ExpectedVersion=kept.Version,PlannedQuestions=null,SourceName=" ",KeepDetails=false});
+        Assert.Null(changed.Tasks.Single().PlannedQuestions);Assert.Null(changed.Tasks.Single().SourceName);
+        // A task saved by the old form had no hour; on the calendar it is placed on its own.
+        var revision=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==draft.Id);
+        var untimed=StudyPlanTask.Create(revision,new(2027,1,6),"Saatsiz çalışma",30);f.Db.Add(untimed);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
+        var placed=await service.MoveTasksAsync(draft.Id,new(changed.Version,[untimed.Id],new(2027,1,6),900));
+        Assert.Equal(900,placed.Tasks.Single(x=>x.Id==untimed.Id).PlannedStartMinute);
+        var renamed=await service.RenameDraftAsync(draft.Id,new(placed.Version,"TEST haftası"));
+        Assert.Equal("TEST haftası",renamed.Title);
+        var published=await service.PublishAsync(draft.Id,renamed.Version);
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>service.RenameDraftAsync(draft.Id,new(published.Version,"Geç")));
+    }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task CalendarEditsAreVersionedRejectConflictsAndPreserveCompletedHistory()
     {

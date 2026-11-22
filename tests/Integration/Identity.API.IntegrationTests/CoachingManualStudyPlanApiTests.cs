@@ -14,13 +14,15 @@ public sealed class CoachingManualStudyPlanApiTests
     public void Json_RequiresExplicitVersionAndBodyLimitFitsMaximumPlan()
     {
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyPlanPublishInput>("{}"));
-        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<ManualStudyPlanUpdate>("{\"Plan\":{\"Title\":\"Plan\",\"Tasks\":[]}}"));
-        foreach (var name in new[] { nameof(ManualStudyPlansController.Create), nameof(ManualStudyPlansController.Replace) })
-        {
-            var limit = Assert.Single(typeof(ManualStudyPlansController).GetMethod(name)!
-                .GetCustomAttributes(typeof(RequestSizeLimitAttribute), false).Cast<RequestSizeLimitAttribute>());
-            Assert.Equal(1024 * 1024, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)limit).MaxRequestBodySize);
-        }
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyPlanRenameInput>("{\"Title\":\"Plan\"}"));
+        var limit = Assert.Single(typeof(ManualStudyPlansController).GetMethod(nameof(ManualStudyPlansController.Create))!
+            .GetCustomAttributes(typeof(RequestSizeLimitAttribute), false).Cast<RequestSizeLimitAttribute>());
+        Assert.Equal(1024 * 1024, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)limit).MaxRequestBodySize);
+        // 22.11.2026: the "planı baştan yaz" endpoint is gone; a draft is renamed and edited on its calendar.
+        Assert.Null(typeof(ManualStudyPlansController).GetMethod("Replace"));
+        var rename = Assert.Single(typeof(ManualStudyPlansController).GetMethod(nameof(ManualStudyPlansController.Rename))!
+            .GetCustomAttributes(typeof(RequestSizeLimitAttribute), false).Cast<RequestSizeLimitAttribute>());
+        Assert.Equal(1024, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)rename).MaxRequestBodySize);
     }
 
     [Fact]
@@ -48,7 +50,7 @@ public sealed class CoachingManualStudyPlanApiTests
     {
         Assert.IsType<NotFoundObjectResult>(await new ManualStudyPlansController(new Stub()).Get(Guid.NewGuid()));
         var controller = new ManualStudyPlansController(new Stub { Failure = new ArgumentException() });
-        Assert.IsType<BadRequestObjectResult>(await controller.Replace(Guid.NewGuid(), new(0, new("Plan", []))));
+        Assert.IsType<BadRequestObjectResult>(await controller.Rename(Guid.NewGuid(), new(0, "Plan")));
     }
 
     [Fact]
@@ -91,7 +93,7 @@ public sealed class CoachingManualStudyPlanApiTests
         public Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<ManualStudyPlanView?>(null);
         public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
-        public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
+        public Task<ManualStudyPlanView> RenameDraftAsync(Guid id, StudyPlanRenameInput request, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> RestoreArchivedAsync(Guid id,StudyPlanRestoreInput request,CancellationToken cancellationToken=default)=>Result();
         public Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default) => Result();

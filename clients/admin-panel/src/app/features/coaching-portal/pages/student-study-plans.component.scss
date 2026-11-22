@@ -29,7 +29,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .badge { font-size: .75rem; border: 1px solid var(--ui-border); border-radius: 99px; padding: .2rem .6rem; white-space: nowrap; }
 .pagination { align-items: center; justify-content: space-between; font-size: .75rem; margin: 1rem 0; gap: .4rem; }
 .pagination button { padding: .4rem .5rem; font-size: .75rem; }
-.draft-task, .task { border-top: 1px solid var(--ui-border); padding: 1rem 0; margin-top: .7rem; }
+.task { border-top: 1px solid var(--ui-border); padding: 1rem 0; margin-top: .7rem; }
 .task { overflow-wrap: anywhere; }
 .fields > label { flex: 1; min-width: 130px; }
 .fields > label.wide { flex-basis: 100%; } .fields > label.wide small { font-weight: 400; }
@@ -89,3 +89,12 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 .source-options label { display: inline-flex; gap: .4rem; align-items: center; min-height: 44px; padding: 0 .8rem; border: 1px solid var(--ui-border-strong); border-radius: 999px; cursor: pointer; }
 .source-options label:has(input:checked) { border-color: var(--ui-brand); background: var(--ui-brand-soft); font-weight: 700; }
 .source-options label:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+
+/* 22.11.2026: a draft is made on its calendar; this box names it, explains the steps and publishes it. */
+.draft-panel { border: 1px solid var(--ui-border); border-radius: 10px; padding: 1rem; margin: 1rem 0; background: var(--ui-surface, transparent); }
+.draft-panel > h3 { margin: 0 0 .25rem; }
+.draft-rename { align-items: end; }
+.draft-guide { margin-top: .75rem; }
+.draft-guide summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.draft-guide ol { margin: .5rem 0 0; padding-left: 1.25rem; display: grid; gap: .4rem; }
+.draft-panel .publish-box { margin-top: 1rem; }
