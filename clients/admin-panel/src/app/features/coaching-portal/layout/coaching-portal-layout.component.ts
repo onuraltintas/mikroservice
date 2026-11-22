@@ -1,3 +1,4 @@
+import { DarkModeService } from '../../../core/services/dark-mode.service';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, HostListener, ViewChild, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -30,8 +31,8 @@ const PARENT_PAGE_LABELS: [string, string][] = [
 
 /**
  * T2 (31.10.2026): the student shell — six menu items, a five-item phone bar, notifications behind the bell and an
- * account menu (profile and settings, payments, personal data, sign-out) on the avatar. The colour theme moved to
- * Profil ve ayarlar › Görünüm, so the header has no theme button.
+ * account menu (profile and settings, payments, personal data, sign-out) on the avatar. The colour theme is chosen in
+ * Profil ve ayarlar › Görünüm; since 22.11.2026 the header also has a light/dark switch, like the other panels.
  */
 @Component({
   selector: 'app-coaching-portal-layout',
@@ -45,6 +46,7 @@ export class CoachingPortalLayoutComponent {
   readonly currentYear = new Date().getFullYear();
   readonly studentNavigation = inject(CoachingStudentNavigationService);
   readonly unreadCount = inject(NotificationService).unreadCount;
+  readonly theme = inject(DarkModeService);
   private readonly messagesUnread = inject(CoachingMessagesUnreadService);
   readonly unreadMessages = this.messagesUnread.count;
   private readonly authService = inject(AuthService);

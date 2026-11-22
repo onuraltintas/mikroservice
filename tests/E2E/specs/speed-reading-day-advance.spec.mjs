@@ -30,7 +30,7 @@ async function setup(page, { allow = true, complete = true, reject = false, dela
     await route.fulfill({ json: response });
   });
   await page.goto('/student/daily-exercises');
-  await expect(page.getByRole('heading', { name: 'Günlük İlerleme', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Günlük egzersizler', exact: true })).toBeVisible();
   return writes;
 }
 

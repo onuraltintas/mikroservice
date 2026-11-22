@@ -21,12 +21,12 @@
     <!-- Unsupported Engine -->
     <div *ngIf="!isLoading && !error && !engine" class="unsupported-state">
         <span class="material-icons">extension_off</span>
-        <h2>Desteklenmeyen Motor</h2>
+        <h2>Desteklenmeyen motor</h2>
         <p>Bu egzersiz tipi henüz Universal Engine'de desteklenmiyor.</p>
         <p class="engine-type">Engine Type: {{ parsedConfig?.engineType || 'Belirtilmemiş' }}</p>
         <button class="ep-btn ep-btn--primary" (click)="goBack()">
             <span class="material-icons">arrow_back</span>
-            Klasik Modda Aç
+            Klasik modda aç
         </button>
     </div>
 
@@ -184,7 +184,8 @@
                 <span class="ready-countdown__ring" aria-hidden="true"><span class="ready-countdown__num">{{ readyCountdown }}</span></span>
                 <span>Hazırlan; gözünü ekranın ortasına getir.</span>
             </div>
-            <div class="card-action-area">
+            <!-- Live test 22.11.2026: during 3-2-1 only the countdown shows; the start and cancel buttons step aside. -->
+            <div class="card-action-area" *ngIf="readyCountdown === null">
                 <button *ngIf="canPracticeFocus" class="ep-btn ep-btn--secondary" (click)="startFocusPractice()">Kısa alıştırma yap</button>
                 <button *ngIf="canPracticeFocus && (asFocusEngine?.nLevel || 1) > 1" class="ep-btn ep-btn--secondary"
                     (click)="startFocusPractice(true)">Önceki N ile alıştırma</button>
@@ -442,7 +443,7 @@
                     </button>
                 </div>
                 <div class="duration-info">
-                    Gösterim: {{ getCurrentDuration() }}ms
+                    Gösterim: {{ getCurrentDuration() }} ms
                 </div>
             </div>
 
@@ -881,7 +882,7 @@
         <div class="game-header">
             <div class="timer">
                 <span class="material-icons">spellcheck</span>
-                Hata Analizi
+                Hata analizi
             </div>
             <div class="progress-info">
                 <span>Bulunan: {{ getErrorAnalysisFoundCount() }} / {{ getErrorAnalysisErrorCount() }}</span>
@@ -1007,7 +1008,7 @@
         <div class="game-header">
             <div class="timer">
                 <span class="material-icons">psychology</span>
-                Anlama Kontrolü
+                Anlama kontrolü
             </div>
             <div class="progress-info">
                 <span>Soru {{ getRegressionCurrentQuestionIndex() + 1 }} / {{ getRegressionQuestionCount() }}</span>
@@ -1048,7 +1049,7 @@
             <button class="ep-btn ep-btn--primary submit-answer-btn" *ngIf="!questionFeedback"
                 [disabled]="!selectedAnswer || questionSubmissionPending || engineState.isPaused" (click)="submitRegressionAnswer(selectedAnswer!)">
                 <span class="material-icons">check</span>
-                Cevabı Gönder
+                Cevabı gönder
             </button>
 
             <!-- Sonraki soru butonu - feedback varken -->
@@ -1226,7 +1227,7 @@
             <div class="header-left">
                 <div class="engine-badge">
                     <span class="material-icons">psychology</span>
-                    <span>Anlama Kontrolü</span>
+                    <span>Anlama kontrolü</span>
                 </div>
             </div>
 
@@ -1476,7 +1477,7 @@
             <div class="header-section left">
                 <div class="title-row">
                     <span class="material-icons">psychology</span>
-                    <span class="title-text">Zihinsel Kayıt</span>
+                    <span class="title-text">Zihinsel kayıt</span>
                 </div>
                 <div class="badges-row">
                     <span class="level-badge" *ngIf="asFocusEngine?.nLevel">
@@ -1636,7 +1637,7 @@
                         <div class="word-text">{{ getVocabCurrentWord().word }}</div>
                         <div class="click-hint" *ngIf="!isVocabDefinitionVisible()">
                             <span class="material-icons">touch_app</span>
-                            Kartı Çevir
+                            Kartı çevir
                         </div>
                     </div>
                     <div class="word-back">
@@ -1713,7 +1714,7 @@
                     </div>
 
                     <button class="ep-btn ep-btn--primary next-btn" [disabled]="engineState.isPaused || isVocabAwaitingPersistence()" (click)="nextVocabQuizQuestion()">
-                        Sonraki Kelime
+                        Sonraki kelime
                         <span class="material-icons">arrow_forward</span>
                     </button>
                 </div>
@@ -2008,7 +2009,7 @@
                 <div class="result-box comprehension-box">
                     <span class="material-icons">psychology</span>
                     <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
-                    <div class="result-label">Anlama Oranı</div>
+                    <div class="result-label">Anlama oranı</div>
                 </div>
                 <!-- Correct Answers -->
                 <div class="result-box questions-box">
@@ -2031,7 +2032,7 @@
                 <div class="result-box timeout-box" *ngIf="result?.details?.timeoutCount > 0">
                     <span class="material-icons">timer_off</span>
                     <div class="result-value">{{ result?.details?.timeoutCount }}</div>
-                    <div class="result-label">Süre Dolan</div>
+                    <div class="result-label">Süre dolan</div>
                 </div>
             </div>
 
@@ -2047,7 +2048,7 @@
                 <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null && result?.details?.measurementStatus === 'Measured'">
                     <span class="material-icons">psychology</span>
                     <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
-                    <div class="result-label">Anlama Oranı</div>
+                    <div class="result-label">Anlama oranı</div>
                 </div>
             </div>
             <div class="stats-row" *ngIf="isFreeReadingPractice()">
@@ -2093,7 +2094,7 @@
                 <div class="result-box wpm-box" *ngIf="result?.details?.wpm">
                     <span class="material-icons">speed</span>
                     <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }}</div>
-                    <div class="result-label">Okuma Hızı (kelime/dk)</div>
+                    <div class="result-label">Okuma hızı (kelime/dk)</div>
                 </div>
 
                 <!-- Word Count Box (New for RSVP) -->
@@ -2102,14 +2103,14 @@
                     <span class="material-icons">text_snippet</span>
                     <div class="result-value">{{ result?.details?.readWordCount }}{{ result?.details?.totalWordCount ?
                         '/' + result?.details?.totalWordCount : '' }}</div>
-                    <div class="result-label">Okunan Kelime</div>
+                    <div class="result-label">Okunan kelime</div>
                 </div>
 
                 <!-- Comprehension Box (Only if available) -->
                 <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null">
                     <span class="material-icons">psychology</span>
                     <div class="result-value">%{{ result?.details?.comprehensionScore }}</div>
-                    <div class="result-label">Anlama Oranı</div>
+                    <div class="result-label">Anlama oranı</div>
                 </div>
 
                 <!-- Questions Box (Only if available) -->
@@ -2139,7 +2140,7 @@
                 <div class="result-box timeout-box" *ngIf="result?.details?.timeoutCount > 0">
                     <span class="material-icons">timer_off</span>
                     <div class="result-value">{{ result?.details?.timeoutCount }}</div>
-                    <div class="result-label">Süre Dolan</div>
+                    <div class="result-label">Süre dolan</div>
                 </div>
             </div>
 
@@ -2155,7 +2156,7 @@
                 *ngIf="!isAssessmentMode && result?.details?.answers?.length > 0 && engine?.engineType === 'exam_simulation'">
                 <div class="answers-header">
                     <span class="material-icons">list_alt</span>
-                    <span>Cevap Detayları</span>
+                    <span>Cevap detayları</span>
                     <span class="header-summary">
                         {{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions }} Doğru
                     </span>
@@ -2194,7 +2195,7 @@
                 <div class="result-box wrong-box">
                     <span class="material-icons status-icon--error">error</span>
                     <div class="result-value">{{ result?.details?.falseAlarms || 0 }}</div>
-                    <div class="result-label">Yanlış Alarm</div>
+                    <div class="result-label">Yanlış alarm</div>
                 </div>
                 <div class="result-box miss-box">
                     <span class="material-icons status-icon--warning">rule</span>
@@ -2213,7 +2214,7 @@
                 *ngIf="!isAssessmentMode && result?.details?.answers && result?.details?.answers.length > 0 && engine?.engineType !== 'exam_simulation'">
                 <div class="section-header">
                     <span class="material-icons">quiz</span>
-                    <span>Soru Sonuçları</span>
+                    <span>Soru sonuçları</span>
                     <span class="section-hint">{{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions
                         }} doğru</span>
                 </div>
@@ -2241,9 +2242,13 @@
 
             <!-- Action Buttons -->
             <div class="action-row">
-                <button class="btn-primary" (click)="goBack()">
+                <button class="btn-primary" *ngIf="canGoToNextDailyExercise" (click)="goToNextDailyExercise()">
+                    <span class="material-icons">arrow_forward</span>
+                    Sıradaki egzersize geç
+                </button>
+                <button [class]="canGoToNextDailyExercise ? 'btn-secondary' : 'btn-primary'" (click)="goBack()">
                     <span class="material-icons">arrow_back</span>
-                    {{ isAssessmentMode ? 'Seviye Tespite Dön' : (assignmentId ? 'Ödevlere Dön' : 'Egzersizlere Dön') }}
+                    {{ isAssessmentMode ? 'Seviye tespitine dön' : (assignmentId ? 'Ödevlere dön' : 'Egzersizlere dön') }}
                 </button>
                 <button class="btn-secondary" (click)="resetExercise()" *ngIf="!isAssessmentMode">
                     <span class="material-icons">refresh</span>
@@ -2262,7 +2267,7 @@
             <div class="exit-actions">
                 <button class="btn-continue" (click)="cancelExit()">
                     <span class="material-icons">play_arrow</span>
-                    Devam Et
+                    Devam et
                 </button>
                 <button class="btn-exit" (click)="confirmExit()" [disabled]="isDiscardingSession">
                     <span class="material-icons">exit_to_app</span>
@@ -2295,7 +2300,7 @@
                 </div>
                 <div class="stat-item">
                     <span class="value">{{ stats.longestStreak }}</span>
-                    <span class="label">En Uzun Seri</span>
+                    <span class="label">En uzun seri</span>
                 </div>
             </div>
 

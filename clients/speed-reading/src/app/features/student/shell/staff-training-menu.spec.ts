@@ -4,7 +4,7 @@ import { StudentShellComponent } from './student-shell.component';
 
 describe('Staff training shell menu', () => {
   it('uses the training navigation rather than the preview-only menu', () => {
-    const items = [{ label: 'Eğitim Programları', route: '/student/training-programs' }];
+    const items = [{ label: 'Eğitim programları', route: '/student/training-programs' }];
     const shell = {
       authService: { hasRole: (role: string) => role === 'Admin', canPreviewExercises: () => true },
       navService: { getStudentMenuItems: () => items },
@@ -16,7 +16,7 @@ describe('Staff training shell menu', () => {
     expect(shell.isTeacherPreview()).toBeFalse();
   });
   it('preserves the personal student menu for dual admin/student accounts', () => {
-    const items = [{ label: 'Ana Sayfa', route: '/student/dashboard' }];
+    const items = [{ label: 'Ana sayfa', route: '/student/dashboard' }];
     const shell = {
       authService: { hasRole: (role: string) => ['Admin', 'Student'].includes(role), canPreviewExercises: () => false },
       navService: { getStudentMenuItems: () => items },

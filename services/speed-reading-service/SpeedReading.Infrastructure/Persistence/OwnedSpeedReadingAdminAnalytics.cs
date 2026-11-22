@@ -32,6 +32,17 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             .Select(item => new ActivityPoint(item.UserId, item.CompletedDate, item.TimeSpentSeconds))
             .ToListAsync(cancellationToken);
         var totalUsers = await db.UserProfiles.AsNoTracking().CountAsync(item => item.IsActive, cancellationToken);
+        // Live test 22.11: new users and growth were always "no data". Profile creation time is the speed reading registration.
+        var profileDates = await db.UserProfiles.AsNoTracking()
+            .Where(item => item.CreatedAt >= previousStart && item.CreatedAt <= end)
+            .Select(item => item.CreatedAt).ToListAsync(cancellationToken);
+        var newUsers = profileDates.Count(at => at >= start);
+        var previousNewUsers = profileDates.Count(at => at < start);
+        var growthAvailable = previousNewUsers > 0;
+        var growthRate = growthAvailable ? Math.Round((decimal)(newUsers - previousNewUsers) / previousNewUsers * 100, 2) : 0;
+        var userGrowth = profileDates.Where(at => at >= start)
+            .GroupBy(at => SpeedReadingReportCalendar.LocalTime(at).Date).OrderBy(group => group.Key)
+            .Select(group => Chart(group.Key, "Yeni kullanıcı", group.Count())).ToList();
         var activeUserIds = readingRows.Concat(exerciseRows).Select(item => item.UserId).Distinct().ToList();
         var previousActiveUserIds = (await db.ReadingSessions.AsNoTracking()
                 .Where(item => item.CompletedAt >= previousStart && item.CompletedAt < start)
@@ -68,16 +79,16 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             end,
             totalUsers,
             activeUserIds.Count,
-            0,
-            false,
+            newUsers,
+            true,
             totalActivities,
             totalReadingSessions,
             totalReadingSessions == 0 ? 0 : Math.Round((decimal)totalReadingSeconds / totalReadingSessions / 60, 2),
-            0,
-            false,
+            growthRate,
+            growthAvailable,
             totalUsers == 0 ? 0 : Math.Round((decimal)activeUserIds.Count / totalUsers * 100, 2),
             previousActiveUserIds.Count == 0 ? 0 : Math.Round((decimal)activeUserIds.Intersect(previousActiveUserIds).Count() / previousActiveUserIds.Count * 100, 2),
-            [],
+            userGrowth,
             dailyActiveUsers.Select(item => Chart(item.Key, "Aktif kullanıcı", item.Count)).ToList(),
             activityVolume.Select(item => Chart(item.Key, "Aktivite", item.Count)).ToList(),
             hourlyActivity.Select(item => new AdminAnalyticsChartData($"{item.Key:00}:00", [new AdminAnalyticsChartSeries("Aktivite", item.Count)])).ToList(),

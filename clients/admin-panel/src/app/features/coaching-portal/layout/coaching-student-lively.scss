@@ -40,7 +40,8 @@
     transition: transform .2s ease, box-shadow .2s ease;
     &:hover { background: var(--ui-surface); transform: translateY(-2px); box-shadow: var(--coaching-card-shadow);
       .row-kind { transform: rotate(-8deg) scale(1.1); } }
-    &.is-late { border-color: var(--ui-accent); } }
+    // Live test 22.11.2026: the highlighter colour is only for "today/now"; a late row is marked by its chip and date.
+    &.is-late { border-color: color-mix(in srgb, var(--ui-border) 70%, transparent); } }
   .row-kind { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; font-size: 20px;
     background: var(--coaching-lesson-0); color: var(--coaching-lesson-text-0); transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
   .row[data-kind='assignment'] .row-kind { background: var(--coaching-lesson-1); color: var(--coaching-lesson-text-1); }

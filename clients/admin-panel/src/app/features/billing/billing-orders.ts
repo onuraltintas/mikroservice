@@ -17,7 +17,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice';
 
 /**
- * "Abonelik ve Ödeme › Siparişler ve ödemeler": the bank-transfer queue of every product. Orders the buyer says are
+ * "Abonelik ve ödeme › Siparişler ve ödemeler": the bank-transfer queue of every product. Orders the buyer says are
  * paid come first; an approval opens the subscription, a refusal and a reversal need a reason the buyer will read.
  */
 @Component({
@@ -27,7 +27,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
   template: `
     <main class="space-y-6" aria-labelledby="billing-orders-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
         <h1 id="billing-orders-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Siparişler ve ödemeler</h1>
         <p class="mt-2 text-sm text-(--ui-text-muted)">Havale/EFT ile verilen siparişler. Banka hesabınızda ödeme kodunu ve tutarı gördüğünüz siparişi onaylayın; onay aboneliği kendiliğinden açar. Ödeme bildirilen siparişler en üsttedir.</p>
       </header>

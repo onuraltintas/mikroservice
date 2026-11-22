@@ -38,7 +38,8 @@
   .cp-child-open { padding: 0 var(--coaching-space-4); border-radius: var(--coaching-radius-pill); background: var(--ui-brand); color: var(--ui-brand-contrast);
     box-shadow: var(--coaching-action-shadow); transition: transform .2s ease;
     &:hover { transform: translateX(3px); } }
-  .cp-link-form { background: var(--coaching-honey-soft); border-color: transparent; }
+  // Live test 22.11.2026: a plain card with a thin highlighter edge; the full honey ground was too loud for a form.
+  .cp-link-form { border-left: 4px solid var(--coaching-honey, var(--ui-accent)); }
 
   // Child page, Koçluk: the week in blue, facts as coloured tiles, warnings in coral.
   cs-card.cp-week { background: var(--coaching-lesson-0); border-color: transparent; }

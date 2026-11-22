@@ -31,7 +31,7 @@ export interface InstitutionSeats { enabled: boolean; pool: InstitutionSeatPool 
         } @else {
           <staff-my-subscription product="speed-reading" [roles]="['InstitutionAdmin']" />
           @if (data.pool; as pool) {
-            <p data-testid="seat-summary"><strong>{{ pool.used }} / {{ pool.capacity }}</strong> koltuk dolu · {{ pool.planName }} ·
+            <p data-testid="seat-summary"><strong>{{ pool.used }} / {{ pool.capacity }}</strong> koltuk dolu, {{ pool.planName }},
               {{ pool.endsAt | date:'dd.MM.yyyy' }} tarihine kadar</p>
           } @else {
             <p class="seats-muted" data-testid="seat-summary">Kurumun süren bir Hızlı Okuma planı yok. Koltuk vermek için önce yukarıdan bir kurum planı alın.</p>
@@ -43,7 +43,7 @@ export interface InstitutionSeats { enabled: boolean; pool: InstitutionSeatPool 
               <tbody>
                 @for (row of rows(); track row.userId) {
                   <tr>
-                    <td><strong>{{ row.name }}</strong>@if (!row.isMember) { <span class="seats-muted"> · kurumdan ayrılmış</span> }</td>
+                    <td><strong>{{ row.name }}</strong>@if (!row.isMember) { <span class="seats-muted">, kurumdan ayrılmış</span> }</td>
                     <td>{{ row.seat ? (row.seat.isCovered ? 'Koltuğu var' : 'Kapasite dışı (erişimi yok)') : 'Koltuğu yok' }}</td>
                     <td class="seats-actions">
                       @if (row.seat) {

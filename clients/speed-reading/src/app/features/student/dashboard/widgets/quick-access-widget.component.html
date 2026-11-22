@@ -1,6 +1,6 @@
 <!-- Quick Access Widget — Sprint 3 -->
 <div class="qa-widget">
-  <h3 class="qa-widget__title">Hızlı Erişim</h3>
+  <h3 class="qa-widget__title">Hızlı erişim</h3>
   <div class="qa-links">
     @for (link of quickLinks; track link.route) {
       <button type="button" class="qa-link" [class]="'qa-link qa-link--' + link.tone" (click)="navigate(link)">

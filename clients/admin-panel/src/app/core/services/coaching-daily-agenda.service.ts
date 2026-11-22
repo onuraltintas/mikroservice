@@ -7,6 +7,8 @@ export interface DailyAgendaItem {
   kind: 'study' | 'assignment' | 'decision'; recordId: string; title: string; date: string;
   startMinute: number | null; minutes: number | null; timeZoneId: string;
   planId: string | null; weekStart: string | null;
+  /** Live test 22.11.2026: the study task's lesson, for its colour label (absent for assignments and decisions). */
+  lessonName?: string | null;
 }
 export interface DailyAgendaPage {
   mode: AgendaMode; items: DailyAgendaItem[]; totalCount: number; pageNumber: number; pageSize: number;

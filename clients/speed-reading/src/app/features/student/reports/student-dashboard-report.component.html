@@ -20,7 +20,7 @@
                 </div>
                 <div class="metric-content">
                     <div class="metric-value">{{ report()?.streak || 0 }}</div>
-                    <div class="metric-label">Günlük Seri</div>
+                    <div class="metric-label">Günlük seri</div>
                     <div class="metric-trend positive">İstikrarını koru</div>
                 </div>
             </div>
@@ -30,8 +30,8 @@
                     <span class="material-icons">trending_up</span>
                 </div>
                 <div class="metric-content">
-                    <div class="metric-value">{{ report()?.comprehensionDataAvailable ? pct(report()?.averageComprehension, 1) : 'Ölçülmedi' }}</div>
-                    <div class="metric-label">Ortalama Kavrama</div>
+                    <div class="metric-value">{{ comprehension() !== null ? '%' + comprehension() : 'Ölçülmedi' }}</div>
+                    <div class="metric-label">Ortalama kavrama</div>
                     <div class="metric-trend">Genel skor</div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
         <div class="stat-card">
             <div class="stat-header">
                 <span class="material-icons stat-icon activities">assignment</span>
-                <span class="stat-title">Toplam Aktivite</span>
+                <span class="stat-title">Toplam aktivite</span>
             </div>
             <div class="stat-value">{{ report()?.totalActivities || 0 }}</div>
             <div class="stat-footer">
@@ -65,7 +65,7 @@
         <div class="stat-card">
             <div class="stat-header">
                 <span class="material-icons stat-icon speed">speed</span>
-                <span class="stat-title">Okuma Hızı</span>
+                <span class="stat-title">Okuma hızı</span>
             </div>
             <div class="stat-value">{{ readingSpeed() ?? 'Ölçülmedi' }}</div>
             <div class="stat-footer">
@@ -76,7 +76,7 @@
         <div class="stat-card">
             <div class="stat-header">
                 <span class="material-icons stat-icon comprehension">school</span>
-                <span class="stat-title">Anlama Oranı</span>
+                <span class="stat-title">Anlama oranı</span>
             </div>
             <div class="stat-value">{{ comprehension() !== null ? '%' + comprehension() : 'Ölçülmedi' }}</div>
             <div class="stat-footer">
@@ -90,7 +90,7 @@
                 <span class="material-icons stat-icon comprehension">psychology</span>
                 <span class="stat-title">Program seviyesi</span>
             </div>
-            <div class="stat-value">{{ report()?.currentLevel || 1 }}</div>
+            <div class="stat-value">{{ programLevel() ?? (report()?.currentLevel || 1) }}</div>
             <div class="stat-footer">
                 <span class="stat-change">Şu anki program seviyen</span>
             </div>
@@ -102,7 +102,7 @@
         <section class="rp-card chart-card elevated rp-charts__wide sp-rise" style="--sp-i: 0" aria-labelledby="rp-speed-title">
             <div class="rp-card__header">
                 <h3 class="rp-card__title" id="rp-speed-title">Okuma hızın</h3>
-                <p class="rp-card__sub">Son {{ speedPoints() }} okumanın kelime/dk değeri</p>
+                <p class="rp-card__sub">{{ speedPoints() ? 'Son ' + speedPoints() + ' okumanın kelime/dk değeri' : 'Okuma metinlerindeki kelime/dk değerin' }}</p>
             </div>
             <div class="rp-card__body">
                 @if (wpmProgressData().length > 0) {
@@ -112,8 +112,13 @@
                 } @else {
                 <div class="chart-empty">
                     <span class="material-icons" aria-hidden="true">trending_up</span>
+                    @if (readingSpeed() !== null) {
+                    <p>Son ölçülen hızın {{ readingSpeed() }} kelime/dk</p>
+                    <small>Okuma metni bitirdikçe hızının gidişatı burada çizilir.</small>
+                    } @else {
                     <p>Henüz hız ölçümü yok</p>
                     <small>Bir okuma egzersizi bitirince hızın burada çizilir.</small>
+                    }
                 </div>
                 }
             </div>
@@ -132,8 +137,13 @@
                 } @else {
                 <div class="chart-empty">
                     <span class="material-icons" aria-hidden="true">psychology</span>
+                    @if (comprehension() !== null) {
+                    <p>Ortalama anlaman %{{ comprehension() }}</p>
+                    <small>Okuma sonrası soruları cevapladıkça her sonucun burada sütun olarak görünür.</small>
+                    } @else {
                     <p>Henüz anlama ölçümü yok</p>
                     <small>Okuma sonrası soruları cevaplayınca burada görünür.</small>
+                    }
                 </div>
                 }
             </div>
@@ -202,7 +212,7 @@
                     <p class="rp-card__sub">En son kazandığın başarımlar</p>
                 </div>
                 <a class="rp-link" routerLink="/student/achievements">
-                    Tümünü Gör
+                    Tümünü gör
                     <span class="material-icons">arrow_forward</span>
                 </a>
             </div>
@@ -235,7 +245,7 @@
                 <h3>Henüz başarım yok</h3>
                 <p>İlk başarımını kazanmak için egzersiz yapmaya devam et!</p>
                 <button type="button" class="rp-btn rp-btn--primary" routerLink="/student/daily-exercises">
-                    Egzersizlere Başla
+                    Egzersizlere başla
                     <span class="material-icons">arrow_forward</span>
                 </button>
             </div>
@@ -246,7 +256,7 @@
     } @else {
     <div class="empty-state">
         <span class="material-icons">assessment</span>
-        <h2>Veri Bulunamadı</h2>
+        <h2>Veri bulunamadı</h2>
         <p>İlerlemenizi burada görmek için egzersizleri tamamlamaya başla</p>
         <button type="button" class="rp-btn rp-btn--primary" routerLink="/student/daily-exercises">
             <span class="material-icons">play_arrow</span>

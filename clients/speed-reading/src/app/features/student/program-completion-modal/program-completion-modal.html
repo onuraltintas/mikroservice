@@ -13,7 +13,7 @@
         <div class="stat-card">
           <span class="material-icons stat-icon" aria-hidden="true">check_circle</span>
           <span class="stat-value">{{ data.stats.totalDays }}</span>
-          <span class="stat-label">Gün Tamamlandı</span>
+          <span class="stat-label">Gün tamamlandı</span>
         </div>
         <div class="stat-card">
           <span class="material-icons stat-icon" aria-hidden="true">star</span>
@@ -23,19 +23,19 @@
         <div class="stat-card">
           <span class="material-icons stat-icon" aria-hidden="true">local_fire_department</span>
           <span class="stat-value">{{ data.stats.longestStreak }}</span>
-          <span class="stat-label">En Uzun Streak</span>
+          <span class="stat-label">En uzun seri</span>
         </div>
         <div class="stat-card">
           <span class="material-icons stat-icon" aria-hidden="true">emoji_events</span>
           <span class="stat-value">{{ data.stats.totalExercises }}</span>
-          <span class="stat-label">Toplam Egzersiz</span>
+          <span class="stat-label">Toplam egzersiz</span>
         </div>
       </div>
     </div>
 
     <!-- Recommendation Section -->
     <div class="recommendation-section" *ngIf="data.recommendedProgram">
-      <h2><span class="material-icons" aria-hidden="true">rocket_launch</span> Bir Sonraki Adım</h2>
+      <h2><span class="material-icons" aria-hidden="true">rocket_launch</span> Bir sonraki adım</h2>
       <div class="program-card">
         <h3>{{ data.recommendedProgram.name }}</h3>
         <p class="description">{{ data.recommendedProgram.description }}</p>
@@ -82,7 +82,7 @@
         {{ isLoading ? 'Başlatılıyor...' : 'Programa Başla' }}
       </button>
       <button type="button" class="sp-btn later-btn" (click)="later()" [disabled]="isLoading">
-        Daha Sonra
+        Daha sonra
       </button>
     </div>
   </div>

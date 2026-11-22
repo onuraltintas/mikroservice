@@ -30,7 +30,7 @@ export class QuickAccessWidgetComponent implements OnInit {
   quickLinks: QuickLink[] = [
     { label: 'Günlük egzersizler', icon: 'today', route: '/student/daily-exercises', tone: 'primary' },
     {
-      label: 'Geçmiş Egzersizler',
+      label: 'Geçmiş egzersizler',
       icon: 'history',
       route: '/student/daily-exercises',
       tone: 'danger',

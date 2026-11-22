@@ -25,9 +25,9 @@ export class NavigationService {
   getStudentMenuItems(): MenuItem[] {
     if (canUseStaffTraining(this.authService)) {
       return [
-        { label: 'Eğitim Programları', icon: 'school', route: '/student/training-programs' },
-        { label: 'Aktif Eğitimim', icon: 'fitness_center', route: '/student/daily-exercises' },
-        { label: 'Egzersiz Önizlemesi', icon: 'preview', route: '/student/exercises' }
+        { label: 'Eğitim programları', icon: 'school', route: '/student/training-programs' },
+        { label: 'Aktif eğitimim', icon: 'fitness_center', route: '/student/daily-exercises' },
+        { label: 'Egzersiz önizlemesi', icon: 'preview', route: '/student/exercises' }
       ];
     }
     const user = this.authService.currentUserValue;
@@ -36,7 +36,7 @@ export class NavigationService {
 
     const items: MenuItem[] = [
       {
-        label: 'Ana Sayfa',
+        label: 'Ana sayfa',
         icon: 'dashboard',
         route: '/student/dashboard'
       }
@@ -96,12 +96,12 @@ export class NavigationService {
 
   getCoachingMenuItems(): MenuItem[] {
     return [
-      { label: 'Genel Bakış',      icon: 'dashboard',  route: '/coaching/dashboard' },
+      { label: 'Genel bakış',      icon: 'dashboard',  route: '/coaching/dashboard' },
       { label: 'Öğrencilerim',     icon: 'people',     route: '/coaching/students' },
-      { label: 'Koçluk Seansları', icon: 'event',      route: '/coaching/sessions' },
+      { label: 'Koçluk seansları', icon: 'event',      route: '/coaching/sessions' },
       { label: 'Hedefler',         icon: 'flag',        route: '/coaching/goals' },
       { label: 'Ödevler',          icon: 'assignment', route: '/coaching/assignments' },
-      { label: 'Sınav Sonuçları',  icon: 'analytics',  route: '/coaching/exam-results' },
+      { label: 'Sınav sonuçları',  icon: 'analytics',  route: '/coaching/exam-results' },
     ];
   }
 

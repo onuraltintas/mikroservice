@@ -34,13 +34,13 @@ interface ProgramRecommendation {
         <p>Öneri, öğrencinin tamamlanan programına ait eğitim sonrası ölçümüne dayanır.</p>
         <p>{{ suggestion.reason }}</p>
         @if (suggestion.recommendedTrainingLevel) {
-          <p>Ölçülen seviye: {{ suggestion.measuredLevel }} · Önerilen eğitim seviyesi: {{ suggestion.recommendedTrainingLevel }}.
-            {{ suggestion.averageWpm | number:'1.0-0' }} kelime/dk · %{{ suggestion.comprehension | number:'1.0-1' }} anlama.</p>
+          <p>Ölçülen seviye: {{ suggestion.measuredLevel }}, Önerilen eğitim seviyesi: {{ suggestion.recommendedTrainingLevel }}.
+            {{ suggestion.averageWpm | number:'1.0-0' }} kelime/dk, %{{ suggestion.comprehension | number:'1.0-1' }} anlama.</p>
         }
         @if (!suggestion.requestedTemplateId) { <p>Öğrencinin program seçimi yapıp onay talebi göndermesi bekleniyor.</p> }
         @if (suggestion.requestedTemplateId) {
           <p>Öğrencinin seçimi: {{ suggestion.requestedTemplateId === suggestion.higherOption?.templateId ? suggestion.higherOption?.templateName : suggestion.templateName }}
-            · {{ suggestion.requestedAt | date:'dd.MM.yyyy HH:mm' }}.</p>
+           , {{ suggestion.requestedAt | date:'dd.MM.yyyy HH:mm' }}.</p>
           <p>Üst seçim ölçülen seviyeyi değiştirmez; seçim ve onay geçmişe kaydedilir.</p>
           <button type="button" [disabled]="busy()" (click)="approve(true)">Öğrencinin seçimini onayla ve başlat</button>
         }

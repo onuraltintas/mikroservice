@@ -72,7 +72,7 @@
   padding: var(--coaching-space-2) var(--coaching-space-1); border-bottom: 1px solid var(--ui-border); color: var(--ui-text); text-decoration: none;
   &:hover { background: var(--ui-surface-muted); }
   &:focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: -3px; border-radius: 8px; }
-  &.is-late .row-time { color: var(--ui-accent-text); }
+  &.is-late .row-time { color: var(--ui-warning); }
 }
 .row-time { font-size: var(--coaching-text-sm); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ui-brand-text); }
 .row-main { display: grid; gap: 2px; min-width: 0; strong { font-size: var(--coaching-text-body); overflow-wrap: anywhere; } small { font-size: var(--coaching-text-sm); color: var(--ui-text-muted); } }
@@ -144,3 +144,6 @@
 // Live test #23: a pending invitation on Bugün.
 .invitation-pending { margin: 0 0 1rem; padding: .75rem 1rem; border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-brand-soft, var(--ui-surface));
   a { margin-left: .5rem; font-weight: 600; } }
+
+// Live test 22.11.2026: the lesson as a small coloured label (subject colours, light background and dark text).
+.row-lesson { display: inline-block; margin-right: .4rem; padding: 0 .45rem; border-radius: 999px; font-size: .75rem; font-weight: 700; line-height: 1.5; }

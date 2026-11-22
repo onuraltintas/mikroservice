@@ -51,7 +51,7 @@ interface PlanDraft {
 }
 
 /**
- * "Abonelik ve Ödeme › Planlar": a price for a period, with the three settings that make every sales model optional
+ * "Abonelik ve ödeme › Planlar": a price for a period, with the three settings that make every sales model optional
  * per product: who buys it, whether it has seats, and which entitlements it gives (several products = a bundle).
  */
 @Component({
@@ -62,7 +62,7 @@ interface PlanDraft {
     <main class="space-y-6" aria-labelledby="billing-plans-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
           <h1 id="billing-plans-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Planlar</h1>
           <p class="mt-2 text-sm text-(--ui-text-muted)">Bir üründe hangi satış biçiminin olacağını planlar belirler: bireysel, öğretmen koltuğu ya da kurum planı açarsanız o satış başlar; planı kapatırsanız biter. Birden çok ürünün hakkını veren plan paket olur.</p>
         </div>

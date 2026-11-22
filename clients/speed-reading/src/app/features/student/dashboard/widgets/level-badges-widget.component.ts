@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, computed, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -30,6 +30,7 @@ export class LevelBadgesWidgetComponent implements OnInit {
   currentXP = signal(0);
   maxXP = signal(100);
   badges = signal<Badge[]>([]);
+  readonly hasUnlocked = computed(() => this.badges().some(badge => badge.unlocked));
 
   ngOnInit(): void {
     this.loadData();

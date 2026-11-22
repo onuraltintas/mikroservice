@@ -44,7 +44,7 @@ type Status = { text: string; failed?: boolean };
                       <span class="cp-child-status" data-testid="child-status" [class.is-muted]="status(link, product)?.failed">{{ status(link, product)?.text ?? 'Yükleniyor…' }}</span>
                     </span>
                     <a class="cp-child-open" [routerLink]="['/coaching-portal/parent/children', link.studentUserId]" [queryParams]="{ urun: slug(product) }"
-                      [attr.aria-label]="first(link.studentName) + ', ' + productLabel(product) + ' ayrıntıları'">Ayrıntılar →</a>
+                      [attr.aria-label]="first(link.studentName) + ', ' + productLabel(product) + ' ayrıntıları'">Ayrıntıları gör</a>
                   </li>
                 }
               </ul>

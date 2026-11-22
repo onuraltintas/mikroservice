@@ -34,31 +34,31 @@
         <div class="stat-item">
           <span class="material-icons stat-icon" aria-hidden="true">emoji_events</span>
           <div class="stat-value">{{ pathStatistics?.earnedPoints || 0 }}</div>
-          <div class="stat-label">Toplam Puan</div>
+          <div class="stat-label">Toplam puan</div>
         </div>
 
         <div class="stat-item">
           <span class="material-icons stat-icon" aria-hidden="true">stars</span>
           <div class="stat-value">{{ pathStatistics?.totalStars || 0 }}</div>
-          <div class="stat-label">Toplam Yıldız</div>
+          <div class="stat-label">Toplam yıldız</div>
         </div>
 
         <div class="stat-item">
           <span class="material-icons stat-icon" aria-hidden="true">check_circle</span>
           <div class="stat-value">{{ pathProgress.completedNodes }} / {{ pathProgress.totalNodes }}</div>
-          <div class="stat-label">Tamamlanan Node</div>
+          <div class="stat-label">Tamamlanan adım</div>
         </div>
 
         <div class="stat-item">
           <span class="material-icons stat-icon" aria-hidden="true">schedule</span>
           <div class="stat-value">{{ pathStatistics?.timeSpentHours || 0 }}sa</div>
-          <div class="stat-label">Harcanan Süre</div>
+          <div class="stat-label">Harcanan süre</div>
         </div>
       </div>
 
       <div class="progress-bar-container">
         <div class="progress-label">
-          <span>Genel İlerleme</span>
+          <span>Genel ilerleme</span>
           <span class="progress-percentage">%{{ pathProgress.completionPercentage | number:'1.0-0' }}</span>
         </div>
         <div class="sp-bar path-progress-bar">
@@ -80,7 +80,7 @@
         </div>
         <div class="legend-item">
           <div class="legend-icon in-progress"></div>
-          <span>Devam Ediyor</span>
+          <span>Devam ediyor</span>
         </div>
         <div class="legend-item">
           <div class="legend-icon completed"></div>

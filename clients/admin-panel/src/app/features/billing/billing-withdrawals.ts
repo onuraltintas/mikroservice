@@ -8,7 +8,7 @@ import { ToasterService } from '../../core/services/toaster.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
 /**
- * "Abonelik ve Ödeme › Cayma talepleri": a buyer may withdraw within 14 days of the approval. Accepting ends the access
+ * "Abonelik ve ödeme › Cayma talepleri": a buyer may withdraw within 14 days of the approval. Accepting ends the access
  * and marks the payment as reversed; the money goes back by a bank transfer the admin makes.
  */
 @Component({
@@ -18,7 +18,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   template: `
     <main class="space-y-6" aria-labelledby="billing-withdrawals-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
         <h1 id="billing-withdrawals-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Cayma talepleri</h1>
         <p class="mt-2 text-sm text-(--ui-text-muted)">Alıcı, ödemesinin onayından sonra 14 gün içinde cayabilir. Kabul ederseniz abonelik sona erer ve ödeme kaydı "geri alındı" olur; tutarı alıcının ödeme yaptığı hesaba bankadan siz iade edersiniz. Ret, alıcının göreceği bir gerekçe ister.</p>
       </header>

@@ -28,13 +28,18 @@
       <button #menuToggle class="coaching-menu-toggle" type="button" [attr.aria-expanded]="menuOpen()" aria-controls="coaching-navigation" aria-label="Menüyü aç" (click)="menuOpen() ? closeMenu() : menuOpen.set(true)"><app-coaching-icon name="menu" /></button>
       <p class="coaching-page-title">{{ pageLabel() }}</p>
       <div class="coaching-topbar-actions">
+        <!-- Live test 22.11.2026 (user decision): the theme switch is back in the header, like the other panels; it sets the same
+             Görünüm preference (Açık / Koyu), which stays editable in Profil ve ayarlar › Görünüm. -->
+        <button type="button" class="coaching-icon-button coaching-theme-toggle" (click)="theme.toggle()"
+          [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" [attr.title]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'">
+          <app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button>
         <button #bellToggle type="button" class="coaching-icon-button coaching-bell" [attr.aria-expanded]="notificationsOpen()" aria-haspopup="dialog" [attr.aria-label]="notificationLabel()" (click)="toggleNotifications()"><app-coaching-icon name="bell" />@if (unreadCount()) { <span class="coaching-badge" aria-hidden="true">{{ badgeText(unreadCount()) }}</span> }</button>
         <div class="coaching-account">
           <button #accountToggle type="button" class="coaching-account-toggle" [attr.aria-expanded]="accountOpen()" aria-haspopup="menu" aria-controls="coaching-account-menu" [attr.aria-label]="'Hesabım: ' + fullName()" (click)="toggleAccount()"><span class="coaching-avatar" aria-hidden="true">{{ initials() }}</span></button>
           <div *ngIf="accountOpen()" id="coaching-account-menu" class="coaching-account-menu" role="menu" aria-label="Hesabım">
             <p class="coaching-account-name"><strong>{{ fullName() }}</strong><small>{{ isParent() ? 'Veli hesabı' : 'Öğrenci hesabı' }}</small></p>
             <ng-container *ngIf="!isParent()">
-              <a role="menuitem" routerLink="/coaching-portal/account/settings"><app-coaching-icon name="clock" /><span>Profil ve ayarlar</span></a>
+              <a role="menuitem" routerLink="/coaching-portal/account/settings/profile"><app-coaching-icon name="user" /><span>Profil ve ayarlar</span></a>
               <a role="menuitem" routerLink="/coaching-portal/account/payments"><app-coaching-icon name="wallet" /><span>Ödemeler</span></a>
               <a role="menuitem" routerLink="/coaching-portal/account/data"><app-coaching-icon name="card" /><span>Kişisel verilerim</span></a>
             </ng-container>

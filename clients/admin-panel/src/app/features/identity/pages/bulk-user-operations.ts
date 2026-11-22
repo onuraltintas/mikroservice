@@ -81,7 +81,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
     .result-card { background: var(--ui-surface-muted); }
     .muted { font-size: .875rem; color: var(--ui-text-muted); }
     label { display: grid; gap: .35rem; font-size: .875rem; font-weight: 500; color: var(--ui-text); }
-    input:not([type="checkbox"]), select { width: 100%; border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .5rem .75rem; background: transparent; font-weight: 400; }
+    input:not([type="checkbox"]):not([type="file"]), select { width: 100%; border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .5rem .75rem; background: transparent; font-weight: 400; }
     .primary, .secondary { border-radius: .5rem; padding: .55rem .85rem; font-size: .875rem; font-weight: 600; }
     .primary { background: var(--ui-brand); color: var(--ui-brand-contrast); } .primary:disabled, .secondary:disabled { opacity: .5; }
     .secondary { border: 1px solid var(--ui-border-strong); color: var(--ui-text); background: var(--ui-surface); }

@@ -203,8 +203,14 @@ export function homeGoalCard(estimate: ScoreEstimate | null, childName: string |
   if (status === 'reached') return card('estimate', childName ? 'Hedef puan geçildi' : 'Hedef puanını geçtin', label, status);
   if (status === 'borderline' && now)
     return card('estimate', `Hedef, tahmini puan aralığının içinde (${decimal.format(now.scoreLow)}–${decimal.format(now.scoreHigh)}): ${childName ? 'sınırda' : 'sınırdasın'}.`, label, status);
-  if (target.scoreGap !== null && target.scoreGap > 0)
-    return card('estimate', `${you} ${exact ? '' : 'yaklaşık '}${points(target.scoreGap)} puan kaldı`, label, 'below');
+  if (target.scoreGap !== null && target.scoreGap > 0) {
+    // Live test 22.11.2026: the card gave the gap but not where the student stands now.
+    const current = exact ? language?.score : now?.score;
+    const base = card('estimate', `${you} ${exact ? '' : 'yaklaşık '}${points(target.scoreGap)} puan kaldı`, label, 'below');
+    if (current == null) return base;
+    const standing = `${childName ? 'Şu anki tahmini puanı' : 'Şu anki tahminin'} ${points(current)}`;
+    return { ...base, detail: base.detail ? `${base.detail}, ${standing.charAt(0).toLocaleLowerCase('tr-TR')}${standing.slice(1)}` : standing };
+  }
   if (target.rankGap !== null && target.rankGap > 0)
     return card('estimate', `Hedef sıralamaya yaklaşık ${whole.format(target.rankGap)} kişi kaldı`, label, 'below');
   return card('estimate', 'Hedefe olan farkı henüz hesaplayamıyoruz.', label, null);

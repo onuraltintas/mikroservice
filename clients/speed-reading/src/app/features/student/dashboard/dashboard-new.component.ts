@@ -14,7 +14,6 @@ import { PerformanceAnalysisWidgetComponent } from './widgets/performance-analys
 import { StreakWidgetComponent } from './widgets/streak-widget.component';
 import { LevelBadgesWidgetComponent } from './widgets/level-badges-widget.component';
 import { QuickAccessWidgetComponent } from './widgets/quick-access-widget.component';
-import { RecentAchievementsWidgetComponent } from './widgets/recent-achievements-widget.component';
 import { ExerciseProgramService } from '../../../core/services/exercise-program.service';
 import { NextProgramRecommendation, StudentProgramService } from '../../../core/services/student-program.service';
 
@@ -34,7 +33,6 @@ import { AssignmentsWidgetComponent } from './widgets/assignments-widget.compone
     LevelBadgesWidgetComponent,
     PerformanceAnalysisWidgetComponent,
     QuickAccessWidgetComponent,
-    RecentAchievementsWidgetComponent,
     QuoteWidgetComponent,
     AssignmentsWidgetComponent
   ],
@@ -57,6 +55,8 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   todayTotal = signal(0);
   todayRemaining = signal(0);
   currentStreak = signal(0);
+  /** Sunucudaki program adı "Genç — Seviye 5 — …" biçiminde; bilgi satırında virgülle okunur. */
+  programLabel(): string { return this.programName().split(' — ').join(', '); }
   successRate = signal(0);
   currentLevel = signal(0);
   currentXP = signal(0);

@@ -5,7 +5,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { BillingAdminService, BillingAdminSubscription, BillingPlan, BillingProduct, BillingSeatPool, billingErrorMessage } from '../../core/services/billing-admin.service';
 import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
-/** "Abonelik ve Ödeme › Abonelikler": who has access through which plan until when, in every product. */
+/** "Abonelik ve ödeme › Abonelikler": who has access through which plan until when, in every product. */
 @Component({
   selector: 'app-billing-subscriptions',
   standalone: true,
@@ -13,7 +13,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
   template: `
     <main class="space-y-6" aria-labelledby="billing-subscriptions-title">
       <header>
-        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+        <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
         <h1 id="billing-subscriptions-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Abonelikler</h1>
         <p class="mt-2 text-sm text-(--ui-text-muted)">Onaylanan ödemelerin, ücretsiz denemelerin ve elle verilenlerin açtığı abonelikler. Bitiş tarihi, onaylı dönemlerin toplamıdır; yenileme mevcut dönemin bittiği gün başlar.</p>
       </header>

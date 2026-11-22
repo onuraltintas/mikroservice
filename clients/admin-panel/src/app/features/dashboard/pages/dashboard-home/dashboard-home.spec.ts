@@ -47,7 +47,7 @@ describe('Yönetim paneli › Ana sayfa', () => {
     const { fixture, page } = setup('SystemAdmin', [ADMIN_PERMISSIONS.supportView, ADMIN_PERMISSIONS.usersView]);
     await settle(fixture);
     expect(page.waiting().map(item => [item.label, item.value])).toEqual([
-      ['Onay bekleyen ödeme', 4], ['Bildirilen havale', 2], ['Eşleşmeyen hesap hareketi', 3], ['Para çekme talebi', 1], ['Açık destek talebi', 5]]);
+      ['Onay bekleyen ödeme', 4], ['Bildirilen havale', 2], ['Eşleşmeyen hesap hareketi', 3], ['Cayma talebi', 1], ['Açık destek talebi', 5]]);
     expect(page.waitingTotal()).toBe(15);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('ilgilenmen gereken 15 iş var');
   });

@@ -37,7 +37,7 @@ import { StaffMeterComponent } from '../../shared/staff-charts';
           <div class="table-scroll"><table><thead><tr><th>Öğrenci</th><th>Öğretmen</th><th>Risk</th><th>Sinyaller</th><th>İşlem</th></tr></thead>
             <tbody>@for (warning of report.items; track warning.studentId) {
               <tr><td>{{ warning.studentName || 'Öğrenci adı bulunamadı' }}</td><td>{{ warning.teacherName || 'Atanmamış' }}</td>
-                <td><span class="risk" [class.high]="riskLabel(warning) === 'Yüksek'" [class.medium]="riskLabel(warning) === 'Orta'">{{ riskLabel(warning) }}</span> <span class="score">{{ warning.riskScore }}</span></td><td>{{ reasons(warning) }}</td>
+                <td><span class="risk" [class.high]="riskLabel(warning) === 'Yüksek'" [class.medium]="riskLabel(warning) === 'Orta'">{{ riskLabel(warning) }}</span> <span class="score" [attr.title]="'Risk puanı ' + warning.riskScore + ' / 100'">{{ warning.riskScore }} puan</span></td><td>{{ reasons(warning) }}</td>
                 <td><button type="button" (click)="openStudent(warning)">Öğrenci raporu</button></td></tr>
             }</tbody></table></div>
         }
@@ -121,7 +121,8 @@ export class CoachingInstitutionAnalyticsComponent implements OnChanges {
   }
   reasons(warning: StudentEarlyWarning): string {
     const labels: Record<string, string> = { low_assignment_submission: 'Ödev teslimi düşük', low_assignment_performance: 'Ödev başarısı düşük',
-      low_attendance: 'Katılım düşük', low_goal_progress: 'Hedef ilerlemesi düşük', no_recent_activity: 'Son etkinlik eski' };
+      low_attendance: 'Katılım düşük', low_goal_progress: 'Hedef ilerlemesi düşük', no_recent_activity: 'Son etkinlik eski',
+      overdue_study_tasks: 'Geciken çalışmalar birikmiş' };
     return warning.reasonCodes.map(reason => labels[reason] ?? reason).join(', ') || 'Sinyal yok';
   }
   private localDate(date: Date): string { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }

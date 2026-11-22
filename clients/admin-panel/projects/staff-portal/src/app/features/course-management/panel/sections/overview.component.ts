@@ -18,7 +18,7 @@ const EMAIL_KINDS: Record<string, string> = {
       @if (state.isOwner() && !state.readOnly()) {
         <div class="actions">
           <button type="button" class="btn-secondary" (click)="navigate.emit('students')">Öğrenci ekle</button>
-          <button type="button" class="btn" (click)="navigate.emit('calendar')">Ders planla</button>
+          <button type="button" [class]="setupOpen() ? 'btn-secondary' : 'btn'" (click)="navigate.emit('calendar')">Ders planla</button>
         </div>
       }
     </header>
@@ -111,8 +111,8 @@ const EMAIL_KINDS: Record<string, string> = {
         }
         @if (view.emails; as mail) {
           <section class="card card-pad actions" style="justify-content: space-between">
-            <div><strong>Dün {{ mail.sent }} e-posta gönderildi</strong>
-              <p class="muted" style="margin: 2px 0 0">{{ emailLine(view) }}</p></div>
+            <div><strong>{{ mail.sent ? 'Dün ' + mail.sent + ' e-posta gönderildi' : 'Dün e-posta gönderilmedi' }}</strong>
+              @if (mail.sent || mail.skipped) { <p class="muted" style="margin: 2px 0 0">{{ emailLine(view) }}</p> }</div>
             <button type="button" class="btn-secondary" (click)="navigate.emit('settings')">E-posta kayıtları</button>
           </section>
         }
@@ -191,6 +191,11 @@ export class OverviewSectionComponent implements OnInit {
     if (lesson.attendanceTaken || lesson.status === 'Completed') return 'done';
     if (lesson.status === 'InProgress') return 'now';
     return new Date(lesson.endsAt) <= new Date() ? 'waiting' : 'next';
+  }
+  /** Live test 22.11.2026: one main action per screen; while setup is open, "Kuruluma devam et" is it. */
+  setupOpen(): boolean {
+    const setup = this.state.setup();
+    return !!(this.state.isOwner() && setup && !setup.closed && this.state.setupProgress().done < this.state.setupProgress().total);
   }
   emailLine(view: PanelOverview): string {
     const mail = view.emails!;

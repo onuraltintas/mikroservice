@@ -143,14 +143,14 @@ export function measurementStatusLabel(status: string): string {
           <section class="space-y-4" aria-labelledby="platform-title">
             <h2 id="platform-title" class="text-lg font-semibold text-(--ui-text)">Platform kullanımı</h2>
             <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div class="metric-card"><span>Toplam kullanıcı</span><strong>{{ data.totalUsers }}</strong></div>
+              <div class="metric-card"><span>Hızlı Okuma profili</span><strong>{{ data.totalUsers }}</strong></div>
               <div class="metric-card"><span>Aktif kullanıcı</span><strong>{{ data.activeUsers }}</strong></div>
               <div class="metric-card"><span>Okuma oturumu</span><strong>{{ data.totalReadingSessions }}</strong></div>
               <div class="metric-card"><span>Toplam aktivite</span><strong>{{ data.totalActivities }}</strong></div>
             </div>
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div class="data-card"><h3>Kullanıcı büyümesi</h3><p class="muted">{{ data.newUserDataAvailable ? (data.newUsers + ' yeni kullanıcı') : 'Kayıt tarihi verisi mevcut değil.' }}</p><p class="muted">{{ data.userGrowthRateDataAvailable ? ('Büyüme oranı: %' + data.userGrowthRate) : 'Büyüme oranı hesaplanamadı.' }}</p></div>
-              <div class="data-card"><h3>Etkileşim</h3><p class="muted">Etkileşim oranı: %{{ data.engagementRate }}</p><p class="muted">Elde tutma oranı: %{{ data.retentionRate }}</p><p class="muted">Ortalama oturum: {{ data.averageSessionDuration }} dakika</p></div>
+              <div class="data-card"><h3>Kullanıcı büyümesi</h3><p class="muted">{{ data.newUserDataAvailable ? ('Bu dönemde ' + data.newUsers + ' yeni kullanıcı') : 'Kayıt tarihi verisi yok.' }}</p><p class="muted">{{ data.userGrowthRateDataAvailable ? ('Önceki döneme göre: %' + num(data.userGrowthRate)) : 'Önceki dönemde yeni kayıt olmadığı için karşılaştırma yapılamıyor.' }}</p>@if (data.userGrowth.length) { <admin-bars title="Günlük yeni kullanıcı" [points]="chartPoints(data.userGrowth)" tone="violet" /> }</div>
+              <div class="data-card"><h3>Etkileşim</h3><p class="muted">Etkileşim oranı: %{{ num(data.engagementRate) }}</p><p class="muted">Elde tutma oranı: %{{ num(data.retentionRate) }}</p><p class="muted">Ortalama oturum: {{ num(data.averageSessionDuration) }} dakika</p></div>
             </div>
             <div class="data-card chart-pair">
               <admin-trend title="Günlük etkin kullanıcı" [points]="chartPoints(data.dailyActiveUsers)" tone="success" />
@@ -302,6 +302,8 @@ export function measurementStatusLabel(status: string): string {
   `]
 })
 export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
+  /** Türkçe sayı biçimi: ondalık virgül, en çok iki basamak. */
+  num(value: number | null | undefined): string { return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(Number(value) || 0); }
   // Lively design (21.11.2026): chart inputs for the tables below them (the tables stay as the accessible detail).
   readonly chartPoints = analyticsChartPoints;
   levelSpeed(rows: { difficultyLevel: number; averageWpm: number }[]): AdminPoint[] {

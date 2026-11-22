@@ -4,7 +4,7 @@
  @if(success()){<p role="status">{{ success() }}</p>}
  @if(busy()){<p role="status">Profil işlemi sürüyor…</p>}
  @if(form;as p){
-  <p>Eğitim durumu: {{ educationDetail(p.educationStatus, p.gradeLevel) }} @if(p.graduationYear){ · Mezuniyet: {{ p.graduationYear }} }</p>
+  <p>Eğitim durumu: {{ educationDetail(p.educationStatus, p.gradeLevel) }} @if(p.graduationYear){, Mezuniyet: {{ p.graduationYear }} }</p>
   <p>Eğitim durumu ve sınıf öğrencinin Profilim sayfasından ya da kurumundan yönetilir.</p>
   @if(!editing){
    <dl><div><dt>Okul</dt><dd>{{ p.schoolName||'Belirtilmedi' }}</dd></div><div><dt>Şehir / ilçe</dt><dd>{{ p.schoolCity||'Belirtilmedi' }} / {{ p.schoolDistrict||'Belirtilmedi' }}</dd></div><div><dt>Okul türü / şube</dt><dd>{{ p.schoolType||'Belirtilmedi' }} / {{ p.classBranch||'Belirtilmedi' }}</dd></div><div><dt>Doğum tarihi</dt><dd>{{ p.birthDate ? (p.birthDate|date:'dd.MM.yyyy') : 'Belirtilmedi' }}</dd></div><div><dt>Öğrenci notu</dt><dd class="bio">{{ p.bio||'Belirtilmedi' }}</dd></div></dl>

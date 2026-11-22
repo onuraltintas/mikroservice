@@ -285,7 +285,7 @@ export class UserDetailsModalComponent implements OnInit {
   private auth = inject(AuthService);
 
   user = signal<UserProfileDto | null>(null);
-  /** The id is what "Abonelik ve Ödeme › Elle abonelik ver" asks for. */
+  /** The id is what "Abonelik ve ödeme › Elle abonelik ver" asks for. */
   readonly idCopied = signal(false);
   copyId(): void {
     void navigator.clipboard?.writeText(this.userId).then(() => this.idCopied.set(true), () => undefined);

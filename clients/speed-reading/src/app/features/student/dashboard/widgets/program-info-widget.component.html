@@ -55,7 +55,7 @@
             <div class="stat-item">
                 <span class="material-icons stat-icon" [class.max-difficulty]="isMaxDifficulty()">trending_up</span>
                 <div class="stat-content">
-                    <span class="stat-label">Zorluk Seviyesi</span>
+                    <span class="stat-label">Zorluk seviyesi</span>
                     <span class="stat-value">
                         {{ programInfo()!.currentDifficultyLevel }}/{{ programInfo()!.maxDifficultyLevel }}
                         <span class="difficulty-badge">{{ getDifficultyDescription() }}</span>
@@ -67,7 +67,7 @@
             <div class="stat-item">
                 <span class="material-icons stat-icon">done_all</span>
                 <div class="stat-content">
-                    <span class="stat-label">Tamamlanan Gün</span>
+                    <span class="stat-label">Tamamlanan gün</span>
                     <span class="stat-value">{{ programInfo()!.totalDaysCompleted }} gün</span>
                 </div>
             </div>
@@ -76,7 +76,7 @@
             <div class="stat-item">
                 <span class="material-icons stat-icon">fitness_center</span>
                 <div class="stat-content">
-                    <span class="stat-label">Tamamlanan Egzersiz</span>
+                    <span class="stat-label">Tamamlanan egzersiz</span>
                     <span class="stat-value">{{ programInfo()!.totalExercisesCompleted }} egzersiz</span>
                 </div>
             </div>
@@ -95,7 +95,7 @@
             <div class="stat-item" *ngIf="programInfo()!.currentStreak > 0">
                 <span class="material-icons stat-icon streak-icon">local_fire_department</span>
                 <div class="stat-content">
-                    <span class="stat-label">Mevcut Seri</span>
+                    <span class="stat-label">Mevcut seri</span>
                     <span class="stat-value">
                         <span class="material-icons streak-value-icon" aria-hidden="true">local_fire_department</span>
                         {{ programInfo()!.currentStreak }} gün

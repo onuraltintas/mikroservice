@@ -98,7 +98,7 @@
         </table>
       </div>
       <footer class="history-pagination">
-        <span>{{ historyTotalCount() }} kayıt · Sayfa {{ historyPage() }} / {{ historyTotalPages() }}</span>
+        <span>{{ historyTotalCount() }} kayıt, Sayfa {{ historyPage() }} / {{ historyTotalPages() }}</span>
         <div><button type="button" (click)="previousPage()" [disabled]="historyPage() <= 1 || isHistoryLoading()">Önceki</button><button type="button" (click)="nextPage()" [disabled]="historyPage() >= historyTotalPages() || isHistoryLoading()">Sonraki</button></div>
       </footer>
     }

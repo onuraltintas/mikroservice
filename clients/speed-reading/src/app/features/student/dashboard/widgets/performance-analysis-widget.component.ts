@@ -61,7 +61,7 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
         this.hasRealData.set(true);
         const performance: PerformanceData = {
           readingSpeed: {
-            label: 'Okuma Hızı',
+            label: 'Okuma hızı',
             current: currentSpeed ?? 0,
             previous: initialSpeed ?? 0,
             unit: 'KDK',
@@ -71,7 +71,7 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
             measured: measured.readingSpeed !== null
           },
           comprehension: {
-            label: 'Kavrama Oranı',
+            label: 'Kavrama oranı',
             current: Math.round(successRate ?? 0),
             previous: 0,
             unit: '%',
@@ -81,7 +81,7 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
             measured: measured.comprehension !== null
           },
           eyeMovement: {
-            label: 'Göz Hareketi',
+            label: 'Göz hareketi',
             current: data?.eyeMovementScore ?? 0,
             previous: 0,
             unit: '%',

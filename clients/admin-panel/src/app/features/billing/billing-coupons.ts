@@ -19,7 +19,7 @@ interface CouponDraft {
   isActive: boolean;
 }
 
-/** "Abonelik ve Ödeme › Kuponlar": discount codes for every product's plans. */
+/** "Abonelik ve ödeme › Kuponlar": discount codes for every product's plans. */
 @Component({
   selector: 'app-billing-coupons',
   standalone: true,
@@ -28,7 +28,7 @@ interface CouponDraft {
     <main class="space-y-6" aria-labelledby="billing-coupons-title">
       <header class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve Ödeme</p>
+          <p class="text-sm font-medium text-(--ui-brand-text)">Abonelik ve ödeme</p>
           <h1 id="billing-coupons-title" class="mt-1 text-2xl font-bold text-(--ui-text)">Kuponlar</h1>
           <p class="mt-2 text-sm text-(--ui-text-muted)">Bir hesap bir kuponu bir kez kullanır. Ödeme bekleyen siparişler de kullanım sayılır; reddedilen, düşen ya da onayı geri alınan sipariş kullanımını geri verir.</p>
         </div>

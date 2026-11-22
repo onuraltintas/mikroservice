@@ -95,6 +95,27 @@ public sealed class CoachingEarlyWarningQueryTests
     }
 
     [Fact]
+    public async Task EarlyWarningQuery_ShouldFlagOverdueStudyTasks_LiveTest20261122()
+    {
+        var institutionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var toDate = DateTime.UtcNow;
+        var identity = new StubReportIdentityClient(new CoachingStudentReportPage(new[] { studentId }, 1));
+        var repository = new StubEarlyWarningRepository(new CoachingStudentEarlyWarningMetrics(
+            studentId, 0, 0, 0, null, 0, 0, 0, 0, 0, toDate.AddDays(-1), OverdueStudyTaskCount: 7));
+        var handler = new GetInstitutionEarlyWarningsQueryHandler(repository, identity, CreatePolicy(Guid.NewGuid(), "SystemAdmin"));
+
+        var result = await handler.Handle(new GetInstitutionEarlyWarningsQuery(institutionId, toDate.AddDays(-30), toDate,
+            GradeLevel: null, PageNumber: 1, PageSize: 10), CancellationToken.None);
+
+        var warning = result.Items.Should().ContainSingle().Subject;
+        warning.ReasonCodes.Should().Equal(EarlyWarningReasonCodes.OverdueStudyTasks);
+        warning.RiskScore.Should().Be(25);
+        warning.RiskLevel.Should().Be(EarlyWarningRiskLevel.Medium);
+        warning.OverdueStudyTaskCount.Should().Be(7);
+    }
+
+    [Fact]
     public async Task EarlyWarningQuery_ShouldRejectNonAdministrator()
     {
         var handler = new GetInstitutionEarlyWarningsQueryHandler(

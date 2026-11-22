@@ -2410,6 +2410,30 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.router.navigate(['/student/exercises']);
   }
 
+  /** Live test 22.11.2026: the result card offered no way on to the next exercise of the day. */
+  get canGoToNextDailyExercise(): boolean {
+    const practice = this.route?.snapshot?.queryParamMap?.get('practiceMode') === 'true';
+    return !this.isAssessmentMode && !this.assignmentId && !practice
+      && !!this.dailySlotOrder && !!this.dailyProgramDay && !!this.dailyProgramProgressId;
+  }
+
+  goToNextDailyExercise(): void {
+    const day = this.dailyProgramDay; const order = this.dailySlotOrder; const progressId = this.dailyProgramProgressId;
+    if (!day || !order || !progressId) { this.goBack(); return; }
+    this.exerciseProgramService.getExercisesByDay(day).subscribe({
+      next: exercises => {
+        const next = [...exercises].sort((a, b) => a.order - b.order).find(item => !item.isCompleted && item.order > order)
+          ?? exercises.find(item => !item.isCompleted && item.order !== order);
+        if (!next) { this.router.navigate(['/student/daily-exercises']); return; }
+        this.router.navigate(['/student/exercises/universal-player', next.exerciseId], {
+          queryParams: { slotOrder: next.order, programDay: day, programProgressId: progressId },
+          state: { fromDailyExercises: true, practiceMode: false, exercise: next, difficultyLevel: next.difficultyLevel }
+        });
+      },
+      error: () => this.router.navigate(['/student/daily-exercises'])
+    });
+  }
+
   // Comprehension Question Methods
   getCurrentQuestion(): any {
     if (this.currentQuestionIndex < this.comprehensionQuestions.length) {
@@ -3269,7 +3293,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   getEngineDisplayName(): string {
     const typeName = this.exercise?.exerciseTypeName;
     const label = exerciseTypeLabel(typeName);
-    return label && label !== typeName ? label : (this.engine?.displayName || '');
+    return label || typeName || this.engine?.displayName || '';
   }
 
   /** 3-2-1 before the first flashed round, so the first letters do not pass while the student is still reading. */

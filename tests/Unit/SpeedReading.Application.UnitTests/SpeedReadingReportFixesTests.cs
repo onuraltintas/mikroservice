@@ -13,6 +13,7 @@ using SpeedReading.Application.Content;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Institutions;
+using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
@@ -64,6 +65,26 @@ public sealed class SpeedReadingReportFixesTests
         usage.TotalReadingSessions.Should().Be(2);
         usage.DailyActiveUsers.Should().ContainSingle().Which.Name.Should().Be("2026-10-30");
         usage.HourlyActivity.Select(item => item.Name).Should().BeEquivalentTo(["00:00", "23:00"]);
+    }
+
+    [Fact]
+    public async Task Admin_platform_usage_counts_new_users_and_growth_from_profile_creation()
+    {
+        await using var db = Db();
+        var now = DateTime.UtcNow;
+        db.UserProfiles.AddRange(
+            SpeedReadingUserProfile.CreateDefault(Guid.NewGuid(), Guid.NewGuid(), now.AddDays(-2)),
+            SpeedReadingUserProfile.CreateDefault(Guid.NewGuid(), Guid.NewGuid(), now.AddDays(-3)),
+            SpeedReadingUserProfile.CreateDefault(Guid.NewGuid(), Guid.NewGuid(), now.AddDays(-45)));
+        await db.SaveChangesAsync();
+
+        var usage = await Admin(db).GetPlatformUsageAsync(now.AddDays(-30), now);
+
+        usage.NewUserDataAvailable.Should().BeTrue();
+        usage.NewUsers.Should().Be(2);
+        usage.UserGrowthRateDataAvailable.Should().BeTrue();
+        usage.UserGrowthRate.Should().Be(100);
+        usage.UserGrowth.Sum(item => item.Series.Sum(series => series.Value)).Should().Be(2);
     }
 
     [Fact]

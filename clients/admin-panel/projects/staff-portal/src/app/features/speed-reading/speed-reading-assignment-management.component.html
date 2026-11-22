@@ -63,7 +63,7 @@
     @if (totalPages() > 1) {
       <nav class="pagination" aria-label="Ödev sayfaları">
         <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
-        <span>Sayfa {{ pageNumber() }} / {{ totalPages() }} · {{ totalCount() }} ödev</span>
+        <span>Sayfa {{ pageNumber() }} / {{ totalPages() }}, {{ totalCount() }} ödev</span>
         <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
       </nav>
     }
@@ -81,14 +81,14 @@
       <div class="section-heading"><div><p class="workspace-eyebrow">Ödev incelemesi</p><h4 id="assignment-details-title">{{ assignment.title }}</h4></div><button class="secondary-button" type="button" (click)="closeDetails()">Kapat</button></div>
       @if (isDetailsLoading()) { <p class="loading" role="status">Ödev ayrıntıları yükleniyor…</p> }
       @else if (details(); as detail) {
-        <p>{{ detail.description || 'Açıklama yok' }} · Teslim: {{ formatDate(detail.dueDate) }}</p>
+        <p>{{ detail.description || 'Açıklama yok' }}, Teslim: {{ formatDate(detail.dueDate) }}</p>
         @if (assignmentStudentErrorMessage()) { <div class="inline-error" role="alert">{{ assignmentStudentErrorMessage() }}</div> }
         @if (!institutionId) {
           <div class="add-assignment-student">
             <label for="assignment-add-student">Ödeve öğrenci ekle</label>
             <select id="assignment-add-student" name="assignmentAddStudent" [(ngModel)]="selectedNewStudentId" [disabled]="isSaving()">
               <option value="">Öğrenci seçin</option>
-              @for (student of availableAssignmentStudents(); track trackById($index, student)) { <option [value]="student.id">{{ student.firstName }} {{ student.lastName }} · {{ student.email || 'e-posta yok' }}</option> }
+              @for (student of availableAssignmentStudents(); track trackById($index, student)) { <option [value]="student.id">{{ student.firstName }} {{ student.lastName }}, {{ student.email || 'e-posta yok' }}</option> }
             </select>
             <button class="secondary-button" type="button" data-testid="add-assignment-student" (click)="addStudentToAssignment()" [disabled]="!selectedNewStudentId || isSaving()">Öğrenciyi ekle</button>
           </div>
@@ -116,7 +116,7 @@
       @if (catalogErrorMessage()) { <div class="inline-error" role="alert">{{ catalogErrorMessage() }} <button type="button" (click)="loadExerciseTypes()">Tekrar dene</button></div> }
       <form class="create-form" (ngSubmit)="submitAssignment()">
         @if (institutionId) {
-          <label><span>Öğretmen</span><select name="assignmentTeacher" [(ngModel)]="selectedTeacherId" (ngModelChange)="onTeacherChange()" required><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track trackById($index, teacher)) { <option [value]="teacher.id">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email || 'e-posta yok' }}</option> }</select></label>
+          <label><span>Öğretmen</span><select name="assignmentTeacher" [(ngModel)]="selectedTeacherId" (ngModelChange)="onTeacherChange()" required><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track trackById($index, teacher)) { <option [value]="teacher.id">{{ teacher.firstName }} {{ teacher.lastName }}, {{ teacher.email || 'e-posta yok' }}</option> }</select></label>
         }
         <label><span>Ödev başlığı</span><input name="assignmentTitle" [(ngModel)]="assignmentTitle" maxlength="200" required placeholder="Örn. Haftalık okuma çalışması"></label>
         <label><span>Açıklama</span><textarea name="assignmentDescription" [(ngModel)]="assignmentDescription" maxlength="2000" rows="3" placeholder="Öğrencilere göstermek istediğiniz yönerge"></textarea></label>

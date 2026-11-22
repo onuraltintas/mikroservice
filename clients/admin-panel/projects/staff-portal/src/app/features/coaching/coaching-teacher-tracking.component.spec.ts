@@ -59,7 +59,7 @@ describe('CoachingTeacherTrackingComponent', () => {
     const { fixture } = await setup(); const text = fixture.nativeElement.textContent;
     expect(text).toContain('Takip merkezi'); expect(text).toContain('40'); expect(text).toContain('15'); expect(text).toContain('5');
     expect(text).toContain('Ayşe Öğrenci'); expect(text).not.toContain('Europe/Istanbul'); expect(text).toContain('18:00');
-    fixture.nativeElement.querySelector('[aria-label="Ayşe Öğrenci · Matematik tekrarı kaydını aç"]').click();
+    fixture.nativeElement.querySelector('[aria-label="Ayşe Öğrenci, Matematik tekrarı kaydını aç"]').click();
     await vi.waitFor(()=>expect(fixture.componentInstance.selected()).toEqual(item));
   });
   it('applies date, search and kind filters and keeps applied filters when paging', async () => {

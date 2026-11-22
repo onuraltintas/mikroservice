@@ -9,7 +9,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Coaching.API.Controllers;
 
 public sealed record StudentDailyAgendaItem(string Kind, Guid RecordId, string Title, DateOnly Date,
-    int? StartMinute, int? Minutes, string TimeZoneId, Guid? PlanId = null, DateOnly? WeekStart = null, DateTime? DueAt = null);
+    int? StartMinute, int? Minutes, string TimeZoneId, Guid? PlanId = null, DateOnly? WeekStart = null, DateTime? DueAt = null,
+    string? LessonName = null);
 public sealed record StudentDailyAgendaPage(string Mode, IReadOnlyList<StudentDailyAgendaItem> Items,
     int TotalCount, int PageNumber, int PageSize, int TodayCount, int UpcomingCount, int OverdueCount, DateTimeOffset GeneratedAt);
 
@@ -82,7 +83,7 @@ public static class StudentDailyAgendaQuery
         var items = new List<StudentDailyAgendaItem>();
         items.AddRange(await studies.Where(x => x.Mode == mode).OrderBy(x => x.Row.PlannedDate).ThenBy(x => x.Row.PlannedStartMinute ?? 1439).ThenBy(x => x.Row.Id)
             .Take(take).Select(x => new StudentDailyAgendaItem("study", x.Row.Id, x.Row.Title, x.Row.PlannedDate,
-                x.Row.PlannedStartMinute, x.Row.PlannedMinutes, zone, planId, null, null)).ToArrayAsync(ct));
+                x.Row.PlannedStartMinute, x.Row.PlannedMinutes, zone, planId, null, null, x.Row.LessonNameSnapshot)).ToArrayAsync(ct));
         var dueRows = await assignments.Where(x => x.Mode == mode).OrderBy(x => x.Row.Assignment.DueDate).ThenBy(x => x.Row.AssignmentId).Take(take)
             .Select(x => new { x.Row.AssignmentId, x.Row.Assignment.Title, x.Row.Assignment.DueDate, x.Row.Assignment.EstimatedDurationMinutes }).ToArrayAsync(ct);
         foreach (var row in dueRows)
@@ -93,7 +94,7 @@ public static class StudentDailyAgendaQuery
         }
         items.AddRange(await decisions.Where(x => x.Mode == mode).OrderBy(x => x.Row.DueOn).ThenBy(x => x.Row.Id).Take(take)
             .Select(x => new StudentDailyAgendaItem("decision", x.Row.Id, x.Row.Title, x.Row.DueOn, null, null,
-                zone, null, x.Row.ReviewWeekStart, null)).ToArrayAsync(ct));
+                zone, null, x.Row.ReviewWeekStart, null, null)).ToArrayAsync(ct));
         var rows = items.OrderBy(SortTime).ThenBy(x => x.Kind, StringComparer.Ordinal).ThenBy(x => x.RecordId)
             .Skip((page - 1) * pageSize).Take(pageSize).ToArray();
         return new StudentDailyAgendaPage(mode, rows, total, page, pageSize, Count("today"), Count("upcoming"), Count("overdue"), now);

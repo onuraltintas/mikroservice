@@ -114,12 +114,12 @@
       <section class="editor-full" aria-labelledby="assignment-files-title">
         <div class="editor-section-heading">
           <h3 id="assignment-files-title">Ödev dosyaları</h3>
-          <p>JPEG, PNG, WebP, PDF, Word (.doc/.docx) ve Markdown (.md) dosyaları · dosya başına en fazla 10 MB. Dosyalar tarama tamamlanınca öğrenciye açılır.</p>
+          <p>JPEG, PNG, WebP, PDF, Word (.doc/.docx) ve Markdown (.md) dosyaları, dosya başına en fazla 10 MB. Dosyalar tarama tamamlanınca öğrenciye açılır.</p>
         </div>
         @if (existingAttachments().length > 0) {
           <ul class="attachment-list" aria-label="Mevcut ödev dosyaları">
             @for (attachment of existingAttachments(); track attachment.id) {
-              <li><span>{{ attachment.originalFileName }} · {{ attachment.status | coachingLabel }}</span>
+              <li><span>{{ attachment.originalFileName }}, {{ attachment.status | coachingLabel }}</span>
                 <button type="button" class="secondary-button" (click)="downloadInstructionAttachment(attachment)" [disabled]="attachment.status !== 'Clean'">İndir</button>
               </li>
             }
@@ -131,7 +131,7 @@
         @if (selectedAttachments().length > 0) {
           <ul class="attachment-list" aria-label="Yüklenecek ödev dosyaları">
             @for (file of selectedAttachments(); track file.name + file.lastModified) {
-              <li><span>{{ file.name }} · {{ (file.size / 1024 / 1024) | number:'1.1-1' }} MB</span>
+              <li><span>{{ file.name }}, {{ (file.size / 1024 / 1024) | number:'1.1-1' }} MB</span>
                 <button type="button" class="secondary-button" (click)="removeSelectedAttachment(file)" [disabled]="isSaving()">Kaldır</button>
               </li>
             }

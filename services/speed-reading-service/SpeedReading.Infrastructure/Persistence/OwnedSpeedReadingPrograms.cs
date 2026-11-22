@@ -1,3 +1,4 @@
+using SpeedReading.Domain.Gamification;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Analytics;
@@ -394,7 +395,8 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.IsActive,
             item.CompletedDate,
             item.AverageSuccessRate,
-            item.CurrentStreak,
+            // Live test 22.11.2026: a stored streak whose last day is before yesterday has ended (as in gamification).
+            GamificationRules.CurrentStreak(item.LastCompletionDate, item.CurrentStreak, DateTime.UtcNow),
             item.LongestStreak);
 
     private static StudentProgramProgressSummary ToProgressSummary(StudentProgramProgress item) =>
@@ -411,7 +413,8 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.IsActive,
             item.CompletedDate,
             item.AverageSuccessRate,
-            item.CurrentStreak,
+            // Live test 22.11.2026: a stored streak whose last day is before yesterday has ended (as in gamification).
+            GamificationRules.CurrentStreak(item.LastCompletionDate, item.CurrentStreak, DateTime.UtcNow),
             item.LongestStreak);
 
     private static AdminStudentProgressSummary ToAdminProgressSummary(

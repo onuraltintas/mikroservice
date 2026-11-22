@@ -6,6 +6,9 @@ export const routes: Routes = [
     path: 'student/coaching',
     loadComponent: () => import('./features/coaching/coaching-redirect.component').then(m => m.CoachingRedirectComponent)
   },
+  // Live test 22.11.2026: Turkish addresses people type by hand opened the CMS 404 page.
+  { path: 'giris', redirectTo: 'auth/login', pathMatch: 'full' },
+  { path: 'kayit', redirectTo: 'auth/register', pathMatch: 'full' },
   {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)

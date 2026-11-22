@@ -12,7 +12,7 @@
         <div class="settings-card">
             <!-- Tab Buttons -->
             <div class="sp-tab-bar" role="tablist" aria-label="Ayar kategorileri">
-                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 0" [class.active]="activeTab === 0" (click)="activeTab = 0">Okuma Modu</button>
+                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 0" [class.active]="activeTab === 0" (click)="activeTab = 0">Okuma modu</button>
                 <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 1" [class.active]="activeTab === 1" (click)="activeTab = 1">Bildirimler</button>
                 <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 2" [class.active]="activeTab === 2" (click)="activeTab = 2">Gizlilik &amp; Hesap</button>
             </div>
@@ -23,13 +23,13 @@
 
                     <!-- Controls Column -->
                     <div class="controls-column">
-                        <div class="section-title">Görünüm Ayarları</div>
+                        <div class="section-title">Görünüm ayarları</div>
 
                         <!-- Font Size -->
                         <div class="setting-group">
                             <label>
                                 <span class="material-icons">format_size</span>
-                                Font Boyutu
+                                Font boyutu
                             </label>
                             <div class="slider-container">
                                 <input id="font-size" type="range" min="12" max="32" step="2" [(ngModel)]="settings.fontSize" (ngModelChange)="previewSettings()" aria-label="Font boyutu">
@@ -41,7 +41,7 @@
                         <div class="setting-group">
                             <label>
                                 <span class="material-icons">font_download</span>
-                                Font Ailesi
+                                Font ailesi
                             </label>
                             <select id="font-family" class="sp-select full-width" [(ngModel)]="settings.fontFamily" (ngModelChange)="previewSettings()" aria-label="Font ailesi">
                                 <!-- Live test 16.11.2026 (#56): the saved default is Arial; without its option the box stood empty. -->
@@ -57,7 +57,7 @@
                         <div class="setting-group">
                             <label>
                                 <span class="material-icons">palette</span>
-                                Renk Teması
+                                Renk teması
                             </label>
                             <div class="theme-picker">
                                 <button class="theme-option"
@@ -94,7 +94,7 @@
                         <div class="setting-group">
                             <label>
                                 <span class="material-icons">format_line_spacing</span>
-                                Satır Yüksekliği
+                                Satır yüksekliği
                             </label>
                             <div class="slider-container">
                                 <input id="line-height" type="range" min="120" max="220" step="10" [(ngModel)]="settings.lineHeight" (ngModelChange)="previewSettings()" aria-label="Satır yüksekliği">
@@ -106,7 +106,7 @@
 
                     <!-- Preview Column -->
                     <div class="preview-column">
-                        <div class="section-title">Canlı Önizleme</div>
+                        <div class="section-title">Canlı önizleme</div>
 
                         <div class="preview-card" [class]="'theme-' + settings.theme"
                             [style.fontSize.px]="settings.fontSize" [style.fontFamily]="settings.fontFamily"
@@ -115,7 +115,7 @@
 
                             <div class="preview-header">
                                 <span class="material-icons">visibility</span>
-                                <span>Okuma Alanı</span>
+                                <span>Okuma alanı</span>
                             </div>
 
                             <h4>Hızlı Okuma Nedir?</h4>
@@ -135,7 +135,7 @@
 
             <!-- Tab 2: Notifications -->
             <div class="tab-content" *ngIf="activeTab === 1" role="tabpanel">
-                <div class="section-title">Bildirim Tercihleri</div>
+                <div class="section-title">Bildirim tercihleri</div>
                 <div class="toggles-list">
 
                     <div class="toggle-card">
@@ -153,7 +153,7 @@
                     <div class="toggle-card reminder-time-card">
                         <div class="info">
                             <div class="text">
-                                <h4>Hatırlatma Saati</h4>
+                                <h4>Hatırlatma saati</h4>
                             </div>
                         </div>
                         <input class="reminder-time-input" type="time" [(ngModel)]="settings.reminderTime" (ngModelChange)="previewSettings()" aria-label="Hatırlatma saati">
@@ -175,7 +175,7 @@
                         <div class="info">
                             <div class="icon-box"><span class="material-icons">emoji_events</span></div>
                             <div class="text">
-                                <h4>Başarı Bildirimleri</h4>
+                                <h4>Başarı bildirimleri</h4>
                                 <p>Yeni bir rozet veya seviye kazandığında haberdar ol.</p>
                             </div>
                         </div>
@@ -187,7 +187,7 @@
 
             <!-- Tab 3: Privacy & Account -->
             <div class="tab-content" *ngIf="activeTab === 2" role="tabpanel">
-                <div class="section-title">Gizlilik Ayarları</div>
+                <div class="section-title">Gizlilik ayarları</div>
                 <div class="toggles-list">
 
                     <div class="toggle-card">
@@ -205,7 +205,7 @@
                         <div class="info">
                             <div class="icon-box"><span class="material-icons">analytics</span></div>
                             <div class="text">
-                                <h4>Analitik Veriler</h4>
+                                <h4>Analitik veriler</h4>
                                 <p>Uygulamayı geliştirmek için anonim kullanım verilerini paylaş.</p>
                             </div>
                         </div>
@@ -234,11 +234,11 @@
             <div class="action-buttons">
                 <button type="button" class="sp-btn sp-btn-warn" (click)="resetToDefaults()">
                     <span class="material-icons">restart_alt</span>
-                    Varsayılana Dön
+                    Varsayılana dön
                 </button>
                 <button type="button" class="sp-btn sp-btn-primary" (click)="saveSettings()">
                     <span class="material-icons">save_as</span>
-                    Değişiklikleri Kaydet
+                    Değişiklikleri kaydet
                 </button>
             </div>
 

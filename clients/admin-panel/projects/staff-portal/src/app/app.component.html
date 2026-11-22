@@ -50,11 +50,10 @@
         @if (hasPhoneMenu) { <button #teacherMenuToggle class="teacher-menu-toggle" type="button" aria-label="Personel menüsünü aç" [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())"><app-coaching-icon name="menu" /></button> }
         <div class="breadcrumb"><span>Personel portalı</span><span aria-hidden="true">/</span><strong>{{ currentProductLabel }}</strong></div>
         <div class="topbar-actions">
-          @if (isTeacherWorkspaceSelected) { <button class="teacher-theme-toggle" type="button" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" (click)="theme.toggle()"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button> }
+          <!-- Live test 22.11.2026: the light/dark switch is in every workspace (it was only in the Koçluk teacher one). -->
+          <button class="teacher-theme-toggle" type="button" [attr.aria-label]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" [attr.title]="theme.isDarkMode() ? 'Açık temaya geç' : 'Koyu temaya geç'" (click)="theme.toggle()"><app-coaching-icon [name]="theme.isDarkMode() ? 'sun' : 'moon'" /></button>
           <button class="account-button" type="button" data-testid="toggle-notifications" [attr.aria-expanded]="notificationsVisible" (click)="notificationsVisible = !notificationsVisible">{{ notificationsVisible ? 'Bildirimleri gizle' : 'Bildirimler' }}</button>
-          @if (auth.activeProduct() !== 'course-management') {
           <button class="account-button" type="button" data-testid="toggle-account-settings" [attr.aria-expanded]="accountSettingsVisible" (click)="accountSettingsVisible = !accountSettingsVisible">{{ accountSettingsVisible ? 'Hesap ayarlarını gizle' : 'Hesap ayarları' }}</button>
-          }
           <button class="logout-button" type="button" (click)="logout()"><span aria-hidden="true">↪</span> Güvenli çıkış</button>
         </div>
       </header>
@@ -100,8 +99,8 @@
         @defer (when auth.activeProduct() === 'course-management' && activeWorkspaceRole) {
           @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
             <!-- maxkampüs (19.11.2026): Kurs Yönetimi has its own address; this panel stays for the move. -->
-            <p class="migration-note moved-note" role="status">Kurs Yönetimi artık <strong>maxkampüs</strong>: kurum paneliniz
-              <a href="https://maxkampus.com/panel">maxkampus.com</a> adresinde. Aynı e-posta ve şifreyle giriş yapın.</p>
+            <p class="migration-note moved-note" role="status">Kurs Yönetimi artık <strong>maxkampüs</strong> adıyla
+              <a href="https://maxkampus.com/panel">maxkampus.com</a> adresinde. Aynı e-posta ve şifreyle giriş yapabilirsiniz.</p>
             <staff-course-panel [role]="courseRole" />
           }
         }
@@ -138,7 +137,7 @@
           }
         }
 
-        <footer class="page-footer">eduivme · Personel çalışma alanı <span>Yetkiniz yalnızca erişim verilen ürünlerde geçerlidir.</span></footer>
+        <footer class="page-footer">eduivme personel çalışma alanı. <span>Yetkiniz yalnızca erişim verilen ürünlerde geçerlidir.</span></footer>
       </div>
     </main>
   </div>

@@ -27,7 +27,7 @@
         <li class="pending-item">
           <div class="pending-details">
             <strong>{{ invitation.email }}</strong>
-            <span>{{ roleLabel(invitation.role) }} · son tarih {{ formatDate(invitation.expiresAt) }}</span>
+            <span>{{ roleLabel(invitation.role) }}, son tarih {{ formatDate(invitation.expiresAt) }}</span>
           </div>
           @if (confirmingInvitationId() === invitation.invitationId) {
             <div class="pending-confirmation">

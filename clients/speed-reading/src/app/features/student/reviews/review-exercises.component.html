@@ -12,7 +12,7 @@
                 <span class="material-icons">event_available</span>
                 <div class="stat-info">
                     <span class="stat-value">{{ statistics()!.totalDueToday }}</span>
-                    <span class="stat-label">Bugün Yapılacak</span>
+                    <span class="stat-label">Bugün yapılacak</span>
                 </div>
             </div>
             <div class="stat-card warning">
@@ -125,7 +125,7 @@
                         <!-- Easiness Factor -->
                         <div class="easiness-section">
                             <div class="easiness-header">
-                                <span>Kolaylık Faktörü</span>
+                                <span>Kolaylık faktörü</span>
                                 <span class="easiness-value">{{ review.easinessFactor.toFixed(2) }}</span>
                             </div>
                             <div class="sp-bar easiness-bar">
@@ -146,7 +146,7 @@
                     <div class="sp-card-actions">
                         <button type="button" class="sp-btn sp-btn--primary" (click)="startReview(review)">
                             <span class="material-icons" aria-hidden="true">play_arrow</span>
-                            Tekrar Yap
+                            Tekrar yap
                         </button>
                         <button type="button" class="sp-btn" (click)="viewHistory(review)">
                             <span class="material-icons" aria-hidden="true">history</span>
@@ -179,7 +179,7 @@
                         <p>Son tekrar: {{ review.lastReviewedAt ? (review.lastReviewedAt | date:'dd.MM.yyyy HH:mm') : 'Henüz yok' }}</p>
                     </div>
                     <div class="sp-card-actions">
-                        <button type="button" class="sp-btn" (click)="viewHistory(review)">Geçmişi Gör</button>
+                        <button type="button" class="sp-btn" (click)="viewHistory(review)">Geçmişi gör</button>
                     </div>
                 </div>
             </div>
@@ -194,7 +194,7 @@
                         <div class="card-icon primary">
                             <span class="material-icons">inventory</span>
                         </div>
-                        <div class="sp-card-title">Toplam İçerik</div>
+                        <div class="sp-card-title">Toplam içerik</div>
                     </div>
                     <div class="sp-card-content">
                         <div class="big-number">{{ statistics()!.totalInReviewQueue }}</div>
@@ -224,7 +224,7 @@
                         <div class="card-icon info">
                             <span class="material-icons">schedule</span>
                         </div>
-                        <div class="sp-card-title">Ortalama Aralık</div>
+                        <div class="sp-card-title">Ortalama aralık</div>
                     </div>
                     <div class="sp-card-content">
                         <div class="big-number">{{ statistics()!.averageInterval.toFixed(0) }}</div>
@@ -255,7 +255,7 @@
                         <div class="card-icon primary">
                             <span class="material-icons">assignment_turned_in</span>
                         </div>
-                        <div class="sp-card-title">Toplam Tamamlanan</div>
+                        <div class="sp-card-title">Toplam tamamlanan</div>
                     </div>
                     <div class="sp-card-content">
                         <div class="big-number">{{ statistics()!.totalCompletedReviews }}</div>
@@ -269,7 +269,7 @@
                         <div class="card-icon warning">
                             <span class="material-icons">event</span>
                         </div>
-                        <div class="sp-card-title">Sonraki Tekrar</div>
+                        <div class="sp-card-title">Sonraki tekrar</div>
                     </div>
                     <div class="sp-card-content">
                         <div class="big-number" *ngIf="statistics()!.nextReviewDate">

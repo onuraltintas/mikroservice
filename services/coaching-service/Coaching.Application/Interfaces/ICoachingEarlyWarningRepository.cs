@@ -26,4 +26,5 @@ public sealed record CoachingStudentEarlyWarningMetrics(
     int GoalCount,
     int CompletedGoalCount,
     int AverageGoalProgress,
-    DateTime? LastActivityAt);
+    DateTime? LastActivityAt,
+    int OverdueStudyTaskCount = 0);
