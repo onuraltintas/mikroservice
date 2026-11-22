@@ -13,6 +13,8 @@ export const formatAdminValue = (value: number, percent = false) => (percent ? '
 const reduceMotion = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function'
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// Not: TONES her bileşenin stiline eklenerek tek parça yapılır. Aynı dosyada birebir aynı satır içi stil parçası
+// birden çok bileşende durursa Angular'ın test derleyicisi (unit-test) testler bitince kapanmıyor (angular-cli #33317).
 const TONES = `
   .tone-info { --tone: var(--ds-info); --tone-soft: var(--ds-info-soft); }
   .tone-success { --tone: var(--ds-success); --tone-soft: var(--ds-success-soft); }
@@ -30,7 +32,7 @@ const TONES = `
       <strong class="value">{{ shown() }}</strong>
       @if (hint()) { <span class="hint">{{ hint() }}</span> }
     </div>`,
-  styles: [TONES, `
+  styles: [TONES + `
     :host { display: block; min-width: 0; }
     .stat { display: grid; gap: 4px; height: 100%; padding: 16px 18px; border-radius: 16px; background: var(--tone-soft); color: var(--ds-text);
       transition: transform .2s ease, box-shadow .2s ease; }
@@ -82,7 +84,7 @@ export class AdminStatComponent {
         } @empty { <p class="none">Henüz veri yok.</p> }
       </div>
     </figure>`,
-  styles: [TONES, `
+  styles: [TONES + `
     :host { display: block; min-width: 0; }
     .bars { margin: 0; }
     figcaption { margin: 0 0 .5rem; color: var(--ds-text); font-size: .875rem; font-weight: 700; }
@@ -135,7 +137,7 @@ export class AdminBarsComponent {
         <div class="axis" aria-hidden="true"><span>{{ s.first }}</span><span>{{ s.lastLabel }}</span></div>
       } @else { <p class="none">Henüz veri yok.</p> }
     </figure>`,
-  styles: [TONES, `
+  styles: [TONES + `
     :host { display: block; min-width: 0; }
     .trend { position: relative; margin: 0; }
     figcaption { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 .5rem; color: var(--ds-text); font-size: .875rem; font-weight: 700; }
@@ -192,7 +194,7 @@ export class AdminTrendComponent {
         </ul>
       </div>
     </figure>`,
-  styles: [TONES, `
+  styles: [TONES + `
     :host { display: block; min-width: 0; }
     .donut { margin: 0; }
     figcaption { margin: 0 0 .5rem; color: var(--ds-text); font-size: .875rem; font-weight: 700; }
@@ -232,7 +234,7 @@ export class AdminRingComponent {
 @Component({
   selector: 'admin-meter', standalone: true,
   template: `<span [class]="'meter tone-' + tone()" role="img" [attr.aria-label]="label() || (value() + ' / ' + max())"><i [style.width.%]="share()"></i></span>`,
-  styles: [TONES, `
+  styles: [TONES + `
     :host { display: block; min-width: 3rem; }
     .meter { display: block; height: 8px; border-radius: 999px; background: var(--tone-soft); overflow: hidden; }
     i { display: block; height: 100%; border-radius: inherit; background: var(--tone); transform-origin: left; animation: admin-meter-fill .8s cubic-bezier(.2, .8, .2, 1) both; }
