@@ -879,6 +879,9 @@ test('institution panel: student filters stay in the address, a year-long series
     // Calendar: right-click an empty hour, add a lesson series that runs a year, see the clash, skip it and save.
     await page.getByRole('link', { name: 'Takvim' }).click();
     await page.getByRole('heading', { name: 'Takvim' }).waitFor();
+    // 22.11.2026: on a Sunday after 10.00 every 10.00 of the current week is a past hour ("geçmiş saat"); the next week
+    // always has free future hours, so the test no longer depends on the day it runs.
+    await page.getByRole('button', { name: 'Sonraki hafta' }).click();
     await page.getByRole('button', { name: /10\.00, ders ekle$/ }).first().click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Tekrarlayan ders ekle' }).click();
     const dialog = page.getByRole('dialog');
