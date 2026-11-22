@@ -33,7 +33,7 @@ public sealed class ExamTypesKm1Tests
     public void EveryOabtFieldHasFiftyQuestionsAndTheQuarterRule(string code, string name)
     {
         var profile = PracticeExamRules.Profiles.Single(x => x.Code == code);
-        Assert.Equal($"ÖABT · {name}", profile.Name);
+        Assert.Equal($"ÖABT, {name}", profile.Name);
         Assert.Equal(50, profile.Sections.Sum(x => x.QuestionCount));
         Assert.Equal(4, profile.WrongAnswerDivisor);
         Assert.Equal(ExamType.AGS, PracticeExamRules.ExamTypeFor(code));
@@ -44,10 +44,10 @@ public sealed class ExamTypesKm1Tests
         Assert.Equal(17, PracticeExamRules.Profiles.Count(x => x.Code.StartsWith("OABT_", StringComparison.Ordinal)));
 
     [Theory]
-    [InlineData("YDS_EN", "YDS · İngilizce", ExamType.YDS)]
-    [InlineData("YOKDIL_FEN", "YÖKDİL · Fen Bilimleri · İngilizce", ExamType.YOKDIL)]
-    [InlineData("YOKDIL_SAG", "YÖKDİL · Sağlık Bilimleri · İngilizce", ExamType.YOKDIL)]
-    [InlineData("YOKDIL_SOS", "YÖKDİL · Sosyal Bilimler · İngilizce", ExamType.YOKDIL)]
+    [InlineData("YDS_EN", "YDS, İngilizce", ExamType.YDS)]
+    [InlineData("YOKDIL_FEN", "YÖKDİL, Fen Bilimleri, İngilizce", ExamType.YOKDIL)]
+    [InlineData("YOKDIL_SAG", "YÖKDİL, Sağlık Bilimleri, İngilizce", ExamType.YOKDIL)]
+    [InlineData("YOKDIL_SOS", "YÖKDİL, Sosyal Bilimler, İngilizce", ExamType.YOKDIL)]
     public void LanguageExamsHaveEightyQuestionsAndNoPenalty(string code, string name, ExamType type)
     {
         var profile = PracticeExamRules.Profiles.Single(x => x.Code == code);

@@ -122,7 +122,7 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await teacherReport.getByRole('checkbox', { name: /Önceki haftayla karşılaştır/ }).check();
   await teacherReport.getByRole('button', { name: 'Raporu göster' }).click();
   await expect(teacherReport.getByText(`${initialActualMinutes + 40} dakika`, { exact: true })).toBeVisible();
-  await expect(teacherReport.getByText(new RegExp(`Kaydedilen soru: ${initialActualQuestions + 24} ·`))).toBeVisible();
+  await expect(teacherReport.getByText(new RegExp(`Kaydedilen soru: ${initialActualQuestions + 24},`))).toBeVisible();
   await expect(teacherReport.getByText('Haftalar arası çalışma karşılaştırması', { exact: true })).toBeVisible();
   await teacherPage.getByTestId('open-session-brief').click();
   await expect(teacherEditor).toHaveCount(0);

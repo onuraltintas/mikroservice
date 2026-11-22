@@ -49,7 +49,7 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
         try
         {
             await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.TransferSubmitted, null, null, "Individual",
-                "Ada <b>Veli</b> · EFT-1"));
+                "Ada <b>Veli</b>, EFT-1"));
             await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.InstitutionExpired, null, "kurum@example.test", "Institution"));
             await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 3);
 
@@ -187,7 +187,7 @@ public sealed class CoachingSubscriptionNoticeConsumerTests
         var harness = provider.GetRequiredService<ITestHarness>();
         try
         {
-            await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.TransferSubmitted, null, null, "Individual", "Ada · EFT-1"));
+            await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.TransferSubmitted, null, null, "Individual", "Ada, EFT-1"));
             (await harness.Consumed.Any<CoachingSubscriptionNoticeV1>(x => x.Exception is null)).Should().BeTrue();
             mail.Messages.Should().BeEmpty(); dispatcher.Calls.Should().BeEmpty();
         }

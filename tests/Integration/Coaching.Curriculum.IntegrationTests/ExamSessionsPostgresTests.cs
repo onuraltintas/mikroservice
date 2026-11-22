@@ -160,7 +160,7 @@ public sealed class ExamSessionsPostgresTests
 
         Assert.Equal(new StudentTodayExam("YDS", new(2027, 3, 28), 146, "Catalog"), await Exam());
         context.SetTargetExamSession(yds.Sessions[1].Id); pg.Db.Update(context); await pg.Db.SaveChangesAsync();
-        Assert.Equal(new StudentTodayExam("YDS · 2027/2", new(2027, 11, 21), 384, "Session"), await Exam());
+        Assert.Equal(new StudentTodayExam("YDS, 2027/2", new(2027, 11, 21), 384, "Session"), await Exam());
         context.SetTargetExamDate(new(2027, 5, 1), new(2026, 11, 2)); pg.Db.Update(context); await pg.Db.SaveChangesAsync();
         Assert.Equal(new StudentTodayExam("Sınavın", new(2027, 5, 1), 180, "Student"), await Exam());
 

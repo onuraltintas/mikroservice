@@ -330,7 +330,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         await Write(kind,id,r.Fingerprint,r.Reason,"CurriculumDelete",async () =>
         {
             var entity = await Load(kind,id,ct); var doc = await Describe(entity,ct);
-            if (!doc.CanDelete) throw new BusinessRuleException("Catalog.InUse","Kayıt kullanımda; silinemez. " + string.Join(" · ",doc.Blockers));
+            if (!doc.CanDelete) throw new BusinessRuleException("Catalog.InUse","Kayıt kullanımda; silinemez. " + string.Join("; ",doc.Blockers));
             // KM7: rejected links stay only for audit; they go with the topic.
             if (entity is StudyCatalogTopic rejectedOwner)
                 db.RemoveRange(await db.Set<StudyCatalogTopicOutcome>().Where(x => x.TopicId == rejectedOwner.Id && x.IsRejected).ToArrayAsync(ct));
@@ -513,9 +513,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         var entity = await Load(kind,id,ct);
         return entity switch
         {
-            // KM7: no "YDS · YDS" when the exam's name is its code.
-            StudyCatalogExam e => string.Equals(e.Name.Trim(),e.Code,StringComparison.OrdinalIgnoreCase) ? e.Name : e.Name + " · " + e.Code,
-            OfficialCurriculumEdition p => p.SubjectName + " · " + p.Code,
+            // KM7: no "YDS, YDS" when the exam's name is its code.
+            StudyCatalogExam e => string.Equals(e.Name.Trim(),e.Code,StringComparison.OrdinalIgnoreCase) ? e.Name : e.Name + ", " + e.Code,
+            OfficialCurriculumEdition p => p.SubjectName + ", " + p.Code,
             OfficialCurriculumTopic t => await Path("programs",t.EditionId,ct) + " / " + t.Name,
             StudyCatalogLesson l => LessonLabel(l),
             StudyCatalogUnit u => await Path("lessons",u.LessonId,ct) + " / " + u.Name,
@@ -524,7 +524,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         };
     }
     private static string LessonLabel(StudyCatalogLesson l)
-        => l.Name + (l.GradeNumber.HasValue ? $" · {l.GradeNumber}. sınıf" : "") + (l.ExamCode is null ? "" : " · " + l.ExamCode);
+        => l.Name + (l.GradeNumber.HasValue ? $", {l.GradeNumber}. sınıf" : "") + (l.ExamCode is null ? "" : ", " + l.ExamCode);
     private async Task<CatalogUsage> MemoryUsage(CatalogKind kind,Guid id,CancellationToken ct)
     {
         var catalog = kind switch

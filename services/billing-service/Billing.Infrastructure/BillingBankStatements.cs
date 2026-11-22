@@ -258,7 +258,7 @@ public sealed class BillingBankStatements(BillingDbContext db, BillingOrders ord
                                join account in db.Accounts.AsNoTracking() on order.AccountId equals account.Id
                                where orderIds.Contains(order.Id)
                                select new { order.Id, account.DisplayName, order.PlanName, order.PaymentCode })
-            .ToDictionaryAsync(item => item.Id, item => $"{item.DisplayName} · {item.PlanName} · {item.PaymentCode}", cancellationToken);
+            .ToDictionaryAsync(item => item.Id, item => $"{item.DisplayName}, {item.PlanName}, {item.PaymentCode}", cancellationToken);
         return lines.Select(item => new BankTransactionView(item.Id, item.BankAccountId, names.GetValueOrDefault(item.BankAccountId, "—"), item.BookedAt,
             item.Amount, item.Description, item.Sender, item.PaymentCode, item.Status, item.OrderId,
             item.OrderId is { } orderId ? summaries.GetValueOrDefault(orderId) : null, item.Note)).ToArray();

@@ -389,7 +389,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             {
                 var slice=session[0];var sessionMinutes=session.Sum(x=>x.Minutes);
                 int? sessionQuestions=session.Any(x=>x.PlannedQuestions.HasValue)?session.Sum(x=>x.PlannedQuestions??0):null;
-                var title=slice.Kind=="Spaced"?"Tekrar · "+slice.Outcome.TopicName:slice.Outcome.TopicName;
+                var title=slice.Kind=="Spaced"?"Tekrar: "+slice.Outcome.TopicName:slice.Outcome.TopicName;
                 var task=StudyPlanTask.Create(revision,slice.Date,title.Length>200?title[..200]:title,sessionMinutes,slice.Outcome.TopicId,plannedQuestions:sessionQuestions);
                 task.SetWeeklyPlacement(slice.LessonId,slice.LessonName,slice.StartMinute);if(v2)task.SetPlanDecision(slice.Kind,slice.Reason);tasks.Add(task);
                 // A spaced review revisits finished curriculum; it must not count as new outcome coverage.

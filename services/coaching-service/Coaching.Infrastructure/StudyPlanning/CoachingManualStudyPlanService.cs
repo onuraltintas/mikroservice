@@ -197,7 +197,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 throw new BusinessRuleException("Authorization.Forbidden", "Öğretmen planını öğretmenin onaylamalı.");
             foreach (var slot in preview.Slots)
             {
-                var title = "Tekrar · " + slot.TopicName;
+                var title = "Tekrar: " + slot.TopicName;
                 var task = StudyPlanTask.Create(revision, slot.Date, title.Length > 200 ? title[..200] : title,
                     slot.Minutes, slot.TopicId, adviceKey: slot.EvidenceKey);
                 task.SetWeeklyPlacement(slot.LessonId, slot.LessonName, slot.StartMinute);

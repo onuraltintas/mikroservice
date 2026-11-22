@@ -133,7 +133,7 @@ public sealed class CoachingUniversityProgramAdminService(CoachingDbContext db, 
                 var deleted = db.Entry(program).State == EntityState.Deleted;
                 await db.SaveChangesAsync(ct);
                 var after = deleted ? null : (await Document(program, ct)).Fingerprint;
-                var label = $"{program.UniversityName} · {program.Name}";
+                var label = $"{program.UniversityName}, {program.Name}";
                 db.AdminAuditRecords.Add(new AdminAuditRecord(Guid.NewGuid(), DateTimeOffset.UtcNow, "Coaching", user.UserId!.Value.ToString(), "SystemAdmin", null,
                     "COMMAND", "/api/coaching-admin/catalog/university-programs", 200, Guid.NewGuid().ToString(), null, null, action, "UniversityProgram", program.Id.ToString(),
                     JsonSerializer.Serialize(new { reason = reason.Trim(), before, after, name = label[..Math.Min(160, label.Length)],

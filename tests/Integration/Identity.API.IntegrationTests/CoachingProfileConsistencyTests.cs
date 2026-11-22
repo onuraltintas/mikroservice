@@ -126,11 +126,11 @@ public sealed class CoachingProfileConsistencyTests
         (same.RemovedTargets.Count, same.TeacherGoalMismatch, same.DiplomaGradeRemoved).Should().Be((0, false, (decimal?)null));
 
         var field = await s.Settings.PreviewAsync(new(LearningPurpose.Yks, "EA", null), default);
-        field.RemovedTargets.Should().Equal("Ankara Üniversitesi · Bilgisayar Mühendisliği", "AYT · Sayısal net hedefin (60,5)");
+        field.RemovedTargets.Should().Equal("Ankara Üniversitesi, Bilgisayar Mühendisliği", "AYT, Sayısal net hedefin (60,5)");
         field.DiplomaGradeRemoved.Should().BeNull("the diploma grade stays with YKS");
 
         var exam = await s.Settings.PreviewAsync(new(LearningPurpose.Yds, null, "English"), default);
-        exam.RemovedTargets.Should().BeEquivalentTo(["Ankara Üniversitesi · Bilgisayar Mühendisliği", "TYT net hedefin (90)", "AYT · Sayısal net hedefin (60,5)"]);
+        exam.RemovedTargets.Should().BeEquivalentTo(["Ankara Üniversitesi, Bilgisayar Mühendisliği", "TYT net hedefin (90)", "AYT, Sayısal net hedefin (60,5)"]);
         exam.DiplomaGradeRemoved.Should().Be(85m);
 
         // Asking saves nothing; saving then removes exactly what was announced.
@@ -172,7 +172,7 @@ public sealed class CoachingProfileConsistencyTests
             .Should().Be(new StudentEducationImpact(false, null, 85m, null), "the diploma grade is asked from 11th grade on");
         var eighth = await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.Student, 8, default);
         (eighth.ExamNoLongerFits, eighth.Exam, eighth.DiplomaGradeRemoved, eighth.Target)
-            .Should().Be((true, "YKS", (decimal?)85m, "Ankara Üniversitesi · Bilgisayar Mühendisliği"));
+            .Should().Be((true, "YKS", (decimal?)85m, "Ankara Üniversitesi, Bilgisayar Mühendisliği"));
         // G1 (07.11.2026): a university graduate no longer takes YKS (and so has no diploma grade question).
         var graduate = await s.Store.PreviewEducationAsync(s.Student, CoachingEducationStatus.UniversityGraduate, null, default);
         (graduate.ExamNoLongerFits, graduate.Exam, graduate.DiplomaGradeRemoved).Should().Be((true, "YKS", (decimal?)85m));

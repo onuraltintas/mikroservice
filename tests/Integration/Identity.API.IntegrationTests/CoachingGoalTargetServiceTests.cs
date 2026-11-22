@@ -98,7 +98,8 @@ public sealed class CoachingGoalTargetServiceTests(PostgresFixture postgres)
             var switched = await service.ReplaceAsync(goal.Id, new(linked.Version, program.Id, null));
             Assert.Null(switched.TargetSchoolId);
             Assert.Equal(program.Id, switched.TargetUniversityProgramId);
-            Assert.Equal("University — Program", switched.CatalogTarget!.Name);
+            Assert.Equal("University, Program", switched.CatalogTarget!.Name);
+            Assert.Equal("Bachelor, SAY", switched.CatalogTarget.Detail); // no empty faculty between commas
             db.ChangeTracker.Clear();
             var cleared = await service.ReplaceAsync(goal.Id, new(switched.Version, null, null));
             Assert.Null(cleared.TargetSchoolId);

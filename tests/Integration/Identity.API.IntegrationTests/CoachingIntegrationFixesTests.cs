@@ -125,7 +125,7 @@ public sealed class CoachingIntegrationFixesTests
         {
             await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.Expiring, teacher, "ogretmen@example.test", "Teacher"));
             await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.InstitutionExpired, null, "kurum@example.test", "Institution"));
-            await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.TransferSubmitted, null, null, "Individual", "Ada · EFT-1"));
+            await harness.Bus.Publish(Notice(CoachingSubscriptionNoticeKinds.TransferSubmitted, null, null, "Individual", "Ada, EFT-1"));
             await TestHarnessTimeouts.UntilAsync(() => mail.Messages.Count >= 4);
 
             mail.Messages.Single(x => x.Recipient == "ogretmen@example.test").Body

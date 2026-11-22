@@ -278,7 +278,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
                 var own = request.Scores?.FirstOrDefault()?.Score;
                 if (program.MinimumScore is null && (own is not { } given || given <= 0 || given > max || decimal.Round(given, 2) != given))
                     throw new OnboardingFieldException("ownScore", $"Bu bölümün taban puanı yok. Hedef puanını yaz: 0'dan büyük, en çok {max:0}.");
-                title = $"{program.UniversityName} · {program.Name}";
+                title = $"{program.UniversityName}, {program.Name}";
                 nets = new[] { "TYT", YksScoreTypes.AdvancedNetExam(program.ScoreType) }.Distinct().ToArray();
                 apply = target =>
                 {
@@ -703,7 +703,7 @@ public sealed class CoachingStudentOnboardingService(CoachingDbContext db, ICoac
                 x.City + " / " + x.District, x.MinimumScore, x.ScoreYear, "LGS", Array.Empty<OnboardingScore>(), canEdit)).SingleOrDefaultAsync(ct);
         if (goal.TargetUniversityProgramId is { } programId)
             return await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == programId).Select(x => new OnboardingTarget("program", x.Id,
-                x.UniversityName + " · " + x.Name, x.FacultyName, x.MinimumScore, x.ScoreYear, x.ScoreType, scores, canEdit)).SingleOrDefaultAsync(ct);
+                x.UniversityName + ", " + x.Name, x.FacultyName, x.MinimumScore, x.ScoreYear, x.ScoreType, scores, canEdit)).SingleOrDefaultAsync(ct);
         if (scores.Length > 0) return new("score", null, string.Join(" ve ", scores.Select(x => TypeName(x.ScoreType))), null, null, null, scores[0].ScoreType, scores, canEdit);
         // An older target score without a stored score type.
         return goal.TargetScore is { } legacy ? new("score", null, goal.Title, null, null, null, null, [new OnboardingScore("", legacy)], canEdit) : null;

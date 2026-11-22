@@ -130,7 +130,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         var now = Now;
         EnsurePending(order, now);
         if (order.PaidDeclaredAt is null)
-            await NoticeAsync(BillingNoticeKinds.PaymentDeclared, order, null, $"{await AccountNameAsync(order.AccountId, cancellationToken)} · {order.PaymentCode}", cancellationToken);
+            await NoticeAsync(BillingNoticeKinds.PaymentDeclared, order, null, $"{await AccountNameAsync(order.AccountId, cancellationToken)}, {order.PaymentCode}", cancellationToken);
         order.PaidDeclaredAt ??= now;
         order.PayerNote = string.IsNullOrEmpty(payerNote) ? order.PayerNote : payerNote;
         order.UpdatedAt = now;

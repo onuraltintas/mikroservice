@@ -105,7 +105,7 @@ public sealed record ScoreGoalEstimate(string ScoreType, string Name, string Gro
     /// (the minimum raw score rule, see NotComputedReason). Null when there is a score.
     /// </summary>
     public string? Reason { get; init; }
-    /// <summary>Names of the practice exams still missing for the score ("ÖABT · İlköğretim Matematik", "AYT · Sayısal").</summary>
+    /// <summary>Names of the practice exams still missing for the score ("ÖABT, İlköğretim Matematik", "AYT, Sayısal").</summary>
     public IReadOnlyList<string> MissingExams { get; init; } = [];
 }
 /// <summary>01.11.2026: a score type with a model and practice exams that ÖSYM does not compute, and the conditions that fail.</summary>
@@ -439,7 +439,7 @@ public sealed class CoachingScoreEstimateService(CoachingDbContext db, ICoaching
             return (scores.FirstOrDefault(x => x.ScoreType != "TYT") ?? scores.FirstOrDefault(), scores);
         }
         if (ScoreModelRules.Normalize(entry.ScoreType) is not { } scoreType) return (null, []);
-        var name = entry is TargetUniversityProgram program ? $"{program.UniversityName} · {program.Name}" : entry.Name;
+        var name = entry is TargetUniversityProgram program ? $"{program.UniversityName}, {program.Name}" : entry.Name;
         var kind = entry is TargetSchool ? "school" : "program";
         // Paket C (#3): a programme without a published taban uses the target score the student entered for it.
         var ownTaban = entry.MinimumScore is null ? own.FirstOrDefault(x => TargetScoreType(x.ScoreType) == scoreType)?.Score : null;

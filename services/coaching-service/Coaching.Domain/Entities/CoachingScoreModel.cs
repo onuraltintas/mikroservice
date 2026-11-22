@@ -28,9 +28,9 @@ public static class ScoreModelRules
         // candidate's ÖABT field with 50 %; Din Kültürü's ÖABT is scored as P2-16 (Din Kültürü ve Ahlak Bilgisi) and P2-17
         // (İHL Meslek Dersleri) with different sub-test weights. P3 (AGS + YDS) is not modelled.
         new("P1", "MEB-AGS P1", ["AGS"], 100, false, MebAgs, false),
-        .. OabtFields.Select(field => new ScoreTypeDefinition($"P2_{field.Code}", $"MEB-AGS P2 · {field.Name}", ["AGS", $"OABT_{field.Code}"], 100, false, MebAgs, false)),
-        new("P2_16", "MEB-AGS P2-16 · Din Kültürü ve Ahlak Bilgisi", ["AGS", "OABT_DIN"], 100, false, MebAgs, false),
-        new("P2_17", "MEB-AGS P2-17 · İHL Meslek Dersleri", ["AGS", "OABT_DIN"], 100, false, MebAgs, false)
+        .. OabtFields.Select(field => new ScoreTypeDefinition($"P2_{field.Code}", $"MEB-AGS P2, {field.Name}", ["AGS", $"OABT_{field.Code}"], 100, false, MebAgs, false)),
+        new("P2_16", "MEB-AGS P2-16, Din Kültürü ve Ahlak Bilgisi", ["AGS", "OABT_DIN"], 100, false, MebAgs, false),
+        new("P2_17", "MEB-AGS P2-17, İHL Meslek Dersleri", ["AGS", "OABT_DIN"], 100, false, MebAgs, false)
     ]);
 
     public const string MebAgs = "MEB-AGS";
