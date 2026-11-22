@@ -1909,7 +1909,7 @@
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261126090000_StudentResources.cs": "2011fd38fb3aba017b53ee15301fe89658ed8a1ec2f07b32647641e671e8f0d3",
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudentResourceService.cs": "a2439d72e310729980383ed29b864387cb339cddbfe6217a6882cd375a20fd42",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.Designer.cs": "0591fe9727681a1abfe1501e48bb5456b0c0efcfbadb705a330ec7a9441dcc1d",
-    "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.cs": "081ad89d423674d3eb21a6619c4293989613f0ec793b6b343d503a51f60a6f47"
+    "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.cs": "cae04e73bc73ea1eba26ca5d069d40e59e613ab498a5e4f6539131be044ac77c"
   },
   "routes": {
     "identity-platform-legal-pages-admin-route": {

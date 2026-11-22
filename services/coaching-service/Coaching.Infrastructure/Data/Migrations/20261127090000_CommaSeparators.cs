@@ -8,7 +8,8 @@ namespace Coaching.Infrastructure.Data.Migrations
     /// 22.11.2026 (design rule: no "·" lines in what people read): the texts the service wrote with " · " get the new separators.
     /// Only generated texts change: the spaced-review task titles ("Tekrar · Konu" → "Tekrar: Konu"), the plan engine's reasons
     /// (one sentence each, "a · b" → "a. b") and the titles of goals made from a university programme ("Üniversite · Bölüm" →
-    /// "Üniversite, Bölüm"). Catalog records (exam names of the content packs) and accepted legal documents are left as they are.
+    /// "Üniversite, Bölüm"). With the user's approval (22.11.2026, 18:07) the catalog exam names written by the content packs follow too
+    /// ("ÖABT · Kimya" → "ÖABT, Kimya"; the KM3 pack now writes them so). Accepted legal documents are left as they are.
     /// </summary>
     public partial class CommaSeparators : Migration
     {
@@ -19,6 +20,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                 UPDATE coaching.study_plan_tasks SET "Title" = 'Tekrar: ' || substr("Title", 10) WHERE "Title" LIKE 'Tekrar · %';
                 UPDATE coaching.study_plan_tasks SET "PlanReason" = replace("PlanReason", ' · ', '. ') WHERE "PlanReason" LIKE '% · %';
                 UPDATE coaching.academic_goals SET title = replace(title, ' · ', ', ') WHERE target_university_program_id IS NOT NULL AND title LIKE '% · %';
+                UPDATE coaching.study_catalog_exams SET "Name" = replace("Name", ' · ', ', ') WHERE "Name" LIKE '% · %';
                 """);
         }
 

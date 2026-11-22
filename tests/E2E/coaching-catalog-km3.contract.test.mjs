@@ -153,8 +153,9 @@ test('outcome names put the parenthetical after "sorular" (review O3), as produc
 
 test('the ÖABT Din Kültürü and Kimya field exams carry the names production uses (review D1, D2)', () => {
   const sql = read('apply.sql');
-  assert.match(sql, /'OABT_DIN', 'ÖABT · Din Kültürü ve Ahlak Bilgisi \/ İmam-Hatip Lisesi Meslek Dersleri', \d+\)/);
-  assert.match(sql, /'OABT_KIM', 'ÖABT · Kimya \/ Kimya Teknolojisi', \d+\)/);
+  // 22.11.2026 (user approval): "ÖABT, <alan>" — the separator follows the design rule; migration CommaSeparators renames live rows.
+  assert.match(sql, /'OABT_DIN', 'ÖABT, Din Kültürü ve Ahlak Bilgisi \/ İmam-Hatip Lisesi Meslek Dersleri', \d+\)/);
+  assert.match(sql, /'OABT_KIM', 'ÖABT, Kimya \/ Kimya Teknolojisi', \d+\)/);
 });
 
 test('editions get the real ÖSYM PDF hashes and a rerun accepts what production already holds', () => {

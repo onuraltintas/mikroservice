@@ -20,7 +20,8 @@ public sealed class CommaSeparatorsMigrationPostgresTests
         var program = TargetUniversityProgram.Create("p-test", "Ankara Üniversitesi", "Hukuk", null, "Bachelor", "EA"); program.SetActive(true);
         var programGoal = AcademicGoal.Create(plan.StudentId, "Ankara Üniversitesi · Hukuk", GoalCategory.ExamPreparation); programGoal.SetCatalogTarget(program.Id, null);
         var ownGoal = AcademicGoal.Create(plan.StudentId, "Benim · hedefim", GoalCategory.ExamPreparation);
-        f.Db.AddRange(review, own, program, programGoal, ownGoal); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
+        var exam = StudyCatalogExam.Create("OABT_TEST", "ÖABT · TEST Kimya / Kimya Teknolojisi");
+        f.Db.AddRange(review, own, program, programGoal, ownGoal, exam); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
 
         var sql = Assert.Single(new CommaSeparators().UpOperations.OfType<SqlOperation>()).Sql;
         await f.Db.Database.ExecuteSqlRawAsync(sql);
@@ -33,6 +34,7 @@ public sealed class CommaSeparatorsMigrationPostgresTests
         var goals = await f.Db.AcademicGoals.AsNoTracking().ToDictionaryAsync(x => x.Id);
         Assert.Equal("Ankara Üniversitesi, Hukuk", goals[programGoal.Id].Title);
         Assert.Equal("Benim · hedefim", goals[ownGoal.Id].Title);
+        Assert.Equal("ÖABT, TEST Kimya / Kimya Teknolojisi", (await f.Db.Set<StudyCatalogExam>().AsNoTracking().SingleAsync(x => x.Code == "OABT_TEST")).Name);
         Assert.Empty(new CommaSeparators().DownOperations);
     }
 }

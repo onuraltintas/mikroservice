@@ -39,7 +39,7 @@ happen in the admin panel afterwards (see below).
 - ÖABT lessons: `OABT_TUR`, `OABT_IMAT`, `OABT_FEN`, `OABT_SOS`, `OABT_TDE`, `OABT_TAR`, `OABT_COG`, `OABT_MAT`, `OABT_FIZ`,
   `OABT_KIM`, `OABT_BIO`, `OABT_DIN`, `OABT_REH`, `OABT_SINIF`, `OABT_OKUL`, `OABT_BED`, `OABT_OZEL`. **Their `ExamCode` is the
   field code** (KM1 decision, 01.11.2026: the field marker the catalog lacked). `study_catalog_lessons.ExamCode` is a foreign
-  key to `study_catalog_exams`, so the pack adds these 17 codes as exams named `ÖABT · <alan>`, **passive**, and only when the
+  key to `study_catalog_exams`, so the pack adds these 17 codes as exams named `ÖABT, <alan>`, **passive**, and only when the
   code does not exist yet. KM1's setup service still lists lessons of `AGS` and `OABT`; the follow-up that filters ÖABT lessons
   by the student's field (`PrimaryScoreType`) must read these codes.
 - YDS: `YDS_EN` "YDS İngilizce" (`YDS`). YÖKDİL: `YOKDIL_FEN` "YÖKDİL Fen Bilimleri İngilizce", `YOKDIL_SAG` "YÖKDİL Sağlık
@@ -162,8 +162,8 @@ same values:
   "Erken Çocuklukta Güzel Sanatlar Eğitimi", "Erken Çocuklukta Müzik Eğitimi" (as in the official document).
 - Outcome names with a range detail read "…, 17–26. sorular (iki paragraf × 5)" instead of "…, 17–26 (iki paragraf × 5).
   sorular" (`YDS_EN.3.01`, `YDS_EN.6.01`, `YOKDIL_FEN|SAG|SOS.2.01` and `.7.01`).
-- Field exams: `OABT_DIN` "ÖABT · Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri", `OABT_KIM`
-  "ÖABT · Kimya / Kimya Teknolojisi" (`catalog.json` → `examName`; `field` stays the KM1 profile name).
+- Field exams: `OABT_DIN` "ÖABT, Din Kültürü ve Ahlak Bilgisi / İmam-Hatip Lisesi Meslek Dersleri", `OABT_KIM`
+  "ÖABT, Kimya / Kimya Teknolojisi" (`catalog.json` → `examName`; `field` stays the KM1 profile name).
 - Curriculum version `coaching-exam-prep-km3-2026` (published): name "AGS-ÖABT, YDS ve YÖKDİL hazırlık kataloğu", label
   `2026.11`, source "KM3 paketi (01.11.2026): ÖSYM konu dağılımları ve soru kitapçıkları; 01.11.2026'da incelenip
   yayımlandı." This rename is a server SQL step (code, years and source URL unchanged); the guard accepts the renamed values
@@ -225,6 +225,13 @@ is missing and keeps every activation and approval the team made; it never updat
 topic–outcome links; activate the exams (`AGS`, `OABT`, `YDS`, `YOKDIL` from KM1 and the `OABT_*` field exams); then publish
 the curriculum version `coaching-exam-prep-km3-2026`. Before approval, records can simply be left passive or permanently
 deleted in the panel; the pack will not bring deleted records back.
+
+## Field exam names (22.11.2026)
+
+The 17 field exams are named `ÖABT, <alan>` (the design rule has no "·" lines; approved by the product owner on 22.11.2026). The pack
+adds an exam only when its code is missing, so rows already in a database are renamed by the coaching migration
+`20261127090000_CommaSeparators`. The catalog.json change gives the pack a new hash; the hash of the previous build (0cccee94) is in
+`previousRelease.alsoAcceptedPackageSha256`, so a rerun over a database that holds it is still accepted.
 
 ## Tests
 
