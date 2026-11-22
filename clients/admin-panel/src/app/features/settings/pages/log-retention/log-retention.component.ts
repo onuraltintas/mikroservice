@@ -13,8 +13,8 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
     <div class="p-4 md:p-6 min-h-full">
         <!-- Header -->
         <div class="mb-6">
-            <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Log saklama ayarları</h1>
-            <p class="text-(--ui-text-muted) text-sm">Logların ne kadar süreyle saklanacağını yapılandırın.</p>
+            <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Kayıt saklama ayarları</h1>
+            <p class="text-(--ui-text-muted) text-sm">Kayıtların ne kadar süre saklanacağını ayarlayın.</p>
         </div>
 
         <!-- Seq Dashboard Link -->
@@ -94,7 +94,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                     
                     <div class="p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Saklama Süresi (Gün)</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Saklama süresi (gün)</label>
                             <div class="relative">
                                 <input type="number" [(ngModel)]="newPolicyDays" min="1" class="w-full pl-3 pr-10 py-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-sm outline-none focus:ring-2 focus:ring-(--ui-brand) text-(--ui-text) transition-all">
                                 <span class="absolute right-3 top-2 text-(--ui-text-muted) text-sm">Gün</span>
@@ -103,7 +103,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Log Seviyesi (Opsiyonel)</label>
+                            <label class="block text-sm font-medium text-(--ui-text) mb-1">Kayıt düzeyi (isteğe bağlı)</label>
                             <select [(ngModel)]="newPolicyLevel" class="w-full px-3 py-2 rounded-lg border border-(--ui-border) bg-(--ui-surface) text-sm outline-none focus:ring-2 focus:ring-(--ui-brand) text-(--ui-text) transition-all">
                                 <option [ngValue]="null">Tümü (Önerilir)</option>
                                 <option value="Information">Information (Bilgi)</option>
@@ -116,7 +116,7 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                         <div class="pt-2">
                             <button (click)="createPolicy()" [disabled]="creatingPolicy || !newPolicyDays" class="w-full px-4 py-2.5 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) disabled:opacity-50 text-sm font-medium transition-colors flex justify-center items-center gap-2">
                                 <span *ngIf="creatingPolicy" class="material-icons animate-spin text-sm">autorenew</span>
-                                {{ creatingPolicy ? 'Ekleniyor...' : 'Politikayı Ekle' }}
+                                {{ creatingPolicy ? 'Ekleniyor...' : 'Politikayı ekle' }}
                             </button>
                         </div>
                     </div>

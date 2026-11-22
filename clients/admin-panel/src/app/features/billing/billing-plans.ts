@@ -203,7 +203,7 @@ export class BillingPlansComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ products, plans }) => { this.products.set(products); this.plans.set(plans); },
-        error: () => this.error.set('Planlar yüklenemedi.')
+        error: () => this.error.set('Planlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 

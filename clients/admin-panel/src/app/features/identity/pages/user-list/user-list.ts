@@ -285,7 +285,7 @@ export class UserListComponent {
   async confirmUserEmail(userId: string) {
     const confirmed = await this.toaster.confirm(
       'Kullanıcının e-postasını manuel olarak doğrulamak istediğinize emin misiniz?',
-      { title: 'E-Postayı Doğrula', confirmText: 'Evet, doğrula' }
+      { title: 'E-postayı doğrula', confirmText: 'Evet, doğrula' }
     );
 
     if (confirmed) {
@@ -295,7 +295,7 @@ export class UserListComponent {
             u.userId === userId ? { ...u, emailConfirmed: true } : u
           ));
           this.openMenuId.set(null);
-          this.toaster.success('E-Posta başarıyla doğrulandı');
+          this.toaster.success('E-posta doğrulandı.');
         },
         error: (err) => {
           console.error('Email confirmation failed', err);
@@ -345,7 +345,7 @@ export class UserListComponent {
         this.userToEdit.set(profile);
         this.showEditModal.set(true);
       },
-      error: () => this.toaster.error('Kullanıcı profili yüklenemedi.')
+      error: () => this.toaster.error('Kullanıcı profili yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

@@ -75,7 +75,7 @@ type CatalogTab = 'schools' | 'programs';
         </section>
       }
       <section class="overflow-hidden rounded-xl border border-(--ui-border) bg-(--ui-surface)" [attr.aria-busy]="loading()" aria-label="LGS okulları">
-        <div class="border-b px-5 py-3 text-sm" aria-live="polite">{{ totalCount() }} okul · Sayfa {{ page() }} / {{ totalPages() }}</div>
+        <div class="border-b px-5 py-3 text-sm" aria-live="polite">{{ totalCount() }} okul, sayfa {{ page() }} / {{ totalPages() }}</div>
         @if (loading()) { <p role="status" class="p-6">Katalog yükleniyor…</p> }
         @else if (!error() && items().length === 0) { <p class="p-6 text-(--ui-text-muted)">Kayıt bulunamadı. Filtrelerinizi değiştirebilirsiniz.</p> }
         @else if (!error()) {
@@ -84,8 +84,8 @@ type CatalogTab = 'schools' | 'programs';
             <tbody>@for (row of items(); track row.id) {
               <tr class="border-t">
                 <td class="p-4 font-medium">{{ row.name }}</td>
-                <td class="p-4">{{ row.city || '—' }} @if (row.district) {<span class="block text-(--ui-text-muted)">{{ row.district }} · {{ row.districtId ? 'Ortak dizinle eşleştirilmiş' : 'Konum eşleştirilmemiş' }}</span>}</td>
-                <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else {—}</td>
+                <td class="p-4">{{ row.city || '—' }} @if (row.district) {<span class="block text-(--ui-text-muted)">{{ row.district }}, {{ row.districtId ? 'Ortak dizinle eşleştirilmiş' : 'Konum eşleştirilmemiş' }}</span>}</td>
+                <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }}, {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else {—}</td>
                 <td class="p-4">{{ sourceName(row.source) }}</td>
                 <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}@if (canDelete()) {<button type="button" [attr.aria-label]="row.name + ' düzenle'" (click)="openEditor(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Düzenle / yayın durumu</button>}<button type="button" [attr.aria-label]="row.name + ' kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>

@@ -39,7 +39,7 @@ import { AUTH_VOICE } from './auth-voice';
                 (change)="selectedInstitutionId = $any($event.target).value" [disabled]="loading">
                 <option value="" disabled>{{ copy.chooseInstitution }}</option>
                 @for (institution of institutions; track institution.id) {
-                  <option [value]="institution.id">{{ institution.name }} · {{ institution.role === 'Owner' ? 'Kurum sahibi' : institution.role === 'Admin' ? 'Yönetici' : 'Yetkili' }}</option>
+                  <option [value]="institution.id">{{ institution.name }}, {{ institution.role === 'Owner' ? 'Kurum sahibi' : institution.role === 'Admin' ? 'Yönetici' : 'Yetkili' }}</option>
                 }
               </select>
               <mat-hint>{{ copy.institutionHint }}</mat-hint>

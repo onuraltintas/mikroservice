@@ -1,2 +1,8 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Yönetim paneli: renk sınıfı verilmemiş kenarlıklar yazı renginde (siyah) çıkmasın.
+   Taban katmanda durduğu için border-(--…) gibi renk sınıfları her zaman önce gelir. */
+@layer base {
+  .admin-shell main *, .admin-shell main ::before, .admin-shell main ::after { border-color: var(--ui-border); }
+}

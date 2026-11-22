@@ -58,7 +58,7 @@ type ReviewKind = 'approve' | 'reject' | 'reverse' | 'invoice' | 'removeInvoice'
               @for (row of orders(); track row.order.id) {
                 <tr [attr.data-testid]="'order-' + row.order.paymentCode">
                   <td><strong>{{ row.accountName }}</strong><div class="muted">{{ row.accountEmail || '—' }}</div></td>
-                  <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }} · {{ row.order.durationDays }} gün</div></td>
+                  <td>{{ row.order.planName }}<div class="muted">{{ productNames(row) }}, {{ row.order.durationDays }} gün</div></td>
                   <td class="amount">{{ row.order.amount | number:'1.2-2' }} {{ row.order.currency | currencyName }}
                     @if (row.order.vatAmount) { <div class="muted">Net {{ row.order.amount - row.order.vatAmount | number:'1.2-2' }} + KDV (%{{ row.order.vatRate }}) {{ row.order.vatAmount | number:'1.2-2' }}</div> }
                     @if (row.order.couponCode) { <div class="muted">Kupon {{ row.order.couponCode }}: −{{ row.order.discount | number:'1.2-2' }}</div> }</td>
@@ -166,7 +166,7 @@ export class BillingOrdersComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ products, orders }) => { this.products.set(products); this.orders.set(orders); },
-        error: () => this.error.set('Siparişler yüklenemedi.')
+        error: () => this.error.set('Siparişler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 
@@ -176,7 +176,7 @@ export class BillingOrdersComponent implements OnInit {
     this.review.set(null);
     this.billing.getOrders(this.status(), this.product()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: orders => this.orders.set(orders),
-      error: () => this.error.set('Siparişler yüklenemedi.')
+      error: () => this.error.set('Siparişler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

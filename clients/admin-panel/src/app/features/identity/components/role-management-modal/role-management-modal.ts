@@ -152,7 +152,7 @@ export class RoleManagementModalComponent implements OnInit {
     loadRoles() {
         this.identityService.getRoles().subscribe({
             next: (roles) => this.availableRoles.set(roles),
-            error: (err) => this.toaster.error(getAdminErrorMessage(err, 'Roller yüklenemedi.'))
+            error: (err) => this.toaster.error(getAdminErrorMessage(err, 'Roller yüklenemedi. Sayfayı yenileyip yeniden deneyin.'))
         });
     }
 

@@ -54,10 +54,10 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
         <form class="grid gap-3 rounded-xl border border-(--ui-success-soft) bg-(--ui-success-soft) p-4 shadow-sm md:grid-cols-4" (ngSubmit)="assignAdmin()">
           <div class="md:col-span-4 font-semibold text-(--ui-text)">{{ institution.name }} kurumuna yönetici ata</div>
           <select class="rounded-lg border p-2" name="adminProduct" [(ngModel)]="adminDraft.product" (ngModelChange)="onAdminProductChange()" aria-label="Ürün seçin">@for (product of adminProducts; track product.value) { <option [ngValue]="product.value">{{ product.label }}</option> }</select>
-          <div class="relative md:col-span-2"><label class="sr-only" for="institution-admin-search">Kurum yöneticisi ara</label><input id="institution-admin-search" class="w-full rounded-lg border p-2" name="adminUserSearch" [(ngModel)]="adminUserSearch" (ngModelChange)="searchAdminCandidates($event)" placeholder="Yönetici adı veya e-postası ara" autocomplete="off" required>@if (adminCandidates().length > 0) {<div class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-(--ui-border) bg-(--ui-surface) shadow-lg" role="listbox" aria-label="Yönetici adayları">@for (candidate of adminCandidates(); track candidate.userId) {<button type="button" role="option" class="block w-full border-b px-3 py-2 text-left text-sm last:border-0 hover:bg-(--ui-surface-muted)" (click)="selectAdminCandidate(candidate)"><strong>{{ candidate.fullName }}</strong><span class="block text-xs text-(--ui-text-muted)">{{ candidate.email }} · {{ candidate.roles.join(', ') }}</span></button>}</div>}</div>
+          <div class="relative md:col-span-2"><label class="sr-only" for="institution-admin-search">Kurum yöneticisi ara</label><input id="institution-admin-search" class="w-full rounded-lg border p-2" name="adminUserSearch" [(ngModel)]="adminUserSearch" (ngModelChange)="searchAdminCandidates($event)" placeholder="Yönetici adı veya e-postası ara" autocomplete="off" required>@if (adminCandidates().length > 0) {<div class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-(--ui-border) bg-(--ui-surface) shadow-lg" role="listbox" aria-label="Yönetici adayları">@for (candidate of adminCandidates(); track candidate.userId) {<button type="button" role="option" class="block w-full border-b px-3 py-2 text-left text-sm last:border-0 hover:bg-(--ui-surface-muted)" (click)="selectAdminCandidate(candidate)"><strong>{{ candidate.fullName }}</strong><span class="block text-xs text-(--ui-text-muted)">{{ candidate.email }}, {{ candidate.roles.join(', ') }}</span></button>}</div>}</div>
           <select class="rounded-lg border p-2" name="adminRole" [(ngModel)]="adminDraft.role">@for (role of adminRoles; track role.value) { <option [ngValue]="role.value">{{ role.label }}</option> }</select>
           <div class="flex gap-2"><button class="rounded-lg bg-(--ui-success-soft) px-4 py-2 text-(--ui-success)" [disabled]="saving()">Ata</button><button type="button" class="rounded-lg border px-4 py-2" (click)="adminInstitution.set(null)">Vazgeç</button></div>
-          <div class="md:col-span-4 rounded-lg border bg-(--ui-surface) p-3"><div class="mb-2 text-sm font-semibold">Mevcut yöneticiler</div>@for (admin of admins(); track admin.userId) { <div class="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0"><span>{{ admin.firstName }} {{ admin.lastName }} · {{ admin.email }} · {{ adminRoleName(admin.role) }}</span><button type="button" class="rounded border px-2 py-1" (click)="toggleAdmin(admin)">{{ admin.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button></div> } @empty { <span class="text-sm text-(--ui-text-muted)">Henüz yönetici atanmamış.</span> }</div>
+          <div class="md:col-span-4 rounded-lg border bg-(--ui-surface) p-3"><div class="mb-2 text-sm font-semibold">Mevcut yöneticiler</div>@for (admin of admins(); track admin.userId) { <div class="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0"><span>{{ admin.firstName }} {{ admin.lastName }}, {{ admin.email }}, {{ adminRoleName(admin.role) }}</span><button type="button" class="rounded border px-2 py-1" (click)="toggleAdmin(admin)">{{ admin.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button></div> } @empty { <span class="text-sm text-(--ui-text-muted)">Henüz yönetici atanmamış.</span> }</div>
         </form>
       }
 
@@ -74,12 +74,12 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
         <table class="min-w-full text-left text-sm"><thead class="border-b bg-(--ui-surface-muted) text-(--ui-text-muted)"><tr><th class="p-3">Kurum</th><th class="p-3">Tür</th><th class="p-3">Kullanım</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
           <tbody>
             @for (institution of institutions(); track institution.id) {
-<tr class="border-b last:border-0"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-(--ui-text-muted)">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div><div class="mt-1 flex items-center gap-2 text-xs text-(--ui-text-muted)"><span class="font-mono break-all" [attr.data-testid]="'institution-id-' + institution.id">{{ institution.id }}</span><button type="button" class="rounded border px-1.5 py-0.5" (click)="copyId(institution.id)">{{ copiedId() === institution.id ? 'Kopyalandı' : 'Kimliği kopyala' }}</button></div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }} öğrenci<br>{{ institution.teacherCount }} öğretmen</td><td class="p-3"><span [class]="institution.isActive ? 'text-(--ui-success)' : 'text-(--ui-text-muted)'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/students" [queryParams]="{ institutionId: institution.id }">Koçluk öğrencileri</a><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/teachers" [queryParams]="{ institutionId: institution.id }">Koçluk öğretmenleri</a><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
+<tr class="border-b last:border-0"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-(--ui-text-muted)">{{ institution.city || 'Şehir yok' }}, {{ institution.email || 'E-posta yok' }}</div><div class="mt-1 flex items-center gap-2 text-xs text-(--ui-text-muted)"><span class="font-mono break-all" [attr.data-testid]="'institution-id-' + institution.id">{{ institution.id }}</span><button type="button" class="rounded border px-1.5 py-0.5" (click)="copyId(institution.id)">{{ copiedId() === institution.id ? 'Kopyalandı' : 'Kimliği kopyala' }}</button></div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }} öğrenci<br>{{ institution.teacherCount }} öğretmen</td><td class="p-3"><span [class]="institution.isActive ? 'text-(--ui-success)' : 'text-(--ui-text-muted)'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/students" [queryParams]="{ institutionId: institution.id }">Koçluk öğrencileri</a><a class="rounded border px-3 py-1" routerLink="/dashboard/coaching/teachers" [queryParams]="{ institutionId: institution.id }">Koçluk öğretmenleri</a><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
             } @empty { <tr><td colspan="6" class="p-8 text-center text-(--ui-text-muted)">Kurum bulunamadı.</td></tr> }
           </tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between text-sm text-(--ui-text-muted)"><span>Toplam {{ totalCount() }} kurum · Sayfa {{ currentPage() }} / {{ totalPages() }}</span><div class="flex gap-2"><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() <= 1" (click)="changePage(currentPage() - 1)">Önceki</button><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() >= totalPages()" (click)="changePage(currentPage() + 1)">Sonraki</button></div></div>
+      <div class="flex items-center justify-between text-sm text-(--ui-text-muted)"><span>Toplam {{ totalCount() }} kurum, sayfa {{ currentPage() }} / {{ totalPages() }}</span><div class="flex gap-2"><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() <= 1" (click)="changePage(currentPage() - 1)">Önceki</button><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() >= totalPages()" (click)="changePage(currentPage() + 1)">Sonraki</button></div></div>
     </section>
   `
 })
@@ -128,7 +128,7 @@ export class InstitutionListComponent {
       this.load();
       this.locations.getProvinces().subscribe({
         next: provinces => this.provinces.set(provinces),
-        error: () => this.error.set('İl seçenekleri yüklenemedi.')
+        error: () => this.error.set('İl seçenekleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
     }
   }
@@ -137,7 +137,7 @@ export class InstitutionListComponent {
     this.loading.set(true); this.error.set(null);
     this.service.getAll(this.currentPage(), this.pageSize, this.search, this.activeFilter).subscribe({
       next: response => { this.institutions.set(response.items); this.totalCount.set(response.totalCount); this.loading.set(false); },
-      error: () => { this.error.set('Kurumlar yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Kurumlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -198,7 +198,7 @@ export class InstitutionListComponent {
     if (this.draft.provinceId) {
       this.locations.getDistricts(this.draft.provinceId).subscribe({
         next: districts => this.createDistricts.set(districts),
-        error: () => this.error.set('İlçe seçenekleri yüklenemedi.')
+        error: () => this.error.set('İlçe seçenekleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
     }
   }
@@ -212,7 +212,7 @@ export class InstitutionListComponent {
   private loadEditDistricts(provinceId: string) {
     this.locations.getDistricts(provinceId).subscribe({
       next: districts => this.editDistricts.set(districts),
-      error: () => this.error.set('İlçe seçenekleri yüklenemedi.')
+      error: () => this.error.set('İlçe seçenekleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -237,7 +237,7 @@ export class InstitutionListComponent {
   private loadInstitutionAdmins(institutionId: string) {
     this.service.getAdmins(institutionId, this.adminDraft.product).subscribe({
       next: admins => this.admins.set(admins),
-      error: () => this.error.set('Kurum yöneticileri yüklenemedi.')
+      error: () => this.error.set('Kurum yöneticileri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -252,7 +252,7 @@ export class InstitutionListComponent {
     this.identityService.getAllUsers(1, 20, term, undefined, true, this.adminDraft.product).subscribe({
       next: result => this.adminCandidates.set(result.items.filter(user =>
         user.roles.includes('InstitutionAdmin') || user.roles.includes('InstitutionOwner'))),
-      error: () => { this.adminCandidates.set([]); this.error.set('Yönetici adayları yüklenemedi.'); }
+      error: () => { this.adminCandidates.set([]); this.error.set('Yönetici adayları yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 

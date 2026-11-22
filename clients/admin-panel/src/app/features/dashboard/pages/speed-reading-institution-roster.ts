@@ -59,7 +59,7 @@ import {
                 <td class="p-3"><strong>{{ member.firstName }} {{ member.lastName }}</strong><span class="block text-xs text-(--ui-text-muted)">{{ member.email || 'E-posta yok' }}</span></td>
                 <td class="p-3">{{ member.isActive ? 'Aktif' : 'Pasif' }}</td>
                 <td class="p-3">
-                  @if (role === 1) { {{ member.gradeLevel ? member.gradeLevel + '. sınıf' : 'Sınıf belirtilmedi' }} · {{ member.teacherName || 'Öğretmen atanmamış' }} }
+                  @if (role === 1) { {{ member.gradeLevel ? member.gradeLevel + '. sınıf' : 'Sınıf belirtilmedi' }}, {{ member.teacherName || 'Öğretmen atanmamış' }} }
                   @else { {{ member.studentCount }} öğrenci }
                 </td>
                 <td class="p-3">
@@ -89,7 +89,7 @@ import {
         </table>
       </div>
       <div class="flex items-center justify-between text-sm text-(--ui-text-muted)">
-        <span>Toplam {{ totalCount() }} üye · Sayfa {{ page() }} / {{ totalPages() }}</span>
+        <span>Toplam {{ totalCount() }} üye, sayfa {{ page() }} / {{ totalPages() }}</span>
         <div class="flex gap-2"><button type="button" class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="page() <= 1 || loading()" (click)="changePage(page() - 1)">Önceki</button>
           <button type="button" class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="page() >= totalPages() || loading()" (click)="changePage(page() + 1)">Sonraki</button></div>
       </div>

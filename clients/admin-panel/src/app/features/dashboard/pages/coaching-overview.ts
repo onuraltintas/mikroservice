@@ -167,7 +167,7 @@ import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../sha
           }
           @if (selectedStudent(); as student) {
             <section class="rounded-lg border border-(--ui-brand-soft) p-4" aria-label="Öğrenci koçluk ayrıntısı">
-              <div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold">{{ student.studentName || 'Öğrenci' }}</h3><p class="text-sm text-(--ui-text-muted)">{{ student.studentEmail }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div><button type="button" class="rounded border px-2 py-1 text-sm" (click)="closeStudent()">Kapat</button></div>
+              <div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold">{{ student.studentName || 'Öğrenci' }}</h3><p class="text-sm text-(--ui-text-muted)">{{ student.studentEmail }}, {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div><button type="button" class="rounded border px-2 py-1 text-sm" (click)="closeStudent()">Kapat</button></div>
               @if (studentDetailLoading()) { <p class="mt-3 text-sm">Ayrıntılar yükleniyor…</p> }
               @if (studentDetailError()) { <p class="mt-3 text-sm text-(--ui-danger)" role="alert">{{ studentDetailError() }}</p> }
               @if (studentProgress(); as progress) {
@@ -179,9 +179,9 @@ import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../sha
                   <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı · ilerleme %{{ progress.averageGoalProgress }}</p>
                 </div>
                 <div class="mt-4 grid gap-4 lg:grid-cols-3 text-sm">
-                  <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status | coachingLabel }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
-                  <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }} · {{ exam.score ?? 'puan yok' }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Sonuç yok.</p> }</div>
-                  <div><h4 class="font-semibold">Hedefler</h4>@for (goal of studentGoals(); track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.progress }}%</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Hedef yok.</p> }</div>
+                  <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }}, {{ assignment.status | coachingLabel }}, {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
+                  <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }}, {{ exam.score ?? 'puan yok' }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Sonuç yok.</p> }</div>
+                  <div><h4 class="font-semibold">Hedefler</h4>@for (goal of studentGoals(); track goal.id) { <p class="mt-2">{{ goal.title }}, {{ goal.progress }}%</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Hedef yok.</p> }</div>
                 </div>
               }
             </section>

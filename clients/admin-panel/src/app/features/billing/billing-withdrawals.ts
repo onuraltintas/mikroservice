@@ -104,7 +104,7 @@ export class BillingWithdrawalsComponent implements OnInit {
     this.review.set(null);
     this.billing.getWithdrawals(this.status()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: withdrawals => this.withdrawals.set(withdrawals),
-      error: () => this.error.set('Cayma talepleri yüklenemedi.')
+      error: () => this.error.set('Cayma talepleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

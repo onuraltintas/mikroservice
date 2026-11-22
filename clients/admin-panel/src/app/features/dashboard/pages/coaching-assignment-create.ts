@@ -40,7 +40,7 @@ import { IdentityService, UserDto } from '../../../core/services/identity.servic
           <label class="text-sm text-(--ui-text)">Öğretmen
             <select [(ngModel)]="form.teacherId" name="teacherId" required class="mt-1 w-full rounded-lg border border-(--ui-border) px-3 py-2">
               <option value="">Öğretmen seçin</option>
-              @for (teacher of teachers(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.fullName }} · {{ teacher.email }}</option> }
+              @for (teacher of teachers(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.fullName }}, {{ teacher.email }}</option> }
             </select>
           </label>
           <label class="text-sm text-(--ui-text)">Son tarih
@@ -102,7 +102,7 @@ import { IdentityService, UserDto } from '../../../core/services/identity.servic
             @for (student of students(); track student.userId) {
               <label class="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-(--ui-surface-muted)">
                 <input type="checkbox" [checked]="isSelected(student.userId)" (change)="toggleStudent(student.userId)" />
-                <span>{{ student.fullName }} · {{ student.email }}</span>
+                <span>{{ student.fullName }}, {{ student.email }}</span>
               </label>
             } @empty { <p class="text-sm text-(--ui-text-muted)">Aktif öğrenci bulunamadı.</p> }
           </div>

@@ -160,7 +160,7 @@ export class BillingProductsComponent implements OnInit {
     this.error.set('');
     this.billing.getProducts().pipe(finalize(() => this.loading.set(false))).subscribe({
       next: products => this.apply(products),
-      error: () => this.error.set('Ürünler yüklenemedi.')
+      error: () => this.error.set('Ürünler yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

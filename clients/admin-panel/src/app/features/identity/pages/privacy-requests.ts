@@ -75,14 +75,14 @@ export class PrivacyRequestsComponent implements OnInit {
     this.loading.set(true); this.error.set('');
     this.identity.getDataSubjectRequests(status).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: page => this.items.set(page.items),
-      error: error => this.error.set(getAdminErrorMessage(error, 'KVKK talepleri yüklenemedi.'))
+      error: error => this.error.set(getAdminErrorMessage(error, 'KVKK talepleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'))
     });
   }
   select(item: DataSubjectRequestDto): void {
     this.error.set('');
     this.identity.getDataSubjectRequestDetail(item.id).subscribe({
       next: detail => this.detail.set(detail),
-      error: error => this.error.set(getAdminErrorMessage(error, 'Değerlendirme ayrıntısı yüklenemedi.'))
+      error: error => this.error.set(getAdminErrorMessage(error, 'Değerlendirme ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'))
     });
   }
 }

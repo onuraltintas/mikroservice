@@ -142,7 +142,7 @@ export class BulkUserOperationsComponent {
   loadRoles(): void {
     this.identityService.getRoles().subscribe({
       next: roles => this.roles.set(roles.filter(role => role.trim().length > 0)),
-      error: () => this.error.set('Roller yüklenemedi.')
+      error: () => this.error.set('Roller yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -156,7 +156,7 @@ export class BulkUserOperationsComponent {
         this.users.set(page.items);
         this.selectedUserIds.set([]);
       },
-      error: () => this.error.set('Kullanıcılar yüklenemedi.')
+      error: () => this.error.set('Kullanıcılar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 

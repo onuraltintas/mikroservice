@@ -129,7 +129,7 @@ export class BillingOverviewComponent implements OnInit {
     this.error.set('');
     this.billing.getOverview(this.product()).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: overview => this.overview.set(overview),
-      error: () => { this.overview.set(null); this.error.set('Genel bakış yüklenemedi.'); }
+      error: () => { this.overview.set(null); this.error.set('Genel bakış yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 

@@ -13,7 +13,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem logları</h1>
+          <h1 class="text-xl md:text-2xl font-bold text-(--ui-text)">Sistem kayıtları</h1>
           <p class="text-(--ui-text-muted) text-sm">Uygulama genelindeki hata ve işlem kayıtları</p>
         </div>
         <button (click)="refresh()" class="px-4 py-2 bg-(--ui-brand) text-(--ui-brand-contrast) rounded-lg hover:bg-(--ui-brand) transition-colors flex items-center gap-2 text-sm font-medium">

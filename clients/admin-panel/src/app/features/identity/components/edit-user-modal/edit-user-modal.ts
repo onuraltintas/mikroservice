@@ -224,7 +224,7 @@ export class EditUserModalComponent implements OnInit {
       this.progression.set(null); this.progressionError.set(null);
       this.progressionService.getStudentProgression(this.user()!.userId).subscribe({
         next: value => { this.progression.set(value); this.progressionMode = value.mode; this.progressionLoading.set(false); },
-        error: error => { this.progressionLoading.set(false); this.progressionError.set(getAdminErrorMessage(error, 'İlerleme izni yüklenemedi.')); }
+        error: error => { this.progressionLoading.set(false); this.progressionError.set(getAdminErrorMessage(error, 'İlerleme izni yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
       });
     }
   }

@@ -110,7 +110,7 @@ export class BillingCouponsComponent implements OnInit {
     this.error.set('');
     forkJoin({ coupons: this.billing.getCoupons(), plans: this.billing.getPlans() }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: ({ coupons, plans }) => { this.coupons.set(coupons); this.plans.set(plans); },
-      error: () => this.error.set('Kuponlar yüklenemedi.')
+      error: () => this.error.set('Kuponlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
