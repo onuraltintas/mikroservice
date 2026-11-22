@@ -132,7 +132,7 @@ export class CoachingYksScopeEditorComponent {
       const page = await firstValueFrom(this.http.get<{ data: { items: OutcomeOption[] } }>(`${environment.apiUrl}/coaching-admin/curriculum-management/children`,
         { params: { kind: 'outcomes', parentId: topicId, pageSize: '200' } })).catch(() => ({ data: { items: [] } }));
       this.outcomes.set(page.data.items);
-    } catch (error) { this.error.set(adminErrorMessage(error, 'YKS kapsamı yüklenemedi.')); }
+    } catch (error) { this.error.set(adminErrorMessage(error, 'YKS kapsamı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
     finally { this.loading.set(false); }
   }
 }

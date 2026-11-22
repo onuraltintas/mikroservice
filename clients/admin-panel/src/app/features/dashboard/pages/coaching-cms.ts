@@ -307,7 +307,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsEntries(this.kind(), this.pageNumber(), 25, this.search).subscribe({
       next: page => { this.entries.set(page.items); this.totalCount.set(page.totalCount); this.totalPages.set(Math.max(1, Math.ceil(page.totalCount / page.pageSize))); this.loading.set(false); },
-      error: () => { this.entries.set([]); this.error.set('Koçluk içerikleri yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.entries.set([]); this.error.set('Koçluk içerikleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -317,7 +317,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsEntries('Block', 1, 25, '', group).subscribe({
       next: page => { this.homePage.set(page); this.loading.set(false); },
-      error: () => { this.homePage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk ana sayfa içeriği yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.homePage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk ana sayfa içeriği yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
     this.loadMediaChoices();
   }
@@ -327,7 +327,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsEntries('Block', pageNumber, 25, '', group).subscribe({
       next: page => { this.specialPage.set(page); this.loading.set(false); },
-      error: () => { this.specialPage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk içeriği yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.specialPage.set({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 }); this.error.set('Koçluk içeriği yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -346,7 +346,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true);
     this.service.getCmsEntries('Block', pageNumber, 25, '', this.selectedHomeGroup).subscribe({
       next: page => { this.homePage.set(page); this.loading.set(false); },
-      error: () => { this.error.set('Koçluk ana sayfa içeriği yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Koçluk ana sayfa içeriği yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
   changeSpecialPage(delta: number) {
@@ -364,7 +364,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getNavigation(menu, true).subscribe({
       next: items => { this.navigation.set(items); this.loading.set(false); },
-      error: () => { this.navigation.set([]); this.error.set('Koçluk menüleri yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.navigation.set([]); this.error.set('Koçluk menüleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -372,7 +372,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCmsMediaAssets(this.media().pageNumber, 25).subscribe({
       next: page => { this.media.set(page); this.loading.set(false); },
-      error: () => { this.error.set('Koçluk görsel kütüphanesi yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Koçluk görsel kütüphanesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -425,7 +425,7 @@ export class CoachingCmsComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.service.getCoachingNewsletterSubscribers(pageNumber, 25, this.newsletterSearch, this.newsletterStatus).subscribe({
       next: page => { this.newsletterPage.set(page); this.loading.set(false); },
-      error: () => { this.error.set('Koçluk bülten aboneleri yüklenemedi.'); this.loading.set(false); }
+      error: () => { this.error.set('Koçluk bülten aboneleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); }
     });
   }
 
@@ -566,14 +566,14 @@ export class CoachingCmsComponent implements OnInit {
 
   showRevisions(entry: CoachingCmsEntry) {
     this.revisionEntry.set(entry); this.revisions.set([]);
-    this.service.getCmsRevisions(entry.id).subscribe({ next: revisions => this.revisions.set(revisions), error: () => this.error.set('İçerik sürümleri yüklenemedi.') });
+    this.service.getCmsRevisions(entry.id).subscribe({ next: revisions => this.revisions.set(revisions), error: () => this.error.set('İçerik sürümleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.') });
   }
 
   async restoreRevision(revision: CoachingCmsRevision) {
     const entry = this.revisionEntry(); if (!entry) return;
     if (!await this.toaster.confirm(`Sürüm ${revision.version} geri yüklensin mi? Mevcut içerik sürüm geçmişinde korunur.`, { title: 'Sürümü geri yükle' })) return;
     try { await firstValueFrom(this.service.restoreCmsRevision(entry.id, revision.id)); this.toaster.success('Önceki sürüm geri yüklendi.'); this.revisionEntry.set(null); this.loadEntries(); }
-    catch (error) { this.error.set(this.apiError(error, 'İçerik sürümü geri yüklenemedi.')); }
+    catch (error) { this.error.set(this.apiError(error, 'İçerik sürümü geri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
   }
 
   startNavigationCreate() { this.navigationEditingId = null; this.navigationDraft = this.emptyNavigationDraft(this.selectedMenuValue); this.navigationEditing.set(true); }

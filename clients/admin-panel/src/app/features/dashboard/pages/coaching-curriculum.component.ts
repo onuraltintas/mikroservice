@@ -57,7 +57,7 @@ export class CoachingCurriculumComponent implements OnInit {
     this.loading.set(true); this.error.set(null);
     this.catalogs.list('lessons', { pageNumber: page, pageSize: 25, search: this.search.trim() })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
-        next: r => { this.lessons.set(r.items); this.page = page; this.total = r.totalCount; }, error: () => this.error.set('Ders seçenekleri yüklenemedi.')
+        next: r => { this.lessons.set(r.items); this.page = page; this.total = r.totalCount; }, error: () => this.error.set('Ders seçenekleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
   toggle(id: string) { this.selected = this.selected.includes(id) ? this.selected.filter(x => x !== id) : [...this.selected, id]; }

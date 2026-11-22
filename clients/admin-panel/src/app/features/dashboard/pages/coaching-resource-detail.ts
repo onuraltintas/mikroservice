@@ -104,7 +104,7 @@ export class CoachingResourceDetailComponent implements OnInit {
       firstValueFrom(detail),
       firstValueFrom(this.identity.getAllUsers(1, 100, '', 'Student', true))
     ]).then(([resource, students]) => {
-      if (resource.status === 'rejected') { this.error.set('Kayıt ayrıntısı yüklenemedi.'); return; }
+      if (resource.status === 'rejected') { this.error.set('Kayıt ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); return; }
       if (students.status === 'fulfilled') this.students.set(students.value.items ?? []);
       if (this.resource === 'session') {
         const value = resource.value as CoachingAdminSessionDetail;

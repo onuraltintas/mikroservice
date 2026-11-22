@@ -82,6 +82,16 @@ body .admin-shell {
   }
   main :is(button, a).secondary { border-radius: 10px; font-weight: 600; background: var(--ui-surface); }
 
+  // Sınıfsız düğmeler (ör. Koçluk portalıyla paylaşılan sayfalar): yuvarlak ikincil düğme; form gönderen düğme ana düğme.
+  main button:not([class]) {
+    min-height: 40px; padding: 8px 16px; border: 1px solid var(--ui-border-strong); border-radius: 999px; background: var(--ui-surface);
+    color: var(--ui-text); font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; transition: background-color .15s ease;
+    &:hover:not(:disabled) { background: var(--ds-soft); }
+    &:disabled { opacity: .5; cursor: not-allowed; }
+  }
+  main button[type='submit']:not([class]) { border-color: var(--ui-brand); background: var(--ui-brand); color: var(--ui-brand-contrast); }
+  main button[type='submit']:not([class]):hover:not(:disabled) { background: var(--ui-brand); box-shadow: 0 8px 18px -10px var(--ui-brand); }
+
   // Tablolar: başlık satırı yumuşak zeminde, satırlar üstüne gelince belirginleşir.
   main table thead th {
     background: var(--ds-soft, var(--ui-surface-muted));

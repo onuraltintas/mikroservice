@@ -118,7 +118,7 @@ export class CoachingAssignmentDetailComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: value => this.assignment.set(value),
-        error: () => this.error.set('Ödev detayı yüklenemedi.')
+        error: () => this.error.set('Ödev detayı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 

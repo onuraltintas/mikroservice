@@ -81,7 +81,7 @@ import {
       </div>
 
       <div class="flex items-center justify-between text-sm text-(--ui-text-muted)">
-        <span>{{ totalCount() }} kayıt · Sayfa {{ page() }} / {{ totalPages() }}</span>
+        <span>{{ totalCount() }} kayıt, sayfa {{ page() }} / {{ totalPages() }}</span>
         <div class="flex gap-2">
           <button type="button" (click)="goTo(page() - 1)" [disabled]="page() <= 1 || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Önceki</button>
           <button type="button" (click)="goTo(page() + 1)" [disabled]="page() >= totalPages() || loading()" class="rounded border px-3 py-1 disabled:opacity-40">Sonraki</button>
@@ -115,8 +115,8 @@ export class CoachingAssignmentsComponent implements OnInit {
     this.service.getAssignments({ pageNumber: this.page(), pageSize: this.pageSize, source: this.source, status: this.status, search: this.search })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: response => { this.assignments.set(response.items); this.totalCount.set(response.totalCount); this.totalPages.set(Math.max(1, response.totalPages)); },
-        error: () => this.error.set('Koçluk ödevleri yüklenemedi.')
+        next: response => { this.assignments.set(response.items); this.totalCount.set(response.totalCount); this.totalPages.set(Math.max(1, response.totalPages || 1)); },
+        error: () => this.error.set('Koçluk ödevleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
       });
   }
 

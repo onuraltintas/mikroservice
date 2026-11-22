@@ -145,7 +145,7 @@ export class CoachingTargetProgramsComponent implements OnInit {
       const result = await firstValueFrom(this.admin.programs({ search: this.search.trim() || undefined, scoreType: this.scoreType || undefined, city: this.city.trim() || undefined,
         year: this.year || undefined, active: this.active === '' ? undefined : this.active === 'true', page, pageSize: this.pageSize }));
       this.items.set(result.items); this.total.set(result.totalCount); this.page.set(page);
-    } catch (error) { this.error.set(adminErrorMessage(error, 'Programlar yüklenemedi.')); }
+    } catch (error) { this.error.set(adminErrorMessage(error, 'Programlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
     finally { this.loading.set(false); }
   }
 

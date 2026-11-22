@@ -324,14 +324,14 @@ export class CoachingPeopleComponent implements OnInit {
           else this.loadPage();
         }
       },
-      error: () => this.error.set('Koçluk yönetim kapsamı yüklenemedi.')
+      error: () => this.error.set('Koçluk yönetim kapsamı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadInstitutions(): void {
     this.institutionService.getAll(1, 100, this.institutionSearch.trim(), true).subscribe({
       next: page => this.institutions.set(page.items ?? []),
-      error: () => this.error.set('Kurumlar yüklenemedi.')
+      error: () => this.error.set('Kurumlar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -401,7 +401,7 @@ export class CoachingPeopleComponent implements OnInit {
       },
       error: () => {
         if (requestId !== this.requestId) return;
-        this.error.set('Liste yüklenemedi.');
+        this.error.set('Liste yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         this.loading.set(false);
       }
     });
@@ -432,7 +432,7 @@ export class CoachingPeopleComponent implements OnInit {
           else this.loadStudentHistory(1);
           this.loading.set(false);
         },
-        error: () => { if (requestId === this.requestId) { this.error.set('Öğrenci ayrıntısı yüklenemedi.'); this.loading.set(false); } }
+        error: () => { if (requestId === this.requestId) { this.error.set('Öğrenci ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); } }
       });
     } else {
       forkJoin({
@@ -448,7 +448,7 @@ export class CoachingPeopleComponent implements OnInit {
           if (!this.selectedTeacher()) this.error.set('Öğretmen bu kurumda bulunamadı.');
           this.loading.set(false);
         },
-        error: () => { if (requestId === this.requestId) { this.error.set('Öğretmen ayrıntısı yüklenemedi.'); this.loading.set(false); } }
+        error: () => { if (requestId === this.requestId) { this.error.set('Öğretmen ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); this.loading.set(false); } }
       });
     }
   }
@@ -459,7 +459,7 @@ export class CoachingPeopleComponent implements OnInit {
     this.error.set(null);
     this.service.getStudentRoster(this.institutionId, page, this.teacherStudentSearch, this.detailId).subscribe({
       next: result => { if (requestId === this.teacherStudentsRequestId) { this.teacherStudentPage = page; this.teacherStudents.set(result); } },
-      error: () => { if (requestId === this.teacherStudentsRequestId) this.error.set('Öğrenci listesi yüklenemedi.'); }
+      error: () => { if (requestId === this.teacherStudentsRequestId) this.error.set('Öğrenci listesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 
@@ -723,7 +723,7 @@ export class CoachingPeopleComponent implements OnInit {
       },
       error: () => {
         if (requestId !== this.studentHistoryRequestId) return;
-        this.error.set('Öğrencinin koçluk geçmişi yüklenemedi.');
+        this.error.set('Öğrencinin koçluk geçmişi yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         this.studentHistoryLoading.set(false);
       }
     });

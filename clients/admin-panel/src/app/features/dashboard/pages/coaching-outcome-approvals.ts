@@ -192,7 +192,7 @@ export class CoachingOutcomeApprovalsComponent implements OnInit {
     try {
       const result = await firstValueFrom(this.admin.mappings({ ...this.filter(), page, pageSize: this.pageSize }));
       this.rows.set(result.items); this.total.set(result.totalCount); this.page.set(page);
-    } catch (error) { this.error.set(adminErrorMessage(error, 'Bağlantılar yüklenemedi.')); }
+    } catch (error) { this.error.set(adminErrorMessage(error, 'Bağlantılar yüklenemedi. Sayfayı yenileyip yeniden deneyin.')); }
     finally { this.loading.set(false); }
   }
 

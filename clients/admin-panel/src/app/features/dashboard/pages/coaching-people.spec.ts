@@ -152,7 +152,7 @@ describe('CoachingPeopleComponent', () => {
 
     expect(component.studentHistory()).toBeNull();
     expect(component.studentHistoryType).toBe('Exams');
-    expect(component.error()).toBe('Öğrencinin koçluk geçmişi yüklenemedi.');
+    expect(component.error()).toBe('Öğrencinin koçluk geçmişi yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
   });
 
   it('invites a teacher through the institution-scoped invitation workflow', () => {

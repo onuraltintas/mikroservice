@@ -284,14 +284,14 @@ export class CoachingOverviewComponent implements OnInit {
     this.error.set(null);
     this.service.getOverview().pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => this.overview.set(value),
-      error: () => this.error.set('Koçluk özeti yüklenemedi.')
+      error: () => this.error.set('Koçluk özeti yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
   loadInstitutions() {
     this.institutionService.getAll(1, 100, this.institutionSearch.trim(), true).subscribe({
       next: response => this.institutions.set(response.items ?? []),
-      error: () => this.comparisonError.set('Kurum listesi yüklenemedi.')
+      error: () => this.comparisonError.set('Kurum listesi yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
@@ -324,7 +324,7 @@ export class CoachingOverviewComponent implements OnInit {
       toDate
     }).pipe(finalize(() => { if (requestId === this.comparisonRequestId) this.comparisonLoading.set(false); })).subscribe({
       next: report => { if (requestId === this.comparisonRequestId) this.comparison.set(report); },
-      error: () => { if (requestId === this.comparisonRequestId) this.comparisonError.set('Karşılaştırmalı rapor yüklenemedi.'); }
+      error: () => { if (requestId === this.comparisonRequestId) this.comparisonError.set('Karşılaştırmalı rapor yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 
@@ -445,7 +445,7 @@ export class CoachingOverviewComponent implements OnInit {
       toDate
     }).pipe(finalize(() => { if (requestId === this.earlyWarningRequestId) this.earlyWarningsLoading.set(false); })).subscribe({
       next: report => { if (requestId === this.earlyWarningRequestId) this.earlyWarnings.set(report); },
-      error: () => { if (requestId === this.earlyWarningRequestId) this.earlyWarningsError.set('Erken uyarı raporu yüklenemedi.'); }
+      error: () => { if (requestId === this.earlyWarningRequestId) this.earlyWarningsError.set('Erken uyarı raporu yüklenemedi. Sayfayı yenileyip yeniden deneyin.'); }
     });
   }
 
@@ -472,7 +472,7 @@ export class CoachingOverviewComponent implements OnInit {
       },
       error: () => {
         if (requestId !== this.studentDetailRequestId) return;
-        this.studentDetailError.set('Öğrenci koçluk ayrıntısı yüklenemedi.');
+        this.studentDetailError.set('Öğrenci koçluk ayrıntısı yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         this.studentDetailLoading.set(false);
       }
     });
@@ -504,7 +504,7 @@ export class CoachingOverviewComponent implements OnInit {
       },
       error: () => {
         if (requestId !== this.teacherRequestId) return;
-        this.teacherOverviewError.set('Öğretmen koçluk özeti yüklenemedi.');
+        this.teacherOverviewError.set('Öğretmen koçluk özeti yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
         this.teacherOverviewLoading.set(false);
       }
     });

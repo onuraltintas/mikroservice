@@ -156,7 +156,7 @@ export class CoachingAssignmentCreateComponent implements OnInit {
     ]).then(([teachers, students]) => {
       this.teachers.set(teachers?.items ?? []);
       this.students.set(students?.items ?? []);
-    }).catch(() => this.error.set('Öğretmen ve öğrenci listeleri yüklenemedi.'))
+    }).catch(() => this.error.set('Öğretmen ve öğrenci listeleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.'))
       .finally(() => this.loadingUsers.set(false));
   }
 

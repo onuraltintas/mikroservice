@@ -196,7 +196,7 @@ export class CoachingResourceCreateComponent implements OnInit {
     if (teachers.status === 'fulfilled') this.teachers.set(teachers.value.items ?? []);
     if (students.status === 'fulfilled') this.students.set(students.value.items ?? []);
     if (institutions.status === 'fulfilled') this.institutions.set(institutions.value.items ?? []);
-    if (results.every(result => result.status === 'rejected')) this.error.set('Kullanıcı listeleri yüklenemedi.');
+    if (results.every(result => result.status === 'rejected')) this.error.set('Kullanıcı listeleri yüklenemedi. Sayfayı yenileyip yeniden deneyin.');
     this.loadingUsers.set(false);
   }
 

@@ -73,7 +73,7 @@ export class CoachingAssignmentEditComponent implements OnInit {
     this.loading.set(true);
     this.service.getAssignment(this.id).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => this.fill(value),
-      error: () => this.error.set('Ödev detayı yüklenemedi.')
+      error: () => this.error.set('Ödev detayı yüklenemedi. Sayfayı yenileyip yeniden deneyin.')
     });
   }
 
