@@ -61,7 +61,7 @@ type CatalogTab = 'schools' | 'programs';
       @if (selectedUsage(); as usage) {
         <section role="region" aria-labelledby="catalog-usage-title" class="space-y-3 rounded-xl border border-(--ui-border) bg-(--ui-surface) p-5">
           <h2 id="catalog-usage-title" class="text-lg font-semibold">{{ usage.name }} — Kullanım ve kalıcı silme</h2>
-          <p class="text-sm">Hedef olarak seçen öğrenci: {{ usage.goalReferences }} · Katalog bağlantısı: {{ usage.catalogReferences }} · Plan görevi: {{ usage.planReferences }} · Sınav sonucu: {{ usage.examReferences }}</p>
+          <p class="text-sm">Hedef olarak seçen öğrenci: {{ usage.goalReferences }}, Katalog bağlantısı: {{ usage.catalogReferences }}, Plan görevi: {{ usage.planReferences }}, Sınav sonucu: {{ usage.examReferences }}</p>
           @if (!usage.canDelete) { <p class="text-sm text-(--ui-warning)">Bu kayıt kullanımda. Öğrenci geçmişini korumak için kalıcı silinemez; pasife alabilirsiniz.</p> }
           @else if (canDelete()) {
             <p class="text-sm text-(--ui-danger)">Kalıcı silme geri alınamaz. Kayıt veritabanından kaldırılır; silme denetim kaydı korunur.</p>

@@ -258,7 +258,7 @@ export class InstitutionListComponent {
 
   selectAdminCandidate(candidate: UserDto) {
     this.adminDraft.userId = candidate.userId;
-    this.adminUserSearch = `${candidate.fullName} · ${candidate.email}`;
+    this.adminUserSearch = `${candidate.fullName}, ${candidate.email}`;
     this.adminCandidates.set([]);
   }
 

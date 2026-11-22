@@ -73,7 +73,7 @@ test('administrator previews a draft package and must supply an import reason', 
   await outcomes.getByText('Kazanım paketi aktar', { exact: true }).click();
   await outcomes.getByLabel('Paket JSON', { exact: true }).fill('{"code":"pilot"}');
   await outcomes.getByRole('button', { name: 'Aktarımı önizle', exact: true }).click();
-  await expect(outcomes.getByText(/52 kazanım · 13 eşleşen konu/)).toBeVisible();
+  await expect(outcomes.getByText(/52 kazanım, 13 eşleşen konu/)).toBeVisible();
   await expect(outcomes.getByRole('button', { name: 'Taslakları aktar', exact: true })).toBeDisabled();
   await outcomes.getByLabel('İşlem gerekçesi', { exact: true }).fill('LGS pilot kontrolü');
   await outcomes.getByRole('button', { name: 'Taslakları aktar', exact: true }).click();

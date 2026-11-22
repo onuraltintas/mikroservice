@@ -34,7 +34,7 @@
       </select></label>
       <label for="curriculum-lesson-filter">Ders<select id="curriculum-lesson-filter" [(ngModel)]="filters.lessonId" (ngModelChange)="applyFilters()" [disabled]="busy() || !filters.examCode || tab === 'lessons'">
         <option value="">{{ filters.examCode ? 'Tüm dersler' : 'Önce sınav seçin' }}</option>
-        @for (l of lessonOptions(); track l.id) { <option [value]="l.id">{{ l.name }}{{ l.gradeNumber ? ' · ' + l.gradeNumber + '. sınıf' : '' }}</option> }
+        @for (l of lessonOptions(); track l.id) { <option [value]="l.id">{{ l.name }}{{ l.gradeNumber ? ', ' + l.gradeNumber + '. sınıf' : '' }}</option> }
       </select></label>
       }
       @if (tab !== 'quality') {
@@ -83,7 +83,7 @@
         <div class="pager"><button type="button" (click)="loadParents(parentPage - 1)" [disabled]="busy() || parentLoading() || parentPage <= 1">Önceki seçenekler</button><button type="button" (click)="loadParents(parentPage + 1)" [disabled]="busy() || parentLoading() || parentPage * 25 >= parentTotal()">Sonraki seçenekler</button></div> }
       }
       <form class="tree-search" (ngSubmit)="loadRoot()"><label class="sr-only" for="curriculum-tree-search">Kayıt ara</label><input id="curriculum-tree-search" [(ngModel)]="rootSearch" name="rootSearch" placeholder="Bu sekmede ara (büyük/küçük harf fark etmez)…" maxlength="200"><button type="submit" [disabled]="busy()">Ara</button></form>
-      @if (branch().total) { <p class="list-count" aria-live="polite">{{ fmt(branch().total) }} kayıt · {{ branch().rows.length }} gösteriliyor</p> }
+      @if (branch().total) { <p class="list-count" aria-live="polite">{{ fmt(branch().total) }} kayıt, {{ branch().rows.length }} gösteriliyor</p> }
       @if (selectedIds().size) {
         <section class="bulk-bar" aria-label="Toplu işlem">
           <p><strong>{{ selectedIds().size }} kayıt seçildi</strong> <button type="button" class="link-button" (click)="clearSelection()">Seçimi temizle</button></p>
@@ -108,7 +108,7 @@
       <div class="record-list">@for (n of branch().rows || []; track n.kind + n.id) {
         <div class="record-row" [class.selected]="selected()?.id === n.id && !creating()" [class.checked]="isChecked(n)">
           @if (canBulk()) { <input type="checkbox" class="row-check" [checked]="isChecked(n)" (change)="toggleRow(n)" [disabled]="busy()" [attr.aria-label]="n.name + ' seç'"> }
-          <button type="button" class="row-open" [attr.aria-label]="n.name + ' düzenle'" (click)="select(n)" [disabled]="busy()"><strong>{{ n.name }}</strong><small>{{ n.path || nodeType(n) }}@if (n.kind === 'exams') { · {{ n.examDate ? 'Sıradaki oturum ' + (n.examDate | date:'dd.MM.yyyy') : 'Oturum belirtilmedi' }} }</small></button>
+          <button type="button" class="row-open" [attr.aria-label]="n.name + ' düzenle'" (click)="select(n)" [disabled]="busy()"><strong>{{ n.name }}</strong><small>{{ n.path || nodeType(n) }}@if (n.kind === 'exams') {, {{ n.examDate ? 'Sıradaki oturum ' + (n.examDate | date:'dd.MM.yyyy') : 'Oturum belirtilmedi' }} }</small></button>
           <div class="row-meta">
             <span class="badge" [class.passive]="!n.isActive">{{ n.isActive ? 'Aktif' : 'Pasif' }}</span>
             @if (n.kind === 'topics') {
@@ -159,11 +159,11 @@
               <label>Programdaki ders saati (varsa)<input aria-label="Programdaki ders saati" name="periods" type="number" min="1" max="500" step="1" [(ngModel)]="form.lessonPeriods"><small>Kaynakta belirtilmiyorsa boş bırakın. Bireysel çalışma dakikasından farklıdır.</small></label>
             }
             @if (kind === 'topics') { <label>Konu çalışma süresi (dk)<input aria-label="Konu çalışma süresi (dk)" aria-describedby="topic-duration-help" name="minutes" type="number" min="1" [max]="maxTopicMinutes" step="1" [(ngModel)]="form.estimatedMinutes"><small id="topic-duration-help">Kazanım seçilmeden yapılan planlamanın önerisi; en fazla {{ maxTopicMinutes }} dk. Plan bir günü aşan konuyu birkaç güne böler. Boş bırakılabilir.</small></label>
-              <label>Sınavda çıkma sıklığı<select aria-label="Sınavda çıkma sıklığı" aria-describedby="topic-yield-help" name="yieldWeight" [(ngModel)]="form.yieldWeight"><option [ngValue]="1">1 · Nadiren</option><option [ngValue]="2">2 · Az</option><option [ngValue]="3">3 · Orta (varsayılan)</option><option [ngValue]="4">4 · Sık</option><option [ngValue]="5">5 · Çok sık</option></select><small id="topic-yield-help">Öğrencinin süresi yetmediğinde plan motoru sık çıkan konuları öne alır.</small></label> }
+              <label>Sınavda çıkma sıklığı<select aria-label="Sınavda çıkma sıklığı" aria-describedby="topic-yield-help" name="yieldWeight" [(ngModel)]="form.yieldWeight"><option [ngValue]="1">1, Nadiren</option><option [ngValue]="2">2, Az</option><option [ngValue]="3">3, Orta (varsayılan)</option><option [ngValue]="4">4, Sık</option><option [ngValue]="5">5, Çok sık</option></select><small id="topic-yield-help">Öğrencinin süresi yetmediğinde plan motoru sık çıkan konuları öne alır.</small></label> }
             @if (creating() && kind === 'topics' && selected()?.kind === 'topics' && selected()?.topicOutcomeCount) { <label class="checkbox full"><input type="checkbox" name="inherit" [(ngModel)]="form.moveParentOutcomes" required> Üst konudaki {{ selected()?.topicOutcomeCount }} kazanımı bu alt konuya taşımayı onaylıyorum. Eski planlar korunacak; yeni bağlantılar kapsam onayı bekleyecek.</label> }
             @if (kind === 'outcomes') {
               <label>Kazanım kodu<input name="code" [(ngModel)]="form.code" required maxlength="100"></label>
-              @if (selected()?.sourceKind === 'ExamSkill' && !creating()) { <p>{{ sourceKindLabel('ExamSkill') }} · Kaynak: MEBİ. Resmî kazanım kodu veya PDF sayfası değildir.</p> }
+              @if (selected()?.sourceKind === 'ExamSkill' && !creating()) { <p>{{ sourceKindLabel('ExamSkill') }}, Kaynak: MEBİ. Resmî kazanım kodu veya PDF sayfası değildir.</p> }
               @else { <label>Kaynak sayfa<input name="sourcePage" [(ngModel)]="form.sourcePage" required min="1" step="1" type="number"></label> }
               <label class="full">Açıklama / kaynak notu<textarea name="notes" [(ngModel)]="form.notes" maxlength="8000" rows="2"></textarea></label>
               @if (creating()) {
@@ -214,7 +214,7 @@
                         <label>Kontrol<input type="number" min="0" step="1" [name]="'shareCheck' + i" [(ngModel)]="s.checkMinutes"></label>
                         <label class="full">Kapsam açıklaması<input [name]="'shareScope' + i" [(ngModel)]="s.scopeDescription" maxlength="2000"></label></div>
                     }
-                    <p class="share-sum" [class.invalid]="!sharesValid()" aria-live="polite">Paylar: {{ shareSum('learningMinutes') }}/{{ learningMinutes }} öğrenme · {{ shareSum('practiceMinutes') }}/{{ practiceMinutes }} alıştırma · {{ shareSum('checkMinutes') }}/{{ checkMinutes }} kontrol</p>
+                    <p class="share-sum" [class.invalid]="!sharesValid()" aria-live="polite">Paylar: {{ shareSum('learningMinutes') }}/{{ learningMinutes }} öğrenme, {{ shareSum('practiceMinutes') }}/{{ practiceMinutes }} alıştırma, {{ shareSum('checkMinutes') }}/{{ checkMinutes }} kontrol</p>
                   </fieldset>
                 }
                 <label class="full">Süre dayanağı<textarea name="evidence" [(ngModel)]="durationEvidence" required minlength="5" maxlength="500" rows="2" placeholder="Öğretmen gözlemi, konu bütçesi veya kullanılan varsayımlar"></textarea></label>
@@ -223,7 +223,7 @@
               <details class="duration-history"><summary>Önceki süreler ve değişiklik geçmişi</summary>
                 @for (e of n.estimates; track e.id) {
                   <article><div><strong>Sürüm {{ e.number }}, {{ total(e) }} dk</strong><span class="badge" [class.passive]="!e.isPublished">{{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</span></div>
-                    <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ confidenceLabel(e.confidence) }}, {{ methodLabel(e.method) }}</p><small>{{ e.evidence }}</small>
+                    <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol, Güven: {{ confidenceLabel(e.confidence) }}, {{ methodLabel(e.method) }}</p><small>{{ e.evidence }}</small>
                     @if (!e.isPublished && e.method === 'ReviewedStudy') { <button type="button" (click)="publish(e)" [disabled]="busy() || form.reason.trim().length < 5">Bu süre sürümünü yayınla</button> }
                     @if (e.method === 'OfficialBudgetDraft') { <p>İlk bütçe dağılımıdır. İnceleyip yukarıdan yeni süre sürümü oluşturun.</p> }
                     <details><summary>Bu süre sürümü için işlemler</summary>

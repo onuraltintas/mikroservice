@@ -117,7 +117,7 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
                   <label>Kapak görseli adresi<input [(ngModel)]="draft.coverImageUrl" name="entryCoverImage" maxlength="500" placeholder="Koçluk medya kütüphanesinden seçin" /></label>
                   <label>Medya kütüphanesinden seç<select [ngModel]="draft.coverImageUrl" (ngModelChange)="draft.coverImageUrl = $event || null" name="entryCoverAsset"><option value="">Kapak görseli seçilmedi</option>@for (asset of media().items; track asset.id) {<option [value]="asset.url">{{ asset.altText || asset.fileName }}</option>}</select></label>
                 }
-                <aside class="wide content-guide" aria-label="İçerik biçimlendirme rehberi"><strong>İçerik biçimlendirme rehberi</strong><p>Güvenli ve düzenli görünüm için biçimleri kullanın. HTML kodları çalıştırılmaz, metin olarak gösterilir.</p><p><code>## Bölüm başlığı</code> bölüm başlığı · boş satır yeni paragraf · <code>- Madde</code> liste öğesi. Görseli, kütüphanedeki “İçeriğe ekleme kodu” düğmesiyle ekleyin.</p></aside>
+                <aside class="wide content-guide" aria-label="İçerik biçimlendirme rehberi"><strong>İçerik biçimlendirme rehberi</strong><p>Güvenli ve düzenli görünüm için biçimleri kullanın. HTML kodları çalıştırılmaz, metin olarak gösterilir.</p><p><code>## Bölüm başlığı</code> bölüm başlığı, boş satır yeni paragraf, <code>- Madde</code> liste öğesi. Görseli, kütüphanedeki “İçeriğe ekleme kodu” düğmesiyle ekleyin.</p></aside>
                 <label>SEO başlığı<input [(ngModel)]="draft.seoTitle" name="seoTitle" maxlength="200" /></label>
                 <label>SEO açıklaması<input [(ngModel)]="draft.seoDescription" name="seoDescription" maxlength="500" /></label>
                 <label>Etiketler (virgülle)<input [ngModel]="draft.tags.join(', ')" (ngModelChange)="setTags($event)" name="entryTags" maxlength="500" /></label>
@@ -171,12 +171,12 @@ type CmsTab = 'home' | 'faq' | 'testimonials' | 'entries' | 'navigation' | 'medi
       @if (previewEntry(); as preview) {
         <div class="dialog-backdrop-shield">
           <section class="preview-dialog" role="dialog" aria-modal="true" aria-label="Koçluk içerik önizlemesi">
-            <header class="flex items-center justify-between gap-3"><div><p class="muted">Kaydedilmemiş taslak · public görünüm önizlemesi</p><h2 class="text-lg font-semibold">{{ preview.title || 'Başlıksız içerik' }}</h2></div><button type="button" class="secondary" (click)="previewEntry.set(null)">Kapat</button></header>
+            <header class="flex items-center justify-between gap-3"><div><p class="muted">Kaydedilmemiş taslak, public görünüm önizlemesi</p><h2 class="text-lg font-semibold">{{ preview.title || 'Başlıksız içerik' }}</h2></div><button type="button" class="secondary" (click)="previewEntry.set(null)">Kapat</button></header>
             <article class="preview-body">
               @if (preview.eyebrow) { <p class="muted">{{ preview.eyebrow }}</p> }
               @if (isCoachingMediaUrl(preview.coverImageUrl || preview.imageUrl)) { <img [src]="preview.coverImageUrl || preview.imageUrl" [alt]="preview.title || ''" class="preview-image" /> }
               <h1>{{ preview.title || 'Başlıksız içerik' }}</h1>
-              @if (preview.author || preview.publishedAt) { <p class="muted">{{ preview.author || '' }} {{ preview.publishedAt ? ('· ' + (preview.publishedAt | date:'dd.MM.yyyy')) : '' }}</p> }
+              @if (preview.author || preview.publishedAt) { <p class="muted">{{ preview.author || '' }}{{ preview.author && preview.publishedAt ? ', ' : '' }}{{ preview.publishedAt ? (preview.publishedAt | date:'dd.MM.yyyy') : '' }}</p> }
               @if (preview.summary) { <p class="preview-summary">{{ preview.summary }}</p> }
               <div class="cms-article">@for (segment of contentSegments(preview.content); track $index) { @if (segment.type === 'heading') { <h2>{{ segment.value }}</h2> } @else if (segment.type === 'list') { <ul>@for (item of segment.items; track $index) { <li>{{ item }}</li> }</ul> } @else if (segment.type === 'image') { <img [src]="segment.src" [alt]="segment.alt" class="preview-image" /> } @else { <p class="whitespace-pre-wrap">{{ segment.value }}</p> } }</div>
               @if (preview.linkLabel && preview.linkUrl) { <a class="preview-link" [href]="preview.linkUrl">{{ preview.linkLabel }}</a> }

@@ -108,14 +108,14 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await studentPage.getByLabel('Gerçek süre (dk)', { exact: true }).fill('40');
   await studentPage.getByLabel('Gerçek soru (isteğe bağlı)', { exact: true }).fill('24');
   await studentPage.getByRole('button', { name: 'Tamamla', exact: true }).click();
-  await expect(studentPage.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
+  await expect(studentPage.getByText(/Tamamlandı, 40 dk/)).toBeVisible();
   await expect(studentPage.getByText(`Kaynak: ${source}`, { exact: true })).toBeVisible();
   await expect(studentPage.getByText('Kaydedilen soru: 24', { exact: true })).toBeVisible();
   await studentPage.setViewportSize({ width: 390, height: 844 });
   expect(await studentPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
   await teacherEditor.getByRole('button', { name: new RegExp(title) }).click();
-  await expect(teacherEditor.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
+  await expect(teacherEditor.getByText(/Tamamlandı, 40 dk/)).toBeVisible();
   const teacherReport = teacherPage.locator('app-student-study-report');
   await teacherReport.getByLabel('Başlangıç').fill('2026-10-19');
   await teacherReport.getByLabel('Bitiş').fill('2026-10-25');
@@ -136,7 +136,7 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await institutionPage.getByRole('button', { name: 'Haftalık plan ve çalışma raporu', exact: true }).click();
   const institutionEditor = institutionPage.locator('app-student-study-plans');
   await institutionEditor.getByRole('button', { name: new RegExp(title) }).click();
-  await expect(institutionEditor.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
+  await expect(institutionEditor.getByText(/Tamamlandı, 40 dk/)).toBeVisible();
   await expect(institutionEditor.getByText(`Kaynak: ${source}`, { exact: true })).toBeVisible();
   await expect(institutionEditor.getByText('Planlanan soru: 30', { exact: true })).toBeVisible();
   await expect(institutionEditor.getByText('Kaydedilen soru: 24', { exact: true })).toBeVisible();

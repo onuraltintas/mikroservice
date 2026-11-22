@@ -192,7 +192,7 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
     const rawAction = (record.action || record.httpMethod || '').toLowerCase();
     const action = actions[rawAction] || this.humanize(rawAction);
     const resource = this.resourceLabel(record.resourceType);
-    return resource ? `${action} · ${resource}` : action;
+    return resource ? `${action}, ${resource}` : action;
   }
   resourceLabel(value?: string): string {
     if (!value) return '';

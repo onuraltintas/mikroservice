@@ -62,7 +62,7 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await expect(page.getByLabel('Gerçek süre (dk)', { exact: true })).toBeVisible();
   await page.getByLabel('Gerçek süre (dk)', { exact: true }).fill('25');
   await page.getByRole('button', { name: 'Tamamla', exact: true }).click();
-  await expect(page.getByText(/Tamamlandı · 25 dk/)).toBeVisible();
+  await expect(page.getByText(/Tamamlandı, 25 dk/)).toBeVisible();
   await page.goto('/coaching-portal/growth/exams');
   await page.getByLabel('Başlık', { exact: true }).fill(`Browser exam ${randomUUID()}`);
   await page.getByLabel('Tarih', { exact: true }).fill('2026-10-02');

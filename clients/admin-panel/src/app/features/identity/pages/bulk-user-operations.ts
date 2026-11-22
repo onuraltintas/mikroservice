@@ -42,7 +42,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
             </div>
             <p class="text-xs text-(--ui-text-muted)">UTF-8, en fazla 5 MB ve 1.000 satır. Sütunlar: firstName, lastName, email, phoneNumber, role.</p>
             <button type="button" class="primary" (click)="importUsers()" [disabled]="busy() || !selectedFile()">{{ importing() ? 'İçe aktarılıyor…' : 'Kullanıcıları içe aktar' }}</button>
-            @if (importResult(); as result) { <div class="result-card"><strong>İçe aktarma sonucu</strong><p class="muted">Başarılı: {{ result.succeeded }} · Başarısız: {{ result.failed }}</p><ul class="error-list">@for (item of result.errors; track item) { <li>{{ item }}</li> }</ul></div> }
+            @if (importResult(); as result) { <div class="result-card"><strong>İçe aktarma sonucu</strong><p class="muted">Başarılı: {{ result.succeeded }}, Başarısız: {{ result.failed }}</p><ul class="error-list">@for (item of result.errors; track item) { <li>{{ item }}</li> }</ul></div> }
           </section>
         }
 
@@ -71,7 +71,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
           <div class="flex flex-wrap items-center gap-3 text-sm"><button type="button" class="secondary" (click)="toggleAll()" [disabled]="users().length === 0">{{ allSelected() ? 'Tümünü kaldır' : 'Tümünü seç' }}</button><span class="muted">{{ selectedUserIds().length }} kullanıcı seçildi</span></div>
           <div class="overflow-x-auto"><table class="data-table"><thead><tr><th><span class="sr-only">Seç</span></th><th>E-posta</th><th>Ad soyad</th><th>Roller</th></tr></thead><tbody>@for (user of users(); track user.userId) { <tr><td><input type="checkbox" [checked]="isSelected(user.userId)" (change)="toggleUser(user.userId)" [attr.aria-label]="user.email + ' seç'" /></td><td>{{ user.email }}</td><td>{{ user.fullName }}</td><td>@for (assignment of userProductRoles(user); track assignment.role + ':' + assignment.product) { <span class="block">{{ productRoleLabel(assignment) }}</span> } @empty { Rol atanmadı }</td></tr> } @empty { <tr><td colspan="4" class="empty">Kullanıcı listesi boş.</td></tr> }</tbody></table></div>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,14rem)_auto_auto] md:items-end"><label>Atanacak rol<select [(ngModel)]="assignmentRole" name="assignmentRole" [disabled]="busy()"><option value="">Rol seçin</option>@for (role of serviceRoles(); track role) { <option [value]="role">{{ role }}</option> }</select></label><label class="check"><input type="checkbox" [(ngModel)]="removeExistingRoles" name="removeExistingRoles" [disabled]="busy()" /> Seçilen servisin mevcut rollerini kaldır</label><button type="button" class="primary" (click)="assignRole()" [disabled]="busy() || selectedUserIds().length === 0 || !assignmentRole || !assignmentProduct">{{ assigning() ? 'Atanıyor…' : 'Seçili kullanıcılara ata' }}</button></div>
-          @if (assignmentResult(); as result) { <div class="result-card"><strong>Rol atama sonucu</strong><p class="muted">Başarılı: {{ result.succeeded }} · Başarısız: {{ result.failed }}</p><ul class="error-list">@for (item of result.errors; track item) { <li>{{ item }}</li> }</ul></div> }
+          @if (assignmentResult(); as result) { <div class="result-card"><strong>Rol atama sonucu</strong><p class="muted">Başarılı: {{ result.succeeded }}, Başarısız: {{ result.failed }}</p><ul class="error-list">@for (item of result.errors; track item) { <li>{{ item }}</li> }</ul></div> }
         </section>
       }
     </section>

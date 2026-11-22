@@ -134,7 +134,7 @@ import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../sha
               <button type="button" (click)="printEarlyWarnings(warnings)" [disabled]="earlyWarningsExporting()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">Filtreli tüm uyarıları yazdır</button>
             </div>
             <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-(--ui-text-muted)">
-              <span>{{ warnings.totalCount }} aktif öğrenci · {{ warnings.pageNumber }}/{{ warnings.totalPages || 1 }}. sayfa</span>
+              <span>{{ warnings.totalCount }} aktif öğrenci, {{ warnings.pageNumber }}/{{ warnings.totalPages || 1 }}. sayfa</span>
               <div class="flex gap-2">
                 <button type="button" (click)="loadEarlyWarnings(warnings.pageNumber - 1)" [disabled]="warnings.pageNumber <= 1 || earlyWarningsLoading()" class="rounded border px-3 py-1 disabled:opacity-50">Önceki</button>
                 <button type="button" (click)="loadEarlyWarnings(warnings.pageNumber + 1)" [disabled]="warnings.pageNumber >= warnings.totalPages || earlyWarningsLoading()" class="rounded border px-3 py-1 disabled:opacity-50">Sonraki</button>
@@ -148,7 +148,7 @@ import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../sha
                 <tbody class="divide-y divide-(--ui-border)">
                   @for (warning of warnings.items; track warning.studentId) {
                     <tr>
-                      <td class="px-4 py-3 text-(--ui-text)"><span class="font-medium">{{ warning.studentName || 'Ad bilgisi yok' }}</span><span class="block text-xs text-(--ui-text-muted)">{{ warning.studentEmail || 'E-posta bilgisi yok' }}{{ warning.gradeLevel ? ' · ' + warning.gradeLevel + '. sınıf' : '' }}</span></td>
+                      <td class="px-4 py-3 text-(--ui-text)"><span class="font-medium">{{ warning.studentName || 'Ad bilgisi yok' }}</span><span class="block text-xs text-(--ui-text-muted)">{{ warning.studentEmail || 'E-posta bilgisi yok' }}{{ warning.gradeLevel ? ', ' + warning.gradeLevel + '. sınıf' : '' }}</span></td>
                       <td class="px-4 py-3">@if (warning.teacherUserId) { <button type="button" class="text-(--ui-brand-text) underline" (click)="openTeacher(warning)">{{ warning.teacherName || 'Öğretmen' }}</button> } @else { {{ warning.teacherName || 'Atanmamış' }} }</td>
                       <td class="px-4 py-3"><span class="rounded-full px-2 py-1 text-xs font-semibold" [class]="riskBadgeClass(warning)">{{ riskLabel(warning) }}</span></td>
                       <td class="px-4 py-3 font-semibold">{{ warning.riskScore }}/100</td>
@@ -172,11 +172,11 @@ import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../sha
               @if (studentDetailError()) { <p class="mt-3 text-sm text-(--ui-danger)" role="alert">{{ studentDetailError() }}</p> }
               @if (studentProgress(); as progress) {
                 <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-                  <p>Ödev: {{ progress.submittedAssignments }}/{{ progress.totalAssignments }} teslim · {{ progress.gradedAssignments }} notlandırıldı</p>
+                  <p>Ödev: {{ progress.submittedAssignments }}/{{ progress.totalAssignments }} teslim, {{ progress.gradedAssignments }} notlandırıldı</p>
                   <p>Ödev ortalaması: {{ formatPercent(progress.averageAssignmentPercentage) }}</p>
-                  <p>Sınav: {{ progress.totalExams }} · ortalama {{ formatPercent(progress.averageExamPercentage) }}</p>
-                  <p>Seans: {{ progress.totalSessions }} · katılım {{ formatPercent(progress.attendancePercentage) }}</p>
-                  <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı · ilerleme %{{ progress.averageGoalProgress }}</p>
+                  <p>Sınav: {{ progress.totalExams }}, ortalama {{ formatPercent(progress.averageExamPercentage) }}</p>
+                  <p>Seans: {{ progress.totalSessions }}, katılım {{ formatPercent(progress.attendancePercentage) }}</p>
+                  <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı, ilerleme %{{ progress.averageGoalProgress }}</p>
                 </div>
                 <div class="mt-4 grid gap-4 lg:grid-cols-3 text-sm">
                   <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }}, {{ assignment.status | coachingLabel }}, {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-(--ui-text-muted)">Ödev yok.</p> }</div>
@@ -188,7 +188,7 @@ import { AdminMeterComponent, AdminStatComponent, AdminTone } from '../../../sha
           }
           @if (selectedTeacherName(); as teacherName) {
             <section class="rounded-lg border border-(--ui-brand-soft) p-4" aria-label="Öğretmen koçluk özeti">
-              <div class="flex items-center justify-between"><h3 class="font-semibold">{{ teacherName }} · Koçluk özeti</h3><button type="button" class="rounded border px-2 py-1 text-sm" (click)="closeTeacher()">Kapat</button></div>
+              <div class="flex items-center justify-between"><h3 class="font-semibold">{{ teacherName }}, Koçluk özeti</h3><button type="button" class="rounded border px-2 py-1 text-sm" (click)="closeTeacher()">Kapat</button></div>
               @if (teacherOverviewLoading()) { <p class="mt-3 text-sm">Öğretmen verileri yükleniyor…</p> }
               @if (teacherOverviewError()) { <p class="mt-3 text-sm text-(--ui-danger)" role="alert">{{ teacherOverviewError() }}</p> }
               @if (teacherOverview(); as teacher) {

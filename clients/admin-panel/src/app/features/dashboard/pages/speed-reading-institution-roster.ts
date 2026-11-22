@@ -17,7 +17,7 @@ import {
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <a routerLink="/dashboard/identity/institutions" class="text-sm text-(--ui-brand-text)">← Kurumlar</a>
-          <h1 class="mt-2 text-2xl font-bold text-(--ui-text)">{{ institutionName() }} · Hızlı Okuma üyeleri</h1>
+          <h1 class="mt-2 text-2xl font-bold text-(--ui-text)">{{ institutionName() }}, Hızlı Okuma üyeleri</h1>
           <p class="text-sm text-(--ui-text-muted)">Bu liste yalnız kurumun Hızlı Okuma üyeliklerini ve öğretmen–öğrenci bağlarını gösterir.</p>
         </div>
         <button type="button" class="rounded-lg border px-4 py-2 text-sm" (click)="load()" [disabled]="loading()">Yenile</button>

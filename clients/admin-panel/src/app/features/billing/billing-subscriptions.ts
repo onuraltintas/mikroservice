@@ -109,7 +109,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
                 @if (pool(); as seats) {
                   @if (seats.subscriptionId === row.subscription.id) {
                     <tr class="seat-row"><td colspan="8" data-testid="seat-pool">
-                      <p class="text-sm"><strong>{{ seats.used }} / {{ seats.capacity }}</strong> koltuk dolu@if (seats.extraSeats) { <span> · {{ seats.extraSeats }} ek koltuk, {{ seats.extraSeatsUntil | date:'dd.MM.yyyy' }} tarihine kadar</span> }@if (seats.used > seats.capacity) { <span class="warn"> · {{ seats.used - seats.capacity }} koltuk kapasite dışında: erişimi yok</span> }</p>
+                      <p class="text-sm"><strong>{{ seats.used }} / {{ seats.capacity }}</strong> koltuk dolu@if (seats.extraSeats) { <span>, {{ seats.extraSeats }} ek koltuk, {{ seats.extraSeatsUntil | date:'dd.MM.yyyy' }} tarihine kadar</span> }@if (seats.used > seats.capacity) { <span class="warn">, {{ seats.used - seats.capacity }} koltuk kapasite dışında: erişimi yok</span> }</p>
                       <p class="muted">Koltukları ürünün kendisi verir (öğretmen ya da kurum yöneticisi, üründeki ekrandan). Buradan yalnız geri alınabilir. Kullanıcılar kimlik numarasıyla görünür.</p>
                       <table class="data-table mt-2">
                         <thead><tr><th>Kullanıcı</th><th>Verildi</th><th>Durum</th><th></th></tr></thead>

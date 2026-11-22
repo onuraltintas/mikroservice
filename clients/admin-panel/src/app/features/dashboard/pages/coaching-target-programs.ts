@@ -48,7 +48,7 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
 
       @if (editing(); as e) {
         <form (ngSubmit)="save()" class="grid gap-3 rounded-xl border border-(--ui-brand-soft) bg-(--ui-surface) p-4 sm:grid-cols-2 lg:grid-cols-4" [attr.aria-label]="e.doc ? 'Programı düzenle' : 'Yeni program'">
-          <h3 class="font-semibold sm:col-span-2 lg:col-span-4">{{ e.doc ? e.doc.data.universityName + ' · ' + e.doc.data.name : 'Yeni program' }}</h3>
+          <h3 class="font-semibold sm:col-span-2 lg:col-span-4">{{ e.doc ? e.doc.data.universityName + ', ' + e.doc.data.name : 'Yeni program' }}</h3>
           @if (e.doc) { <p class="text-sm text-(--ui-text-muted) sm:col-span-2 lg:col-span-4">{{ sourceName(e.doc.data.source) }}, {{ e.doc.goalCount }} öğrenci hedefinde kullanılıyor</p> }
           @if (!e.doc) {
             <label class="grid min-w-0 gap-1 text-sm font-medium sm:col-span-2">Üniversite<input name="universityName" [(ngModel)]="form.universityName" required maxlength="300" class="w-full min-w-0 rounded-lg border p-2"></label>
@@ -86,8 +86,8 @@ const emptyForm = (): ProgramForm => ({ universityName: '', name: '', programCod
               <li class="grid gap-2 p-4 md:grid-cols-[1fr_auto]">
                 <div class="min-w-0">
                   <p class="break-words font-semibold text-(--ui-text)">{{ p.universityName }}, {{ p.name }}</p>
-                  <p class="break-words text-sm text-(--ui-text-muted)">{{ p.facultyName || 'Fakülte belirtilmemiş' }}, {{ p.city || 'Şehir yok' }}, {{ programType(p.programType) }}, {{ scoreName(p.scoreType) }}@if (p.programCode) { · Kod {{ p.programCode }} }</p>
-                  <p class="text-sm">Taban {{ p.minimumScore == null ? '—' : (p.minimumScore | number:'1.0-5') }} · Sıra {{ p.rank == null ? '—' : (p.rank | number) }} · Kontenjan {{ p.quota ?? '—' }}, {{ p.year || 'Yıl yok' }}</p>
+                  <p class="break-words text-sm text-(--ui-text-muted)">{{ p.facultyName || 'Fakülte belirtilmemiş' }}, {{ p.city || 'Şehir yok' }}, {{ programType(p.programType) }}, {{ scoreName(p.scoreType) }}@if (p.programCode) {, Kod {{ p.programCode }} }</p>
+                  <p class="text-sm">Taban {{ p.minimumScore == null ? '—' : (p.minimumScore | number:'1.0-5') }}, Sıra {{ p.rank == null ? '—' : (p.rank | number) }}, Kontenjan {{ p.quota ?? '—' }}, {{ p.year || 'Yıl yok' }}</p>
                 </div>
                 <div class="flex flex-wrap items-start gap-2">
                   <span class="rounded px-2 py-1 text-xs font-medium" [class]="p.isActive ? 'bg-(--ui-success-soft) text-(--ui-success)' : 'bg-(--ui-surface-muted) text-(--ui-text)'">{{ p.isActive ? 'Etkin' : 'Pasif' }}</span>
@@ -185,7 +185,7 @@ export class CoachingTargetProgramsComponent implements OnInit {
 
   async remove(): Promise<void> {
     const doc = this.editing()?.doc; if (!doc || this.reason.trim().length < 5) return;
-    if (!await this.toaster.confirm(`“${doc.data.universityName} · ${doc.data.name}” kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?`,
+    if (!await this.toaster.confirm(`“${doc.data.universityName}, ${doc.data.name}” kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?`,
       { title: 'Programı sil', confirmText: 'Evet, sil', cancelText: 'Vazgeç' })) return;
     this.working.set(true); this.error.set(null);
     try {

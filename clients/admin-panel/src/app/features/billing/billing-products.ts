@@ -58,7 +58,7 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
           <div class="product-head">
             <div>
               <h2 [id]="'product-' + product.id" class="text-lg font-semibold text-(--ui-text)">{{ product.name }}</h2>
-              <p class="muted"><span class="font-mono">{{ product.code }}</span> · <span class="badge" [class.on]="product.isActive" [class.off]="!product.isActive">{{ product.isActive ? 'Etkin' : 'Kapalı' }}</span></p>
+              <p class="muted"><span class="font-mono">{{ product.code }}</span>, <span class="badge" [class.on]="product.isActive" [class.off]="!product.isActive">{{ product.isActive ? 'Etkin' : 'Kapalı' }}</span></p>
             </div>
             <button type="button" class="secondary" (click)="startProduct(product)">Adı ve sırayı düzenle</button>
           </div>

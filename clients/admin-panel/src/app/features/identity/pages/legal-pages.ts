@@ -100,7 +100,7 @@ const CORE_LEGAL_DOCUMENTS: { slug: string; title: string; description: string }
           <h2 id="legal-revisions-title" class="text-lg font-semibold text-(--ui-text)">Sürüm geçmişi</h2>
           @if (loadingRevisions()) { <p class="text-sm text-(--ui-text-muted)">Sürümler yükleniyor…</p> }
           @else if (!revisions().length) { <p class="text-sm leading-6 text-(--ui-text-muted)">Henüz önceki bir sürüm yok. İlk kayıt etkin sürüm olarak saklanır.</p> }
-          @else { <ol class="space-y-3">@for (revision of revisions(); track revision.id) { <li><details class="rounded-lg border border-(--ui-border) p-3"><summary class="cursor-pointer text-sm font-medium">Sürüm {{ revision.version }}{{ revision.isArchived ? ' · Arşiv kaydı' : '' }}, {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</summary><p class="mt-2 text-xs font-semibold">{{ revision.title }}</p><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs leading-5 text-(--ui-text-muted)">{{ revision.content }}</pre></details></li> }</ol> }
+          @else { <ol class="space-y-3">@for (revision of revisions(); track revision.id) { <li><details class="rounded-lg border border-(--ui-border) p-3"><summary class="cursor-pointer text-sm font-medium">Sürüm {{ revision.version }}{{ revision.isArchived ? ', Arşiv kaydı' : '' }}, {{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</summary><p class="mt-2 text-xs font-semibold">{{ revision.title }}</p><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs leading-5 text-(--ui-text-muted)">{{ revision.content }}</pre></details></li> }</ol> }
         </aside>
       </section>
     </main>
