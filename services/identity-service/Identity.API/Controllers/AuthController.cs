@@ -94,11 +94,11 @@ public class AuthController : ControllerBase
     }
 
     public sealed record StaffLoginRequest(
-        [property: Required, EmailAddress, MaxLength(256)] string Email,
-        [property: Required, MaxLength(256)] string Password,
+        [Required, EmailAddress, MaxLength(256)] string Email,
+        [Required, MaxLength(256)] string Password,
         bool RememberMe = false,
-        [property: MaxLength(32)] string? Workspace = null,
-        [property: MaxLength(32)] string? PreferredProduct = null);
+        [MaxLength(32)] string? Workspace = null,
+        [MaxLength(32)] string? PreferredProduct = null);
 
     public sealed record StaffLoginSessionResponse(string AccessToken, string TokenType, int ExpiresInMinutes, string? Product);
 
