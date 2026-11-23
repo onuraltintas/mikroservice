@@ -215,9 +215,15 @@
         } @else {
           <div class="ds-auth__heading">
             <h2 class="ds-auth__title">Personel girişi</h2>
-            <p class="ds-auth__lead">Kullandığınız ürünü seçin. Yetkili olduğunuz diğer ürünler girişten sonra görünür.</p>
+            @if (courseManagementOffered) {
+              <p class="ds-auth__lead">Kullandığınız ürünü seçin. Yetkili olduğunuz diğer ürünler girişten sonra görünür.</p>
+            } @else {
+              <!-- Kullanıcı kararı 23.11.2026: ürün sorulmaz; hesabın bu adreste rolü olan ürün açılır. -->
+              <p class="ds-auth__lead" data-testid="staff-login-lead">Hesabınızın yetkili olduğu ürün açılır. Diğer ürüne girişten sonra Çalışma alanı menüsünden geçebilirsiniz.</p>
+            }
           </div>
 
+          @if (courseManagementOffered) {
           <div class="staff-login__products" role="group" aria-label="Giriş yapılacak ürün">
             <button type="button" [class.selected]="selectedProduct === 'coaching'" [attr.aria-pressed]="selectedProduct === 'coaching'" (click)="selectedProduct = 'coaching'">
               <img src="brand/maxkoc.svg" alt="" width="32" height="32"><span><strong>maxkoç</strong><small>Koçluk</small></span>
@@ -231,6 +237,7 @@
               </button>
             }
           </div>
+          }
 
           <form class="ds-auth__form" (ngSubmit)="submitLogin()">
             <div class="ds-field">

@@ -34,6 +34,7 @@ public sealed class RateLimitRuleSetTests
     [InlineData("/api/auth/login", "POST", "auth-login", 60, 60)]
     [InlineData("/api/auth/coaching/login", "POST", "auth-login", 60, 60)]
     [InlineData("/api/auth/speed-reading/login", "POST", "auth-login", 60, 60)]
+    [InlineData("/api/auth/staff/login", "POST", "auth-login", 60, 60)]
     [InlineData("/api/auth/course-management/login", "POST", "auth-login", 60, 60)]
     [InlineData("/api/auth/course-management/login/coaching", "POST", "auth-login", 60, 60)]
     [InlineData("/api/auth/google-login", "POST", "auth-login", 60, 60)]

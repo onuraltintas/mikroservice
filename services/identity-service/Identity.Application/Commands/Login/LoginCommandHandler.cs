@@ -92,6 +92,17 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
              return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "Hesabınız pasif durumdadır."));
         }
 
+        // 3b. Staff portal sign-in (user decision 23.11.2026): the service picks the product; the rest is the product login.
+        if (request.Staff is { } staff)
+        {
+            if (StaffProductAccessPolicy.ResolveSignInProduct(user, staff.Workspace, staff.PreferredProduct) is not { } staffProduct)
+            {
+                return Result.Failure<LoginResponse>(StaffProductAccessPolicy.NotStaffAccount());
+            }
+
+            request = request with { Product = staffProduct, Staff = null };
+        }
+
         // 4. Check Email Confirmation & IsAdmin Check
         var productRoles = user.GetRolesForProductScope(request.Product).ToArray();
         var isAdmin = productRoles.Any(r => 
@@ -150,7 +161,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
 
             return Result.Success(LoginResponse.RequireMfa(
                 _multiFactorService.CreateChallenge(user.Id, request.RememberMe, request.Product),
-                enrollmentRequired: !user.MfaEnabled));
+                enrollmentRequired: !user.MfaEnabled) with { Product = request.Product?.ToRouteValue() });
         }
 
         // 6. Generate Tokens
@@ -187,7 +198,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             refreshToken.IssuedValue!,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
-            ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
+            ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync(),
+            Product: request.Product?.ToRouteValue()));
     }
 
     internal static Error TooManyAttempts(TimeSpan remaining) => new(

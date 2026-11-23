@@ -18,8 +18,9 @@ export function getStaffAuthRecaptchaAction(request: HttpRequest<unknown>): stri
     .map(segment => segment.toLowerCase());
   const [product, action] = segments;
 
+  // 23.11.2026: /auth/staff/login is the staff sign-in without a product choice.
   return segments.length === 2
-      && ['coaching', 'speed-reading', 'course-management'].includes(product)
+      && ['staff', 'coaching', 'speed-reading', 'course-management'].includes(product)
       && action === 'login'
     ? 'auth_login'
     : null;

@@ -38,6 +38,7 @@ function withSession(request: HttpRequest<unknown>, token: string): HttpRequest<
 
 function isSessionEndpoint(url: string): boolean {
   return url.includes('/auth/staff-session/switch/')
+    || url.endsWith('/auth/staff/login')
     || url.endsWith('/auth/coaching/login')
     || url.endsWith('/auth/speed-reading/login')
     || url.endsWith('/auth/course-management/login')
