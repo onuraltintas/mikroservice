@@ -14,7 +14,7 @@ import { BILLING_PAGE_STYLES } from './billing-page.styles';
 
 interface ProductDraft { id: string | null; code: string; name: string; isActive: boolean; sortOrder: number; }
 interface EntitlementDraft { id: string | null; productId: string; productCode: string; key: string; name: string; hasLimit: boolean; }
-interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales: boolean; }
+interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales: boolean; staffSeatsRequired: boolean; }
 
 /**
  * "Abonelik ve ödeme › Ürünler ve haklar": what is sold, the access keys each product understands, and the two
@@ -70,6 +70,10 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
                   <legend>Abonelik</legend>
                   <label class="check"><input type="checkbox" role="switch" [(ngModel)]="settings.requireSubscription" [name]="'require-' + product.id" [attr.aria-checked]="settings.requireSubscription" /> Bu üründe abonelik iste</label>
                   <p class="muted mt-2">{{ settings.requireSubscription ? 'Açık: ürünü kullanmak için geçerli bir hak gerekir.' : 'Kapalı: hesabı olan herkes ürünü abonelik olmadan kullanır; satın alma sayfası gizlenir.' }}</p>
+                  @if (!settings.requireSubscription) {
+                    <label class="check mt-2"><input type="checkbox" role="switch" [(ngModel)]="settings.staffSeatsRequired" [name]="'staff-' + product.id" [attr.aria-checked]="settings.staffSeatsRequired" /> Öğretmen ve kurumlar paket alsın</label>
+                    <p class="muted mt-2">{{ settings.staffSeatsRequired ? 'Açık: öğrenciler ücretsiz kullanır. Öğretmen ve kurum planları satılır; yeni öğrenci eklemek için planda boş yer gerekir, mevcut öğrenciler kalır.' : 'Kapalı: öğretmen ve kurum planları da satılmaz.' }}</p>
+                  }
                 </fieldset>
                 <fieldset>
                   <legend>Havale/EFT onayı</legend>
@@ -84,7 +88,7 @@ interface SettingsDraft { requireSubscription: boolean; bankTransferApproval: Ba
                 </fieldset>
               </div>
               <div class="form-actions">
-                <span class="muted">Kayıtlı: {{ product.requireSubscription ? 'abonelik isteniyor' : 'abonelik istenmiyor' }}, {{ product.bankTransferApproval === 'Automatic' ? 'otomatik onay' : 'elle onay' }}, {{ product.businessSales ? 'kurumsal satış' : 'tüketiciye satış' }}</span>
+                <span class="muted">Kayıtlı: {{ product.requireSubscription ? 'abonelik isteniyor' : product.staffSeatsRequired ? 'öğretmen ve kurumlar paket alıyor' : 'abonelik istenmiyor' }}, {{ product.bankTransferApproval === 'Automatic' ? 'otomatik onay' : 'elle onay' }}, {{ product.businessSales ? 'kurumsal satış' : 'tüketiciye satış' }}</span>
                 <button type="submit" class="primary" [disabled]="saving() || !settingsChanged(product)">Ayarları kaydet</button>
               </div>
             </form>
@@ -167,7 +171,7 @@ export class BillingProductsComponent implements OnInit {
   settingsChanged(product: BillingProduct): boolean {
     const draft = this.settingsDrafts()[product.id];
     return !!draft && (draft.requireSubscription !== product.requireSubscription || draft.bankTransferApproval !== product.bankTransferApproval
-      || draft.businessSales !== !!product.businessSales);
+      || draft.businessSales !== !!product.businessSales || draft.staffSeatsRequired !== !!product.staffSeatsRequired);
   }
 
   saveSettings(product: BillingProduct): void {
@@ -238,6 +242,7 @@ export class BillingProductsComponent implements OnInit {
   private apply(products: BillingProduct[]): void {
     this.products.set(products);
     this.settingsDrafts.set(Object.fromEntries(products.map(product =>
-      [product.id, { requireSubscription: product.requireSubscription, bankTransferApproval: product.bankTransferApproval, businessSales: !!product.businessSales }])));
+      [product.id, { requireSubscription: product.requireSubscription, bankTransferApproval: product.bankTransferApproval, businessSales: !!product.businessSales,
+        staffSeatsRequired: !!product.staffSeatsRequired }])));
   }
 }

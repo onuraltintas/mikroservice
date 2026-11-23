@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CoachingCmsEntry, CoachingManagementPage, CoachingManagementService, CoachingSubscriptionPlan } from '../../../core/services/coaching-management.service';
 import { parseCoachingCmsContent } from '../coaching-cms-content';
@@ -128,7 +128,29 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
           </div>
         } @else if (plans().length) {
           <div class="cards">
-            @for (plan of plans(); track plan.id) {
+            <!-- 23.11.2026: teacher and institution packages (several student counts and periods) are one card each. -->
+            @for (group of packageGroups(); track group.audience) {
+              <article class="card plan" [class.plan--featured]="group.audience === 'Institution'" [attr.data-testid]="'plan-group-' + group.audience">
+                <p class="plan__audience">{{ group.audience === 'Institution' ? 'Kurumlar için' : 'Öğretmenler için' }}</p>
+                <h3>{{ group.audience === 'Institution' ? 'Kurum paketleri' : 'Öğretmen paketleri' }}</h3>
+                <p class="card__lead">{{ group.minSeats }}–{{ group.maxSeats }} öğrenci, {{ group.periods }}. Her pakette bütün özellikler var; paketler yalnız öğrenci sayısı ve süreyle ayrılır.</p>
+                <p class="plan__price">{{ priceText(group.cheapest) }}'den başlayan</p>
+                <p class="plan__terms">Öğrenciler ücretsiz kullanır. Ödemeyi {{ group.audience === 'Institution' ? 'kurum' : 'öğretmen' }} yapar; dönem içinde ek öğrenci alınabilir.</p>
+                @if (group.features.length) {
+                  <ul class="plan__features">
+                    @for (feature of group.features; track feature) {
+                      <li><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>{{ feature }}</span></li>
+                    }
+                  </ul>
+                }
+                <div class="plan__actions">
+                  <a [routerLink]="group.audience === 'Institution' ? '/auth/register/institution' : '/auth/register/teacher'" [queryParams]="campaign()"
+                    [attr.data-testid]="'plan-group-register-' + group.audience" class="ds-btn ds-btn--primary ds-btn--block">{{ group.audience === 'Institution' ? 'Kurum olarak kaydol' : 'Öğretmen olarak kaydol' }}</a>
+                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/coaching-portal' }" class="ds-link plan__login">Hesabım var, giriş yap</a>
+                </div>
+              </article>
+            }
+            @for (plan of singlePlans(); track plan.id) {
               <article class="card plan" [class.plan--featured]="plan.audience === 'Institution'" [attr.data-testid]="'plan-' + plan.slug">
                 <p class="plan__audience">{{ audienceLabel(plan) }}</p>
                 <h3>{{ plan.name }}</h3>
@@ -144,10 +166,10 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
                   </ul>
                 }
                 <div class="plan__actions">
-                  @if (plan.audience === 'Institution' || plan.isContactOnly) {
+                  @if (plan.isContactOnly) {
                     <a routerLink="/coaching/pages/kurumlar" [queryParams]="campaign()" class="ds-btn ds-btn--secondary ds-btn--block">{{ plan.audience === 'Institution' ? 'Kurum çözümlerini incele' : 'Bilgi al' }}</a>
                   } @else {
-                    <a [routerLink]="registerLink(plan)" [queryParams]="registerParams(plan)" [attr.data-testid]="'plan-register-' + plan.slug" (click)="selectPlan(plan)" class="ds-btn ds-btn--primary ds-btn--block">{{ plan.audience === 'Teacher' ? 'Öğretmen olarak kaydol' : ((plan.trialDays ?? 0) > 0 ? 'Kaydol ve ücretsiz dene' : 'Kaydol ve başla') }}</a>
+                    <a [routerLink]="registerLink(plan)" [queryParams]="registerParams(plan)" [attr.data-testid]="'plan-register-' + plan.slug" (click)="selectPlan(plan)" class="ds-btn ds-btn--primary ds-btn--block">{{ plan.audience === 'Teacher' ? 'Öğretmen olarak kaydol' : plan.audience === 'Institution' ? 'Kurum olarak kaydol' : ((plan.trialDays ?? 0) > 0 ? 'Kaydol ve ücretsiz dene' : 'Kaydol ve başla') }}</a>
                     <a routerLink="/auth/login" [queryParams]="{ returnUrl: plan.audience === 'Teacher' ? '/coaching-portal' : '/coaching-portal/account/payments' }" class="ds-link plan__login">Hesabım var, giriş yap</a>
                   }
                 </div>
@@ -390,8 +412,24 @@ export class CoachingPublicHomeComponent implements OnInit {
   }
 
   registerLink(plan: CoachingSubscriptionPlan): string {
-    return plan.audience === 'Teacher' ? '/auth/register/teacher' : '/auth/register/student';
+    return plan.audience === 'Teacher' ? '/auth/register/teacher' : plan.audience === 'Institution' ? '/auth/register/institution' : '/auth/register/student';
   }
+
+  /** Teacher and institution plans that differ only in students and period (two or more): one card per audience. */
+  readonly packageGroups = computed(() => (['Teacher', 'Institution'] as const).map(audience => {
+    const tiers = this.plans().filter(plan => plan.audience === audience && !plan.isContactOnly && !!plan.includedStudentSeats);
+    if (tiers.length < 2) return null;
+    const seats = tiers.map(plan => plan.includedStudentSeats!);
+    const days = [...new Set(tiers.map(plan => plan.durationDays))].sort((a, b) => a - b);
+    const periods = days.map(day => day >= 360 ? 'yıllık' : day % 30 === 0 ? `${day / 30} aylık` : `${day} günlük`).join(' ya da ');
+    const features = tiers[0].features.filter(feature => tiers.every(plan => plan.features.includes(feature)));
+    const cheapest = [...tiers].sort((a, b) => a.price - b.price)[0];
+    return { audience, tiers, minSeats: Math.min(...seats), maxSeats: Math.max(...seats), periods, features, cheapest };
+  }).filter(group => group !== null));
+  readonly singlePlans = computed(() => {
+    const grouped = new Set(this.packageGroups().flatMap(group => group.tiers));
+    return this.plans().filter(plan => !grouped.has(plan));
+  });
 
   /** Students come back to the subscription page with the plan chosen; campaign tags travel with the link. */
   registerParams(plan: CoachingSubscriptionPlan): Record<string, string> {

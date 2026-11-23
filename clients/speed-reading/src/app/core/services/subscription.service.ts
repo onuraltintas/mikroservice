@@ -18,6 +18,9 @@ export interface SubscriptionPlan {
   isBundle: boolean;
 }
 
+/** The institution packages as one card on the public page (23.11.2026). */
+export interface InstitutionPackages { minSeats: number; maxSeats: number; lowestPrice: number; periods: string; features: string[]; }
+
 /** What the student may use, as the Hızlı Okuma service answers (it asks the billing service). */
 export interface UserModules {
   modules: string[];
@@ -28,7 +31,7 @@ export interface UserModules {
 interface BillingCatalog {
   plans: {
     id: string; name: string; description: string; buyerType: 'Individual' | 'Teacher' | 'Institution'; price: number; currency: string;
-    durationDays: number; isContactOnly: boolean; features: string[]; productCodes: string[];
+    durationDays: number; isContactOnly: boolean; features: string[]; productCodes: string[]; seatCount?: number | null;
   }[];
 }
 
@@ -44,6 +47,24 @@ export class SubscriptionService {
         durationDays: plan.durationDays, isContactOnly: plan.isContactOnly, features: plan.features ?? [],
         isBundle: (plan.productCodes?.length ?? 0) > 1
       }))));
+  }
+
+  /**
+   * 23.11.2026: institutions buy packages that differ only in their students and period; students train free. The public
+   * page shows them as one card: the student range, the periods and the lowest price. Null when there are fewer than two.
+   */
+  getInstitutionPackages(): Observable<InstitutionPackages | null> {
+    return this.http.get<BillingCatalog>(`${environment.apiUrl}/billing/v1/catalog/speed-reading`).pipe(map(catalog => {
+      const tiers = (catalog?.plans ?? []).filter(plan => plan.buyerType === 'Institution' && !plan.isContactOnly && !!plan.seatCount);
+      if (tiers.length < 2) return null;
+      const seats = tiers.map(plan => plan.seatCount!);
+      const days = [...new Set(tiers.map(plan => plan.durationDays))].sort((a, b) => a - b);
+      return {
+        minSeats: Math.min(...seats), maxSeats: Math.max(...seats), lowestPrice: Math.min(...tiers.map(plan => plan.price)),
+        periods: days.map(day => day >= 360 ? 'yıllık' : day % 30 === 0 ? `${day / 30} aylık` : `${day} günlük`).join(' ya da '),
+        features: (tiers[0].features ?? []).filter(feature => tiers.every(plan => (plan.features ?? []).includes(feature)))
+      };
+    }));
   }
 
   getMyModules(): Observable<UserModules> {

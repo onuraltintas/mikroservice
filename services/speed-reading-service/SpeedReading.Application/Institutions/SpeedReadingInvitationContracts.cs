@@ -74,6 +74,12 @@ public interface ISpeedReadingInvitations
         DateTime at,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The institution whose seat the user takes by accepting this pending invitation: a student invitation of an institution
+    /// the user is not yet an active student of. Null otherwise (user decision 23.11.2026: a new institution student takes a seat).
+    /// </summary>
+    Task<Guid?> InstitutionSeatNeededAsync(Guid invitationId, Guid userId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<SpeedReadingPendingInvitation>> GetPendingByInviterAsync(
         Guid inviterUserId,
         DateTime at,

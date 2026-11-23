@@ -9,6 +9,7 @@ using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Institutions;
+using SpeedReading.Application.Subscription;
 using SpeedReading.Domain.Institutions;
 
 namespace SpeedReading.API.Controllers;
@@ -22,9 +23,19 @@ public sealed class SpeedReadingInvitationsController(
     ISpeedReadingInstitutionDirectory institutionDirectory,
     ISpeedReadingInstitutionAdministrationAuthorization administrationAuthorization,
     IConfiguration configuration,
-    ILogger<SpeedReadingInvitationsController> logger) : ControllerBase
+    ILogger<SpeedReadingInvitationsController> logger,
+    ISpeedReadingBillingAccess? billing = null,
+    ISpeedReadingBillingSeats? billingSeats = null) : ControllerBase
 {
     private const string EmailConsumerType = "SpeedReadingInvitation";
+    // User decision 23.11.2026: students train free; an institution needs a plan with a free seat for each new student.
+    // Students already in the institution stay; the rule is checked on inviting and the seat is taken on accepting.
+    public const string InstitutionNeedsPlan = "Yeni öğrenci eklemek için kurumunuzun bir paketi olmalı. Paketi kurum aboneliği sayfasından seçebilirsiniz.";
+    public const string InstitutionPlanFull = "Kurum paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için ek öğrenci alın ya da daha büyük bir paket seçin.";
+    public const string InstitutionHasNoSeat = "Davet eden kurumun paketinde boş yer kalmadığı için bu davet şu an kabul edilemiyor. Kurumuna haber ver.";
+
+    private async Task<bool> StaffSeatsRequiredAsync(Guid user, CancellationToken cancellationToken) =>
+        billing is { Enabled: true } && billingSeats is { Enabled: true } && (await billing.GetAsync(user, cancellationToken)).StaffSeatsRequired;
 
     [HttpPost("teachers/me")]
     [Authorize(Roles = "Teacher")]
@@ -66,6 +77,12 @@ public sealed class SpeedReadingInvitationsController(
             return BadRequest(new { code = "Invitation.InvalidRole", message = "Davet rolü öğrenci veya öğretmen olmalıdır." });
         if (request.Role == SpeedReadingInstitutionMemberRole.Teacher && request.TeacherUserId.HasValue)
             return BadRequest(new { code = "Invitation.InvalidScope", message = "Öğretmen davetinde hedef öğretmen seçilemez." });
+        if (request.Role == SpeedReadingInstitutionMemberRole.Student && await StaffSeatsRequiredAsync(actorId, cancellationToken))
+        {
+            var pool = await billingSeats!.GetPoolAsync(institutionId, cancellationToken);
+            if (pool is null) return Conflict(new { code = "Invitation.InstitutionNeedsPlan", message = InstitutionNeedsPlan });
+            if (pool.Used >= pool.Capacity) return Conflict(new { code = "Invitation.InstitutionPlanFull", message = InstitutionPlanFull });
+        }
 
         var created = await invitations.CreateAsync(
             request.Email,
@@ -139,12 +156,24 @@ public sealed class SpeedReadingInvitationsController(
             });
         }
 
+        // A new institution student takes a seat first; when joining fails after that, the seat is given back.
+        Guid? seatInstitution = null;
+        if (await invitations.InstitutionSeatNeededAsync(invitationId, userId, cancellationToken) is { } institution
+            && await StaffSeatsRequiredAsync(userId, cancellationToken))
+        {
+            var seat = await billingSeats!.AssignAsync(institution, userId, userId, cancellationToken);
+            if (!seat.Done) return Conflict(new { code = "Invitation.InstitutionHasNoSeat", message = InstitutionHasNoSeat });
+            if (seat.Code == "Assigned") seatInstitution = institution;
+            billing!.Forget(userId);
+        }
         var result = await invitations.AcceptAsync(
             invitationId,
             userId,
             user.Email,
             DateTime.UtcNow,
             cancellationToken);
+        if (seatInstitution is { } given && result is not (SpeedReadingInvitationAcceptResult.Accepted or SpeedReadingInvitationAcceptResult.AlreadyAccepted))
+            await billingSeats!.ReleaseWhenLeavingAsync(given, userId, userId, cancellationToken);
         return result switch
         {
             SpeedReadingInvitationAcceptResult.Accepted

@@ -7,8 +7,10 @@ namespace SpeedReading.Application.Subscription;
 /// <summary>
 /// Whether a student may train, as the billing service ("Abonelik ve Ödeme") sees it.
 /// <paramref name="Known"/> false: billing could not be asked and nothing was remembered, so the student is let in.
+/// <paramref name="StaffSeatsRequired"/>: students train free, and a new student of an institution takes a seat of its plan
+/// (user decision 23.11.2026).
 /// </summary>
-public sealed record BillingAccessDecision(bool Allowed, bool RequireSubscription, DateTime? EndsAt, bool Known);
+public sealed record BillingAccessDecision(bool Allowed, bool RequireSubscription, DateTime? EndsAt, bool Known, bool StaffSeatsRequired = false);
 
 /// <summary>Asks the billing service about a user's access to Hızlı Okuma and remembers the answer for a short time.</summary>
 public interface ISpeedReadingBillingAccess
@@ -40,10 +42,11 @@ public static class SpeedReadingBillingRules
     /// <summary>A missing answer (billing does not sell the product) and a product that asks for no subscription are both open.</summary>
     public static BillingAccessDecision Decide(BillingProductAccessResponse? access, DateTime now)
     {
-        if (access is null || !access.RequireSubscription) return new(true, false, null, true);
+        if (access is null) return new(true, false, null, true);
+        if (!access.RequireSubscription) return new(true, false, null, true, access.StaffSeatsRequired);
         var ends = (access.Entitlements ?? []).Where(item => item.Key == StudentEntitlement && item.EndsAt > now)
             .Select(item => (DateTime?)item.EndsAt).DefaultIfEmpty(null).Max();
-        return new(ends is not null, true, ends, true);
+        return new(ends is not null, true, ends, true, access.StaffSeatsRequired);
     }
 
     public static UserAccessSummary Summary(BillingAccessDecision decision) =>

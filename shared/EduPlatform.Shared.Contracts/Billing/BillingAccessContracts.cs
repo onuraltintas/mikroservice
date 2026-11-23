@@ -5,8 +5,10 @@ namespace EduPlatform.Shared.Contracts.Billing;
 /// <paramref name="RequireSubscription"/> false: everybody with an account uses the product and the entitlements are not looked at.
 /// </summary>
 /// <paramref name="LastEndsAt"/>: the latest end of any subscription that gave the user the product, past or running.
+/// <paramref name="StaffSeatsRequired"/>: students use the product free, and a new student of an independent teacher or an
+/// institution takes a seat of their plan; without a free seat the student is not added (user decision 23.11.2026).
 public sealed record BillingProductAccessResponse(string ProductCode, bool RequireSubscription, IReadOnlyList<BillingGrantedEntitlement>? Entitlements,
-    DateTime? LastEndsAt = null);
+    DateTime? LastEndsAt = null, bool StaffSeatsRequired = false);
 
 public sealed record BillingGrantedEntitlement(string Key, int? LimitValue, DateTime EndsAt);
 

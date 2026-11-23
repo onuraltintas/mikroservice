@@ -20,10 +20,12 @@ export interface BillingProduct {
   entitlements: BillingEntitlement[];
   /** Sold to businesses (maxkampüs): business subscription contract, no withdrawal. */
   businessSales?: boolean;
+  /** 23.11.2026: students free, teachers and institutions buy plans with a seat per new student. */
+  staffSeatsRequired?: boolean;
 }
 
 export interface BillingProductRequest { code: string; name: string; isActive: boolean; sortOrder: number; }
-export interface BillingProductSettingsRequest { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales?: boolean; }
+export interface BillingProductSettingsRequest { requireSubscription: boolean; bankTransferApproval: BankTransferApproval; businessSales?: boolean; staffSeatsRequired?: boolean; }
 export interface BillingEntitlementRequest { key: string; name: string; hasLimit: boolean; }
 
 export interface BillingPlanEntitlement {

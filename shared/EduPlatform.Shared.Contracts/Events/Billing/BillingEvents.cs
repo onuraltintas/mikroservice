@@ -7,7 +7,8 @@ namespace EduPlatform.Shared.Contracts.Events.Billing;
 public sealed record BillingEntitlementsChangedV1(Guid UserId, string[] ProductCodes, DateTime ChangedAt);
 
 /// <summary>The "subscription required" switch of a product was turned on or off.</summary>
-public sealed record BillingProductSettingsChangedV1(string ProductCode, bool RequireSubscription, DateTime ChangedAt);
+/// <summary><paramref name="StaffSeatsRequired"/>: students free, a new student of a teacher or an institution takes a seat (23.11.2026).</summary>
+public sealed record BillingProductSettingsChangedV1(string ProductCode, bool RequireSubscription, DateTime ChangedAt, bool StaffSeatsRequired = false);
 
 /// <summary>
 /// Something a buyer (or the seller) is told about by e-mail: a decision on an order, an answer to a withdrawal

@@ -42,6 +42,12 @@ public sealed class Product
     /// the consumer pre-information form and distance-sales contract, and there is no withdrawal (cayma).
     /// </summary>
     public bool BusinessSales { get; set; }
+    /// <summary>
+    /// Students use the product free; independent teachers and institutions buy plans, and a new student of theirs takes a
+    /// seat from the plan (user decision 23.11.2026). Teacher and institution plans are on sale even while
+    /// <see cref="RequireSubscription"/> is off; individual plans are not.
+    /// </summary>
+    public bool StaffSeatsRequired { get; set; }
     public bool IsActive { get; set; } = true;
     public int SortOrder { get; set; }
     public DateTime CreatedAt { get; set; }
