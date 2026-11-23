@@ -75,6 +75,12 @@ public static class LearningEndpoints
             var userId = UserId(user);
             if (!await IsOwner(db, workspaceId, userId, ct)) return Results.NotFound();
             if (string.IsNullOrWhiteSpace(request.PreviewId)) return Results.BadRequest(new { code = "StudentImport.PreviewRequired" });
+            if (request.GroupId is Guid importGroupId)
+            {
+                var importGroup = await db.Groups.AsNoTracking().SingleOrDefaultAsync(item => item.Id == importGroupId && item.WorkspaceId == workspaceId, ct);
+                if (importGroup is null) return Results.NotFound();
+                if (importGroup.ArchivedAt is not null) return Results.Conflict(new { code = "Group.Archived" });
+            }
             StudentCsvImportPreviewResponse preview;
             try
             {
@@ -104,17 +110,26 @@ public static class LearningEndpoints
             if (!await WorkspaceStudentCapacity.CanAddAsync(db, billing, workspaceId, currentPreview.ReadyCount, ct))
                 return Results.Conflict(new { code = "Student.ActiveLimitReached" });
 
+            var imported = new List<Guid>();
             foreach (var row in currentPreview.Rows.Where(row => row.Status == "Ready"))
             {
                 var studentId = ImportedStudentId(currentPreview.PreviewId, row.RowNumber);
                 var student = StudentRecord.Create(studentId, workspaceId, row.DisplayName, row.Email, row.PhoneNumber, DateTimeOffset.UtcNow);
                 db.Students.Add(student);
                 AddAudit(db, workspaceId, userId, student.Id, "Student.Imported");
+                imported.Add(studentId);
             }
             await db.SaveChangesAsync(ct);
+            var joined = 0;
+            if (request.GroupId is Guid groupId)
+            {
+                foreach (var studentId in imported)
+                    if (await GroupEndpoints.JoinAsync(db, workspaceId, groupId, studentId, userId, DateTimeOffset.UtcNow, ct)) joined++;
+                await db.SaveChangesAsync(ct);
+            }
             await transaction.CommitAsync(ct);
             return Results.Ok(new StudentCsvImportCommitResponse(currentPreview.PreviewId,
-                currentPreview.ReadyCount, currentPreview.ImportedCount));
+                currentPreview.ReadyCount, currentPreview.ImportedCount, joined));
         });
 
         api.MapPost("/workspaces/{workspaceId:guid}/imports/legacy-students/preview", async (Guid workspaceId,
@@ -411,7 +426,9 @@ public static class LearningEndpoints
             var groups = db.Groups.AsNoTracking().Where(group => group.WorkspaceId == workspaceId);
             if (!await IsOwner(db, workspaceId, UserId(user), ct)) groups = groups.Where(group => group.TeacherUserId == UserId(user));
             return Results.Ok(await groups.Join(db.Courses.AsNoTracking(), group => group.CourseId, course => course.Id,
-                    (group, course) => new { group.Id, group.CourseId, courseName = course.Name, group.Name, group.TeacherUserId })
+                    (group, course) => new { group.Id, group.CourseId, courseName = course.Name, group.Name, group.TeacherUserId, group.ArchivedAt,
+                        studentCount = db.Enrollments.Count(enrollment => enrollment.GroupId == group.Id && enrollment.Status == EnrollmentStatus.Active
+                            && db.Students.Any(student => student.Id == enrollment.StudentId && student.IsActive)) })
                 .OrderBy(group => group.Name).Take(200).ToListAsync(ct));
         });
 
@@ -438,26 +455,22 @@ public static class LearningEndpoints
         {
             var userId = UserId(user);
             if (!await CanManageWorkspace(db, workspaceId, userId, ct)) return Results.NotFound();
-            if (!await db.Groups.AnyAsync(group => group.Id == groupId && group.WorkspaceId == workspaceId
-                    && (group.TeacherUserId == userId || db.Workspaces.Any(workspace => workspace.Id == workspaceId && workspace.OwnerUserId == userId)), ct))
-                return Results.NotFound();
+            var group = await db.Groups.SingleOrDefaultAsync(item => item.Id == groupId && item.WorkspaceId == workspaceId
+                && (item.TeacherUserId == userId || db.Workspaces.Any(workspace => workspace.Id == workspaceId && workspace.OwnerUserId == userId)), ct);
+            if (group is null) return Results.NotFound();
+            if (group.ArchivedAt is not null) return Results.Conflict(new { code = "Group.Archived" });
             if (!await db.Students.AnyAsync(student => student.Id == studentId && student.WorkspaceId == workspaceId && student.IsActive, ct))
                 return Results.NotFound();
-            var existing = await db.Enrollments.SingleOrDefaultAsync(item => item.GroupId == groupId && item.StudentId == studentId, ct);
-            if (existing is not null)
-            {
-                if (existing.Status == EnrollmentStatus.Active) return Results.Ok(new { existing.Id });
-                existing.Reactivate();
-                AddAudit(db, workspaceId, userId, existing.Id, "Enrollment.Restored");
-                await db.SaveChangesAsync(ct);
-                return Results.Ok(new { existing.Id, fullRoomLessons = await FullRoomLessons(db, workspaceId, groupId, ct) });
-            }
-            var enrollment = StudentGroupEnrollment.Create(Guid.NewGuid(), workspaceId, groupId, studentId, DateTimeOffset.UtcNow);
-            db.Enrollments.Add(enrollment);
-            AddAudit(db, workspaceId, userId, enrollment.Id, "Enrollment.Created");
-            await db.SaveChangesAsync(ct);
-            return Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/groups/{groupId}/students/{studentId}",
-                new { enrollment.Id, fullRoomLessons = await FullRoomLessons(db, workspaceId, groupId, ct) });
+            var existed = await db.Enrollments.AnyAsync(item => item.GroupId == groupId && item.StudentId == studentId, ct);
+            var joined = await GroupEndpoints.JoinAsync(db, workspaceId, groupId, studentId, userId, DateTimeOffset.UtcNow, ct);
+            if (joined) await db.SaveChangesAsync(ct);
+            var enrollment = await db.Enrollments.SingleAsync(item => item.GroupId == groupId && item.StudentId == studentId, ct);
+            if (!joined) return Results.Ok(new { enrollment.Id });
+            var fullRoomLessons = await FullRoomLessons(db, workspaceId, groupId, ct);
+            return existed
+                ? Results.Ok(new { enrollment.Id, fullRoomLessons })
+                : Results.Created($"/api/course-management/v1/workspaces/{workspaceId}/groups/{groupId}/students/{studentId}",
+                    new { enrollment.Id, fullRoomLessons });
         });
 
         api.MapGet("/workspaces/{workspaceId:guid}/lessons", async (Guid workspaceId, DateTimeOffset? from, DateTimeOffset? to,
@@ -1128,6 +1141,7 @@ public static class LearningEndpoints
                     var courseGroup = await db.Groups.SingleOrDefaultAsync(item => item.Id == selectedGroupId
                         && item.WorkspaceId == workspaceId && item.CourseId == request.CourseId, ct);
                     if (courseGroup is null || courseGroup.TeacherUserId != request.TeacherUserId) return Results.NotFound();
+                    if (courseGroup.ArchivedAt is not null) return Results.Conflict(new { code = "Group.Archived" });
                     studentIds = await (from enrollment in db.Enrollments
                         join student in db.Students on enrollment.StudentId equals student.Id
                         where enrollment.WorkspaceId == workspaceId && enrollment.GroupId == selectedGroupId
@@ -1268,6 +1282,7 @@ public static class LearningEndpoints
                     var courseGroup = await db.Groups.SingleOrDefaultAsync(item => item.Id == selectedGroupId
                         && item.WorkspaceId == workspaceId && item.CourseId == request.CourseId, ct);
                     if (courseGroup is null || courseGroup.TeacherUserId != request.TeacherUserId) return Results.NotFound();
+                    if (courseGroup.ArchivedAt is not null) return Results.Conflict(new { code = "Group.Archived" });
                     studentIds = await (from enrollment in db.Enrollments
                         join student in db.Students on enrollment.StudentId equals student.Id
                         where enrollment.WorkspaceId == workspaceId && enrollment.GroupId == selectedGroupId
@@ -2057,7 +2072,7 @@ public static class LearningEndpoints
         + new string((phoneNumber ?? string.Empty).Where(char.IsDigit).ToArray());
     private static Guid ImportedStudentId(string previewId, int rowNumber) =>
         new(SHA256.HashData(Encoding.UTF8.GetBytes($"{previewId}\n{rowNumber}")).AsSpan(0, 16));
-    private static Task<Guid[]> GetLinkedStudentUserIds(CourseManagementDbContext db, Guid workspaceId,
+    internal static Task<Guid[]> GetLinkedStudentUserIds(CourseManagementDbContext db, Guid workspaceId,
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct) => db.Students.AsNoTracking()
         .Where(student => student.WorkspaceId == workspaceId && student.IsActive && student.UserId != null
             && studentIds.Contains(student.Id))
@@ -2074,11 +2089,12 @@ public static class LearningEndpoints
 
 public sealed record CreateStudentRequest(Guid Id, string DisplayName, string? Email, string? PhoneNumber);
 public sealed record PreviewStudentCsvRequest(string? Csv);
-public sealed record CommitStudentCsvRequest(string? PreviewId, string? Csv);
+/// <summary><paramref name="GroupId"/>: the imported students join this group too (23.11.2026); null keeps them unplaced.</summary>
+public sealed record CommitStudentCsvRequest(string? PreviewId, string? Csv, Guid? GroupId = null);
 public sealed record StudentCsvImportPreviewRow(int RowNumber, string Status, string DisplayName, string? Email, string? PhoneNumber, string? Error);
 public sealed record StudentCsvImportPreviewResponse(string PreviewId, int ReadyCount, int ImportedCount, int InvalidCount,
     int DuplicateCount, IReadOnlyList<StudentCsvImportPreviewRow> Rows);
-public sealed record StudentCsvImportCommitResponse(string PreviewId, int CreatedCount, int AlreadyImportedCount);
+public sealed record StudentCsvImportCommitResponse(string PreviewId, int CreatedCount, int AlreadyImportedCount, int JoinedGroupCount = 0);
 public sealed record LegacyStudentImportRequest(string? PreviewId, string? SourceSystem, IReadOnlyList<string>? SelectedFields,
     IReadOnlyList<LegacyStudentImportInputRow>? Rows);
 public sealed record LegacyStudentImportInputRow(Guid SourceRecordId, string? DisplayName, string? Email, bool IsActive);

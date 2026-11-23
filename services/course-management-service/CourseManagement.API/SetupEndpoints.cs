@@ -30,7 +30,7 @@ public static class SetupEndpoints
                 && item.Status == InvitationStatus.Pending && item.ExpiresAt > now, ct);
             var rooms = await db.Rooms.CountAsync(room => room.WorkspaceId == workspaceId, ct);
             var courses = await db.Courses.CountAsync(course => course.WorkspaceId == workspaceId, ct);
-            var groups = await db.Groups.CountAsync(group => group.WorkspaceId == workspaceId, ct);
+            var groups = await db.Groups.CountAsync(group => group.WorkspaceId == workspaceId && group.ArchivedAt == null, ct);
             var activeStudents = db.Students.Where(student => student.WorkspaceId == workspaceId && student.IsActive);
             var students = await activeStudents.CountAsync(ct);
             var unplaced = await activeStudents.CountAsync(student => student.OneToOneTeacherUserId == null
@@ -160,15 +160,7 @@ public static class SetupEndpoints
                 && item.StudentId == studentId, ct);
             if (enrollment is null) return Results.NotFound();
             if (enrollment.Status == EnrollmentStatus.Archived) return Results.NoContent();
-            enrollment.Archive();
-            var now = DateTimeOffset.UtcNow;
-            var participants = await (from participant in db.LessonParticipants
-                join lesson in db.LessonSessions on participant.LessonSessionId equals lesson.Id
-                where participant.WorkspaceId == workspaceId && participant.StudentId == studentId && participant.IsActive
-                    && lesson.GroupId == groupId && lesson.Status == LessonSessionStatus.Scheduled && lesson.StartsAt > now
-                select participant).ToListAsync(ct);
-            foreach (var participant in participants) participant.Cancel(now);
-            db.AuditEntries.Add(WorkspaceAuditEntry.Create(workspaceId, UserId(user), enrollment.Id, "Enrollment.Archived"));
+            await GroupEndpoints.LeaveAsync(db, workspaceId, groupId, enrollment, UserId(user), DateTimeOffset.UtcNow, ct);
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
         });

@@ -33,7 +33,7 @@ export interface StudentCsvImportRow { rowNumber: number; status: 'Ready' | 'Imp
 export interface StudentCsvImportPreview {
   previewId: string; readyCount: number; importedCount: number; invalidCount: number; duplicateCount: number; rows: StudentCsvImportRow[];
 }
-export interface StudentCsvImportCommit { previewId: string; createdCount: number; alreadyImportedCount: number; }
+export interface StudentCsvImportCommit { previewId: string; createdCount: number; alreadyImportedCount: number; joinedGroupCount?: number; }
 export type LegacyStudentImportField = 'displayName' | 'email' | 'isActive';
 export interface LegacyStudentImportPreviewRow {
   rowNumber: number; status: 'Ready' | 'Imported' | 'Invalid' | 'Conflict' | 'Duplicate';
@@ -61,7 +61,7 @@ export interface LegacyInstitutionImportCommit {
 export interface GuardianContact { id: string; displayName: string; email: string | null; phoneNumber: string | null; }
 export interface StudentGuardianLink extends GuardianContact { relationship: string; }
 export interface CourseSummary { id: string; name: string; subject: string; }
-export interface CourseGroup { id: string; courseId: string; courseName: string; name: string; teacherUserId: string; }
+export interface CourseGroup { id: string; courseId: string; courseName: string; name: string; teacherUserId: string; archivedAt?: string | null; studentCount?: number; }
 export interface CourseBranch { id: string; name: string; archivedAt?: string | null; }
 export interface CourseRoom { id: string; branchId: string; branchName: string; name: string; capacity: number | null; archivedAt?: string | null; }
 export interface CourseLesson {
@@ -183,8 +183,9 @@ export class CourseManagementService {
   previewStudentCsv(workspaceId: string, csv: string) {
     return firstValueFrom(this.http.post<StudentCsvImportPreview>(`${this.base}/workspaces/${workspaceId}/imports/students/preview`, { csv }));
   }
-  commitStudentCsv(workspaceId: string, previewId: string, csv: string) {
-    return firstValueFrom(this.http.post<StudentCsvImportCommit>(`${this.base}/workspaces/${workspaceId}/imports/students`, { previewId, csv }));
+  /** groupId: the imported students join that group too (23.11.2026). */
+  commitStudentCsv(workspaceId: string, previewId: string, csv: string, groupId: string | null = null) {
+    return firstValueFrom(this.http.post<StudentCsvImportCommit>(`${this.base}/workspaces/${workspaceId}/imports/students`, { previewId, csv, groupId }));
   }
   previewLegacyStudents(workspaceId: string, sourceSystem: LegacyStudentSource, selectedFields: LegacyStudentImportField[], rows: LegacyStudentSourceRow[]) {
     return firstValueFrom(this.http.post<LegacyStudentImportPreview>(
