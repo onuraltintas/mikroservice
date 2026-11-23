@@ -9,7 +9,8 @@ import {
   StaffLoginResult,
   StaffMfaSetupResponse,
   StaffProduct,
-  StaffProductAccess
+  StaffProductAccess,
+  StaffWorkspace
 } from './staff-auth.models';
 
 interface AccessTokenClaims {
@@ -21,6 +22,8 @@ interface AccessTokenClaims {
 @Injectable({ providedIn: 'root' })
 export class StaffAuthService {
   private static readonly activeProductStorageKey = 'eduplatform_staff_active_product';
+  /** User decision 23.11.2026: with two products the sign-in opens the one used last (kept across sessions). */
+  private static readonly lastProductStorageKey = 'eduplatform_staff_last_product';
   private readonly http = inject(HttpClient);
   private readonly _accessToken = signal('');
   private readonly _products = signal<StaffProductAccess[]>([]);
@@ -72,23 +75,38 @@ export class StaffAuthService {
     }
   }
 
+  /**
+   * User decision 23.11.2026: staff sign in without choosing a product. The identity service opens the product where the
+   * account has a role for this address (with two, the last used one, otherwise maxkoç) and says which one it opened.
+   * maxkampüs (pilot, opened with ?product=course-management) keeps its own sign-in.
+   */
   async login(
-    product: StaffProduct,
+    product: StaffProduct | null,
     email: string,
     password: string,
-    rememberMe = false
+    rememberMe = false,
+    workspace: StaffWorkspace | null = null,
+    preferredProduct: StaffProduct | null = null
   ): Promise<StaffLoginResult> {
-    const response = await firstValueFrom(this.http.post<LoginResponse>(
-      `${environment.apiUrl}/auth/${product}/login`,
-      { email, password, rememberMe },
-      { withCredentials: true }
-    ));
+    const response = product === 'course-management'
+      ? await firstValueFrom(this.http.post<LoginResponse>(
+        `${environment.apiUrl}/auth/course-management/login`,
+        { email, password, rememberMe },
+        { withCredentials: true }))
+      : await firstValueFrom(this.http.post<LoginResponse>(
+        `${environment.apiUrl}/auth/staff/login`,
+        { email, password, rememberMe, workspace, preferredProduct: preferredProduct ?? this.getLastProduct() },
+        { withCredentials: true }));
+    const opened: StaffProduct = product === 'course-management'
+      ? product
+      : response.product === 'speed-reading' ? 'speed-reading' : 'coaching';
 
     if (response.requiresMfa) {
       return {
         requiresMfa: true,
         mfaEnrollmentRequired: response.mfaEnrollmentRequired ?? false,
-        mfaChallengeToken: response.mfaChallengeToken ?? null
+        mfaChallengeToken: response.mfaChallengeToken ?? null,
+        product: opened
       };
     }
 
@@ -100,14 +118,14 @@ export class StaffAuthService {
       accessToken: response.accessToken,
       tokenType: response.tokenType ?? 'Bearer',
       expiresInMinutes: response.expiresInMinutes ?? 15
-    }, product);
+    }, opened);
     await this.loadStaffProducts();
     if (this._products().length === 0) {
       await this.logout();
       throw new Error('Bu hesapta öğretmen veya kurum personeli erişimi bulunamadı.');
     }
 
-    return { requiresMfa: false, mfaEnrollmentRequired: false, mfaChallengeToken: null };
+    return { requiresMfa: false, mfaEnrollmentRequired: false, mfaChallengeToken: null, product: opened };
   }
 
   async verifyMfa(
@@ -332,9 +350,21 @@ export class StaffAuthService {
 
   private storeActiveProduct(product: StaffProduct): void {
     try {
-      if (typeof window !== 'undefined') window.sessionStorage.setItem(StaffAuthService.activeProductStorageKey, product);
+      if (typeof window === 'undefined') return;
+      window.sessionStorage.setItem(StaffAuthService.activeProductStorageKey, product);
+      if (product !== 'course-management') window.localStorage.setItem(StaffAuthService.lastProductStorageKey, product);
     } catch {
       // Session state remains in memory when browser storage is unavailable.
+    }
+  }
+
+  private getLastProduct(): StaffProduct | null {
+    try {
+      if (typeof window === 'undefined') return null;
+      const product = window.localStorage.getItem(StaffAuthService.lastProductStorageKey);
+      return product === 'coaching' || product === 'speed-reading' ? product : null;
+    } catch {
+      return null;
     }
   }
 }

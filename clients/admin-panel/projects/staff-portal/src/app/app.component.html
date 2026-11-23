@@ -143,22 +143,23 @@
   </div>
 } @else {
   <!-- Redesign 18.11.2026 (tuval: "Giriş: eduivme"). Renkler --ds-* değişkenlerinden; marka html'de data-brand="eduivme". -->
-  <div class="ds-auth staff-login" data-brand="eduivme">
+  <!-- Canlı giriş 23.11.2026: "i" işareti bir kez canlanır, maddeler kendi tonlarında sırayla belirir. -->
+  <div class="ds-auth ds-auth--lively staff-login" data-brand="eduivme">
     <section class="ds-auth__visual staff-login__visual" aria-label="eduivme personel paneli hakkında">
-      <svg class="staff-login__mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
-        <rect class="staff-login__stem" x="210" y="300" width="130" height="420" rx="65"></rect>
-        <path class="staff-login__arc" d="M150 200c40-80 120-120 190-108" fill="none" stroke-width="22" stroke-linecap="round"></path>
-        <circle class="staff-login__dot" cx="370" cy="110" r="78"></circle>
+      <svg class="ds-auth-mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
+        <rect class="ds-auth-mark__stem" x="210" y="290" width="130" height="390" rx="65"></rect>
+        <path class="ds-auth-mark__arc" d="M150 200c40-80 120-120 190-108" pathLength="1" fill="none" stroke-width="22" stroke-linecap="round"></path>
+        <circle class="ds-auth-mark__dot" cx="370" cy="110" r="78"></circle>
       </svg>
-      <span class="ds-auth__place">Öğretmen ve kurum paneli</span>
+      <span class="ds-auth__place ds-rise" style="--i: 0">Öğretmen ve kurum paneli</span>
       <div class="staff-login__copy">
-        <h1 class="ds-auth__headline">Öğrencilerinizin haftası tek listede.</h1>
-        <p class="ds-auth__sub">maxkoç ve Master Hızlı Okuma öğrencilerinizi aynı panelden izleyin. Hangi ürüne erişebileceğinizi sistem doğrular; ürün verileri birbirine karışmaz.</p>
+        <h1 class="ds-auth__headline ds-rise" style="--i: 1">Öğrencilerinizin haftası tek listede.</h1>
+        <p class="ds-auth__sub ds-rise" style="--i: 2">maxkoç ve Master Hızlı Okuma öğrencilerinizi aynı panelden izleyin. Hangi ürüne erişebileceğinizi sistem doğrular; ürün verileri birbirine karışmaz.</p>
       </div>
-      <ul class="ds-auth__points">
-        <li>Ödev, seans ve haftalık değerlendirme</li>
-        <li>Deneme analizi ve raporlar</li>
-        <li>Veliyle ve öğrenciyle mesajlaşma</li>
+      <ul class="ds-auth__tones">
+        <li class="ds-rise" style="--i: 3"><span class="ds-auth__tone ds-tone-1" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 10.5 3.2 3.2L15 7"/></svg></span>Ödev, seans ve haftalık değerlendirme</li>
+        <li class="ds-rise" style="--i: 4"><span class="ds-auth__tone ds-tone-2" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 10.5 3.2 3.2L15 7"/></svg></span>Deneme analizi ve raporlar</li>
+        <li class="ds-rise" style="--i: 5"><span class="ds-auth__tone ds-tone-4" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 10.5 3.2 3.2L15 7"/></svg></span>Veliyle ve öğrenciyle mesajlaşma</li>
       </ul>
     </section>
 
@@ -214,9 +215,15 @@
         } @else {
           <div class="ds-auth__heading">
             <h2 class="ds-auth__title">Personel girişi</h2>
-            <p class="ds-auth__lead">Kullandığınız ürünü seçin. Yetkili olduğunuz diğer ürünler girişten sonra görünür.</p>
+            @if (courseManagementOffered) {
+              <p class="ds-auth__lead">Kullandığınız ürünü seçin. Yetkili olduğunuz diğer ürünler girişten sonra görünür.</p>
+            } @else {
+              <!-- Kullanıcı kararı 23.11.2026: ürün sorulmaz; hesabın bu adreste rolü olan ürün açılır. -->
+              <p class="ds-auth__lead" data-testid="staff-login-lead">Hesabınızın yetkili olduğu ürün açılır. Diğer ürüne girişten sonra Çalışma alanı menüsünden geçebilirsiniz.</p>
+            }
           </div>
 
+          @if (courseManagementOffered) {
           <div class="staff-login__products" role="group" aria-label="Giriş yapılacak ürün">
             <button type="button" [class.selected]="selectedProduct === 'coaching'" [attr.aria-pressed]="selectedProduct === 'coaching'" (click)="selectedProduct = 'coaching'">
               <img src="brand/maxkoc.svg" alt="" width="32" height="32"><span><strong>maxkoç</strong><small>Koçluk</small></span>
@@ -230,6 +237,7 @@
               </button>
             }
           </div>
+          }
 
           <form class="ds-auth__form" (ngSubmit)="submitLogin()">
             <div class="ds-field">

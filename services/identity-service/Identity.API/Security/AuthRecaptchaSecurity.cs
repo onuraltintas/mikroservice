@@ -122,6 +122,14 @@ public static class AuthRecaptchaRules
             };
         }
 
+        // Staff portal sign-in without a product choice (23.11.2026).
+        if (segments.Length == 4
+            && string.Equals(segments[2], "staff", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(segments[3], "login", StringComparison.OrdinalIgnoreCase))
+        {
+            return "auth_login";
+        }
+
         if (segments.Length == 4
             && IsProduct(segments[2]))
         {

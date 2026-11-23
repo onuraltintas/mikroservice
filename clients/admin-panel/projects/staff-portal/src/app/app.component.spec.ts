@@ -37,7 +37,8 @@ describe('Staff portal MFA flow', () => {
       login: vi.fn().mockResolvedValue({
         requiresMfa: true,
         mfaEnrollmentRequired: true,
-        mfaChallengeToken: 'mfa-challenge'
+        mfaChallengeToken: 'mfa-challenge',
+        product: 'coaching'
       }),
       startMfaSetup: vi.fn().mockResolvedValue({
         secret: 'TOTP-SECRET',

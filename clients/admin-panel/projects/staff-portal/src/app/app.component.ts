@@ -246,12 +246,18 @@ export class AppComponent implements AfterViewInit {
     this.isSubmitting = true;
     this.errorMessage = '';
     try {
+      // User decision 23.11.2026: no product choice; the service opens the product with a role for this address.
+      // A link into a product (startPlace) asks for that product first; maxkampüs (pilot page) keeps its own sign-in.
+      const pilotCourse = this.courseManagementOffered && this.selectedProduct === 'course-management';
       const result = await this.auth.login(
-        this.selectedProduct,
+        pilotCourse ? 'course-management' : null,
         this.email.trim(),
         this.password,
-        this.rememberMe
+        this.rememberMe,
+        this.siteRole,
+        this.startPlace?.product ?? (this.courseManagementOffered ? this.selectedProduct : null)
       );
+      this.selectedProduct = result.product;
       if (result.requiresMfa) {
         this.password = '';
         if (!result.mfaChallengeToken) {

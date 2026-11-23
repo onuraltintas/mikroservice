@@ -15,6 +15,7 @@ public sealed class AuthRecaptchaSecurityTests
     [InlineData("/api/auth/login", "auth_login")]
     [InlineData("/api/auth/coaching/login", "auth_login")]
     [InlineData("/api/auth/speed-reading/login", "auth_login")]
+    [InlineData("/api/auth/staff/login", "auth_login")]
     [InlineData("/api/auth/course-management/login", "auth_login")]
     [InlineData("/api/auth/course-management/login/speed-reading", "auth_login")]
     [InlineData("/api/auth/google", "auth_login")]

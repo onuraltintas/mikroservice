@@ -227,6 +227,74 @@
   }
 }
 
+// Canlı giriş ve kayıt (kullanıcı kararı 23.11.2026): maxkoç ve eduivme giriş sayfaları da canlı.
+// Kurallar (SKILL.md): her şey bir kez oynar, sonsuz döngü yok; gradyan ve parlama yok; renkler yalnız --ds-*.
+// "Hareketi azalt" açıksa hiçbiri oynamaz ve gecikmeler de kalkar (içerik hemen görünür).
+@keyframes ds-auth-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ds-auth-pop { 0% { opacity: 0; transform: scale(0.6); } 70% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: none; } }
+@keyframes ds-auth-sweep { from { background-size: 0% 100%; } to { background-size: 100% 100%; } }
+@keyframes ds-auth-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ds-auth-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ds-auth-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+// Markanın imzası: "i"nin noktası yukarıdan düşer, iki kez sekip yerine oturur.
+@keyframes ds-auth-hop {
+  0% { opacity: 0; transform: translateY(-140px); }
+  45% { opacity: 1; transform: translateY(0); }
+  62% { transform: translateY(-34px); }
+  78% { transform: translateY(0); }
+  89% { transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.ds-auth--lively .ds-auth__panel { animation: ds-auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+// Logo bir kez açılır; telefonda sol alan gizli olduğundan üstte markanın vurgu şeridi ve küçük renkli karolar kalır.
+.ds-auth--lively .ds-auth__brand img { animation: ds-auth-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; }
+// Koyu temada eduivme logosu zemine karışmasın diye ince bir çerçeve.
+.ds-auth--lively .ds-auth__brand img { border-radius: 11px; box-shadow: 0 0 0 1px var(--ds-line); }
+@media (max-width: 900px) {
+  .ds-auth--lively .ds-auth__main { border-top: 6px solid var(--ds-accent); }
+}
+// Sırayla belirme: öğe kendi sırasını --i ile verir.
+.ds-auth--lively .ds-rise { animation: ds-auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 110ms + 180ms); }
+.ds-auth--lively .ds-pop { animation: ds-auth-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay: calc(var(--i, 0) * 110ms + 700ms); }
+
+// Büyük "i" işareti (iki marka da). Gövde aşağıdan yükselir, yay çizilir, nokta sıçrar.
+.ds-auth-mark { position: absolute; top: 28px; right: 5%; z-index: 0; width: clamp(200px, 21vw, 300px); height: auto; pointer-events: none; }
+.ds-auth-mark__stem { fill: currentColor; opacity: 0.08; transform-box: fill-box; transform-origin: center bottom; }
+.ds-auth-mark__arc { stroke: var(--ds-accent); opacity: 0.6; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.ds-auth-mark__dot { fill: var(--ds-accent); transform-box: fill-box; transform-origin: center bottom; }
+.ds-auth--lively .ds-auth-mark__stem { animation: ds-auth-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+.ds-auth--lively .ds-auth-mark__arc { animation: ds-auth-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.6s both; }
+.ds-auth--lively .ds-auth-mark__dot { animation: ds-auth-hop 1.3s cubic-bezier(0.33, 0, 0.67, 1) 0.9s both; }
+// maxkoç işareti açık zeminde: gövde mürekkep tonunda, yay yerine fosforlu kalem çizgisi.
+[data-brand='maxkoc'] .ds-auth-mark__stem { fill: var(--ds-primary); opacity: 0.1; }
+
+// Renkli maddeler: her madde kendi tonunda küçük bir karo ile.
+.ds-auth__tones { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 15px; font-weight: 500; }
+.ds-auth__tones li { display: flex; align-items: center; gap: 12px; }
+.ds-auth__tone { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--tone-bg); color: var(--tone-fg); }
+.ds-auth__tone svg { width: 18px; height: 18px; }
+.ds-tone-1 { --tone-bg: var(--ds-info-soft, var(--ds-math-bg)); --tone-fg: var(--ds-info, var(--ds-math-fg)); }
+.ds-tone-2 { --tone-bg: var(--ds-violet-soft, var(--ds-history-bg)); --tone-fg: var(--ds-violet, var(--ds-history-fg)); }
+.ds-tone-3 { --tone-bg: var(--ds-orange-soft, var(--ds-turkish-bg)); --tone-fg: var(--ds-orange, var(--ds-turkish-fg)); }
+.ds-tone-4 { --tone-bg: var(--ds-success-soft); --tone-fg: var(--ds-success); }
+
+// Örnek kart: yükseltilmiş, köşeli rozetlerle.
+.ds-auth__stage { position: relative; z-index: 1; width: min(100%, 420px); }
+.ds-auth__stage .ds-auth__sample { width: 100%; border-radius: 16px; box-shadow: var(--ds-shadow-raised, var(--ds-shadow)); }
+.ds-auth__badge { position: absolute; display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px;
+  background: var(--tone-bg); color: var(--tone-fg); font-size: 13px; font-weight: 700; box-shadow: var(--ds-shadow); white-space: nowrap; }
+.ds-auth__badge--top { top: -16px; right: -12px; }
+.ds-auth__badge--bottom { bottom: -16px; right: 28px; }
+.ds-auth__badge--ok { --tone-bg: var(--ds-success-soft); --tone-fg: var(--ds-success); }
+.ds-auth__badge--warm { --tone-bg: var(--ds-warning-soft); --tone-fg: var(--ds-warning); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-auth--lively .ds-auth__panel, .ds-auth--lively .ds-rise, .ds-auth--lively .ds-pop,
+  .ds-auth--lively .ds-auth-mark__stem, .ds-auth--lively .ds-auth-mark__arc, .ds-auth--lively .ds-auth-mark__dot,
+  .ds-auth--lively .ds-auth__brand img { animation: none !important; }
+}
+
 // Form düzeni yardımcıları: yan yana iki alan, başlıklı alan grubu, geri bağlantısı, ortalanmış yığın.
 .ds-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
 @media (max-width: 560px) { .ds-form-row { grid-template-columns: 1fr; } }

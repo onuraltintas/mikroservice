@@ -70,6 +70,18 @@ public sealed class LoginLockoutTests
         limiter.Failures.Should().BeEmpty();
     }
 
+    // User decision 23.11.2026: the staff portal signs in without a product; an account without a staff role is told so.
+    [Fact]
+    public async Task StaffSignIn_WithoutAStaffRole_IsRejectedAsNotAStaffAccount()
+    {
+        var handler = CreateHandler(CountingUserRepository.Create(ConfirmedUser(), out _), new CountingPasswordHasher(accepts: true), new RecordingLimiter());
+
+        var result = await handler.Handle(
+            new LoginCommand("member@example.test", "correct", Staff: new StaffSignIn("teacher", null)), CancellationToken.None);
+
+        result.Error.Code.Should().Be("Auth.NotStaffAccount");
+    }
+
     [Fact]
     public async Task RedisUnavailable_AllowsTheAttempt()
     {

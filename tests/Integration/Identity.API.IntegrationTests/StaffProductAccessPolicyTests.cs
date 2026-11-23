@@ -53,6 +53,66 @@ public sealed class StaffProductAccessPolicyTests
         accesses.Should().BeEmpty();
     }
 
+    // User decision 23.11.2026: the staff portal no longer asks for a product; the service picks it for the address.
+    [Theory]
+    [InlineData("institution", null, PlatformProduct.SpeedReading)]
+    [InlineData("teacher", null, PlatformProduct.Coaching)]
+    [InlineData(null, null, PlatformProduct.Coaching)]
+    [InlineData(null, PlatformProduct.SpeedReading, PlatformProduct.SpeedReading)]
+    [InlineData("teacher", PlatformProduct.SpeedReading, PlatformProduct.Coaching)]
+    public void ResolveSignInProduct_ShouldOpenTheProductWithARoleForTheAddress(
+        string? workspace, PlatformProduct? preferred, PlatformProduct expected)
+    {
+        var user = User.Create(Guid.NewGuid(), "teacher-and-manager@example.com");
+        AddRole(user, "Teacher", PlatformProduct.Coaching);
+        AddRole(user, "InstitutionAdmin", PlatformProduct.SpeedReading);
+        Grant(user, PlatformProduct.Coaching);
+        Grant(user, PlatformProduct.SpeedReading);
+
+        StaffProductAccessPolicy.ResolveSignInProduct(user, workspace, preferred).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(null, PlatformProduct.Coaching)]
+    [InlineData(PlatformProduct.SpeedReading, PlatformProduct.SpeedReading)]
+    [InlineData(PlatformProduct.CourseManagement, PlatformProduct.Coaching)]
+    public void ResolveSignInProduct_WithTwoFittingProducts_ShouldPreferTheLastUsedOtherwiseMaxkoc(
+        PlatformProduct? preferred, PlatformProduct expected)
+    {
+        var user = User.Create(Guid.NewGuid(), "two-products@example.com");
+        AddRole(user, "Teacher", PlatformProduct.Coaching);
+        AddRole(user, "Teacher", PlatformProduct.SpeedReading);
+        Grant(user, PlatformProduct.Coaching);
+        Grant(user, PlatformProduct.SpeedReading);
+
+        StaffProductAccessPolicy.ResolveSignInProduct(user, "teacher", preferred).Should().Be(expected);
+    }
+
+    [Fact]
+    public void ResolveSignInProduct_WithOnlySpeedReading_ShouldOpenItEvenWhenTheAddressDoesNotFit()
+    {
+        var user = User.Create(Guid.NewGuid(), "reading-teacher@example.com");
+        AddRole(user, "Teacher", PlatformProduct.SpeedReading);
+        Grant(user, PlatformProduct.SpeedReading);
+
+        StaffProductAccessPolicy.ResolveSignInProduct(user, "institution", null).Should().Be(PlatformProduct.SpeedReading);
+    }
+
+    [Fact]
+    public void ResolveSignInProduct_WithoutAStaffRole_ShouldReturnNothing()
+    {
+        var user = User.Create(Guid.NewGuid(), "student@example.com");
+        AddRole(user, "Student", PlatformProduct.Coaching);
+        AddRole(user, "CourseTeacher", PlatformProduct.CourseManagement);
+        Grant(user, PlatformProduct.Coaching);
+        Grant(user, PlatformProduct.CourseManagement);
+
+        StaffProductAccessPolicy.ResolveSignInProduct(user, "teacher", null).Should().BeNull();
+    }
+
+    private static void Grant(User user, PlatformProduct product) =>
+        user.GrantProductAccess(product, UserProductAccessSource.Admin, grantedByUserId: null, DateTimeOffset.UtcNow);
+
     private static void AddRole(
         User user,
         string roleName,

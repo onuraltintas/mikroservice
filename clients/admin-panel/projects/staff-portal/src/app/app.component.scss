@@ -6,14 +6,16 @@
 /* Redesign 18.11.2026: personel girişi ortak ds-auth düzeniyle (shared/styles/_design-components.scss). */
 .staff-login__copy { display: flex; flex-direction: column; gap: 18px; }
 .staff-login__visual { justify-content: space-between; }
-.staff-login__mark { position: absolute; right: 8%; bottom: -180px; }
-.staff-login__stem { fill: currentColor; opacity: 0.08; }
-.staff-login__arc { stroke: var(--ds-accent); opacity: 0.45; }
-.staff-login__dot { fill: var(--ds-accent); opacity: 0.9; }
 .staff-login__products { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.staff-login__products button { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 10px; border: 1.5px solid var(--ds-line); border-radius: var(--ds-radius-control); background: var(--ds-surface); color: var(--ds-text); font: inherit; text-align: left; cursor: pointer; }
+.staff-login__products button { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 10px; border: 1.5px solid var(--ds-line); border-radius: var(--ds-radius-control); background: var(--ds-surface); color: var(--ds-text); font: inherit; text-align: left; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, transform 180ms ease, box-shadow 180ms ease; }
+/* Canlı giriş 23.11.2026: ürün kartı üstüne gelince yükselir; seçili ürün kendi tonunda. */
+.staff-login__products button:hover { transform: translateY(-2px); box-shadow: var(--ds-shadow); }
+.staff-login__products button:nth-child(1) { --tone-bg: var(--ds-info-soft); --tone-line: var(--ds-info); }
+.staff-login__products button:nth-child(2) { --tone-bg: var(--ds-success-soft); --tone-line: var(--ds-success); }
+.staff-login__products button:nth-child(3) { --tone-bg: var(--ds-violet-soft); --tone-line: var(--ds-violet); }
+@media (prefers-reduced-motion: reduce) { .staff-login__products button:hover { transform: none; } }
 .staff-login__products button:hover { border-color: var(--ds-field); }
-.staff-login__products button.selected { border-color: var(--ds-primary); box-shadow: inset 0 0 0 1px var(--ds-primary); }
+.staff-login__products button.selected { border-color: var(--tone-line, var(--ds-primary)); background: var(--tone-bg, var(--ds-surface)); box-shadow: inset 0 0 0 1px var(--tone-line, var(--ds-primary)); }
 .staff-login__products strong, .staff-login__products small { display: block; }
 .staff-login__products strong { font-size: 15px; font-weight: 600; }
 .staff-login__products small { color: var(--ds-muted); font-size: 13px; }

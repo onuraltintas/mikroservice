@@ -21,13 +21,15 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('logs into the selected product and loads only server-authorized staff products', async () => {
-    const login = service.login('coaching', 'teacher@example.com', 'correct horse battery staple');
-    const loginRequest = http.expectOne('/api/auth/coaching/login');
+    const login = service.login(null, 'teacher@example.com', 'correct horse battery staple');
+    const loginRequest = http.expectOne('/api/auth/staff/login');
     expect(loginRequest.request.withCredentials).toBe(true);
     expect(loginRequest.request.body).toEqual({
       email: 'teacher@example.com',
       password: 'correct horse battery staple',
-      rememberMe: false
+      rememberMe: false,
+      workspace: null,
+      preferredProduct: null
     });
     loginRequest.flush({ accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer' });
     await Promise.resolve();
@@ -46,9 +48,36 @@ describe('StaffAuthService product-scoped sessions', () => {
     ]);
   });
 
+  // User decision 23.11.2026: no product choice; the service opens the product with a role for the address and says which.
+  it('signs in without a product and opens the product the service chose for the address', async () => {
+    localStorage.setItem('eduplatform_staff_last_product', 'speed-reading');
+    const login = service.login(null, 'manager@example.com', 'password', false, 'institution');
+    const request = http.expectOne('/api/auth/staff/login');
+    expect(request.request.body).toEqual(expect.objectContaining({ workspace: 'institution', preferredProduct: 'speed-reading' }));
+    request.flush({ accessToken: 'reading-access', expiresInMinutes: 15, tokenType: 'Bearer', product: 'speed-reading' });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([{ product: 'speed-reading', roles: ['InstitutionAdmin'] }]);
+
+    const result = await login;
+
+    expect(result.product).toBe('speed-reading');
+    expect(service.activeProduct()).toBe('speed-reading');
+    expect(localStorage.getItem('eduplatform_staff_last_product')).toBe('speed-reading');
+    localStorage.removeItem('eduplatform_staff_last_product');
+  });
+
+  it('tells the MFA step which product the service opened', async () => {
+    const login = service.login(null, 'manager@example.com', 'password', false, 'institution');
+    http.expectOne('/api/auth/staff/login').flush({ requiresMfa: true, mfaChallengeToken: 'challenge', product: 'speed-reading' });
+
+    const result = await login;
+
+    expect(result).toEqual({ requiresMfa: true, mfaEnrollmentRequired: false, mfaChallengeToken: 'challenge', product: 'speed-reading' });
+  });
+
   it('honors an explicit remember-me choice', async () => {
-    const login = service.login('coaching', 'teacher@example.com', 'password', true);
-    const request = http.expectOne('/api/auth/coaching/login');
+    const login = service.login(null, 'teacher@example.com', 'password', true);
+    const request = http.expectOne('/api/auth/staff/login');
     expect(request.request.body.rememberMe).toBe(true);
     request.flush({ accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer' });
     await Promise.resolve();
@@ -63,8 +92,8 @@ describe('StaffAuthService product-scoped sessions', () => {
       sub: 'teacher-1',
       exp: Math.floor(Date.now() / 1000) + 900
     }));
-    const login = service.login('coaching', 'teacher@example.com', 'password');
-    http.expectOne('/api/auth/coaching/login').flush({
+    const login = service.login(null, 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/staff/login').flush({
       accessToken: `e30.${payload}.signature`, expiresInMinutes: 15, tokenType: 'Bearer'
     });
     await Promise.resolve();
@@ -77,8 +106,8 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('rotates into the selected product session without persisting access tokens', async () => {
-    const login = service.login('coaching', 'teacher@example.com', 'password');
-    http.expectOne('/api/auth/coaching/login').flush({
+    const login = service.login(null, 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/staff/login').flush({
       accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer'
     });
     await Promise.resolve();
@@ -132,8 +161,8 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('uses an independent course session for switching, refresh and logout', async () => {
-    const login = service.login('coaching', 'teacher@example.com', 'password');
-    http.expectOne('/api/auth/coaching/login').flush({
+    const login = service.login(null, 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/staff/login').flush({
       accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer'
     });
     await Promise.resolve();
@@ -165,8 +194,8 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('keeps the active session usable when per-tab storage is unavailable', async () => {
-    const login = service.login('coaching', 'teacher@example.com', 'password');
-    http.expectOne('/api/auth/coaching/login').flush({
+    const login = service.login(null, 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/staff/login').flush({
       accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer'
     });
     await Promise.resolve();

@@ -1,29 +1,76 @@
-// Giriş ve kayıt sayfalarının çerçevesi. Düzen ve ortak bileşenler: shared/styles/_design-components.scss.
+// Giriş ve kayıt sayfalarının çerçevesi. Düzen, işaret ve hareketler: shared/styles/_design-components.scss.
+// Canlı giriş (23.11.2026): örnek kartlar renkli ve bir kez canlanır; "Hareketi azalt" açıksa hepsi durur.
 :host { display: block; }
 
 .shell-panel--wide { max-width: 560px; }
 .shell-visual__copy { display: flex; flex-direction: column; gap: 18px; }
 
-// eduivme: koyu zemin üstünde büyük "i" işareti.
+// eduivme: koyu zemin.
 .shell-visual--dark { justify-content: space-between; }
-.shell-visual__mark { position: absolute; right: 8%; bottom: -180px; }
-.shell-visual__stem { fill: currentColor; opacity: 0.08; }
-.shell-visual__arc { stroke: var(--ds-accent); opacity: 0.45; }
-.shell-visual__dot { fill: var(--ds-accent); opacity: 0.9; }
 
-// maxkoç: örnek gün ve haftalık özet.
+// Örnek kartın satırları.
 .shell-sample__head, .shell-sample__line { display: flex; justify-content: space-between; gap: 12px; }
 .shell-sample__head span, .shell-sample__line > span { color: var(--ds-muted); font-size: 14px; font-weight: 500; }
 .shell-sample__line { font-size: 15px; }
-.shell-sample__row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--ds-radius-control); font-size: 15px; }
+.shell-sample__row { position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--ds-radius-control); font-size: 15px; }
 .shell-sample__row--done { color: var(--ds-muted); }
-.shell-sample__row--now { background: var(--ds-soft); }
-.shell-sample__now { margin-left: auto; padding: 1px 7px; border-radius: 4px; background: var(--ds-accent); color: var(--ds-on-accent); font-size: 12px; font-weight: 700; }
+// maxkoç imzası: "Şimdi" satırının altından fosforlu kalem geçer.
+.shell-sample__row--now {
+  background-color: var(--ds-soft);
+  background-image: linear-gradient(color-mix(in srgb, var(--ds-accent) 55%, transparent), color-mix(in srgb, var(--ds-accent) 55%, transparent));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  font-weight: 600;
+  animation: ds-auth-sweep 0.9s cubic-bezier(0.65, 0, 0.35, 1) 1.1s both;
+}
+// Koyu temada kalem daha soluk; açık yazı en az 4,5:1 kalır.
+:host-context(html.dark) .shell-sample__row--now, :host-context([data-theme='dark']) .shell-sample__row--now {
+  background-image: linear-gradient(color-mix(in srgb, var(--ds-accent) 28%, transparent), color-mix(in srgb, var(--ds-accent) 28%, transparent));
+}
+.shell-sample__now { margin-left: auto; padding: 1px 7px; border-radius: 4px; background: var(--ds-primary); color: var(--ds-on-primary); font-size: 12px; font-weight: 700; }
 .shell-sample__bar { display: block; height: 8px; border-radius: 4px; background: var(--ds-line); overflow: hidden; }
-.shell-sample__bar span { display: block; width: 69%; height: 100%; background: var(--ds-primary); }
+.shell-sample__bar span { display: block; width: 69%; height: 100%; border-radius: 4px; background: var(--ds-primary); transform-origin: left center; animation: ds-auth-fill 1s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both; }
+.shell-sample__bar--low span { background: var(--ds-warning); }
+
+// Tamamlanan görevin onay işareti çizilir; diğerlerinde boş daire.
+.shell-check { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--ds-success); color: var(--ds-surface); }
+.shell-check svg { width: 14px; height: 14px; }
+.shell-check path { stroke-dasharray: 1; animation: ds-auth-draw 0.5s ease-out 0.9s both; }
+.shell-dot { flex: none; width: 20px; height: 20px; box-sizing: border-box; border: 2px solid var(--ds-field); border-radius: 50%; }
 
 // Ders etiketleri: --ds-math-* gibi değişkenler (açık ve koyu tema üreticide).
 .shell-chip { flex: none; padding: 2px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; }
 .shell-chip--math { background: var(--ds-math-bg); color: var(--ds-math-fg); }
 .shell-chip--turkish { background: var(--ds-turkish-bg); color: var(--ds-turkish-fg); }
 .shell-chip--science { background: var(--ds-science-bg); color: var(--ds-science-fg); }
+.shell-chip--history { background: var(--ds-history-bg); color: var(--ds-history-fg); }
+
+// Veli: haftanın günleri, sütunlar aşağıdan yükselir.
+.shell-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: end; height: 92px; padding-top: 6px; }
+.shell-days__day { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; color: var(--ds-muted); font-size: 12px; font-weight: 500; }
+.shell-days__bar { display: block; width: 100%; max-width: 26px; min-height: 6px; border-radius: 6px 6px 3px 3px; background: var(--ds-primary); opacity: 0.85;
+  transform-origin: center bottom; animation: ds-auth-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both; }
+.shell-days__day:nth-child(4) .shell-days__bar { background: var(--ds-accent); opacity: 1; }
+
+// Öğretmen: öğrencilerin haftası.
+.shell-person { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+.shell-person__avatar { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--tone-bg); color: var(--tone-fg); font-size: 15px; font-weight: 700; }
+.shell-person__body { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.shell-person__name { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
+.shell-person__name span { color: var(--ds-muted); font-variant-numeric: tabular-nums; }
+
+// Kurum: deneme ortalaması, sütunlar aşağıdan yükselir; son ay vurgulu.
+.shell-chart { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; align-items: end; height: 140px; }
+.shell-chart__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; color: var(--ds-muted); font-size: 12px; font-weight: 500; }
+.shell-chart__col strong { color: var(--ds-text); font-size: 13px; font-variant-numeric: tabular-nums; }
+.shell-chart__bar { display: block; width: 100%; max-width: 40px; border-radius: 8px 8px 3px 3px; background: var(--ds-info, var(--ds-primary));
+  transform-origin: center bottom; animation: ds-auth-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both; }
+.shell-chart__col:nth-child(2) .shell-chart__bar { animation-delay: 0.88s; }
+.shell-chart__col:nth-child(3) .shell-chart__bar { animation-delay: 0.96s; }
+.shell-chart__col:nth-child(4) .shell-chart__bar { animation-delay: 1.04s; }
+.shell-chart__col:nth-child(5) .shell-chart__bar { animation-delay: 1.12s; }
+.shell-chart__bar--now { background: var(--ds-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-sample__row--now, .shell-sample__bar span, .shell-check path, .shell-days__bar, .shell-chart__bar { animation: none !important; }
+}

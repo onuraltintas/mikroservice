@@ -58,6 +58,50 @@ public class AuthController : ControllerBase
         return await LoginAsync(command with { Product = platformProduct });
     }
 
+    /// <summary>
+    /// User decision 23.11.2026: the staff portal signs in without a product choice. The service opens the product where
+    /// the account holds a role for the address (teacher or institution) and tells the portal which one it opened.
+    /// </summary>
+    [HttpPost("staff/login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> StaffLogin([FromBody] StaffLoginRequest request)
+    {
+        PlatformProduct? preferred = null;
+        if (request.PreferredProduct is { } value
+            && PlatformProductExtensions.TryParseRouteValue(value, out var parsed)
+            && parsed is PlatformProduct.Coaching or PlatformProduct.SpeedReading)
+        {
+            preferred = parsed;
+        }
+        var workspace = request.Workspace?.Trim().ToLowerInvariant();
+        if (workspace is not ("teacher" or "institution"))
+        {
+            workspace = null;
+        }
+        var result = await _mediator.Send(new LoginCommand(
+            request.Email, request.Password, request.RememberMe, Product: null, Staff: new StaffSignIn(workspace, preferred)));
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+        if (result.Value.RequiresMfa)
+        {
+            return Ok(result.Value);
+        }
+
+        var session = RefreshTokenCookiePolicy.Issue(Response, result.Value, UseSecureSessionCookie);
+        return Ok(new StaffLoginSessionResponse(session.AccessToken, session.TokenType, session.ExpiresInMinutes, result.Value.Product));
+    }
+
+    public sealed record StaffLoginRequest(
+        [Required, EmailAddress, MaxLength(256)] string Email,
+        [Required, MaxLength(256)] string Password,
+        bool RememberMe = false,
+        [MaxLength(32)] string? Workspace = null,
+        [MaxLength(32)] string? PreferredProduct = null);
+
+    public sealed record StaffLoginSessionResponse(string AccessToken, string TokenType, int ExpiresInMinutes, string? Product);
+
     private async Task<IActionResult> LoginAsync(LoginCommand command)
     {
         var result = await _mediator.Send(command);

@@ -1,46 +1,93 @@
-<div class="ds-auth" [attr.data-brand]="page.brand">
+<div class="ds-auth" [attr.data-brand]="page.brand" [class.ds-auth--lively]="true">
   <section class="ds-auth__visual shell-visual" [class.shell-visual--dark]="page.brand === 'eduivme'"
     [attr.aria-label]="page.brandName + ' hakkında'">
-    @if (page.brand === 'eduivme') {
-      <svg class="shell-visual__mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
-        <rect class="shell-visual__stem" x="210" y="300" width="130" height="420" rx="65"></rect>
-        <path class="shell-visual__arc" d="M150 200c40-80 120-120 190-108" fill="none" stroke-width="22" stroke-linecap="round"></path>
-        <circle class="shell-visual__dot" cx="370" cy="110" r="78"></circle>
-      </svg>
-      <span class="ds-auth__place">{{ page.place }}</span>
-    }
+    <!-- Canlı giriş 23.11.2026: markanın "i" işareti; gövde yükselir, yay çizilir, nokta sıçrar (bir kez). -->
+    <svg class="ds-auth-mark" width="420" height="560" viewBox="0 0 520 700" aria-hidden="true">
+      <rect class="ds-auth-mark__stem" x="210" y="290" width="130" height="390" rx="65"></rect>
+      <path class="ds-auth-mark__arc" d="M150 200c40-80 120-120 190-108" pathLength="1" fill="none" stroke-width="22" stroke-linecap="round"></path>
+      <circle class="ds-auth-mark__dot" cx="370" cy="110" r="78"></circle>
+    </svg>
+    <span class="ds-auth__place ds-rise" style="--i: 0">{{ page.place }}</span>
     <div class="shell-visual__copy">
-      <h2 class="ds-auth__headline">{{ headline() ?? page.headline }}</h2>
-      <p class="ds-auth__sub">{{ sub() ?? page.sub }}</p>
+      <h2 class="ds-auth__headline ds-rise" style="--i: 1">{{ headline() ?? page.headline }}</h2>
+      <p class="ds-auth__sub ds-rise" style="--i: 2">{{ sub() ?? page.sub }}</p>
     </div>
 
     <!-- Live test 13.11.2026: no invented testimonial; only what the product does is shown. -->
     @if (points(); as list) {
-      <ul class="ds-auth__points" [attr.data-testid]="featuresTestId()">
-        @for (point of list; track point) { <li>{{ point }}</li> }
+      <ul class="ds-auth__tones" [attr.data-testid]="featuresTestId()">
+        @for (point of list; track point; let index = $index) {
+          <li class="ds-rise" [style.--i]="index + 3"><span [class]="'ds-auth__tone ' + tone(index)" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 10.5 3.2 3.2L15 7"/></svg></span>{{ point }}</li>
+        }
       </ul>
     } @else {
       @switch (page.visual) {
         @case ('today') {
-          <div class="ds-auth__sample" aria-hidden="true" [attr.data-testid]="featuresTestId()">
-            <span class="shell-sample__head"><strong>Bugün</strong><span>1 / 3 tamam</span></span>
-            <span class="shell-sample__row shell-sample__row--done"><span class="shell-chip shell-chip--math">Matematik</span><s>Üslü ifadeler</s></span>
-            <span class="shell-sample__row shell-sample__row--now"><span class="shell-chip shell-chip--turkish">Türkçe</span>Paragraf, 20 soru<span class="shell-sample__now">Şimdi</span></span>
-            <span class="shell-sample__row"><span class="shell-chip shell-chip--science">Fen</span>DNA tekrarı</span>
+          <div class="ds-auth__stage ds-rise" style="--i: 3" [attr.data-testid]="featuresTestId()">
+            <div class="ds-auth__sample" aria-hidden="true">
+              <span class="shell-sample__head"><strong>Bugün</strong><span>1 / 3 tamam</span></span>
+              <span class="shell-sample__row shell-sample__row--done"><span class="shell-check"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="m5 10.5 3.2 3.2L15 7"/></svg></span><span class="shell-chip shell-chip--math">Matematik</span><s>Üslü ifadeler</s></span>
+              <span class="shell-sample__row shell-sample__row--now"><span class="shell-dot"></span><span class="shell-chip shell-chip--turkish">Türkçe</span>Paragraf, 20 soru<span class="shell-sample__now">Şimdi</span></span>
+              <span class="shell-sample__row"><span class="shell-dot"></span><span class="shell-chip shell-chip--science">Fen</span>DNA tekrarı</span>
+              <span class="shell-sample__row"><span class="shell-dot"></span><span class="shell-chip shell-chip--history">İnkılap</span>Milli Mücadele, 15 soru</span>
+            </div>
+            <span class="ds-auth__badge ds-auth__badge--top ds-auth__badge--ok ds-pop" style="--i: 0" aria-hidden="true">Bu hafta +8 net</span>
+            <span class="ds-auth__badge ds-auth__badge--bottom ds-auth__badge--warm ds-pop" style="--i: 1" aria-hidden="true">6 günlük seri</span>
           </div>
         }
         @case ('week') {
-          <div class="ds-auth__sample" aria-hidden="true" [attr.data-testid]="featuresTestId()">
-            <strong>Haftalık özet</strong>
-            <span class="shell-sample__line"><span>Çalışma</span><strong>9 sa 40 dk / 14 sa</strong></span>
-            <span class="shell-sample__bar"><span></span></span>
-            <span class="shell-sample__line"><span>Son deneme</span><strong>72 net</strong></span>
-            <span class="shell-sample__line"><span>Sıradaki görüşme</span><strong>Cuma 17:30</strong></span>
+          <div class="ds-auth__stage ds-rise" style="--i: 3" [attr.data-testid]="featuresTestId()">
+            <div class="ds-auth__sample" aria-hidden="true">
+              <strong>Haftalık özet</strong>
+              <span class="shell-sample__line"><span>Çalışma</span><strong>9 sa 40 dk / 14 sa</strong></span>
+              <span class="shell-sample__bar"><span></span></span>
+              <span class="shell-days">
+                @for (day of week; track day.label) {
+                  <span class="shell-days__day"><span class="shell-days__bar" [style.height.%]="day.value"></span><span>{{ day.label }}</span></span>
+                }
+              </span>
+              <span class="shell-sample__line"><span>Son deneme</span><strong>72 net</strong></span>
+              <span class="shell-sample__line"><span>Sıradaki görüşme</span><strong>Cuma 17:30</strong></span>
+            </div>
+            <span class="ds-auth__badge ds-auth__badge--top ds-auth__badge--ok ds-pop" style="--i: 0" aria-hidden="true">Ödevler tamam</span>
+          </div>
+        }
+        @case ('roster') {
+          <div class="ds-auth__stage ds-rise" style="--i: 3" [attr.data-testid]="featuresTestId()">
+            <div class="ds-auth__sample" aria-hidden="true">
+              <span class="shell-sample__head"><strong>Bu hafta</strong><span>3 öğrenci</span></span>
+              @for (student of roster; track student.name; let index = $index) {
+                <span class="shell-person">
+                  <span class="shell-person__avatar" [class]="'shell-person__avatar ' + tone(index)">{{ student.name.charAt(0) }}</span>
+                  <span class="shell-person__body">
+                    <span class="shell-person__name">{{ student.name }}<span>%{{ student.done }}</span></span>
+                    <span class="shell-sample__bar" [class.shell-sample__bar--low]="student.done < 40"><span [style.width.%]="student.done"></span></span>
+                  </span>
+                </span>
+              }
+            </div>
+            <span class="ds-auth__badge ds-auth__badge--bottom ds-auth__badge--warm ds-pop" style="--i: 0" aria-hidden="true">1 öğrenci desteğe ihtiyaç duyuyor</span>
+          </div>
+        }
+        @case ('report') {
+          <div class="ds-auth__stage ds-rise" style="--i: 3" [attr.data-testid]="featuresTestId()">
+            <div class="ds-auth__sample" aria-hidden="true">
+              <span class="shell-sample__head"><strong>Deneme ortalaması</strong><span>Son 5 deneme</span></span>
+              <span class="shell-chart">
+                @for (exam of report; track exam.label; let last = $last) {
+                  <span class="shell-chart__col"><strong>{{ exam.net }}</strong><span class="shell-chart__bar" [class.shell-chart__bar--now]="last" [style.height.%]="exam.net"></span><span>{{ exam.label }}</span></span>
+                }
+              </span>
+              <span class="shell-sample__line"><span>Etkin öğrenci</span><strong>148</strong></span>
+            </div>
+            <span class="ds-auth__badge ds-auth__badge--top ds-auth__badge--ok ds-pop" style="--i: 0" aria-hidden="true">+6 net</span>
           </div>
         }
         @default {
-          <ul class="ds-auth__points" [attr.data-testid]="featuresTestId()">
-            @for (point of page.points; track point) { <li>{{ point }}</li> }
+          <ul class="ds-auth__tones" [attr.data-testid]="featuresTestId()">
+            @for (point of page.points; track point; let index = $index) {
+              <li class="ds-rise" [style.--i]="index + 3"><span [class]="'ds-auth__tone ' + tone(index)" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 10.5 3.2 3.2L15 7"/></svg></span>{{ point }}</li>
+            }
           </ul>
         }
       }

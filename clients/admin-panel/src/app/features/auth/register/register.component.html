@@ -1,4 +1,4 @@
-<!-- Redesign 18.11.2026: kayıt türü seçimi. Çerçeve: auth-shell. -->
+<!-- Redesign 18.11.2026: kayıt türü seçimi. Çerçeve: auth-shell. Canlı giriş 23.11.2026: her türün kendi tonu, sırayla belirir. -->
 <app-auth-shell [wide]="true">
   <div class="ds-auth__heading">
     <h1 class="ds-auth__title">Hoş geldin</h1>
@@ -14,19 +14,23 @@
     </div>
   } @else {
     <nav class="choices" aria-label="Hesap türü">
-      <a class="choice" routerLink="/auth/register/student">
+      <a class="choice ds-tone-1" routerLink="/auth/register/student" style="--i: 0">
+        <span class="choice__icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 10 5l7 3.5-7 3.5-7-3.5Z"/><path d="M6 10v3.5c0 1 1.8 2 4 2s4-1 4-2V10"/></svg></span>
         <span class="choice__title">Öğrenci</span>
         <span class="choice__text">Sınavına kadar haftalık çalışma planını kur; denemelerini ve ödevlerini takip et.</span>
       </a>
-      <a class="choice" routerLink="/auth/register/parent">
+      <a class="choice ds-tone-2" routerLink="/auth/register/parent" style="--i: 1">
+        <span class="choice__icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="6.5" r="2.5"/><circle cx="13.5" cy="8" r="2"/><path d="M2.5 16c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5"/><path d="M11 16c.3-2 1.4-3.5 2.5-3.5 1.6 0 3 1.5 3 3.5"/></svg></span>
         <span class="choice__title">Veli</span>
         <span class="choice__text">Çocuğunun onayıyla planını, denemelerini ve seanslarını izle.</span>
       </a>
-      <a class="choice" routerLink="/auth/register/teacher">
+      <a class="choice ds-tone-3" routerLink="/auth/register/teacher" style="--i: 2">
+        <span class="choice__icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="9" rx="1.5"/><path d="M7 16h6M10 13v3M6.5 8h4"/></svg></span>
         <span class="choice__title">Öğretmen</span>
         <span class="choice__text">Öğrencilerinin planını hazırla; ödev, deneme ve seanslarını yönet.</span>
       </a>
-      <a class="choice" routerLink="/auth/register/institution">
+      <a class="choice ds-tone-4" routerLink="/auth/register/institution" style="--i: 3">
+        <span class="choice__icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16h14M4.5 16V8.5L10 5l5.5 3.5V16"/><path d="M8 16v-4h4v4"/></svg></span>
         <span class="choice__title">Kurum</span>
         <span class="choice__text">Öğretmen ve öğrencilerini tek yerden yönet, raporları izle.</span>
       </a>
