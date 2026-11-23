@@ -2,9 +2,16 @@
 :host { display: block; }
 .choice-loading { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--ds-muted); }
 .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.choice { display: flex; flex-direction: column; gap: 6px; min-height: 44px; padding: 16px; border: 1.5px solid var(--ds-line); border-radius: var(--ds-radius);
-  background: var(--ds-surface); color: var(--ds-text); text-decoration: none; transition: border-color 150ms ease, background-color 150ms ease; }
-.choice:hover { border-color: var(--ds-primary); background: var(--ds-soft); }
+.choice { display: flex; flex-direction: column; gap: 6px; min-height: 44px; padding: 16px; border: 1.5px solid var(--ds-line); border-radius: 14px;
+  background: var(--ds-surface); color: var(--ds-text); text-decoration: none;
+  transition: border-color 150ms ease, background-color 150ms ease, transform 180ms ease, box-shadow 180ms ease;
+  animation: ds-auth-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 90ms + 250ms); }
+// Canlı giriş 23.11.2026: üstüne gelince kart kendi tonuna boyanır ve hafifçe yükselir.
+.choice:hover { border-color: var(--tone-fg); background: var(--tone-bg); transform: translateY(-3px); box-shadow: var(--ds-shadow); }
+.choice__icon { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 4px; border-radius: 11px; background: var(--tone-bg); color: var(--tone-fg); }
+.choice__icon svg { width: 22px; height: 22px; }
+.choice:hover .choice__icon { background: var(--ds-surface); }
+@media (prefers-reduced-motion: reduce) { .choice { animation: none; } .choice:hover { transform: none; } }
 .choice__title { font-size: 17px; font-weight: 600; }
 .choice__text { color: var(--ds-muted); font-size: 14px; line-height: 1.5; }
 @media (max-width: 520px) { .choices { grid-template-columns: 1fr; } }

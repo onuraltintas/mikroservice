@@ -11,8 +11,11 @@ export interface AuthPageContent {
   brandName: string;
   brandNote: string;
   logo: string;
-  /** What the left side shows: a sample day, a parent's weekly summary or a short list of what the panel does. */
-  visual: 'today' | 'week' | 'points';
+  /**
+   * What the left side shows: a sample day, a parent's weekly summary, a teacher's week, an institution's exam report
+   * or a short list of what the panel does.
+   */
+  visual: 'today' | 'week' | 'roster' | 'report' | 'points';
   place: string;
   headline: string;
   sub: string;
@@ -47,7 +50,7 @@ export const AUTH_PAGES: Readonly<Record<EduivmeSite, AuthPageContent>> = {
     other: { lead: 'Öğrenci misin?', label: 'Öğrenci girişi', site: 'student' }
   },
   teacher: {
-    ...EDUIVME, brandNote: 'Personel paneli', visual: 'points', place: 'ogretmen.eduivme.com',
+    ...EDUIVME, brandNote: 'Personel paneli', visual: 'roster', place: 'ogretmen.eduivme.com',
     headline: 'Öğrencilerinin haftası tek listede.',
     sub: 'Planları, ödevleri ve denemeleri izle; kimin desteğe ihtiyacı olduğunu ilk bakışta gör.',
     points: ['maxkoç ve Master Hızlı Okuma öğrencileri', 'Ödev, seans ve haftalık değerlendirme', 'Veliyle ve öğrenciyle mesajlaşma'],
@@ -56,7 +59,7 @@ export const AUTH_PAGES: Readonly<Record<EduivmeSite, AuthPageContent>> = {
     other: { lead: 'Kurum yöneticisi misin?', label: 'Kurum girişi', site: 'institution' }
   },
   institution: {
-    ...EDUIVME, brandNote: 'Personel paneli', visual: 'points', place: 'kurum.eduivme.com',
+    ...EDUIVME, brandNote: 'Personel paneli', visual: 'report', place: 'kurum.eduivme.com',
     headline: 'Kurumunun koçluk işleri tek yerde.',
     sub: 'Öğretmenler, öğrenciler, koltuklar ve tahsilat; hepsi aynı panelde.',
     points: ['Öğretmen ve öğrenci yönetimi', 'Deneme analizi ve raporlar', 'Abonelik ve tahsilat'],

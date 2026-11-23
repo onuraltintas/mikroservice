@@ -26,4 +26,17 @@ export class AuthShellComponent {
   readonly sub = input<string | null>(null);
   readonly points = input<readonly string[] | null>(null);
   readonly featuresTestId = input('login-features');
+
+  // Canlı giriş 23.11.2026: örnek kartların uydurma olmayan, açıkça örnek veri olduğu görülen içerikleri.
+  readonly week = [
+    { label: 'Pt', value: 60 }, { label: 'Sa', value: 85 }, { label: 'Ça', value: 40 }, { label: 'Pe', value: 95 },
+    { label: 'Cu', value: 70 }, { label: 'Ct', value: 50 }, { label: 'Pz', value: 20 }
+  ] as const;
+  readonly roster = [{ name: 'Ece', done: 86 }, { name: 'Mert', done: 64 }, { name: 'Zeynep', done: 31 }] as const;
+  readonly report = [
+    { label: 'Tem', net: 52 }, { label: 'Ağu', net: 58 }, { label: 'Eyl', net: 61 }, { label: 'Eki', net: 66 }, { label: 'Kas', net: 72 }
+  ] as const;
+
+  /** Maddeler ve kişiler sırayla dört tondan birini alır (ds-tone-1…4). */
+  tone(index: number): string { return `ds-tone-${(index % 4) + 1}`; }
 }
