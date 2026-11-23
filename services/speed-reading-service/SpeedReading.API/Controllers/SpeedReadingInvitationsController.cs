@@ -32,6 +32,8 @@ public sealed class SpeedReadingInvitationsController(
     // Students already in the institution stay; the rule is checked on inviting and the seat is taken on accepting.
     public const string InstitutionNeedsPlan = "Yeni öğrenci eklemek için kurumunuzun bir paketi olmalı. Paketi kurum aboneliği sayfasından seçebilirsiniz.";
     public const string InstitutionPlanFull = "Kurum paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için ek öğrenci alın ya da daha büyük bir paket seçin.";
+    // Live test 23.11.2026: a plan that sells no extra seats must not tell the buyer to buy one.
+    public const string InstitutionPlanFullNoExtra = "Kurum paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için daha büyük bir paket seçin.";
     public const string InstitutionHasNoSeat = "Davet eden kurumun paketinde boş yer kalmadığı için bu davet şu an kabul edilemiyor. Kurumuna haber ver.";
 
     private async Task<bool> StaffSeatsRequiredAsync(Guid user, CancellationToken cancellationToken) =>
@@ -81,7 +83,8 @@ public sealed class SpeedReadingInvitationsController(
         {
             var pool = await billingSeats!.GetPoolAsync(institutionId, cancellationToken);
             if (pool is null) return Conflict(new { code = "Invitation.InstitutionNeedsPlan", message = InstitutionNeedsPlan });
-            if (pool.Used >= pool.Capacity) return Conflict(new { code = "Invitation.InstitutionPlanFull", message = InstitutionPlanFull });
+            if (pool.Used >= pool.Capacity)
+                return Conflict(new { code = "Invitation.InstitutionPlanFull", message = pool.ExtraSeatPrice is null ? InstitutionPlanFullNoExtra : InstitutionPlanFull });
         }
 
         var created = await invitations.CreateAsync(

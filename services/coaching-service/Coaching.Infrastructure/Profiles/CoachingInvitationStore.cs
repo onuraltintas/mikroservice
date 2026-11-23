@@ -19,8 +19,11 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
     // when the student accepts (the seat is taken then).
     public const string TeacherNeedsPlan = "Yeni öğrenci eklemek için bir öğretmen paketi seçin. Paketinizi Hesabım bölümündeki Öğretmen planım sayfasından alabilirsiniz.";
     public const string TeacherPlanFull = "Paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için ek öğrenci alın ya da daha büyük bir paket seçin.";
+    public const string TeacherPlanFullNoExtra = "Paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için daha büyük bir paket seçin.";
     public const string InstitutionNeedsPlan = "Yeni öğrenci eklemek için kurumunuzun bir paketi olmalı. Paketi kurum aboneliği sayfasından seçebilirsiniz.";
     public const string InstitutionPlanFull = "Kurum paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için ek öğrenci alın ya da daha büyük bir paket seçin.";
+    // Live test 23.11.2026: a plan that sells no extra seats must not tell the buyer to buy one.
+    public const string InstitutionPlanFullNoExtra = "Kurum paketinizdeki öğrenci sayısı doldu. Yeni öğrenci için daha büyük bir paket seçin.";
     public const string TeacherHasNoSeat = "Davet eden öğretmenin paketinde boş yer kalmadığı için bu davet şu an kabul edilemiyor. Öğretmenine haber ver.";
     public const string InstitutionHasNoSeat = "Davet eden kurumun paketinde boş yer kalmadığı için bu davet şu an kabul edilemiyor. Kurumuna haber ver.";
 
@@ -80,7 +83,10 @@ public sealed class CoachingInvitationStore(CoachingDbContext db, ICoachingAccou
             var pool = await billingSeats!.GetPoolAsync(seatOwner, ct);
             var forTeacher = seatOwner.TeacherId is not null;
             if (pool is null) throw CoachingProfileStore.Conflict(forTeacher ? TeacherNeedsPlan : InstitutionNeedsPlan);
-            if (pool.Used >= pool.Capacity) throw CoachingProfileStore.Conflict(forTeacher ? TeacherPlanFull : InstitutionPlanFull);
+            if (pool.Used >= pool.Capacity)
+                throw CoachingProfileStore.Conflict(pool.ExtraSeatPrice is null
+                    ? forTeacher ? TeacherPlanFullNoExtra : InstitutionPlanFullNoExtra
+                    : forTeacher ? TeacherPlanFull : InstitutionPlanFull);
         }
         var now = clock.GetUtcNow().UtcDateTime;
         var invitation = CoachingInvitation.Create(actor, email, role, institution, teacher, institutionInvitation, message, now);

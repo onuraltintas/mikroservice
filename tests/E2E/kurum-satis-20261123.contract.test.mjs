@@ -38,3 +38,17 @@ test('the pages sell packages: subscription page, maxkoç home, Hızlı Okuma pr
   assert.match(read('clients/speed-reading/src/app/features/public/home/sections/pricing-section/pricing-section.html'), /routerLink="\/auth\/register-school">Kurum olarak kaydol/);
   assert.match(read('clients/admin-panel/src/app/features/billing/billing-products.ts'), /Öğretmen ve kurumlar paket alsın/);
 });
+
+// Live test 23.11.2026: with a plan that sells no extra seats, the "full" message must not say "ek öğrenci alın".
+test('a full plan without extra seats only suggests a bigger package', () => {
+  const coaching = read('services/coaching-service/Coaching.Infrastructure/Profiles/CoachingInvitationStore.cs');
+  assert.match(coaching, /pool\.ExtraSeatPrice is null\s*\?\s*forTeacher \? TeacherPlanFullNoExtra : InstitutionPlanFullNoExtra/);
+  const speedReading = read('services/speed-reading-service/SpeedReading.API/Controllers/SpeedReadingInvitationsController.cs');
+  assert.match(speedReading, /pool\.ExtraSeatPrice is null \? InstitutionPlanFullNoExtra : InstitutionPlanFull/);
+  for (const source of [coaching, speedReading]) {
+    for (const line of source.split('\n').filter((item) => /PlanFullNoExtra = "/.test(item))) {
+      assert.doesNotMatch(line, /ek öğrenci/);
+      assert.match(line, /daha büyük bir paket seçin\./);
+    }
+  }
+});
