@@ -9,6 +9,8 @@ public sealed class CourseGroup
     public Guid TeacherUserId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; private set; }
+    /// <summary>An archived group takes no new students, lessons or homework; its past stays (23.11.2026).</summary>
+    public DateTimeOffset? ArchivedAt { get; private set; }
 
     public static CourseGroup Create(Guid id, Guid workspaceId, Guid courseId, Guid teacherUserId, string name, DateTimeOffset now)
     {
@@ -35,4 +37,7 @@ public sealed class CourseGroup
         if (teacherUserId == Guid.Empty) throw new ArgumentException("Teacher is required.", nameof(teacherUserId));
         TeacherUserId = teacherUserId;
     }
+
+    public void Archive(DateTimeOffset now) => ArchivedAt ??= now.ToUniversalTime();
+    public void Restore() => ArchivedAt = null;
 }

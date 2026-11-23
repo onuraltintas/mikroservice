@@ -95,7 +95,7 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
               <!-- Paket D (#7): the school comes from the catalog as in the wizard; G4 (#43): one that is not in the list is typed in ("Okulum listede yok"). -->
               <div class="place" data-testid="own-school">
                 <span>Okulun (isteğe bağlı): <strong>{{ schoolName(s) ?? 'seçilmedi' }}</strong>
-                  @if (schoolDetail(s); as detail) { <small> · {{ detail }}</small> }</span>
+                  @if (schoolDetail(s); as detail) { <small>, {{ detail }}</small> }</span>
                 @if (!schoolPicker()) {
                   <!-- Review L5: a saved school can always be removed; the catalog list is the high-school one (9th grade on). -->
                   <span>@if (schoolApplies(s)) { <button type="button" (click)="openSchoolPicker()">{{ schoolName(s) ? 'Okulunu değiştir' : 'Okulunu seç' }}</button> }
@@ -178,7 +178,7 @@ const decimal = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
       @else if (!invitations().length && !invitationError()) { <p>{{ t('Bekleyen koçluk davetiniz yok.', 'Bekleyen koçluk davetin yok.') }}</p> }
       @if (invitationNotice(); as notice) { <p role="status" data-testid="invitation-notice">{{ notice }}</p> }
       @for (invite of invitations(); track invite.id) {
-        <article>@if (invite.institutionName) { <strong data-testid="invitation-institution">{{ invite.institutionName }}</strong><small> · daveti gönderen: </small> }<strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
+        <article>@if (invite.institutionName) { <strong data-testid="invitation-institution">{{ invite.institutionName }}</strong><small>, daveti gönderen: </small> }<strong>{{ invite.inviterName || invite.inviterEmail }}</strong>@if (invite.inviterName && invite.inviterEmail) { <small> ({{ invite.inviterEmail }})</small> }<p>{{ invite.type === 'TeacherToInstitution' ? 'Kurum öğretmen daveti' : invite.type === 'StudentToInstitution' ? 'Kurum öğrenci daveti' : 'Koç–öğrenci daveti' }}</p>
           @if (invite.message) { <p>{{ invite.message }}</p> }
           @if (role === 'Student' && invite.type !== 'TeacherToInstitution') {
             <p class="history-notice">{{ invite.type === 'StudentToInstitution' ? 'Kabul edersen bu kurumun yöneticileri ve öğretmenleri' : 'Kabul edersen bu öğretmen' }} önceki öğretmen ve kurumlarındaki çalışma geçmişini (ödevler, denemeler, seanslar, hedefler) görebilir.</p>
@@ -309,7 +309,7 @@ export class CoachingProfileComponent implements OnInit {
     if (this.schoolRemoved()) return null;
     const picked = this.pickedSchool();
     const parts = picked ? [picked.district, picked.type] : [[s.schoolCity, s.schoolDistrict].filter(Boolean).join(' / '), s.schoolType];
-    return parts.filter(Boolean).join(' · ') || null;
+    return parts.filter(Boolean).join(', ') || null;
   }
   /** Starts in the home city (its district's schools come first); another city can be picked from the catalog's cities. */
   openSchoolPicker() {
@@ -358,7 +358,7 @@ export class CoachingProfileComponent implements OnInit {
     if (home) params['district'] = home;
     return this.http.get<{ data: SchoolPage }>(`${this.base}/students/me/onboarding/options/schools`, { params }).pipe(map(r => ({ total: r.data.totalCount,
       items: r.data.items.map(x => ({ value: x.id, label: x.name, data: { district: x.district, type: x.type ?? null },
-        hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(' · ') || undefined })) })));
+        hint: [x.inHomeDistrict ? 'ilçende' : null, x.district, x.type].filter(Boolean).join(', ') || undefined })) })));
   };
   /**
    * The wizard's rule: the diploma grade is asked for 11th, 12th grade and of a lise graduate (YKS; the server drops it for other

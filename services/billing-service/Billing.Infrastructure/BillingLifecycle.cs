@@ -29,8 +29,9 @@ public sealed class BillingLifecycle(BillingDbContext db, BillingOrders orders, 
                          orderby subscription.EndsAt
                          select new { subscription, account }).Take(500).ToListAsync(cancellationToken);
         if (due.Count == 0) return 0;
-        // A product that asks for no subscription sells nothing: nobody is urged to renew there.
-        var selling = (await db.Products.AsNoTracking().Where(item => item.IsActive && item.RequireSubscription).Select(item => item.Code).ToListAsync(cancellationToken)).ToHashSet();
+        // A product that sells nothing urges nobody to renew; one where teachers and institutions pay does (23.11.2026).
+        var selling = (await db.Products.AsNoTracking().Where(item => item.IsActive && (item.RequireSubscription || item.StaffSeatsRequired))
+            .Select(item => item.Code).ToListAsync(cancellationToken)).ToHashSet();
         var ids = due.Select(item => item.subscription.Id).ToArray();
         var sent = (await db.NoticeReceipts.AsNoTracking().Where(item => ids.Contains(item.SubscriptionId)).ToListAsync(cancellationToken))
             .Select(item => (item.SubscriptionId, item.Kind, item.PeriodEnd)).ToHashSet();

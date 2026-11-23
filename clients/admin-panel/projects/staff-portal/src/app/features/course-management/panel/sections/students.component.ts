@@ -13,6 +13,8 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
 /**
  * Öğrenciler: a searchable, filterable, sortable list in pages, and the student card (contact, guardians, groups,
  * e-mail switch, balance). Filters stay in the address. A teacher sees their own groups' students without contacts.
+ * 23.11.2026: the owner selects students on the list and puts them into a group at once, moves a student from one group
+ * to another in one step, and chooses a group for the students of a CSV file.
  */
 @Component({
   selector: 'course-students-section',
@@ -30,6 +32,12 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
     .sc-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
     .sc-text strong, .sc-text .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sc-text .muted { font-size: 13px; }
+    .pick { width: 1%; }
+    .pick input { width: 20px; height: 20px; margin: 0; cursor: pointer; }
+    .bulk { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--ds-line); background: var(--ds-soft); }
+    .bulk .field { flex: 1 1 220px; }
+    .move { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+    .move .field { flex: 1 1 200px; }
     @container (max-width: 480px) {
       .table-wrap { display: none; }
       .student-cards { display: flex; }
@@ -44,7 +52,7 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
       @if (state.isOwner() && !state.readOnly()) {
         <div class="actions">
           @if (canImportFromProducts()) { <button type="button" class="btn-secondary" (click)="importOpen.set(!importOpen())">Başka üründen aktar</button> }
-          <button type="button" class="btn-secondary" (click)="csvName.set(''); csvPreview.set(null); cardError.set(''); csvOpen.set(true)">Toplu ekle (CSV)</button>
+          <button type="button" class="btn-secondary" (click)="csvName.set(''); csvPreview.set(null); cardError.set(''); csvGroupId = ''; csvOpen.set(true)">Toplu ekle (CSV)</button>
           <button type="button" class="btn" (click)="openNew()">Öğrenci ekle</button>
         </div>
       }
@@ -78,9 +86,20 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
       </form>
       @if (page(); as result) {
         @if (result.items.length) {
+          @if (selected().length) {
+            <div class="bulk" role="region" aria-label="Seçilen öğrenciler">
+              <strong>{{ selected().length }} öğrenci seçildi</strong>
+              <label class="field">Gruba ekle<select name="bulkGroup" [(ngModel)]="bulkGroupId">
+                <option value="">Grup seçin</option>@for (group of state.groups(); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
+              <button type="button" class="btn" (click)="addSelectedToGroup()" [disabled]="!bulkGroupId || busy()">Gruba ekle</button>
+              <button type="button" class="btn-quiet" (click)="selected.set([])">Seçimi temizle</button>
+            </div>
+          }
           <div class="table-wrap">
             <table>
               <thead><tr>
+                @if (canPick()) { <th scope="col" class="pick"><input type="checkbox" [checked]="allPicked(result.items)" (change)="pickAll(result.items, $any($event.target).checked)"
+                  aria-label="Bu sayfadaki öğrencilerin hepsini seç"></th> }
                 <th scope="col"><button type="button" class="sort" (click)="toggleSort('name')" [attr.aria-label]="'Ada göre sırala'">Öğrenci {{ sortMark('name') }}</button></th>
                 <th scope="col">Gruplar</th>
                 @if (state.isOwner()) { <th scope="col">Veli</th><th scope="col" class="right">Gecikmiş borç</th> }
@@ -89,6 +108,8 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               <tbody>
                 @for (student of result.items; track student.id) {
                   <tr class="clickable" (click)="openCard(student)">
+                    @if (canPick()) { <td class="pick" (click)="$event.stopPropagation()"><input type="checkbox" [checked]="isPicked(student.id)" [disabled]="!student.isActive"
+                      (change)="pick(student.id, $any($event.target).checked)" [attr.aria-label]="student.displayName + ' öğrencisini seç'"></td> }
                     <th scope="row"><span class="who"><span class="avatar" [class]="'avatar ' + tone(student.displayName)" aria-hidden="true">{{ initials(student.displayName) }}</span>
                       <button type="button" class="row-link" (click)="$event.stopPropagation(); openCard(student)">{{ student.displayName }}</button></span>
                       @if (!student.isActive) { <span class="badge">Arşivde</span> }
@@ -150,8 +171,21 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               @if (!form.groupIds.length) { <p class="muted" style="margin: 0">Henüz bir gruba kayıtlı değil.</p> }
               @for (groupId of form.groupIds; track groupId) {
                 <div class="actions" style="justify-content: space-between"><span>{{ groupLabel(groupId, form.groups) }}</span>
-                  @if (state.isOwner() && !state.readOnly()) { <button type="button" class="btn-quiet btn-small" [disabled]="busy()" (click)="leaveGroup(groupId)"
-                    [attr.aria-label]="groupLabel(groupId, form.groups) + ' grubundan çıkar'">Gruptan çıkar</button> }</div>
+                  @if (state.isOwner() && !state.readOnly()) {
+                    <span class="actions">
+                      <button type="button" class="btn-quiet btn-small" [disabled]="busy() || !openGroups(form.groupIds).length" (click)="movingFrom.set(groupId); moveGroupId = ''"
+                        [attr.aria-label]="groupLabel(groupId, form.groups) + ' grubundan başka gruba taşı'">Başka gruba taşı</button>
+                      <button type="button" class="btn-quiet btn-small" [disabled]="busy()" (click)="leaveGroup(groupId)"
+                        [attr.aria-label]="groupLabel(groupId, form.groups) + ' grubundan çıkar'">Gruptan çıkar</button></span>
+                  }</div>
+                @if (movingFrom() === groupId) {
+                  <div class="move">
+                    <label class="field">Yeni grubu<select [(ngModel)]="moveGroupId">
+                      <option value="">Grup seçin</option>@for (group of openGroups(form.groupIds); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select></label>
+                    <button type="button" class="btn-secondary" (click)="moveGroup(groupId)" [disabled]="!moveGroupId || busy()">Taşı</button>
+                    <button type="button" class="btn-quiet" (click)="movingFrom.set('')">Vazgeç</button>
+                  </div>
+                }
               }
               @if (state.isOwner() && !state.readOnly()) {
                 <div class="actions"><label class="field" style="flex: 1">Gruba ekle<select [(ngModel)]="enrollGroupId">
@@ -251,6 +285,11 @@ const RELATIONSHIPS = [{ value: 2, label: 'Annesi' }, { value: 3, label: 'Babas�
               </div>
             }
           }
+          @if (csvPreview()?.readyCount && state.groups().length) {
+            <label class="field">Eklenen öğrencileri gruba da koy (isteğe bağlı)<select [(ngModel)]="csvGroupId">
+              <option value="">Gruba koyma, sonra kartından eklerim</option>@for (group of state.groups(); track group.id) { <option [value]="group.id">{{ group.courseName }}, {{ group.name }}</option> }</select>
+              <span class="hint">Zaten kayıtlı olup atlanan öğrenciler bu gruba eklenmez; onları listeden seçip ekleyebilirsiniz.</span></label>
+          }
           @if (cardError()) { <p class="alert" role="alert">{{ cardError() }}</p> }
           <div class="dialog-actions">
             <button type="button" class="btn-secondary" (click)="csvOpen.set(false)">Vazgeç</button>
@@ -291,6 +330,13 @@ export class StudentsSectionComponent {
   };
   overdueChoice: '' | 'yes' | 'no' = '';
   enrollGroupId = '';
+  /** 23.11.2026: students picked on the list (active ones on the current page), a group for them, a group for a CSV file. */
+  readonly selected = signal<string[]>([]);
+  readonly canPick = computed(() => this.state.isOwner() && !this.state.readOnly() && this.state.groups().length > 0);
+  readonly movingFrom = signal('');
+  bulkGroupId = '';
+  moveGroupId = '';
+  csvGroupId = '';
   guardian = { displayName: '', email: '', phoneNumber: '', relationship: 2 };
 
   groupsForCourse() {
@@ -488,6 +534,51 @@ export class StudentsSectionComponent {
     }, 'Öğrenci gruptan çıkarıldı.');
   }
 
+  /** One step instead of "out, then in": the student leaves the old group's planned lessons and joins the new group's. */
+  async moveGroup(fromGroupId: string): Promise<void> {
+    const form = this.editing();
+    const target = this.state.groups().find(item => item.id === this.moveGroupId);
+    if (!form?.id || !target) return;
+    let full = 0;
+    await this.act(async () => {
+      full = (await this.api.moveToGroup(this.state.id(), fromGroupId, form.id, target.id))?.fullRoomLessons ?? 0;
+      this.editing.set({ ...form, groupIds: [...form.groupIds.filter(id => id !== fromGroupId), target.id] });
+      this.movingFrom.set('');
+      this.moveGroupId = '';
+      await this.load();
+    }, `Öğrenci ${target.courseName}, ${target.name} grubuna taşındı.`);
+    if (full && !this.cardError()) this.notice.set(`Öğrenci ${target.name} grubuna taşındı.` + fullRoomNotice(full));
+  }
+
+  isPicked(id: string): boolean { return this.selected().includes(id); }
+  pick(id: string, on: boolean): void { this.selected.update(list => on ? [...new Set([...list, id])] : list.filter(item => item !== id)); }
+  allPicked(rows: PanelStudentRow[]): boolean {
+    const active = rows.filter(row => row.isActive);
+    return active.length > 0 && active.every(row => this.isPicked(row.id));
+  }
+  pickAll(rows: PanelStudentRow[], on: boolean): void {
+    const ids = rows.filter(row => row.isActive).map(row => row.id);
+    this.selected.update(list => on ? [...new Set([...list, ...ids])] : list.filter(item => !ids.includes(item)));
+  }
+
+  /** The picked students join one group; those already in it are counted, not added twice. */
+  async addSelectedToGroup(): Promise<void> {
+    const group = this.state.groups().find(item => item.id === this.bulkGroupId);
+    const ids = this.selected();
+    if (!group || !ids.length) return;
+    this.busy.set(true); this.error.set(''); this.notice.set('');
+    try {
+      const result = await this.api.addToGroup(this.state.id(), group.id, ids);
+      this.selected.set([]);
+      this.bulkGroupId = '';
+      await this.state.refreshLists();
+      await this.load();
+      const already = result.alreadyInGroup ? ` ${result.alreadyInGroup} öğrenci zaten bu gruptaydı.` : '';
+      this.notice.set(`${result.added} öğrenci ${group.courseName}, ${group.name} grubuna eklendi.${already}` + fullRoomNotice(result.fullRoomLessons));
+    } catch (error) { this.error.set(problemText(error)); }
+    finally { this.busy.set(false); }
+  }
+
   async setSolo(teacherUserId: string): Promise<void> {
     const form = this.editing();
     if (!form?.id) return;
@@ -547,10 +638,13 @@ export class StudentsSectionComponent {
     const preview = this.csvPreview();
     if (!preview) return;
     await this.act(async () => {
-      const result = await this.service.commitStudentCsv(this.state.id(), preview.previewId, this.csvText);
+      const group = this.state.groups().find(item => item.id === this.csvGroupId);
+      const result = await this.service.commitStudentCsv(this.state.id(), preview.previewId, this.csvText, group?.id ?? null);
       this.csvOpen.set(false);
       this.csvPreview.set(null);
-      this.notice.set(`${result.createdCount} öğrenci eklendi.`);
+      this.notice.set(group && result.joinedGroupCount
+        ? `${result.createdCount} öğrenci eklendi; ${result.joinedGroupCount} öğrenci ${group.name} grubuna kondu.`
+        : `${result.createdCount} öğrenci eklendi.`);
       await this.load();
     }, '');
   }

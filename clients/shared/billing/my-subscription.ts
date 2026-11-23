@@ -15,7 +15,7 @@ export interface BillingPlan {
   vatRate?: number | null; priceWithVat?: number;
 }
 export interface BillingBankAccount { bankName: string; accountHolder: string; iban: string; ibanFormatted: string; instructions: string | null }
-export interface BillingCatalog { productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean; plans: BillingPlan[]; bankAccounts: BillingBankAccount[]; businessSales?: boolean }
+export interface BillingCatalog { productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean; plans: BillingPlan[]; bankAccounts: BillingBankAccount[]; businessSales?: boolean; staffSeatsRequired?: boolean }
 export interface BillingSubscription {
   id: string; planId: string; planName: string; productCodes: string[]; status: 'Active' | 'Cancelled'; startsAt: string; endsAt: string;
   isCurrent: boolean; seatCount: number | null;
@@ -30,6 +30,8 @@ export interface BillingOrder {
 }
 export interface MyBilling {
   productCode: string; productName: string; requireSubscription: boolean; salesOpen: boolean;
+  /** 23.11.2026: students use the product free; teachers and institutions buy plans with a seat for each student. */
+  staffSeatsRequired?: boolean;
   entitlements: { key: string; limitValue: number | null; endsAt: string }[]; subscriptions: BillingSubscription[]; pendingOrders: BillingOrder[];
 }
 export interface BillingOrganization { id: string; name: string; subscriptions: BillingSubscription[]; pendingOrders: BillingOrder[] }
@@ -87,8 +89,10 @@ export type SeatUnit = 'koltuk' | 'öğrenci';
  * KocApp uyumu (22.11.2026): teacher plans that differ only in their students and period ("3 öğrenci, 3 ay") are sold as one
  * package with two choices; two or more such plans make a tier set. Contact-only plans stay ordinary cards.
  */
-export function billingTeacherTiers(plans: readonly BillingPlan[]): BillingPlan[] {
-  const tiers = plans.filter(plan => plan.buyerType === 'Teacher' && !!plan.seatCount && !plan.isContactOnly);
+export function billingTeacherTiers(plans: readonly BillingPlan[]): BillingPlan[] { return billingTiers(plans, 'Teacher'); }
+/** 23.11.2026: institution plans that differ only in their students and period are sold the same way. */
+export function billingTiers(plans: readonly BillingPlan[], buyer: 'Teacher' | 'Institution'): BillingPlan[] {
+  const tiers = plans.filter(plan => plan.buyerType === buyer && !!plan.seatCount && !plan.isContactOnly);
   return tiers.length >= 2 ? tiers : [];
 }
 /** The features every tier lists, in the first tier's order: "her pakette her şey var". */
@@ -267,8 +271,14 @@ export class MySubscriptionController {
     }
   }
 
-  /** The product asks for no subscription: nothing to buy, nothing to show but that. */
-  get open(): boolean { return this.me !== null && !this.me.requireSubscription; }
+  /**
+   * The product asks for no subscription: nothing to buy, nothing to show but that. While only teachers and institutions
+   * pay (23.11.2026), a teacher or an institution's admin who has plans to choose from sees them; a student does not.
+   */
+  get open(): boolean {
+    return this.me !== null && !this.me.requireSubscription
+      && !(this.me.staffSeatsRequired && (this.plans.length > 0 || this.subscriptions.length > 0));
+  }
   get current(): BillingSubscription[] { return this.subscriptions.filter(item => item.isCurrent); }
   get subscriptions(): BillingSubscription[] {
     return [...(this.me?.subscriptions ?? []), ...this.organizations.flatMap(item => item.subscriptions.filter(sub => sub.productCodes.includes(this.options.product)))];
@@ -281,7 +291,9 @@ export class MySubscriptionController {
   get history(): BillingOrder[] { return this.orders.filter(order => order.status !== 'Pending'); }
   get plans(): BillingPlan[] { return billingPlansFor(this.catalog?.plans ?? [], this.options.roles, this.organizations.length > 0, this.options.individualPlans ?? true); }
   get canBuy(): boolean { return !!this.me?.salesOpen && !!this.catalog?.salesOpen; }
-  get teacherTiers(): BillingPlan[] { return billingTeacherTiers(this.plans); }
+  /** Teacher packages, or for an institution's admin the institution packages: one set of choices. */
+  get teacherTiers(): BillingPlan[] { const teacher = billingTiers(this.plans, 'Teacher'); return teacher.length ? teacher : billingTiers(this.plans, 'Institution'); }
+  get tierTitle(): string { return this.teacherTiers[0]?.buyerType === 'Institution' ? 'Kurum paketleri' : 'Öğretmen paketleri'; }
   /** The plans shown as cards: all but the teacher tiers. */
   get otherPlans(): BillingPlan[] { const tiers = new Set(this.teacherTiers); return this.plans.filter(plan => !tiers.has(plan)); }
   get tierSeatOptions(): number[] { return [...new Set(this.teacherTiers.map(plan => plan.seatCount!))].sort((a, b) => a - b); }
@@ -597,8 +609,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
             <strong>{{ item.planName }}</strong>
             @if (c.organizationName(item); as name) { <span class="bill-tag">{{ name }}</span> }
             <span class="bill-tag" [class.bill-tag--ok]="item.isCurrent">{{ item.isCurrent ? 'Etkin' : 'Sona erdi' }}</span>
-            <div class="bill-muted">{{ c.date(item.startsAt) }} – {{ c.date(item.endsAt) }}
-              @if (item.seatCount) { · {{ item.seatCount }} {{ c.seatUnit(item) }} }
+            <div class="bill-muted">{{ c.date(item.startsAt) }} – {{ c.date(item.endsAt) }}@if (item.seatCount) {, {{ item.seatCount }} {{ c.seatUnit(item) }}}
             </div>
           </div>
           @if (item.seatCount && item.isCurrent) {
@@ -654,7 +665,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         <p>Havale ya da EFT açıklamasına <strong>yalnız bu kodu</strong> {{ c.t.writeCode }}. Sipariş {{ c.date(order.expiresAt) }} tarihine kadar geçerli.</p>
         @for (account of c.bankAccounts; track account.iban) {
           <div class="bill-bank">
-            <div><strong>{{ account.bankName }}</strong> · {{ account.accountHolder }}</div>
+            <div><strong>{{ account.bankName }}</strong>, {{ account.accountHolder }}</div>
             <div><span class="bill-code">{{ account.ibanFormatted }}</span>
               <button type="button" class="bill-copy" (click)="c.copy(account.iban)">{{ c.copied === account.iban ? 'Kopyalandı' : 'Kopyala' }}</button></div>
             @if (account.instructions) { <div class="bill-muted">{{ account.instructions }}</div> }
@@ -687,7 +698,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
     @if (c.plan; as plan) {
       <div class="bill-card">
         <h2>{{ plan.name }}</h2>
-        <p>{{ c.duration(plan.durationDays) }} ·
+        <p>{{ c.duration(plan.durationDays) }},
           @if (c.quote; as quote) {
             <s>{{ c.money(quote.listPrice, quote.currency) }}</s> <strong>{{ c.money(quote.amount, quote.currency) }}</strong> ({{ quote.code }})
           } @else { <strong>{{ c.money(c.breakdown(plan).total, plan.currency) }}</strong> }
@@ -748,7 +759,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
         @if (c.teacherTiers.length) {
           <!-- KocApp uyumu (22.11.2026): one teacher package, chosen by students and period. -->
           <section class="bill-tiers" data-testid="bill-tiers" aria-labelledby="bill-tiers-title">
-            <h3 id="bill-tiers-title">Öğretmen paketleri</h3>
+            <h3 id="bill-tiers-title">{{ c.tierTitle }}</h3>
             <p>Her pakette bütün özellikler var. Paketler yalnız öğrenci sayısında ayrılır.</p>
             @if (c.tierFeatures.length) { <ul class="bill-tier-features">@for (feature of c.tierFeatures; track feature) { <li>{{ feature }}</li> }</ul> }
             <fieldset class="bill-choice">
@@ -833,8 +844,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
               <strong>{{ order.planName }}</strong>
               @if (order.kind === 'ExtraSeats') { <span class="bill-tag">{{ order.extraSeats }} ek {{ order.buyerType === 'Teacher' ? 'öğrenci' : 'koltuk' }}</span> }
               <span class="bill-tag" [class.bill-tag--ok]="order.status === 'Paid'">{{ c.orderStatus(order) }}</span>
-              <div class="bill-muted">{{ c.date(order.createdAt) }} · {{ c.money(order.amount, order.currency) }} · {{ order.paymentCode }}
-                @if (order.couponCode) { · kupon {{ order.couponCode }} }
+              <div class="bill-muted">{{ c.date(order.createdAt) }}, {{ c.money(order.amount, order.currency) }}, {{ order.paymentCode }}@if (order.couponCode) {, kupon {{ order.couponCode }}}
               </div>
               @if (order.reviewNote && order.status !== 'Paid') { <div class="bill-muted">Gerekçe: {{ order.reviewNote }}</div> }
               @if (order.withdrawal) { <div class="bill-muted">{{ c.withdrawalStatus(order.withdrawal) }}</div> }

@@ -60,9 +60,11 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
         var product = await db.Products.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (product is null) return null;
         // Products cache the switch; they hear of a change with the transaction that makes it.
-        if (product.RequireSubscription != request.RequireSubscription && events is not null)
-            await events.PublishAsync(new BillingProductSettingsChangedV1(product.Code, request.RequireSubscription, Now), cancellationToken);
+        var staffSeats = request.StaffSeatsRequired ?? product.StaffSeatsRequired;
+        if ((product.RequireSubscription != request.RequireSubscription || product.StaffSeatsRequired != staffSeats) && events is not null)
+            await events.PublishAsync(new BillingProductSettingsChangedV1(product.Code, request.RequireSubscription, Now, staffSeats), cancellationToken);
         product.RequireSubscription = request.RequireSubscription;
+        product.StaffSeatsRequired = staffSeats;
         product.BankTransferApproval = request.BankTransferApproval;
         if (request.BusinessSales is { } business) product.BusinessSales = business;
         product.UpdatedAt = Now;
@@ -319,13 +321,15 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
                              select link.PlanId).Distinct().ToListAsync(cancellationToken);
         var plans = await db.Plans.AsNoTracking().Where(item => planIds.Contains(item.Id) && item.IsActive && item.IsPublic)
             .OrderBy(item => item.SortOrder).ThenBy(item => item.Name).ToListAsync(cancellationToken);
+        // While only teachers and institutions pay, an individual plan is not sold: the page does not offer it.
+        if (!product.RequireSubscription && product.StaffSeatsRequired) plans = plans.Where(item => item.BuyerType != BuyerType.Individual).ToList();
         var accounts = await db.BankAccounts.AsNoTracking().Where(item => item.IsActive)
             .OrderBy(item => item.SortOrder).ThenBy(item => item.BankName).ToListAsync(cancellationToken);
         var seller = await db.Sellers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == Seller.SingleId, cancellationToken);
         return new PublicCatalog(product.Code, product.Name, product.RequireSubscription, seller is { IsComplete: true } && accounts.Count > 0,
             await ViewsAsync(plans, cancellationToken),
             accounts.Select(item => new PublicBankAccount(item.BankName, item.AccountHolder, item.Iban, BillingRules.FormatIban(item.Iban), item.Instructions)).ToArray(),
-            product.BusinessSales);
+            product.BusinessSales, product.StaffSeatsRequired);
     }
 
     // ---- Helpers ------------------------------------------------------------------------------------------------------
@@ -341,7 +345,7 @@ public sealed class BillingCatalog(BillingDbContext db, TimeProvider clock, IBil
     private static ProductView View(Product product, IReadOnlyList<Entitlement> entitlements) =>
         new(product.Id, product.Code, product.Name, product.RequireSubscription, product.BankTransferApproval, product.IsActive, product.SortOrder,
             entitlements.Where(item => item.ProductId == product.Id).Select(item => new EntitlementView(item.Id, item.Key, item.Name, item.HasLimit)).ToArray(),
-            product.BusinessSales);
+            product.BusinessSales, product.StaffSeatsRequired);
 
     private static SellerView View(Seller seller) =>
         new(seller.Title, seller.Address, seller.TaxOffice, seller.TaxNumber, seller.MersisNumber, seller.Email, seller.Phone, seller.AlertEmail, seller.IsComplete);

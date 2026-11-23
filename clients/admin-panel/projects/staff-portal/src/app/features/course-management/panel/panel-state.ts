@@ -42,7 +42,10 @@ export class CoursePanelState {
 
   readonly workspace = signal<CourseWorkspace | null>(null);
   readonly courses = signal<CourseSummary[]>([]);
-  readonly groups = signal<CourseGroup[]>([]);
+  /** Every group, archived ones too (names in reports, the archive list on Kurslar ve gruplar). */
+  readonly allGroups = signal<CourseGroup[]>([]);
+  /** The groups forms pick from: archived groups take no students, lessons or homework (23.11.2026). */
+  readonly groups = computed(() => this.allGroups().filter(group => !group.archivedAt));
   readonly rooms = signal<CourseRoom[]>([]);
   readonly branches = signal<CourseBranch[]>([]);
   readonly members = signal<PanelMember[]>([]);
@@ -119,7 +122,7 @@ export class CoursePanelState {
     ]);
     this.invitations.set(invitations);
     this.courses.set(courses);
-    this.groups.set(groups);
+    this.allGroups.set(groups);
     this.rooms.set(rooms);
     this.branches.set(branches);
     this.members.set(members);

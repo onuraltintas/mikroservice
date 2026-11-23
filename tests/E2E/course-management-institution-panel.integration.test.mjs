@@ -510,6 +510,70 @@ test('institution panel: switched-off student portal and files, teacher homework
     assert.equal((await soloHomework(outsider)).status, 404, 'a teacher outside the workspace cannot');
     assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: pendingId })).status, 200);
     assert.equal((await call(`${ws}/students/${soloId}/one-to-one-teacher`, owner, 'PUT', { teacherUserId: randomUUID() })).status, 400);
+
+    // Groups end and students move (23.11.2026): archive, delete, many students at once, a move in one step, a CSV group.
+    const endCourse = randomUUID();
+    assert.equal((await call(`${ws}/courses`, owner, 'POST', { id: endCourse, name: 'TEST Fen', subject: 'Fen' })).status, 201);
+    const [oldGroup, newGroup, csvGroup] = [randomUUID(), randomUUID(), randomUUID()];
+    for (const [id, name] of [[oldGroup, 'TEST Eski'], [newGroup, 'TEST Yeni'], [csvGroup, 'TEST CSV']])
+      assert.equal((await call(`${ws}/groups`, owner, 'POST', { id, courseId: endCourse, teacherUserId: teacherId, name })).status, 201);
+    const plan = async (groupId, day) => {
+      const id = randomUUID();
+      const response = await call(`${ws}/lessons`, owner, 'POST', { id, courseId: endCourse, groupId, studentId: null, teacherUserId: teacherId,
+        roomId: null, startsAt: `${turkeyDay(day)}T15:30:00+03:00`, endsAt: `${turkeyDay(day)}T16:00:00+03:00` });
+      assert.equal(response.status, 201, await response.clone().text());
+      return id;
+    };
+    const [movingId, stayingId, memberId] = [randomUUID(), randomUUID(), randomUUID()];
+    for (const [id, name] of [[movingId, 'TEST Taşınan'], [stayingId, 'TEST Kalan'], [memberId, 'TEST Yeni Grup Üyesi']])
+      assert.equal((await call(`${ws}/students`, owner, 'POST', { id, displayName: name, email: null, phoneNumber: null })).status, 201);
+    // A lesson is planned only for a group with students: each group gets one first.
+    assert.equal((await call(`${ws}/groups/${oldGroup}/students/${stayingId}`, owner, 'POST')).status, 201);
+    assert.equal((await call(`${ws}/groups/${newGroup}/students/${memberId}`, owner, 'POST')).status, 201);
+    const oldLesson = await plan(oldGroup, 27);
+    const newLesson = await plan(newGroup, 28);
+    const roster = async (lessonId, day) => (await (await call(`${ws}/lessons?from=${turkeyDay(day)}T00:00:00%2B03:00&to=${turkeyDay(day + 1)}T00:00:00%2B03:00`, owner)).json())
+      .find(item => item.id === lessonId).students.filter(item => item.isActive !== false).map(item => item.studentId).sort();
+    const many = await call(`${ws}/groups/${oldGroup}/students`, owner, 'POST', { studentIds: [movingId, stayingId] });
+    assert.equal(many.status, 200, await many.clone().text());
+    assert.deepEqual(await many.json(), { added: 1, alreadyInGroup: 1, fullRoomLessons: 0 });
+    assert.equal((await (await call(`${ws}/groups/${oldGroup}/students`, owner, 'POST', { studentIds: [movingId] })).json()).alreadyInGroup, 1);
+    assert.deepEqual(await roster(oldLesson, 27), [movingId, stayingId].sort(), 'students who join later are in the planned lessons too');
+    assert.equal((await call(`${ws}/groups/${oldGroup}/students`, teacher, 'POST', { studentIds: [movingId] })).status, 404, 'the owner adds many');
+    const movedStudent = await call(`${ws}/groups/${oldGroup}/students/${movingId}/move`, owner, 'POST', { toGroupId: newGroup });
+    assert.equal(movedStudent.status, 200, await movedStudent.clone().text());
+    assert.deepEqual(await roster(oldLesson, 27), [stayingId], 'the moved student leaves the old group’s lessons');
+    assert.deepEqual(await roster(newLesson, 28), [movingId, memberId].sort(), 'and joins the new group’s');
+    const counts = Object.fromEntries((await (await call(`${ws}/groups`, owner)).json()).map(item => [item.id, item.studentCount]));
+    assert.equal(counts[oldGroup], 1);
+    assert.equal(counts[newGroup], 2);
+    const archiveGroupAsk = await call(`${ws}/groups/${oldGroup}/archive`, owner, 'POST');
+    assert.equal(archiveGroupAsk.status, 409);
+    assert.deepEqual(await archiveGroupAsk.json(), { code: 'Group.HasPlannedLessonsOrStudents', lessons: 1, students: 1 });
+    const archivedGroup = await call(`${ws}/groups/${oldGroup}/archive?force=true`, owner, 'POST');
+    assert.equal(archivedGroup.status, 200, await archivedGroup.clone().text());
+    assert.deepEqual(await archivedGroup.json(), { cancelledLessons: 1, removedStudents: 1 });
+    assert.ok((await (await call(`${ws}/groups`, owner)).json()).find(item => item.id === oldGroup).archivedAt, 'the archived group is listed, marked');
+    assert.equal((await (await call(`${ws}/groups/${oldGroup}/students/${stayingId}`, owner, 'POST')).json()).code, 'Group.Archived');
+    assert.equal((await (await call(`${ws}/lessons`, owner, 'POST', { id: randomUUID(), courseId: endCourse, groupId: oldGroup, studentId: null,
+      teacherUserId: teacherId, roomId: null, startsAt: `${turkeyDay(29)}T15:30:00+03:00`, endsAt: `${turkeyDay(29)}T16:00:00+03:00` })).json()).code, 'Group.Archived');
+    assert.equal((await call(`${ws}/groups/${oldGroup}/restore`, owner, 'POST')).status, 204);
+    assert.equal((await call(`${ws}/groups/${oldGroup}/archive`, owner, 'POST')).status, 200, 'nothing left to ask about');
+    const deletedOld = await call(`${ws}/groups/${oldGroup}`, owner, 'DELETE');
+    assert.equal(deletedOld.status, 200, await deletedOld.clone().text());
+    const deleteNewAsk = await call(`${ws}/groups/${newGroup}`, owner, 'DELETE');
+    assert.deepEqual(await deleteNewAsk.json(), { code: 'Group.HasPlannedLessonsOrStudents', lessons: 1, students: 2 });
+    assert.equal((await call(`${ws}/groups/${newGroup}?force=true`, teacher, 'DELETE')).status, 404, 'only the owner deletes a group');
+    assert.equal((await call(`${ws}/groups/${newGroup}?force=true`, owner, 'DELETE')).status, 200);
+    const groupsLeft = (await (await call(`${ws}/groups`, owner)).json()).map(item => item.id);
+    assert.equal(groupsLeft.includes(oldGroup) || groupsLeft.includes(newGroup), false, 'both groups are gone');
+    assert.equal((await (await call(`${ws}/groups/${groupId}`, owner, 'DELETE')).json()).code, 'Group.InUse', 'a group with history is archived instead');
+    const csv = 'ad,e-posta,telefon\nTEST CSV Öğrenci,,\n';
+    const csvPreview = await (await call(`${ws}/imports/students/preview`, owner, 'POST', { csv })).json();
+    const csvCommit = await call(`${ws}/imports/students`, owner, 'POST', { previewId: csvPreview.previewId, csv, groupId: csvGroup });
+    assert.equal(csvCommit.status, 200, await csvCommit.clone().text());
+    assert.equal((await csvCommit.json()).joinedGroupCount, 1, 'the CSV students join the chosen group');
+    assert.equal((await (await call(`${ws}/groups`, owner)).json()).find(item => item.id === csvGroup).studentCount, 1);
   } finally {
     child.kill();
     stub.close();

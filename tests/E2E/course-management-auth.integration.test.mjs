@@ -573,7 +573,7 @@ test('live API enforces product and subject boundaries before database access', 
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv, previewId: previewBody.previewId }) });
       const committedImport = await commitImport();
       assert.equal(committedImport.status, 200);
-      assert.deepEqual(await committedImport.json(), { previewId: previewBody.previewId, createdCount: 2, alreadyImportedCount: 0 });
+      assert.deepEqual(await committedImport.json(), { previewId: previewBody.previewId, createdCount: 2, alreadyImportedCount: 0, joinedGroupCount: 0 });
       const overLimitUpdate = await setSubscription({ ...subscriptionPayload, activeStudentLimit: 1 });
       assert.equal(overLimitUpdate.status, 409, 'an existing active student count cannot exceed a newly assigned plan limit');
       assert.equal((await (await request(mySubscriptionsPath, teacherToken)).json())
@@ -581,7 +581,7 @@ test('live API enforces product and subject boundaries before database access', 
         'a rejected limit update leaves the prior plan unchanged');
       const repeatedImport = await commitImport();
       assert.equal(repeatedImport.status, 200, 'repeating the same preview commit is safe');
-      assert.deepEqual(await repeatedImport.json(), { previewId: previewBody.previewId, createdCount: 0, alreadyImportedCount: 2 });
+      assert.deepEqual(await repeatedImport.json(), { previewId: previewBody.previewId, createdCount: 0, alreadyImportedCount: 2, joinedGroupCount: 0 });
       const importedStudents = await (await request(`/api/course-management/v1/workspaces/${workspaceId}/students`, teacherToken)).json();
       assert.ok(importedStudents.every(student => student.userId === null), 'CSV import creates local records without linking Identity accounts by email or name');
       const adaStudent = importedStudents.find(student => student.email === 'ada@example.test');

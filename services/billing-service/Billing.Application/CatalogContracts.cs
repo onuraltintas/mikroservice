@@ -14,14 +14,18 @@ public sealed record ProductView(
     int SortOrder,
     IReadOnlyList<EntitlementView> Entitlements,
     /// <summary>Sold to businesses: business contract, no withdrawal (see <see cref="Product.BusinessSales"/>).</summary>
-    bool BusinessSales = false);
+    bool BusinessSales = false,
+    /// <summary>Students free, teachers and institutions pay (see <see cref="Product.StaffSeatsRequired"/>).</summary>
+    bool StaffSeatsRequired = false);
 
 public sealed record ProductRequest(string Code, string Name, bool IsActive, int SortOrder);
 
 /// <summary>The two billing settings of a product, changed on their own so a catalog edit never flips them by accident.</summary>
 public sealed record ProductSettingsRequest(bool RequireSubscription, BankTransferApproval BankTransferApproval,
     /// <summary>Null leaves the setting as it is (older screens do not send it).</summary>
-    bool? BusinessSales = null);
+    bool? BusinessSales = null,
+    /// <summary>Null leaves the setting as it is (older screens do not send it).</summary>
+    bool? StaffSeatsRequired = null);
 
 public sealed record EntitlementRequest(string Key, string Name, bool HasLimit);
 
@@ -123,7 +127,9 @@ public sealed record PublicCatalog(
     bool SalesOpen,
     IReadOnlyList<PlanView> Plans,
     IReadOnlyList<PublicBankAccount> BankAccounts,
-    bool BusinessSales = false);
+    bool BusinessSales = false,
+    /// <summary>Students free, teachers and institutions pay: only their plans are listed and sold.</summary>
+    bool StaffSeatsRequired = false);
 
 /// <summary>The catalog and settings of the billing service (stage 1 of billing-service-plan.md).</summary>
 public interface IBillingCatalog

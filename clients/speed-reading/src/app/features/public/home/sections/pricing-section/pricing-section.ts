@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { SubscriptionService, SubscriptionPlan } from '../../../../../core/services/subscription.service';
+import { InstitutionPackages, SubscriptionService, SubscriptionPlan } from '../../../../../core/services/subscription.service';
 import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
 
 @Component({
@@ -14,6 +14,8 @@ export class PricingSectionComponent implements OnInit {
   private subscriptionService = inject(SubscriptionService);
   @Input() content: HomeSectionHeading = DEFAULT_HOME_PAGE_CONTENT.pricing;
   plans: SubscriptionPlan[] = [];
+  /** 23.11.2026: institutions buy packages; students train free. */
+  institution: InstitutionPackages | null = null;
   loading = true;
 
   ngOnInit() {
@@ -21,6 +23,7 @@ export class PricingSectionComponent implements OnInit {
   }
 
   private loadPlans() {
+    this.subscriptionService.getInstitutionPackages().subscribe({ next: packages => this.institution = packages, error: () => this.institution = null });
     this.subscriptionService.getPublicPlans().subscribe({
       next: (plans) => {
         this.plans = plans;

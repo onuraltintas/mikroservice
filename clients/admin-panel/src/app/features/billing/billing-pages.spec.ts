@@ -109,7 +109,7 @@ describe('Abonelik ve Ödeme pages', () => {
     expect(component.settingsChanged(courses)).toBe(false);
     component.saveSettings(coaching);
 
-    expect(billing.updateProductSettings).toHaveBeenCalledWith('p-coaching', { requireSubscription: true, bankTransferApproval: 'Automatic', businessSales: false });
+    expect(billing.updateProductSettings).toHaveBeenCalledWith('p-coaching', { requireSubscription: true, bankTransferApproval: 'Automatic', businessSales: false, staffSeatsRequired: false });
     fixture.detectChanges();
     expect(component.products()[0].requireSubscription).toBe(true);
     expect(component.products()[1].requireSubscription).toBe(false);

@@ -38,6 +38,7 @@ public static class AssignmentEndpoints
                 var group = await db.Groups.SingleOrDefaultAsync(item => item.Id == groupId
                     && item.WorkspaceId == workspaceId && item.CourseId == request.CourseId, ct);
                 if (group is null || (!owner && group.TeacherUserId != userId)) return Results.NotFound();
+                if (group.ArchivedAt is not null) return Results.Conflict(new { code = "Group.Archived" });
                 recipientIds = await (from enrollment in db.Enrollments.AsNoTracking()
                     join student in db.Students.AsNoTracking() on enrollment.StudentId equals student.Id
                     where enrollment.WorkspaceId == workspaceId && enrollment.GroupId == groupId

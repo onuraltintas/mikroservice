@@ -1819,7 +1819,7 @@
                 <p>Alıştırma turları dahil değildir. Bu sonuç klinik bir ölçüm veya okuma hızı değildir.</p>
                 <p *ngFor="let block of blocks">
                     Blok {{ block.block }}, {{ block.rounds }} tur, %{{ block.accuracy | number:'1.0-1' }}
-                    {{ engine?.engineType === 'text_stream' ? '· ' + block.value + ' ms' : '' }}
+                    {{ engine?.engineType === 'text_stream' ? ', ' + block.value + ' ms' : '' }}
                 </p>
             </section>
             <div class="exercise-info-badges" *ngIf="engine?.engineType !== 'grid_interaction'">

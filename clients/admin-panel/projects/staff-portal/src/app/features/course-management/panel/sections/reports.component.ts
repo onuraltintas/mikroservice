@@ -50,7 +50,7 @@ export class ReportsSectionComponent {
       case 'students': return buildCourseStudentRosterReport(await this.service.getStudentRosterForReport(workspace));
       case 'attendance': return buildCourseLessonAttendanceReport(await this.service.getLessonAttendanceForReport(workspace), id => this.state.teacherName(id));
       case 'homework': return buildCourseAssignmentProgressReport(await this.service.getAssignmentProgressForReport(workspace),
-        groupId => this.state.groups().find(group => group.id === groupId)?.name ?? '', id => this.state.teacherName(id));
+        groupId => this.state.allGroups().find(group => group.id === groupId)?.name ?? '', id => this.state.teacherName(id));
       default: return buildCourseFinanceWorkspaceReport(await this.service.getFinanceWorkspaceReport(workspace));
     }
   }

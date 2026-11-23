@@ -113,6 +113,20 @@ export class CoursePanelApi {
       { name, teacherUserId, moveFutureLessons, force }));
   }
   removeFromGroup(id: string, groupId: string, studentId: string) { return firstValueFrom(this.http.delete<void>(`${this.ws(id)}/groups/${groupId}/students/${studentId}`)); }
+  /** 23.11.2026: a group is archived (its planned lessons cancelled, its students out) or, with no history, deleted. */
+  archiveGroup(id: string, groupId: string, force = false) {
+    return firstValueFrom(this.http.post<{ cancelledLessons: number; removedStudents: number } | null>(`${this.ws(id)}/groups/${groupId}/archive${force ? '?force=true' : ''}`, {}));
+  }
+  restoreGroup(id: string, groupId: string) { return firstValueFrom(this.http.post<void>(`${this.ws(id)}/groups/${groupId}/restore`, {})); }
+  deleteGroup(id: string, groupId: string, force = false) {
+    return firstValueFrom(this.http.delete<{ deletedLessons: number; removedStudents: number }>(`${this.ws(id)}/groups/${groupId}${force ? '?force=true' : ''}`));
+  }
+  addToGroup(id: string, groupId: string, studentIds: string[]) {
+    return firstValueFrom(this.http.post<{ added: number; alreadyInGroup: number; fullRoomLessons: number }>(`${this.ws(id)}/groups/${groupId}/students`, { studentIds }));
+  }
+  moveToGroup(id: string, fromGroupId: string, studentId: string, toGroupId: string) {
+    return firstValueFrom(this.http.post<{ groupId: string; fullRoomLessons: number }>(`${this.ws(id)}/groups/${fromGroupId}/students/${studentId}/move`, { toGroupId }));
+  }
   setOneToOneTeacher(id: string, studentId: string, teacherUserId: string | null) {
     return firstValueFrom(this.http.put<{ id: string; oneToOneTeacherUserId: string | null }>(`${this.ws(id)}/students/${studentId}/one-to-one-teacher`, { teacherUserId }));
   }

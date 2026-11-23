@@ -140,7 +140,9 @@ public sealed record ProductAccess(
     /// The latest end of any subscription that gave the user this product, past or running; null when there was none.
     /// Course Management deletes a workspace's data a year after it (user decision 20.11.2026).
     /// </summary>
-    DateTime? LastEndsAt = null);
+    DateTime? LastEndsAt = null,
+    /// <summary>Students free; a new student of an independent teacher or an institution takes a seat of their plan.</summary>
+    bool StaffSeatsRequired = false);
 
 /// <summary>"Aboneliğim" of one product for the signed-in user.</summary>
 public sealed record MyBilling(
@@ -151,7 +153,9 @@ public sealed record MyBilling(
     IReadOnlyList<GrantedEntitlement> Entitlements,
     IReadOnlyList<SubscriptionView> Subscriptions,
     IReadOnlyList<OrderView> PendingOrders,
-    bool BusinessSales = false);
+    bool BusinessSales = false,
+    /// <summary>Students free, teachers and institutions pay: their plans are on sale even though no subscription is required.</summary>
+    bool StaffSeatsRequired = false);
 
 /// <summary>Publishes billing messages with the transaction that causes them (outbox).</summary>
 public interface IBillingEvents

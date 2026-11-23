@@ -52,7 +52,7 @@ const DISMISSED = 'coaching.celebration.dismissed';
       <ul aria-label="Rozetler">
         @for (badge of m.badges; track badge.code) {
           <li [class.locked]="!badge.earnedOn" [attr.data-testid]="'badge-' + badge.code" [title]="badge.description">
-            {{ badge.label }}<span class="muted">{{ badge.earnedOn ? '' : ' · henüz yok' }}</span>
+            {{ badge.label }}<span class="muted">{{ badge.earnedOn ? '' : ', henüz yok' }}</span>
           </li>
         }
       </ul>

@@ -56,6 +56,24 @@ public sealed class CoachingBillingAccessTests
     }
 
     [Fact]
+    public void While_only_teachers_and_institutions_pay_students_stay_free_and_a_new_student_needs_their_seat()
+    {
+        // User decision 23.11.2026.
+        CoachingBillingRules.Decide(new("coaching", false, [], null, true), Now)
+            .Should().Be(new CoachingBillingDecision(true, false, null, true, true));
+        CoachingBillingRules.Decide(new("coaching", false, []), Now).StaffSeatsRequired.Should().BeFalse();
+        var teacher = Guid.NewGuid();
+        var institution = Guid.NewGuid();
+        Coaching.Infrastructure.Profiles.CoachingInvitationStore.SeatOwner("Student", null, teacher, false)
+            .Should().Be(CoachingSeatOwner.Teacher(teacher));
+        Coaching.Infrastructure.Profiles.CoachingInvitationStore.SeatOwner("Student", institution, teacher, true)
+            .Should().Be(CoachingSeatOwner.Institution(institution));
+        // An institution teacher invites a student who already is the institution's: no new seat. A teacher takes none.
+        Coaching.Infrastructure.Profiles.CoachingInvitationStore.SeatOwner("Student", institution, teacher, false).Should().BeNull();
+        Coaching.Infrastructure.Profiles.CoachingInvitationStore.SeatOwner("Teacher", institution, null, true).Should().BeNull();
+    }
+
+    [Fact]
     public void A_student_has_Kocluk_with_a_running_student_entitlement_whether_bought_or_given_with_a_seat()
     {
         CoachingBillingRules.Decide(null, Now).Should().Be(new CoachingBillingDecision(true, false, null, true));

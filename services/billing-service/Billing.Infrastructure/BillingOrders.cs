@@ -194,7 +194,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                 .OrderByDescending(item => item.CreatedAt).ToListAsync(cancellationToken), cancellationToken))
             .Where(item => item.ProductCodes.Contains(product.Code)).ToArray();
         return new MyBilling(product.Code, product.Name, product.RequireSubscription, await SalesOpenAsync(cancellationToken),
-            await GrantsAsync(userId, product.Id, now, cancellationToken), subscriptions, pending, product.BusinessSales);
+            await GrantsAsync(userId, product.Id, now, cancellationToken), subscriptions, pending, product.BusinessSales, product.StaffSeatsRequired);
     }
 
     // ---- Admin --------------------------------------------------------------------------------------------------------
@@ -419,7 +419,7 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
         var product = await ActiveProductAsync(productCode, cancellationToken);
         if (product is null) return null;
         return new ProductAccess(product.Code, product.RequireSubscription, await GrantsAsync(userId, product.Id, Now, cancellationToken),
-            await LastEndsAtAsync(userId, product.Code, cancellationToken));
+            await LastEndsAtAsync(userId, product.Code, cancellationToken), product.StaffSeatsRequired);
     }
 
     /// <summary>
@@ -473,8 +473,9 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                           select new { link, entitlement, product }).ToListAsync(cancellationToken);
         if (rows.Count == 0 || rows.Any(row => !row.product.IsActive))
             throw new BusinessRuleException("Billing.PlanNotOnSale", "Bu plan satın alınamıyor.");
-        // A product that asks for no subscription sells nothing; a bundle is on sale when one of its products does.
-        if (rows.All(row => !row.product.RequireSubscription))
+        // A product that asks for no subscription sells nothing, except teacher and institution plans while only they pay
+        // (23.11.2026); a bundle is on sale when one of its products sells it.
+        if (!rows.Any(row => BillingRules.Sells(row.product.RequireSubscription, row.product.StaffSeatsRequired, plan.BuyerType)))
             throw new BusinessRuleException("Billing.SubscriptionNotRequired", "Bu üründe abonelik gerekmiyor; satın alma kapalı.");
         var seller = await db.Sellers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == Seller.SingleId, cancellationToken);
         if (seller is not { IsComplete: true } || !await db.BankAccounts.AnyAsync(item => item.IsActive, cancellationToken))
@@ -600,8 +601,10 @@ public sealed class BillingOrders(BillingDbContext db, IBillingEvents events, Ti
                           where link.PlanId == planId
                           orderby product.SortOrder, entitlement.Key, link.Holder
                           select new { link, entitlement, product }).ToListAsync(cancellationToken);
+        var buyer = await db.Plans.AsNoTracking().Where(item => item.Id == planId).Select(item => item.BuyerType).SingleOrDefaultAsync(cancellationToken);
         return (rows.Select(row => new OrderEntitlement(row.entitlement.Id, row.entitlement.Key, row.product.Code, row.link.Holder, row.link.LimitValue)).ToArray(),
-            rows.Count > 0 && rows.All(row => row.product.IsActive) && rows.Any(row => row.product.RequireSubscription));
+            rows.Count > 0 && rows.All(row => row.product.IsActive)
+            && rows.Any(row => BillingRules.Sells(row.product.RequireSubscription, row.product.StaffSeatsRequired, buyer)));
     }
 
     internal static string RequireBuyerName(string? value) => BuyerName(value);

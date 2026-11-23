@@ -921,6 +921,9 @@ namespace Billing.Infrastructure.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("StaffSeatsRequired")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -945,7 +948,8 @@ namespace Billing.Infrastructure.Migrations
                             IsActive = true,
                             Name = "Eduİvme Koçluk",
                             RequireSubscription = false,
-                            SortOrder = 1
+                            SortOrder = 1,
+                            StaffSeatsRequired = false
                         },
                         new
                         {
@@ -957,7 +961,8 @@ namespace Billing.Infrastructure.Migrations
                             IsActive = true,
                             Name = "Master Hızlı Okuma",
                             RequireSubscription = false,
-                            SortOrder = 2
+                            SortOrder = 2,
+                            StaffSeatsRequired = false
                         },
                         new
                         {
@@ -969,7 +974,8 @@ namespace Billing.Infrastructure.Migrations
                             IsActive = true,
                             Name = "Kurs Yönetimi",
                             RequireSubscription = false,
-                            SortOrder = 3
+                            SortOrder = 3,
+                            StaffSeatsRequired = false
                         });
                 });
 
