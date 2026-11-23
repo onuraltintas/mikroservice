@@ -616,7 +616,7 @@ test('live API enforces product and subject boundaries before database access', 
         body: JSON.stringify({ sourceSystem: 'speed-reading', selectedFields: ['displayName'], rows: legacyRows, previewId: safeLegacyPreview.previewId }) });
       const committedLegacy = await commitLegacy();
       assert.equal(committedLegacy.status, 200, await committedLegacy.clone().text());
-      assert.deepEqual(await committedLegacy.json(), { previewId: safeLegacyPreview.previewId, createdCount: 2, alreadyImportedCount: 0, joinedGroupCount: 0 });
+      assert.deepEqual(await committedLegacy.json(), { previewId: safeLegacyPreview.previewId, createdCount: 2, alreadyImportedCount: 0 });
       const importedLegacyStudents = await (await request(legacyStudentsPath, teacherToken)).json();
       const importedLegacyStudent = importedLegacyStudents.find(student => student.displayName === 'Aktarılacak öğrenci');
       assert.ok(importedLegacyStudent);
