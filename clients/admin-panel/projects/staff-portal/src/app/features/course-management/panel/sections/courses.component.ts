@@ -218,7 +218,7 @@ export class CoursesSectionComponent {
     return this.act(async () => {
       await this.service.createGroup(this.state.id(), this.groupCourseId, this.groupTeacherId, this.groupName.trim());
       this.groupName = '';
-    }, 'Grup eklendi. Öğrencileri kartlarından bu gruba ekleyebilirsiniz.');
+    }, 'Grup eklendi. Öğrencileri Öğrenciler bölümünde seçip bu gruba toplu ekleyebilir ya da kartlarından tek tek ekleyebilirsiniz.');
   }
 }
 
