@@ -249,6 +249,8 @@
 .ds-auth--lively .ds-auth__panel { animation: ds-auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
 // Logo bir kez açılır; telefonda sol alan gizli olduğundan üstte markanın vurgu şeridi ve küçük renkli karolar kalır.
 .ds-auth--lively .ds-auth__brand img { animation: ds-auth-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; }
+// Koyu temada eduivme logosu zemine karışmasın diye ince bir çerçeve.
+.ds-auth--lively .ds-auth__brand img { border-radius: 11px; box-shadow: 0 0 0 1px var(--ds-line); }
 @media (max-width: 900px) {
   .ds-auth--lively .ds-auth__main { border-top: 6px solid var(--ds-accent); }
 }
