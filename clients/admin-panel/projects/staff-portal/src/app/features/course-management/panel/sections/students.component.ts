@@ -511,6 +511,8 @@ export class StudentsSectionComponent {
         groupIds: [...form.groupIds, this.enrollGroupId] });
       this.enrollGroupId = '';
       await this.load();
+      // The group counts on Kurslar ve gruplar follow at once (live test 23.11.2026: they waited for a reload).
+      await this.state.refreshLists();
     }, 'Öğrenci gruba eklendi.');
     if (full && !this.error()) this.notice.set('Öğrenci gruba eklendi.' + fullRoomNotice(full));
   }
@@ -531,6 +533,8 @@ export class StudentsSectionComponent {
       await this.api.removeFromGroup(this.state.id(), groupId, form.id);
       this.editing.set({ ...form, groupIds: form.groupIds.filter(id => id !== groupId) });
       await this.load();
+      // The group counts on Kurslar ve gruplar follow at once (live test 23.11.2026: they waited for a reload).
+      await this.state.refreshLists();
     }, 'Öğrenci gruptan çıkarıldı.');
   }
 
@@ -546,6 +550,8 @@ export class StudentsSectionComponent {
       this.movingFrom.set('');
       this.moveGroupId = '';
       await this.load();
+      // The group counts on Kurslar ve gruplar follow at once (live test 23.11.2026: they waited for a reload).
+      await this.state.refreshLists();
     }, `Öğrenci ${target.courseName}, ${target.name} grubuna taşındı.`);
     if (full && !this.cardError()) this.notice.set(`Öğrenci ${target.name} grubuna taşındı.` + fullRoomNotice(full));
   }

@@ -760,7 +760,7 @@ export const MY_SUBSCRIPTION_TEMPLATE = `
           <!-- KocApp uyumu (22.11.2026): one teacher package, chosen by students and period. -->
           <section class="bill-tiers" data-testid="bill-tiers" aria-labelledby="bill-tiers-title">
             <h3 id="bill-tiers-title">{{ c.tierTitle }}</h3>
-            <p>Her pakette bütün özellikler var. Paketler yalnız öğrenci sayısında ayrılır.</p>
+            <p>Her pakette bütün özellikler var. Paketler yalnız öğrenci sayısı ve süreyle ayrılır.</p>
             @if (c.tierFeatures.length) { <ul class="bill-tier-features">@for (feature of c.tierFeatures; track feature) { <li>{{ feature }}</li> }</ul> }
             <fieldset class="bill-choice">
               <legend>Öğrenci sayısı</legend>
