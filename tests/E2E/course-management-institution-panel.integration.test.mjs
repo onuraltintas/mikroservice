@@ -524,26 +524,29 @@ test('institution panel: switched-off student portal and files, teacher homework
       assert.equal(response.status, 201, await response.clone().text());
       return id;
     };
+    const [movingId, stayingId, memberId] = [randomUUID(), randomUUID(), randomUUID()];
+    for (const [id, name] of [[movingId, 'TEST Taşınan'], [stayingId, 'TEST Kalan'], [memberId, 'TEST Yeni Grup Üyesi']])
+      assert.equal((await call(`${ws}/students`, owner, 'POST', { id, displayName: name, email: null, phoneNumber: null })).status, 201);
+    // A lesson is planned only for a group with students: each group gets one first.
+    assert.equal((await call(`${ws}/groups/${oldGroup}/students/${stayingId}`, owner, 'POST')).status, 201);
+    assert.equal((await call(`${ws}/groups/${newGroup}/students/${memberId}`, owner, 'POST')).status, 201);
     const oldLesson = await plan(oldGroup, 27);
     const newLesson = await plan(newGroup, 28);
-    const [movingId, stayingId] = [randomUUID(), randomUUID()];
-    for (const [id, name] of [[movingId, 'TEST Taşınan'], [stayingId, 'TEST Kalan']])
-      assert.equal((await call(`${ws}/students`, owner, 'POST', { id, displayName: name, email: null, phoneNumber: null })).status, 201);
     const roster = async (lessonId, day) => (await (await call(`${ws}/lessons?from=${turkeyDay(day)}T00:00:00%2B03:00&to=${turkeyDay(day + 1)}T00:00:00%2B03:00`, owner)).json())
       .find(item => item.id === lessonId).students.filter(item => item.isActive !== false).map(item => item.studentId).sort();
     const many = await call(`${ws}/groups/${oldGroup}/students`, owner, 'POST', { studentIds: [movingId, stayingId] });
     assert.equal(many.status, 200, await many.clone().text());
-    assert.equal((await many.json()).added, 2);
+    assert.deepEqual(await many.json(), { added: 1, alreadyInGroup: 1, fullRoomLessons: 0 });
     assert.equal((await (await call(`${ws}/groups/${oldGroup}/students`, owner, 'POST', { studentIds: [movingId] })).json()).alreadyInGroup, 1);
     assert.deepEqual(await roster(oldLesson, 27), [movingId, stayingId].sort(), 'students who join later are in the planned lessons too');
     assert.equal((await call(`${ws}/groups/${oldGroup}/students`, teacher, 'POST', { studentIds: [movingId] })).status, 404, 'the owner adds many');
     const movedStudent = await call(`${ws}/groups/${oldGroup}/students/${movingId}/move`, owner, 'POST', { toGroupId: newGroup });
     assert.equal(movedStudent.status, 200, await movedStudent.clone().text());
     assert.deepEqual(await roster(oldLesson, 27), [stayingId], 'the moved student leaves the old group’s lessons');
-    assert.deepEqual(await roster(newLesson, 28), [movingId], 'and joins the new group’s');
+    assert.deepEqual(await roster(newLesson, 28), [movingId, memberId].sort(), 'and joins the new group’s');
     const counts = Object.fromEntries((await (await call(`${ws}/groups`, owner)).json()).map(item => [item.id, item.studentCount]));
     assert.equal(counts[oldGroup], 1);
-    assert.equal(counts[newGroup], 1);
+    assert.equal(counts[newGroup], 2);
     const archiveGroupAsk = await call(`${ws}/groups/${oldGroup}/archive`, owner, 'POST');
     assert.equal(archiveGroupAsk.status, 409);
     assert.deepEqual(await archiveGroupAsk.json(), { code: 'Group.HasPlannedLessonsOrStudents', lessons: 1, students: 1 });
@@ -559,7 +562,7 @@ test('institution panel: switched-off student portal and files, teacher homework
     const deletedOld = await call(`${ws}/groups/${oldGroup}`, owner, 'DELETE');
     assert.equal(deletedOld.status, 200, await deletedOld.clone().text());
     const deleteNewAsk = await call(`${ws}/groups/${newGroup}`, owner, 'DELETE');
-    assert.deepEqual(await deleteNewAsk.json(), { code: 'Group.HasPlannedLessonsOrStudents', lessons: 1, students: 1 });
+    assert.deepEqual(await deleteNewAsk.json(), { code: 'Group.HasPlannedLessonsOrStudents', lessons: 1, students: 2 });
     assert.equal((await call(`${ws}/groups/${newGroup}?force=true`, teacher, 'DELETE')).status, 404, 'only the owner deletes a group');
     assert.equal((await call(`${ws}/groups/${newGroup}?force=true`, owner, 'DELETE')).status, 200);
     const groupsLeft = (await (await call(`${ws}/groups`, owner)).json()).map(item => item.id);
