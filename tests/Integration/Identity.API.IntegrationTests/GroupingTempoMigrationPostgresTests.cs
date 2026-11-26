@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Domain.AgeGroups;
