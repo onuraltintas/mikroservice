@@ -78,8 +78,15 @@ public sealed class TachistoscopeState
 
     public const int AdaptationBlockSize = 3;
 
-    // 3/3 correct: 15 % shorter; 2/3: unchanged; 0–1: 15 % longer. At a duration bound the length changes
-    // instead and the duration returns to its start, so one block never makes both harder.
+    /// <summary>
+    /// After a length step the duration returns to this multiple of the minimum (never above the start), so the student
+    /// keeps most of the speed gained instead of climbing down from the start again (decision 26.11.2026).
+    /// </summary>
+    public const decimal LengthStepDurationFactor = 1.5m;
+
+    // Decision 26.11.2026 (duration-focused Kısa Gösterim): 3/3 correct shortens the display by 15 %; 3/3 at the
+    // minimum lengthens the stimulus by one and the duration returns to 1.5 × minimum (at most the start). Any other
+    // block changes nothing: the duration never grows and the length never shrinks. One block never makes both harder.
     private void Adapt(int correctCount)
     {
         if (correctCount == AdaptationBlockSize)
@@ -87,22 +94,27 @@ public sealed class TachistoscopeState
             if (DisplayDurationMs <= MinDurationMs && TargetLength < MaxTargetLength)
             {
                 TargetLength++;
-                DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
+                DisplayDurationMs = LengthStepDurationMs();
             }
             else DisplayDurationMs = Math.Max(MinDurationMs, (int)Math.Round(DisplayDurationMs * .85, MidpointRounding.AwayFromZero));
-        }
-        else if (correctCount <= 1)
-        {
-            if (DisplayDurationMs >= MaxDurationMs && TargetLength > MinTargetLength)
-            {
-                TargetLength--;
-                DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
-            }
-            else DisplayDurationMs = Math.Min(MaxDurationMs, (int)Math.Round(DisplayDurationMs * 1.15, MidpointRounding.AwayFromZero));
         }
         DisplayDurationMs = Math.Clamp(DisplayDurationMs, MinDurationMs, Math.Max(MinDurationMs, MaxDurationMs));
         TargetLength = Math.Clamp(TargetLength, Math.Min(MinTargetLength, MaxTargetLength), MaxTargetLength);
     }
+
+    private int LengthStepDurationMs()
+    {
+        var stepped = (int)Math.Round(MinDurationMs * LengthStepDurationFactor, MidpointRounding.AwayFromZero);
+        return Math.Clamp(Math.Min(stepped, InitialDurationMs), MinDurationMs, Math.Max(MinDurationMs, MaxDurationMs));
+    }
+
+    /// <summary>Shortest display duration the student answered correctly in a scored trial (result screen).</summary>
+    public int? ShortestCorrectDurationMs => Trials.Where(trial => trial.IsCorrect && !trial.IsPractice)
+        .Select(trial => (int?)trial.DisplayDurationMs).Min();
+
+    /// <summary>Longest stimulus (characters, spaces included) the student answered correctly in a scored trial.</summary>
+    public int? LongestCorrectLength => Trials.Where(trial => trial.IsCorrect && !trial.IsPractice)
+        .Select(trial => (int?)trial.Stimulus.Length).Max();
 
     // Turkish lower case with collapsed whitespace; the circumflex letters â, î, û (as in "kâğıt") count as a, i, u
     // because students often type them without the mark. The player preview mirrors this.

@@ -44,7 +44,8 @@ export const TACHISTOSCOPE_PHRASES: readonly string[] = [
   'akvaryum balığı', 'bayram ziyareti', 'bisiklet sürmek', 'bisiklet yarışı', 'domates salçası', 'dondurma külahı',
   'ilkbahar çiçeği', 'kahvaltı tabağı', 'kütüphane kartı', 'mahalle bakkalı', 'matematik dersi', 'matematik ödevi',
   'papatya tarlası', 'piyano dersleri', 'renkli balonlar', 'resim öğretmeni', 'saklambaç oyunu', 'satranç tahtası',
-  'sıcak gülümseme', 'sınıf öğretmeni', 'uçurtma uçurmak', 'basketbol potası', 'beslenme çantası', 'bilgisayar oyunu',
+  'sıcak gülümseme', 'sınıf öğretmeni', 'uçurtma uçurmak', 'kahvaltı masası', 'kırmızı elmalar', 'yeşil yapraklar', 'renkli kalemler', 'oyuncak arabası', 'masal kitapları', 'deniz kabukları', 'spor ayakkabısı', 'neşeli şarkılar', 'sarı papatyalar', 'ilkbahar sabahı', 'zeytin ağaçları', 'basketbol potası', 'beslenme çantası', 'bilgisayar oyunu',
   'dengeli beslenme', 'deniz yıldızları', 'hayvanat bahçesi', 'kahvaltı sofrası', 'okul kütüphanesi', 'sabah kahvaltısı',
   'sonbahar yaprağı', 'yeşil kurbağalar', 'çalışkan öğrenci', 'çamaşır makinesi', 'çilekli dondurma',
+  'portakal bahçesi', 'balkon çiçekleri', 'sevimli köpekler', 'ilkbahar yağmuru', 'yağmur damlaları', 'pazar kahvaltısı', 'sağlıklı yiyecek', 'mevsim meyveleri', 'beyaz kelebekler', 'mandalina kabuğu', 'ayçiçeği tarlası', 'karpuz dilimleri', 'kütüphane kitabı', 'fındık bahçeleri', 'ahşap oyuncaklar', 'limonlu kurabiye', 'çiçekli saksılar', 'kırmızı balonlar',
 ];

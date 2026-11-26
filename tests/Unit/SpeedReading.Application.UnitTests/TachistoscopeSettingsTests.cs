@@ -109,27 +109,28 @@ public sealed class TachistoscopeSettingsTests
             Assert.InRange(state.DisplayDurationMs, minDuration, maxDuration);
         }
         Assert.Equal(maxLength, state.TargetLength);
+        var reached = state.DisplayDurationMs;
         for (var i = 0; i < 600; i++) state.Record("1234", "wrong", 100);
-        Assert.Equal(minLength, state.TargetLength);
-        Assert.Equal(maxDuration, state.DisplayDurationMs);
+        // 26.11.2026: failures never shorten the stimulus or lengthen the display.
+        Assert.Equal(maxLength, state.TargetLength);
+        Assert.Equal(reached, state.DisplayDurationMs);
     }
 
     [Fact]
-    public void Length_changes_only_after_success_at_floor_or_failure_at_ceiling()
+    public void Length_grows_only_after_success_at_the_floor_and_never_shrinks()
     {
         var state = new TachistoscopeState { MinTargetLength = 3, MaxTargetLength = 5,
-            TargetLength = 4, MinDurationMs = 400, MaxDurationMs = 2000,
-            DisplayDurationMs = 400, InitialDurationMs = 1100 };
+            TargetLength = 4, MinDurationMs = 300, MaxDurationMs = 2000,
+            DisplayDurationMs = 300, InitialDurationMs = 1100 };
         for (var i = 0; i < 2; i++) state.Record("1234", "1234", 100);
         Assert.Equal(4, state.TargetLength);
         state.Record("1234", "1234", 100);
         Assert.Equal(5, state.TargetLength);
-        Assert.Equal(1100, state.DisplayDurationMs);
-        Assert.Equal(400, state.Trials[2].DisplayDurationMs);
+        Assert.Equal(450, state.DisplayDurationMs);
+        Assert.Equal(300, state.Trials[2].DisplayDurationMs);
         state.DisplayDurationMs = 2000;
         for (var i = 0; i < 3; i++) state.Record("12345", "wrong", 100);
-        Assert.Equal(4, state.TargetLength);
-        Assert.Equal(1100, state.DisplayDurationMs);
-        Assert.Equal(2000, state.Trials[5].DisplayDurationMs);
+        Assert.Equal(5, state.TargetLength);
+        Assert.Equal(2000, state.DisplayDurationMs);
     }
 }

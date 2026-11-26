@@ -3642,6 +3642,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return TACHISTOSCOPE_COPY.instruction(this.getTachistoscopeContentType());
   }
 
+  /** Result screen: digits for numbers, characters (spaces included) for letters, words and phrases. */
+  getTachistoscopeLengthUnit(): string {
+    return this.getTachistoscopeContentType() === 'number' ? 'basamak' : 'harf';
+  }
+
+  getTachistoscopeLengthNoun(): string {
+    return TACHISTOSCOPE_COPY.lengthNoun[this.getTachistoscopeContentType()];
+  }
+
   getTachistoscopeAnswerPrompt(): string {
     return TACHISTOSCOPE_COPY.answerPrompt(this.getTachistoscopeContentType());
   }

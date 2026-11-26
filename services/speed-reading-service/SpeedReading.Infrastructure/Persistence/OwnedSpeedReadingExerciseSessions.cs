@@ -4149,6 +4149,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 tachistoscope.AssessmentProtocol,
                 correctCount = state.IsAssessmentMode ? (int?)null : tachistoscope.Trials.Count(trial => trial.IsCorrect),
                 incorrectCount = state.IsAssessmentMode ? (int?)null : tachistoscope.Trials.Count(trial => !trial.IsCorrect),
+                // Result screen (decision 26.11.2026): the shortest display and the longest stimulus answered correctly.
+                shortestCorrectDurationMs = state.IsAssessmentMode ? null : tachistoscope.ShortestCorrectDurationMs,
+                longestCorrectLength = state.IsAssessmentMode ? null : tachistoscope.LongestCorrectLength,
                 trials = !state.IsAssessmentMode && tachistoscope.Round == tachistoscope.Count ? tachistoscope.Trials : []
             }, JsonOptions);
         }

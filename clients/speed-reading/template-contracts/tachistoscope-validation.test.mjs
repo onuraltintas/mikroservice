@@ -21,5 +21,7 @@ test('tachistoscope displays stimulus duration and response latency instead of r
   assert.match(html, /isTachistoscopeMode\(\) \? 'Gösterim süresi' : 'Gösterim temposu'/);
   assert.match(html, /isTachistoscopeMode\(\) \? 'ms' : 'kelime\/dk'/);
   assert.match(html, /Ortalama cevap süresi/);
-  assert.match(html, /initialDurationMs[\s\S]*?finalDurationMs/);
+  // 26.11.2026: the result shows the shortest display and the longest stimulus answered correctly, with the start duration.
+  assert.match(html, /shortestCorrectDurationMs[\s\S]*?başlangıç \{\{ result\?\.details\?\.initialDurationMs \}\} ms/);
+  assert.match(html, /longestCorrectLength[\s\S]*?getTachistoscopeLengthUnit\(\)/);
 });

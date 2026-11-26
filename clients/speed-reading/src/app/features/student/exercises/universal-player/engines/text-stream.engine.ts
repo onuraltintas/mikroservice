@@ -119,6 +119,8 @@ export class TextStreamEngine implements BaseEngine {
     private phraseLengthRange = { min: 0, max: 0 };
     /** Answers per adaptation block; mirrors TachistoscopeState.AdaptationBlockSize on the server. */
     static readonly ADAPTATION_BLOCK_SIZE = 3;
+    /** After a length step the display returns to this multiple of the minimum (TachistoscopeState). */
+    static readonly LENGTH_STEP_DURATION_FACTOR = 1.5;
 
     // Fallback word pool for the local staff preview (no backend data). Everyday words only, as on the server
     // (vocabulary levels 1–2 without TachistoscopeWordExclusions): Takistoskop measures quick recognition of
@@ -758,9 +760,10 @@ export class TextStreamEngine implements BaseEngine {
 
     /**
      * Same rule as TachistoscopeState.Record on the server (used for local previews only; server sessions
-     * take duration and length from the server): independent blocks of three answers, 3/3 correct shortens
-     * the display by 15 %, 2/3 keeps it, 0–1 lengthens it by 15 %. At a duration bound the length changes
-     * instead and the duration returns to its start, so one block never makes both harder.
+     * take duration and length from the server). Decision 26.11.2026 (duration-focused Kısa Gösterim):
+     * independent blocks of three answers; 3/3 correct shortens the display by 15 %; 3/3 at the minimum
+     * lengthens the stimulus by one and the duration returns to 1.5 × minimum (never above the start).
+     * Every other block changes nothing: the duration never grows and the length never shrinks.
      */
     private adjustSpeed(): void {
         const block = TextStreamEngine.ADAPTATION_BLOCK_SIZE;
@@ -770,13 +773,9 @@ export class TextStreamEngine implements BaseEngine {
         if (recentCorrect === block) {
             if (this.currentDurationMs <= minDuration && this.targetLength < this.maxTargetLength) {
                 this.targetLength++;
-                this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.initialDurationMs));
+                this.currentDurationMs = Math.min(Math.round(minDuration * TextStreamEngine.LENGTH_STEP_DURATION_FACTOR),
+                    this.initialDurationMs);
             } else this.currentDurationMs = Math.max(minDuration, Math.round(this.currentDurationMs * .85));
-        } else if (recentCorrect <= 1) {
-            if (this.currentDurationMs >= maxDuration && this.targetLength > this.minTargetLength) {
-                this.targetLength--;
-                this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.initialDurationMs));
-            } else this.currentDurationMs = Math.min(maxDuration, Math.round(this.currentDurationMs * 1.15));
         }
         this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.currentDurationMs));
         this.targetLength = Math.max(Math.min(this.minTargetLength, this.maxTargetLength), Math.min(this.maxTargetLength, this.targetLength));
@@ -817,6 +816,7 @@ export class TextStreamEngine implements BaseEngine {
             ? Math.round((this.initialDurationMs - this.currentDurationMs) / this.initialDurationMs * 100)
             : 0;
 
+        const correctTrials = this.trials.filter(trial => trial.isCorrect && Number.isFinite(trial.displayDurationMs));
         const result: EngineResult = {
             score,
             accuracy: this.state.accuracy,
@@ -833,6 +833,9 @@ export class TextStreamEngine implements BaseEngine {
                 avgResponseTime,
                 initialDurationMs: this.initialDurationMs,
                 finalDurationMs: this.currentDurationMs,
+                // Result screen (26.11.2026): shortest display and longest stimulus answered correctly.
+                shortestCorrectDurationMs: correctTrials.length ? Math.min(...correctTrials.map(trial => trial.displayDurationMs)) : null,
+                longestCorrectLength: correctTrials.length ? Math.max(...correctTrials.map(trial => trial.stimulus.length)) : null,
                 speedImprovementPercent: speedImprovement,
                 trials: this.trials,
 

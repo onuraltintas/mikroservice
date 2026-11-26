@@ -20,7 +20,8 @@ describe('Tachistoscope runtime', () => {
     expect(engine.getCurrentDuration()).toBe(75);
     expect(engine.getCurrentStimulus().length).toBe(4);
     answerBlocks(false, 30);
-    expect(engine.getCurrentDuration()).toBe(600);
+    // 26.11.2026: failed blocks never lengthen the display.
+    expect(engine.getCurrentDuration()).toBe(75);
     expect(engine.getCurrentStimulus().length).toBe(4);
     engine.reset(); engine.start();
     expect(engine.getCurrentStimulus().length).toBe(4);
@@ -34,7 +35,7 @@ describe('Tachistoscope runtime', () => {
     expect(engine.getCurrentDuration()).toBe(400);
     engine.destroy();
   });
-  for (const [correctCount, duration] of [[0, 575], [1, 575], [2, 500], [3, 425]]) {
+  for (const [correctCount, duration] of [[0, 500], [1, 500], [2, 500], [3, 425]]) {
     it(`adapts a three-answer preview block with ${correctCount} correct answers to ${duration} ms`, fakeAsync(() => {
       const { engine } = create({ content: { type: 'number', length: 3, count: 6 },
         timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: 3, maxLength: 5 } });
@@ -51,7 +52,7 @@ describe('Tachistoscope runtime', () => {
   }
 
   for (const [minimum, maximum] of [[3, 5], [3, 6], [4, 6], [4, 7]]) {
-    it(`changes preview length only at duration bounds and stays within ${minimum}-${maximum}`, fakeAsync(() => {
+    it(`grows preview length only at the minimum duration, never shrinks it and stays within ${minimum}-${maximum}`, fakeAsync(() => {
       const { engine } = create({ content: { type: 'number', length: maximum - 1, count: 100 },
         timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: minimum, maxLength: maximum, minDurationMs: 400, maxDurationMs: 600 } });
       engine.start();
@@ -73,19 +74,31 @@ describe('Tachistoscope runtime', () => {
       answerBlock(true);
       expect(engine.getCurrentStimulus().length).toBe(maximum);
       expect(engine.getCurrentDuration()).toBe(400);
-      answerBlock(false);
-      expect(engine.getCurrentDuration()).toBe(460);
-      for (let block = 0; block < 2; block++) answerBlock(false);
-      expect(engine.getCurrentDuration()).toBe(600);
-      answerBlock(false);
-      expect(engine.getCurrentStimulus().length).toBe(maximum - 1);
-      expect(engine.getCurrentDuration()).toBe(500);
+      for (let block = 0; block < 4; block++) answerBlock(false);
+      expect(engine.getCurrentStimulus().length).toBe(maximum);
+      expect(engine.getCurrentDuration()).toBe(400);
       engine.reset(); engine.start();
       expect(engine.getCurrentStimulus().length).toBe(maximum - 1);
       expect(engine.getCurrentDuration()).toBe(500);
       engine.destroy();
     }));
   }
+  it('steps back to one and a half times the minimum after a length step, never above the start', fakeAsync(() => {
+    const { engine } = create({ content: { type: 'word', length: 5, count: 60 }, timing: { durationMs: 480 },
+      adaptive: { enabled: true, minLength: 5, maxLength: 9, minDurationMs: 150, maxDurationMs: 1500 } });
+    engine.start();
+    const answerBlock = () => {
+      for (let i = 0; i < 3; i++) {
+        tick(engine.getCurrentDuration());
+        engine.handleInput({ answer: engine.getCurrentStimulus() }); tick(600);
+      }
+    };
+    for (let block = 0; block < 8; block++) answerBlock();
+    expect(engine.getCurrentDuration()).toBe(150);
+    answerBlock();
+    expect(engine.getCurrentDuration()).toBe(225);
+    engine.destroy();
+  }));
   it('keeps duration on a 2/3 block and ignores an incomplete final block', fakeAsync(() => {
     const { engine } = create({ content: { type: 'number', length: 3, count: 5 },
       timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: 3, maxLength: 5 } });

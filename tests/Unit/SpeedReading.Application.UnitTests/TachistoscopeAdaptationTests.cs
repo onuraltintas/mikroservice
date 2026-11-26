@@ -4,9 +4,9 @@ using SpeedReading.Domain.Sessions;
 namespace SpeedReading.Application.UnitTests;
 
 /// <summary>
-/// November 2026 rule: independent blocks of three scored trials. 3/3 correct shortens the display
-/// by 15 %, 2/3 keeps it, 0–1 lengthens it by 15 %. At the duration bounds the length changes instead
-/// and the duration returns to its start; duration and length never both get harder in one block.
+/// Decision 26.11.2026 (duration-focused Kısa Gösterim): independent blocks of three scored trials. 3/3 correct
+/// shortens the display by 15 %; 3/3 at the minimum lengthens the stimulus by one and the duration returns to
+/// 1.5 × minimum (never above the start). Every other block changes nothing: duration never grows, length never shrinks.
 /// </summary>
 public sealed class TachistoscopeAdaptationTests
 {
@@ -26,8 +26,8 @@ public sealed class TachistoscopeAdaptationTests
     [Theory]
     [InlineData(3, 544)]
     [InlineData(2, 640)]
-    [InlineData(1, 736)]
-    [InlineData(0, 736)]
+    [InlineData(1, 640)]
+    [InlineData(0, 640)]
     public void A_three_trial_block_adjusts_duration_by_fifteen_percent(int correct, int expected)
     {
         var state = Create();
@@ -49,30 +49,58 @@ public sealed class TachistoscopeAdaptationTests
         state.Record("kalem", "yanlış", 100);
         state.DisplayDurationMs.Should().Be(544, "the second block has 2/3 correct");
         Block(state, 1);
-        state.DisplayDurationMs.Should().Be(626);
+        state.DisplayDurationMs.Should().Be(544, "a failed block never lengthens the display");
         state.Record("kalem", "kalem", 100);
-        state.DisplayDurationMs.Should().Be(626);
+        state.DisplayDurationMs.Should().Be(544);
         state.TargetLength.Should().Be(6);
     }
 
     [Fact]
-    public void Success_at_the_minimum_duration_lengthens_the_stimulus_and_resets_the_duration()
+    public void Success_at_the_minimum_duration_lengthens_the_stimulus_and_steps_back_to_one_and_a_half_minimum()
     {
-        var state = Create(duration: 640);
-        state.DisplayDurationMs = 250;
+        var state = Create(duration: 640, min: 150);
+        state.DisplayDurationMs = 150;
         Block(state, 3);
         state.TargetLength.Should().Be(7);
-        state.DisplayDurationMs.Should().Be(640, "duration and length are never both made harder in one block");
+        state.DisplayDurationMs.Should().Be(225, "duration and length are never both made harder in one block");
     }
 
     [Fact]
-    public void Failure_at_the_maximum_duration_shortens_the_stimulus_and_resets_the_duration()
+    public void The_length_step_never_returns_above_the_start_duration()
+    {
+        var state = Create(duration: 400, min: 300);
+        state.DisplayDurationMs = 300;
+        Block(state, 3);
+        state.TargetLength.Should().Be(7);
+        state.DisplayDurationMs.Should().Be(400);
+    }
+
+    [Fact]
+    public void Failure_never_lengthens_the_display_or_shortens_the_stimulus()
     {
         var state = Create(duration: 640);
         state.DisplayDurationMs = 1500;
-        Block(state, 1);
-        state.TargetLength.Should().Be(5);
-        state.DisplayDurationMs.Should().Be(640);
+        for (var block = 0; block < 5; block++) Block(state, 0);
+        state.TargetLength.Should().Be(6);
+        state.DisplayDurationMs.Should().Be(1500);
+        var fast = Create(duration: 640, min: 150);
+        fast.DisplayDurationMs = 150;
+        fast.TargetLength = 8;
+        for (var block = 0; block < 5; block++) Block(fast, 1);
+        fast.TargetLength.Should().Be(8);
+        fast.DisplayDurationMs.Should().Be(150);
+    }
+
+    [Fact]
+    public void Result_reports_the_shortest_correct_display_and_longest_correct_stimulus()
+    {
+        var state = Create(duration: 640);
+        state.ShortestCorrectDurationMs.Should().BeNull();
+        Block(state, 3);
+        state.Record("kalemlik", "kalemlik", 100);
+        state.Record("defter", "yanlış", 100);
+        state.ShortestCorrectDurationMs.Should().Be(544);
+        state.LongestCorrectLength.Should().Be(8);
     }
 
     [Fact]
@@ -93,8 +121,8 @@ public sealed class TachistoscopeAdaptationTests
             state.DisplayDurationMs.Should().BeInRange(300, 500);
             state.TargetLength.Should().BeInRange(6, 7);
         }
-        state.DisplayDurationMs.Should().Be(500);
-        state.TargetLength.Should().Be(6);
+        state.DisplayDurationMs.Should().Be(300, "failed blocks keep the reached duration");
+        state.TargetLength.Should().Be(7);
     }
 
     [Fact]
@@ -106,7 +134,7 @@ public sealed class TachistoscopeAdaptationTests
         state.TargetLength.Should().Be(6);
         var slow = Create(duration: 1400, max: 1500);
         Block(slow, 0);
-        slow.DisplayDurationMs.Should().Be(1500);
+        slow.DisplayDurationMs.Should().Be(1400);
         slow.TargetLength.Should().Be(6);
     }
 
