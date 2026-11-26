@@ -523,8 +523,8 @@
     "clients/speed-reading/src/app/features/student/exercises/exercise-level-dialog/exercise-level-dialog.component.scss": "6f32832b61da514feaa9e3979be8a50a8f7c38cf5b42deb1561bd1364cbc6442",
     "clients/speed-reading/src/app/features/student/exercises/exercise-level-dialog/exercise-level-dialog.component.spec.ts": "0b64b717f92c8a292660dc8053dd486c940136fbac70f8888fdb745535ca9286",
     "clients/speed-reading/src/app/features/student/exercises/exercise-level-dialog/exercise-level-dialog.component.ts": "74c6b161957136807c2bd32944cc06733d05c5e7cc16a822d22dc9e277438f71",
-    "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.html": "26e9f854fa1ba4391a93bbe32eaa856e73ddb1c1883267f627ec7ba9119e8712",
-    "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.scss": "5460bc7baf91366546c023c851c17969757da80cc19d1d9fbae5e5430b16608b",
+    "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.html": "258f3dbe7473a652401b31f1234bf17abd248753fe92c96bcfa7fc5fb9c2c247",
+    "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.scss": "c21c49f91e4cc2cb8c8db17fd9afb045870dcd00aa230f8a4dc327c7651a330d",
     "clients/speed-reading/src/app/features/student/exercises/exercises-list.component.ts": "bc4d036a9a9f787f28a13f46679df8dcba438b56d8c28735a5dff3856d747a5a",
     "clients/speed-reading/src/app/features/student/exercises/reading-catalog-progress.spec.ts": "e02cd8b1c1349e3aadd80b47aa9e7affd0eea2535dfa6b6a3bbce098ef705924",
     "clients/speed-reading/src/app/features/student/exercises/universal-player/assessment-blocks.spec.ts": "308b0c5f9c6e810313dc88282eca1a8c8e04175a44032f23ce808e70f2bdcca4",
@@ -1911,7 +1911,8 @@
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.Designer.cs": "0591fe9727681a1abfe1501e48bb5456b0c0efcfbadb705a330ec7a9441dcc1d",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.cs": "cae04e73bc73ea1eba26ca5d069d40e59e613ab498a5e4f6539131be044ac77c",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126110000_TachistoscopeShorterMinimumDurations.cs": "1f2737d495cf108e1b666e12ffb4e3b03cab0ae63fa91be30bfecf3bdd762244",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126120000_GroupingTempoByAge.cs": "7f372533ea021c55c989e6c161783626547feca73f6a36b389e7474da91528d5"
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126120000_GroupingTempoByAge.cs": "7f372533ea021c55c989e6c161783626547feca73f6a36b389e7474da91528d5",
+    "clients/speed-reading/src/app/features/student/exercises/category-tabs-layout.spec.ts": "3c0e35e192f4f73124ac642117a7fced1dc0c540864b11ae0e0af0c5103ddd78"
   },
   "routes": {
     "identity-platform-legal-pages-admin-route": {
