@@ -17,8 +17,17 @@ namespace Identity.API.IntegrationTests;
 /// unrelated and deleted rows stay; Down restores the exact source configuration; both directions are idempotent.
 /// </summary>
 [Collection("Database")]
-public sealed class GroupingTempoMigrationPostgresTests(PostgresFixture postgres)
+public sealed class GroupingTempoMigrationPostgresTests(PostgresFixture postgres) : IAsyncLifetime
 {
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    // The "Database" collection shares one database: leave it empty for the next test.
+    public async Task DisposeAsync()
+    {
+        await using var db = Open();
+        await db.Database.EnsureDeletedAsync();
+    }
+
     private const string Target = "20261126120000_GroupingTempoByAge";
 
     // id, age index, level, previous catalog configuration (levels 1–4), previous pack configuration, new configuration.

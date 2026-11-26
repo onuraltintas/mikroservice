@@ -17,8 +17,17 @@ namespace Identity.API.IntegrationTests;
 /// settings and the previous minimum; assessment, deleted and edited rows stay; Down restores the previous minimum.
 /// </summary>
 [Collection("Database")]
-public sealed class TachistoscopeMinimumDurationMigrationPostgresTests(PostgresFixture postgres)
+public sealed class TachistoscopeMinimumDurationMigrationPostgresTests(PostgresFixture postgres) : IAsyncLifetime
 {
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    // The "Database" collection shares one database: leave it empty for the next test.
+    public async Task DisposeAsync()
+    {
+        await using var db = Open();
+        await db.Database.EnsureDeletedAsync();
+    }
+
     private const string Target = "20261126110000_TachistoscopeShorterMinimumDurations";
 
     private static readonly (string Name, int MinAge, int? MaxAge, int OldMinimum, int NewMinimum, int MaxDuration, int Interval)[] AgeGroups =

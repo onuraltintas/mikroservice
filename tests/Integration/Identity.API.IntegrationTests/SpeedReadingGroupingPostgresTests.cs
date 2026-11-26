@@ -173,7 +173,8 @@ public sealed class SpeedReadingGroupingPostgresTests(PostgresFixture postgres)
             // 26.11.2026: grouping asks four questions, so accuracy is the share of correct answers (no reading speed).
             Assert.Equal((decimal?)100, result.Accuracy);
             Assert.Equal((decimal?)100, result.ComprehensionScore);
-            Assert.Equal(0, result.XpGained);
+            // Completed grouping with answered questions earns XP; an unfinished reading does not.
+            if (partial) Assert.Equal(0, result.XpGained); else Assert.True(result.XpGained > 0);
             Assert.Equal(partial, result.DetailedResults.GetProperty("readingIncomplete").GetBoolean());
             Assert.Equal(200, result.DetailedResults.GetProperty("groupingDisplayPaceWpm").GetDecimal());
             var completion = result.DetailedResults.GetProperty("groupingCompletionPercent").GetDecimal();
