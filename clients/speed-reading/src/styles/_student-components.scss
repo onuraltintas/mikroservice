@@ -559,18 +559,31 @@
 
 // ── Günlük egzersizler (21.11.2026) ──────────────────────────────────────────────────────────────
 #main-content {
-  .de-stat { border: 0; border-radius: 18px; box-shadow: var(--sp-shadow-raised); animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; }
-  .de-stat--orange { background: var(--sp-tone-peach-soft); .de-stat__icon, .de-stat__value { color: var(--sp-tone-peach); } }
-  .de-stat--purple { background: var(--sp-tone-sand-soft); animation-delay: 60ms; .de-stat__icon, .de-stat__value { color: var(--sp-tone-sand); } }
-  .de-stat--blue   { background: var(--sp-tone-sea-soft); animation-delay: 120ms; .de-stat__icon, .de-stat__value { color: var(--sp-tone-sea); } }
-  .de-stat--green  { background: var(--sp-tone-mint-soft); animation-delay: 180ms; .de-stat__icon, .de-stat__value { color: var(--sp-tone-mint); } }
+  // 26.11.2026: kum ve şeftali zeminler kalktı. Karolar beyaz; üstte renkli çizgi dolar, simge kendi tonunda bir kutuda.
+  .de-stat { position: relative; overflow: hidden; border: 0; border-radius: 18px; background: var(--sp-surface); box-shadow: var(--sp-shadow-raised);
+    animation: sp-rise .6s cubic-bezier(.2, .8, .2, 1) both; --stat-line: var(--sp-tone-mint); --stat-soft: var(--sp-tone-mint-soft); --stat-ink: var(--sp-tone-mint); }
+  .de-stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--stat-line);
+    transform-origin: left center; animation: sp-grow-x .8s .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .de-stat__icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--stat-soft); color: var(--stat-ink); font-size: 22px; }
+  .de-stat__value { color: var(--sp-text-1); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .de-stat__label { color: var(--sp-text-2); }
+  .de-stat--orange { --stat-line: var(--sp-focus-line); --stat-soft: color-mix(in srgb, var(--sp-focus-line) 14%, var(--sp-surface)); --stat-ink: var(--sp-tone-peach); }
+  .de-stat--purple { --stat-line: var(--ds-primary); --stat-soft: var(--sp-tone-mint-soft); --stat-ink: var(--ds-primary); animation-delay: 60ms; }
+  .de-stat--blue   { --stat-line: var(--sp-tone-sea); --stat-soft: var(--sp-tone-sea-soft); --stat-ink: var(--sp-tone-sea); animation-delay: 120ms; }
+  .de-stat--green  { animation-delay: 180ms; }
   .de-progress-banner { border: 0; border-radius: 20px; box-shadow: var(--sp-shadow-raised); }
   .de-progress-bar__fill { transform-origin: left; animation: sp-grow-x 1s .3s cubic-bezier(.2, .8, .2, 1) both; }
   .de-card { position: relative; border: 0; border-radius: var(--sp-radius-card-lg); box-shadow: var(--sp-shadow-raised); overflow: hidden;
     transition: transform .2s ease, box-shadow .2s ease;
     &:not(.de-card--locked):hover { transform: translateY(-4px); box-shadow: var(--sp-shadow-raised-hover);
       .de-card__icon-wrap { transform: scale(1.08) rotate(-4deg); } } }
-  .de-card__header { background: var(--tone-soft); color: var(--tone); }
+  // Kart başlığı sade; türün rengi üstteki çizgide ve simgede (kum ve şeftali zemin yok).
+  .de-card__header { position: relative; background: var(--sp-surface-2); color: var(--tone); }
+  .de-card__header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--tone-line, var(--tone)); }
+  .sp-tone-mint { --tone-line: var(--sp-tone-mint); }
+  .sp-tone-sea { --tone-line: var(--sp-tone-sea); }
+  .sp-tone-peach { --tone-line: var(--sp-focus-line); }
+  .sp-tone-sand { --tone-line: var(--ds-primary); }
   .de-card__icon-wrap { background: var(--sp-surface); color: var(--tone); transition: transform .3s cubic-bezier(.3, 1.6, .5, 1); }
   .de-card__icon { color: inherit; }
   .de-card__order { background: var(--sp-surface); color: var(--tone); font-weight: 700; }
@@ -584,7 +597,7 @@
   .de-tabs { border: 0; box-shadow: var(--sp-shadow-raised); }
 }
 @media (prefers-reduced-motion: reduce) {
-  #main-content :is(.de-stat, .de-card, .de-progress-bar__fill, .de-card__done-badge, .de-card__focus-line) { animation: none !important; transition: none !important; }
+  #main-content :is(.de-stat, .de-stat::before, .de-card, .de-progress-bar__fill, .de-card__done-badge, .de-card__focus-line) { animation: none !important; transition: none !important; }
   #main-content .de-card:hover { transform: none; }
 }
 
