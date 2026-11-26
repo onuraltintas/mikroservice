@@ -14,6 +14,7 @@
 .feature-card:hover { transform: translateY(-3px); box-shadow: var(--ds-shadow-hover, var(--ds-shadow)); }
 .feature-card:nth-child(4n + 1) .icon-wrapper { background: var(--ds-mint-soft, var(--ds-soft)); color: var(--ds-mint, var(--ds-primary)); }
 .feature-card:nth-child(4n + 2) .icon-wrapper { background: var(--ds-info-soft, var(--ds-soft)); color: var(--ds-info, var(--ds-primary)); }
-.feature-card:nth-child(4n + 3) .icon-wrapper { background: var(--ds-orange-soft, var(--ds-soft)); color: var(--ds-orange, var(--ds-primary)); }
-.feature-card:nth-child(4n + 4) .icon-wrapper { background: var(--ds-sand-soft, var(--ds-soft)); color: var(--ds-sand, var(--ds-primary)); }
+// 26.11.2026: şeftali ve kum zemin yerine beyaz zemin ve ince çerçeve.
+.feature-card:nth-child(4n + 3) .icon-wrapper { background: var(--ds-surface); color: var(--ds-orange, var(--ds-primary)); outline: 1.5px solid color-mix(in srgb, var(--ds-accent) 60%, transparent); outline-offset: -1.5px; }
+.feature-card:nth-child(4n + 4) .icon-wrapper { background: var(--ds-surface); color: var(--ds-primary); outline: 1.5px solid color-mix(in srgb, var(--ds-primary) 40%, transparent); outline-offset: -1.5px; }
 @media (prefers-reduced-motion: reduce) { .feature-card:hover { transform: none; } }

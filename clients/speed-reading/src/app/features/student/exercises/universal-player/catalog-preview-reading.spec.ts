@@ -42,7 +42,10 @@ describe('Catalogue reading previews', () => {
     player.startPreviewSession();
     expect(player.initializePreviewEngine).not.toHaveBeenCalled();
   });
-  it('applies Chunking word bands even with custom speed/group size and drops practice questions', () => {
+  const validQuestion = (index: number) => ({ id: `q${index}`, questionText: `Soru ${index}`, type: 1, bloomLevel: 1, correctAnswer: 'A',
+    optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D' });
+
+  it('applies Chunking word bands even with custom speed/group size and keeps only valid questions', () => {
     const player = create();
     player.exercise.exerciseTypeName = 'Chunking';
     player.parsedConfig = { engineType: 'word_highlight', engineConfig: { mode: 'chunking',
@@ -51,10 +54,42 @@ describe('Catalogue reading previews', () => {
     player.startPreviewSession();
     expect(player.initializePreviewEngine).not.toHaveBeenCalled();
     const config = player.createPreviewReadingConfig({ id: 'real', content: 'Bir iki üç dört beş altı.',
-      questions: [{ type: 1, correctAnswer: 'A' }] });
-    expect(config.questions).toEqual([]);
-    expect(config.Questions).toEqual([]);
+      questions: [{ type: 1, correctAnswer: 'A' }, validQuestion(1)] });
+    expect(config.questions).toEqual([validQuestion(1)]);
     expect(player.parsedConfig.engineConfig.content).toEqual({ minWordCount: 5, maxWordCount: 8 });
+  });
+
+  for (const purpose of [undefined, 'practice', 'evaluation']) {
+    it(`always asks exactly four questions in a word-grouping preview (purpose: ${purpose ?? 'none'})`, () => {
+      const player = create();
+      player.exercise.exerciseTypeName = 'Chunking';
+      player.parsedConfig = { engineType: 'word_highlight', engineConfig: { mode: 'chunking',
+        ...(purpose ? { readingPurpose: purpose } : {}), pacer: { speedWpm: 200, chunkSize: 2 } } };
+      player.exerciseService.getReadingText.and.returnValue(of({ id: 'actual', content: 'Bir iki üç dört.', difficultyLevel: 3,
+        isActive: true, questions: [1, 2, 3, 4, 5, 6].map(validQuestion) }));
+      player.startPreviewSession();
+      expect(player.exerciseService.getReadingTexts.calls.mostRecent().args[3]).toBeTrue();
+      expect(player.initializePreviewEngine).toHaveBeenCalledTimes(1);
+      expect(player.comprehensionQuestions.length).toBe(4);
+      expect(player.backendSessionConfig.questions.length).toBe(4);
+    });
+  }
+
+  it('skips word-grouping texts with fewer than four valid questions', () => {
+    const player = create();
+    player.exercise.exerciseTypeName = 'Chunking';
+    player.parsedConfig = { engineType: 'word_highlight', engineConfig: { mode: 'chunking', pacer: { speedWpm: 200, chunkSize: 2 } } };
+    player.exerciseService.getReadingText.and.returnValue(of({ id: 'actual', content: 'Bir iki üç dört.', difficultyLevel: 3,
+      isActive: true, questions: [1, 2, 3].map(validQuestion) }));
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+    expect(player.error).toContain('metin');
+  });
+
+  it('keeps guided speed reading on the same engine out of the four-question rule', () => {
+    const player = create();
+    player.parsedConfig = { engineType: 'word_highlight', engineConfig: { mode: 'speed_reading', readingPurpose: 'practice' } };
+    expect(player.previewRequiresQuestions()).toBeFalse();
   });
   it('does not silently initialize a demo when a pinned text fails', () => {
     const player = create();

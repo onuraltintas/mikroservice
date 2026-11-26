@@ -66,9 +66,12 @@ public sealed class UnreadTextSelectionTests
         db.ExerciseTypes.Add(type);
         db.Exercises.Add(exercise);
         db.ReadingTexts.AddRange(read, unread);
+        // Word grouping always asks four comprehension questions (26.11.2026).
+        var questionsPerText = engine == "word_highlight" ? ExerciseConfigurationRules.WordGroupingQuestionCount : 1;
         foreach (var text in new[] { read, unread })
-            db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Soru?", "A", 0, 1, 1,
-                optionA: "bir", optionB: "iki", optionC: "üç", optionD: "dört"));
+            for (var index = 0; index < questionsPerText; index++)
+                db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Soru?", "A", index, 1, 1,
+                    optionA: "bir", optionB: "iki", optionC: "üç", optionD: "dört"));
         if (exerciseHistory)
         {
             var prior = ExerciseSession.Start(student, exercise.Id, read.Id, 1, DateTime.UtcNow.AddMinutes(-5), null);

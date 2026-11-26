@@ -418,9 +418,9 @@
     .stat-label { color: var(--sp-text-2); font-size: 0.8125rem; }
   }
   .stat-card.primary { --tone: var(--sp-tone-mint); background: var(--sp-tone-mint-soft); }
-  .stat-card.warning { --tone: var(--sp-tone-peach); background: var(--sp-tone-peach-soft); }
+  .stat-card.warning { --tone: var(--sp-tone-peach); background: var(--sp-surface); outline: 2px solid var(--sp-ring-focus); outline-offset: -2px; }
   .stat-card.success { --tone: var(--sp-tone-sea); background: var(--sp-tone-sea-soft); }
-  .stat-card.info { --tone: var(--sp-tone-sand); background: var(--sp-tone-sand-soft); }
+  .stat-card.info { --tone: var(--ds-primary); background: var(--sp-surface); outline: 2px solid var(--sp-ring-pine); outline-offset: -2px; }
 }
 
 @media (max-width: 760px) {

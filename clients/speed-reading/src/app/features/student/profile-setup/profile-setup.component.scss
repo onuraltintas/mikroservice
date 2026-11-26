@@ -572,7 +572,7 @@
   background: var(--tone-soft);
 
   &--sea { --tone: var(--sp-tone-sea); --tone-soft: var(--sp-tone-sea-soft); }
-  &--sand { --tone: var(--sp-tone-sand); --tone-soft: var(--sp-tone-sand-soft); }
+  &--sand { --tone: var(--ds-primary); --tone-soft: var(--sp-surface); outline: 2px solid var(--sp-ring-pine); outline-offset: -2px; }
 
   .ps-goal-card__icon-wrap,
   .ps-goal-card__icon-wrap--amber,

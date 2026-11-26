@@ -260,8 +260,8 @@
   background: var(--tone-soft);
   color: var(--tone);
 
-  &[data-tone='peach'] { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-tone-peach-soft); }
-  &[data-tone='sand'] { --tone: var(--sp-tone-sand); --tone-soft: var(--sp-tone-sand-soft); }
+  &[data-tone='peach'] { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-surface); outline: 1.5px solid var(--sp-ring-focus); outline-offset: -1.5px; }
+  &[data-tone='sand'] { --tone: var(--ds-primary); --tone-soft: var(--sp-surface); outline: 1.5px solid var(--sp-ring-pine); outline-offset: -1.5px; }
   &[data-tone='mint'] { --tone: var(--sp-tone-mint); --tone-soft: var(--sp-tone-mint-soft); }
 }
 .notifications-page .notification-item.unread .notification-icon { background: var(--sp-surface); }

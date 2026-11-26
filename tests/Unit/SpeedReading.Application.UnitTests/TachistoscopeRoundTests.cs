@@ -54,8 +54,8 @@ public sealed class TachistoscopeRoundTests
     }
 
     [Theory]
-    [InlineData(0, 575)]
-    [InlineData(1, 575)]
+    [InlineData(0, 500)]
+    [InlineData(1, 500)]
     [InlineData(2, 500)]
     [InlineData(3, 425)]
     public void Completed_blocks_adjust_duration_from_accuracy(int correctCount, int expectedDuration)

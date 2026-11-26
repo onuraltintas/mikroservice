@@ -2392,7 +2392,9 @@
     margin: 16px 0;
     padding: 16px 20px;
     border-radius: 16px;
-    background: var(--sp-tone-peach-soft, var(--ui-surface-muted));
+    background: var(--sp-surface, var(--ui-surface-muted));
+    outline: 2px solid var(--sp-ring-focus, transparent);
+    outline-offset: -2px;
     text-align: left;
 
     h3 { margin: 0 0 10px; font-size: 1rem; color: var(--sp-text-1, var(--ui-text)); }

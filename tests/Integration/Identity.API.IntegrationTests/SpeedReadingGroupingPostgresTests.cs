@@ -95,11 +95,16 @@ public sealed class SpeedReadingGroupingPostgresTests(PostgresFixture postgres)
             var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            // Word grouping always asks four comprehension questions (26.11.2026); the pack ships texts only.
+            foreach (var text in await db.ReadingTexts.AsNoTracking().ToListAsync())
+                AddQuestions(db, text.Id);
+            await db.SaveChangesAsync();
             foreach (var row in settings.RootElement.EnumerateArray())
             {
                 var started = await service.StartAsync(Guid.NewGuid(), new() { ExerciseId = row.GetProperty("id").GetGuid() });
                 Assert.Equal(1, started.InitialData.GetProperty("groupingVersion").GetInt32());
-                Assert.Empty(started.InitialData.GetProperty("questions").EnumerateArray());
+                Assert.Equal(ExerciseConfigurationRules.WordGroupingQuestionCount, started.InitialData.GetProperty("questions").GetArrayLength());
+                Assert.Equal("evaluation", started.InitialData.GetProperty("readingPurpose").GetString());
                 Assert.Equal(0, started.InitialData.GetProperty("readingMaximumMs").GetInt32());
                 Assert.Equal(row.GetProperty("configuration").GetProperty("engineConfig").GetProperty("pacer").GetProperty("speedWpm").GetInt32(),
                     started.InitialData.GetProperty("groupingDisplayPaceWpm").GetDecimal());
@@ -136,8 +141,12 @@ public sealed class SpeedReadingGroupingPostgresTests(PostgresFixture postgres)
             db.ExerciseTypes.Add(type);
             db.Exercises.Add(exercise);
             db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Yanlış", "yanlış seviye", difficultyLevel: 1));
-            db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3));
-            db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "B", "beş altı yedi sekiz", difficultyLevel: 3));
+            foreach (var text in new[] { ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3),
+                         ReadingText.Create(Guid.NewGuid(), "B", "beş altı yedi sekiz", difficultyLevel: 3) })
+            {
+                db.ReadingTexts.Add(text);
+                AddQuestions(db, text.Id);
+            }
             await db.SaveChangesAsync();
             var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType,
@@ -155,11 +164,17 @@ public sealed class SpeedReadingGroupingPostgresTests(PostgresFixture postgres)
             await db.SaveChangesAsync();
             db.ChangeTracker.Clear();
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading", IsTimeout = partial })).IsValid);
-            var result = await service.CompleteAsync(student, started.SessionId, new());
+            var answers = JsonNode.Parse((await db.ExerciseSessions.AsNoTracking().SingleAsync()).SessionDataJson)!["questions"]!.AsArray()
+                .Select(question => new ExerciseQuestionAnswer { QuestionId = Guid.Parse(question!["questionId"]!.GetValue<string>()), Answer = "A" })
+                .ToList();
+            Assert.Equal(ExerciseConfigurationRules.WordGroupingQuestionCount, answers.Count);
+            var result = await service.CompleteAsync(student, started.SessionId, new() { QuestionAnswers = answers });
             Assert.Null(result.RawWPM);
-            Assert.Null(result.Accuracy);
-            Assert.Null(result.ComprehensionScore);
-            Assert.Equal(0, result.XpGained);
+            // 26.11.2026: grouping asks four questions, so accuracy is the share of correct answers (no reading speed).
+            Assert.Equal((decimal?)100, result.Accuracy);
+            Assert.Equal((decimal?)100, result.ComprehensionScore);
+            // Completed grouping with answered questions earns XP; an unfinished reading does not.
+            if (partial) Assert.Equal(0, result.XpGained); else Assert.True(result.XpGained > 0);
             Assert.Equal(partial, result.DetailedResults.GetProperty("readingIncomplete").GetBoolean());
             Assert.Equal(200, result.DetailedResults.GetProperty("groupingDisplayPaceWpm").GetDecimal());
             var completion = result.DetailedResults.GetProperty("groupingCompletionPercent").GetDecimal();
@@ -176,5 +191,12 @@ public sealed class SpeedReadingGroupingPostgresTests(PostgresFixture postgres)
         {
             await db.Database.EnsureDeletedAsync();
         }
+    }
+
+    private static void AddQuestions(OwnedSpeedReadingDbContext db, Guid textId)
+    {
+        for (var index = 0; index < ExerciseConfigurationRules.WordGroupingQuestionCount; index++)
+            db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), textId, $"Soru {index + 1}", "A", index,
+                type: 1, bloomLevel: 1, optionA: "Doğru", optionB: "Yanlış", optionC: "Diğer", optionD: "Son"));
     }
 }

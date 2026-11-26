@@ -5,11 +5,21 @@ import { join, dirname, resolve } from 'node:path';
 const directory = dirname(fileURLToPath(import.meta.url));
 const root = resolve(directory, '../../..');
 const ages = [
-  { name: 'child', suffix: 1, sizes: [2, 3, 4, 4, 4], speeds: [100, 130, 160, 200, 230], bands: [[150,200],[195,260],[240,320],[300,400],[345,460]] },
-  { name: 'teen', suffix: 2, sizes: [2, 3, 3, 4, 4], speeds: [150,180,210,240,270], bands: [[300,375],[360,450],[420,525],[480,600],[540,675]] },
-  { name: 'young-adult', suffix: 4, sizes: [2, 3, 3, 4, 5], speeds: [180,210,240,270,300], bands: [[360,540],[420,630],[480,720],[540,810],[600,900]] },
-  { name: 'adult', suffix: 3, sizes: [2, 3, 3, 4, 5], speeds: [200,230,260,290,320], bands: [[400,600],[460,690],[520,780],[580,870],[640,960]] },
+  // 26.11.2026 (user decision): lower child/teen tempo, at most 2–3 words for children and 4 for the others. `bands` only
+  // select the pack's own passages and stay as released on 11.10.2026, so the live texts and their questions keep matching.
+  { name: 'child', suffix: 1, sizes: [2, 2, 2, 3, 3], speeds: [100, 120, 140, 160, 180], bands: [[150,200],[195,260],[240,320],[300,400],[345,460]] },
+  { name: 'teen', suffix: 2, sizes: [2, 3, 3, 3, 4], speeds: [130,150,180,210,240], bands: [[300,375],[360,450],[420,525],[480,600],[540,675]] },
+  { name: 'young-adult', suffix: 4, sizes: [2, 3, 3, 4, 4], speeds: [180,210,240,270,300], bands: [[360,540],[420,630],[480,720],[540,810],[600,900]] },
+  { name: 'adult', suffix: 3, sizes: [2, 3, 3, 4, 4], speeds: [200,230,260,290,320], bands: [[400,600],[460,690],[520,780],[580,870],[640,960]] },
 ];
+// 26.11.2026 (user decision after the live counts): the configured word band covers the pack's live passages and every
+// existing 4-question text of the age and level, so the four-question rule never leaves a level without texts.
+const configuredBands = {
+  child: [[160,460],[220,470],[260,400],[310,390],[310,400]],
+  teen: [[280,430],[280,400],[300,490],[410,560],[540,640]],
+  'young-adult': [[450,770],[510,730],[580,730],[420,690],[430,700]],
+  adult: [[360,590],[310,590],[340,820],[680,960],[470,1050]],
+};
 const sources = [['library', 'Mahalle kütüphanesinden notlar'], ['garden', 'Bahçede birlikte öğrenmek'], ['map', 'Bir haritanın gelişimi']];
 const settings = [], texts = [], programs = [];
 const words = text => text.trim().split(/\s+/u).length;
@@ -21,12 +31,13 @@ for (const age of ages) {
     if (level < 5 && !previous) throw new Error(`Missing known catalog entry ${age.name}/${level}`);
     const id = previous?.id ?? `d7b10000-0000-5000-8000-${String(age.suffix).padStart(12, '0')}`;
     const [minWordCount, maxWordCount] = age.bands[level - 1];
+    const [configuredMin, configuredMax] = configuredBands[age.name][level - 1];
     settings.push({ id, age: age.name, ageGroupId, level, previousTitle: previous?.title ?? null,
       previousConfiguration: previous?.configuration ?? null,
       title: `Kelime Gruplarıyla Okuma — Seviye ${level}`,
       configuration: { engineType: 'word_highlight', difficultyLevel: level, engineConfig: {
         mode: 'chunking', readingPurpose: 'practice',
-        content: { source: 'reading_text', minWordCount, maxWordCount },
+        content: { source: 'reading_text', minWordCount: configuredMin, maxWordCount: configuredMax },
         pacer: { chunkSize: age.sizes[level - 1], speedWpm: age.speeds[level - 1] } } } });
     for (const [source, title] of sources) {
       const paragraphs = readFileSync(join(directory, `texts/${source}.txt`), 'utf8').trim().split(/\r?\n\s*\r?\n/u);

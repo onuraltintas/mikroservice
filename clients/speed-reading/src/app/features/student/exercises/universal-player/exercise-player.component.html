@@ -1932,7 +1932,8 @@
                 Uzaklık ekrandaki göreli konumdur; fiziksel görüş açısı veya okuma hızı ölçümü değildir.
                 Cevap süresi, harfler kaybolduktan sonra yanıtlama süresidir; kayıtlı oturumlarda ağ gecikmesi de etkileyebilir.
             </div>
-            <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
+            <!-- Kısa Gösterim shows no reading text, so the reading-pace note is hidden there (26.11.2026). -->
+            <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm && !isTachistoscopeMode()">
                 {{ getReadingMeasurementMessage() }}
             </div>
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
@@ -2063,8 +2064,12 @@
                     <div class="result-label">Ortalama cevap süresi</div>
                 </div>
                 <div class="result-box">
-                    <div class="result-value">{{ result?.details?.initialDurationMs }} → {{ result?.details?.finalDurationMs }} ms</div>
-                    <div class="result-label">Gösterim süresi</div>
+                    <div class="result-value">{{ result?.details?.shortestCorrectDurationMs == null ? '—' : result?.details?.shortestCorrectDurationMs + ' ms' }}</div>
+                    <div class="result-label">Doğru tanıdığın en kısa gösterim (başlangıç {{ result?.details?.initialDurationMs }} ms)</div>
+                </div>
+                <div class="result-box">
+                    <div class="result-value">{{ result?.details?.longestCorrectLength == null ? '—' : result?.details?.longestCorrectLength + ' ' + getTachistoscopeLengthUnit() }}</div>
+                    <div class="result-label">Doğru tanıdığın en uzun {{ getTachistoscopeLengthNoun() }}</div>
                 </div>
             </div>
             <div class="speed-reading-results" *ngIf="engine?.engineType === 'adaptive_fluency' && result?.details">

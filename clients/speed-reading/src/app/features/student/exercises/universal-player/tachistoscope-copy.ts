@@ -16,5 +16,7 @@ export const TACHISTOSCOPE_COPY = {
     return type === 'word' || type === 'phrase' ? `${instruction} Büyük-küçük harf fark etmez.` : instruction;
   },
   answerPrompt: (type: TachistoscopeContentType): string => `Gördüğün ${ANSWER_NOUN[type]} yaz`,
+  /** Result screen: "Doğru tanıdığın en uzun …". */
+  lengthNoun: { number: 'sayı', letter: 'harf dizisi', word: 'kelime', phrase: 'kelime grubu' } as Record<TachistoscopeContentType, string>,
   contentLabel: { number: 'Sayı', letter: 'Harf', word: 'Kelime', phrase: 'Kelime grubu (iki kelime)' } as Record<TachistoscopeContentType, string>
 } as const;
