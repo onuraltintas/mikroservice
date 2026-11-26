@@ -690,7 +690,7 @@
     "clients/speed-reading/src/app/features/student/student-layout.component.ts": "f4d81a6d58155f91e8c05bdfdcbb2b611b69915032e4ca89430c9ca65d3b9caa",
     "clients/speed-reading/src/app/features/student/student.routes.ts": "36f2ffd040d674acaca89b3c9d7a0dd7b8b9f0adcc50d9ec7da9e62892c91754",
     "clients/speed-reading/src/app/features/student/subscription/student-subscription.component.ts": "523d087544cd435295a65d8e624ff9db1bb7ef0778232e003dd7ec025c1617bf",
-    "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.spec.ts": "2641ee82b59c944726f5b9ce9ecc4d55fe25bdf8d690a19ea6c41476d1d81ae0",
+    "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.spec.ts": "a7ff8711ba2f34548b4ec18d715ce7adcbb3f3a070479a2b5f4eea1505765e87",
     "clients/speed-reading/src/app/features/student/training-programs/training-programs.component.ts": "b5f84ec44bd17ac21de481129bc1002a1e9a1a77831d250b4a44956020ba6878",
     "clients/speed-reading/src/app/features/student/ui/index.ts": "301f93a640d5657c343c85dd7fcd048dda1e6017d1a70c101d594c4e571b33d2",
     "clients/speed-reading/src/app/features/student/ui/sp-badge.component.ts": "8dbeb2cabb709074d1c530c41ff873359c36966785d415d528ab5c438d40c92e",
