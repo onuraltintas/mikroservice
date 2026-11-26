@@ -1911,7 +1911,7 @@
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.Designer.cs": "0591fe9727681a1abfe1501e48bb5456b0c0efcfbadb705a330ec7a9441dcc1d",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.cs": "cae04e73bc73ea1eba26ca5d069d40e59e613ab498a5e4f6539131be044ac77c",
     "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126110000_TachistoscopeShorterMinimumDurations.cs": "1f2737d495cf108e1b666e12ffb4e3b03cab0ae63fa91be30bfecf3bdd762244",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126120000_GroupingTempoByAge.cs": "88ca095e5fe48cc5d526b4e21b4a324c82443ba68c6fe61a9369a6ddf8b4465b"
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126120000_GroupingTempoByAge.cs": "7f372533ea021c55c989e6c161783626547feca73f6a36b389e7474da91528d5"
   },
   "routes": {
     "identity-platform-legal-pages-admin-route": {

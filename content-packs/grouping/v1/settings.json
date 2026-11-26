@@ -29,7 +29,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 150,
+          "minWordCount": 160,
           "maxWordCount": 460
         },
         "pacer": {
@@ -69,7 +69,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 180,
+          "minWordCount": 220,
           "maxWordCount": 470
         },
         "pacer": {
@@ -109,7 +109,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 210,
+          "minWordCount": 260,
           "maxWordCount": 400
         },
         "pacer": {
@@ -149,7 +149,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 240,
+          "minWordCount": 310,
           "maxWordCount": 390
         },
         "pacer": {
@@ -175,8 +175,8 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 270,
-          "maxWordCount": 390
+          "minWordCount": 310,
+          "maxWordCount": 400
         },
         "pacer": {
           "chunkSize": 3,
@@ -215,7 +215,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 260,
+          "minWordCount": 280,
           "maxWordCount": 430
         },
         "pacer": {
@@ -256,7 +256,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 280,
-          "maxWordCount": 380
+          "maxWordCount": 400
         },
         "pacer": {
           "chunkSize": 3,
@@ -296,7 +296,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 300,
-          "maxWordCount": 480
+          "maxWordCount": 490
         },
         "pacer": {
           "chunkSize": 3,
@@ -336,7 +336,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 410,
-          "maxWordCount": 530
+          "maxWordCount": 560
         },
         "pacer": {
           "chunkSize": 3,
@@ -361,7 +361,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 480,
+          "minWordCount": 540,
           "maxWordCount": 640
         },
         "pacer": {
@@ -401,7 +401,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 360,
+          "minWordCount": 450,
           "maxWordCount": 770
         },
         "pacer": {
@@ -441,7 +441,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 420,
+          "minWordCount": 510,
           "maxWordCount": 730
         },
         "pacer": {
@@ -481,7 +481,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 480,
+          "minWordCount": 580,
           "maxWordCount": 730
         },
         "pacer": {
@@ -522,7 +522,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 420,
-          "maxWordCount": 810
+          "maxWordCount": 690
         },
         "pacer": {
           "chunkSize": 4,
@@ -548,7 +548,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 430,
-          "maxWordCount": 900
+          "maxWordCount": 700
         },
         "pacer": {
           "chunkSize": 4,
@@ -588,7 +588,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 360,
-          "maxWordCount": 600
+          "maxWordCount": 590
         },
         "pacer": {
           "chunkSize": 2,
@@ -628,7 +628,7 @@
         "content": {
           "source": "reading_text",
           "minWordCount": 310,
-          "maxWordCount": 690
+          "maxWordCount": 590
         },
         "pacer": {
           "chunkSize": 3,
@@ -707,7 +707,7 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 580,
+          "minWordCount": 680,
           "maxWordCount": 960
         },
         "pacer": {

@@ -5,20 +5,20 @@ import { join, dirname, resolve } from 'node:path';
 const directory = dirname(fileURLToPath(import.meta.url));
 const root = resolve(directory, '../../..');
 const ages = [
-  // 26.11.2026 (user decision): lower child/teen tempo, at most 2–3 words for children and 4 for the others; word bands
-  // keep the target reading time (child 1.5–2, teen 2–2.5, others 2–3 minutes).
-  { name: 'child', suffix: 1, sizes: [2, 2, 2, 3, 3], speeds: [100, 120, 140, 160, 180], bands: [[150,200],[180,240],[210,280],[240,320],[270,360]] },
-  { name: 'teen', suffix: 2, sizes: [2, 3, 3, 3, 4], speeds: [130,150,180,210,240], bands: [[260,325],[300,375],[360,450],[420,525],[480,600]] },
+  // 26.11.2026 (user decision): lower child/teen tempo, at most 2–3 words for children and 4 for the others. `bands` only
+  // select the pack's own passages and stay as released on 11.10.2026, so the live texts and their questions keep matching.
+  { name: 'child', suffix: 1, sizes: [2, 2, 2, 3, 3], speeds: [100, 120, 140, 160, 180], bands: [[150,200],[195,260],[240,320],[300,400],[345,460]] },
+  { name: 'teen', suffix: 2, sizes: [2, 3, 3, 3, 4], speeds: [130,150,180,210,240], bands: [[300,375],[360,450],[420,525],[480,600],[540,675]] },
   { name: 'young-adult', suffix: 4, sizes: [2, 3, 3, 4, 4], speeds: [180,210,240,270,300], bands: [[360,540],[420,630],[480,720],[540,810],[600,900]] },
   { name: 'adult', suffix: 3, sizes: [2, 3, 3, 4, 4], speeds: [200,230,260,290,320], bands: [[400,600],[460,690],[520,780],[580,870],[640,960]] },
 ];
-// 26.11.2026 (user decision after the live count): the configured word band also covers every existing 4-question text of
-// the age and level, so no level runs out of texts; the pack's own selections keep the target reading time (above).
+// 26.11.2026 (user decision after the live counts): the configured word band covers the pack's live passages and every
+// existing 4-question text of the age and level, so the four-question rule never leaves a level without texts.
 const configuredBands = {
-  child: [[150,460],[180,470],[210,400],[240,390],[270,390]],
-  teen: [[260,430],[280,380],[300,480],[410,530],[480,640]],
-  'young-adult': [[360,770],[420,730],[480,730],[420,810],[430,900]],
-  adult: [[360,600],[310,690],[340,820],[580,960],[470,1050]],
+  child: [[160,460],[220,470],[260,400],[310,390],[310,400]],
+  teen: [[280,430],[280,400],[300,490],[410,560],[540,640]],
+  'young-adult': [[450,770],[510,730],[580,730],[420,690],[430,700]],
+  adult: [[360,590],[310,590],[340,820],[680,960],[470,1050]],
 };
 const sources = [['library', 'Mahalle kütüphanesinden notlar'], ['garden', 'Bahçede birlikte öğrenmek'], ['map', 'Bir haritanın gelişimi']];
 const settings = [], texts = [], programs = [];
