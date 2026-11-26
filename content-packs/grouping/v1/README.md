@@ -17,14 +17,21 @@ Canlıdaki satırlar Hızlı Okuma servisinin otomatik veri geçişi `2026112612
 paket uygulanmışsa eski paket ayarından, uygulanmamışsa 1–4. seviyelerde eski katalog ayarından yeni ayara geçer.
 Böylece paket sonradan uygulansa da güncellenmiş satırları "zaten uygulanmış" görür.
 
-Her hücre `gruptaki kelime / kelime-dk tempo / metindeki kelime bandı` biçimindedir.
+Her hücre `gruptaki kelime / kelime-dk tempo / egzersizin kelime bandı` biçimindedir.
 
 | Yaş | Seviye 1 | Seviye 2 | Seviye 3 | Seviye 4 | Seviye 5 |
 | --- | --- | --- | --- | --- | --- |
-| Çocuk 9–12 | 2 / 100 / 150–200 | 2 / 120 / 180–240 | 2 / 140 / 210–280 | 3 / 160 / 240–320 | 3 / 180 / 270–360 |
-| Genç 13–16 | 2 / 130 / 260–325 | 3 / 150 / 300–375 | 3 / 180 / 360–450 | 3 / 210 / 420–525 | 4 / 240 / 480–600 |
-| Genç yetişkin 17–21 | 2 / 180 / 360–540 | 3 / 210 / 420–630 | 3 / 240 / 480–720 | 4 / 270 / 540–810 | 4 / 300 / 600–900 |
-| Yetişkin 22+ | 2 / 200 / 400–600 | 3 / 230 / 460–690 | 3 / 260 / 520–780 | 4 / 290 / 580–870 | 4 / 320 / 640–960 |
+| Çocuk 9–12 | 2 / 100 / 150–460 | 2 / 120 / 180–470 | 2 / 140 / 210–400 | 3 / 160 / 240–390 | 3 / 180 / 270–390 |
+| Genç 13–16 | 2 / 130 / 260–430 | 3 / 150 / 280–380 | 3 / 180 / 300–480 | 3 / 210 / 410–530 | 4 / 240 / 480–640 |
+| Genç yetişkin 17–21 | 2 / 180 / 360–770 | 3 / 210 / 420–730 | 3 / 240 / 480–730 | 4 / 270 / 420–810 | 4 / 300 / 430–900 |
+| Yetişkin 22+ | 2 / 200 / 360–600 | 3 / 230 / 310–690 | 3 / 260 / 340–820 | 4 / 290 / 580–960 | 4 / 320 / 470–1050 |
+
+**Kelime bandı (26.11.2026, canlı sayımdan sonra):** Kelime Gruplama her metinden sonra 4 anlama sorusu sorar; yalnız en az 4 geçerli
+sorusu olan metinler seçilir. Canlı sayımda her yaş/seviyede 11–19 tane 4 sorulu metin vardı, ama çoğu dar bantların dışındaydı. Bu yüzden
+egzersizin bandı hem paketin kısa seçkilerini hem o yaş/seviyedeki bütün 4 sorulu metinleri kapsar. Paketin kendi seçkileri hedef
+gösterim süresine göre dar bantla seçilmeye devam eder (`generate.mjs` içinde `bands`; egzersize yazılan bant `configuredBands`).
+Mevcut metinlerle okuma süresi bazı hücrelerde hedefin üstündedir (çocuk 1–2 ve genç yetişkin 1. seviyede 3–4,5 dakika); kısa yeni
+metinler ayrı içerik işidir.
 
 Önceki (11.10.2026) değerler: Çocuk 2/100, 3/130, 4/160, 4/200, 4/230; Genç 2/150, 3/180, 3/210, 4/240, 4/270;
 Genç yetişkin ve Yetişkin 5. seviyede 5 kelime.

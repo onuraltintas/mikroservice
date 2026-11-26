@@ -42,7 +42,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 150,
-          "maxWordCount": 200
+          "maxWordCount": 460
         },
         "pacer": {
           "chunkSize": 2,
@@ -82,7 +82,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 180,
-          "maxWordCount": 240
+          "maxWordCount": 470
         },
         "pacer": {
           "chunkSize": 2,
@@ -122,7 +122,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 210,
-          "maxWordCount": 280
+          "maxWordCount": 400
         },
         "pacer": {
           "chunkSize": 2,
@@ -162,7 +162,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 240,
-          "maxWordCount": 320
+          "maxWordCount": 390
         },
         "pacer": {
           "chunkSize": 3,
@@ -188,7 +188,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 270,
-          "maxWordCount": 360
+          "maxWordCount": 390
         },
         "pacer": {
           "chunkSize": 3,
@@ -228,7 +228,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 260,
-          "maxWordCount": 325
+          "maxWordCount": 430
         },
         "pacer": {
           "chunkSize": 2,
@@ -267,8 +267,8 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 300,
-          "maxWordCount": 375
+          "minWordCount": 280,
+          "maxWordCount": 380
         },
         "pacer": {
           "chunkSize": 3,
@@ -307,8 +307,8 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 360,
-          "maxWordCount": 450
+          "minWordCount": 300,
+          "maxWordCount": 480
         },
         "pacer": {
           "chunkSize": 3,
@@ -347,8 +347,8 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 420,
-          "maxWordCount": 525
+          "minWordCount": 410,
+          "maxWordCount": 530
         },
         "pacer": {
           "chunkSize": 3,
@@ -374,7 +374,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 480,
-          "maxWordCount": 600
+          "maxWordCount": 640
         },
         "pacer": {
           "chunkSize": 4,
@@ -414,7 +414,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 360,
-          "maxWordCount": 540
+          "maxWordCount": 770
         },
         "pacer": {
           "chunkSize": 2,
@@ -454,7 +454,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 420,
-          "maxWordCount": 630
+          "maxWordCount": 730
         },
         "pacer": {
           "chunkSize": 3,
@@ -494,7 +494,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 480,
-          "maxWordCount": 720
+          "maxWordCount": 730
         },
         "pacer": {
           "chunkSize": 3,
@@ -533,7 +533,7 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 540,
+          "minWordCount": 420,
           "maxWordCount": 810
         },
         "pacer": {
@@ -559,7 +559,7 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 600,
+          "minWordCount": 430,
           "maxWordCount": 900
         },
         "pacer": {
@@ -599,7 +599,7 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 400,
+          "minWordCount": 360,
           "maxWordCount": 600
         },
         "pacer": {
@@ -639,7 +639,7 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 460,
+          "minWordCount": 310,
           "maxWordCount": 690
         },
         "pacer": {
@@ -679,8 +679,8 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 520,
-          "maxWordCount": 780
+          "minWordCount": 340,
+          "maxWordCount": 820
         },
         "pacer": {
           "chunkSize": 3,
@@ -720,7 +720,7 @@ FROM jsonb_array_elements($settings$[
         "content": {
           "source": "reading_text",
           "minWordCount": 580,
-          "maxWordCount": 870
+          "maxWordCount": 960
         },
         "pacer": {
           "chunkSize": 4,
@@ -745,8 +745,8 @@ FROM jsonb_array_elements($settings$[
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 640,
-          "maxWordCount": 960
+          "minWordCount": 470,
+          "maxWordCount": 1050
         },
         "pacer": {
           "chunkSize": 4,

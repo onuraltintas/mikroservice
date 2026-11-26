@@ -12,6 +12,14 @@ const ages = [
   { name: 'young-adult', suffix: 4, sizes: [2, 3, 3, 4, 4], speeds: [180,210,240,270,300], bands: [[360,540],[420,630],[480,720],[540,810],[600,900]] },
   { name: 'adult', suffix: 3, sizes: [2, 3, 3, 4, 4], speeds: [200,230,260,290,320], bands: [[400,600],[460,690],[520,780],[580,870],[640,960]] },
 ];
+// 26.11.2026 (user decision after the live count): the configured word band also covers every existing 4-question text of
+// the age and level, so no level runs out of texts; the pack's own selections keep the target reading time (above).
+const configuredBands = {
+  child: [[150,460],[180,470],[210,400],[240,390],[270,390]],
+  teen: [[260,430],[280,380],[300,480],[410,530],[480,640]],
+  'young-adult': [[360,770],[420,730],[480,730],[420,810],[430,900]],
+  adult: [[360,600],[310,690],[340,820],[580,960],[470,1050]],
+};
 const sources = [['library', 'Mahalle kütüphanesinden notlar'], ['garden', 'Bahçede birlikte öğrenmek'], ['map', 'Bir haritanın gelişimi']];
 const settings = [], texts = [], programs = [];
 const words = text => text.trim().split(/\s+/u).length;
@@ -23,12 +31,13 @@ for (const age of ages) {
     if (level < 5 && !previous) throw new Error(`Missing known catalog entry ${age.name}/${level}`);
     const id = previous?.id ?? `d7b10000-0000-5000-8000-${String(age.suffix).padStart(12, '0')}`;
     const [minWordCount, maxWordCount] = age.bands[level - 1];
+    const [configuredMin, configuredMax] = configuredBands[age.name][level - 1];
     settings.push({ id, age: age.name, ageGroupId, level, previousTitle: previous?.title ?? null,
       previousConfiguration: previous?.configuration ?? null,
       title: `Kelime Gruplarıyla Okuma — Seviye ${level}`,
       configuration: { engineType: 'word_highlight', difficultyLevel: level, engineConfig: {
         mode: 'chunking', readingPurpose: 'practice',
-        content: { source: 'reading_text', minWordCount, maxWordCount },
+        content: { source: 'reading_text', minWordCount: configuredMin, maxWordCount: configuredMax },
         pacer: { chunkSize: age.sizes[level - 1], speedWpm: age.speeds[level - 1] } } } });
     for (const [source, title] of sources) {
       const paragraphs = readFileSync(join(directory, `texts/${source}.txt`), 'utf8').trim().split(/\r?\n\s*\r?\n/u);
