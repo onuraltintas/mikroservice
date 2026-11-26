@@ -55,7 +55,8 @@ export class StudentShellComponent implements OnInit, OnDestroy {
   /** A short name that fits under the bottom-menu icon; the full name stays in the drawer. */
   shortLabel(item: MenuItem): string { return this.shortLabels[item.route ?? ''] ?? item.label; }
 
-  private readonly navTones = ['mint', 'peach', 'sand', 'sea'] as const;
+  // 26.11.2026: kum ve şeftali zeminler kalktı; nane, odak (turuncu çerçeve) ve deniz sırayla.
+  private readonly navTones = ['mint', 'focus', 'sea'] as const;
   /** Each menu entry gets a soft tone of the same family, in turn. */
   navTone(index: number): string { return this.navTones[index % this.navTones.length]; }
 

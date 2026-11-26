@@ -569,7 +569,9 @@
 .info-cards .info-card { border: 0; box-shadow: var(--sp-shadow-raised, var(--sp-shadow-card)); }
 .info-cards .info-card--mint { background: var(--sp-tone-mint-soft); }
 .info-cards .info-card--sea { background: var(--sp-tone-sea-soft); }
-.info-cards .info-card--sand { background: var(--sp-tone-sand-soft); }
+// 26.11.2026: kum zemin yerine beyaz kart, turuncu çerçeve.
+.info-cards .info-card.info-card--focus { border: 2px solid color-mix(in srgb, var(--sp-focus-line) 60%, transparent); background: var(--sp-surface); }
+.info-cards .info-card.info-card--focus .card-icon { background: var(--sp-tone-mint-soft); }
 .info-cards .info-card .card-icon { background: var(--sp-surface); }
 
 @media (max-width: 600px) {
