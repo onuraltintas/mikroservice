@@ -9,14 +9,15 @@ using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
 
-namespace SpeedReading.ProgramProgression.IntegrationTests;
+namespace Identity.API.IntegrationTests;
 
 /// <summary>
 /// Duration-focused Kısa Gösterim (26.11.2026): only <c>engineConfig.adaptive.minDurationMs</c> of the 20 normal
 /// exercises changes (400/300/250/250 → 300/200/150/150 ms), only when the row still holds the reviewed November 2026
 /// settings and the previous minimum; assessment, deleted and edited rows stay; Down restores the previous minimum.
 /// </summary>
-public sealed class TachistoscopeMinimumDurationMigrationPostgresTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
+[Collection("Database")]
+public sealed class TachistoscopeMinimumDurationMigrationPostgresTests(PostgresFixture postgres)
 {
     private const string Target = "20261126110000_TachistoscopeShorterMinimumDurations";
 

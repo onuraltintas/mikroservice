@@ -170,7 +170,8 @@ public sealed class SpeedReadingGroupingPostgresTests(PostgresFixture postgres)
             Assert.Equal(ExerciseConfigurationRules.WordGroupingQuestionCount, answers.Count);
             var result = await service.CompleteAsync(student, started.SessionId, new() { QuestionAnswers = answers });
             Assert.Null(result.RawWPM);
-            Assert.Null(result.Accuracy);
+            // 26.11.2026: grouping asks four questions, so accuracy is the share of correct answers (no reading speed).
+            Assert.Equal((decimal?)100, result.Accuracy);
             Assert.Equal((decimal?)100, result.ComprehensionScore);
             Assert.Equal(0, result.XpGained);
             Assert.Equal(partial, result.DetailedResults.GetProperty("readingIncomplete").GetBoolean());

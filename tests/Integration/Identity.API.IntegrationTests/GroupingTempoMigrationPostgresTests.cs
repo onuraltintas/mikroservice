@@ -8,14 +8,15 @@ using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
 
-namespace SpeedReading.ProgramProgression.IntegrationTests;
+namespace Identity.API.IntegrationTests;
 
 /// <summary>
 /// Kelime Gruplama tempo by age and level (26.11.2026): rows holding exactly the previous grouping pack configuration,
 /// or before the pack exactly the previous catalog configuration, move to the regenerated pack configuration; edited,
 /// unrelated and deleted rows stay; Down restores the exact source configuration; both directions are idempotent.
 /// </summary>
-public sealed class GroupingTempoMigrationPostgresTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
+[Collection("Database")]
+public sealed class GroupingTempoMigrationPostgresTests(PostgresFixture postgres)
 {
     private const string Target = "20261126120000_GroupingTempoByAge";
 
