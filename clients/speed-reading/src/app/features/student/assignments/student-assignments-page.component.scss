@@ -95,8 +95,11 @@ $bg-color: var(--sp-surface-2);
 
         &.pending {
             .icon-circle {
-                background: var(--sp-warning-light);
-                color: $warning-color;
+                // 26.11.2026: kum zemin yerine beyaz zemin ve turuncu çerçeve.
+                background: var(--sp-surface);
+                color: var(--sp-tone-peach);
+                outline: 1.5px solid var(--sp-ring-focus);
+                outline-offset: -1.5px;
             }
         }
 
@@ -455,10 +458,10 @@ $bg-color: var(--sp-surface-2);
     &:hover { transform: translateY(-3px); box-shadow: var(--sp-shadow-raised-hover, var(--sp-shadow-hover)); }
 }
 
-.status-badge.soon { background: var(--sp-tone-peach-soft); color: var(--sp-tone-peach); }
+.status-badge.soon { background: var(--sp-surface); color: var(--sp-tone-peach); outline: 1.5px solid var(--sp-ring-focus); outline-offset: -1.5px; }
 .status-badge.normal { background: var(--sp-tone-mint-soft); color: var(--sp-tone-mint); }
 
-.stats-row .stat-card.pending { background: var(--sp-tone-peach-soft); }
+.stats-row .stat-card.pending { background: var(--sp-surface); outline: 2px solid var(--sp-ring-focus); outline-offset: -2px; }
 .stats-row .stat-card.completed { background: var(--sp-tone-mint-soft); }
 .stats-row .stat-card.score { background: var(--sp-tone-sea-soft); }
 

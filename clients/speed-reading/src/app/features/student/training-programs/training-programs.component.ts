@@ -76,13 +76,13 @@ interface TrainingTemplate { id: string; name: string; description: string; tota
     .catalog-toolbar label{font-weight:700;color:var(--sp-text-1)}
     .catalog-toolbar select{min-height:44px;min-width:200px;padding:10px 36px 10px 14px;font:inherit;color:var(--sp-text-1);background:var(--sp-surface);border:1px solid var(--sp-border-strong,var(--sp-border));border-radius:12px}
     .catalog-toolbar>span{margin-left:auto}
-    .enrollment-notice{margin:0 0 20px;padding:12px 16px;border-radius:14px;background:var(--sp-tone-sand-soft);color:var(--sp-text-1);font-size:14px}
+    .enrollment-notice{margin:0 0 20px;padding:12px 16px;border-radius:14px;background:var(--sp-tone-mint-soft);color:var(--sp-text-1);font-size:14px}
     .program-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:32px}
     .program-card{--tone:var(--sp-tone-mint);--tone-soft:var(--sp-tone-mint-soft);display:flex;flex-direction:column;min-width:0;padding:22px;border-radius:var(--sp-radius-card-lg,22px);background:var(--sp-surface);box-shadow:var(--sp-shadow-raised,var(--sp-shadow-card));border-top:5px solid var(--tone);transition:transform .2s ease,box-shadow .2s ease}
     .program-card:hover{transform:translateY(-3px);box-shadow:var(--sp-shadow-raised-hover,var(--sp-shadow-hover))}
-    .program-card[data-tone=peach]{--tone:var(--sp-tone-peach);--tone-soft:var(--sp-tone-peach-soft)}
+    .program-card[data-tone=peach]{--tone:var(--sp-focus-line);--tone-soft:var(--sp-surface-2)}
     .program-card[data-tone=sea]{--tone:var(--sp-tone-sea);--tone-soft:var(--sp-tone-sea-soft)}
-    .program-card[data-tone=sand]{--tone:var(--sp-tone-sand);--tone-soft:var(--sp-tone-sand-soft)}
+    .program-card[data-tone=sand]{--tone:var(--ds-primary);--tone-soft:var(--sp-surface-2)}
     .card-meta{display:flex;flex-wrap:wrap;gap:8px}
     .card-meta span{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--sp-surface-2,var(--sp-tone-mint-soft));color:var(--sp-text-2)}
     .card-meta .age-badge{background:var(--tone-soft);color:var(--tone)}

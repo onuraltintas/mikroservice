@@ -108,6 +108,9 @@
   --sp-tone-peach-soft: var(--ds-orange-soft);
   --sp-tone-sand:       var(--ds-sand);
   --sp-tone-sand-soft:  var(--ds-sand-soft);
+  // 26.11.2026: kum ve şeftali zeminlerin yerine beyaz zemin ve bu iki ince çerçeve kullanılır.
+  --sp-ring-focus:      color-mix(in srgb, var(--ds-accent) 60%, transparent);
+  --sp-ring-pine:       color-mix(in srgb, var(--ds-primary) 40%, transparent);
   --sp-focus-line:      var(--ds-accent);
   --sp-radius-card-lg:  var(--ds-radius-card, 22px);
   --sp-shadow-raised:   var(--ds-shadow-raised, var(--ds-shadow));

@@ -273,8 +273,8 @@
 // Renkli kart ve etiket tonları: --tone (yazı/çizgi) ve --tone-soft (zemin).
 .sp-tone-mint  { --tone: var(--sp-tone-mint);  --tone-soft: var(--sp-tone-mint-soft); }
 .sp-tone-sea   { --tone: var(--sp-tone-sea);   --tone-soft: var(--sp-tone-sea-soft); }
-.sp-tone-peach { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-tone-peach-soft); }
-.sp-tone-sand  { --tone: var(--sp-tone-sand);  --tone-soft: var(--sp-tone-sand-soft); }
+.sp-tone-peach { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-surface-2); }  // 26.11.2026: şeftali zemin yok
+.sp-tone-sand  { --tone: var(--sp-tone-sand);  --tone-soft: var(--sp-surface-2); }  // 26.11.2026: kum zemin yok
 // 26.11.2026: kum ve şeftali zeminin yerine "odak" tonu: beyaz zemin, turuncu çerçeve, koyu turuncu simge.
 .sp-tone-focus { --tone: var(--sp-tone-peach); --tone-soft: var(--sp-surface); --tone-ring: color-mix(in srgb, var(--sp-focus-line) 60%, transparent); }
 
