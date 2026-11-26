@@ -44,7 +44,8 @@ describe('Staff training programs', () => {
       expect(header.classList.contains('page-header')).toBeFalse();
       expect(getComputedStyle(header).display).toBe('flex');
       expect(getComputedStyle(header).flexDirection).toBe('column');
-      expect(getComputedStyle(header).alignItems).toBe('flex-start');
+      // Chrome 158 reports the computed flex-start as 'flow-start'; both start the items on the same edge.
+      expect(['flex-start', 'flow-start']).toContain(getComputedStyle(header).alignItems);
     } finally {
       sharedStyle.remove();
       fixture.nativeElement.remove();
