@@ -775,7 +775,7 @@
     "clients/speed-reading/src/styles.scss": "eac6a8380e403116c2e0711d034b28821b925006fbb1e5ecf256019309333969",
     "clients/speed-reading/src/styles/_animations.scss": "0c7440bf825559396a1398fc8a587835f57d2970392fa87f7f1a22d8fdfcbe05",
     "clients/speed-reading/src/styles/_player-shell.scss": "7ea198279b77551b645ec8c0d72eb673f44d2e8ba1f841c8298f145b3474f4f3",
-    "clients/speed-reading/src/styles/_student-components.scss": "879344689f9ba0ae93f353bc86341508cb7b8485ac9dc9cc0fbc7b36f6a6410c",
+    "clients/speed-reading/src/styles/_student-components.scss": "b833c6846da0989d16717b7007520e4ca82d2d6f2681b77c8d37fd68555334b6",
     "clients/speed-reading/src/styles/_student-tokens.scss": "004d1938836a2dbb6ddaa6c5a65128722f6793b0256ab36c7d62c77cbba4690c",
     "clients/speed-reading/src/tailwind.css": "1a1a340d6efa2bef4f9201bc6e4ceff3f8c7f88625fbc6cc3871a654d38e5cdf",
     "clients/speed-reading/tailwind.config.js": "7c276522fc283b2a08c91b9ef42f2a18da22422ba0ca6157a641c4c4a7a91a7f",
