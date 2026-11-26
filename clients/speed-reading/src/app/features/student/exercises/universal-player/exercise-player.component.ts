@@ -70,6 +70,9 @@ import { toCompleteSessionRequest } from '../../../../core/services/exercise-ses
 import { completionLevelToast } from './completion-toasts';
 import { getErrorMessage } from '../../../../core/utils/error-message';
 
+/** User decision 26.11.2026: every word-grouping (Chunking) exercise asks exactly four comprehension questions. */
+const WORD_GROUPING_QUESTION_COUNT = 4;
+
 interface ExerciseData {
   id: string;
   title: string;
@@ -854,7 +857,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           try { this.backendSessionConfig = this.createPreviewReadingConfig(readingText); }
           catch { retry(); return; }
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
-          const requiredQuestions = this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
+          const requiredQuestions = this.isWordGroupingPreview() ? WORD_GROUPING_QUESTION_COUNT
+            : this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
             : (['exam_simulation', 'reading_comprehension', 'regression_reduction', 'subvocalization_reduction', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
                 || this.isRsvpPreview()) && this.previewRequiresQuestions()
             ? this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount : undefined;
@@ -969,8 +973,18 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || String(this.parsedConfig?.['engineConfig']?.['mode'] ?? this.parsedConfig?.['mode']).toLowerCase() === 'rsvp'));
   }
 
+  /** Word grouping (Chunking): word_highlight in chunking mode. Guided and speed-reading modes are not grouping. */
+  private isWordGroupingPreview(): boolean {
+    const engine = String(this.parsedConfig?.['engineType'] ?? '').toLowerCase();
+    if (!['word_highlight', 'word_group', 'chunking'].includes(engine)) return false;
+    return this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking'
+      || String(this.parsedConfig?.['engineConfig']?.['mode'] ?? this.parsedConfig?.['mode'] ?? '').trim().toLowerCase() === 'chunking';
+  }
+
   private previewRequiresQuestions(): boolean {
     if (this.parsedConfig?.['engineType'] === 'error_analysis') return false;
+    // User decision 26.11.2026: word grouping always asks four comprehension questions, in sessions and in previews.
+    if (this.isWordGroupingPreview()) return true;
     return ['reading_comprehension', 'exam_simulation', 'adaptive_fluency', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
       || (this.parsedConfig?.['engineConfig']?.['readingPurpose'] ?? this.parsedConfig?.['readingPurpose']) === 'evaluation';
   }
@@ -1039,15 +1053,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     const title = typeof readingText?.title === 'string' ? readingText.title : '';
     const wordCount = Number(readingText?.wordCount) || content.split(/\s+/).filter(Boolean).length;
-    const availableQuestions = this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking'
-      || (this.parsedConfig?.['engineType'] === 'free_reading' && !this.previewRequiresQuestions()) ? []
+    const availableQuestions = this.parsedConfig?.['engineType'] === 'free_reading' && !this.previewRequiresQuestions() ? []
       : Array.isArray(readingText?.questions) ? readingText.questions : [];
     const questions = this.parsedConfig?.['engineType'] === 'skimming'
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1
         && Number(question.bloomLevel ?? question.BloomLevel) >= 1 && Number(question.bloomLevel ?? question.BloomLevel) <= 6
         && ['A', 'B', 'C', 'D'].includes(String(question.correctAnswer ?? question.CorrectAnswer ?? '').trim().toUpperCase())
         && ['A', 'B', 'C', 'D'].every(option => String(question[`option${option}`] ?? question[`Option${option}`] ?? '').trim()))
-      : (['exam_simulation', 'reading_comprehension', 'text_fade', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
+      : this.isWordGroupingPreview() || (['exam_simulation', 'reading_comprehension', 'text_fade', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
           || this.isRsvpPreview())
           && this.previewRequiresQuestions()
           && (this.parsedConfig?.['engineType'] === 'text_fade'

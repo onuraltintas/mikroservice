@@ -64,6 +64,28 @@ public static class ExerciseConfigurationRules
         return purpose ?? "practice";
     }
 
+    /// <summary>User decision 26.11.2026: word grouping always asks exactly this many comprehension questions.</summary>
+    public const int WordGroupingQuestionCount = 4;
+
+    /// <summary>
+    /// Word grouping ("Öbek Okuma", Chunking) is the word_highlight engine in chunking mode. Guided and speed-reading
+    /// modes of the same engine are not grouping and keep their configured reading purpose.
+    /// </summary>
+    public static bool IsWordGrouping(string? exerciseTypeName, string? engineType, string? mode)
+    {
+        if (string.IsNullOrWhiteSpace(engineType)) return false;
+        string engine;
+        try { engine = NormalizeEngineType(engineType); }
+        catch (ArgumentException) { return false; }
+        return engine == "word_highlight"
+            && (string.Equals(exerciseTypeName, "Chunking", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(mode?.Trim(), "chunking", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Word grouping always measures comprehension; other exercises use <see cref="ResolveReadingPurpose"/>.</summary>
+    public static string ResolveReadingPurpose(string? exerciseTypeName, string engineType, string? mode, string? configuredPurpose, bool assessment) =>
+        IsWordGrouping(exerciseTypeName, engineType, mode) ? "evaluation" : ResolveReadingPurpose(engineType, configuredPurpose, assessment);
+
     public static bool ShouldIncludeComprehensionQuestions(
         string exerciseTypeName, string engineType, string? textStreamMode) =>
         !string.Equals(exerciseTypeName, "Tachistoscope", StringComparison.OrdinalIgnoreCase)

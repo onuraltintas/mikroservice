@@ -34,7 +34,8 @@ async function prepare(page, role = 'Admin', timeout = false, realText = 'bir. i
       response = { items, totalCount: items.length };
     }
     else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: realText,
-      difficultyLevel: 3, isActive: true, wordCount: 6, questions: [{ type: 1, correctAnswer: 'A', optionA: 'a', optionB: 'b', optionC: 'c', optionD: 'd' }] };
+      difficultyLevel: 3, isActive: true, wordCount: 6, questions: [1, 2, 3, 4, 5].map(index => ({ id: `q${index}`, questionText: `Soru ${index}`,
+        type: 1, bloomLevel: 1, correctAnswer: 'A', optionA: 'a', optionB: 'b', optionC: 'c', optionD: 'd' })) };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     else if (path.endsWith('/profile/settings')) response = { ageGroupConfigurationId: ageAware ? '10000000-0000-0000-0000-000000000004' : null };
@@ -43,6 +44,17 @@ async function prepare(page, role = 'Admin', timeout = false, realText = 'bir. i
   await page.goto('/student/exercises', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Gruplama', exact: true })).toBeVisible();
   return { errors, writes, dailyRequests };
+}
+
+// User decision 26.11.2026: every word-grouping exercise ends with exactly four comprehension questions, previews included.
+async function answerFourQuestions(page) {
+  for (let index = 1; index <= 4; index++) {
+    await expect(page.locator('.question-card .question-number')).toHaveText(`Soru ${index}`);
+    await page.locator('.question-card .answer-option').first().click();
+    await page.locator('.question-actions .btn-primary').click();
+    await page.clock.runFor(100);
+  }
+  await expect(page.locator('.question-card')).toHaveCount(0);
 }
 
 async function launch(page) {
@@ -69,11 +81,11 @@ test('group colors, display pace and completion remain distinct from measured re
   await expect(page.locator('.word-highlight-container .progress-info')).toContainText('Grup');
   await expect(page.locator('.word-highlight-container .game-stats')).toContainText('Gösterim temposu');
   await page.clock.runFor(2100);
+  await answerFourQuestions(page);
   await expect(page.getByText('Tamamlanan gösterim', { exact: true })).toBeVisible();
-  await expect(page.getByText('Metindeki grup sayısı', { exact: true })).toBeVisible();
-  await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
+  await expect(page.locator('.answers-list .answer-item')).toHaveCount(4);
+  await expect(page.getByText('Anlama sorularla ölçüldü.', { exact: false })).toBeVisible();
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
-  await expect(page.locator('.comprehension-questions-container')).toHaveCount(0);
   expect(errors).toEqual([]);
   expect(writes).toEqual([]);
 });
@@ -97,6 +109,7 @@ test('teacher timeout reports incomplete demonstration without preview persisten
   const { errors, writes } = await prepare(page, 'Teacher', true);
   await launch(page);
   await page.clock.runFor(1100);
+  await answerFourQuestions(page);
   await expect(page.getByText('Gösterim yarım kaldı.', { exact: false })).toBeVisible();
   expect(errors).toEqual([]);
   expect(writes).toEqual([]);

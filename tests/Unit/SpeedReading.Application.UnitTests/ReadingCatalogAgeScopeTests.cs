@@ -64,7 +64,15 @@ public sealed class ReadingCatalogAgeScopeTests
             pacer = new { speedWpm = 200, chunkSize = 2 } } });
         var exercise = Exercise.Create(name, name, configuration, 1, user, type.Id, targetAgeGroupId: selectedAge);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
-        if (withText) db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Seviye metni", string.Join(" ", Enumerable.Repeat("kelime", 50)), difficultyLevel: 1));
+        if (withText)
+        {
+            var text = ReadingText.Create(Guid.NewGuid(), "Seviye metni", string.Join(" ", Enumerable.Repeat("kelime", 50)), difficultyLevel: 1);
+            db.ReadingTexts.Add(text);
+            // Word grouping always asks four comprehension questions (26.11.2026).
+            for (var index = 0; index < ExerciseConfigurationRules.WordGroupingQuestionCount; index++)
+                db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Soru {index + 1}", "A", index, 1, 1,
+                    optionA: "Doğru", optionB: "Yanlış", optionC: "Diğer", optionD: "Son"));
+        }
         await db.SaveChangesAsync(); return (user, exercise.Id);
     }
 }

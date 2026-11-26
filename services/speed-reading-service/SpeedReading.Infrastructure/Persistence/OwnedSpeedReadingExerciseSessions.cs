@@ -382,7 +382,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration)
                     || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                     || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
-                var comprehensionQuestionCount = normalizedEngineType == "text_fade"
+                var comprehensionQuestionCount = ExerciseConfigurationRules.IsWordGrouping(exerciseTypeName, normalizedEngineType,
+                        ReadString(ReadObject(parsedConfiguration, "engineConfig"), "mode") ?? ReadString(parsedConfiguration, "mode"))
+                    ? ExerciseConfigurationRules.WordGroupingQuestionCount
+                    : normalizedEngineType == "text_fade"
                     && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
                         ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                             ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
@@ -408,7 +411,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var errorTextIds = isErrorAnalysis ? ErrorAnalysisTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
                 var requiresScorableQuestions = !isErrorAnalysis && ExerciseConfigurationRules.ResolveReadingPurpose(
-                    normalizedEngineType,
+                    exerciseTypeName, normalizedEngineType,
+                    ReadString(ReadObject(parsedConfiguration, "engineConfig"), "mode") ?? ReadString(parsedConfiguration, "mode"),
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                         ?? ReadString(parsedConfiguration, "readingPurpose"),
                     request.AssessmentAttemptId.HasValue) == "evaluation";
@@ -1635,7 +1639,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning"))
             state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
-                exerciseEngineType,
+                exerciseTypeName, exerciseEngineType,
+                ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode"),
                 ReadString(effectiveConfig, "readingPurpose") ?? ReadString(config, "readingPurpose"),
                 isAssessmentMode);
         if (IsTachistoscope(exerciseTypeName, exerciseEngineType, config))
@@ -1868,9 +1873,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             || (IsEngineType(exerciseEngineType, "regression_reduction") && state.ReadingPurpose == "evaluation")
             || (IsEngineType(exerciseEngineType, "subvocalization_reduction") && state.ReadingPurpose == "evaluation")
             || (IsTextFade(state) && state.ReadingPurpose == "evaluation")
-            || (IsRsvp(state) && state.ReadingPurpose == "evaluation"))
+            || (IsRsvp(state) && state.ReadingPurpose == "evaluation")
+            || IsWordGrouping(exerciseTypeName, exerciseEngineType, effectiveConfig, config))
         {
-            var count = IsTextFade(state) ? 4 : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
+            var count = IsTextFade(state) ? 4
+                : IsWordGrouping(exerciseTypeName, exerciseEngineType, effectiveConfig, config) ? ExerciseConfigurationRules.WordGroupingQuestionCount
+                : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
                 ?? ReadPositiveInt(ReadObject(config, "content"), "questionCount");
             if (count.HasValue)
             {
@@ -3450,6 +3458,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "word_highlight"
         && (state.ExerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase)
             || state.ExerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsWordGrouping(string exerciseTypeName, string exerciseEngineType, JsonElement effectiveConfig, JsonElement config) =>
+        ExerciseConfigurationRules.IsWordGrouping(exerciseTypeName, exerciseEngineType,
+            ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode"));
 
     private static bool IsTextFade(SessionState state) =>
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "text_fade";

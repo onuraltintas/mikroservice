@@ -16,7 +16,7 @@ public sealed class GroupingSessionTests
         var (service, student, exercise) = await Seed(db,
             """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","content":{"minWordCount":5,"maxWordCount":8},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
         var text = ReadingText.Create(Guid.NewGuid(), "Kısa", "bir iki üç dört", difficultyLevel: 3);
-        db.ReadingTexts.Add(text);
+        AddText(db, text);
         db.Entry(text).Property(item => item.WordCount).CurrentValue = 6;
         await db.SaveChangesAsync();
         var start = () => service.StartAsync(student, new() { ExerciseId = exercise });
@@ -29,7 +29,7 @@ public sealed class GroupingSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         var session = await db.ExerciseSessions.SingleAsync();
@@ -55,7 +55,7 @@ public sealed class GroupingSessionTests
         var (service, student, exercise) = await Seed(db,
             """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","readingPurpose":"practice","content":{"minWordCount":5,"maxWordCount":8},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
         var text = ReadingText.Create(Guid.NewGuid(), "Kısa", "bir iki üç dört", difficultyLevel: 3);
-        db.ReadingTexts.Add(text);
+        AddText(db, text);
         await db.SaveChangesAsync();
         var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = explicitText ? text.Id : null });
         await start.Should().ThrowAsync<Exception>();
@@ -67,7 +67,7 @@ public sealed class GroupingSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "Bir. İki üç dört. Beş altı.", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "Bir. İki üç dört. Beş altı.", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         started.InitialData.GetProperty("groupingVersion").GetInt32().Should().Be(1);
@@ -99,7 +99,7 @@ public sealed class GroupingSessionTests
         await using var db = Context();
         var (service, student, exercise) = await Seed(db,
             """{"engineType":"word_highlight","pacer":{"chunkSize":3},"timing":{"durationMs":850,"delayMs":450},"engineConfig":{"mode":"chunking","content":{"chunkSize":2},"timing":{"DELAY_NAME":0}}}""".Replace("DELAY_NAME", delayName));
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         started.InitialData.GetProperty("groupingChunkSize").GetInt32().Should().Be(3);
@@ -111,7 +111,7 @@ public sealed class GroupingSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         var session = await db.ExerciseSessions.SingleAsync();
@@ -136,7 +136,7 @@ public sealed class GroupingSessionTests
         await using var db = Context();
         var (service, student, exercise) = await Seed(db,
             """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","pacer":{"chunkSize":2,"speedWpm":200},"timing":{"timeLimitSec":1}}}""");
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" });
@@ -146,7 +146,7 @@ public sealed class GroupingSessionTests
         session.SetState(state.ToJsonString());
         await db.SaveChangesAsync();
         await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" });
-        var result = await service.CompleteAsync(student, started.SessionId, new());
+        var result = await service.CompleteAsync(student, started.SessionId, new() { QuestionAnswers = await CorrectAnswers(db) });
         result.DetailedResults.GetProperty("readingIncomplete").GetBoolean().Should().BeTrue();
         result.DetailedResults.GetProperty("groupingCompletionPercent").GetDecimal().Should().BeLessThan(100);
     }
@@ -156,7 +156,7 @@ public sealed class GroupingSessionTests
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
         var text = ReadingText.Create(Guid.NewGuid(), "Yanlış", "bir iki", difficultyLevel: 1);
-        db.ReadingTexts.Add(text);
+        AddText(db, text);
         await db.SaveChangesAsync();
         var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = text.Id });
         await start.Should().ThrowAsync<KeyNotFoundException>();
@@ -168,7 +168,7 @@ public sealed class GroupingSessionTests
         await using var db = Context();
         var (service, student, exercise) = await Seed(db,
             """{"engineType":"word_highlight","timing":{"durationMs":850,"delayMs":450},"engineConfig":{"mode":"chunking","content":{"chunkSize":2}}}""");
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         started.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(2600);
@@ -179,7 +179,7 @@ public sealed class GroupingSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var old = await service.StartAsync(student, new() { ExerciseId = exercise });
         var session = await db.ExerciseSessions.SingleAsync();
@@ -196,7 +196,7 @@ public sealed class GroupingSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         var early = () => service.CompleteAsync(student, started.SessionId, new());
@@ -223,7 +223,7 @@ public sealed class GroupingSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db);
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Başka seviye", "bir iki üç dört", difficultyLevel: 1));
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Başka seviye", "bir iki üç dört", difficultyLevel: 1));
         await db.SaveChangesAsync();
         var start = () => service.StartAsync(student, new() { ExerciseId = exercise });
         await start.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
@@ -236,8 +236,8 @@ public sealed class GroupingSessionTests
         var (service, student, exercise) = await Seed(db);
         var firstId = Guid.Parse("10000000-0000-0000-0000-000000000001");
         var secondId = Guid.Parse("10000000-0000-0000-0000-000000000002");
-        db.ReadingTexts.Add(ReadingText.Create(firstId, "Bir", "bir iki üç dört", difficultyLevel: 3));
-        db.ReadingTexts.Add(ReadingText.Create(secondId, "İki", "beş altı yedi sekiz", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(firstId, "Bir", "bir iki üç dört", difficultyLevel: 3));
+        AddText(db, ReadingText.Create(secondId, "İki", "beş altı yedi sekiz", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var first = await service.StartAsync(student, new() { ExerciseId = exercise });
         var session = await db.ExerciseSessions.SingleAsync();
@@ -246,6 +246,63 @@ public sealed class GroupingSessionTests
         await db.SaveChangesAsync();
         await service.StartAsync(student, new() { ExerciseId = exercise });
         (await db.ExerciseSessions.SingleAsync(item => item.Id != session.Id)).ReadingTextId.Should().NotBe(selected!.Value);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("practice")]
+    [InlineData("evaluation")]
+    public async Task Word_grouping_always_asks_exactly_four_comprehension_questions(string? purpose)
+    {
+        await using var db = Context();
+        var purposeJson = purpose is null ? "" : $",\"readingPurpose\":\"{purpose}\"";
+        var (service, student, exercise) = await Seed(db,
+            $$"""{"engineType":"word_highlight","engineConfig":{"mode":"chunking"{{purposeJson}},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3), questionCount: 6);
+        await db.SaveChangesAsync();
+        await service.StartAsync(student, new() { ExerciseId = exercise });
+        var state = System.Text.Json.Nodes.JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        state["readingPurpose"]!.GetValue<string>().Should().Be("evaluation");
+        state["questions"]!.AsArray().Count.Should().Be(ExerciseConfigurationRules.WordGroupingQuestionCount);
+    }
+
+    [Fact]
+    public async Task Word_grouping_skips_texts_with_fewer_than_four_valid_questions()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        AddText(db, ReadingText.Create(Guid.NewGuid(), "Az sorulu", "bir iki üç dört", difficultyLevel: 3), questionCount: 3);
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise });
+        await start.Should().ThrowAsync<Exception>();
+        db.ExerciseSessions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Guided_reading_on_the_same_engine_is_not_word_grouping()
+    {
+        ExerciseConfigurationRules.IsWordGrouping("SpeedReading", "word_highlight", "speed_reading").Should().BeFalse();
+        ExerciseConfigurationRules.IsWordGrouping(null, "word_highlight", "guided").Should().BeFalse();
+        ExerciseConfigurationRules.IsWordGrouping("Chunking", "word_highlight", null).Should().BeTrue();
+        ExerciseConfigurationRules.IsWordGrouping(null, "chunking", "chunking").Should().BeTrue();
+        ExerciseConfigurationRules.ResolveReadingPurpose("SpeedReading", "word_highlight", "speed_reading", null, false).Should().Be("practice");
+        ExerciseConfigurationRules.ResolveReadingPurpose("Chunking", "word_highlight", "chunking", "practice", false).Should().Be("evaluation");
+    }
+
+    private static void AddText(OwnedSpeedReadingDbContext db, ReadingText text, int questionCount = ExerciseConfigurationRules.WordGroupingQuestionCount)
+    {
+        db.ReadingTexts.Add(text);
+        for (var index = 0; index < questionCount; index++)
+            db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Soru {index + 1}", "A", index,
+                type: 1, bloomLevel: 1, optionA: "Doğru", optionB: "Yanlış", optionC: "Diğer", optionD: "Son"));
+    }
+
+    private static async Task<List<ExerciseQuestionAnswer>> CorrectAnswers(OwnedSpeedReadingDbContext db)
+    {
+        var state = System.Text.Json.Nodes.JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        return state["questions"]!.AsArray()
+            .Select(question => new ExerciseQuestionAnswer { QuestionId = Guid.Parse(question!["questionId"]!.GetValue<string>()), Answer = "A" })
+            .ToList();
     }
 
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
