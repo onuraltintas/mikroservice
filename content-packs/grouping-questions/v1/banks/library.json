@@ -1,0 +1,231 @@
+{
+  "source": "texts/library.txt",
+  "note": "need = sorunun cevabı için metin seçkisinde bulunması gereken son paragraf (1'den başlar). type: 1 gerçek anlam, 2 çıkarım, 3 değerlendirme.",
+  "questions": [
+    {
+      "key": "L01",
+      "need": 2,
+      "type": 1,
+      "bloom": 1,
+      "text": "Kütüphanede mavi raflarda hangi kitaplar vardı?",
+      "options": [
+        "Doğa kitapları",
+        "Öyküler",
+        "Kuşları anlatan kitaplar",
+        "Harita kitapları"
+      ],
+      "answer": "B",
+      "explanation": "Görevli, mavi raflarda öykülerin, yeşil raflarda doğa kitaplarının bulunduğunu anlatır."
+    },
+    {
+      "key": "L02",
+      "need": 3,
+      "type": 1,
+      "bloom": 1,
+      "text": "Duru bir kitabı seçerken ne yaptı?",
+      "options": [
+        "Yalnız kapağının resmine bakıp hemen aldı",
+        "Görevliden ona bir kitap seçmesini istedi",
+        "Arka kapağı okudu, birkaç sayfayı çevirdi",
+        "Raftaki en kalın ve en büyük kitabı aldı"
+      ],
+      "answer": "C",
+      "explanation": "Metinde Duru'nun yalnız kapağa bakmadığı, arka kapaktaki tanıtımı okuyup birkaç sayfayı çevirdiği yazılıdır."
+    },
+    {
+      "key": "L03",
+      "need": 4,
+      "type": 2,
+      "bloom": 2,
+      "text": "Duru eve dönerken parkta neden kısa bir süre durdu?",
+      "options": [
+        "Kitaptaki kuşla gerçek kuşu karşılaştırmak için",
+        "Arkadaşının okuldan gelmesini beklemek için",
+        "Kitabın son bölümünü orada bitirmek için",
+        "Defterini sabah bahçede unuttuğunu fark ettiği için"
+      ],
+      "answer": "A",
+      "explanation": "Duru parkta durup kitapta okuduğu kuşla gerçek kuşu karşılaştırır."
+    },
+    {
+      "key": "L04",
+      "need": 5,
+      "type": 2,
+      "bloom": 2,
+      "text": "Duru'nun görevliyle birlikte başka bir kitapta yanıt araması ona ne gösterdi?",
+      "options": [
+        "Her sorunun yanıtının yalnız tek bir kitapta bulunduğunu",
+        "Görevlinin bütün yanıtları ezbere bildiğini ve aramaya gerek olmadığını",
+        "Defter tutmanın aramayı yavaşlattığını ve gereksiz olduğunu",
+        "Bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabildiğini"
+      ],
+      "answer": "D",
+      "explanation": "Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini görür ve yeni açıklamayı notunun yanına ekler."
+    },
+    {
+      "key": "L05",
+      "need": 5,
+      "type": 3,
+      "bloom": 5,
+      "text": "Duru'nun defter tutması ona en çok hangi konuda yardım etti?",
+      "options": [
+        "Aradığı başlığı ve öğrendiklerini kolayca hatırlamasında",
+        "Kitapları her gün daha hızlı ve daha az yorularak okumasında",
+        "Rafların renklerini kendi isteğine göre değiştirmesinde",
+        "Kütüphaneye haftada bir kez gelmesinin yetmesinde"
+      ],
+      "answer": "A",
+      "explanation": "Duru unuttuğu başlığa defterinden bakar, bilmediği sözcüğü ve yeni açıklamaları da deftere yazar."
+    },
+    {
+      "key": "L06",
+      "need": 7,
+      "type": 1,
+      "bloom": 1,
+      "text": "Duru öneri kartına ne yazdı?",
+      "options": [
+        "Oturma yerlerinin pencereden gelen ışığa yakın olmasını",
+        "Rafları gösteren daha büyük bir harita çizilmesini",
+        "Kapıya büyük yazılı yön işaretleri konmasını",
+        "Kütüphaneye daha çok kuş kitabı alınmasını"
+      ],
+      "answer": "B",
+      "explanation": "Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerir."
+    },
+    {
+      "key": "L07",
+      "need": 7,
+      "type": 2,
+      "bloom": 2,
+      "text": "Duru büyük bir harita isterken hangi gerekçeyi yazdı?",
+      "options": [
+        "Kapının yanındaki eski haritanın yırtılmış ve solmuş olduğunu",
+        "Görevlinin eski haritayı beğenmediğini ve değiştirmek istediğini",
+        "İlk kez gelen birinin renklerin anlamını hemen anlayamayabileceğini",
+        "Rafların sayısının son ayda iki katına çıktığını ve yerlerin karıştığını"
+      ],
+      "answer": "C",
+      "explanation": "Duru önerisinin nedenini de yazar: ilk kez gelen biri renklerin anlamını hemen anlayamayabilir."
+    },
+    {
+      "key": "L08",
+      "need": 9,
+      "type": 2,
+      "bloom": 4,
+      "text": "Gönüllüler her renge bir sözcük ve bir şekil ekleyerek neyi sağlamak istedi?",
+      "options": [
+        "Haritanın duvarda daha süslü ve renkli görünmesini",
+        "Kitapların raflarda daha az yer kaplamasını ve düzenli durmasını",
+        "Yeni getirilen rafların eskilerden kolayca ayrılmasını",
+        "Renkleri ayırt edemeyenlerin de rafları bulabilmesini"
+      ],
+      "answer": "D",
+      "explanation": "Sözcük ve şekil eklenince yalnız renge bakarak ayırt edemeyen ziyaretçiler de rafları bulabilir."
+    },
+    {
+      "key": "L09",
+      "need": 11,
+      "type": 3,
+      "bloom": 5,
+      "text": "Gönüllülerin haritayı asmadan önce birkaç kişiyle denemesi neden yerinde bir karardı?",
+      "options": [
+        "Haritanın gerçekten yol bulmaya yarayıp yaramadığı görüldü",
+        "Böylece harita daha kısa sürede ve daha az emekle bitti",
+        "Denemeye katılanlar haritanın renklerini tamamen değiştirmek istedi",
+        "Haritanın duvara asılacağı yer henüz belli değildi"
+      ],
+      "answer": "A",
+      "explanation": "Deneme, güzel görünen bir çizimin her zaman kolay kullanılmadığını gösterir; oklar ve yazılar bu yüzden düzeltilir."
+    },
+    {
+      "key": "L10",
+      "need": 12,
+      "type": 1,
+      "bloom": 2,
+      "text": "Görevli, yanlış görünen kitap kayıtlarıyla ne yaptı?",
+      "options": [
+        "Hepsini kimseye sormadan hemen defterden sildi",
+        "Silmeden önce raftaki kitaplarla karşılaştırdı",
+        "Kayıtları yeni bir deftere olduğu gibi kopyaladı",
+        "Gönüllülerden bütün kayıtları baştan yazmalarını istedi"
+      ],
+      "answer": "B",
+      "explanation": "Görevli yanlış kayıtları sessizce silmek yerine önce raftaki kitaplarla karşılaştırır."
+    },
+    {
+      "key": "L11",
+      "need": 16,
+      "type": 2,
+      "bloom": 4,
+      "text": "Gönüllüler yeni gelen kitaplar hakkında nasıl karar verdi?",
+      "options": [
+        "En çok konuşan ve en çok isteyen kişinin tercihine göre",
+        "Gelen kitapları raflara rastgele dağıtarak ve beklemeden",
+        "Kayıtlara, önerilere ve eksik konulara birlikte bakarak",
+        "Yalnız çocukların sevdiği türlerden kitap seçerek"
+      ],
+      "answer": "C",
+      "explanation": "Gönüllüler tek bir kişinin tercihine göre değil; ödünç alma kayıtlarına, önerilere ve eksik konulara bakarak karar verir."
+    },
+    {
+      "key": "L12",
+      "need": 17,
+      "type": 1,
+      "bloom": 1,
+      "text": "Çok istenen bir kitabı bekleyenlere ne sunuldu?",
+      "options": [
+        "Kitabın bir fotokopisi ve okuma için kısa bir süre",
+        "Sıraya girmeden kitabı hemen eve götürme izni ve kartı",
+        "Bir hafta sonra yeniden gelmelerini söyleyen bir kart",
+        "Tahmini dönüş tarihi ve benzer konuda başka kitaplar"
+      ],
+      "answer": "D",
+      "explanation": "Sıradakilere tahmini dönüş tarihi söylenir, beklemek istemeyenlere benzer konuda başka kitaplar gösterilir."
+    },
+    {
+      "key": "L13",
+      "need": 19,
+      "type": 3,
+      "bloom": 5,
+      "text": "Okuma buluşmasında farklı yorumlar konuşmayı nasıl etkiledi?",
+      "options": [
+        "Gerekçeler dinlenince konuşma zenginleşti",
+        "Herkes sonunda aynı görüşe geçmek zorunda kaldı",
+        "Konuşma tartışmaya döndüğü için bitirildi",
+        "Yorumlar öyküden bağımsız olduğu için önemsenmedi"
+      ],
+      "answer": "A",
+      "explanation": "Herkes görüşünü öyküdeki bir olayla açıklar; yöneten kişi gerekçeleri sorar ve konuşma gerekçelerle zenginleşir."
+    },
+    {
+      "key": "L14",
+      "need": 20,
+      "type": 2,
+      "bloom": 2,
+      "text": "Metne göre kütüphane Duru için zamanla neye dönüştü?",
+      "options": [
+        "Yalnız ödev yaptığı sessiz bir odaya",
+        "Merakın geliştiği bir çalışma alanına",
+        "Bitmiş yanıtların saklandığı bir depoya",
+        "Arkadaşlarıyla buluştuğu bir oyun yerine"
+      ],
+      "answer": "B",
+      "explanation": "Kütüphane onun için bitmiş yanıtların bulunduğu bir yerden çok, merakın geliştiği bir çalışma alanıdır."
+    },
+    {
+      "key": "L15",
+      "need": 21,
+      "type": 3,
+      "bloom": 5,
+      "text": "Metnin sonunda harita hakkında hangi düşünce öne çıkar?",
+      "options": [
+        "Bir kez çizilen haritanın bir daha hiç değiştirilmemesi gerektiği",
+        "Haritanın yalnız kütüphaneye ilk kez gelenler için gerekli olduğu",
+        "Raflar ve ihtiyaçlar değiştikçe haritanın yeniden gözden geçirilebileceği",
+        "Haritanın yerine yalnız renkli rafların yeterli olacağı ve okların gereksizliği"
+      ],
+      "answer": "C",
+      "explanation": "Metin, haritanın sonsuza kadar değişmeden kalması gerekmediğini; raflar ve ihtiyaçlar değiştikçe yeniden gözden geçirilebileceğini söyler."
+    }
+  ]
+}

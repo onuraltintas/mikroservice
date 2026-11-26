@@ -1,0 +1,246 @@
+{
+  "source": "texts/map.txt",
+  "note": "need = sorunun cevabı için metin seçkisinde bulunması gereken son paragraf (1'den başlar). type: 1 gerçek anlam, 2 çıkarım, 3 değerlendirme.",
+  "questions": [
+    {
+      "key": "M01",
+      "need": 1,
+      "type": 1,
+      "bloom": 1,
+      "text": "Deniz neden başka bir sokaktan yürümek zorunda kaldı?",
+      "options": [
+        "Parka giden yolun bir bölümü kapanmıştı",
+        "Arkadaşı onu başka bir sokakta beklediğini söylemişti",
+        "Her zamanki yolu çok kalabalıktı",
+        "Yeni bir dükkânı görmek istiyordu"
+      ],
+      "answer": "A",
+      "explanation": "Bir gün yolun bir bölümü kapanır ve Deniz başka bir sokaktan yürümek zorunda kalır."
+    },
+    {
+      "key": "M02",
+      "need": 2,
+      "type": 2,
+      "bloom": 2,
+      "text": "Deniz ilk haritasından hangi sonucu çıkardı?",
+      "options": [
+        "Bir harita her ayrıntıyı tam ölçüyle göstermek zorundadır",
+        "Bir çizim her ayrıntıyı göstermeden de işe yarayabilir",
+        "Elle çizilen haritalar yol bulmada hiçbir işe yaramaz",
+        "Haritada yalnız uzun yollar gösterilmelidir"
+      ],
+      "answer": "B",
+      "explanation": "Harita tam ölçüyü göstermese de nerede döneceğini hatırlamasına yardım eder; Deniz bunun belirli bir iş için yararlı olduğunu görür."
+    },
+    {
+      "key": "M03",
+      "need": 3,
+      "type": 1,
+      "bloom": 2,
+      "text": "Arkadaşı iki oyun alanını neden karıştırdı?",
+      "options": [
+        "Haritada oyun alanları hiç gösterilmemişti",
+        "Oyun alanları birbirinden çok uzakta ve ağaçların arkasındaydı",
+        "Deniz aynı şekli iki farklı yer için kullanmıştı",
+        "Arkadaşı haritayı ters tutmuştu"
+      ],
+      "answer": "C",
+      "explanation": "Deniz aynı şekli iki farklı yer için kullanmıştır; sonra işaretlerin yanına kısa adlar ekler."
+    },
+    {
+      "key": "M04",
+      "need": 4,
+      "type": 2,
+      "bloom": 4,
+      "text": "Deniz yürüyüş süresini neden tek ve kesin bir ölçü saymadı?",
+      "options": [
+        "Kullandığı saat her gün farklı bir zaman gösteriyordu",
+        "Arkadaşları yürürken süre tutmasını istemedi",
+        "Parka her gün başka bir yoldan gitti",
+        "Süre yürüyüş biçimine göre değişiyordu"
+      ],
+      "answer": "D",
+      "explanation": "Hızlı yürüdüğü gün ile arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermez; süre yürüyüş biçimine göre değişir."
+    },
+    {
+      "key": "M05",
+      "need": 5,
+      "type": 2,
+      "bloom": 4,
+      "text": "Deniz'in haritasıyla park kapısındaki harita arasındaki fark nedir?",
+      "options": [
+        "Biri parka ulaşmaya, öbürü parkın içinde dolaşmaya yarar",
+        "Biri renkli kalemlerle, öbürü yalnız siyah kalemle çizilmiştir",
+        "Biri yalnız çocuklar, öbürü yalnız büyükler içindir",
+        "İkisi de aynı yerleri aynı amaçla gösterir"
+      ],
+      "answer": "A",
+      "explanation": "Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım eder."
+    },
+    {
+      "key": "M06",
+      "need": 6,
+      "type": 1,
+      "bloom": 1,
+      "text": "Deniz keşif oyununu neden önce bir arkadaşıyla yavaşça denedi?",
+      "options": [
+        "Oyunun tam olarak kaç dakika sürdüğünü ölçmek için",
+        "Yolların açık olduğundan emin olmak için",
+        "Arkadaşına oyunun kurallarını tek tek öğretmek için",
+        "Oyunun ödülünü belirlemek için"
+      ],
+      "answer": "B",
+      "explanation": "Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça dener."
+    },
+    {
+      "key": "M07",
+      "need": 7,
+      "type": 3,
+      "bloom": 5,
+      "text": "Deniz'in yanlış oku düzelttikten sonra açıklamayı da yeniden okuması neden yerindeydi?",
+      "options": [
+        "Açıklamanın yazısı okunamayacak kadar küçüktü",
+        "Arkadaşı açıklamayı beğenmemiş ve silmesini istemişti",
+        "Sorun işaretle yazının birlikte kullanımından doğabilirdi",
+        "Oku düzeltmek tek başına hiçbir işe yaramamıştı ve geri alındı"
+      ],
+      "answer": "C",
+      "explanation": "Deniz, bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark eder."
+    },
+    {
+      "key": "M08",
+      "need": 8,
+      "type": 2,
+      "bloom": 2,
+      "text": "Keşif oyununda farklı yollar seçilmesi neyi gösterdi?",
+      "options": [
+        "Haritanın baştan sona tamamen yanlış çizildiğini",
+        "Oyunun kurallarının çocuklar tarafından hiç anlaşılmadığını",
+        "En uzak noktanın bulunamadığını",
+        "Aynı sonuca birden fazla yoldan ulaşılabileceğini"
+      ],
+      "answer": "D",
+      "explanation": "Herkes aynı yolu seçmez; aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini görürler."
+    },
+    {
+      "key": "M09",
+      "need": 9,
+      "type": 1,
+      "bloom": 2,
+      "text": "Oyundan sonra çocuklar neyi konuştu?",
+      "options": [
+        "Hangi işaretlerin kolay anlaşıldığını",
+        "Oyunu en hızlı bitirenin kim olduğunu ve ödülünü",
+        "Haritanın kaç sayfa olduğunu",
+        "Oyunun ne zaman tekrarlanacağını"
+      ],
+      "answer": "A",
+      "explanation": "En hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuşurlar."
+    },
+    {
+      "key": "M10",
+      "need": 10,
+      "type": 2,
+      "bloom": 4,
+      "text": "Haritaya merdiven ve eğimli yol işaretleri eklenmesi neyi sağladı?",
+      "options": [
+        "Haritanın duvarda daha süslü ve renkli görünmesini",
+        "Merdiven kullanamayanların uygun yolu bulabilmesini",
+        "Parkın daha kısa sürede ve daha az yorularak gezilmesini",
+        "Eski sokakların yeniden açılmasını"
+      ],
+      "answer": "B",
+      "explanation": "Bir ziyaretçi merdivensiz yolu sorar; işaretler eklenince herkes kendine uygun yolu bulabilir."
+    },
+    {
+      "key": "M11",
+      "need": 11,
+      "type": 1,
+      "bloom": 2,
+      "text": "Eski sokak yeniden açıldığında Deniz haritasında ne yaptı?",
+      "options": [
+        "Eski haritayı artık gerekmediği için tamamen attı",
+        "Yeni ve daha büyük bir harita çizmeye başladı",
+        "Kapalı sokak işaretini kaldırıp tarihi yazdı",
+        "Haritayı parkın kapısına astı"
+      ],
+      "answer": "C",
+      "explanation": "Deniz haritayı atmaz; kapalı sokak işaretini kaldırır ve haritanın güncellendiği tarihi yazar."
+    },
+    {
+      "key": "M12",
+      "need": 13,
+      "type": 2,
+      "bloom": 4,
+      "text": "Grup haritaya bütün bilgileri aynı anda koymamaya neden karar verdi?",
+      "options": [
+        "Haritanın basımı çok pahalı olacaktı",
+        "Ayrıntılar zaten mahalledeki herkes tarafından biliniyordu",
+        "Bazı bilgilerin gizli tutulması isteniyordu",
+        "Fazla işaret aranan bilgiyi bulmayı zorlaştırabilirdi"
+      ],
+      "answer": "D",
+      "explanation": "Denemelerde çok fazla işaretin aranan bilgiyi bulmayı zorlaştırabileceğini görürler; ayrıntılar ayrı notlara konur."
+    },
+    {
+      "key": "M13",
+      "need": 14,
+      "type": 2,
+      "bloom": 2,
+      "text": "Yürüyüş süresi neden tek bir sayı yerine bir aralıkla anlatıldı?",
+      "options": [
+        "Yağmur, kalabalık ve yol çalışmaları süreyi değiştiriyordu",
+        "Grup ölçtüğü sayıları haritaya yazmayı hiç sevmiyordu",
+        "Kullanılan saatler birbirine uymuyor ve hep farklı gösteriyordu",
+        "Herkes farklı bir parka gidiyordu"
+      ],
+      "answer": "A",
+      "explanation": "Farklı günlerdeki kayıtlar yağmurun, kalabalığın ve yol çalışmalarının süreyi değiştirdiğini gösterir; aralık bu değişkenliği anlatır."
+    },
+    {
+      "key": "M14",
+      "need": 17,
+      "type": 3,
+      "bloom": 5,
+      "text": "Sokak adı değişince iki adın bir süre birlikte gösterilmesi neden iyi bir karardı?",
+      "options": [
+        "Yeni adın yanlış yazılmış olma ihtimali çok yüksekti",
+        "Eski adla arayanlar da yolunu bulabildi",
+        "Haritada hiç boş yer kalmaması gerekiyordu",
+        "İki ad birlikte daha kısa görünüyordu"
+      ],
+      "answer": "B",
+      "explanation": "Böylece yeni bilgi, eski adı bilenleri dışarıda bırakmaz; güncelleme eski kullanıcıların nasıl aradığını da düşünür."
+    },
+    {
+      "key": "M15",
+      "need": 18,
+      "type": 2,
+      "bloom": 4,
+      "text": "Harita toplantısındaki anlaşmazlık nasıl çözüldü?",
+      "options": [
+        "En kısa rota tek doğru rota olarak seçildi",
+        "Toplantı karar verilmeden bitirildi",
+        "Seçeneklerin özellikleri açıkça gösterildi",
+        "Basamaklı yollar haritadan çıkarıldı"
+      ],
+      "answer": "C",
+      "explanation": "İki kişinin farklı ihtiyaçları önemsediği anlaşılır; tek doğru rota yerine seçeneklerin özellikleri açıkça gösterilir."
+    },
+    {
+      "key": "M16",
+      "need": 21,
+      "type": 3,
+      "bloom": 5,
+      "text": "Metnin sonunda Deniz'in ilk haritası için ne düşünülür?",
+      "options": [
+        "Yeni harita çizildiği için artık tamamen gereksiz olduğu",
+        "Hatalı olduğu için hiç saklanmaması gerektiği",
+        "Yeni haritadan daha doğru ve daha ayrıntılı olduğu",
+        "Küçük bir ihtiyacı görünür kılıp konuşmayı başlattığı"
+      ],
+      "answer": "D",
+      "explanation": "İlk çizim gereksiz değildir; küçük bir ihtiyacı görünür kılmış ve konuşmayı başlatmıştır."
+    }
+  ]
+}

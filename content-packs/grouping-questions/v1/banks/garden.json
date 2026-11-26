@@ -1,0 +1,246 @@
+{
+  "source": "texts/garden.txt",
+  "note": "need = sorunun cevabı için metin seçkisinde bulunması gereken son paragraf (1'den başlar). type: 1 gerçek anlam, 2 çıkarım, 3 değerlendirme.",
+  "questions": [
+    {
+      "key": "G01",
+      "need": 1,
+      "type": 1,
+      "bloom": 1,
+      "text": "Çocuklar tohum almadan önce ne yaptı?",
+      "options": [
+        "Alanı gezip güneşi ve suyun biriktiği yerleri gözlediler",
+        "Okulun yanındaki dükkândan bütün tohumları satın aldılar",
+        "Toprağı kazıp büyük taşları bahçenin dışına taşıdılar",
+        "Öğretmenlerinden bir bitki kitabı okumasını istediler"
+      ],
+      "answer": "A",
+      "explanation": "Metne göre ilk işleri tohum almak olmaz; önce alanı gezip güneşin nereden geldiğini ve suyun nerede biriktiğini gözlerler."
+    },
+    {
+      "key": "G02",
+      "need": 2,
+      "type": 1,
+      "bloom": 1,
+      "text": "Çocuklar gün içinde bahçede neyin yer değiştirdiğini fark etti?",
+      "options": [
+        "Toprağın renginin",
+        "Gölgenin",
+        "Kuşların konduğu dalların",
+        "Rüzgârın yönünün"
+      ],
+      "answer": "B",
+      "explanation": "Çocuklar sabah ve öğleden sonra bahçeye bakar ve gölgenin gün içinde yer değiştirdiğini fark eder."
+    },
+    {
+      "key": "G03",
+      "need": 3,
+      "type": 2,
+      "bloom": 2,
+      "text": "Çocuklar toprağı temizlerken neye dikkat etti?",
+      "options": [
+        "İşi olabildiğince çabuk bitirip sınıfa dönmeye",
+        "Bütün yaprakları ve dalları çöpe atmaya",
+        "Toprakta yaşayan küçük canlıları rahatsız etmemeye",
+        "Yalnız büyük taşların yerini değiştirip toprağı düzlemeye"
+      ],
+      "answer": "C",
+      "explanation": "Metinde çocukların toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştığı ve bulduklarını hemen çöp saymadığı yazılıdır."
+    },
+    {
+      "key": "G04",
+      "need": 4,
+      "type": 1,
+      "bloom": 1,
+      "text": "Sıraların başına konan işaretlerde neler yazıyordu?",
+      "options": [
+        "Sulamayı yapacak öğrencinin adı",
+        "Bitkinin ne kadar su istediği",
+        "Tohumların hangi dükkândan alındığı",
+        "Bitkinin adı ve ekildiği gün"
+      ],
+      "answer": "D",
+      "explanation": "İşaretlerde bitkinin adı ve ekildiği gün yazıyordu."
+    },
+    {
+      "key": "G05",
+      "need": 5,
+      "type": 2,
+      "bloom": 2,
+      "text": "Çocuklar sulama görevlerini neden paylaştırdı?",
+      "options": [
+        "Herkesin ayrı ayrı sulaması toprağı fazla ıslattığı için",
+        "Su kabı yalnız bir kişinin taşıyabileceği kadar ağır olduğu için",
+        "Öğretmenleri bahçeye yalnız bir öğrencinin girmesini istediği için",
+        "Bazı çocuklar sulama yapmak istemediği için"
+      ],
+      "answer": "A",
+      "explanation": "İlk sulamada herkes su verince toprak fazla ıslanır; bu yüzden ertesi gün görevleri paylaşırlar."
+    },
+    {
+      "key": "G06",
+      "need": 6,
+      "type": 3,
+      "bloom": 5,
+      "text": "Eren'in henüz filizlenmeyen tohumları hemen başarısız saymaması nasıl bir davranıştır?",
+      "options": [
+        "Gereksiz bir gecikmedir",
+        "Sabırlı ve dikkatli bir gözlemcinin davranışıdır",
+        "Arkadaşlarını kırmamak için yapılmış bir şakadır",
+        "Bahçeyle ilgilenmemenin bir sonucudur"
+      ],
+      "answer": "B",
+      "explanation": "Eren paketteki bilgileri defterdeki tarihlerle karşılaştırır ve gözlem yapmanın bazen sabır gerektirdiğini anlar."
+    },
+    {
+      "key": "G07",
+      "need": 7,
+      "type": 2,
+      "bloom": 4,
+      "text": "İlk ölçümlerde sonuçlar neden farklı çıktı?",
+      "options": [
+        "Kullandıkları cetvellerden biri kırık olduğu için",
+        "Bitkiler ölçüm sırasında birkaç santim birden büyüdüğü için",
+        "Çocuklar bitkinin farklı noktalarından ölçtüğü için",
+        "Ölçümler farklı günlerde yapıldığı için"
+      ],
+      "answer": "C",
+      "explanation": "Bir arkadaş yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıkar; bu yüzden ortak bir ölçüm noktası belirlerler."
+    },
+    {
+      "key": "G08",
+      "need": 9,
+      "type": 3,
+      "bloom": 5,
+      "text": "Çocukların yalnız en uzun bitkiyi göstermek yerine birkaç bitkiyi karşılaştırması neden doğruydu?",
+      "options": [
+        "Tek örneğe bakıp bütün sırayı yargılamak yanıltıcı olabilirdi",
+        "Ziyaretçi bahçedeki bütün bitkilerin adını tek tek öğrenmek istiyordu",
+        "En uzun bitki o gün henüz ölçülmemişti",
+        "Öğretmenleri yalnız kısa bitkileri göstermelerini istemişti"
+      ],
+      "answer": "A",
+      "explanation": "Çocuklar aynı türden birkaç bitkiyi karşılaştırır; tek örneğe bakarak kesin karar vermenin yanıltıcı olabileceğini düşünürler."
+    },
+    {
+      "key": "G09",
+      "need": 10,
+      "type": 1,
+      "bloom": 2,
+      "text": "Bir işaret kaybolduğunda çocuklar sıradaki bitkileri nasıl buldu?",
+      "options": [
+        "Ziyaretçilere sordular",
+        "Defterdeki çizime baktılar",
+        "Bitkileri söküp yeniden ektiler",
+        "Öğretmenlerinin hatırlamasını beklediler"
+      ],
+      "answer": "B",
+      "explanation": "Herkes bitkilerin adını farklı hatırlar; defterdeki çizime bakarak sırayı yeniden bulurlar."
+    },
+    {
+      "key": "G10",
+      "need": 11,
+      "type": 2,
+      "bloom": 2,
+      "text": "Sulama çizelgesinde yapılacak işin açıklamasının da bulunması ne sağladı?",
+      "options": [
+        "Çizelgenin panoda daha renkli ve dikkat çekici görünmesini",
+        "Görevlerin her hafta biraz daha azalmasını",
+        "Gelemeyen birinin görevini başka birinin üstlenebilmesini",
+        "Sulamanın yalnız öğretmen tarafından yapılmasını"
+      ],
+      "answer": "C",
+      "explanation": "Açıklama sayesinde bir kişi gelemediğinde başka biri görevi devralabilir."
+    },
+    {
+      "key": "G11",
+      "need": 13,
+      "type": 2,
+      "bloom": 4,
+      "text": "Deneme sonunda bazı bitkiler daha canlı görününce çocuklar ne yaptı?",
+      "options": [
+        "Sonucun yalnız sulamadan kaynaklandığını hemen herkese ilan ettiler",
+        "Bütün bahçeyi aynı biçimde sulamaya başladılar",
+        "Denemeyi kimseye söylemeden bitirdiler",
+        "Başka etkenleri de konuşup sonucu gözlem olarak yazdılar"
+      ],
+      "answer": "D",
+      "explanation": "Çocuklar sonucu kesin bir kural gibi sunmaz; toprağın ve güneşin de etkili olabileceğini konuşur, sonucu gözlem olarak yazarlar."
+    },
+    {
+      "key": "G12",
+      "need": 14,
+      "type": 1,
+      "bloom": 2,
+      "text": "Bahçenin çevresindeki yol neden genişletildi?",
+      "options": [
+        "Önce çizilen dar geçit sulama kabı taşıyanlara yetmedi",
+        "Ziyaretçiler yolun kenarına daha çok bitki ekilmesini istedi",
+        "Yağmur yolun bir bölümünü tamamen silmişti",
+        "Öğretmenleri bahçeye bir bank koymak istedi"
+      ],
+      "answer": "A",
+      "explanation": "Çok dar çizilen geçit sulama kabı taşıyanlara yetmez; çocuklar yürüyerek dener ve yolu biraz genişletir."
+    },
+    {
+      "key": "G13",
+      "need": 16,
+      "type": 2,
+      "bloom": 4,
+      "text": "Eski ve yeni fotoğrafları karşılaştırırken çocuklar neyi fark etti?",
+      "options": [
+        "Fotoğrafların hepsinin aslında aynı gün çekildiğini",
+        "Farklı açı ve ışığın değişiklik varmış gibi gösterebileceğini",
+        "Bitkilerin mevsimden mevsime hiç değişmediğini ve hep aynı kaldığını",
+        "Eski fotoğrafların daha net olduğunu"
+      ],
+      "answer": "B",
+      "explanation": "Benzer açıdan çekilen fotoğraflar karşılaştırmayı kolaylaştırır; farklı açı ve ışıkla bir değişiklik varmış gibi görünebileceğini fark ederler."
+    },
+    {
+      "key": "G14",
+      "need": 17,
+      "type": 3,
+      "bloom": 5,
+      "text": "Bir bitki kuruduğunda grubun suçlu aramak yerine kayıtları incelemesi neden yerindeydi?",
+      "options": [
+        "Böylece kuruyan bitkiyi aynı gün yenisiyle değiştirebildiler",
+        "Kayıtlar kimin hata yaptığını her seferinde kesin olarak gösteriyordu",
+        "Nedeni anlayıp sonraki ekimde neyi değiştireceklerini buldular",
+        "Öğretmenleri bu konuda konuşmalarını yasaklamıştı"
+      ],
+      "answer": "C",
+      "explanation": "Grup bakım kayıtlarını ve toprağın durumunu inceler, sorunun tek kişiden kaynaklanmayabileceğini konuşur ve sonraki ekim için ne yapacaklarını yazar."
+    },
+    {
+      "key": "G15",
+      "need": 19,
+      "type": 2,
+      "bloom": 4,
+      "text": "Eren ve arkadaşları yeni gelecek öğrencilere neden karışıklık yaşanan günleri de anlattı?",
+      "options": [
+        "Bahçenin aslında başarısız olduğunu herkese göstermek için",
+        "Yeni öğrencilerin bahçeyi devralmaktan vazgeçmesi için",
+        "Dosyanın daha kalın görünmesi için",
+        "Yeni grup önceki denemelerden yararlanabilsin diye"
+      ],
+      "answer": "D",
+      "explanation": "Yeni grup, aynı güçlükleri yeniden yaşamak yerine önceki denemelerden yararlanabilsin diye karışıklıklar ve çözümler de anlatılır."
+    },
+    {
+      "key": "G16",
+      "need": 21,
+      "type": 3,
+      "bloom": 5,
+      "text": "Metnin sonuna göre bahçe köşesinden geriye kalan en önemli şey nedir?",
+      "options": [
+        "Gözlemleyip birbirine anlatabilme alışkanlığı",
+        "Yalnız en uzun boylu ve en gösterişli bitkiler",
+        "Yeni öğrencilerin aynı yolu aynen izleme zorunluluğu",
+        "Bahçeye konan renkli işaretlerin güzelliği"
+      ],
+      "answer": "A",
+      "explanation": "Eren'e göre köşede ortak kararlar, ölçümler ve notlar birikmiştir; önemli olan yapılanı gözlemleyip birbirine anlatabilmektir."
+    }
+  ]
+}
