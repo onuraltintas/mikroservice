@@ -257,7 +257,7 @@ public sealed class GroupingSessionTests
         await using var db = Context();
         var purposeJson = purpose is null ? "" : $",\"readingPurpose\":\"{purpose}\"";
         var (service, student, exercise) = await Seed(db,
-            $$"""{"engineType":"word_highlight","engineConfig":{"mode":"chunking"{{purposeJson}},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
+            $$$$"""{"engineType":"word_highlight","engineConfig":{"mode":"chunking"{{{{purposeJson}}}},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
         AddText(db, ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3), questionCount: 6);
         await db.SaveChangesAsync();
         await service.StartAsync(student, new() { ExerciseId = exercise });
