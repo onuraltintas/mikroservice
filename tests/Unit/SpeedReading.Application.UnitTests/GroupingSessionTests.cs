@@ -209,10 +209,10 @@ public sealed class GroupingSessionTests
         session.SetState(state.ToJsonString());
         await db.SaveChangesAsync();
         (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeTrue();
-        var result = await service.CompleteAsync(student, started.SessionId, new());
+        var result = await service.CompleteAsync(student, started.SessionId, new() { QuestionAnswers = await CorrectAnswers(db) });
         result.RawWPM.Should().BeNull();
-        result.Accuracy.Should().BeNull();
-        result.XpGained.Should().Be(0);
+        result.Accuracy.Should().Be(100);
+        result.XpGained.Should().BePositive();
         result.DetailedResults.GetProperty("groupingDisplayPaceWpm").GetDecimal().Should().Be(200);
         result.DetailedResults.GetProperty("groupingCompletionPercent").GetDecimal().Should().Be(100);
         (await service.CompleteAsync(student, started.SessionId, new())).RawWPM.Should().BeNull();
