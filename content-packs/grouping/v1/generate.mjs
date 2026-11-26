@@ -5,10 +5,12 @@ import { join, dirname, resolve } from 'node:path';
 const directory = dirname(fileURLToPath(import.meta.url));
 const root = resolve(directory, '../../..');
 const ages = [
-  { name: 'child', suffix: 1, sizes: [2, 3, 4, 4, 4], speeds: [100, 130, 160, 200, 230], bands: [[150,200],[195,260],[240,320],[300,400],[345,460]] },
-  { name: 'teen', suffix: 2, sizes: [2, 3, 3, 4, 4], speeds: [150,180,210,240,270], bands: [[300,375],[360,450],[420,525],[480,600],[540,675]] },
-  { name: 'young-adult', suffix: 4, sizes: [2, 3, 3, 4, 5], speeds: [180,210,240,270,300], bands: [[360,540],[420,630],[480,720],[540,810],[600,900]] },
-  { name: 'adult', suffix: 3, sizes: [2, 3, 3, 4, 5], speeds: [200,230,260,290,320], bands: [[400,600],[460,690],[520,780],[580,870],[640,960]] },
+  // 26.11.2026 (user decision): lower child/teen tempo, at most 2–3 words for children and 4 for the others; word bands
+  // keep the target reading time (child 1.5–2, teen 2–2.5, others 2–3 minutes).
+  { name: 'child', suffix: 1, sizes: [2, 2, 2, 3, 3], speeds: [100, 120, 140, 160, 180], bands: [[150,200],[180,240],[210,280],[240,320],[270,360]] },
+  { name: 'teen', suffix: 2, sizes: [2, 3, 3, 3, 4], speeds: [130,150,180,210,240], bands: [[260,325],[300,375],[360,450],[420,525],[480,600]] },
+  { name: 'young-adult', suffix: 4, sizes: [2, 3, 3, 4, 4], speeds: [180,210,240,270,300], bands: [[360,540],[420,630],[480,720],[540,810],[600,900]] },
+  { name: 'adult', suffix: 3, sizes: [2, 3, 3, 4, 4], speeds: [200,230,260,290,320], bands: [[400,600],[460,690],[520,780],[580,870],[640,960]] },
 ];
 const sources = [['library', 'Mahalle kütüphanesinden notlar'], ['garden', 'Bahçede birlikte öğrenmek'], ['map', 'Bir haritanın gelişimi']];
 const settings = [], texts = [], programs = [];

@@ -10,14 +10,24 @@ Bu bir gösterim/izleme alıştırmasıdır; anlamsal çözümleme, anlama testi
 
 ## Onaylanan ayarlar
 
+**26.11.2026 güncellemesi (kullanıcı kararı):** çocuk ve gençte tempo düşürüldü, grup çocukta en fazla 3 (1–3. seviyede 2),
+diğer yaşlarda en fazla 4 kelime oldu; kelime bandı hedef gösterim süresini koruyacak biçimde tempoyla birlikte
+yeniden hesaplandı. Paket `generate.mjs` ile yeniden üretildi (değişen seviyelerde metin seçkileri de değişti).
+Canlıdaki satırlar Hızlı Okuma servisinin otomatik veri geçişi `20261126120000_GroupingTempoByAge` ile güncellenir:
+paket uygulanmışsa eski paket ayarından, uygulanmamışsa 1–4. seviyelerde eski katalog ayarından yeni ayara geçer.
+Böylece paket sonradan uygulansa da güncellenmiş satırları "zaten uygulanmış" görür.
+
 Her hücre `gruptaki kelime / kelime-dk tempo / metindeki kelime bandı` biçimindedir.
 
 | Yaş | Seviye 1 | Seviye 2 | Seviye 3 | Seviye 4 | Seviye 5 |
 | --- | --- | --- | --- | --- | --- |
-| Çocuk 9–12 | 2 / 100 / 150–200 | 3 / 130 / 195–260 | 4 / 160 / 240–320 | 4 / 200 / 300–400 | 4 / 230 / 345–460 |
-| Genç 13–16 | 2 / 150 / 300–375 | 3 / 180 / 360–450 | 3 / 210 / 420–525 | 4 / 240 / 480–600 | 4 / 270 / 540–675 |
-| Genç yetişkin 17–21 | 2 / 180 / 360–540 | 3 / 210 / 420–630 | 3 / 240 / 480–720 | 4 / 270 / 540–810 | 5 / 300 / 600–900 |
-| Yetişkin 22+ | 2 / 200 / 400–600 | 3 / 230 / 460–690 | 3 / 260 / 520–780 | 4 / 290 / 580–870 | 5 / 320 / 640–960 |
+| Çocuk 9–12 | 2 / 100 / 150–200 | 2 / 120 / 180–240 | 2 / 140 / 210–280 | 3 / 160 / 240–320 | 3 / 180 / 270–360 |
+| Genç 13–16 | 2 / 130 / 260–325 | 3 / 150 / 300–375 | 3 / 180 / 360–450 | 3 / 210 / 420–525 | 4 / 240 / 480–600 |
+| Genç yetişkin 17–21 | 2 / 180 / 360–540 | 3 / 210 / 420–630 | 3 / 240 / 480–720 | 4 / 270 / 540–810 | 4 / 300 / 600–900 |
+| Yetişkin 22+ | 2 / 200 / 400–600 | 3 / 230 / 460–690 | 3 / 260 / 520–780 | 4 / 290 / 580–870 | 4 / 320 / 640–960 |
+
+Önceki (11.10.2026) değerler: Çocuk 2/100, 3/130, 4/160, 4/200, 4/230; Genç 2/150, 3/180, 3/210, 4/240, 4/270;
+Genç yetişkin ve Yetişkin 5. seviyede 5 kelime.
 
 Hedef gösterim süresi çocukta 1,5–2; gençte 2–2,5; diğer gruplarda 2–3 dakikadır. Bunlar ürünün pilot ayarlarıdır; akademik olarak doğrulanmış yaş normları değildir. Metinlerin yaşa uygunluğu ve zorluk derecesi eğitimci değerlendirmesi gerektirir.
 

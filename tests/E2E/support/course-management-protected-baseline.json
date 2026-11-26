@@ -1910,7 +1910,8 @@
     "services/coaching-service/Coaching.Infrastructure/StudyPlanning/CoachingStudentResourceService.cs": "a2439d72e310729980383ed29b864387cb339cddbfe6217a6882cd375a20fd42",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.Designer.cs": "0591fe9727681a1abfe1501e48bb5456b0c0efcfbadb705a330ec7a9441dcc1d",
     "services/coaching-service/Coaching.Infrastructure/Data/Migrations/20261127090000_CommaSeparators.cs": "cae04e73bc73ea1eba26ca5d069d40e59e613ab498a5e4f6539131be044ac77c",
-    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126110000_TachistoscopeShorterMinimumDurations.cs": "1f2737d495cf108e1b666e12ffb4e3b03cab0ae63fa91be30bfecf3bdd762244"
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126110000_TachistoscopeShorterMinimumDurations.cs": "1f2737d495cf108e1b666e12ffb4e3b03cab0ae63fa91be30bfecf3bdd762244",
+    "services/speed-reading-service/SpeedReading.Infrastructure/Persistence/Migrations/20261126120000_GroupingTempoByAge.cs": "3ecc43dfe2dff09a4305cf5da2c7d5e60965fc4b8ec5536e2376f4d660839d75"
   },
   "routes": {
     "identity-platform-legal-pages-admin-route": {

@@ -69,12 +69,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 195,
-          "maxWordCount": 260
+          "minWordCount": 180,
+          "maxWordCount": 240
         },
         "pacer": {
-          "chunkSize": 3,
-          "speedWpm": 130
+          "chunkSize": 2,
+          "speedWpm": 120
         }
       }
     }
@@ -109,12 +109,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 240,
-          "maxWordCount": 320
+          "minWordCount": 210,
+          "maxWordCount": 280
         },
         "pacer": {
-          "chunkSize": 4,
-          "speedWpm": 160
+          "chunkSize": 2,
+          "speedWpm": 140
         }
       }
     }
@@ -149,12 +149,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 300,
-          "maxWordCount": 400
+          "minWordCount": 240,
+          "maxWordCount": 320
         },
         "pacer": {
-          "chunkSize": 4,
-          "speedWpm": 200
+          "chunkSize": 3,
+          "speedWpm": 160
         }
       }
     }
@@ -175,12 +175,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 345,
-          "maxWordCount": 460
+          "minWordCount": 270,
+          "maxWordCount": 360
         },
         "pacer": {
-          "chunkSize": 4,
-          "speedWpm": 230
+          "chunkSize": 3,
+          "speedWpm": 180
         }
       }
     }
@@ -215,12 +215,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 300,
-          "maxWordCount": 375
+          "minWordCount": 260,
+          "maxWordCount": 325
         },
         "pacer": {
           "chunkSize": 2,
-          "speedWpm": 150
+          "speedWpm": 130
         }
       }
     }
@@ -255,12 +255,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 360,
-          "maxWordCount": 450
+          "minWordCount": 300,
+          "maxWordCount": 375
         },
         "pacer": {
           "chunkSize": 3,
-          "speedWpm": 180
+          "speedWpm": 150
         }
       }
     }
@@ -295,12 +295,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 420,
-          "maxWordCount": 525
+          "minWordCount": 360,
+          "maxWordCount": 450
         },
         "pacer": {
           "chunkSize": 3,
-          "speedWpm": 210
+          "speedWpm": 180
         }
       }
     }
@@ -335,12 +335,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 480,
-          "maxWordCount": 600
+          "minWordCount": 420,
+          "maxWordCount": 525
         },
         "pacer": {
-          "chunkSize": 4,
-          "speedWpm": 240
+          "chunkSize": 3,
+          "speedWpm": 210
         }
       }
     }
@@ -361,12 +361,12 @@
         "readingPurpose": "practice",
         "content": {
           "source": "reading_text",
-          "minWordCount": 540,
-          "maxWordCount": 675
+          "minWordCount": 480,
+          "maxWordCount": 600
         },
         "pacer": {
           "chunkSize": 4,
-          "speedWpm": 270
+          "speedWpm": 240
         }
       }
     }
@@ -551,7 +551,7 @@
           "maxWordCount": 900
         },
         "pacer": {
-          "chunkSize": 5,
+          "chunkSize": 4,
           "speedWpm": 300
         }
       }
@@ -737,7 +737,7 @@
           "maxWordCount": 960
         },
         "pacer": {
-          "chunkSize": 5,
+          "chunkSize": 4,
           "speedWpm": 320
         }
       }
