@@ -1932,7 +1932,8 @@
                 Uzaklık ekrandaki göreli konumdur; fiziksel görüş açısı veya okuma hızı ölçümü değildir.
                 Cevap süresi, harfler kaybolduktan sonra yanıtlama süresidir; kayıtlı oturumlarda ağ gecikmesi de etkileyebilir.
             </div>
-            <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
+            <!-- Kısa Gösterim shows no reading text, so the reading-pace note is hidden there (26.11.2026). -->
+            <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm && !isTachistoscopeMode()">
                 {{ getReadingMeasurementMessage() }}
             </div>
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
