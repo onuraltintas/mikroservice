@@ -84,6 +84,7 @@ jobs:
           node --test content-packs/pool-questions/v1/pack.test.mjs
           node --test content-packs/pool-questions/v2/pack.test.mjs
           node --test content-packs/pool-texts/v1/pack.test.mjs
+          node --test content-packs/pool-texts/v1-fix1/pack.test.mjs
           node --test tests/E2E/support/static-security-headers.contract.test.mjs
           node --test tests/E2E/redesign-public-pages.contract.test.mjs
           node --test tests/E2E/support/production-images.contract.test.mjs
