@@ -13,7 +13,8 @@ export class Seo {
   private readonly document = inject(DOCUMENT);
 
   set(page: { title: string; description?: string | null; path: string; noindex?: boolean; image?: string | null }): void {
-    const title = page.title.endsWith('maxkampüs') || page.title.includes('| maxkampüs') ? page.title : page.title + SUFFIX;
+    // A title that already names the brand ("maxkampüs: …", "… | maxkampüs") does not get it a second time.
+    const title = /maxkampüs/i.test(page.title) ? page.title : page.title + SUFFIX;
     this.title.setTitle(title);
     const description = (page.description ?? '').trim()
       || 'Kurslar, etüt merkezleri ve özel ders veren öğretmenler için ders programı, yoklama, ödev, tahsilat ve velilere e-posta tek yerde.';

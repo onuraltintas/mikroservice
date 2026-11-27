@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { Component, OnInit, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MaxkampusApi, SiteEntry } from '../core/api';
 import { Seo } from '../core/seo';
@@ -113,7 +113,7 @@ export class ContentPageComponent implements OnInit {
   `,
   styles: `h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 36px); }`
 })
-export class LegalPageComponent implements OnInit {
+export class LegalPageComponent {
   private readonly api = inject(MaxkampusApi);
   private readonly seo = inject(Seo);
   readonly slug = input.required<string>();
@@ -123,18 +123,32 @@ export class LegalPageComponent implements OnInit {
   readonly updated = signal('');
   readonly loading = signal(true);
 
-  async ngOnInit(): Promise<void> {
+  // The router reuses this component when a footer link moves from one legal document to another, so the document,
+  // its title and its canonical address follow the slug, not only the first one opened (27.11.2026).
+  constructor() {
+    effect(() => {
+      const slug = this.slug();
+      untracked(() => void this.load(slug));
+    });
+  }
+
+  private async load(slug: string): Promise<void> {
+    this.loading.set(true);
     try {
-      const page = await this.api.legal(this.slug());
+      const page = await this.api.legal(slug);
+      if (slug !== this.slug()) return;
       this.title.set(page.title);
       this.content.set(page.content);
       this.version.set(page.version);
       this.updated.set(trDate(page.updatedAt ?? page.createdAt));
-      this.seo.set({ title: page.title, path: `/yasal/${this.slug()}` });
+      this.seo.set({ title: page.title, path: `/yasal/${slug}` });
     } catch {
-      this.seo.set({ title: 'Yasal metin', path: `/yasal/${this.slug()}`, noindex: true });
+      if (slug !== this.slug()) return;
+      this.title.set('');
+      this.content.set('');
+      this.seo.set({ title: 'Yasal metin', path: `/yasal/${slug}`, noindex: true });
     } finally {
-      this.loading.set(false);
+      if (slug === this.slug()) this.loading.set(false);
     }
   }
 }
