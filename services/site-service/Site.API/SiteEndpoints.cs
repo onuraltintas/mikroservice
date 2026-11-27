@@ -83,7 +83,7 @@ public static class SiteEndpoints
             Cache(http, 3600);
             var origin = (configuration["Site:MaxkampusPublicUrl"] ?? "https://maxkampus.com").TrimEnd('/');
             var items = await content.GetMaxkampusSitemapAsync(cancellationToken);
-            var fixedPages = new[] { "/", "/fiyatlar", "/blog", "/iletisim" };
+            var fixedPages = new[] { "/", "/fiyatlar", "/blog", "/iletisim", "/yasal/privacy", "/yasal/kvkk", "/yasal/cookies", "/yasal/course-management-terms" };
             var builder = new System.Text.StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
             foreach (var path in fixedPages) builder.Append($"  <url><loc>{System.Security.SecurityElement.Escape(origin + path)}</loc></url>\n");
             // The contact and pricing pages are kept as entries for their text; their address is the fixed one above.

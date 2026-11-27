@@ -13,6 +13,7 @@ import { canonicalPageUrl } from '../../../core/utils/public-site-url';
   template: `
     <app-navbar [forceOpaque]="true"></app-navbar>
     <main class="pricing-page-content">
+      <h1 class="sr-only">Master Hızlı Okuma fiyatları</h1>
       <app-pricing-section></app-pricing-section>
     </main>
     <app-footer></app-footer>
@@ -23,8 +24,8 @@ export class PricingPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.seoService.updateTags({
-      title: 'Fiyatlandırma | Hızlı Okuma',
-      description: 'Hızlı okuma hedeflerinize uygun abonelik planını seçin.',
+      title: 'Fiyatlandırma | Master Hızlı Okuma',
+      description: 'Master Hızlı Okuma abonelik planları: okuma hızı ve anlama hedeflerinize uygun planı seçin, ücretleri karşılaştırın.',
       url: canonicalPageUrl('/fiyatlandirma'),
       type: 'website'
     });

@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { PlatformLegalPage, PlatformLegalPagesService } from '../../core/services/platform-legal-pages.service';
+import { SeoService } from '../../core/services/seo.service';
+import { LegalPageSeo } from './legal-page-seo';
 
 @Component({
   selector: 'app-platform-legal-page',
@@ -32,11 +34,15 @@ import { PlatformLegalPage, PlatformLegalPagesService } from '../../core/service
   `,
   styles: [`:host { display: block; min-height: 100%; background: var(--ui-page, var(--ui-surface)); }`]
 })
-export class PlatformLegalPageComponent implements OnInit {
+export class PlatformLegalPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly legalPages = inject(PlatformLegalPagesService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly legalSeo = inject(LegalPageSeo);
+  private readonly seo = inject(SeoService);
+  private restoreSeo: (() => void) | null = null;
   readonly page = signal<PlatformLegalPage | null>(null);
+  private slug = '';
   readonly loading = signal(true);
   readonly notFound = signal(false);
   readonly error = signal(false);
@@ -44,6 +50,7 @@ export class PlatformLegalPageComponent implements OnInit {
   ngOnInit(): void {
     this.route.paramMap.pipe(switchMap(params => {
       const slug = params.get('slug') ?? '';
+      this.slug = slug ?? '';
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
         this.page.set(null);
         this.loading.set(false);
@@ -65,6 +72,35 @@ export class PlatformLegalPageComponent implements OnInit {
       else this.notFound.set(result.notFound || !result.page);
       this.error.set(result.error);
       this.loading.set(false);
+      this.applySeo(this.slug);
     });
   }
+
+  ngOnDestroy(): void {
+    this.restoreSeo?.();
+    this.seo.setNoIndex(false);
+  }
+
+  // Each shared legal document gets its own title, description and canonical address (27.11.2026);
+  // an unpublished one stays out of search results.
+  private applySeo(slug: string): void {
+    this.restoreSeo?.();
+    this.restoreSeo = null;
+    const page = this.page();
+    if (!page) {
+      this.seo.setNoIndex(true);
+      return;
+    }
+    this.seo.setNoIndex(false);
+    this.restoreSeo = this.legalSeo.apply({ path: `/legal/${slug}`, heading: page.title.trim(), description: summary(page.content) });
+  }
+}
+
+/** First sentences of a document, for its description: plain text, at most 155 characters. */
+function summary(content: string): string {
+  const text = content.replace(/[#*_>`]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length <= 155) return text;
+  const cut = text.slice(0, 155);
+  const space = cut.lastIndexOf(' ');
+  return `${cut.slice(0, space > 100 ? space : 155)}…`;
 }

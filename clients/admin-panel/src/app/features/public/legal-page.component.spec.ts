@@ -48,4 +48,20 @@ describe('PlatformLegalPageComponent', () => {
     expect(loadPage).toHaveBeenCalledWith('accessibility-policy');
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Erişilebilirlik politikası');
   });
+
+  it('gives each document its own title, description and canonical address for search engines', async () => {
+    await createComponent('privacy', vi.fn(() => of(page)));
+
+    expect(document.title).toMatch(/^Gizlilik politikası \| /);
+    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(`${location.origin}/legal/privacy`);
+    expect(document.head.querySelector('meta[name="description"]')?.getAttribute('content')).toContain('kişisel verilerin');
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
+  });
+
+  it('keeps an unpublished document out of search results', async () => {
+    await createComponent('kvkk', vi.fn(() => throwError(() => ({ status: 404 }))));
+
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex');
+  });
 });
+

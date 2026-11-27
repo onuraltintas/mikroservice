@@ -19,6 +19,12 @@
 #   maxkampus.com         maxkampüs (Kurs Yönetimi): its site, sign-in and institution panel (19.11.2026)
 # eduivme.com shows the parent brand page (catch-all block below). The old Coaching domain is closed.
 
+# www is not a separate site: the parent brand page answers only on eduivme.com (27.11.2026, search engines indexed
+# www pages as duplicates).
+www.eduivme.com:80 {
+	redir https://eduivme.com{uri} 301
+}
+
 www.maxkoc.com:80 {
 	redir https://maxkoc.com{uri} 301
 }
