@@ -12,6 +12,19 @@ const GA_ID_PATTERN = /^G-[A-Z0-9]{4,15}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Public legal documents both sites link from every footer (27.11.2026: listed in the sitemaps).
 const LEGAL_PATHS = ['/legal/privacy', '/legal/kvkk'];
+/**
+ * CMS pages whose address the site sends elsewhere (27.11.2026): the starter "Sıkça sorulan sorular" page is shown by
+ * the dedicated FAQ page. The server answers these with a permanent redirect and the sitemap leaves them out, so search
+ * engines see one address per page. Keep in step with the redirectTo routes in app.routes.ts.
+ */
+export const CMS_PAGE_REDIRECTS: Readonly<Record<string, string>> = { 'sikca-sorulan-sorular': '/coaching/faq' };
+
+/** Where a public path permanently moves to, or null. */
+export function permanentRedirect(path: string): string | null {
+  const match = /^\/coaching\/pages\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(path);
+  return match ? CMS_PAGE_REDIRECTS[match[1]] ?? null : null;
+}
+
 const STATIC_PATHS = ['/coaching', '/coaching/faq', '/coaching/blog', '/coaching/newsletter', ...LEGAL_PATHS];
 // Alan adı planı (18.11.2026): the public Coaching pages live on maxkoc.com.
 /** Brand decision 18.11.2026: maxkoç is the Koçluk product (students and parents); every other address is eduivme. */
@@ -77,6 +90,7 @@ export function buildSitemap(origin: string, entries: readonly SitemapEntry[]): 
   const urls: { loc: string; lastmod?: string }[] = STATIC_PATHS.map(path => ({ loc: `${origin}${path}` }));
   for (const entry of entries) {
     if (!SLUG_PATTERN.test(entry.slug)) continue;
+    if (entry.kind === 'Page' && CMS_PAGE_REDIRECTS[entry.slug]) continue;
     const path = entry.kind === 'Blog' ? `/coaching/blog/${entry.slug}` : entry.kind === 'Page' ? `/coaching/pages/${entry.slug}` : null;
     if (!path) continue;
     const date = new Date(entry.lastModified);
