@@ -1,0 +1,335 @@
+{
+ "43": {
+  "title": "Aynı Anda İki İş",
+  "category": "Bilgi/Açıklama",
+  "content": "Ders çalışırken bir yandan telefona gelen mesajlara bakıyor, bir yandan da arka planda bir dizi açık tutuyor musunuz? Pek çok kişi bunun zamanı verimli kullanmak olduğunu düşünür. Aynı anda birkaç iş yapabilmek, modern hayatın bir becerisi gibi görülür. Hatta bazı iş ilanlarında bu beceri aranan özellikler arasında sayılır. Oysa beyin araştırmaları farklı bir tablo ortaya koyuyor.\n\nBilim insanlarına göre insan beyni, dikkat gerektiren iki işi gerçekten aynı anda yapamaz. Aynı anda yaptığımızı sandığımız durumlarda beyin aslında işler arasında hızla gidip gelir. Bu geçişlerin her biri küçük de olsa bir zaman kaybına yol açar. Beyin, bir işten diğerine geçerken önceki işin kurallarını bir kenara bırakır ve yeni işin kurallarını hatırlamak zorunda kalır. Araştırmacılar buna geçiş maliyeti adını verir. Tıpkı bir arabanın sürekli durup kalkması gibi, her yeniden başlangıç fazladan enerji ister.\n\nTek bir geçiş saniyenin kesirleri kadar sürebilir. Ama bir saat boyunca onlarca kez mesajlara bakan bir öğrenci için bu kayıplar birikir. Yapılan bazı deneylerde, işler arasında sürekli geçiş yapan katılımcıların aynı görevleri sırayla yapanlara göre daha uzun sürede bitirdiği ve daha fazla hata yaptığı görülmüştür. İlginç olan, bu katılımcıların çoğunun kendilerini daha verimli sanmasıdır. Yani çoklu görev, yalnızca performansı düşürmekle kalmaz, bu düşüşü fark etmemizi de zorlaştırır.\n\nSorun yalnızca zaman kaybı değildir. Dikkat bölündüğünde öğrenilen bilgi de daha yüzeysel kalır. Bir konuyu derinlemesine anlamak için beynin o konuya bir süre kesintisiz odaklanması gerekir. Sık sık bölünen bir çalışma, bilgiyi uzun süreli belleğe aktarmayı zorlaştırır. Bu yüzden çok uzun süre çalıştığı hâlde sınavda konuyu hatırlayamayan öğrenciler, aslında dikkatlerini sürekli bölmüş olabilir.\n\nElbette her iş aynı düzeyde dikkat istemez. Yürürken müzik dinlemek ya da bulaşık yıkarken sohbet etmek çoğu insan için sorun yaratmaz, çünkü bu işlerden biri artık neredeyse kendiliğinden yapılır. Sorun, iki işin de düşünmeyi gerektirdiği durumlarda ortaya çıkar.\n\nPeki ne yapılabilir? Uzmanlar, çalışma süresini kısa ve kesintisiz bölümlere ayırmayı önerir. Örneğin yirmi beş dakika boyunca yalnızca tek bir işe odaklanmak, ardından kısa bir mola vermek etkili bir yöntemdir. Bu süre boyunca telefonu sessize almak ya da başka bir odaya bırakmak, dikkati bölecek uyaranları azaltır. Bilgisayarda çalışılıyorsa, gereksiz sekmeleri kapatmak da aynı işi görür. Molalarda ise mesajlara bakılabilir.\n\nTek bir işe odaklanmak ilk başta zor gelebilir, çünkü beyin sürekli yeni uyaranlara alışmıştır. Ama bu da bir alışkanlıktır ve zamanla geliştirilebilir. Birkaç hafta düzenli olarak tek işe odaklanarak çalışan biri, hem daha az zamanda daha çok iş bitirdiğini hem de öğrendiklerini daha iyi hatırladığını fark edecektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metnin başında çoklu görev hakkındaki yaygın kanı nasıl aktarılır?",
+    "correct": "Vakti iyi değerlendirmenin bir yolu sayıldığı",
+    "wrong": [
+     "Yalnızca gençlerin yapabildiği bir iş olduğu",
+     "Beyni yoran ve kaçınılması gereken bir şey olduğu",
+     "İş ilanlarında hiç aranmayan bir özellik olduğu"
+    ],
+    "explanation": "Pek çok kişi aynı anda birkaç iş yapmayı zamanı verimli kullanmak olarak görür."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmacıların geçiş maliyeti dediği şey nedir?",
+    "correct": "İşler arasında gidip gelirken kaybolan süre",
+    "wrong": [
+     "Telefon ve bilgisayarların harcadığı elektrik",
+     "Bir işi bitirmek için ödenen ek bir ücret",
+     "Beynin iki işi aynı anda yapabilme gücü"
+    ],
+    "explanation": "Beyin bir işten diğerine her geçişte küçük de olsa zaman kaybeder; buna geçiş maliyeti denir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar geçiş maliyetini neden durup kalkan bir arabaya benzetir?",
+    "correct": "Her yeniden başlayışın ek çaba istemesi",
+    "wrong": [
+     "Arabaların da çok fazla yakıt harcaması",
+     "Beynin bir araba kadar hızlı çalışması",
+     "Trafikte de dikkatin sık sık bölünmesi"
+    ],
+    "explanation": "Tıpkı durup kalkan araba gibi, beyin de her yeniden başlangıçta fazladan enerji harcar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Deneylerdeki katılımcıların kendilerini verimli sanması neden önemlidir?",
+    "correct": "Kaybın kişi tarafından fark edilmemesini göstermesi",
+    "wrong": [
+     "Çoklu görevin aslında başarılı olduğunu kanıtlaması",
+     "Katılımcıların görevleri daha kısa sürede bitirmesi",
+     "Deneylerin hatalı tasarlandığını ortaya koyması"
+    ],
+    "explanation": "Çoklu görev performansı düşürmekle kalmaz, bu düşüşün fark edilmesini de zorlaştırır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzun süre çalışıp konuyu hatırlayamayan öğrenci için yazarın açıklaması nedir?",
+    "correct": "Odağının sık sık kesilmiş olabileceği",
+    "wrong": [
+     "Konunun ona çok zor gelmiş olduğu",
+     "Sınavın beklenmedik biçimde uzun olduğu",
+     "Yeterince uzun süre çalışmamış olduğu"
+    ],
+    "explanation": "Sık bölünen çalışma bilginin uzun süreli belleğe aktarılmasını zorlaştırır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yürürken müzik dinlemenin çoğu kişi için sorun yaratmamasının nedeni nedir?",
+    "correct": "İşlerden birinin kendiliğinden yürüyebilmesi",
+    "wrong": [
+     "Müziğin dikkati güçlendiren bir şey olması",
+     "Yürüyüşün çok kısa süren bir etkinlik olması",
+     "İki işin de aynı derecede düşünce istemesi"
+    ],
+    "explanation": "Bu işlerden biri neredeyse kendiliğinden yapıldığı için dikkat bölünmez."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanların önerdiği çalışma yöntemi hangisidir?",
+    "correct": "Kısa, kesintisiz dilimler ve aralarda mola",
+    "wrong": [
+     "Saatlerce ara vermeden tek oturuşta çalışma",
+     "Her beş dakikada bir mesajları kontrol etme",
+     "Dizi açık tutularak sessiz ortamda çalışma"
+    ],
+    "explanation": "Örneğin yirmi beş dakika tek işe odaklanıp ardından kısa mola vermek önerilir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki temel mesajı nedir?",
+    "correct": "Odaklanmanın pratikle güçlenebileceği",
+    "wrong": [
+     "Beynin yeni uyaranlara alışamayacağı",
+     "Tek işe odaklanmanın zor kalacağı",
+     "Çoklu görevin zamanla verimli olacağı"
+    ],
+    "explanation": "Tek işe odaklanmak bir alışkanlıktır; düzenli çalışmayla gelişir ve verim artar."
+   }
+  ]
+ },
+ "45": {
+  "title": "Görmek İstediğimizi Görmek",
+  "category": "Bilgi/Açıklama",
+  "content": "Yeni bir telefon almaya karar verdiğinizi düşünün. Aklınızda zaten bir model var; arkadaşınız onu çok övmüş. İnternette yorumları okumaya başlıyorsunuz. Olumlu yorumları dikkatle okuyor, olumsuz olanları ise “Bu kişi herhalde şanssız bir ürüne denk gelmiş” diyerek geçiyorsunuz. Sonunda o telefonu alıyorsunuz ve doğru karar verdiğinizden eminsiniz. Peki gerçekten araştırma mı yaptınız, yoksa yalnızca zaten inandığınız şeyi mi doğruladınız?\n\nPsikologlar bu eğilime doğrulama yanlılığı adını verir. Doğrulama yanlılığı, insanın var olan inançlarını destekleyen bilgileri arama, fark etme ve hatırlama eğilimidir. Aynı zamanda bu inançlara ters düşen bilgileri görmezden gelme ya da önemsiz sayma eğilimini de kapsar. Bu, bilinçli bir seçim değildir; çoğu zaman bunu yaptığımızın farkında bile olmayız. Üstelik zekâ ya da eğitim düzeyi bu eğilimden korumaz. Hatta bazı araştırmalar, bilgili kişilerin kendi görüşlerini savunmak için daha ustaca gerekçeler bulabildiğini gösterir.\n\nBu eğilimi gösteren ünlü deneylerden biri 1960'larda İngiliz psikolog Peter Wason tarafından yapıldı. Wason, katılımcılara “2, 4, 6” şeklinde üç sayı gösterdi ve bu dizinin gizli bir kurala uyduğunu söyledi. Katılımcılar kendi sayı dizilerini önerebilir, her seferinde bu dizinin kurala uyup uymadığını öğrenebilirdi. Çoğu katılımcı hemen “ikişer artan çift sayılar” gibi bir kural tahmin etti ve 8, 10, 12 gibi bu tahmini doğrulayan diziler önerdi. Her seferinde “evet, kurala uyuyor” cevabını alınca da kendi kurallarından emin oldular. Oysa gizli kural çok daha basitti: Herhangi bir artan sayı dizisi. Katılımcıların çok azı, tahminlerini çürütebilecek bir dizi, örneğin 1, 5, 20 gibi bir deneme yapmayı akıl etti.\n\nBu deney, insanların bir fikri sınarken onu yanlışlamaya değil, doğrulamaya çalıştığını gösterir. Oysa bir fikrin doğru olup olmadığını anlamanın en iyi yolu, onun nerede yanlış olabileceğini aramaktır. Bilim insanları da deneylerini bu ilkeye göre tasarlamaya çalışır: Bir varsayımı desteklemek için yüz örnek bulmak, onu çürüten tek bir sağlam örnek karşısında yetersiz kalabilir.\n\nDoğrulama yanlılığı günlük hayatın pek çok alanında karşımıza çıkar. Sosyal medyada çoğumuz kendi görüşlerimize yakın hesapları takip ederiz. Algoritmalar da bize ilgimizi çeken içerikleri gösterdiği için zamanla yalnızca kendi düşüncelerimizi yansıtan bir ortamda yaşamaya başlarız. Farklı görüşler bize giderek daha yabancı ve hatta akıl dışı gelir.\n\nBu yanlılık belleğimizi de etkiler. Bir arkadaşımızın güvenilmez olduğunu düşünüyorsak, geç kaldığı günleri kolayca hatırlarız; zamanında geldiği günler ise aklımızda pek yer etmez. Böylece izlenimimiz, gerçekte olduğundan daha sağlam bir kanıta dayanıyormuş gibi görünür.\n\nDoğrulama yanlılığı önemli kararları da etkileyebilir. Bir doktorun ilk muayenede aklına gelen teşhise uymayan belirtileri gözden kaçırması ya da bir yöneticinin sevdiği bir projenin zayıf yanlarını görmemesi bunun örnekleridir.\n\nDoğrulama yanlılığından tamamen kurtulmak mümkün değildir, çünkü beynimizin bilgiyi hızla işleme biçiminin bir parçasıdır. Ama etkisini azaltabiliriz. Bir karar vermeden önce kendimize “Bu fikrin yanlış olduğunu gösterecek ne olabilir?” diye sormak iyi bir başlangıçtır. Bilerek karşıt görüşleri okumak ve bizimle aynı fikirde olmayan insanları dinlemek de düşüncemizi sınamamıza yardım eder. Fikrini değiştirebilen biri olmak bir zayıflık değil, düşünmenin bir işaretidir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Telefon örneğinde kişinin olumsuz yorumları geçiştirmesi neyi gösterir?",
+    "correct": "Kararını en baştan vermiş olduğunu",
+    "wrong": [
+     "Yorumları dikkatle karşılaştırdığını",
+     "Arkadaşının övgüsüne güvenmediğini",
+     "Telefonun pahalı olduğunu bildiğini"
+    ],
+    "explanation": "Kişi araştırma yapmıyor, zaten inandığı şeyi doğrulamaya çalışıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre doğrulama yanlılığı nasıl ortaya çıkar?",
+    "correct": "Çoğunlukla kişi farkına varmadan",
+    "wrong": [
+     "Kişinin bilinçli bir tercihiyle",
+     "Yalnızca eğitimsiz kişilerde",
+     "Sadece önemli kararlar sırasında"
+    ],
+    "explanation": "Doğrulama yanlılığı bilinçli bir seçim değildir; çoğu zaman farkında olmayız."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bilgili kişilerle ilgili araştırma bulgusu neyi düşündürür?",
+    "correct": "Bilginin yanlılığı ortadan kaldırmadığını",
+    "wrong": [
+     "Eğitimin insanı yanlılıktan koruduğunu",
+     "Bilgili kişilerin fikrini kolay değiştirdiğini",
+     "Zekânın karar vermeyi yavaşlattığını"
+    ],
+    "explanation": "Bilgili kişiler kendi görüşlerini savunmak için daha ustaca gerekçeler bulabilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Wason deneyindeki gizli kural neydi?",
+    "correct": "Sayıların küçükten büyüğe sıralanması",
+    "wrong": [
+     "İkişer artan çift sayılardan oluşması",
+     "Yalnızca tek sayılardan oluşması",
+     "Her sayının iki katına çıkması"
+    ],
+    "explanation": "Gizli kural çok basitti: Herhangi bir artan sayı dizisi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Wason deneyinde çoğu katılımcı neden gizli kuralı bulamadı?",
+    "correct": "Tahminini sınayan farklı denemeler yapmadığı için",
+    "wrong": [
+     "Önerilen dizilerin çoğu kurala uymadığı için",
+     "Wason'ın katılımcılara yanlış cevaplar verdiği için",
+     "Deneyde onlara yeterli süre tanınmadığı için"
+    ],
+    "explanation": "Katılımcılar tahminlerini doğrulayan diziler önerdi; çürütebilecek bir dizi denemediler."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre bir varsayımı desteklemek için yüz örnek bulmak neden yetmeyebilir?",
+    "correct": "Tek bir güçlü karşı örnek onu çürütebileceği için",
+    "wrong": [
+     "Yüz örneği toplamak çok daha uzun zaman alacağı için",
+     "Bilim insanları örnek sayısını önemsemediği için",
+     "Örneklerin tümü aynı kişiden geleceği için"
+    ],
+    "explanation": "Varsayımı çürüten tek sağlam örnek, onu destekleyen pek çok örnekten daha belirleyici olabilir."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Güvenilmez sandığımız bir arkadaşla ilgili belleğimiz nasıl çalışır?",
+    "correct": "Geciktiği anları daha kolay anımsarız",
+    "wrong": [
+     "Onunla ilgili her şeyi eşit hatırlarız",
+     "Zamanında geldiği günleri öne çıkarırız",
+     "Onu hiç hatırlamamaya çalışırız"
+    ],
+    "explanation": "Geç kaldığı günleri kolayca hatırlar, zamanında geldiği günleri pek hatırlamayız."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın vardığı sonuç hangisidir?",
+    "correct": "Yanlılık silinmese de bilinçli çabayla azalabilir",
+    "wrong": [
+     "Yanlılıktan kurtulmak için karar vermemek gerekir",
+     "Fikrini değiştirmek kararsızlığın göstergesidir",
+     "Karşıt görüşleri okumak yanlılığı güçlendirir"
+    ],
+    "explanation": "Yazar yanlılığın tamamen yok edilemeyeceğini ama karşıt görüşleri dinleyerek azaltılabileceğini söyler."
+   }
+  ]
+ },
+ "50": {
+  "title": "Saatçi",
+  "category": "Hikaye/Kurgu",
+  "content": "Hüseyin Usta, kırk yıl boyunca çarşının en eski sokağındaki küçük dükkânında saat tamir etmişti. Dükkânın camında solmuş harflerle “Saatçi” yazıyordu. İçeride duvarlar boyunca dizilmiş onlarca saat, her biri kendi ritmiyle tıkırdardı. Mahallenin yaşlıları, düğünlerde takılan saatlerini, babalarından kalan cep saatlerini hep ona getirirdi. Hüseyin Usta bir saati açtığında, onun yalnızca çarklarını değil, sahibinin hikâyesini de dinlerdi. Bu yüzden müşterileri dükkândan çoğu zaman bir saat değil, bir dost bulmuş olarak çıkardı.\n\nSon yıllarda iş azalmıştı. İnsanlar artık saati telefonlarından okuyordu. Bozulan saatlerin çoğu tamir edilmek yerine atılıyordu. Çarşıdaki diğer saatçiler birer birer dükkânlarını kapatmış, yerlerine telefon kılıfı satan dükkânlar açılmıştı. Hüseyin Usta'nın oğlu ise başka bir şehirde bankacılık yapıyordu ve babasının mesleğine hiç ilgi duymamıştı. Hüseyin Usta, yetmiş yaşını geçtiğinde dükkânı kapatmayı düşünmeye başladı. Ellerindeki titreme artık en küçük vidaları tutmasını zorlaştırıyordu. Ama yıllarca biriktirdiği bilginin onunla birlikte kaybolacağını düşündükçe içi sızlıyordu.\n\nBir sonbahar günü dükkâna yirmili yaşlarında bir genç kadın girdi. Adı Elif'ti. Elinde dedesinden kalan, yıllardır çalışmayan bir cep saati vardı. Hüseyin Usta saati açtı, mekanizmayı inceledi ve birkaç gün içinde onu yeniden çalıştırdı. Elif saati almaya geldiğinde uzun süre tezgâhın başında durdu ve ustanın çalışmasını izledi. Ustanın büyüteçli gözlüğünü takıp cımbızla minicik bir çarkı yerine oturtuşunu nefesini tutarak seyretti. Sonra çekinerek bir soru sordu: Saat tamirini öğrenmek mümkün müydü?\n\nElif bir mühendislik fakültesinden mezun olmuş, ama aradığı işi bulamamıştı. Küçük, hassas mekanizmalara çocukluğundan beri ilgi duyuyordu. Hüseyin Usta önce şaşırdı. Yıllardır yanına bir çırak almayı düşünmüş, ama bu mesleğe ilgi duyan kimseyle karşılaşmamıştı. Bir genç kadının bu işi seçmesini de beklemiyordu, çünkü çarşıda bu meslek hep babadan oğula geçmişti. Ama Elif'in saate bakışındaki dikkati görünce bu düşüncesinden utandı. Biraz düşündükten sonra ona ertesi sabah sekizde gelmesini söyledi.\n\nİlk haftalar Elif için kolay geçmedi. Usta ona önce hiçbir şeye dokunmamayı, yalnızca izlemeyi öğretti. Sonra eski, değeri olmayan saatleri sökmesini ve yeniden takmasını istedi. Elif bir yayı yanlış yerleştirdiğinde ya da bir vidayı kaybettiğinde usta hiç kızmıyor, yalnızca “Saat sabırla konuşur, acele edenle konuşmaz” diyordu.\n\nAylar geçtikçe Elif'in elleri hızlandı, gözü keskinleşti. Artık bir saatin sesini dinleyerek nerede sorun olduğunu tahmin edebiliyordu. Mühendislik eğitiminden gelen bilgisiyle ustanın yıllar içinde sezgiyle bulduğu bazı çözümlerin nedenini de açıklayabiliyordu; usta bu açıklamaları büyük bir merakla dinliyordu. Bir gün usta ona, kendi ellerinin artık yapamadığı ince bir işi verdi. Elif saati başarıyla onardığında usta hiçbir şey söylemedi, ama o akşam dükkânı kapatırken her zamankinden uzun süre gülümsedi.\n\nElif yalnızca saat tamir etmeyi öğrenmedi. Dükkânın bir de internet sayfasını açtı ve eski saatlerin fotoğraflarını paylaşmaya başladı. Kısa sürede başka şehirlerden de saatler gelmeye başladı. Eski saatlere ilgi duyan genç bir kitle oluşmuştu. Bazıları dükkâna gelip ustayla sohbet etmek, onun eski saatlerle ilgili anlattıklarını dinlemek istiyordu. Hüseyin Usta, yıllardır kimsenin sormadığı şeyleri anlatma fırsatı bulduğu için gençleşmiş gibiydi.\n\nİki yıl sonra dükkânın camındaki solmuş yazı yenilendi. Artık yalnızca “Saatçi” değil, altında küçük harflerle “Hüseyin Usta ve Elif” yazıyordu. Usta hâlâ her sabah dükkâna geliyor, köşedeki sandalyesinde oturup çayını içiyor ve Elif'in çalışmasını izliyordu. Bilgisinin kaybolmayacağını bilmek ona, kırk yılın bütün emeğinden daha büyük bir huzur veriyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Müşterilerin dükkândan bir dost bulmuş olarak çıkmasının nedeni nedir?",
+    "correct": "Ustanın onların hikâyelerine kulak vermesi",
+    "wrong": [
+     "Ustanın tamir için hiç ücret almaması",
+     "Dükkânda sayısız eski ve değerli saat bulunması",
+     "Ustanın onlara hediye bir saat vermesi"
+    ],
+    "explanation": "Usta bir saati açtığında sahibinin hikâyesini de dinlerdi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hüseyin Usta'nın dükkânı kapatmayı düşünmesinin nedenlerinden biri hangisidir?",
+    "correct": "Hassas işlerde ellerinin titremesi",
+    "wrong": [
+     "Oğlunun dükkânı devralmak istemesi",
+     "Çarşıdaki kira bedelinin çok artması",
+     "Telefon kılıfı satmaya karar vermesi"
+    ],
+    "explanation": "Ellerindeki titreme küçük vidaları tutmasını zorlaştırıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ustanın içini sızlatan asıl kaygı nedir?",
+    "correct": "Birikiminin onunla yok olması",
+    "wrong": [
+     "Dükkânın camının eskimiş olması",
+     "Oğlunun başka şehirde yaşaması",
+     "Müşterilerinin onu unutması"
+    ],
+    "explanation": "Yıllarca biriktirdiği bilginin onunla birlikte kaybolacağını düşünüyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif dükkâna ilk kez ne amaçla geldi?",
+    "correct": "Dedesinden kalma bir saati onartmak",
+    "wrong": [
+     "Ustanın yanında iş istemek için",
+     "Dükkânın fotoğraflarını çekmek için",
+     "Annesine bir cep saati almak için"
+    ],
+    "explanation": "Elif yıllardır çalışmayan, dedesinden kalan cep saatini getirdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ustanın kendi düşüncesinden utanması onunla ilgili neyi gösterir?",
+    "correct": "Önyargısını sorgulayabildiğini",
+    "wrong": [
+     "Elif'i işe almak hiç istemediğini",
+     "Mesleğinden bıkmış olduğunu",
+     "Oğluna çok kırgın olduğunu"
+    ],
+    "explanation": "Usta bir kadının bu işi seçmesini beklemiyordu, ama Elif'in dikkatini görünce bu düşüncesinden utandı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Saat sabırla konuşur, acele edenle konuşmaz” sözü neyi anlatır?",
+    "correct": "Bu işin özen ve zaman istediğini",
+    "wrong": [
+     "Saatlerin ses çıkararak bozulduğunu",
+     "Elif'in çok yavaş çalıştığını",
+     "Hataların bağışlanmayacağını"
+    ],
+    "explanation": "Usta, saat tamirinin aceleye gelmediğini ve sabır istediğini anlatıyordu."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif'in mühendislik eğitimi işe nasıl katkı sağladı?",
+    "correct": "Ustanın sezgisel çözümlerini açıklayabilmesi",
+    "wrong": [
+     "Saatleri bilgisayarla tamir etmeyi öğretmesi",
+     "Dükkânın hesaplarını daha düzenli tutması",
+     "Yeni saat modelleri tasarlamaya başlaması"
+    ],
+    "explanation": "Elif, ustanın yıllar içinde sezgiyle bulduğu bazı çözümlerin nedenini açıklayabiliyordu."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda ustanın duyduğu huzurun kaynağı nedir?",
+    "correct": "Bildiklerinin onunla bitmeyecek olması",
+    "wrong": [
+     "Dükkânın tabelasının yenilenmiş olması",
+     "Artık hiç çalışmak zorunda kalmaması",
+     "İnternetten çok para kazanmaya başlaması"
+    ],
+    "explanation": "Bilgisinin kaybolmayacağını bilmek ona büyük bir huzur veriyordu."
+   }
+  ]
+ }
+}

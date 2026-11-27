@@ -1,0 +1,668 @@
+{
+ "268": {
+  "title": "Kolları Yeniden Çıkan Canlı",
+  "category": "Bilgi/Açıklama",
+  "content": "Deniz yıldızları, adlarında “yıldız” ve “balık” sözcükleri geçse de ne yıldızdır ne de balık. Onlar, deniz kestanelerinin akrabası olan omurgasız deniz hayvanlarıdır. Dünyanın bütün denizlerinde, sığ kıyılardan okyanusların karanlık derinliklerine kadar yaşarlar. Yaklaşık iki bin farklı türleri vardır. Kimi bir tırnak kadar küçük, kimi ise bir araba lastiği kadar büyüktür. Renkleri de turuncudan mora, kırmızıdan maviye kadar çok çeşitlidir.\n\nÇoğu deniz yıldızının beş kolu vardır, ama bazı türlerin kol sayısı yirmiyi, hatta kırkı bulabilir. Deniz yıldızlarının en şaşırtıcı yeteneklerinden biri, kopan kollarını yeniden oluşturabilmeleridir. Bir kol koparsa, yerine yavaş yavaş yenisi çıkar. Bu birkaç ay, hatta bir yıl sürebilir. Bazı türlerde kopan bir kol, vücudun orta kısmından bir parça taşıyorsa, kendisi bütün bir deniz yıldızına dönüşebilir.\n\nDeniz yıldızlarının ne bir beyni ne de bizimki gibi bir kanı vardır. Kan yerine vücutlarında deniz suyu dolaşır. Her kolunun ucunda ışığı ve karanlığı ayırt edebilen küçük birer göz bulunur. Kollarının altında ise yüzlerce küçük tüp ayak vardır. Bu ayaklar sayesinde hem yürür hem de kayalara sıkıca tutunurlar. Yine de çok yavaş hareket ederler; çoğu tür bir dakikada ancak birkaç on santimetre ilerleyebilir.\n\nDeniz yıldızlarının beslenme biçimi de çok ilginçtir. En sevdikleri yiyecekler midye ve istiridye gibi kabuklu hayvanlardır. Deniz yıldızı kollarıyla midyenin kabuğunu sarar ve yavaşça çekerek aralar. Kabuk biraz aralandığında midesini ağzından dışarı çıkarır ve kabuğun içine sokar. Yiyeceğini kabuğun içinde sindirdikten sonra midesini yeniden vücuduna çeker. Bu yöntem sayesinde, ağızlarından çok daha büyük avları bile yiyebilirler.\n\nDeniz yıldızları, yaşadıkları kıyılardaki dengeyi korumada da önemli bir rol oynar. Midyelerin aşırı çoğalıp kayaların tamamını kaplamasını önleyerek, başka canlıların da kendine yer bulmasını sağlarlar. Ancak son yıllarda denizlerin ısınmasıyla birlikte bazı bölgelerde deniz yıldızlarını etkileyen hastalıklar yayılıyor. Bilim insanları bu güzel canlıları korumak için çalışmalarını sürdürüyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deniz yıldızlarının akrabası hangi canlıdır?",
+    "correct": "Deniz kestanesi",
+    "wrong": [
+     "Denizanası türü",
+     "Köpek balığı",
+     "Ahtapot yavrusu"
+    ],
+    "explanation": "Deniz yıldızları deniz kestanelerinin akrabasıdır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar ilk cümlede hangi yanlış inancı düzeltir?",
+    "correct": "Adının türünü yansıtmadığını",
+    "wrong": [
+     "Denizlerde hiç yaşamadığını",
+     "Geceleri gökyüzünde parladığını",
+     "Hiç kolunun bulunmadığını"
+    ],
+    "explanation": "Adında yıldız ve balık geçse de ne yıldızdır ne de balık."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deniz yıldızlarının en şaşırtıcı yeteneklerinden biri nedir?",
+    "correct": "Kaybettiği kolu onarmak",
+    "wrong": [
+     "Karada uzun süre koşmak",
+     "Suyun üstünde uçmak",
+     "Renk değiştirip saklanmak"
+    ],
+    "explanation": "Kopan kollarını yeniden oluşturabilirler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deniz yıldızının vücudunda kan yerine ne dolaşır?",
+    "correct": "Tuzlu su",
+    "wrong": [
+     "Hava kabarcığı",
+     "Bitki özü",
+     "Tatlı su"
+    ],
+    "explanation": "Kan yerine vücutlarında deniz suyu dolaşır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tüp ayakların deniz yıldızına sağladığı yarar nedir?",
+    "correct": "Gezip tutunabilmek",
+    "wrong": [
+     "Yiyecekleri tadabilmek",
+     "Işığı fark edebilmek",
+     "Hızla yüzebilmek"
+    ],
+    "explanation": "Tüp ayaklarla hem yürür hem kayalara tutunurlar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Midesini dışarı çıkarabilmesi deniz yıldızına ne kazandırır?",
+    "correct": "Kendinden iri avları yiyebilmeyi",
+    "wrong": [
+     "Avlanmadan aylarca yaşayabilmeyi",
+     "Çok daha hızlı yüzebilmeyi",
+     "Kollarını yenileyebilmeyi"
+    ],
+    "explanation": "Bu yöntemle ağızlarından çok daha büyük avları yiyebilirler."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz yıldızları kıyıdaki dengeyi nasıl korur?",
+    "correct": "Kabuklu avların sayısını dengeleyip",
+    "wrong": [
+     "Kayaların üstünü yosunla kaplayarak",
+     "Suyu temizleyip sürekli ılık tutarak",
+     "Balıkları kıyıdan uzağa kovarak"
+    ],
+    "explanation": "Midyelerin kayaları kaplamasını önlerler."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazar hangi duruma dikkat çeker?",
+    "correct": "Bu canlıların tehlikede olduğuna",
+    "wrong": [
+     "Bu canlıların çok zehirli olduğuna",
+     "Midyelerin büsbütün tükendiğine",
+     "Denizlerin giderek soğuduğuna"
+    ],
+    "explanation": "Isınan denizlerde yayılan hastalıklar deniz yıldızlarını etkiliyor."
+   }
+  ]
+ },
+ "272": {
+  "title": "Pırıl ile Fırıl",
+  "category": "Hikaye/Kurgu",
+  "content": "Yeni haftanın ilk günü, pazartesi sabahı Barış sınıfa girdiğinde pencerenin önünde yeni bir şey gördü. Bu, içinde suyun ve yeşil bitkilerin bulunduğu cam bir akvaryumdu. Akvaryumda iki küçük turuncu balık yüzüyordu. Kuyrukları çok ince ve uzundu, suda yüzerken dans ediyormuş gibi görünüyorlardı.\n\nÖğretmenleri Nur Hanım, balıkların artık sınıfın üyesi olduğunu söyledi. Çocuklar hemen akvaryumun çevresine toplandı. Hepsi balıklara ad koymak istedi. Uzun bir oylamadan sonra balıkların adı Pırıl ve Fırıl oldu.\n\nNur Hanım balıklara her gün az miktarda yem verilmesi gerektiğini anlattı. Fazla yem suyu kirletir ve balıkları hasta ederdi. Ayrıca akvaryumun camına vurulmamalıydı, çünkü bu balıkları korkuturdu. Her gün bir öğrenci yem vermekle görevli olacaktı. Barış kendi sırasının gelmesini sabırsızlıkla bekledi.\n\nPerşembe günü sıra Barış'a geldi. Barış heyecanla ama dikkatle yem kutusunu açtı. Küçük bir tutam yemi suyun üstüne serpti. Pırıl ve Fırıl hemen yukarı yüzdü ve yemleri yemeye başladı. Barış onları izlerken gülümsedi. Kendini çok önemli bir iş yapmış gibi hissetti. O akşam eve gidince annesine Pırıl ile Fırıl'ı uzun uzun anlattı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Barış sınıfta ne gördü?",
+    "correct": "Balık dolu cam kap",
+    "wrong": [
+     "Bir kuş kafesi",
+     "Çiçekli bir saksı",
+     "Çerçeveli bir resim"
+    ],
+    "explanation": "Pencerenin önünde cam bir akvaryum gördü."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Akvaryumdaki balıklar ne renkti?",
+    "correct": "Turuncu",
+    "wrong": [
+     "Mavi",
+     "Kırmızı",
+     "Gümüş"
+    ],
+    "explanation": "İki küçük turuncu balık yüzüyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Balıklara ad nasıl verildi?",
+    "correct": "Sınıfça oy kullanılarak",
+    "wrong": [
+     "Öğretmen tek başına seçerek",
+     "Barış kendisi bularak",
+     "Kura çekilerek seçilerek"
+    ],
+    "explanation": "Uzun bir oylamadan sonra adlar Pırıl ve Fırıl oldu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Balıklara neden az yem verilmeliydi?",
+    "correct": "Fazlası suyu bozduğu için",
+    "wrong": [
+     "Yem çok pahalı olduğu için",
+     "Balıklar hiç acıkmadığı için",
+     "Yem çabuk bittiği için"
+    ],
+    "explanation": "Fazla yem suyu kirletir ve balıkları hasta eder."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Akvaryumun camına neden vurulmamalıydı?",
+    "correct": "Balıklar ürktüğü için",
+    "wrong": [
+     "Cam kırılabileceği için",
+     "Su taşabileceği için",
+     "Öğretmen kızdığı için"
+    ],
+    "explanation": "Cama vurmak balıkları korkutur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Barış'ın görev günü hangisiydi?",
+    "correct": "Perşembe",
+    "wrong": [
+     "Pazartesi",
+     "Cuma",
+     "Salı"
+    ],
+    "explanation": "Perşembe günü sıra Barış'a geldi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Barış'ın kendini önemli hissetmesinin nedeni nedir?",
+    "correct": "Bir canlıya bakmayı üstlenmesi",
+    "wrong": [
+     "Öğretmenin ona bir ödül vermesi",
+     "Balıkları eve götürebilmesi",
+     "Sınıf arkadaşlarını yönetmesi"
+    ],
+    "explanation": "Balıkları beslemek ona sorumluluk duygusu verdi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Barış'ın akşam annesine balıkları anlatması neyi gösterir?",
+    "correct": "Göreve bağlandığını",
+    "wrong": [
+     "Akvaryumdan çekindiğini",
+     "Okuldan sıkıldığını",
+     "Balık istemediğini"
+    ],
+    "explanation": "Görevi onu çok mutlu etmişti."
+   }
+  ]
+ },
+ "273": {
+  "title": "Ağabey Olmak",
+  "category": "Hikaye/Kurgu",
+  "content": "Mert dokuz yaşındayken evlerine yeni bir bebek geldi: kız kardeşi Defne. Annesi ve babası günlerdir bu bebeği bekliyordu. Mert de önce çok heyecanlıydı. Kardeşiyle oynayacağı oyunları, ona öğreteceği şeyleri hayal ediyordu. Hatta kendi eski oyuncaklarından bazılarını kardeşi için ayırmıştı.\n\nAma Defne eve geldikten sonra her şey değişti. Bebek gece gündüz ağlıyordu. Annesi neredeyse bütün gününü onunla geçiriyordu. Babası işten gelince önce Defne'nin yanına gidiyordu. Misafirler eve geldiğinde herkes bebeğin başına toplanıyor, Mert'i neredeyse fark etmiyordu. Mert, evde artık kimsenin onu görmediğini düşünmeye başladı. İçinde daha önce hiç hissetmediği bir öfke ve kırgınlık büyüyordu. Okulda da dalgın oluyor, öğretmeninin sorularını duymuyordu. Kardeşini sevmek istiyor ama bazen ondan uzak durmak istiyordu; bu karışık duygular onu daha da üzüyordu.\n\nBir akşam Mert, annesi Defne'yi uyuturken odasına kapandı ve kapıyı sertçe çarptı. Biraz sonra babası kapıyı tıklattı ve yanına oturdu. Mert önce konuşmak istemedi ve yüzünü duvara döndü. Sonra gözleri doldu ve içindekileri anlattı: Herkesin artık sadece bebeği sevdiğini düşünüyordu.\n\nBabası onu dinledi ve ona sarıldı. Mert'e, kendisinin de çocukken bir kardeşi doğduğunda tam olarak aynı şeyleri hissettiğini anlattı. Bebeklerin çok fazla bakıma ihtiyacı olduğunu, ama bunun Mert'in daha az sevildiği anlamına gelmediğini söyledi. Sonra ona bir öneride bulundu: Her cumartesi sabahı, ikisi birlikte parka gidip bisiklet sürecekti. Bu zaman yalnızca ikisine ait olacaktı. Mert gözyaşlarını silip gülümsedi.\n\nErtesi gün annesi de Mert'i yanına çağırdı ve ondan Defne'nin banyosunda yardım etmesini istedi. Mert bebeğin minik ayaklarını yıkarken Defne ona bakıp ilk kez gülümsedi. Mert şaşırdı ve içinde sıcak bir şeyin kıpırdadığını hissetti. Annesi, Defne'nin ağabeyini çok sevdiğini söyledi. O günden sonra Mert, kardeşine şarkılar söylemeye başladı. Defne ağladığında en çabuk Mert'in sesiyle susuyordu. Cumartesi sabahları ise babasıyla parkta bisiklet sürerken, evde onu bekleyen küçük kardeşini düşünüp gülümsüyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mert'in kardeşinin adı nedir?",
+    "correct": "Defne",
+    "wrong": [
+     "Deniz",
+     "Damla",
+     "Duru"
+    ],
+    "explanation": "Kız kardeşinin adı Defne'ydi."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mert'in eski oyuncaklarını ayırması neyi gösterir?",
+    "correct": "Kardeşini merakla beklediğini",
+    "wrong": [
+     "Oyuncaklarından iyice sıkıldığını",
+     "Annesinden çok fazla korktuğunu",
+     "Odasını toplamak istediğini"
+    ],
+    "explanation": "Kardeşi için hazırlık yapacak kadar heyecanlıydı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mert'in kendini görünmez hissetmesinin nedeni nedir?",
+    "correct": "İlginin bebeğe kayması",
+    "wrong": [
+     "Okulda başarısız olması",
+     "Arkadaşlarının ona küsmesi",
+     "Başka eve taşınmaları"
+    ],
+    "explanation": "Herkes bebekle ilgileniyor, Mert'i fark etmiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Mert'in duyguları neden “karışık” olarak anlatılır?",
+    "correct": "Hem sevgi hem öfke duyması",
+    "wrong": [
+     "Hem hasta hem yorgun olması",
+     "Hem okulu hem evi sevmesi",
+     "Hem korkup hem sevinmesi"
+    ],
+    "explanation": "Kardeşini sevmek istiyor ama ondan uzak durmak da istiyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mert öfkesini ilk nasıl gösterdi?",
+    "correct": "Kapıyı hırsla kapatarak",
+    "wrong": [
+     "Oyuncaklarını kırarak",
+     "Avazı çıktığınca bağırarak",
+     "Evden kaçmaya kalkarak"
+    ],
+    "explanation": "Odasına kapanıp kapıyı sertçe çarptı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Babanın kendi çocukluğunu anlatmasının amacı nedir?",
+    "correct": "Duygularını olağan göstermek",
+    "wrong": [
+     "Mert'i hemen cezalandırmak",
+     "Kendi kardeşini uzun uzun övmek",
+     "Konuyu başka bir yöne çekmek"
+    ],
+    "explanation": "Aynı şeyleri hissettiğini söyleyerek Mert'i rahatlattı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babanın önerisi neydi?",
+    "correct": "Haftada bir baş başa vakit geçirmek",
+    "wrong": [
+     "Her gün birlikte ders çalışmak",
+     "Yeni bir bisiklet satın almak",
+     "Kardeşine bakıcılık yapmayı öğrenmek"
+    ],
+    "explanation": "Her cumartesi parkta birlikte bisiklet süreceklerdi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Mert'te ne değişmiştir?",
+    "correct": "Kardeşini sevgiyle benimsemiştir",
+    "wrong": [
+     "Ailesinden tümüyle uzaklaşmıştır",
+     "Bisikleti bırakmaya karar vermiştir",
+     "Kardeşinden hâlâ nefret etmektedir"
+    ],
+    "explanation": "Kardeşine şarkılar söylemeye başlar ve onu sevgiyle anar."
+   }
+  ]
+ },
+ "274": {
+  "title": "Kâğıdın Uzun Yolculuğu",
+  "category": "Bilgi/Açıklama",
+  "content": "Bugün defterlerimizden kitaplarımıza, paralarımızdan ambalajlara kadar her yerde kâğıt kullanıyoruz. Peki kâğıt icat edilmeden önce insanlar nereye yazıyordu? Mezopotamya'da kil tabletlere, Mısır'da papirüs bitkisinin saplarından yapılan yapraklara, Avrupa'da ise hayvan derisinden hazırlanan parşömene yazılıyordu. Çin'de ise uzun süre bambu şeritler ve ipek kumaş kullanıldı. Ancak bu malzemelerin hepsinin sorunları vardı. Kil tabletler çok ağırdı, bambu şeritler hantaldı, ipek ve parşömen ise çok pahalıydı.\n\nGeleneğe göre kâğıdı icat eden kişi, Çin imparatorunun sarayında görevli olan Cai Lun'dur. Cai Lun, yaklaşık 105 yılında ağaç kabuklarını, kenevir liflerini, eski balık ağlarını ve paçavraları suda ıslatıp ezdi. Elde ettiği hamuru incecik bir elekle sudan süzdü ve kurumaya bıraktı. Kuruyan hamurdan ortaya çıkan ince, hafif ve ucuz yaprak, yazı yazmak için mükemmeldi. Aslında arkeologlar Cai Lun'dan daha eski kâğıt parçaları da buldu. Yani Cai Lun kâğıdı sıfırdan icat etmekten çok, yapım yöntemini geliştirmiş ve yaygınlaştırmış olabilir.\n\nÇinliler kâğıt yapımının sırrını yüzyıllarca sakladı. Kâğıt yapımının yöntemini yabancılara öğretmek uzun süre yasak sayıldı. Yine de kâğıt, Çin'den Kore'ye ve Japonya'ya, oradan da İpek Yolu üzerindeki kentlere yayıldı. 751 yılında Talas Savaşı'ndan sonra esir alınan bazı Çinli ustaların Semerkant'ta kâğıt yapımını öğrettiği anlatılır. Kısa süre sonra Bağdat'ta kâğıt atölyeleri kuruldu ve kâğıt İslam dünyasına hızla yayıldı. Bağdat, Şam ve Kahire, yüzyıllar boyunca önemli kâğıt üretim merkezleri oldu. Avrupa'ya ise kâğıt ancak on ikinci yüzyılda, İspanya ve İtalya üzerinden ulaştı. Avrupalılar uzun süre kâğıdı parşömenden daha az dayanıklı bularak ona güvenmedi.\n\nKâğıdın yaygınlaşması bilginin yayılmasını büyük ölçüde hızlandırdı. Kitaplar daha ucuza üretilmeye başlandı, kütüphaneler zenginleşti. Devletler kayıtlarını, tüccarlar hesaplarını, bilim insanları gözlemlerini artık çok daha kolay saklayabiliyordu. Yüzyıllar sonra matbaanın icadıyla birlikte kâğıt, insanlık tarihinin en önemli buluşlarından biri olduğunu bir kez daha gösterdi. Bugün dijital ekranlar hayatımızın her yerinde olsa da, dünyada her yıl yüz milyonlarca ton kâğıt üretiliyor. Bu da yaklaşık iki bin yıl önce bir Çin sarayında geliştirilen basit bir yöntemin, hâlâ ne kadar önemli olduğunu gösteriyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mısır'da kâğıt öncesinde neye yazılıyordu?",
+    "correct": "Sazdan yapraklara",
+    "wrong": [
+     "Kilden tabletlere",
+     "Bambu şeritlerine",
+     "Hayvan derilerine"
+    ],
+    "explanation": "Mısır'da papirüs saplarından yapılan yapraklara yazılıyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "İlk paragrafta eski yazı malzemelerinin hangi ortak sorunu vurgulanır?",
+    "correct": "Hantal ya da pahalı olmaları",
+    "wrong": [
+     "Çabucak tutuşup kül olmaları",
+     "Yazının hemen silinmesi",
+     "Yalnızca krallara satılması"
+    ],
+    "explanation": "Kil ağır, bambu hantal, ipek ve parşömen pahalıydı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Cai Lun hamuru hazırlamak için neleri kullandı?",
+    "correct": "Kabuk, lif ve bez",
+    "wrong": [
+     "Taş, kum ve kireç",
+     "İpek, yün ve deri",
+     "Bal, un ve şeker"
+    ],
+    "explanation": "Ağaç kabuğu, kenevir, eski ağ ve paçavraları kullandı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Arkeolojik bulgular Cai Lun hakkındaki bilgiyi nasıl değiştirir?",
+    "correct": "İlk değil, iyileştiren olduğunu",
+    "wrong": [
+     "Onun hiç yaşamamış olduğunu",
+     "Kâğıdın Japonya'da çıktığını",
+     "Kâğıdın aslında taştan yapıldığını"
+    ],
+    "explanation": "Daha eski kâğıt parçaları bulunduğu için yöntemi geliştirmiş olabilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Rivayete göre kâğıt yapımı Semerkant'a nasıl ulaştı?",
+    "correct": "Tutsak düşen ustalar sayesinde",
+    "wrong": [
+     "Bir Çin prensesinin çeyiziyle",
+     "Gemilerle gelen tüccarlarla",
+     "Bir kitabın Arapçaya çevrilmesiyle"
+    ],
+    "explanation": "Talas Savaşı'ndan sonra esir alınan Çinli ustaların öğrettiği anlatılır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Avrupalıların kâğıda başta güvenmemesinin nedeni nedir?",
+    "correct": "Parşömenden zayıf bulmaları",
+    "wrong": [
+     "Kâğıdın çok pahalı olması",
+     "Kâğıdın Çince yazılması",
+     "Kâğıdın pazarda bulunmaması"
+    ],
+    "explanation": "Kâğıdı parşömenden daha az dayanıklı buldular."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kâğıdın yaygınlaşmasının bilgiye etkisi ne oldu?",
+    "correct": "Bilginin kolay yayılması",
+    "wrong": [
+     "Kitapların pahalanması",
+     "Kütüphanelerin kapanması",
+     "Yazının giderek unutulması"
+    ],
+    "explanation": "Kitaplar ucuzladı, kütüphaneler zenginleşti."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazar kâğıdın bugünkü önemini nasıl destekler?",
+    "correct": "Üretimin hâlâ çok yüksek oluşuyla",
+    "wrong": [
+     "Ekranların her yerde yasaklanmasıyla",
+     "Çin'in tek üretici olmasıyla",
+     "Matbaaların hızla kapanmasıyla"
+    ],
+    "explanation": "Her yıl yüz milyonlarca ton kâğıt üretiliyor."
+   }
+  ]
+ },
+ "278": {
+  "title": "Bulutlardaki Şekiller",
+  "category": "Hikaye/Kurgu",
+  "content": "Yaz tatilinin sıcak bir öğleden sonrasıydı. Kaan ile ablası Zeynep bahçedeki çimenlere sırtüstü uzandılar. Gökyüzünde bembeyaz, pamuk gibi bulutlar vardı. Bulutlar yavaş yavaş, sessizce süzülüyordu. Ağaçların yaprakları hafif rüzgârla hışırdıyordu. Zeynep, “Hadi bulutlarda şekil arayalım,” dedi.\n\nKaan önce uzun süre baktı ama hiçbir şey göremedi. Sonra büyük bir bulutu gösterdi. “Bak, bu bir fil! İşte hortumu!” dedi. Zeynep güldü. Ona göre o bulut bir fil değil, kocaman bir dondurmaydı. Hatta tepesinde bir de kiraz vardı! İkisi de gülmeye başladı.\n\nBiraz sonra rüzgâr esti ve bulutlar yavaşça değişti. Fil bulutunun hortumu kayboldu. Kaan bu kez bir ejderha gördü. Zeynep ise bir gemi gördüğünü söyledi. Her biri aynı buluta bakıyor ama başka bir şey görüyordu. Zeynep, bunun ne kadar güzel olduğunu söyledi. Herkes aynı şeye farklı gözlerle bakabilirdi.\n\nAkşamüstü anneleri onları çağırdı. Kaan içeri girerken bir kez daha gökyüzüne baktı. Bulutlar pembe ve turuncu renklere bürünmüştü. Kaan ertesi gün yine bulutlara bakmaya karar verdi. Belki yarın bir tavşan ya da bir uçak görürdü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaan ile Zeynep çimenlere uzanınca ne yapmaya karar verdiler?",
+    "correct": "Gökte şekil aramaya",
+    "wrong": [
+     "Bahçede top oynamaya",
+     "Biraz kestirmeye",
+     "Sesli kitap okumaya"
+    ],
+    "explanation": "Zeynep bulutlarda şekil aramayı önerdi."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bulutlar neye benziyordu?",
+    "correct": "Pamuğa",
+    "wrong": [
+     "Kayaya",
+     "Dumana",
+     "Ateşe"
+    ],
+    "explanation": "Gökyüzünde pamuk gibi bulutlar vardı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaan ilk bulutta ne gördü?",
+    "correct": "Bir fil",
+    "wrong": [
+     "Bir kedi",
+     "Bir at",
+     "Bir ayı"
+    ],
+    "explanation": "Kaan bulutun bir fil olduğunu söyledi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Zeynep aynı bulutu neye benzetti?",
+    "correct": "Bir dondurmaya",
+    "wrong": [
+     "Bir oyuncak araca",
+     "Bir kelebeğe",
+     "Bir uçurtmaya"
+    ],
+    "explanation": "Ona göre bulut kocaman bir dondurmaydı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Bulutların şekli neden değişti?",
+    "correct": "Rüzgâr estiği için",
+    "wrong": [
+     "Yağmur yağdığı için",
+     "Güneş battığı için",
+     "Kar yağdığı için"
+    ],
+    "explanation": "Rüzgâr esince bulutlar yavaşça değişti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Zeynep'in güzel bulduğu şey neydi?",
+    "correct": "Herkesin başka şey görmesi",
+    "wrong": [
+     "Bulutların sabit durması",
+     "Kaan'ın her şeyi bilmesi",
+     "Göğün aynı mavi renkte kalması"
+    ],
+    "explanation": "Herkes aynı şeye farklı gözlerle bakabilirdi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Akşamüstü bulutlar hangi renklere büründü?",
+    "correct": "Gün batımı renklerine",
+    "wrong": [
+     "Mor ve yemyeşil renge",
+     "Siyah ve koyu griye",
+     "Mavi ve bembeyaza"
+    ],
+    "explanation": "Bulutlar pembe ve turuncu renklere bürünmüştü."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Kaan'ın ertesi gün yine bulutlara bakmak istemesi neyi gösterir?",
+    "correct": "Oyundan keyif aldığını",
+    "wrong": [
+     "Ablasına çok kızdığını",
+     "Hiç ama hiç eğlenmediğini",
+     "Biraz hasta olduğunu"
+    ],
+    "explanation": "Oyunu çok sevmiş, yeni şekiller görmek istiyordu."
+   }
+  ]
+ },
+ "279": {
+  "title": "Balkondaki Radyo",
+  "category": "Hikaye/Kurgu",
+  "content": "Onur'un dedesinin balkonunda, tozlu bir rafın üstünde eski, ahşap kasalı bir radyo dururdu. Dedesi bu radyoyu gençliğinde ilk maaşıyla almıştı. Ama radyo yıllardır çalışmıyordu. Onur on beş yaşına girdiği yaz, dedesine bu radyoyu birlikte tamir etmeyi teklif etti. Okulda elektrik devreleri dersinde öğrendiklerini denemek istiyordu.\n\nDedesi önce güldü. “Bunu artık kimse tamir edemez,” dedi. Ama Onur'un ısrarı karşısında dayanamadı ve rafın üstünden radyoyu indirdi. Balkondaki masaya eski bir gazete serdiler ve radyonun arka kapağını tornavidayla açtılar. İçinden toz, örümcek ağları ve Onur'un daha önce hiç görmediği parçalar çıktı. Cam lambalar, rengârenk kablolar, küçük silindirler. Onur, bugünkü telefonların içinde bunların çok daha küçük karşılıklarının bulunduğunu biliyordu, ama hiçbirini bu kadar yakından görmemişti.\n\nOnur telefonundan internette bu modelin şemasını aradı ve buldu. Dedesi ise parçaların çoğunun adını hâlâ hatırlıyordu. Gençken bir tamirhanede çırak olarak çalıştığını, ama sonra fabrikaya geçtiği için bu işi bıraktığını anlattı. Onur buna çok şaşırdı. Dedesinin böyle bir geçmişi olduğunu hiç bilmiyordu. O akşam dedesi ona, ustasından öğrendiği bir sözü söyledi: “Bir şeyi tamir etmeden önce, onu dinlemeyi öğreneceksin.”\n\nİki hafta boyunca her akşam balkonda radyoyla uğraştılar. Onur şemayı okuyor, dedesi ise hangi parçanın neye benzediğini tarif ediyordu. Bazı akşamlar hiçbir ilerleme kaydedemiyor, ama yine de birlikte çay içip sohbet ediyorlardı. Sonunda bir kondansatörün şişip bozulduğunu buldular. Onur yenisini, şehrin eski çarşısında elektronik malzeme satan küçük bir dükkândan buldu. Dükkânın sahibi, böyle eski bir radyoyu tamir etmeye çalışan bir gence pek rastlamadığını söyleyip parçanın parasını almadı. Dedesi titreyen ellerine rağmen lehim yapmayı unutmamıştı.\n\nParçayı taktıkları akşam radyoyu prize bağladılar. Önce bir hışırtı duyuldu, sonra bir şarkının ilk notaları. Dedesinin gözleri doldu ve bir süre hiçbir şey söylemeden radyoyu dinledi. Bu şarkıyı gençliğinde de dinlediğini söyledi. Onur o akşam, tamir ettikleri şeyin yalnızca eski bir radyo olmadığını düşündü. İki hafta boyunca dedesini, okuldaki bütün derslerden daha çok tanımış, onun hayatının bilmediği bir sayfasını açmıştı. Radyo o günden sonra rafa geri konmadı; balkondaki masanın üstünde, her akşam çalmaya devam etti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dede radyoyu nasıl almıştı?",
+    "correct": "İlk kazancıyla",
+    "wrong": [
+     "Hediye olarak",
+     "Pazardan ucuza",
+     "Kendi yaparak"
+    ],
+    "explanation": "Dedesi radyoyu gençliğinde ilk maaşıyla almıştı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Onur'un radyoyu tamir etmek istemesinin bir nedeni nedir?",
+    "correct": "Ders bilgisini uygulamak",
+    "wrong": [
+     "Radyoyu satıp para kazanmak",
+     "Dedesini bir sınava sokmak",
+     "Yepyeni bir radyo almak"
+    ],
+    "explanation": "Elektrik devreleri dersinde öğrendiklerini denemek istiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dedenin “Bunu artık kimse tamir edemez” demesi neyi gösterir?",
+    "correct": "Pek umut beslemediğini",
+    "wrong": [
+     "Onur'a hiç güvenmediğini",
+     "Radyoyu hiç sevmediğini",
+     "Tamirden korktuğunu"
+    ],
+    "explanation": "Radyonun yıllardır çalışmamasından ötürü umutsuzdu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dede gençliğinde nerede çalışmıştı?",
+    "correct": "Bir onarım atölyesinde",
+    "wrong": [
+     "Bir radyo stüdyosunda",
+     "Bir ekmek fırınında",
+     "Bir köy okulunda hizmetli"
+    ],
+    "explanation": "Gençken bir tamirhanede çırak olarak çalışmıştı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ustanın sözünün radyo tamiriyle ilgisi nedir?",
+    "correct": "Önce sorunu kavramak gerektiği",
+    "wrong": [
+     "Radyoyu açık tutmak gerektiği",
+     "Tamirin hızlı yapılması gerektiği",
+     "Müzik dinlemenin yasak sayıldığı"
+    ],
+    "explanation": "Bir şeyi tamir etmeden önce onu dinlemeyi öğrenmek gerekir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Radyodaki arıza neydi?",
+    "correct": "Şişmiş bir parça",
+    "wrong": [
+     "Kopmuş bir kablo",
+     "Kırık bir cam lamba",
+     "Bitmiş bir pil"
+    ],
+    "explanation": "Şişip bozulmuş bir kondansatör buldular."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dükkân sahibinin parayı almaması neyi gösterir?",
+    "correct": "Gencin çabasını beğendiğini",
+    "wrong": [
+     "Parçanın bozuk olduğunu",
+     "Dükkânı yakında kapatacağını",
+     "Dedeyi eskiden tanıdığını"
+    ],
+    "explanation": "Böyle bir işe girişen genci takdir etti."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Onur'a göre radyonun tamiri neden daha derin bir anlam taşır?",
+    "correct": "Dedesiyle yeni bir bağ kurduğu için",
+    "wrong": [
+     "Radyonun değerli bir antika olduğu için",
+     "Radyonun yeniden satılacağı için",
+     "Okulda bir ödül alacakları için"
+    ],
+    "explanation": "Dedesini tanımış, hayatının bilinmeyen bir sayfasını açmıştı."
+   }
+  ]
+ }
+}

@@ -1,0 +1,668 @@
+{
+ "216": {
+  "title": "Sarı Şemsiye",
+  "category": "Hikaye/Kurgu",
+  "content": "Okul çıkışında birden yağmur başladı. Gökyüzü kararmış, kalın damlalar yere düşmeye başlamıştı. Çocuklar koşarak evlerine dağıldı. Zehra çantasından küçük sarı şemsiyesini çıkardı. Bahçe kapısının yanında sınıf arkadaşı Yusuf'u gördü. Yusuf'un şemsiyesi yoktu. Kapının altında durmuş, yağmurun dinmesini bekliyordu. Saçları ve montu şimdiden ıslanmıştı.\n\nZehra bir an durup düşündü. Şemsiye küçüktü. İkisi birden altına sığar mıydı? Sonra Yusuf'un yanına gitti ve şemsiyesini paylaşmayı teklif etti. Yusuf önce biraz utandı, ama sonra gülümseyerek kabul etti. Zehra şemsiyeyi ikisinin arasında tuttu.\n\nİkisi birlikte yürümeye başladılar. Şemsiye gerçekten küçüktü. Zehra'nın bir omzu, Yusuf'un da bir omzu ıslandı. Ama ikisi de buna güldü. Yolda su birikintilerinin üstünden atladılar ve yağmurun şemsiyede çıkardığı tıpırtıları dinlediler. Yusuf ona en sevdiği çizgi filmi anlattı. Zehra da ona kedisinin adını söyledi.\n\nÖnce Yusuf'un evine geldiler. Yusuf'un annesi kapıda onları merakla bekliyordu. Zehra'ya teşekkür etti ve ona sıcak bir kurabiye verdi. Zehra kendi evine dönerken yağmur dinmişti. Gökyüzünde güneş yeniden görünüyordu ve uzakta küçük bir gökkuşağı belirmişti. Zehra ıslanan omzuna rağmen kendini çok mutlu hissediyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zehra'nın şemsiyesi ne renkti?",
+    "correct": "Sarı renkli",
+    "wrong": [
+     "Mavi renkli",
+     "Kırmızı renkli",
+     "Yeşil renkli"
+    ],
+    "explanation": "Zehra çantasından küçük sarı şemsiyesini çıkardı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yusuf neden kapının altında bekliyordu?",
+    "correct": "Şemsiyesi olmadığı için",
+    "wrong": [
+     "Annesini beklediği için",
+     "Zehra'yı aradığı için",
+     "Çantasını unuttuğu için"
+    ],
+    "explanation": "Yusuf'un şemsiyesi yoktu ve yağmurun dinmesini bekliyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Zehra teklif etmeden önce neden bir an düşündü?",
+    "correct": "Sığıp sığmayacaklarını bilmediği için",
+    "wrong": [
+     "Yusuf'u daha önce hiç görmediği için",
+     "Annesinin kızacağından çekindiği için",
+     "Şemsiyesinin kırık olduğunu bildiği için"
+    ],
+    "explanation": "Şemsiye küçüktü; ikisi birden sığar mı diye düşündü."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yusuf teklifi duyunca ilk önce ne hissetti?",
+    "correct": "Biraz utandı",
+    "wrong": [
+     "Çok sinirlendi",
+     "Çok korktu",
+     "Ağlamaya başladı"
+    ],
+    "explanation": "Yusuf önce biraz utandı, sonra kabul etti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yolda yürürken neler yaptılar?",
+    "correct": "Su birikintilerinden atladılar",
+    "wrong": [
+     "Yağmurun altında yarış yaptılar",
+     "Yoldaki bir markete uğradılar",
+     "Parktaki salıncağa bindiler"
+    ],
+    "explanation": "Su birikintilerinin üstünden atladılar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Islanan omuzlarına gülmeleri ne gösterir?",
+    "correct": "Islanmayı önemsemediklerini",
+    "wrong": [
+     "Birden çok fazla üşüdüklerini",
+     "Birbirlerine kızdıklarını",
+     "Eve çok geç kaldıklarını"
+    ],
+    "explanation": "Islanmaya aldırmadan birlikte eğlendiler."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yusuf'un annesi Zehra'ya ne verdi?",
+    "correct": "Kurabiye",
+    "wrong": [
+     "Şemsiye",
+     "Çikolata",
+     "Oyuncak"
+    ],
+    "explanation": "Teşekkür edip ona sıcak bir kurabiye verdi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Zehra eve dönerken neden mutluydu?",
+    "correct": "Arkadaşına yardım ettiği için",
+    "wrong": [
+     "Yağmurda hiç ıslanmadığı için",
+     "Yeni bir şemsiye aldığı için",
+     "Okul yarın tatil olduğu için"
+    ],
+    "explanation": "Islansa da arkadaşına yardım etmenin mutluluğunu yaşadı."
+   }
+  ]
+ },
+ "217": {
+  "title": "Çölün Gemisi",
+  "category": "Bilgi/Açıklama",
+  "content": "Develer, çöllerde yaşayan büyük hayvanlardır. Çölde günler çok sıcak, geceler ise soğuk olur. Çölde su ve yiyecek bulmak çok zordur. Develer bu zor yerde yaşamaya çok iyi uyum sağlamıştır. İnsanlar binlerce yıldır develerle çölleri geçer. Bu yüzden develere “çölün gemisi” de denir. Develer sırtlarında ağır yükler taşıyarak günlerce yürüyebilir.\n\nPeki develer bu kadar zor bir yerde nasıl yaşar? Pek çok kişi, devenin sırtındaki hörgücün içinde su sakladığını düşünür. Oysa bu doğru değildir. Hörgücün içinde su değil, yağ vardır. Deve uzun süre yiyecek bulamadığında bu yağı kullanır. Yağ vücutta enerjiye dönüşür. Deve uzun süre aç kaldığında hörgücü küçülür ve yana doğru sarkar. Yeniden beslendiğinde ise hörgücü eski hâline döner. Bazı develerin bir, bazılarının ise iki hörgücü vardır.\n\nDeveler suyu başka bir yolla idare eder. Bir deve, su bulduğunda bir seferde çok fazla su içebilir. Susadığında, on dakika içinde yüz litreden fazla su içtiği görülmüştür. Ayrıca develer çok az terler ve vücutlarındaki suyu dikkatle kullanır. Gündüz vücut ısıları yükselse de hemen terlemezler; serin gecelerde ise vücutları soğur. Böylece su kaybını azaltırlar.\n\nDevelerin çölde işlerine yarayan başka özellikleri de vardır. İki sıra uzun kirpikleri gözlerini uçuşan kumdan korur. Burun deliklerini kapatarak kum fırtınasında nefes alabilirler. Geniş ve yumuşak ayakları da kuma batmadan yürümelerini sağlar. Develer, başka hayvanların yiyemediği dikenli bitkileri bile yiyebilir, çünkü ağızlarının içi çok serttir. Kısacası deve, çölde yaşamak için yapılmış bir hayvan gibidir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Develere hangi ad da verilir?",
+    "correct": "Çölün gemisi",
+    "wrong": [
+     "Ormanın kralı",
+     "Dağın aslanı",
+     "Kumun kuşu adı"
+    ],
+    "explanation": "Develere çölün gemisi de denir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Develere bu adın verilmesinin nedeni nedir?",
+    "correct": "İnsanların onlarla çölü aşması",
+    "wrong": [
+     "Denizde bile çok iyi yüzebilmeleri",
+     "Şekillerinin gemiye benzemesi",
+     "Liman kentlerinde yaşamaları"
+    ],
+    "explanation": "İnsanlar binlerce yıldır develerle yük taşıyarak çölleri geçer."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hörgücün içinde ne bulunur?",
+    "correct": "Yağ deposu",
+    "wrong": [
+     "Su deposu",
+     "Kum taneleri",
+     "Sıcak hava"
+    ],
+    "explanation": "Hörgücün içinde su değil yağ vardır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Aç kalan devenin hörgücü neden küçülür?",
+    "correct": "Yağı enerjiye dönüştüğü için",
+    "wrong": [
+     "İçindeki su buharlaştığı için",
+     "Güneş onu kavurduğu için",
+     "İçine kum doldurulduğu için"
+    ],
+    "explanation": "Deve yağı kullandıkça hörgücü küçülür ve sarkar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Susamış bir deve on dakikada ne kadar su içebilir?",
+    "correct": "Yüz litreyi aşan",
+    "wrong": [
+     "Bir bardak kadar",
+     "On litreden az",
+     "Bin litreyi aşan"
+    ],
+    "explanation": "On dakikada yüz litreden fazla su içtiği görülmüştür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Develerin gündüz hemen terlememesi onlara ne kazandırır?",
+    "correct": "Su kaybını azaltmayı",
+    "wrong": [
+     "Çok daha hızlı koşmayı",
+     "Çok daha fazla yemeyi",
+     "Gündüz uzun uyumayı"
+    ],
+    "explanation": "Hemen terlemeyerek su kaybını azaltırlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kum fırtınasında develeri ne korur?",
+    "correct": "Kapanan burun delikleri",
+    "wrong": [
+     "Kalın ve uzun kuyrukları",
+     "Sert ve sivri boynuzları",
+     "Güçlü ve keskin dişleri"
+    ],
+    "explanation": "Burun deliklerini kapatarak nefes alabilirler."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Son cümlede develer için ne vurgulanır?",
+    "correct": "Çöle tümüyle uyum sağladıkları",
+    "wrong": [
+     "Çölden kaçmak istedikleri",
+     "Ormanda daha mutlu oldukları",
+     "Tek başına yaşamayı sevdikleri"
+    ],
+    "explanation": "Deve çölde yaşamak için yapılmış bir hayvan gibidir."
+   }
+  ]
+ },
+ "218": {
+  "title": "Fındık'ın Listesi",
+  "category": "Hikaye/Kurgu",
+  "content": "Ekim ayında Mine'nin sınıfına yeni bir arkadaş geldi: Fındık adında küçük, kahverengi bir hamster. Öğretmenleri Ayten Hanım, Fındık'ın bakımını her hafta başka bir öğrencinin üstleneceğini söyledi. Görevli öğrenci, Fındık'ın yemini ve suyunu verecek, kafesini temizleyecek ve hafta sonları onu evine götürecekti. Ayten Hanım ayrıca hamsterların gece hareketli, gündüz ise uykulu hayvanlar olduğunu, bu yüzden ders saatlerinde Fındık'ı rahatsız etmemeleri gerektiğini anlattı. Sınıf bu kurala özenle uydu.\n\nMine sıranın kendisine gelmesini sabırsızlıkla bekledi. Sonunda kasım ayında görev ona verildi. Mine ilk gün Fındık'ın suyunu tazeledi, yem kabını doldurdu ve kafesine taze talaş serdi. Ama ikinci gün arkadaşlarıyla oyuna dalıp Fındık'ı unuttu. Akşam eve dönerken bunu hatırladı ve içi burkuldu. O gece yatağında uzun süre Fındık'ı düşündü. Ya susuz kalırsa? Ya hasta olursa?\n\nErtesi sabah okula herkesten erken gitti. Fındık'ın su kabının neredeyse boş olduğunu gördü. Hemen suyunu doldurdu. Fındık su kabına koşup uzun uzun içti. Mine bunu görünce gözleri doldu. Küçük bir canlının hayatının, onu unutan birinin elinde olduğunu ilk kez bu kadar net düşündü.\n\nMine, Ayten Hanım'a gidip olanları anlattı. Öğretmeni ona kızmadı. Onu dinledikten sonra, hata yapmanın insanlara özgü olduğunu, önemli olanın hatadan ne öğrenildiği olduğunu söyledi. Sonra birlikte bir çözüm düşündüler. Mine bir kâğıda Fındık'ın günlük işlerini yazdı ve her işin yanına bir kutucuk çizdi. Kâğıdı kafesin yanına astı. Her işi yaptığında kutucuğu işaretleyecekti.\n\nBu liste o kadar işe yaradı ki, Ayten Hanım onu bütün sınıfla paylaştı. Artık Fındık'a kim bakarsa baksın, listeyi kullanıyordu. Sınıfın başka işleri için de benzer listeler hazırlandı: çiçekleri sulamak, tahtayı silmek ve kitaplığı düzenlemek için. Hafta sonu Mine, Fındık'ı evine götürdü. Kardeşine de listeyi gösterdi ve birlikte bütün kutucukları tek tek işaretlediler. Pazartesi sabahı Fındık'ı okula sağ salim geri getirdiğinde Mine kendini çok sorumlu ve gururlu hissediyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fındık nasıl bir hayvandı?",
+    "correct": "Kahverengi bir hamster",
+    "wrong": [
+     "Küçük beyaz bir tavşan",
+     "Küçük sarı bir kanarya",
+     "Küçük gri bir kedi"
+    ],
+    "explanation": "Fındık küçük, kahverengi bir hamsterdı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ders saatlerinde Fındık'ın rahatsız edilmemesinin nedeni nedir?",
+    "correct": "Gün içinde uykulu olması",
+    "wrong": [
+     "Çocuklardan çok korkması",
+     "Gürültüden hastalanması",
+     "Kafesinden kaçabilmesi"
+    ],
+    "explanation": "Hamsterlar gündüz uykulu, gece hareketlidir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mine ikinci gün neden Fındık'ı unuttu?",
+    "correct": "Oyuna daldığı için",
+    "wrong": [
+     "Hasta olduğu için",
+     "Okula gitmediği için",
+     "Sınava çalıştığı için"
+    ],
+    "explanation": "Arkadaşlarıyla oyuna dalıp Fındık'ı unuttu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mine'nin gece Fındık'ı düşünmesi neyi gösterir?",
+    "correct": "Sorumluluğunu ciddiye aldığını",
+    "wrong": [
+     "Ertesi gün okula gitmek istemediğini",
+     "Öğretmeninin kızmasından korktuğunu",
+     "Kendine bir hamster istediğini"
+    ],
+    "explanation": "Fındık'ın başına bir şey gelmesinden endişe eder."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mine ertesi sabah Fındık'ın neyini boş buldu?",
+    "correct": "Su kabını",
+    "wrong": [
+     "Yem kabını",
+     "Kafesini",
+     "Yatağını"
+    ],
+    "explanation": "Su kabı neredeyse boştu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ayten Hanım'ın tutumu Mine'ye nasıl yardımcı oldu?",
+    "correct": "Hatasından ders çıkarmasını sağladı",
+    "wrong": [
+     "Görevi ondan alıp başkasına verdi",
+     "Sınıfın önünde ona sert bir uyarı yaptı",
+     "Annesini hemen okula çağırıp konuştu"
+    ],
+    "explanation": "Kızmadı; birlikte liste fikrini buldular."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Listenin bütün sınıfla paylaşılması neyi gösterir?",
+    "correct": "Fikrin herkese yarayabildiğini",
+    "wrong": [
+     "Mine'nin bir tür ceza aldığını",
+     "Fındık'ın yeniden hastalandığını",
+     "Sınıftaki kâğıtların bittiğini"
+    ],
+    "explanation": "Mine'nin bulduğu çözüm bütün sınıfın işine yaradı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Mine'nin duyguları nasıldır?",
+    "correct": "Görevini başardığı için onurlu",
+    "wrong": [
+     "Fındık'ı geri verdiği için kırgın",
+     "Kardeşine kızdığı için öfkeli",
+     "Okuldan sıkıldığı için yorgun"
+    ],
+    "explanation": "Fındık'ı sağ salim getirince kendini sorumlu ve gururlu hissetti."
+   }
+  ]
+ },
+ "219": {
+  "title": "Kulaklarıyla Gören Avcılar",
+  "category": "Bilgi/Açıklama",
+  "content": "Yarasalar, gündüzleri mağaralarda ya da çatı aralarında baş aşağı asılı uyuyan, geceleri ise avlanan hayvanlardır. Karanlıkta uçarken ağaçlara, duvarlara çarpmazlar ve küçücük sivrisinekleri bile yakalayabilirler. Peki zifiri karanlıkta bunu nasıl başarırlar? Yarasaların sırrı gözlerinde değil, kulaklarındadır.\n\nYarasalar uçarken ağızlarından ya da burunlarından çok tiz sesler çıkarır. Bu sesler o kadar incedir ki biz insanlar onları kulaklarımızla duyamayız. Ses bir nesneye çarptığında geri döner, yani yankılanır. Yarasa, geri dönen bu yankıyı büyük kulaklarıyla duyar. Yankının ne kadar sürede geri döndüğüne bakarak önündeki şeyin ne kadar uzakta olduğunu anlar. Bu yönteme ekolokasyon, yani yankıyla yer bulma denir.\n\nBu yöntem o kadar hassastır ki yarasa, bir saç teli kadar ince bir ipi bile fark edebilir. Avına yaklaştıkça daha sık ses çıkarır ve böceğin tam yerini belirler. Bir yarasa, tek bir gecede yüzlerce, hatta binlerce sivrisinek yiyebilir. Bu yüzden yarasalar, böcek sayısını dengede tutarak doğaya ve çiftçilere büyük yarar sağlar.\n\nBilim insanları, yarasaların bu yeteneğinden esinlenerek denizaltılarda kullanılan sonar cihazlarını geliştirmiştir. Bazı görme engelli insanlar da dillerini damaklarında şaklatarak benzer bir yöntemle çevrelerini algılamayı öğrenmiştir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yarasalar gündüzleri nasıl uyur?",
+    "correct": "Tepetaklak asılarak",
+    "wrong": [
+     "Bir yuvada kıvrılıp",
+     "Ağaç dalına yatarak",
+     "Suyun üstünde yüzerek"
+    ],
+    "explanation": "Gündüzleri baş aşağı asılı uyurlar."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın ilk paragrafın sonunda sırrın kulaklarda olduğunu söylemesi neyi hazırlar?",
+    "correct": "Sesle yön bulmanın açıklanmasını",
+    "wrong": [
+     "Gözlerin ayrıntılı tanıtılmasını",
+     "Yarasa türlerinin sıralanmasını",
+     "Mağaraların anlatılmasını"
+    ],
+    "explanation": "Sonraki paragraf yankıyla yer bulmayı açıklar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yarasaların çıkardığı sesleri insanlar neden duyamaz?",
+    "correct": "Fazla ince oldukları için",
+    "wrong": [
+     "Çok alçak oldukları için",
+     "Çok kısa sürdükleri için",
+     "Uzakta çıkarıldıkları için"
+    ],
+    "explanation": "Sesler o kadar incedir ki insanlar duyamaz."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yarasa bir nesnenin uzaklığını nasıl anlar?",
+    "correct": "Sesin geri gelme süresinden",
+    "wrong": [
+     "Nesnenin renginden ve şeklinden",
+     "Nesnenin çıkardığı kokudan",
+     "Havadaki rüzgârın yönünden"
+    ],
+    "explanation": "Yankının ne kadar sürede döndüğüne bakarak uzaklığı anlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yarasanın avına yaklaştıkça daha sık ses çıkarmasının amacı nedir?",
+    "correct": "Böceğin yerini kesinleştirmek",
+    "wrong": [
+     "Avını korkutup uzaklaştırmak",
+     "Diğer yarasaları yardıma çağırmak",
+     "Uçarken yorgunluğunu atmak"
+    ],
+    "explanation": "Daha sık ses çıkararak böceğin tam yerini belirler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yarasaların çiftçilere yararı neden kaynaklanır?",
+    "correct": "Zararlı böcekleri azaltmalarından",
+    "wrong": [
+     "Toprağı kazıp havalandırmalarından",
+     "Tohumları uzağa taşımalarından",
+     "Tarlaları gece korumalarından"
+    ],
+    "explanation": "Bir gecede binlerce sivrisinek yiyerek böcek sayısını dengede tutarlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yarasalardan esinlenerek geliştirilen cihaz hangisidir?",
+    "correct": "Sonar cihazı",
+    "wrong": [
+     "Radyo cihazı",
+     "Pusula cihazı",
+     "Mikroskop cihazı"
+    ],
+    "explanation": "Denizaltılarda kullanılan sonar geliştirilmiştir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraf yarasaların yeteneği hakkında ne gösterir?",
+    "correct": "İnsanlara da örnek olabildiğini",
+    "wrong": [
+     "Sadece yarasalarda işe yaradığını",
+     "Günümüzde önemini yitirdiğini",
+     "İnsanlar için tehlikeli olduğunu"
+    ],
+    "explanation": "Sonar ve görme engellilerin yöntemi bu yeteneğin insanlara örnek olduğunu gösterir."
+   }
+  ]
+ },
+ "220": {
+  "title": "İki Yaz Arasında",
+  "category": "Bilgi/Açıklama",
+  "content": "Her yıl dünyanın bir ucundan öbür ucuna uçan küçük bir kuş var: kutup sumrusu. Ağırlığı yalnızca yüz gram kadar, yani küçük bir elma ağırlığında olan bu kuş, hayvanlar dünyasında bilinen en uzun göçü yapar. Kuzey Kutbu'na yakın bölgelerde yumurtlar, yavrularını büyütür, sonra güneye, Antarktika'ya kadar uçar. Birkaç ay sonra da aynı yolu geri döner. Yolculuk sırasında çoğu zaman karaya inmez; okyanusun üzerinde süzülerek dinlenir ve suyun yüzeyine yakın yüzen küçük balıkları avlayarak beslenir.\n\nBilim insanları uzun süre bu yolculuğun yaklaşık kırk bin kilometre olduğunu düşündü. Ancak 2010 yılında kuşların bacaklarına takılan, ataç büyüklüğündeki küçük konum cihazları şaşırtıcı bir gerçeği ortaya koydu. Kuşlar düz bir çizgide uçmuyor, rüzgârları kullanmak için okyanus üzerinde dev bir S harfi çiziyordu. Böylece bir yılda kat edilen mesafe yetmiş bin kilometreyi aşıyordu. Kuşlar, yolun ortasında Atlantik Okyanusu'nun belirli bir bölgesinde yaklaşık bir ay mola veriyor ve burada bol besinle güç topluyordu.\n\nKutup sumruları otuz yıldan fazla yaşayabilir. Bu da bir sumrunun ömrü boyunca yaklaşık iki milyon kilometre uçtuğu anlamına gelir. Bu, Ay'a gidip üç kez geri dönmeye eşit bir mesafedir.\n\nKutup sumrusunun bu zorlu yolculuğu yapmasının bir nedeni de güneştir. Kuzey Kutbu'nda yaz yaşanırken orada, Antarktika'da yaz yaşanırken de orada bulunur. Kısacası iki yaz arasında gidip gelir. Yani bu kuş, dünyada başka hiçbir canlının görmediği kadar çok gün ışığı görür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup sumrusu yaklaşık ne kadar ağırdır?",
+    "correct": "Yaklaşık yüz gram",
+    "wrong": [
+     "Yaklaşık bir kilogram",
+     "Yaklaşık on gram",
+     "Yaklaşık beş yüz gram"
+    ],
+    "explanation": "Ağırlığı yalnızca yüz gram kadardır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sumru yolculuk boyunca nasıl beslenir?",
+    "correct": "Yüzeydeki ufak balıkları avlayarak",
+    "wrong": [
+     "Adalara inip böcekleri toplayarak",
+     "Gemilerden atılan yemleri alarak",
+     "Vücudundaki yağ deposunu harcayarak"
+    ],
+    "explanation": "Yüzeye yakın yüzen küçük balıkları avlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "2010 yılındaki araştırmada hangi araç kullanıldı?",
+    "correct": "Küçük konum cihazları",
+    "wrong": [
+     "Uydudan fotoğraflar",
+     "Gemilerdeki radar ağları",
+     "Ses kayıt cihazları"
+    ],
+    "explanation": "Bacaklara ataç büyüklüğünde konum cihazları takıldı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kuşların S biçiminde uçmasının nedeni nedir?",
+    "correct": "Esintilerden destek almak",
+    "wrong": [
+     "Avcı kuşlardan saklanmak",
+     "Yolculuğu uzatıp eğlenmek",
+     "Okyanustaki gemileri izlemek"
+    ],
+    "explanation": "Rüzgârları kullanmak için S çizerler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Atlantik'teki molanın yolculuk için önemi nedir?",
+    "correct": "Devam etmek için güç toplamak",
+    "wrong": [
+     "Yavrularını orada büyütmek",
+     "Tüylerini baştan yenilemek",
+     "Rotalarını bütünüyle değiştirmek"
+    ],
+    "explanation": "Bol besinle güç toplayarak yolculuğa devam ederler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir sumru ömrü boyunca yaklaşık ne kadar uçar?",
+    "correct": "Yaklaşık iki milyon kilometre",
+    "wrong": [
+     "Yaklaşık yirmi bin kilometre",
+     "Yaklaşık iki yüz bin kilometre",
+     "Yaklaşık yirmi milyon kilometre"
+    ],
+    "explanation": "Ömrü boyunca yaklaşık iki milyon kilometre uçar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ay örneğinin metindeki işlevi nedir?",
+    "correct": "Uzaklığı gözde canlandırmak",
+    "wrong": [
+     "Ay yolculuklarını anlatmak",
+     "Kuşların uzaya çıktığını anlatmak",
+     "Ünlü astronotları tanıtmak"
+    ],
+    "explanation": "Büyük bir sayıyı anlaşılır kılmak için karşılaştırma yapılır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre sumrunun göçü hangi sonucu doğurur?",
+    "correct": "Yılın çoğunu aydınlıkta geçirmesini",
+    "wrong": [
+     "Kış mevsimini uyuyarak geçirmesini",
+     "Yavrularını bir türlü yetiştirememesini",
+     "Daha çok karanlıkta avlanmasını"
+    ],
+    "explanation": "İki yaz arasında gidip gelerek en çok gün ışığını gören canlı olur."
+   }
+  ]
+ },
+ "221": {
+  "title": "Hamlelerin Dili",
+  "category": "Hikaye/Kurgu",
+  "content": "Babasının işi yüzünden İzmir'den Erzurum'a taşındıklarında Efe on dört yaşındaydı. Yeni okulunun ilk günü, sınıfa girdiğinde herkesin ona baktığını hissetti. Teneffüste arkadaş grupları kendi aralarında konuşuyor, gülüşüyordu. Efe ise bahçenin bir köşesinde tek başına duruyor, telefonuna bakıyormuş gibi yapıyordu. Eski arkadaşlarına mesaj atıyor, ama onlar derste oldukları için cevap gelmiyordu.\n\nİlk hafta böyle geçti. Efe akşamları odasına kapanıyor, annesine okulun iyi olduğunu söylüyordu. Oysa her sabah okula gitmek ona biraz daha zor geliyordu. Yeni şehrin soğuğu da, okulun koridorları da ona yabancıydı. İzmir'deki denizi, sahilde arkadaşlarıyla bisiklete bindiği akşamları özlüyordu.\n\nİkinci haftanın başında okulun duyuru panosunda bir ilan gördü: “Satranç kulübü yeni üyeler arıyor. Perşembe, okul çıkışı, kütüphane.” Efe, İzmir'de dedesiyle sık sık satranç oynardı. Bir süre tereddüt etti. Kimseyi tanımadığı bir odaya girmek gözünü korkutuyordu. Ama perşembe günü yine de kütüphanenin kapısını açtı.\n\nİçeride altı öğrenci vardı. Kulübü yöneten öğretmen Efe'yi masalardan birine oturttu. Karşısında, sınıftan yüzünü tanıdığı ama hiç konuşmadığı Can vardı. Oyun başladığında Efe'nin gerginliği yavaş yavaş geçti. Hamleler, onun bildiği ve rahat ettiği bir dildi. Oyun neredeyse bir saat sürdü ve sonunda Efe kazandı. Can ise yenilgiye hiç bozulmadı; gülerek hemen bir rövanş maçı istedi. İkinci oyunu da Can kazandı.\n\nO gün kulüpten çıkarken Can, Efe'ye ertesi gün teneffüste birlikte oturmayı teklif etti. Efe yeni şehirdeki ilk arkadaşını, hiç beklemediği bir yerde, eski bir tutkusunun sayesinde bulmuştu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Efe teneffüste ne yapıyordu?",
+    "correct": "Ekranına bakıyor görünüyordu",
+    "wrong": [
+     "Yeni arkadaşlarıyla top oynuyordu",
+     "Kütüphanede kitap okuyordu",
+     "Sınıf öğretmeniyle konuşuyordu"
+    ],
+    "explanation": "Bahçenin köşesinde telefona bakıyormuş gibi yapıyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Efe'nin telefona bakıyormuş gibi yapmasının nedeni nedir?",
+    "correct": "Yalnızlığını gizlemek istemesi",
+    "wrong": [
+     "Önemli bir mesaj beklemesi",
+     "Telefonda oyun oynamayı sevmesi",
+     "Sınav için ders çalışıyor olması"
+    ],
+    "explanation": "Kimseyle konuşmadığı için yalnız görünmekten kaçınıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Efe'nin annesine okulun iyi olduğunu söylemesi neyi gösterir?",
+    "correct": "Zorlandığını belli etmediğini",
+    "wrong": [
+     "Yeni okulunu çok sevdiğini",
+     "Annesine çok kızgın olduğunu",
+     "Derslerinde çok başarılı olduğunu"
+    ],
+    "explanation": "Her sabah okula gitmek zor gelse de bunu annesine söylemiyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Efe satrancı kiminle oynardı?",
+    "correct": "Dedesiyle",
+    "wrong": [
+     "Babasıyla",
+     "Ağabeyiyle",
+     "Öğretmeniyle"
+    ],
+    "explanation": "İzmir'de dedesiyle sık sık satranç oynardı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Efe'nin kulübe gitmeden önce tereddüt etmesinin nedeni nedir?",
+    "correct": "Yabancı bir ortamdan çekinmesi",
+    "wrong": [
+     "Satranç oynamayı hiç bilmemesi",
+     "Kütüphanenin okuldan uzak olması",
+     "Annesinin ona izin vermemesi"
+    ],
+    "explanation": "Kimseyi tanımadığı bir odaya girmek gözünü korkutuyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "“Hamleler, onun bildiği ve rahat ettiği bir dildi” cümlesi ne anlatır?",
+    "correct": "Tanıdık uğraşın onu rahatlattığını",
+    "wrong": [
+     "Oyun sırasında çok konuştuğunu",
+     "Birkaç yabancı dil bildiğini",
+     "Can'ın söylediklerini anlamadığını"
+    ],
+    "explanation": "Satranç ona tanıdık geldiği için gerginliği geçti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "İkinci oyunu kim kazandı?",
+    "correct": "Can kazandı",
+    "wrong": [
+     "Efe kazandı",
+     "Öğretmen",
+     "Berabere"
+    ],
+    "explanation": "İkinci oyunu Can kazandı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana düşüncesi hangisidir?",
+    "correct": "Ortak ilgiler dostluğa kapı açar",
+    "wrong": [
+     "Satranç dünyanın en zor oyunudur",
+     "Şehir değiştirmek insana zarar verir",
+     "Kazanmak dostluktan daha önemlidir"
+    ],
+    "explanation": "Efe ilk arkadaşını satranç sayesinde buldu."
+   }
+  ]
+ }
+}

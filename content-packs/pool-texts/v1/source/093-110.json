@@ -1,0 +1,446 @@
+{
+ "93": {
+  "title": "Katlanan Mühendislik",
+  "category": "Bilgi/Açıklama",
+  "content": "Kâğıt katlama sanatı origami, çoğumuzun aklına kâğıttan yapılmış kuşları, kurbağaları ya da kayıkları getirir. Japonya'da yüzyıllardır uygulanan bu sanat, tek bir kâğıt parçasını kesmeden ve yapıştırmadan katlayarak biçimler oluşturmaya dayanır. Origami ustaları, yalnızca birkaç temel katlama türünü farklı biçimlerde birleştirerek şaşırtıcı derecede karmaşık figürler ortaya çıkarabilir. Ama origami bugün yalnızca bir el sanatı değil; mühendislerin ve bilim insanlarının da ilgisini çeken bir alan.\n\nBunun en bilinen örneklerinden biri, Japon astrofizikçi Koryo Miura'nın geliştirdiği katlama yöntemidir. Miura katlaması adı verilen bu yöntemde, düz bir yüzey küçük paralelkenarlara bölünerek katlanır. Böyle katlanan bir yüzey, iki karşı köşesinden çekildiğinde tek bir hareketle açılır ve yine tek hareketle kapanır. Bu yöntem, 1990'larda Japonya'nın uzaya gönderdiği bir uyduda güneş panellerinin katlanması için denendi. Yöntemin bir başka avantajı da katlama çizgilerinin yüzeyi fazla yıpratmamasıdır; bu sayede yüzey defalarca açılıp kapanabilir. Aynı katlama bugün bazı harita ve broşürlerde de kullanılıyor.\n\nUzay araçlarında yer çok değerlidir. Fırlatma sırasında araçların olabildiğince küçük olması gerekir; ama uzaya ulaştıklarında güneş panelleri ya da antenler gibi büyük parçaların açılması gerekir. Origami, büyük yüzeyleri küçük bir hacme sığdırıp sonra güvenle açmanın yollarını sunar. Mühendisler artık bilgisayar programları yardımıyla hangi katlama düzeninin en az yer kaplayacağını ve en kolay açılacağını önceden hesaplayabiliyor.\n\nOrigaminin etkisi uzayla da sınırlı değil. Araştırmacılar, damarların içine katlanmış hâlde yerleştirilip orada açılan küçük tıbbi araçlar, otomobillerde hava yastıklarının en verimli biçimde katlanması ve taşınabilir barınaklar gibi pek çok alanda origamiden esinleniyor. Bir zamanlar çocukların oyunu sanılan kâğıt katlama, bugün mühendisliğin önemli araçlarından biri hâline geldi. Bu örnek, sanat ile bilim arasındaki sınırın sanıldığı kadar kesin olmadığını da gösteriyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Origaminin temel kuralı nedir?",
+    "correct": "Kâğıdı yalnız katlayarak biçim vermek",
+    "wrong": [
+     "Kâğıdı keserek ve yapıştırarak birleştirmek",
+     "Kuş ve kurbağa gibi figürleri boyamak",
+     "Kâğıtları üst üste koyup sıkıştırmak"
+    ],
+    "explanation": "Origami tek bir kâğıdı kesmeden ve yapıştırmadan katlayarak biçim oluşturur."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ustaların karmaşık figürler yapabilmesi neye dayanır?",
+    "correct": "Az sayıda temel hareketin çeşitli birleşimine",
+    "wrong": [
+     "Çok sayıda farklı kâğıt türü kullanmalarına",
+     "Figürleri önce bilgisayarda tasarlamalarına",
+     "Kâğıdı keserek üzerine yeni parçalar eklemelerine"
+    ],
+    "explanation": "Ustalar birkaç temel katlamayı farklı biçimlerde birleştirir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Miura katlaması nasıl açılır?",
+    "correct": "Karşılıklı uçlardan tek seferde",
+    "wrong": [
+     "Her katı tek tek elle açarak sırayla",
+     "Yüzeyi ortasından ikiye bölerek",
+     "Kâğıdı suya batırıp yumuşatarak"
+    ],
+    "explanation": "Böyle katlanan yüzey iki karşı köşesinden çekildiğinde tek hareketle açılır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Katlama çizgilerinin yüzeyi az yıpratması neden önemlidir?",
+    "correct": "Defalarca kullanıma elverişli olması için",
+    "wrong": [
+     "Uydunun daha hızlı fırlatılabilmesi için",
+     "Haritaların daha ucuza basılabilmesi için",
+     "Güneş panellerinin daha kolay katlanması için"
+    ],
+    "explanation": "Bu sayede yüzey defalarca açılıp kapanabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzay araçlarında origamiden yararlanılmasının nedeni nedir?",
+    "correct": "Fırlatmada küçük, uzayda geniş olma gereği",
+    "wrong": [
+     "Uzayda kâğıdın çok dayanıklı olması",
+     "Panellerin uzayda kendiliğinden katlanması",
+     "Fırlatma sırasında aracın ağırlaşması"
+    ],
+    "explanation": "Araçlar fırlatılırken küçük olmalı, uzayda ise büyük parçalar açılmalıdır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mühendisler en uygun katlama düzenini nasıl belirliyor?",
+    "correct": "Bilgisayar desteğiyle tasarlayarak",
+    "wrong": [
+     "Kâğıtla yüzlerce deneme yaparak",
+     "Eski origami kitaplarını inceleyerek",
+     "Uzaydaki uydularda deneyerek"
+    ],
+    "explanation": "Bilgisayar programları yardımıyla en az yer kaplayan düzen önceden hesaplanıyor."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde origamiden esinlenen alanlardan biri hangisidir?",
+    "correct": "Araçlardaki hava yastıkları",
+    "wrong": [
+     "Futbol toplarının üretimi",
+     "Ekmek fırınlarının yapımı",
+     "Telefon hatlarının döşenmesi"
+    ],
+    "explanation": "Hava yastıklarının verimli katlanmasında origamiden esinleniliyor."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesiyle varılan sonuç hangisidir?",
+    "correct": "Sanat ile bilimin iç içe geçebildiği",
+    "wrong": [
+     "Origaminin yalnızca çocuklara uygun olduğu",
+     "Mühendisliğin sanattan uzak durduğu",
+     "Kâğıt katlamanın artık unutulmaya yüz tuttuğu"
+    ],
+    "explanation": "Yazar sanat ile bilim arasındaki sınırın sanıldığı kadar kesin olmadığını söyler."
+   }
+  ]
+ },
+ "101": {
+  "title": "Tozlu Kutu",
+  "category": "Hikaye/Kurgu",
+  "content": "Annesini kaybettikten sonra Gülay Hanım, eski evi boşaltırken dolabın en üst rafında tozlu bir karton kutu buldu. Kutunun içinde yüzlerce siyah beyaz fotoğraf vardı. Bazıları sararmış, bazılarının köşeleri kırılmıştı. Fotoğrafların çoğundaki yüzleri tanımıyordu. Annesi geçmişinden pek söz etmeyen, sessiz bir kadındı; Gülay Hanım onun gençliğine dair çok az şey biliyordu.\n\nGülay Hanım bu fotoğrafları atmaya kıyamadı. Kızının yardımıyla onları tarayıp bilgisayara aktarmaya karar verdi. Her akşam birkaç saat fotoğrafları temizliyor, tarıyor ve dosyalara ayırıyordu. Bu iş ona, annesinin yasını tutarken bir tür teselli de veriyordu. Bazı fotoğrafların arkasında annesinin el yazısıyla küçük notlar vardı: bir tarih, bir şehir adı ya da “Ablam ve ben, düğün günü” gibi kısa bir açıklama.\n\nBu notlar Gülay Hanım'ı geçmişe doğru bir yolculuğa çıkardı. Annesinin, hiç tanımadığı bir ablası olduğunu öğrendi. Bu teyze, gençken başka bir şehre taşınmış ve aile ile bağları zamanla kopmuştu. Gülay Hanım, fotoğrafın arkasındaki şehir adından yola çıkarak araştırmaya başladı. O şehirdeki nüfus kayıtlarını inceledi, eski komşulara ulaşmaya çalıştı ve fotoğrafı internetteki bir yerel tarih grubunda paylaştı.\n\nHaftalar süren aramanın ardından, teyzesinin torunlarından birine ulaştı. Telefonda konuşurken ikisi de ağladı. Torun, ailesinde de benzer fotoğraflar olduğunu söyledi. Torun, büyükannesinin yıllarca kız kardeşini andığını, ama onu bir daha bulamadığını anlattı. Gülay Hanım ona fotoğrafların kopyalarını gönderdi. Birkaç gün sonra gelen cevapta, aynı düğün gününden bir başka fotoğraf vardı: İki genç kız, kol kola gülümsüyordu.\n\nO yaz iki aile ilk kez bir araya geldi. Masanın üstünde, kutudan çıkan fotoğraflar duruyordu. Yaşlılar fotoğraflardaki yüzleri tek tek tanıyıp anılarını anlatırken, gençler hiç bilmedikleri bir aile geçmişini dinliyordu. Gülay Hanım, tozlu bir kutunun yıllar önce kopan bir bağı yeniden kurabileceğini hiç düşünmemişti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gülay Hanım'ın fotoğraflardaki yüzleri tanımamasının nedeni nedir?",
+    "correct": "Annesinin geçmişini pek paylaşmaması",
+    "wrong": [
+     "Fotoğrafların çok küçük ve bulanık olması",
+     "Gözlüklerini yanına almamış olması",
+     "Fotoğrafların başka bir aileye ait olması"
+    ],
+    "explanation": "Annesi geçmişinden pek söz etmeyen sessiz bir kadındı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gülay Hanım fotoğraflarla ne yaptı?",
+    "correct": "Dijital ortama geçirdi",
+    "wrong": [
+     "Bir albüme yapıştırdı",
+     "Bir fotoğrafçıya onarttı",
+     "Akrabalarına dağıttı"
+    ],
+    "explanation": "Kızının yardımıyla fotoğrafları tarayıp bilgisayara aktardı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Fotoğraflarla uğraşmak Gülay Hanım'a nasıl bir etki yaptı?",
+    "correct": "Kederini biraz hafifletti",
+    "wrong": [
+     "Onu daha yalnız bıraktı",
+     "Kızıyla arasını iyice bozdu",
+     "Eski evi satmasına yol açtı"
+    ],
+    "explanation": "Bu iş ona annesinin yasını tutarken bir tür teselli veriyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fotoğrafların arkasındaki notlar Gülay Hanım'a ne öğretti?",
+    "correct": "Hiç duymadığı bir akrabasını",
+    "wrong": [
+     "Annesinin doğduğu şehrin adını",
+     "Babasının gençlik yıllarını",
+     "Evin kimden satın alındığını"
+    ],
+    "explanation": "Annesinin hiç tanımadığı bir ablası olduğunu öğrendi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gülay Hanım teyzesini ararken hangi ipucundan yola çıktı?",
+    "correct": "Arkada yazılı yer adından",
+    "wrong": [
+     "Fotoğraftaki evin rengiyle",
+     "Annesinin eski mektuplarıyla",
+     "Teyzesinin numarasıyla"
+    ],
+    "explanation": "Fotoğrafın arkasındaki şehir adından yola çıkarak araştırmaya başladı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Telefon konuşmasında iki tarafın ağlaması neyi gösterir?",
+    "correct": "Kopan bağın ikisi için de önemli olduğunu",
+    "wrong": [
+     "Konuşmanın kötü bir haberle bittiğini",
+     "Torunun Gülay Hanım'ı tanımadığını",
+     "Hatların kötü olduğu için anlaşamadıklarını"
+    ],
+    "explanation": "Torunun büyükannesi de yıllarca kız kardeşini anmıştı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Torunun gönderdiği cevapta ne vardı?",
+    "correct": "Aynı güne ait başka bir kare",
+    "wrong": [
+     "Teyzesinin yazdığı bir mektup",
+     "Ailenin yeni adresi ve telefonu",
+     "Eski bir düğün davetiyesi"
+    ],
+    "explanation": "Gelen cevapta aynı düğün gününden bir başka fotoğraf vardı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana düşüncesi hangisidir?",
+    "correct": "Geçmişin izleri kopmuş bağları onarabilir",
+    "wrong": [
+     "Eski eşyalar vakit geçirmeden atılmalıdır",
+     "Fotoğraflar yalnızca anı olarak saklanır",
+     "Aile bağları zamanla giderek zayıflar"
+    ],
+    "explanation": "Tozlu bir kutu yıllar önce kopan bir bağı yeniden kurdu."
+   }
+  ]
+ },
+ "108": {
+  "title": "Dişlerimizin Hikâyesi",
+  "category": "Bilgi/Açıklama",
+  "content": "Bebeklikte ağzımızda hiç diş yoktur. İlk dişler genellikle altıncı ay civarında çıkmaya başlar. Üç yaşına gelindiğinde çoğu çocuğun yirmi süt dişi olur. Süt dişleri küçüktür ve kalıcı dişlere göre daha incedir. Yine de onlar da önemlidir; çiğnememize, konuşmamıza ve kalıcı dişlerin doğru yerde çıkmasına yardım ederler.\n\nAltı yaş civarında süt dişleri birer birer sallanmaya ve düşmeye başlar. Bunun nedeni, altlarından kalıcı dişlerin gelmesidir. Kalıcı diş büyüdükçe süt dişinin kökünü yavaş yavaş eritir. Kökü kalmayan süt dişi sallanır ve sonunda düşer. Onun yerini daha büyük ve güçlü olan kalıcı diş alır. Yetişkinlerin ağzında genellikle otuz iki kalıcı diş bulunur.\n\nKalıcı dişlerimiz bir ömür boyu bize eşlik eder. Düşerse ya da çürürse yerine yenisi çıkmaz. Bu yüzden onlara iyi bakmak çok önemlidir. Bir kalıcı dişi kaybeden kişinin, onun yerine diş hekiminin yaptığı yapay bir diş kullanması gerekebilir.\n\nDiş çürüğü nasıl oluşur? Ağzımızda çok sayıda bakteri yaşar. Şekerli yiyecekler yediğimizde bu bakteriler şekerle beslenir ve asit üretir. Bu asit, dişin en dıştaki sert tabakası olan minenin yavaş yavaş aşınmasına yol açar. Zamanla dişte küçük delikler oluşur. Buna diş çürüğü denir. Çürük ilerlerse diş ağrımaya başlar ve sıcak ya da soğuk yiyeceklere karşı hassaslaşır.\n\nDişlerimizi korumak için günde en az iki kez, özellikle sabah kahvaltıdan sonra ve gece yatmadan önce dişlerimizi fırçalamalıyız. Şekerli yiyecekleri ve içecekleri azaltmak da çok önemlidir. Yılda en az bir kez diş hekimine gitmek, küçük sorunların büyümeden fark edilmesini sağlar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Üç yaşındaki çocukların çoğunda kaç süt dişi bulunur?",
+    "correct": "20",
+    "wrong": [
+     "12",
+     "28",
+     "32"
+    ],
+    "explanation": "Üç yaşına gelindiğinde çoğu çocuğun yirmi süt dişi olur."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Süt dişlerinin önemiyle ilgili hangisi doğrudur?",
+    "correct": "Sonrakilere yer tutarlar",
+    "wrong": [
+     "Hiçbir işe yaramazlar",
+     "Kalıcılardan güçlüdürler",
+     "Ömür boyu ağızda kalırlar"
+    ],
+    "explanation": "Süt dişleri kalıcı dişlerin doğru yerde çıkmasına yardım eder."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Süt dişinin sallanmasının nedeni nedir?",
+    "correct": "Alttan gelen dişin kökü eritmesi",
+    "wrong": [
+     "Çocuğun çok fazla şeker yemesi",
+     "Diş hekiminin dişi elle gevşetmesi",
+     "Dişin zamanla çürüyüp aşınması"
+    ],
+    "explanation": "Kalıcı diş büyüdükçe süt dişinin kökünü eritir; kökü kalmayan diş sallanır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yetişkinlerin ağzında genellikle kaç diş bulunur?",
+    "correct": "32",
+    "wrong": [
+     "20",
+     "24",
+     "40"
+    ],
+    "explanation": "Yetişkinlerin ağzında genellikle otuz iki kalıcı diş bulunur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kalıcı dişlere iyi bakmak neden gereklidir?",
+    "correct": "Yerlerine başkası gelmediği için",
+    "wrong": [
+     "Süt dişlerinden küçük oldukları için",
+     "Her yıl yeniden çıktıkları için",
+     "Kolayca sallanıp düştükleri için"
+    ],
+    "explanation": "Kalıcı dişler düşer ya da çürürse yerine yenisi çıkmaz."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mineyi aşındıran asidi ne üretir?",
+    "correct": "Ağızdaki mikroplar",
+    "wrong": [
+     "Diş macunundaki tuz",
+     "Diş fırçasının kılları",
+     "Ağızdaki tükürük"
+    ],
+    "explanation": "Bakteriler şekerle beslenir ve mineyi aşındıran asit üretir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şekerli yiyeceklerin dişe zararı nasıl ortaya çıkar?",
+    "correct": "Mikropları besleyip aside yol açarak",
+    "wrong": [
+     "Dişleri doğrudan kırıp parçalayarak",
+     "Diş etlerini şişirip sürekli kanatarak",
+     "Dişin rengini kalıcı biçimde değiştirerek"
+    ],
+    "explanation": "Bakteriler şekerle beslenir, asit üretir ve bu asit mineyi aşındırır."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraftaki öneriler ortak olarak neyi amaçlar?",
+    "correct": "Sorunları önceden engellemeyi",
+    "wrong": [
+     "Çürük dişleri hemen çektirmeyi",
+     "Yalnızca süt dişlerini korumayı",
+     "Diş ağrısını hemen geçirmeyi"
+    ],
+    "explanation": "Fırçalama, şekeri azaltma ve düzenli kontrol, sorunların oluşmasını önler."
+   }
+  ]
+ },
+ "110": {
+  "title": "Kahverengi Cüzdan",
+  "category": "Hikaye/Kurgu",
+  "content": "Okul çıkışı Efe ile Deniz, parkın yanındaki bankın altında kahverengi bir cüzdan buldu. Deniz cüzdanı açtığında içinde bir miktar para, birkaç kart ve bir kimlik kartı gördü. Kimlik kartındaki fotoğrafta yaşlı bir adam vardı. Çocuklar etrafa baktı ama parkta cüzdanı arıyormuş gibi görünen kimse yoktu.\n\nEfe önce paraya baktı. “Bu kadar parayla istediğimiz o oyunu alabiliriz” dedi. Deniz ise kararsızdı. Cüzdanın sahibi şu anda onu arıyor olmalıydı. Belki de içindeki para, onun ay sonuna kadar idare etmesi gereken parasıydı. Üstelik kimse görmese bile, başkasının parasını almak Deniz'e doğru gelmiyordu.\n\nİki arkadaş bir süre bankın yanında durup konuştu. Deniz, “Biz kaybetseydik ne hissederdik?” diye sordu. Efe bir an düşündü. Geçen yıl okulda montunu kaybettiğinde ne kadar üzüldüğünü ve birinin onu bulup getirdiğinde ne kadar sevindiğini hatırladı. Sonunda cüzdanı sahibine ulaştırmaya karar verdiler. Önce parkın bekçisine sormayı düşündüler, ama bekçi o gün izinliydi. Bunun üzerine kimlik kartındaki adrese kendileri gitmeye karar verdiler.\n\nKimlik kartındaki adres, parkın birkaç sokak ötesindeydi. Kapıyı yaşlı bir adam açtı. Çocuklar cüzdanı uzatınca adamın yüzü aydınlandı. Sabahtan beri cüzdanını aradığını, içinde emekli maaşının bir kısmı olduğunu anlattı. Çocuklara teşekkür edip onlara ödül olarak para vermek istedi. Ama Efe ile Deniz bunu kabul etmedi. Deniz, “Biz yalnızca yapılması gerekeni yaptık” dedi. Yaşlı adam bu cevaba çok duygulandı.\n\nErtesi hafta okul müdürü, sabah töreninde iki öğrencinin dürüstlüğünü anlattı. Yaşlı adam okula bir teşekkür mektubu göndermişti. Mektupta yaşlı adam, çocukların dürüstlüğünün ona insanlara olan güvenini yeniden hatırlattığını yazmıştı. Efe, o oyunu almaktan çok daha güzel bir şey hissettiğini düşündü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar cüzdanı nerede buldu?",
+    "correct": "Bir oturağın altında",
+    "wrong": [
+     "Okulun bahçe kapısında",
+     "Otobüs durağının yanında",
+     "Bir dükkânın önünde"
+    ],
+    "explanation": "Cüzdanı parkın yanındaki bankın altında buldular."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz'in kararsız kalmasının nedeni nedir?",
+    "correct": "Paranın sahibine gerekli olabileceğini düşünmesi",
+    "wrong": [
+     "Paranın oyunu almaya yetmeyeceğini hesaplaması",
+     "Efe'nin parayı tek başına almak istediğini sezmesi",
+     "Cüzdanın içinde hiç para bulunmadığını görmesi"
+    ],
+    "explanation": "Deniz, paranın sahibinin ay sonuna kadar idare edeceği para olabileceğini düşündü."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz'in “Biz kaybetseydik ne hissederdik?” sorusu Efe'yi nasıl etkiledi?",
+    "correct": "Onun kaybedenin yerine geçmesini sağladı",
+    "wrong": [
+     "Onu oyunu hemen almaya kesin ikna etti",
+     "Cüzdanı parka bırakmasına yol açtı",
+     "Deniz'e kızıp ondan ayrılmasına neden oldu"
+    ],
+    "explanation": "Efe montunu kaybettiği günü hatırladı ve sahibin üzüntüsünü anladı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar neden parkın bekçisine başvuramadı?",
+    "correct": "O gün işte bulunmadığı için",
+    "wrong": [
+     "Çok uzakta oturduğu için",
+     "Çocukları dinlemediği için",
+     "Parkı erkenden kapattığı için"
+    ],
+    "explanation": "Bekçi o gün izinliydi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Cüzdanda bulunan paranın sahibi için önemi neydi?",
+    "correct": "Aylık gelirinin bir parçası olması",
+    "wrong": [
+     "Bir hediye için biriktirilmiş olması",
+     "Torununa ait bir harçlık olması",
+     "Bankadan o sabah çekilmiş olması"
+    ],
+    "explanation": "İçinde emekli maaşının bir kısmı vardı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çocukların ödülü geri çevirmesi neyi gösterir?",
+    "correct": "İyiliği karşılıksız yaptıklarını",
+    "wrong": [
+     "Yaşlı adamdan korktuklarını",
+     "Paranın az olduğunu düşündüklerini",
+     "Ailelerinden izin almadıklarını"
+    ],
+    "explanation": "Deniz yalnızca yapılması gerekeni yaptıklarını söyledi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Okul müdürü olayı nereden öğrendi?",
+    "correct": "Gelen bir teşekkür mektubundan",
+    "wrong": [
+     "Çocukların anlattıklarından",
+     "Parkın bekçisinin anlattığından",
+     "Yerel bir gazete haberinden"
+    ],
+    "explanation": "Yaşlı adam okula bir teşekkür mektubu göndermişti."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Efe'nin hissettikleri neyi anlatır?",
+    "correct": "Doğru davranmanın hazzının daha değerli olduğunu",
+    "wrong": [
+     "Oyunu alamadığı için hâlâ çok üzgün olduğunu",
+     "Ödülü kabul etmediğine hemen pişman olduğunu",
+     "Müdürün kendisini herkesin önünde övmesinden utandığını"
+    ],
+    "explanation": "Efe o oyunu almaktan çok daha güzel bir şey hissetti."
+   }
+  ]
+ }
+}

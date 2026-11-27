@@ -1,0 +1,668 @@
+{
+ "222": {
+  "title": "Küçülen Paket",
+  "category": "Bilgi/Açıklama",
+  "content": "Okul kantininde sevilen bir çikolatanın fiyatı arttığında öğrenciler hemen fark eder ve şikâyet eder. Oysa fiyatı aynı kalıp boyutu küçülen bir çikolata çoğu zaman gözden kaçar. Ekonomistler bu duruma “shrinkflation”, Türkçede ise “küçülen paket enflasyonu” adını veriyor. Kısaca anlatmak gerekirse, ürünün fiyatı değişmez, ama paketin içindeki miktar azalır. Kavram yeni değildir, ancak fiyatların hızla arttığı dönemlerde çok daha sık görülür. Son yıllarda pek çok ülkede tüketiciler, cips paketlerinden diş macunlarına, deterjanlardan tuvalet kâğıtlarına kadar birçok üründe bu küçülmeyi fark ettiklerini söylüyor.\n\nŞirketlerin bu yola başvurmasının en önemli nedeni, maliyetlerin artmasıdır. Kakao, şeker, ambalaj ya da taşıma masrafları yükseldiğinde şirketin ya fiyatı artırması ya da kârından vazgeçmesi gerekir. Fiyat artışları tüketicinin tepkisini çektiği için bazı şirketler daha az dikkat çeken bir yolu seçer: Ürünü biraz küçültürler. Yüz gramlık bir paket doksan grama, bir litrelik bir şişe dokuz yüz mililitreye iner. Paketin dış görünüşü çoğu zaman neredeyse aynı kalır; bazen paketin içinde daha fazla boşluk bırakılır ya da şişenin dibi biraz daha içe doğru şekillendirilir.\n\nTüketicilerin bu değişikliği fark etmekte zorlanmasının bir nedeni, alışveriş sırasında çoğunlukla fiyata bakmalarıdır. Gramaj ise paketin arkasında küçük harflerle yazar ve pek okunmaz. Üstelik insanlar alıştıkları bir ürünü genellikle düşünmeden sepete atar. Küçülme tek seferde değil, yıllar içinde birkaç küçük adımda yapıldığında ise neredeyse hiç fark edilmez. On gramlık bir azalma tek başına önemsiz görünür, ama üç dört kez tekrarlandığında paket gözle görülür biçimde küçülmüş olur.\n\nBazı ülkeler bu konuda tüketiciyi korumak için önlem almaya başladı. Fransa'da bazı marketler, boyutu küçülüp fiyatı aynı kalan ürünlerin yanına uyarı etiketleri koymaya başladı. Pek çok ülkede raflarda ürünün birim fiyatının, yani kilogram ya da litre başına fiyatının gösterilmesi zorunludur. Birim fiyata bakmak, iki farklı boyuttaki ürünü karşılaştırmanın en güvenilir yoludur. Bazen büyük paket, küçüğünden daha pahalıya gelebilir. Bilinçli bir tüketici olmak için etikette yalnızca fiyata değil, ürünün miktarına ve birim fiyatına da bakmak gerekir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Küçülen paket enflasyonunda ne değişir?",
+    "correct": "İçerideki ürün miktarı",
+    "wrong": [
+     "Ürünün satış fiyatı",
+     "Paketin rengi ve şekli",
+     "Ürünün üretildiği yer"
+    ],
+    "explanation": "Fiyat değişmez, paketin içindeki miktar azalır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bu uygulamanın hangi dönemlerde daha sık görülmesi beklenir?",
+    "correct": "Pahalılığın çabuk tırmandığı yıllarda",
+    "wrong": [
+     "Ürünlerin hızla ucuzladığı dönemlerde",
+     "Yeni markaların piyasaya girdiği yıllarda",
+     "Bayram ve yılbaşı gibi özel günlerde"
+    ],
+    "explanation": "Kavram, fiyatların hızla arttığı dönemlerde çok daha sık görülür."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre şirketleri bu yola iten temel neden nedir?",
+    "correct": "Giderlerin artması",
+    "wrong": [
+     "Rekabetin azalması",
+     "Satışların patlaması",
+     "Reklamların ucuzlaması"
+    ],
+    "explanation": "En önemli neden maliyetlerin artmasıdır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şirketler neden fiyat artırmak yerine ürünü küçültmeyi tercih eder?",
+    "correct": "Alışveriş yapanları kızdırmamak için",
+    "wrong": [
+     "Fabrikalarda yer açmak istedikleri için",
+     "Daha az çalışan istihdam etmek için",
+     "Yeni taşıma kurallarına uymak için"
+    ],
+    "explanation": "Fiyat artışları tepki çektiği için daha az dikkat çeken yolu seçerler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Paket içinde boşluk bırakılması hangi amaca hizmet eder?",
+    "correct": "Küçülmeyi dışarıdan gizlemeye",
+    "wrong": [
+     "Ürünün çok daha iyi korunmasına",
+     "Taşıma masrafının azalmasına",
+     "Ambalajın geri dönüşümüne"
+    ],
+    "explanation": "Paketin dış görünüşü aynı kalır; değişiklik fark edilmez."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Küçülmenin adım adım yapılması neden etkilidir?",
+    "correct": "Her adım tek başına önemsiz göründüğü için",
+    "wrong": [
+     "Tüketiciler büyük paketleri sevmediği için",
+     "Yasalar ani değişikliği yasakladığı için",
+     "Marketler küçük ürünleri öne koyduğu için"
+    ],
+    "explanation": "On gramlık azalma önemsiz görünür ama tekrarlanınca paket küçülür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fransa'da bazı marketler ne yapmaya başladı?",
+    "correct": "Bu ürünleri tabelayla belirtmeye",
+    "wrong": [
+     "Bu ürünlerin satışını durdurmaya",
+     "Bu ürünlerde indirim yapmaya",
+     "Bu ürünleri raftan kaldırmaya"
+    ],
+    "explanation": "Boyutu küçülüp fiyatı aynı kalan ürünlerin yanına uyarı etiketi kondu."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın tüketicilere asıl önerisi nedir?",
+    "correct": "Paketin ne kadarlık olduğuna da bakmak",
+    "wrong": [
+     "Yalnızca büyük paketleri satın almak",
+     "Alışverişleri yalnızca internetten yapmak",
+     "Tek bir markadan alışveriş yapmak"
+    ],
+    "explanation": "Etikette fiyatın yanında miktar ve birim fiyata bakılmalıdır."
+   }
+  ]
+ },
+ "225": {
+  "title": "Sandalyenin Gölgesi",
+  "category": "Bilgi/Açıklama",
+  "content": "Evde, okulda, ofiste ya da arabada, günün büyük bölümünü oturarak geçiriyoruz. Araştırmalar, modern bir yetişkinin uyanık geçirdiği zamanın yarısından fazlasını oturarak harcadığını gösteriyor. Uzun süre oturmanın sağlık üzerindeki etkileri, son yıllarda bilim insanlarının en çok ilgilendiği konulardan biri hâline geldi. Hatta bazı uzmanlar, hareketsiz yaşam için “yeni sigara” benzetmesini bile kullanıyor. Bu benzetme abartılı bulunsa da, konunun ne kadar ciddiye alındığını gösteriyor.\n\nİnsan bedeni, tarih boyunca hareket etmek için şekillenmiştir. Atalarımız yiyecek bulmak için kilometrelerce yürür, tarlada saatlerce çalışırdı. Oturmak, ancak yorgunluk anlarında başvurulan bir dinlenme biçimiydi. Oysa bugün pek çok meslek, sekiz saat boyunca bir ekranın karşısında oturmayı gerektiriyor. Okula ya da işe arabayla gidiyor, akşamları da televizyon ya da telefon karşısında yine oturarak dinleniyoruz. Bedenimiz için alışılmadık olan bu yaşam biçimi, ancak son birkaç kuşakta bu kadar yaygınlaştı.\n\nUzun süre oturduğumuzda bacak kaslarımız neredeyse hiç çalışmaz. Bu kaslar, normalde kandaki şekerin ve yağın kullanılmasında önemli rol oynar. Hareketsiz kaldıklarında vücudun şekeri ve yağı işleme hızı yavaşlar. Zamanla bu durum kilo alma, tip 2 diyabet ve kalp hastalıkları riskini artırabilir. Ayrıca uzun süre aynı pozisyonda oturmak, bel ve boyun ağrılarının da yaygın nedenlerinden biridir. Uzun oturma, kan dolaşımını yavaşlattığı için uzun uçak yolculuklarında olduğu gibi bacaklarda şişme ve uyuşmaya da yol açabilir.\n\nŞaşırtıcı olan, düzenli spor yapmanın bu etkileri tamamen ortadan kaldırmamasıdır. Bazı araştırmalar, haftada birkaç gün spor salonuna giden ama günün geri kalanını masa başında geçiren kişilerin de risk altında olduğunu gösteriyor. Bilim insanları bu kişilere “aktif hareketsizler” adını veriyor. Bir saatlik antrenman, geri kalan on saatlik kesintisiz oturmanın etkisini tam olarak dengeleyemiyor. Yani sorun yalnızca ne kadar spor yaptığımız değil, gün içinde ne kadar uzun süre hareketsiz kaldığımızdır.\n\nİyi haber şu ki, çözüm karmaşık değil ve pahalı ekipman da gerektirmiyor. Uzmanlar oturma süresini kısa aralarla bölmeyi öneriyor. Her yarım saatte bir ayağa kalkıp birkaç dakika dolaşmak, telefonla ayakta konuşmak, asansör yerine merdiveni kullanmak ya da toplantıların bir kısmını yürüyerek yapmak gibi küçük değişiklikler bile fark yaratabilir. Kimi iş yerleri, çalışanların istediğinde ayakta çalışabileceği yüksekliği ayarlanabilir masalar kullanmaya başladı. Ancak uzmanlar, gün boyu ayakta durmanın da kendi sorunlarını getirebileceğini, asıl önemli olanın oturmak ile hareket arasında denge kurmak olduğunu hatırlatıyor. Kısacası en iyi duruş, bir sonraki duruştur; beden, sürekli aynı hâlde kalmaktan değil, sık sık değişiklikten hoşlanır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre yetişkinler uyanık geçirdikleri zamanın ne kadarını oturarak harcar?",
+    "correct": "Büyük çoğunluğunu",
+    "wrong": [
+     "Yarısından azını",
+     "Dörtte birinden azını",
+     "Yalnızca onda birini"
+    ],
+    "explanation": "Uyanık zamanın yarısından fazlası oturarak geçer."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Yeni sigara” benzetmesi neyi anlatmak için kullanılır?",
+    "correct": "Tehlikenin boyutunu",
+    "wrong": [
+     "Sigaranın yararlarını",
+     "Sandalyenin tarihini",
+     "Ofis kurallarını"
+    ],
+    "explanation": "Benzetme, konunun ne kadar ciddiye alındığını gösterir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "İkinci paragraf hareketsizliği hangi açıdan ele alır?",
+    "correct": "İnsan bedeninin evrimsel geçmişi",
+    "wrong": [
+     "Spor salonlarının yaygınlaşması",
+     "Ofis mobilyalarının tasarımı",
+     "Televizyon programlarının etkisi"
+    ],
+    "explanation": "Bedenin tarih boyunca hareket için şekillendiğini anlatır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hareketsiz kaldıklarında bacak kaslarının hangi işi yavaşlar?",
+    "correct": "Besinleri enerjiye çevirmek",
+    "wrong": [
+     "Kırık kemikleri yeniden onarmak",
+     "Vücut ısısını dengelemek",
+     "Kalbin atışını düzenlemek"
+    ],
+    "explanation": "Kaslar hareketsiz kalınca şeker ve yağın kullanımı yavaşlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzun yolculuklarda bacakların şişmesinin nedeni nedir?",
+    "correct": "Kanın ağırlaşan akışı",
+    "wrong": [
+     "Ayakkabıların dar olması",
+     "Havanın çok sıcak olması",
+     "Çok fazla su içilmesi"
+    ],
+    "explanation": "Uzun oturma kan dolaşımını yavaşlatır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "“Aktif hareketsizler” ifadesi hangi çelişkiyi anlatır?",
+    "correct": "Spor yapıp gün boyu kıpırdamamayı",
+    "wrong": [
+     "Hiç spor yapmadan zayıf kalmayı",
+     "Çok yürüyüp yine de hiç yorulmamayı",
+     "Ayakta çalışıp hiç dinlenmemeyi"
+    ],
+    "explanation": "Spor yapsalar da günün geri kalanında hareketsiz kalırlar."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlar oturma süresini nasıl bölmeyi öneriyor?",
+    "correct": "Sık sık kısa molalarla",
+    "wrong": [
+     "Haftada bir uzun yürüyüşle",
+     "Yalnızca hafta sonu sporla",
+     "Günde bir esneme ile"
+    ],
+    "explanation": "Her yarım saatte kalkıp birkaç dakika dolaşmak önerilir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "“En iyi duruş, bir sonraki duruştur” sözü ne anlatır?",
+    "correct": "Beden için değişkenliğin önemini",
+    "wrong": [
+     "Ayakta durmanın en sağlıklı olduğunu",
+     "Doğru oturma biçiminin tek olduğunu",
+     "Uyurken pozisyon değiştirmeyi"
+    ],
+    "explanation": "Beden sürekli aynı hâlde kalmaktan değil sık değişiklikten hoşlanır."
+   }
+  ]
+ },
+ "228": {
+  "title": "Marul Yaprağının Altında",
+  "category": "Hikaye/Kurgu",
+  "content": "Ela'nın dedesinin bahçesinde Tosbik adında yaşlı bir kaplumbağa yaşardı. Tosbik'in sert kabuğu kahverengi ve yeşil desenliydi. Çok yavaş yürür, ama her şeyi dikkatle koklardı. En çok da çilek ve marul yemeyi severdi. Ela her yaz dedesini ziyarete geldiğinde ilk iş bahçeye çıkıp Tosbik'i arardı.\n\nBu yaz Ela bahçeye koştu ama Tosbik'i hiçbir yerde göremedi. Çiçeklerin arasına, ağacın dibine, havuzun kenarına baktı. Tosbik yoktu. Hatta kapının arkasına ve odun yığınının yanına bile baktı. Ela çok üzüldü. Gözleri doldu ve hemen dedesine koştu. Tosbik'in kaybolduğunu söyledi.\n\nDedesi ona sakin olmasını söyledi, gülümsedi ve Ela'nın elinden tuttu. Birlikte yavaşça bahçenin en gölgeli köşesine gittiler. Orada, büyük bir marul yaprağının altında Tosbik uyuyordu! Dedesi, kaplumbağaların sıcak günlerde serin yerlerde dinlenmeyi sevdiğini anlattı.\n\nEla, Tosbik'i uyandırmadan yanına küçük bir kap su ve birkaç çilek bıraktı. Akşamüstü Tosbik uyandı ve yavaş yavaş çileklere yürüdü. Ela onu izlerken çok mutluydu. Tosbik çilekleri yerken küçük ağzını kocaman açıyordu. Dedesi de Ela'ya bir sır verdi: Tosbik, dedesinden bile yaşlıydı! Ela buna çok şaşırdı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tosbik ne tür bir hayvandı?",
+    "correct": "Kaplumbağa",
+    "wrong": [
+     "Tavşancık",
+     "Kirpi yavrusu",
+     "Kertenkele"
+    ],
+    "explanation": "Tosbik yaşlı bir kaplumbağaydı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tosbik en çok neleri yemeyi severdi?",
+    "correct": "Çilek ve marul",
+    "wrong": [
+     "Elma ve armut",
+     "Havuç ve lahana",
+     "Üzüm ve kiraz"
+    ],
+    "explanation": "En çok çilek ve marul yemeyi severdi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ela Tosbik'i bulamayınca nasıl hissetti?",
+    "correct": "Hüzünlendi",
+    "wrong": [
+     "Sevindi",
+     "Gülümsedi",
+     "Kahkaha attı"
+    ],
+    "explanation": "Çok üzüldü, gözleri doldu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ela Tosbik'i hangi yerlerde aradı?",
+    "correct": "Bitkilerin ve havuzun yanında",
+    "wrong": [
+     "Evin çatısında ve bacasında",
+     "Mutfakta ve dolapların içinde",
+     "Komşunun garajında ve damında"
+    ],
+    "explanation": "Çiçeklerin arasına, ağacın dibine, havuzun kenarına baktı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tosbik nerede uyuyordu?",
+    "correct": "Bir yaprağın altında",
+    "wrong": [
+     "Havuzun en dibinde",
+     "Ağacın en tepesinde",
+     "Evin karanlık bodrumunda"
+    ],
+    "explanation": "Büyük bir marul yaprağının altında uyuyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Tosbik neden gölgeli köşedeydi?",
+    "correct": "Sıcaktan korunmak için",
+    "wrong": [
+     "Ela'dan saklanmak için",
+     "Kuşlardan gizlenmek için",
+     "Yumurtalarını bırakmak için"
+    ],
+    "explanation": "Kaplumbağalar sıcak günlerde serin yerlerde dinlenmeyi sever."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ela'nın Tosbik'i uyandırmaması neyi gösterir?",
+    "correct": "Ona özen gösterdiğini",
+    "wrong": [
+     "Ondan çok korktuğunu",
+     "Çok acele ettiğini",
+     "Ona çok kızgın olduğunu"
+    ],
+    "explanation": "Uyandırmadan yanına yiyecek bırakarak onu düşündüğünü gösterir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Ela öykünün sonunda neden şaşırdı?",
+    "correct": "Tosbik'in yaşı dedesini geçiyordu",
+    "wrong": [
+     "Tosbik bir anda çok hızlı koşmuştu",
+     "Tosbik çilekleri hiç yememişti",
+     "Tosbik konuşmaya başlamıştı"
+    ],
+    "explanation": "Dedesi Tosbik'in kendisinden bile yaşlı olduğunu söyledi."
+   }
+  ]
+ },
+ "229": {
+  "title": "Göz Kırpan Işıklar",
+  "category": "Bilgi/Açıklama",
+  "content": "Açık bir gecede gökyüzüne baktığınızda yıldızların parıldadığını, sanki göz kırptığını görürsünüz. Bu yüzden şarkılarda ve masallarda yıldızlar hep göz kırpar. Peki yıldızlar gerçekten yanıp söner mi? Aslında hayır. Yıldızlar sabit bir ışık yayar. Onları titriyormuş gibi gösteren şey, Dünya'nın etrafını saran hava tabakasıdır.\n\nBir yıldızın ışığı bize ulaşmak için çok uzun bir yol gelir. Bazı yıldızların ışığı bize yüzlerce, hatta binlerce yılda ulaşır. Yani bu gece gördüğümüz ışık, o yıldızdan çok uzun zaman önce yola çıkmıştır. Yolculuğunun son kısmında havanın içinden geçer. Hava hiç durmadan hareket eder. Bazı yerlerde sıcak, bazı yerlerde soğuktur. Işık bu farklı hava katmanlarından geçerken yolu sürekli biraz eğilir. Bu yüzden yıldızın ışığı gözümüze bir an daha parlak, bir an daha sönük ulaşır. Biz de yıldızın göz kırptığını sanırız. Yıldız ufka ne kadar yakınsa, ışığı o kadar çok havadan geçer ve o kadar çok titrer.\n\nGökyüzünde parlayan her nokta yıldız değildir. Gezegenler ise yıldızlar gibi parıldamaz. Venüs ya da Jüpiter gökyüzünde daha sabit bir ışıkla görünür. Bunun nedeni, gezegenlerin bize yıldızlardan çok daha yakın olmasıdır. Yakın oldukları için ışıkları küçük bir nokta gibi değil, minik bir disk gibi gelir ve hava onları daha az etkiler.\n\nGökbilimciler yıldızların bu titremesinden pek hoşlanmaz, çünkü titreme yıldızları net görmeyi zorlaştırır. Bu yüzden büyük teleskopları yüksek dağların tepelerine kurarlar. Orada hava daha ince ve daha sakindir. Bazı teleskoplar ise havanın hiç olmadığı uzaya gönderilmiştir. Uzaydaki bir teleskoptan bakıldığında yıldızlar hiç göz kırpmaz.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yıldızları titriyormuş gibi gösteren nedir?",
+    "correct": "Gezegenimizin gaz örtüsü",
+    "wrong": [
+     "Yıldızların sönüp yanması",
+     "Gözlerimizin yorulması",
+     "Ay'ın yansıttığı ışık"
+    ],
+    "explanation": "Yıldızları titrek gösteren, Dünya'yı saran hava tabakasıdır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bu gece gördüğümüz yıldız ışığı hakkında ne söylenebilir?",
+    "correct": "Çok eskiden yola çıktığı",
+    "wrong": [
+     "O anda yıldızdan çıktığı",
+     "Ay'dan yansıyıp geldiği",
+     "Bir gezegenden geldiği"
+    ],
+    "explanation": "Işık bize yüzlerce, binlerce yılda ulaşır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Işığın yolu neden sürekli biraz eğilir?",
+    "correct": "Atmosferdeki sıcaklık değişimleri",
+    "wrong": [
+     "Yıldızların hızla dönmesi yüzünden",
+     "Ay'ın ışığı çekmesi nedeniyle",
+     "Bulutların ışığı emmesi yüzünden"
+    ],
+    "explanation": "Işık sıcak ve soğuk hava katmanlarından geçerken eğilir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ufka yakın yıldızların daha çok titremesinin nedeni nedir?",
+    "correct": "Işığın daha çok havayı aşması",
+    "wrong": [
+     "Bu yıldızların daha sıcak olması",
+     "Bu yıldızların bize yakın olması",
+     "Ufukta hiç bulut olmaması"
+    ],
+    "explanation": "Ufka yakın yıldızın ışığı daha çok havadan geçer."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde yıldızlar gibi parıldamadığı söylenen gökcismi hangisidir?",
+    "correct": "Venüs",
+    "wrong": [
+     "Güneş",
+     "Kutup",
+     "Sirius"
+    ],
+    "explanation": "Venüs ya da Jüpiter daha sabit bir ışıkla görünür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gezegenlerin ışığının daha az etkilenmesinin nedeni nedir?",
+    "correct": "Gökte ufak bir daire gibi görünmeleri",
+    "wrong": [
+     "Kendi ışıklarını kendileri üretmeleri",
+     "Bulutların arkasında kalmaları",
+     "Yıldızlardan çok daha sıcak olmaları"
+    ],
+    "explanation": "Yakın oldukları için ışıkları disk gibi gelir ve hava daha az etkiler."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Büyük teleskoplar neden dağ tepelerine kurulur?",
+    "correct": "Orada atmosfer ince ve durgun olduğu için",
+    "wrong": [
+     "Orada gökyüzü daha geniş göründüğü için",
+     "Dağlar yıldızlara daha yakın olduğu için",
+     "Şehirlerde teleskop kurmak yasak olduğu için"
+    ],
+    "explanation": "Tepelerde hava daha ince ve daha sakindir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son cümle metnin ana fikrini nasıl destekler?",
+    "correct": "Titremenin nedeninin atmosfer olduğunu kanıtlar",
+    "wrong": [
+     "Yıldızların aslında hiç ışık vermediğini gösterir",
+     "Uzaydaki teleskopların bozuk olduğunu anlatır",
+     "Gezegenlerin yıldızlardan büyük olduğunu söyler"
+    ],
+    "explanation": "Hava olmayan uzayda titreme görülmez; neden havadır."
+   }
+  ]
+ },
+ "230": {
+  "title": "Okul Bahçesindeki Kuş Evleri",
+  "category": "Hikaye/Kurgu",
+  "content": "Bahar geldiğinde Arda'nın sınıfı okul bahçesindeki kuşları gözlemlemeye başladı. Fen bilgisi öğretmenleri Selim Bey, her sabah ilk derste beş dakika pencereden bahçeyi izlemelerini ve gördükleri kuşları bir deftere yazmalarını istedi. Çocuklar serçeleri, kumruları, saksağanları ve bir kez de rengârenk bir ağaçkakanı gördüler. Defter günden güne doluyor, çocuklar artık kuşları seslerinden bile tanıyabiliyordu. Arda, kumruların her sabah aynı saatte aynı dala konduğunu fark etmişti.\n\nBir gün Arda, bahçedeki yaşlı çınarın dalında bir serçe çiftinin yuva yapmak için çalıştığını fark etti. Kuşlar ağızlarında çöp ve tüylerle gidip geliyor, ama kurdukları yuva rüzgârda sürekli dağılıyordu. Arda bunu sınıfa anlattı. Selim Bey, şehirlerde yaşlı ağaçların ve kovukların azaldığını, bu yüzden kuşların yuva yapacak güvenli yer bulmakta zorlandığını anlattı. Sonra da kuşlara yardım etmek için sınıfça kuş evleri yapabileceklerini söyledi.\n\nÖnce kuş evlerinin nasıl olması gerektiğini araştırdılar. Öğrendiler ki girişin deliği çok büyük olmamalıydı; yoksa daha büyük kuşlar içeri girip yumurtalara zarar verebilirdi. Evin çatısı yağmur suyunu dışarı akıtacak şekilde eğimli olmalı, tabanında da suyun akması için küçük delikler bulunmalıydı. Ayrıca kuş evi kedilerin ulaşamayacağı bir yüksekliğe asılmalıydı.\n\nArda'nın babası marangozdu. Okula artan tahta parçaları getirdi ve çocuklara testereyi ve çekici güvenli bir şekilde nasıl kullanacaklarını gösterdi. Her grup kendi kuş evini yaptı. Kimisi evini maviye, kimisi yeşile boyadı. Ama Selim Bey, kuşların parlak renklerden ürkebileceğini söyleyince, çocuklar ikinci kat boyayı doğal tahta renginde yaptılar.\n\nKuş evleri bahçedeki ağaçlara, yere yaklaşık iki metre yükseklikte asıldı. İlk hafta hiçbir kuş yaklaşmadı ve çocuklar hayal kırıklığına uğradı. Selim Bey onlara sabırlı olmalarını, kuşların yeni bir şeye alışmasının zaman alacağını söyledi. Gerçekten de ikinci haftanın sonunda Arda'nın grubunun yaptığı evin girişinde bir serçe belirdi. Bütün sınıf pencereye koştu. O günden sonra sabah gözlemleri sınıfın en sevdiği beş dakika oldu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selim Bey öğrencilerden her sabah ne yapmalarını istedi?",
+    "correct": "Kuşları izleyip not almalarını",
+    "wrong": [
+     "Bahçedeki ağaçları sulamalarını",
+     "Kuşlara ekmek kırıntısı bırakmalarını",
+     "Dersten önce resim çizmelerini"
+    ],
+    "explanation": "Beş dakika bahçeyi izleyip gördükleri kuşları yazmalarını istedi."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çocukların kuşları seslerinden tanıyabilmesi neyi gösterir?",
+    "correct": "Gözlemlerin bilgiye dönüştüğünü",
+    "wrong": [
+     "Kuşların çok gürültülü olduğunu",
+     "Defterin artık gereksiz kaldığını",
+     "Bahçeye yeni kuşların geldiğini"
+    ],
+    "explanation": "Düzenli gözlem sayesinde kuşları tanımayı öğrendiler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şehirlerde kuşların yuva bulmakta zorlanmasının nedeni nedir?",
+    "correct": "Kovuklu eski ağaçların azalması",
+    "wrong": [
+     "Kedilerin çok fazla çoğalması",
+     "Havanın her yıl biraz daha ısınması",
+     "İnsanların kuşları kovalaması"
+    ],
+    "explanation": "Yaşlı ağaçlar ve kovuklar azaldığı için zorlanırlar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kuş evinin girişi neden büyük olmamalıdır?",
+    "correct": "İri kuşlar yumurtalara dokunmasın",
+    "wrong": [
+     "Yağmur suyu kolayca içeri girmesin",
+     "Kediler deliği hiç fark etmesin",
+     "Tahta parçaları yetsin ve artmasın"
+    ],
+    "explanation": "Büyük delikten daha büyük kuşlar girip yumurtalara zarar verebilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tabandaki küçük deliklerin işlevi nedir?",
+    "correct": "Yuvanın kuru kalması",
+    "wrong": [
+     "İçeri hava girmesi",
+     "Kuşların içi görmesi",
+     "Yavruların bakması"
+    ],
+    "explanation": "Tabanda suyun akması için delik bulunmalıdır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Çocukların boyayı değiştirmesi onların hangi özelliğini gösterir?",
+    "correct": "Kuşların rahatını öne aldıklarını",
+    "wrong": [
+     "Parlak renklerden hiç hoşlanmadıklarını",
+     "Boyanın yetmediğini fark ettiklerini",
+     "Öğretmenlerinden çekindiklerini"
+    ],
+    "explanation": "Kuşlar ürkmesin diye kendi seçtikleri renklerden vazgeçtiler."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk hafta ne oldu?",
+    "correct": "Evlere hiç kuş uğramadı",
+    "wrong": [
+     "Bütün evler kuşlarla doldu",
+     "Rüzgâr kuş evlerini düşürdü",
+     "Kediler evlere tırmandı"
+    ],
+    "explanation": "İlk hafta hiçbir kuş yaklaşmadı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öyküde vurgulanan en önemli değer hangisidir?",
+    "correct": "Doğaya duyarlılık ve sabır",
+    "wrong": [
+     "Yarışmada birinci olma isteği",
+     "Pahalı malzemelerin önemi",
+     "Kuşları kafeste besleme sevgisi"
+    ],
+    "explanation": "Çocuklar kuşlara yardım etti ve sabırla bekledi."
+   }
+  ]
+ },
+ "231": {
+  "title": "Resimli Harfler",
+  "category": "Bilgi/Açıklama",
+  "content": "Bugün mesajlaşırken neredeyse hepimiz emoji kullanıyoruz. Gülen bir yüz, bir kalp ya da baş parmağını kaldırmış bir el, bazen uzun bir cümleden daha fazlasını anlatıyor. Peki bu küçük resimler nereden çıktı? Hikâyesi, sandığınızdan daha yeni ve şaşırtıcıdır.\n\nİlk emojileri 1999 yılında Japonya'da Shigetaka Kurita adlı bir tasarımcı çizdi. Kurita, o dönemde Japonya'da cep telefonlarına internet hizmeti sunan bir şirkette çalışıyordu. Telefon ekranları çok küçüktü ve bir mesaja yazılabilecek karakter sayısı sınırlıydı. Kurita, insanların duygularını kısa mesajlarda anlatmakta zorlandığını fark etti. Örneğin “Tamam” kelimesi, bağlama göre sevinçli de olabilirdi, kırgın da. Bu sorunu çözmek için Kurita on iki piksele on iki piksellik minik kareler içinde yüz yetmiş altı simge tasarladı. Hava durumu simgeleri, yüz ifadeleri ve günlük nesneler bu ilk setin içindeydi.\n\n“Emoji” sözcüğü İngilizcedeki “emotion”, yani duygu kelimesine benzese de aslında Japoncadır. “E” resim, “moji” ise harf ya da karakter anlamına gelir.\n\nEmojiler önce yalnızca Japonya'da kullanıldı. 2010'da uluslararası bir standarda eklenmeleri ve kısa süre sonra akıllı telefonların klavyelerine girmeleriyle dünyaya yayıldılar. Bugün binlerce farklı emoji var ve her yıl yenileri ekleniyor. Yeni emojilere, dünyanın dört bir yanından gelen önerileri inceleyen uluslararası bir kurul karar veriyor. Kurulun onayladığı emojiler bir sonraki yıl telefonlara geliyor. Kurita'nın çizdiği ilk set ise New York'taki Modern Sanat Müzesi'nin koleksiyonunda sergileniyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar ilk paragrafı neden bir soruyla bitirir?",
+    "correct": "Okurun merakını uyandırıp konuya geçmek için",
+    "wrong": [
+     "Okurdan kendi emojisini çizmesini istemek için",
+     "Emojilerin zararlı olduğunu kanıtlamak için",
+     "Mesajlaşmanın tarihini sıralamak için"
+    ],
+    "explanation": "Soru, emojilerin kökenine merak uyandırır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk emojileri kim tasarladı?",
+    "correct": "Uzakdoğulu bir çizer",
+    "wrong": [
+     "Amerikalı bir öğrenci",
+     "Bir müze çalışanı",
+     "Bir telefon satıcısı"
+    ],
+    "explanation": "İlk emojileri Shigetaka Kurita çizdi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kurita'yı emoji tasarlamaya iten sorun neydi?",
+    "correct": "Yazışmada hislerin anlaşılmaması",
+    "wrong": [
+     "Telefonların çok pahalı olması",
+     "İnternetin oldukça yavaş çalışması",
+     "Ekranlarda hiç renk bulunmaması"
+    ],
+    "explanation": "İnsanlar kısa mesajlarda duygularını anlatmakta zorlanıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "“Tamam” örneği hangi düşünceyi açıklar?",
+    "correct": "Bir sözün çok anlamlı olabildiğini",
+    "wrong": [
+     "Japoncanın çok zor bir dil olduğunu",
+     "Kısa mesajların ücretli olduğunu",
+     "İnsanların eskiden az konuştuğunu"
+    ],
+    "explanation": "Tamam sözü bağlama göre sevinçli de kırgın da olabilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk emoji setinde kaç simge vardı?",
+    "correct": "Yüz yetmiş altı",
+    "wrong": [
+     "On iki tane",
+     "Bin iki yüz elli",
+     "Altmış dört"
+    ],
+    "explanation": "Kurita yüz yetmiş altı simge tasarladı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Japoncada “e” sözcüğü ne anlama gelir?",
+    "correct": "Görsel",
+    "wrong": [
+     "Duygu",
+     "Harf",
+     "Sözcük"
+    ],
+    "explanation": "E resim, moji ise harf anlamına gelir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Emojilerin dünyaya yayılmasını sağlayan gelişme nedir?",
+    "correct": "Telefonların tuş takımına girmeleri",
+    "wrong": [
+     "Müzede sergilenmeye başlamaları",
+     "Kurita'nın yurt dışına taşınması",
+     "Japon filmlerinde çok kullanılmaları"
+    ],
+    "explanation": "Uluslararası standarda eklenip akıllı telefon klavyelerine girdiler."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son cümlede ilk emoji setinin müzede sergilenmesi neyi vurgular?",
+    "correct": "Kültürel değer kazandığını",
+    "wrong": [
+     "Artık hiç kullanılmadığını",
+     "Çok pahalıya satıldığını",
+     "Sanatçıların onları sevmediğini"
+    ],
+    "explanation": "Müze koleksiyonuna girmesi kültürel önemini gösterir."
+   }
+  ]
+ }
+}

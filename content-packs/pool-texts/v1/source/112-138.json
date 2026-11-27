@@ -1,0 +1,668 @@
+{
+ "112": {
+  "title": "Okul Bahçesi",
+  "category": "Hikaye/Kurgu",
+  "content": "Elif'in sınıfı bu yıl okulun bahçesinde küçük bir sebze bahçesi kurmaya karar verdi. Öğretmenleri Ahmet Bey, bahçenin bir köşesini onlara ayırdı. Çocuklar ilk gün ellerinde küreklerle toprağı kazdılar, taşları ayıkladılar ve toprağı yumuşattılar. Ahmet Bey, toprağa okulun mutfağından çıkan sebze ve meyve kabuklarından yapılmış kompostu karıştırmalarını söyledi. Kompostun toprağı beslediğini ve bitkilerin daha iyi büyümesini sağladığını anlattı.\n\nNe ekeceklerine birlikte karar verdiler. Bazıları domates istiyordu, bazıları çilek. Ahmet Bey onlara, her bitkinin farklı ihtiyaçları olduğunu anlattı. Domates çok güneş isterdi, marul ise daha serin yerleri severdi. Sonunda bahçeyi bölümlere ayırdılar: güneşli köşeye domates ve biber, gölgeli köşeye marul ve maydanoz ektiler.\n\nHer öğrencinin bir görevi vardı. Bazıları sulamadan, bazıları yabani otları temizlemekten sorumluydu. Elif'in görevi ise bitkilerin ne kadar büyüdüğünü ölçüp bir deftere yazmaktı. Her hafta cetvelini alıp fideleri tek tek ölçüyordu. Ölçümleri bir çizelgeye işliyor, hangi bitkinin daha hızlı büyüdüğünü karşılaştırıyordu. Güneşli köşedeki domateslerin, gölgedekilere göre çok daha hızlı uzadığını fark etti.\n\nBir sabah bahçeye geldiklerinde domates fidelerinin yapraklarında küçük delikler gördüler. Yaprakları bir şey yemişti. Çocuklar çok üzüldü. Ahmet Bey onlarla birlikte yaprakları inceledi ve yaprakların altında küçük tırtıllar buldu. Ahmet Bey zehirli ilaç kullanmak yerine tırtılları elle toplamayı önerdi. Ayrıca bahçenin kenarına kadife çiçekleri dikmelerini söyledi; bu çiçeklerin bazı zararlı böcekleri uzak tuttuğu biliniyordu.\n\nTırtıllar toplandıktan sonra fideler yeniden toparlandı ve yeni yapraklar çıkardı.\n\nHaziran geldiğinde domatesler kızarmaya başladı. Çocuklar ilk ürünlerini topladıklarında çok heyecanlandılar. Topladıkları sebzelerle okul kantininde küçük bir salata şenliği yaptılar ve diğer sınıfları da davet ettiler. Pek çok öğrenci, kendi yetiştirdikleri marulun marketten alınandan daha lezzetli olduğunu söyledi. Yaz tatilinde bahçeyi sulamak için öğrenciler nöbet listesi hazırladı. Elif defterine son ölçümü yazarken, küçük bir fidenin bu kadar büyüyebildiğine hâlâ şaşırıyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahmet Bey toprağa ne karıştırmalarını söyledi?",
+    "correct": "Mutfak artıklarından yapılmış gübre",
+    "wrong": [
+     "Marketten alınmış kimyasal bir ilaç",
+     "Dere kenarından getirilmiş ince kum",
+     "Ormandan toplanmış kuru çam yaprakları"
+    ],
+    "explanation": "Okulun mutfağından çıkan kabuklardan yapılmış kompostu karıştırmalarını söyledi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bahçenin bölümlere ayrılmasının nedeni nedir?",
+    "correct": "Bitkilerin güneş isteğinin farklı olması",
+    "wrong": [
+     "Öğrencilerin tartışmasını önlemek istemesi",
+     "Bahçenin bütün bitkiler için dar olması",
+     "Öğretmenin domatesten hoşlanmaması"
+    ],
+    "explanation": "Domates çok güneş ister, marul serin yerleri sever."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif'in bahçedeki görevi neydi?",
+    "correct": "Bitkilerin boyunu ölçüp kaydetmek",
+    "wrong": [
+     "Her sabah bütün bahçeyi sulamak",
+     "Bahçedeki yabani otları temizlemek",
+     "Bahçe için yeni tohumlar almak"
+    ],
+    "explanation": "Elif bitkilerin ne kadar büyüdüğünü ölçüp deftere yazıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elif'in ölçümleri hangi sonucu ortaya koydu?",
+    "correct": "Güneşli yerdekilerin daha hızlı uzadığını",
+    "wrong": [
+     "Gölgedeki bitkilerin daha hızlı uzadığını",
+     "Bütün bitkilerin aynı hızla büyüdüğünü",
+     "Marulların domateslerden uzun olduğunu"
+    ],
+    "explanation": "Güneşli köşedeki domatesler gölgedekilere göre daha hızlı uzadı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ahmet Bey'in zehirli ilaç yerine tırtılları elle toplamayı önermesi neyi gösterir?",
+    "correct": "Doğaya zarar vermeyen bir yol seçtiğini",
+    "wrong": [
+     "Tırtılları çok sevdiğini ve beslediğini",
+     "İlaçların çok pahalı olduğunu düşündüğünü",
+     "Çocukları bu işle cezalandırmak istediğini"
+    ],
+    "explanation": "Zehirli ilaç kullanmadan sorunu çözmeyi tercih etti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bahçenin kenarına kadife çiçeği dikilmesinin amacı nedir?",
+    "correct": "Zararlı böcekleri uzaklaştırmak",
+    "wrong": [
+     "Bahçeyi daha renkli göstermek",
+     "Domateslere biraz gölge sağlamak",
+     "Toprağı daha yumuşak hâle getirmek"
+    ],
+    "explanation": "Bu çiçeklerin bazı zararlı böcekleri uzak tuttuğu biliniyordu."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Topladıkları sebzelerle ne yaptılar?",
+    "correct": "Salata yapıp bir şenlik düzenlediler",
+    "wrong": [
+     "Hepsini pazarda satıp para kazandılar",
+     "Sebzeleri ailelerine armağan ettiler",
+     "Tohumlarını bahçeye yeniden ektiler"
+    ],
+    "explanation": "Kantinde küçük bir salata şenliği yaptılar ve diğer sınıfları davet ettiler."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Elif'in şaşkınlığı neyi vurgular?",
+    "correct": "Küçük bir başlangıcın büyüyebileceğini",
+    "wrong": [
+     "Ölçümlerinin tümünün yanlış çıktığını",
+     "Domateslerin yaz boyunca hiç büyümediğini",
+     "Bahçe işinin onu çok sıkıp yorduğunu"
+    ],
+    "explanation": "Küçük bir fide, emek ve zamanla büyüyüp ürün verdi."
+   }
+  ]
+ },
+ "115": {
+  "title": "Ayağa Kalkınca Gelen Baş Dönmesi",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir sabah yataktan kalktığınızda başınızın döndüğünü, gözlerinizin önünün karardığını hissettiniz mi? Ya da uzun süre oturduktan sonra birden ayağa kalktığınızda dengenizi kaybedecek gibi oldunuz mu? Bu durumun çoğu zaman basit bir açıklaması vardır. Doktorlar buna kısaca ayağa kalkınca oluşan tansiyon düşüklüğü der.\n\nYatarken ya da otururken kanımızın bir kısmı bacaklarımızda birikir. Aniden ayağa kalktığımızda yerçekimi nedeniyle kan aşağıya doğru çekilir ve beyne giden kan miktarı bir anlığına azalır. Normalde vücudumuz buna çok hızlı tepki verir: Kalp atışlarını hızlandırır ve damarları daraltarak kanın yukarıya gitmesini sağlar. Ama bu ayar birkaç saniye gecikirse beyin kısa bir süre yeterli kan alamaz. İşte o anda baş dönmesi ve göz kararması yaşanır. Birkaç saniye içinde vücut dengeyi yeniden kurar ve belirtiler kendiliğinden geçer.\n\nBu durum özellikle yeterince su içmediğimizde, uzun süre aç kaldığımızda ya da çok sıcak havalarda daha sık görülür. Hızlı büyüme dönemindeki gençlerde de sık rastlanır. Uzun süre hareketsiz ayakta durmak da benzer bir etki yaratabilir; bu yüzden törenlerde uzun süre kıpırdamadan duran kişilerin zaman zaman fenalaştığı görülür.\n\nBunu önlemek için yataktan ya da oturduğumuz yerden yavaşça kalkmak, kalkmadan önce birkaç saniye oturup beklemek ve gün boyunca yeterli su içmek işe yarar. Ayakta uzun süre beklemek gerektiğinde bacak kaslarını arada bir kasıp gevşetmek de kanın yukarı dönmesine yardım eder. Ancak baş dönmesi çok sık yaşanıyorsa ya da bayılmaya yol açıyorsa, bir doktora danışmak gerekir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Doktorlar ayağa kalkınca yaşanan bu duruma ne ad verir?",
+    "correct": "Kalkınca görülen tansiyon düşmesi",
+    "wrong": [
+     "Kan şekerinin aniden yükselmesi",
+     "Kulaktaki denge sıvısının azalması",
+     "Kalbin birkaç saniye durması"
+    ],
+    "explanation": "Doktorlar buna ayağa kalkınca oluşan tansiyon düşüklüğü der."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ani kalkışta baş dönmesinin nedeni nedir?",
+    "correct": "Beynin kısa süre az kan alması",
+    "wrong": [
+     "Bacaklardaki kanın tümüyle bitmesi",
+     "Kalbin atışlarını yavaşlatması",
+     "Bütün damarların aniden genişlemesi"
+    ],
+    "explanation": "Kan aşağı çekilir ve beyne giden kan bir anlığına azalır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Vücut ayağa kalkınca kanı yukarı göndermek için ne yapar?",
+    "correct": "Nabzı artırır, damarları daraltır",
+    "wrong": [
+     "Nefes almayı bir süre durdurur",
+     "Bacak kaslarını gevşetip uyutur",
+     "Kanı bütünüyle mideye yönlendirir"
+    ],
+    "explanation": "Kalp atışlarını hızlandırır ve damarları daraltır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre bu durum hangi koşulda daha sık görülür?",
+    "correct": "Yeterince su içilmediğinde",
+    "wrong": [
+     "Kışın çok soğuk günlerde",
+     "Her gün bol su içildiğinde",
+     "Düzenli spor yapıldığında"
+    ],
+    "explanation": "Yeterince su içilmediğinde, açlıkta ve sıcak havalarda daha sık görülür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Törenlerde uzun süre kıpırdamadan duranların fenalaşması nasıl açıklanır?",
+    "correct": "Kıpırdamayınca kanın aşağıda toplanmasıyla",
+    "wrong": [
+     "Törenlerdeki gürültünün çok fazla olmasıyla",
+     "Güneş ışığının gözleri kamaştırmasıyla",
+     "Kalabalık yerde oksijenin bitmesiyle"
+    ],
+    "explanation": "Uzun süre hareketsiz durmak da benzer bir etki yaratır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Baş dönmesini önlemek için ne önerilir?",
+    "correct": "Kalkmadan önce biraz oturmak",
+    "wrong": [
+     "Yataktan hızla fırlayıp kalkmak",
+     "Gün boyunca çok az su içmek",
+     "Sabahları uzun süre aç kalmak"
+    ],
+    "explanation": "Yavaşça kalkmak ve kalkmadan önce birkaç saniye oturmak işe yarar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bacak kaslarını kasıp gevşetmenin yararı nedir?",
+    "correct": "Kanın yukarı dönmesine yardım etmesi",
+    "wrong": [
+     "Bacak kaslarının daha hızlı büyümesi",
+     "Vücut sıcaklığını hızla düşürmesi",
+     "Kalbin atışlarını iyice yavaşlatması"
+    ],
+    "explanation": "Kasıp gevşetmek kanın yukarı dönmesine yardım eder."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesindeki uyarının amacı nedir?",
+    "correct": "Sık ya da ağır durumlarda doktora gidilmesi",
+    "wrong": [
+     "Baş dönmesinin zararsız olduğunu iddia etmek",
+     "Okuru sporu bırakmaya ikna etmeye çalışmak",
+     "Sadece gençlerin doktora gitmesini önermek"
+    ],
+    "explanation": "Baş dönmesi çok sık ya da bayılmaya yol açıyorsa doktora danışmak gerekir."
+   }
+  ]
+ },
+ "133": {
+  "title": "Kırmızı Uçurtma",
+  "category": "Hikaye/Kurgu",
+  "content": "Kerem'in en sevdiği oyuncak, kırmızı uçurtmasıydı. Uçurtmayı ona dedesi yapmıştı. Kâğıttan yapılmıştı ve uzun, renkli bir kuyruğu vardı. Dedesi uçurtmayı yaparken Kerem de ona yardım etmiş, kuyruğa renkli kurdeleler bağlamıştı. Ama uçurtmayı henüz hiç uçurmamışlardı.\n\nBir pazar günü Kerem dedesiyle birlikte tepeye çıktı. Hava güneşliydi ve hafif bir rüzgâr esiyordu. Tepede başka çocuklar da vardı; bazıları top oynuyor, bazıları da uçurtma uçuruyordu. Dedesi uçurtmayı tuttu, Kerem de ipi çekerek koşmaya başladı. Uçurtma biraz yükseldi ama sonra yere düştü. Kerem bir daha denedi. Uçurtma yine düştü. Üçüncü denemede de aynı şey oldu. Kerem'in dizleri çimenlerden yeşile boyanmıştı.\n\nKerem üzüldü. “Uçurtmam uçmuyor” dedi. Dedesi gülümsedi ve rüzgârın hangi yönden estiğine bakmalarını söyledi. Birlikte otları izlediler. Otlar tepenin arka tarafına doğru eğiliyordu. Dedesi, Kerem'in rüzgâra sırtını dönerek durması gerektiğini anlattı. Böylece rüzgâr uçurtmanın önüne çarpıp onu yukarı itecekti.\n\nKerem bu kez doğru yönde durdu. Dedesi uçurtmayı bıraktığında rüzgâr onu hemen yukarı kaldırdı. Kerem ipi yavaş yavaş saldı. Kırmızı uçurtma gökyüzünde gittikçe yükseldi. Renkli kuyruğu rüzgârda dalgalanıyordu. Tepedeki diğer çocuklar da gelip uçurtmayı izledi.\n\nKerem çok mutluydu. Sanki kendisi de uçurtmayla birlikte uçuyormuş gibi hissediyordu. Uçurtmanın ipini sıkıca tuttu ve gökyüzüne baktı. Dedesi de yanında oturmuş, onu izliyordu. Akşam olunca uçurtmayı yavaşça indirdiler. Eve dönerken Kerem, bir sonraki pazar yine gelmek istediğini söyledi. Dedesi de ona, bir dahaki sefere birlikte yeni bir uçurtma yapabileceklerini söyledi. Kerem bu kez mavi bir uçurtma istiyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kerem'in uçurtmasını kim yapmıştı?",
+    "correct": "Dedesi",
+    "wrong": [
+     "Babası",
+     "Annesi",
+     "Ablası"
+    ],
+    "explanation": "Uçurtmayı Kerem'e dedesi yapmıştı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kerem uçurtma yapılırken ne yapmıştı?",
+    "correct": "Kurdele bağlamıştı",
+    "wrong": [
+     "Uçurtmayı boyamıştı",
+     "İpi kendisi almıştı",
+     "Kâğıdı kesmişti"
+    ],
+    "explanation": "Kerem kuyruğa renkli kurdeleler bağlamıştı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kerem'in dizlerinin yeşile boyanması neyi gösterir?",
+    "correct": "Defalarca yere düştüğünü",
+    "wrong": [
+     "Çimenlerde uzun uyuduğunu",
+     "Yeşil boya kullandığını",
+     "Tepedeki ağaca tırmandığını"
+    ],
+    "explanation": "Kerem uçurtmayı uçurmaya çalışırken defalarca çimenlere düşmüştü."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Rüzgârın yönünü nasıl anladılar?",
+    "correct": "Otların eğildiği yöne bakarak",
+    "wrong": [
+     "Güneşin gökteki yerine bakarak",
+     "Gökteki bulutları sayarak",
+     "Dedesinin saatine bakarak"
+    ],
+    "explanation": "Birlikte otları izlediler; otlar tepenin arka tarafına doğru eğiliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kerem'in rüzgâra sırtını dönmesi neden gerekiyordu?",
+    "correct": "Rüzgâr uçurtmayı yukarı itsin diye",
+    "wrong": [
+     "Rüzgâr gözlerine toz kaçırmasın diye",
+     "Dedesini daha rahat görebilmek için",
+     "Tepeden daha hızlı koşabilmek için"
+    ],
+    "explanation": "Böylece rüzgâr uçurtmanın önüne çarpıp onu yukarı itecekti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Diğer çocukların gelip uçurtmayı izlemesi neyi gösterir?",
+    "correct": "Uçurtmanın ilgi çektiğini",
+    "wrong": [
+     "Çocukların sıkıldığını",
+     "Uçurtmanın yere düştüğünü",
+     "Havanın karardığını"
+    ],
+    "explanation": "Kırmızı uçurtma gökyüzünde yükselince çocukların ilgisini çekti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uçurtma yükselirken Kerem ne yaptı?",
+    "correct": "İpi azar azar saldı",
+    "wrong": [
+     "İpi bütün gücüyle çekti",
+     "İpi dedesine verdi",
+     "İpi bırakıp koştu"
+    ],
+    "explanation": "Kerem ipi yavaş yavaş saldı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öykünün ana fikri hangisidir?",
+    "correct": "Sabır ve doğru yöntemle başarı gelir",
+    "wrong": [
+     "Uçurtmalar yalnızca pazar günü uçar",
+     "Dedeler her şeyi en iyi bilir",
+     "Kırmızı uçurtmalar daha yükseğe uçar"
+    ],
+    "explanation": "Kerem pes etmedi ve dedesinin öğrettiği yöntemle uçurtmayı uçurdu."
+   }
+  ]
+ },
+ "136": {
+  "title": "Gökteki Perdeler",
+  "category": "Bilgi/Açıklama",
+  "content": "Dünya'nın kuzey ve güney uçlarına yakın yerlerde, kış gecelerinde gökyüzünde büyüleyici bir görüntü belirir. Yeşil, mor ve pembe renkli ışıklar, dev perdeler gibi gökyüzünde dalgalanır. Bu ışıklara kutup ışıkları denir. Kuzeyde görülenlere kuzey ışıkları, güneyde görülenlere ise güney ışıkları denir. Bu ışıkları ilk kez gören pek çok kişi, gözlerine inanamadığını anlatır.\n\nKutup ışıklarının kaynağı Güneş'tir. Güneş sürekli olarak uzaya çok küçük parçacıklar fırlatır. Bu parçacıklar, güneş rüzgârı adı verilen bir akım hâlinde uzayda ilerler. Dünya'ya ulaştıklarında, gezegenimizi saran görünmez manyetik alanla karşılaşırlar. Manyetik alan, bu parçacıkların çoğunu uzaklaştırarak bizi korur. Ama bir kısmını kutuplara doğru yönlendirir. Bu yüzden ışıklar en çok kutuplara yakın bölgelerde görülür.\n\nKutuplara yönelen parçacıklar, havanın üst katmanlarındaki gazlarla çarpışır. Bu çarpışmalar sırasında gazlar ışık saçar. Işığın rengi, çarpışan gazın türüne ve yüksekliğine göre değişir. Oksijen çoğunlukla yeşil ve bazen kırmızı ışık verir. Azot ise mor ve pembe tonlar oluşturur. Işıklar yerden yaklaşık yüz kilometre ya da daha yüksekte oluşur; yani bulutların çok üstündedir.\n\nKutup ışıklarını görmek için en iyi yerler Norveç, Finlandiya, İzlanda ve Kanada gibi kuzey ülkeleridir. Şehir ışıklarından uzak, karanlık ve açık havalı geceler en uygun zamanlardır. Güneş'in daha etkin olduğu dönemlerde ışıklar daha sık ve daha güçlü görülür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup ışıkları en çok hangi mevsimde, hangi saatte görülür?",
+    "correct": "Kış gecelerinde",
+    "wrong": [
+     "Yaz sabahları",
+     "Bahar öğlenleri",
+     "Güz akşamüstü"
+    ],
+    "explanation": "Kutup ışıkları kış gecelerinde görülür."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup ışıklarının kaynağı nedir?",
+    "correct": "Güneş'ten gelen parçacıklar",
+    "wrong": [
+     "Ay'ın Dünya'ya yansıttığı ışık",
+     "Büyük şehirlerin ışıkları",
+     "Kutup buzullarının yansıması"
+    ],
+    "explanation": "Güneş'in fırlattığı küçük parçacıklar kutup ışıklarına yol açar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Manyetik alanın parçacıklar üzerindeki etkisi nasıl açıklanır?",
+    "correct": "Çoğunu geri çevirip bazılarını kutuplara yollar",
+    "wrong": [
+     "Parçacıkların tümünü hiç durdurmadan içeri alır",
+     "Bütün parçacıkları ekvatora doğru çekip toplar",
+     "Parçacıkları yakarak tümüyle ortadan kaldırır"
+    ],
+    "explanation": "Manyetik alan parçacıkların çoğunu uzaklaştırır, bir kısmını kutuplara yönlendirir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Işıklar nasıl oluşur?",
+    "correct": "Parçacıkların gazlara çarpmasıyla",
+    "wrong": [
+     "Bulutların birbirine sürtünmesiyle",
+     "Yıldızların ışığını yansıtmasıyla",
+     "Şimşeklerin gökyüzünde çakmasıyla"
+    ],
+    "explanation": "Parçacıklar havanın üst katmanlarındaki gazlarla çarpışınca gazlar ışık saçar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Işıkların farklı renklerde görünmesinin nedeni nedir?",
+    "correct": "Çarpışan gazın türü ve yüksekliği",
+    "wrong": [
+     "Güneş'in o günkü renginin değişmesi",
+     "Kar örtüsünün kalınlığının değişmesi",
+     "Bakan kişinin gözünün yorulması"
+    ],
+    "explanation": "Işığın rengi çarpışan gazın türüne ve yüksekliğine göre değişir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup ışıkları yerden yaklaşık ne kadar yükseklikte oluşur?",
+    "correct": "100 km ya da daha yukarıda",
+    "wrong": [
+     "1 kilometre kadar yüksekte",
+     "10 kilometre kadar yüksekte",
+     "Bulutlarla aynı yükseklikte"
+    ],
+    "explanation": "Işıklar yerden yaklaşık yüz kilometre ya da daha yüksekte oluşur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kutup ışıklarını izlemek için şehirlerden uzaklaşmak neden gerekir?",
+    "correct": "Yapay ışığın gökyüzünü aydınlatması",
+    "wrong": [
+     "Şehirlerde kış boyunca kar yağmaması",
+     "Şehirlerin kutuplardan çok uzak olması",
+     "Şehirlerde havanın çok sıcak olması"
+    ],
+    "explanation": "Şehir ışıklarından uzak, karanlık geceler en uygun zamanlardır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Güneş parçacıkları kutup göğünü aydınlatır",
+    "wrong": [
+     "Kutup ışıkları yalnızca Norveç'te görülür",
+     "Kutup ışıkları bulutların arasında doğar",
+     "Kutup ışıkları en çok yaz aylarında parlar"
+    ],
+    "explanation": "Metin, Güneş'ten gelen parçacıkların gazlarla çarpışıp ışık oluşturmasını anlatır."
+   }
+  ]
+ },
+ "137": {
+  "title": "Yuvarlanan Top",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulun ikinci döneminde sınıfa yeni bir öğrenci geldi. Adı Amira'ydı ve ailesiyle birlikte başka bir ülkeden gelmişti. Türkçeyi henüz çok az biliyordu. Öğretmenleri onu sınıfa tanıttığında Amira başını öne eğmiş, sessizce duruyordu.\n\nİlk günlerde Amira teneffüslerde hep yalnız kalıyordu. Diğer çocuklar onunla nasıl konuşacaklarını bilmiyordu. Bazıları ona yaklaşmaya çekiniyordu. Mehmet ise her gün onun bahçede tek başına oturduğunu görüyor ve üzülüyordu. Geçen yıl kendisi de başka bir şehirden bu okula taşınmış, ilk haftalarda yalnızlık çekmişti.\n\nBir gün Mehmet, yanına bir top alıp Amira'nın yanına gitti. Hiçbir şey söylemeden topu ona doğru yuvarladı. Amira bir an şaşırdı, sonra gülümsedi ve topu geri yuvarladı. Kısa süre sonra birkaç çocuk daha oyuna katıldı ve bahçe kahkahalarla doldu. Konuşmalarına gerek yoktu; top herkesin anladığı bir dildi.\n\nErtesi gün Mehmet bir fikir buldu. Sınıfta küçük kartlar hazırladı. Her kartın bir yüzüne bir resim çizdi, öbür yüzüne de o şeyin Türkçe adını yazdı: kalem, kitap, elma, top. Amira kartlarla yeni kelimeler öğrenirken, o da Mehmet'e kendi dilindeki karşılıklarını öğretti. Sınıftaki diğer çocuklar da merak edip oyuna katıldı. Kısa sürede herkes birkaç kelimeyi Amira'nın dilinde söyleyebiliyordu.\n\nAylar geçtikçe Amira Türkçeyi giderek daha iyi konuşmaya başladı. Artık teneffüslerde hiç yalnız kalmıyordu. Bazen derste öğretmenin sorularına el kaldırıp cevap bile veriyordu. Dönem sonunda öğretmen herkese en sevdiği anıyı yazmasını söyledi. Amira kâğıdına, kendisine doğru yuvarlanan o ilk topu yazdı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Amira sınıfa ilk geldiğinde nasıl davranıyordu?",
+    "correct": "Başı önde, sessiz duruyordu",
+    "wrong": [
+     "Herkesle hemen tanışıyordu",
+     "Yüksek sesle şarkı söylüyordu",
+     "Öğretmenine sorular soruyordu"
+    ],
+    "explanation": "Amira başını öne eğmiş, sessizce duruyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Diğer çocukların Amira'ya yaklaşmamasının nedeni nedir?",
+    "correct": "İletişim kurmanın yolunu bilmemeleri",
+    "wrong": [
+     "Amira'nın onlarla sürekli kavga etmesi",
+     "Öğretmenin onlara bunu yasaklaması",
+     "Amira'nın sınıfın en arkasında oturması"
+    ],
+    "explanation": "Diğer çocuklar onunla nasıl konuşacaklarını bilmiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mehmet'in Amira'nın durumunu iyi anlamasının nedeni nedir?",
+    "correct": "Benzer bir yalnızlığı yaşamış olması",
+    "wrong": [
+     "Amira'yla aynı ülkeden gelmiş olması",
+     "Öğretmeninin bunu ona görev vermesi",
+     "Amira'yla aynı apartmanda oturması"
+    ],
+    "explanation": "Mehmet de geçen yıl taşınmış ve ilk haftalarda yalnızlık çekmişti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mehmet Amira'yla nasıl iletişim kurdu?",
+    "correct": "Ona doğru bir top yuvarlayarak",
+    "wrong": [
+     "Ona uzun bir mektup yazarak",
+     "Onu evine yemeğe çağırarak",
+     "Ona kendi çizdiği resmi vererek"
+    ],
+    "explanation": "Mehmet hiçbir şey söylemeden topu Amira'ya doğru yuvarladı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "“Top herkesin anladığı bir dildi” sözü neyi anlatır?",
+    "correct": "Oyunun dil engelini aşabildiğini",
+    "wrong": [
+     "Topun üzerinde yazılar bulunduğunu",
+     "Çocukların hiç konuşmadığını",
+     "Amira'nın topu çok sevdiğini"
+    ],
+    "explanation": "Ortak bir oyun, konuşmaya gerek kalmadan anlaşmayı sağladı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mehmet'in hazırladığı kartlarda ne vardı?",
+    "correct": "Bir yüzde resim, öbür yüzde adı",
+    "wrong": [
+     "Sınıftaki öğrencilerin fotoğrafları",
+     "Matematik soruları ve cevapları",
+     "Ülkelerin bayrakları ve başkentleri"
+    ],
+    "explanation": "Kartların bir yüzünde resim, öbür yüzünde o şeyin Türkçe adı vardı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kart oyununun sınıfa katkısı ne oldu?",
+    "correct": "Öğrenmenin karşılıklı hâle gelmesi",
+    "wrong": [
+     "Amira'nın tek başına ders çalışması",
+     "Çocukların teneffüse hiç çıkmaması",
+     "Öğretmenin ders anlatmayı bırakması"
+    ],
+    "explanation": "Amira Türkçe öğrenirken diğerleri de onun dilinden kelimeler öğrendi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Amira'nın en sevdiği anı olarak ilk topu yazması neyi gösterir?",
+    "correct": "Küçük bir jestin büyük iz bırakabildiğini",
+    "wrong": [
+     "Top oynamaktan her şeyden çok hoşlandığını",
+     "Türkçe öğrenmenin çok kolay olduğunu",
+     "Mehmet'in sınıfın en başarılısı olduğunu"
+    ],
+    "explanation": "Mehmet'in küçük bir iyiliği Amira için en değerli anı oldu."
+   }
+  ]
+ },
+ "138": {
+  "title": "Çölün Su Deposu",
+  "category": "Bilgi/Açıklama",
+  "content": "Çöllerde yağmur çok az yağar ve toprak çoğu zaman kupkurudur. Bazen aylarca hiç yağmur düşmez. Gündüzleri hava çok sıcak, geceleri ise soğuktur. Böyle zor koşullarda yaşayan kaktüsler, suyu saklamanın ustasıdır.\n\nKaktüslerin gövdesi kalın ve etlidir. Yağmur yağdığında kaktüs, toprağın hemen altına yayılmış geniş kökleriyle suyu hızla emer. Bu suyu gövdesinde depolar. Bazı büyük kaktüsler, bir yağmurdan sonra yüzlerce litre su saklayabilir. Gövdeleri, tıpkı bir akordeon gibi su aldıkça şişer, susuz kaldıkça büzülür.\n\nKaktüslerin çoğunun yaprağı yoktur. Onların yerine dikenleri vardır. Aslında bu dikenler, zamanla değişime uğramış yapraklardır. Yapraklar suyun buharlaşmasına yol açar. Dikenler ise su kaybını azaltır. Ayrıca kaktüsü, onun sulu gövdesini yemek isteyen hayvanlardan korur.\n\nKaktüsün gövdesi kalın ve mumlu bir kabukla kaplıdır. Bu kabuğa dokunduğunuzda kaygan ve parlak olduğunu hissedersiniz. Bu kabuk da suyun dışarı kaçmasını engeller. Bütün bu özellikler sayesinde kaktüsler, başka bitkilerin yaşayamadığı yerlerde bile yeşil kalabilir. Bazı kaktüsler yüz yıldan fazla yaşayabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çöllerde iklim nasıldır?",
+    "correct": "Gündüz sıcak, gece soğuk",
+    "wrong": [
+     "Yıl boyu serin ve yağışlı",
+     "Gündüz soğuk, gece sıcak",
+     "Her gün bol yağmurlu"
+    ],
+    "explanation": "Gündüzleri hava çok sıcak, geceleri ise soğuktur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaktüs suyu nasıl toplar?",
+    "correct": "Yüzeye yakın geniş kökleriyle",
+    "wrong": [
+     "Dikenleriyle havadan çekerek",
+     "Geniş yapraklarıyla emerek",
+     "Çiçekleriyle yağmuru toplayarak"
+    ],
+    "explanation": "Kaktüs toprağın hemen altına yayılmış geniş kökleriyle suyu emer."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın kaktüs gövdesini akordeona benzetmesinin nedeni nedir?",
+    "correct": "Su alınca şişip, susuzken büzülmesi",
+    "wrong": [
+     "Rüzgâr estiğinde müzik sesi çıkarması",
+     "Gövdesinin kıvrımlı ve renkli olması",
+     "Gövdesinin çok ağır ve büyük olması"
+    ],
+    "explanation": "Gövde su aldıkça şişer, susuz kaldıkça büzülür."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaktüs dikenleri aslında nedir?",
+    "correct": "Değişime uğramış yapraklar",
+    "wrong": [
+     "Toprak üstüne çıkmış kökler",
+     "Kuruyup sertleşmiş çiçekler",
+     "Kırılıp sivrilmiş dallar"
+    ],
+    "explanation": "Bu dikenler zamanla değişime uğramış yapraklardır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dikenlerin kaktüse sağladığı iki yarar hangisidir?",
+    "correct": "Suyu korumak ve hayvanları uzak tutmak",
+    "wrong": [
+     "Çiçek açıp tohumlarını uzağa yaymak",
+     "Güneş ışığını yansıtıp gövdeyi ısıtmak",
+     "Toprağa tutunup daha hızlı büyümek"
+    ],
+    "explanation": "Dikenler su kaybını azaltır ve gövdeyi hayvanlardan korur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaktüs gövdesini kaplayan kabuğun özelliği nedir?",
+    "correct": "Mumlu ve kaygan olması",
+    "wrong": [
+     "İnce ve yumuşak olması",
+     "Elle kolayca soyulabilmesi",
+     "Delikli ve süngerimsi olması"
+    ],
+    "explanation": "Gövde kalın ve mumlu bir kabukla kaplıdır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mumlu kabuk kaktüse nasıl yardım eder?",
+    "correct": "Nemin dışarı çıkmasını engeller",
+    "wrong": [
+     "Hayvanları kendine doğru çeker",
+     "Köklerin daha da uzamasını sağlar",
+     "Çiçeklerin büyümesini sağlar"
+    ],
+    "explanation": "Bu kabuk da suyun dışarı kaçmasını engeller."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Kaktüsün yapısı kurak yaşama uygundur",
+    "wrong": [
+     "Kaktüsler sadece saksıda yetiştirilir",
+     "Kaktüsler genellikle kısa yaşar",
+     "Kaktüslere bol bol su gerekir"
+    ],
+    "explanation": "Kaktüslerin kökleri, gövdesi, dikenleri ve kabuğu kurak yaşama uygundur."
+   }
+  ]
+ }
+}

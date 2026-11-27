@@ -1,0 +1,668 @@
+{
+ "85": {
+  "title": "Durmadan Çalışan Pompa",
+  "category": "Bilgi/Açıklama",
+  "content": "Elinizi göğsünüzün sol tarafına koyduğunuzda hissettiğiniz atışlar, kalbinizin çalıştığını gösterir. Kalp, yaklaşık bir yumruk büyüklüğünde, kaslardan oluşan bir organdır. Görevi, kanı bütün vücuda pompalamaktır. Kalp hiç dinlenmeden, siz uyurken bile çalışır. Dinlenme hâlindeki bir yetişkinin kalbi dakikada yaklaşık altmış ile yüz kez atar. Çocukların kalbi ise genellikle daha hızlı atar. Bir insanın kalbi, ömrü boyunca milyarlarca kez atar.\n\nKalbin içinde dört oda bulunur. Üstteki iki odaya kulakçık, alttaki iki odaya karıncık denir. Kalbin sağ tarafı ile sol tarafı birbirinden bir duvarla ayrılır ve kan bu iki taraf arasında doğrudan geçemez. Böylece oksijeni azalmış kan ile oksijen yüklü kan birbirine karışmaz.\n\nKanın yolculuğu şöyledir: Vücutta dolaşıp oksijenini bırakan kan, toplardamarlarla kalbin sağ kulakçığına gelir. Buradan sağ karıncığa geçer. Sağ karıncık bu kanı akciğerlere pompalar. Akciğerlerde kan, soluduğumuz havadaki oksijeni alır ve karbondioksiti bırakır. Oksijen yüklü kan bu kez kalbin sol kulakçığına döner ve oradan sol karıncığa geçer. Sol karıncık, kalbin en güçlü bölümüdür; duvarı diğer odalarınkinden daha kalındır. Oksijenli kanı atardamarlarla bütün vücuda gönderir.\n\nKalbin odaları arasında kapakçıklar bulunur. Bu kapakçıklar, kanın yalnızca tek yönde akmasını sağlar ve geri kaçmasını önler. Doktorların steteskopla dinlediği “güm güm” sesleri, aslında bu kapakçıkların kapanırken çıkardığı seslerdir.\n\nKalbimizi sağlıklı tutmak için yapabileceğimiz pek çok şey vardır. Kalp de bir kas olduğu için, tıpkı diğer kaslarımız gibi çalıştıkça güçlenir. Düzenli egzersiz kalp kasını güçlendirir. Koşmak, yüzmek, bisiklete binmek ya da hızlı yürümek kalbe iyi gelir. Sebze ve meyveden zengin bir beslenme, yeterli uyku ve sigaradan uzak durmak da kalp sağlığı için önemlidir.\n\nSpor yaparken kalbin daha hızlı attığını fark etmişsinizdir. Çünkü çalışan kaslar daha fazla oksijene ihtiyaç duyar ve kalp onlara daha fazla kan göndermek için hızlanır. Egzersiz bittikten birkaç dakika sonra kalp atışları yavaş yavaş eski hızına döner. Düzenli spor yapan kişilerin kalbi, dinlenirken genellikle daha yavaş atar; çünkü güçlenen kalp her atışta daha fazla kan pompalayabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kalbin görevi nedir?",
+    "correct": "Kanı bedenin her yerine itmek",
+    "wrong": [
+     "Soluduğumuz havayı temizlemek",
+     "Besinleri sindirip parçalamak",
+     "Vücut ısısını sabit tutmak"
+    ],
+    "explanation": "Kalbin görevi kanı bütün vücuda pompalamaktır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kalbin iki yanını ayıran duvarın önemi nedir?",
+    "correct": "Temiz ve kirli kanı ayrı tutması",
+    "wrong": [
+     "Kalbin daha hızlı atmasını sağlaması",
+     "Kapakçıkların sesini azaltması",
+     "Kalbin büyümesini engellemesi"
+    ],
+    "explanation": "Duvar sayesinde oksijeni azalmış kan ile oksijenli kan birbirine karışmaz."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kan oksijen yükünü nerede alır?",
+    "correct": "Akciğerlerde",
+    "wrong": [
+     "Sağ karıncıkta",
+     "Atardamarda",
+     "Sol kulakçıkta"
+    ],
+    "explanation": "Akciğerlerde kan oksijen alır, karbondioksit bırakır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sol karıncığın duvarının daha kalın olmasının nedeni ne olabilir?",
+    "correct": "Kanı en uzak noktalara göndermesi",
+    "wrong": [
+     "Kanı yalnızca akciğerlere göndermesi",
+     "Kanın ilk geldiği oda olması",
+     "Kapakçıkların burada bulunmaması"
+    ],
+    "explanation": "Sol karıncık oksijenli kanı bütün vücuda gönderdiği için en güçlü bölümdür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Steteskopla duyulan sesler neden kaynaklanır?",
+    "correct": "Kalpteki kapakların kapanmasından",
+    "wrong": [
+     "Kanın atardamarlara çarpmasından",
+     "Ciğerlerin dolup boşalmasından",
+     "Kalp kasının gerilip gevşemesinden"
+    ],
+    "explanation": "Güm güm sesleri kapakçıkların kapanırken çıkardığı seslerdir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre kalp sağlığı için hangisi önerilir?",
+    "correct": "Hareketli bir hayat sürmek",
+    "wrong": [
+     "Az uyuyup çok çalışmak",
+     "Yalnızca etle beslenmek",
+     "Spordan bütünüyle kaçınmak"
+    ],
+    "explanation": "Düzenli egzersiz, sağlıklı beslenme ve yeterli uyku kalp için önemlidir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Spor yaparken kalbin hızlanmasının nedeni nedir?",
+    "correct": "Kasların artan oksijen ihtiyacı",
+    "wrong": [
+     "Kalbin yorulup düzensizleşmesi",
+     "Kapakçıkların sık açılıp kapanması",
+     "Akciğerlerin çalışmayı bırakması"
+    ],
+    "explanation": "Çalışan kaslar daha fazla oksijen ister; kalp daha fazla kan göndermek için hızlanır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Düzenli spor yapanların kalbinin dinlenirken daha yavaş atması neyi gösterir?",
+    "correct": "Güçlenen kalbin her vuruşta daha çok iş görmesini",
+    "wrong": [
+     "Bu kişilerin kalbinin zayıfladığını ve yorulduğunu",
+     "Sporun kalbi zamanla küçülttüğünü gösterdiğini",
+     "Bu kişilerin daha az oksijene ihtiyaç duyduğunu"
+    ],
+    "explanation": "Güçlenen kalp her atışta daha fazla kan pompalayabildiği için daha az atar."
+   }
+  ]
+ },
+ "88": {
+  "title": "Perde Açılmadan",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulun yıl sonu tiyatro oyunu için seçmeler yapılacağını duyduğumda hiç düşünmeden adımı yazdırdım. Evde ayna karşısında rol yapmayı, ailemin önünde komik sahneler canlandırmayı çok severdim. Ama seçme günü sahneye çıkıp salondaki öğretmenleri ve öğrencileri görünce ellerim titremeye, sesim kısılmaya başladı. Ezberlediğim cümleleri unuttum. Birkaç saniye sessizce durdum, sonra kâğıda bakarak zar zor okudum.\n\nSeçmelerden çıktığımda kendimi berbat hissediyordum. Rol alamayacağımdan emindim. O akşam anneme bir daha asla sahneye çıkmayacağımı söyledim. Ama iki gün sonra panodaki listede adımı gördüm; bana küçük bir rol verilmişti. Tiyatro öğretmenimiz Nazlı Hanım, seçmede heyecanımı fark ettiğini, ama ilk denemede herkesin heyecanlandığını söyledi.\n\nProvalar başladığında Nazlı Hanım bize sahne korkusuyla başa çıkmanın bazı yollarını öğretti. Sahneye çıkmadan önce yavaşça ve derin nefes alıp vermemizi istedi. Heyecanın bir düşman değil, bedenimizin bizi önemli bir ana hazırladığının işareti olduğunu anlattı. Rollerimizi yalnızca ezberlemememizi, sahnedeki karakteri gerçekten anlamaya çalışmamızı söyledi. Her provada önce küçük bir gruba, sonra bütün sınıfa oynadık. Her seferinde biraz daha az titrediğimi fark ettim.\n\nGösteri akşamı salon doluydu. Perde açılmadan önce kalbim yine hızla çarpıyordu. Ama bu kez derin nefes aldım ve kendime heyecanımın normal olduğunu hatırlattım. Sahneye çıktığımda ilk cümlemi söyledim, sonra ikincisini. Bir süre sonra salondakileri unutup karakterime odaklandım.\n\nOyun bittiğinde salon alkışlarla doldu. Sahneden inerken ellerim hâlâ biraz titriyordu, ama bu kez korkudan değil sevinçten. Annem kulise gelip bana sarıldığında, ona bir daha sahneye çıkmayacağımı söylediğim akşamı hatırladık ve birlikte güldük.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Seçme günü anlatıcıya ne oldu?",
+    "correct": "Repliklerini unutup kâğıttan okudu",
+    "wrong": [
+     "Rolünü sahnede kusursuz oynadı",
+     "Sahneye çıkmadan eve geri döndü",
+     "Salondaki öğretmenlere rolünü anlattı"
+    ],
+    "explanation": "Anlatıcı heyecanlanıp ezberlediklerini unuttu ve kâğıda bakarak okudu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Anlatıcının annesine söylediği söz o anki ruh hâlini nasıl yansıtır?",
+    "correct": "Utançla aceleci bir karar verdiğini",
+    "wrong": [
+     "Tiyatroyu hiç sevmediğini anladığını",
+     "Annesinin onu sahneye zorladığını",
+     "Rol almayı zaten istemediğini"
+    ],
+    "explanation": "Kötü bir seçmenin ardından bir daha sahneye çıkmayacağını söyledi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nazlı Hanım anlatıcıya seçmedeki heyecanı hakkında ne söyledi?",
+    "correct": "İlk denemede bunun olağan olduğunu",
+    "wrong": [
+     "Bir daha seçmeye girmemesini",
+     "Heyecanını kimsenin görmediğini",
+     "Rol alamayacağını bildiğini önceden"
+    ],
+    "explanation": "Nazlı Hanım ilk denemede herkesin heyecanlandığını söyledi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nazlı Hanım sahneye çıkmadan önce ne yapmalarını önerdi?",
+    "correct": "Yavaşça ve derinden soluk almalarını",
+    "wrong": [
+     "Salondakilerin yüzüne bakmamalarını",
+     "Repliklerini yüksek sesle bağırmalarını",
+     "Gözlerini kapayıp hızla konuşmalarını"
+    ],
+    "explanation": "Sahneye çıkmadan önce yavaşça ve derin nefes alıp vermelerini istedi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Nazlı Hanım'ın heyecanı bir hazırlık işareti olarak görmesi neyi değiştirmeyi amaçlar?",
+    "correct": "Öğrencinin heyecana bakışını",
+    "wrong": [
+     "Oyunun konusunu ve sahnelerini",
+     "Salondaki seyirci sayısını",
+     "Provaların yapıldığı günleri"
+    ],
+    "explanation": "Heyecanı düşman değil, bedenin önemli bir ana hazırlanması olarak görmelerini istedi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Provaların önce küçük gruba sonra sınıfa oynanmasının amacı nedir?",
+    "correct": "Kaygının aşama aşama azalması",
+    "wrong": [
+     "Rolleri en iyi oynayanı seçmek",
+     "Oyunu daha kısa sürede bitirmek",
+     "Seyircileri önceden tanımak"
+    ],
+    "explanation": "Her seferinde daha az titrediğini fark etti; kaygı adım adım azaldı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gösteri akşamı anlatıcının seçme gününden farklı olarak ne yaptığı görülür?",
+    "correct": "Öğrendiği yöntemleri uygulayıp odaklandığı",
+    "wrong": [
+     "Heyecanını hiç hissetmeden sahneye çıktığı",
+     "Repliklerini yine kâğıttan okuduğu",
+     "Salondaki seyircilere tek tek baktığı"
+    ],
+    "explanation": "Derin nefes aldı, heyecanının normal olduğunu hatırladı ve karakterine odaklandı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda anlatıcı ile annesinin gülmesi neyi gösterir?",
+    "correct": "Eski kararının yersiz kaldığını",
+    "wrong": [
+     "Annesinin oyunu beğenmediğini",
+     "Bir daha hiç sahneye çıkmayacağını",
+     "Oyunun komik bir oyun olduğunu"
+    ],
+    "explanation": "Bir daha sahneye çıkmayacağını söylediği akşam artık geride kalmıştı."
+   }
+  ]
+ },
+ "92": {
+  "title": "Bir Fincanın Hikâyesi",
+  "category": "Bilgi/Açıklama",
+  "content": "Kahvenin nasıl keşfedildiğine dair en bilinen hikâye, Etiyopya'nın dağlık bölgelerinde geçer. Anlatıya göre Kaldi adında genç bir çoban, bir gün keçilerinin tuhaf davrandığını fark eder. Keçiler zıplıyor, gece olunca da bir türlü uyumuyordur. Kaldi onları izler ve keçilerin bir çalının kırmızı meyvelerini yediğini görür.\n\nMerak eden Kaldi meyvelerden kendisi de tadar ve kısa sürede kendini canlı ve dinç hisseder. Meyveleri yakındaki bir manastıra götürür. Hikâyenin bir anlatımına göre keşişlerden biri bu meyvelerin şeytan işi olduğunu düşünüp onları ateşe atar. Ama ateşten yükselen güzel koku herkesi büyüler. Kavrulan çekirdekler ateşten çıkarılır, ezilir ve sıcak suya konur. Böylece ilk fincan kahvenin hazırlandığı anlatılır.\n\nTarihçiler bu hikâyenin bir efsane olduğunu düşünür; çünkü ilk kez yüzlerce yıl sonra yazıya geçirilmiştir. Bilinen kesin bilgiler ise kahvenin on beşinci yüzyılda Yemen'de içildiğini gösterir. Kahve buradan Mekke'ye, Kahire'ye ve İstanbul'a yayıldı. Kahvenin İstanbul'a on altıncı yüzyılın ortalarında geldiği kabul edilir. İstanbul'da açılan kahvehaneler kısa sürede insanların buluşup sohbet ettiği, haber alıp verdiği yerler hâline geldi. Kahve oradan Avrupa'ya ve dünyanın dört bir yanına ulaştı; bugün dünyada en çok tüketilen içeceklerden biridir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Efsaneye göre Kaldi keçilerinin neyini tuhaf buldu?",
+    "correct": "Zıplayıp gece uyumamalarını",
+    "wrong": [
+     "Yemek yemeyi bırakmalarını",
+     "Sürüden ayrılıp kaçmalarını",
+     "Çalılardan uzak durmalarını"
+    ],
+    "explanation": "Keçiler zıplıyor ve gece olunca uyumuyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Meyveleri yiyen Kaldi ne hissetti?",
+    "correct": "Zinde ve uyanık hissetti",
+    "wrong": [
+     "Başı dönüp uykusu geldi",
+     "Midesi bulanıp hastalandı",
+     "Hiçbir değişiklik olmadı"
+    ],
+    "explanation": "Kaldi meyveleri tadınca kendini canlı ve dinç hissetti."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Efsanede kahvenin içilmesini sağlayan olay hangisidir?",
+    "correct": "Atılan çekirdeklerin kokusunun fark edilmesi",
+    "wrong": [
+     "Keşişlerin meyveleri dikkatle incelemesi",
+     "Kaldi'nin meyveleri suyla iyice yıkayıp kurutması",
+     "Keçilerin meyveleri manastıra taşıması"
+    ],
+    "explanation": "Ateşe atılan çekirdeklerin güzel kokusu herkesi büyüledi; sonra çekirdekler suya kondu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tarihçilerin Kaldi hikâyesini bir efsane saymasının nedeni nedir?",
+    "correct": "Olaydan çok sonra kayda geçirilmesi",
+    "wrong": [
+     "Etiyopya'da hiç kahve yetişmemesi",
+     "Keçilerin kahve meyvesini yememesi",
+     "Hikâyenin yalnızca İstanbul'da anlatılması"
+    ],
+    "explanation": "Hikâye ilk kez yüzlerce yıl sonra yazıya geçirilmiştir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kesin bilgilere göre kahve on beşinci yüzyılda nerede içiliyordu?",
+    "correct": "Yemen'de",
+    "wrong": [
+     "Mısır'da",
+     "Etiyopya'da",
+     "Avrupa'da"
+    ],
+    "explanation": "Bilinen kesin bilgiler kahvenin on beşinci yüzyılda Yemen'de içildiğini gösterir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kahve İstanbul'a ne zaman geldi?",
+    "correct": "16. yüzyılın ortalarında",
+    "wrong": [
+     "15. yüzyılın başlarında",
+     "17. yüzyılın sonlarında",
+     "18. yüzyılın ortalarında"
+    ],
+    "explanation": "Kahvenin İstanbul'a on altıncı yüzyılın ortalarında geldiği kabul edilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "İstanbul'daki kahvehanelerin önemi neydi?",
+    "correct": "Toplumsal bir buluşma yeri hâline gelmeleri",
+    "wrong": [
+     "Kahvenin yetiştirildiği yerler olmaları",
+     "Yalnız yabancıların gittiği yerler olmaları",
+     "Kahve çekirdeğinin satıldığı pazarlar"
+    ],
+    "explanation": "Kahvehaneler insanların buluşup sohbet ettiği, haber alıp verdiği yerlerdi."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin bütününden çıkan sonuç hangisidir?",
+    "correct": "Efsane ile belgelenmiş tarih ayrı tutulmalıdır",
+    "wrong": [
+     "Kahvenin keşfi kesin olarak bilinmektedir",
+     "Kahveyi ilk kez Avrupalılar içmiştir",
+     "Kaldi'nin hikâyesi tarihçilerce kanıtlanmıştır"
+    ],
+    "explanation": "Metin bir efsaneyi anlatıp ardından tarihçilerin kesin bildiklerini ayırır."
+   }
+  ]
+ },
+ "100": {
+  "title": "Esneme Bulaşır mı?",
+  "category": "Bilgi/Açıklama",
+  "content": "Birinin esnediğini gördüğünüzde, kısa süre sonra sizin de esnediğinizi fark etmişsinizdir. Hatta esneme hakkında bir yazı okumak bile bazı insanları esnetmeye yeter. Bilim insanları bu duruma bulaşıcı esneme adını verir. Esnemenin kendisi ise anne karnındaki bebeklerde bile görülen, çok eski bir davranıştır.\n\nEsnemenin neden bulaşıcı olduğu tam olarak bilinmiyor. Ama araştırmalar ilginç ipuçları veriyor. Uzun süre esnemenin vücuda daha fazla oksijen almak için yapıldığı sanılmıştı; ancak deneyler bu açıklamayı desteklemedi. Bir çalışmada, insanların yabancılara göre aile üyelerini ve yakın arkadaşlarını gördüklerinde daha sık esnediği bulundu. Bu nedenle bazı bilim insanları, bulaşıcı esnemenin başkalarının duygularını anlama ve paylaşma becerisiyle, yani empatiyle ilişkili olabileceğini düşünüyor.\n\nBulaşıcı esneme yalnızca insanlarda görülmez. Şempanzeler gibi bazı hayvanlarda da gözlenmiştir. Bazı çalışmalar köpeklerin sahiplerinin esnemesine karşılık esneyebildiğini de öne sürmüştür.\n\nİlginç bir başka bulgu da yaşla ilgilidir. Küçük çocuklar, yaklaşık dört beş yaşına gelene kadar başkalarının esnemesinden pek etkilenmez. Bu da bulaşıcı esnemenin, sosyal becerilerin gelişmesiyle birlikte ortaya çıktığını düşündürüyor. Yine de bu konudaki araştırmalar sürüyor ve bilim insanları henüz tam bir açıklama üzerinde anlaşmış değil.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre esneme ne zamandan beri görülen bir davranıştır?",
+    "correct": "Doğumdan önce bile",
+    "wrong": [
+     "Yetişkinlikten sonra",
+     "Okula başlayınca",
+     "Yaşlılık döneminde"
+    ],
+    "explanation": "Esneme anne karnındaki bebeklerde bile görülür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Esnemenin oksijen almak için yapıldığı düşüncesi hakkında ne söylenebilir?",
+    "correct": "Yapılan deneylerle doğrulanamamıştır",
+    "wrong": [
+     "Bugün de en çok kabul gören görüştür",
+     "Yalnızca hayvanlar için geçerlidir",
+     "Bulaşıcı esnemeyi tam açıklar"
+    ],
+    "explanation": "Deneyler bu açıklamayı desteklemedi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir çalışmaya göre insanlar kimleri gördüğünde daha sık esner?",
+    "correct": "Yakınlarını",
+    "wrong": [
+     "Yabancıları",
+     "Hayvanları",
+     "Çocukları"
+    ],
+    "explanation": "İnsanlar yabancılara göre aile üyelerini ve yakın arkadaşlarını gördüklerinde daha sık esner."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bulaşıcı esnemenin empatiyle ilişkilendirilmesinin dayanağı nedir?",
+    "correct": "Duygusal bağ arttıkça esnemenin artması",
+    "wrong": [
+     "Yabancıların daha sık esnemeye yol açması",
+     "Esnemenin oksijen eksikliğinden doğması",
+     "Herkesin aynı sıklıkta esneyip durması"
+    ],
+    "explanation": "Yakın kişilerin esnemesinin daha çok bulaşması, empatiyle bağı düşündürür."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bulaşıcı esneme hangi canlılarda da gözlenmiştir?",
+    "correct": "Şempanzelerde",
+    "wrong": [
+     "Serçelerde",
+     "Balıklarda",
+     "Kaplumbağalarda"
+    ],
+    "explanation": "Bulaşıcı esneme şempanzeler gibi bazı hayvanlarda da görülmüştür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar yaklaşık kaç yaşına kadar başkalarının esnemesinden pek etkilenmez?",
+    "correct": "4-5",
+    "wrong": [
+     "1-2",
+     "8-9",
+     "12-13"
+    ],
+    "explanation": "Küçük çocuklar yaklaşık dört beş yaşına kadar bulaşıcı esnemeden pek etkilenmez."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çocuklarla ilgili bulgu hangi düşünceyi destekler?",
+    "correct": "Esnemenin sosyal gelişimle ilişkisini",
+    "wrong": [
+     "Bebeklerin anne karnında esnemediğini",
+     "Esnemenin yaşla birlikte kaybolduğunu",
+     "Çocukların daha çok oksijen istediğini"
+    ],
+    "explanation": "Bulaşıcı esneme sosyal becerilerin gelişmesiyle birlikte ortaya çıkıyor olabilir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın konuya yaklaşımı nasıldır?",
+    "correct": "Bulguları aktarıp kesin yargıdan kaçınan",
+    "wrong": [
+     "Tek bir açıklamayı kesin doğru sayan",
+     "Araştırmaları tümüyle gereksiz ve boş bulan",
+     "Esnemeyi bir hastalık olarak gören"
+    ],
+    "explanation": "Yazar ipuçlarını aktarır ama bilim insanlarının henüz anlaşmadığını vurgular."
+   }
+  ]
+ },
+ "107": {
+  "title": "Pembe Kumbara",
+  "category": "Hikaye/Kurgu",
+  "content": "Doğum gününde Zehra'ya dedesi küçük, pembe bir kumbara hediye etti. Kumbaranın üstünde para atmak için ince bir delik vardı. Dedesi, “Her hafta harçlığının bir kısmını buraya at. Bakalım yıl sonunda ne olacak” dedi.\n\nZehra'nın aklında çoktandır bir bisiklet vardı. Mahalledeki bir dükkânın vitrininde mavi bir bisiklet görmüş ve ona hayran kalmıştı. Ama bisiklet çok pahalıydı. Zehra kumbarasıyla bu bisikleti alabileceğini düşündü. Her hafta okula giderken vitrinin önünde durup bisiklete bakıyordu.\n\nİlk haftalar kolay geçmedi. Okul kantininde arkadaşları çikolata ve gofret alırken Zehra'nın da canı çekiyordu. Bazen dayanamayıp harçlığının hepsini harcadı. Sonra bir fikir buldu. Harçlığını alır almaz yarısını hemen kumbaraya atmaya başladı. Böylece elinde kalan parayla yetinmek zorunda kalıyordu. Kantinde bir şey almak yerine evden meyve götürmeye başladı.\n\nAylar geçtikçe kumbara ağırlaştı. Zehra bazen kumbarayı sallayıp içindeki paraların sesini dinliyordu. Yaz tatili geldiğinde dedesiyle birlikte kumbarayı açtılar ve paraları saydılar. Para, bisikletin fiyatının yarısından biraz fazlaydı.\n\nZehra önce hayal kırıklığına uğradı. Bisiklete ulaşmak için bir yıl daha beklemesi gerekecekti. Ama dedesi ona bir öneride bulundu: Zehra'nın biriktirdiği kadar parayı da kendisi ekleyecekti. “Çünkü sabırla biriktirmeyi öğrendin” dedi. Ertesi gün mavi bisiklet artık Zehra'nındı. Zehra kumbarasını yeniden rafına koydu; artık yeni bir hedefi vardı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kumbarayı Zehra'ya kim verdi?",
+    "correct": "Dedesi",
+    "wrong": [
+     "Annesi",
+     "Babası",
+     "Arkadaşları"
+    ],
+    "explanation": "Doğum gününde Zehra'ya kumbarayı dedesi hediye etti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zehra para biriktirerek ne almak istiyordu?",
+    "correct": "Bir bisiklet",
+    "wrong": [
+     "Bir bilgisayar",
+     "Bir oyuncak",
+     "Bir kitap seti"
+    ],
+    "explanation": "Zehra vitrinde gördüğü mavi bisikleti almak istiyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zehra'nın ilk haftalarda zorlanmasının nedeni nedir?",
+    "correct": "Arkadaşlarına özenmesi",
+    "wrong": [
+     "Harçlığının hiç olmaması",
+     "Kumbarayı kaybetmesi",
+     "Bisikletin satılması"
+    ],
+    "explanation": "Kantinde arkadaşları çikolata alırken Zehra'nın da canı çekiyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Zehra'nın harçlığın yarısını hemen kumbaraya atması hangi sorunu çözdü?",
+    "correct": "Elindeki parayı harcama isteğini sınırladı",
+    "wrong": [
+     "Kantindeki fiyatların düşmesini sağladı",
+     "Dedesinden daha çok harçlık almasını sağladı",
+     "Bisikletin fiyatının azalmasını sağladı"
+    ],
+    "explanation": "Parayı hemen ayırınca elinde kalanla yetinmek zorunda kaldı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zehra kantinde bir şey almak yerine ne yaptı?",
+    "correct": "Yanına meyve aldı",
+    "wrong": [
+     "Kantinden gofret aldı",
+     "Arkadaşlarından istedi",
+     "Hiç yemek yemedi"
+    ],
+    "explanation": "Zehra kantinde harcamak yerine evden meyve götürmeye başladı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kumbara açıldığında biriken para ne kadardı?",
+    "correct": "Fiyatın yarısını biraz aşan",
+    "wrong": [
+     "Bisikletin tam fiyatı kadar",
+     "Fiyatın dörtte biri kadar",
+     "Fiyatın iki katı kadar"
+    ],
+    "explanation": "Para, bisikletin fiyatının yarısından biraz fazlaydı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dedenin eksik parayı tamamlamasının nedeni nedir?",
+    "correct": "Torununun sabrını ödüllendirmek",
+    "wrong": [
+     "Zehra'nın ağlayıp ondan istemesi",
+     "Bisikletin fiyatının düşmüş olması",
+     "Kumbaranın yere düşüp kırılması"
+    ],
+    "explanation": "Dede, Zehra'nın sabırla biriktirmeyi öğrendiğini söyledi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda kumbarayı yeniden rafına koyması Zehra hakkında ne anlatır?",
+    "correct": "Birikim alışkanlığını sürdüreceğini",
+    "wrong": [
+     "Bir daha para biriktirmeyeceğini",
+     "Bisikletten çok çabuk sıkıldığını",
+     "Kumbarayı dedesine geri vermek istediğini"
+    ],
+    "explanation": "Zehra'nın artık yeni bir hedefi vardı."
+   }
+  ]
+ },
+ "109": {
+  "title": "Karanlığın Fenerleri",
+  "category": "Bilgi/Açıklama",
+  "content": "Yaz akşamlarında karanlık çökünce çayırlarda küçük ışıkların yanıp söndüğünü görebilirsiniz. Bu ışıklar, ateşböceklerinden gelir. Ateşböcekleri, karınlarının ucunda ışık üretebilen küçük böceklerdir. Adlarında “ateş” sözcüğü geçse de yakıcı değildirler.\n\nAteşböceğinin ışığı, vücudundaki özel maddelerin havadaki oksijenle birleşmesiyle oluşur. Bu ışığın ilginç bir özelliği vardır: Neredeyse hiç ısı üretmez. Bir ampul ışık verirken ısınır, ama ateşböceğinin ışığı soğuktur. Bu yüzden ateşböceğini elinize aldığınızda sıcaklık hissetmezsiniz.\n\nAteşböcekleri ışıklarını birbirleriyle haberleşmek için kullanır. Işık, onların karanlıktaki dili gibidir. Her türün kendine özgü bir yanıp sönme düzeni vardır. Erkekler uçarken belirli bir düzende ışık saçar. Dişiler de yerden aynı türün ışık düzeniyle cevap verir. Böylece birbirlerini karanlıkta bulurlar. Bazı yerlerde binlerce ateşböceği aynı anda yanıp söner ve bu görüntüyü izlemek için insanlar uzaklardan gelir.\n\nNe yazık ki ateşböceklerinin sayısı birçok yerde azalıyor. Bunun bir nedeni, şehirlerdeki yapay ışıklardır. Bu ışıklar, ateşböceklerinin birbirini görmesini zorlaştırır. Yaşadıkları çayırların ve ormanların azalması da onlara zarar verir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ateşböceklerinin ışığı vücudunun neresinden gelir?",
+    "correct": "Karnının ucundan",
+    "wrong": [
+     "Kanatlarından",
+     "Başının üstünden",
+     "Ayaklarından"
+    ],
+    "explanation": "Ateşböcekleri karınlarının ucunda ışık üretir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ateşböceğinin ışığını ampulden ayıran özellik nedir?",
+    "correct": "Hemen hiç ısı vermemesi",
+    "wrong": [
+     "Çok daha parlak olması",
+     "Gündüz de görülmesi",
+     "Renginin kırmızı olması"
+    ],
+    "explanation": "Ateşböceğinin ışığı neredeyse hiç ısı üretmez."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Işığın oluşması için ne gereklidir?",
+    "correct": "Oksijen gazı",
+    "wrong": [
+     "Güneş ışığı",
+     "Yağmur suyu",
+     "Çiçek tozları"
+    ],
+    "explanation": "Işık, vücuttaki özel maddelerin oksijenle birleşmesiyle oluşur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar ışığı neden ateşböceklerinin dili olarak niteler?",
+    "correct": "Onunla birbirine haber verdikleri için",
+    "wrong": [
+     "Işık saçarken ses de çıkardıkları için",
+     "Işıklarının çok uzaktan görüldüğü için",
+     "Yalnız erkeklerin ışık saçtığı için"
+    ],
+    "explanation": "Ateşböcekleri ışıklarını haberleşmek için kullanır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dişi ateşböcekleri erkeklere nasıl cevap verir?",
+    "correct": "Yerden benzer ışık düzeniyle",
+    "wrong": [
+     "Havada uçarak şarkı söyleyerek",
+     "Kanatlarını hızla çırparak",
+     "Karınlarını yere sürterek"
+    ],
+    "explanation": "Dişiler yerden aynı türün ışık düzeniyle cevap verir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Her türün kendine özgü yanıp sönme düzeni olması ne işe yarar?",
+    "correct": "Aynı cinsten olanı tanımayı",
+    "wrong": [
+     "Avcıları korkutup kaçırmayı",
+     "Gece yolu aydınlatmayı",
+     "Daha hızlı uçabilmeyi"
+    ],
+    "explanation": "Böylece aynı türden ateşböcekleri birbirini karanlıkta bulur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şehir ışıklarının ateşböceklerine zararı nedir?",
+    "correct": "Birbirlerini görmeyi zorlaştırması",
+    "wrong": [
+     "Onları gereğinden çok fazla ısıtması",
+     "Yiyeceklerini tümüyle yok etmesi",
+     "Çayırları ve ormanları azaltması"
+    ],
+    "explanation": "Yapay ışıklar ateşböceklerinin birbirini görmesini zorlaştırır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Son paragrafın ana düşüncesi hangisidir?",
+    "correct": "İnsan etkinlikleri bu canlıları tehdit ediyor",
+    "wrong": [
+     "Ateşböcekleri yalnızca büyük şehirlerde yaşıyor",
+     "Ateşböceklerinin sayısı hızla artıyor",
+     "Yapay ışıklar ateşböceklerine yardım eder"
+    ],
+    "explanation": "Yapay ışıklar ve yaşam alanlarının azalması ateşböceklerinin sayısını düşürüyor."
+   }
+  ]
+ }
+}

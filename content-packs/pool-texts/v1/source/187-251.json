@@ -1,0 +1,668 @@
+{
+ "187": {
+  "title": "İçimizdeki Kuşkucu Ses",
+  "category": "Bilgi/Açıklama",
+  "content": "Yeni bir işe başladınız ya da zorlu bir bölüme kabul edildiniz. Çevrenizdeki herkes size çok yetenekli görünüyor. İçinizde ise küçük bir ses, buraya yanlışlıkla geldiğinizi, şansınızın yaver gittiğini ve bir gün gerçek yeteneğinizin “ortaya çıkacağını” fısıldıyor. Bu duyguyu yaşıyorsanız, yalnız değilsiniz. Psikologlar bu duruma “sahtekârlık sendromu” adını veriyor.\n\nKavram ilk kez 1978 yılında psikologlar Pauline Clance ve Suzanne Imes tarafından tanımlandı. İkili, akademik ve mesleki açıdan son derece başarılı olan pek çok kadının, başarılarını kendi yeteneklerine değil şansa, iyi zamanlamaya ya da başkalarının yanılmasına bağladığını fark etti. Bu kişiler, ne kadar başarılı olurlarsa olsunlar, kendilerini bir sahtekâr gibi hissediyordu. Sonraki araştırmalar, bu duygunun yalnızca kadınlara özgü olmadığını, her cinsiyetten ve her meslekten insanda görülebildiğini ortaya koydu. Bazı araştırmalara göre insanların büyük çoğunluğu hayatlarının bir döneminde bu duyguyu yaşıyor.\n\nSahtekârlık sendromu bir hastalık değil, bir düşünme biçimidir. Bu duyguyu yaşayan kişiler genellikle birkaç ortak özellik gösterir. Başarılarını küçümser, hatalarını ise büyütürler. Övgüyü kabul etmekte zorlanır, iltifatı nezaketen söylenmiş bir söz olarak görürler. Bazıları başarısız olmaktan korktukları için aşırı çalışır ve her şeyi kusursuz yapmaya çalışır. Başarılı olduklarında ise rahatlamak yerine, bu kez şanslı olduklarını düşünüp bir sonraki işte “yakalanacaklarından” korkarlar. Bazıları ise tam tersine, yetersiz görünmemek için yeni fırsatlardan kaçınır.\n\nİlginç olan, bu duygunun çoğu zaman gerçekten yetenekli insanlarda görülmesidir. Bir alanda ilerledikçe insanlar, o alanın ne kadar geniş olduğunu ve henüz bilmedikleri ne kadar çok şey bulunduğunu daha iyi fark eder. Bu farkındalık, kendi bilgilerini yetersiz görmelerine yol açabilir. Buna karşılık bir konuda az bilgisi olan kişiler, bazen yeteneklerini olduğundan çok daha yüksek değerlendirir. Psikolojide bu ikinci duruma “Dunning-Kruger etkisi” deniyor. Yani kendinden şüphe etmek, çoğu zaman bir yetersizlik belirtisi değil, konunun derinliğini kavramış olmanın bir yan ürünüdür.\n\nOrtam da bu duyguyu güçlendirebilir. Bir grubun içinde kendine benzeyen pek az kişi gören biri, örneğin ailesinden üniversiteye giden ilk kişi ya da bir ekipteki tek kadın mühendis, kendini oraya ait hissetmekte daha çok zorlanabilir. Bu yüzden bazı araştırmacılar, sorunun yalnızca bireyin kafasında değil, kapsayıcı olmayan ortamlarda da aranması gerektiğini vurguluyor.\n\nUzmanlar bu duyguyla başa çıkmak için bazı yollar öneriyor. İlki, duyguyu adlandırmaktır: “Şu anda kendimi sahtekâr gibi hissediyorum, ama bu bir duygu, bir gerçek değil.” İkincisi, başarıların somut kanıtlarını, örneğin aldığınız olumlu geri bildirimleri ya da tamamladığınız projeleri bir yerde toplamak ve zor anlarda onlara bakmaktır. Üçüncüsü, bu duyguyu güvendiğiniz biriyle konuşmaktır. Çoğu zaman karşınızdaki kişinin de benzer şeyler hissettiğini öğrenmek rahatlatıcıdır. Son olarak, hata yapmanın öğrenmenin doğal bir parçası olduğunu ve hiç kimsenin her şeyi bilmediğini kendinize hatırlatmak önemlidir. Bu duygu çok yoğunlaşır ve günlük hayatı, uykuyu ya da iş performansını belirgin biçimde etkilemeye başlarsa, bir ruh sağlığı uzmanından destek almak da yararlı olabilir. Unutmayın, oraya gelmeyi hak ettiğiniz için oradasınız.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Giriş paragrafındaki içsel sesin ortak teması nedir?",
+    "correct": "Yerini hak etmediği kaygısı",
+    "wrong": [
+     "Arkadaş bulamama kaygısı",
+     "İşin yorucu olacağı kaygısı",
+     "Bölümü yanlış seçtiği kaygısı"
+    ],
+    "explanation": "Ses, kişinin oraya şansla geldiğini ve bir gün yakalanacağını söyler."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Clance ve Imes'in ilk gözlemleri hangi grup üzerineydi?",
+    "correct": "Başarılı kadınlar",
+    "wrong": [
+     "Genç erkek öğrenciler",
+     "Emekli öğretmenler",
+     "İşsiz yetişkinler"
+    ],
+    "explanation": "Akademik ve mesleki olarak başarılı kadınları incelediler."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sonraki araştırmalar bu duygunun kimlerde görüldüğünü ortaya koydu?",
+    "correct": "Her kesimden insanda",
+    "wrong": [
+     "Yalnızca yöneticilerde",
+     "Çoğunlukla gençlerde",
+     "Yalnızca kadınlarda"
+    ],
+    "explanation": "Duygunun her cinsiyetten ve meslekten insanda görülebildiği anlaşıldı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bu duyguyu yaşayanlar övgüyü nasıl karşılar?",
+    "correct": "Kibarlık için söylendiğini sanar",
+    "wrong": [
+     "Hemen daha fazlasını talep eder",
+     "Övgüyü ekip arkadaşına aktarır",
+     "İltifatı başarısının kanıtı sayar"
+    ],
+    "explanation": "İltifatı nezaketen söylenmiş bir söz olarak görürler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Aşırı çalışma ile fırsatlardan kaçınma arasındaki ilişki nedir?",
+    "correct": "Aynı korkuya verilen zıt tepkiler",
+    "wrong": [
+     "Birbirini ortadan kaldıran eylemler",
+     "Yalnızca kadınlarda görülen eylemler",
+     "Başarıyı artıran ortak yöntemler"
+    ],
+    "explanation": "İkisi de yetersiz görünme korkusundan doğar ama zıt yönde işler."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazar Dunning-Kruger etkisine neden değinir?",
+    "correct": "Karşıt bir durumla kıyaslamak için",
+    "wrong": [
+     "Sendromun tıbbi adını açıklamak için",
+     "Yetenekli kişileri eleştirmek için",
+     "Bilgisi az kişileri övmek için"
+    ],
+    "explanation": "Az bilenin kendini abartmasıyla kıyas, kuşkunun derin kavrayışla ilgisini gösterir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ailesinden üniversiteye giden ilk kişi örneği neyi destekler?",
+    "correct": "Çevrenin duyguyu besleyebildiğini",
+    "wrong": [
+     "Ailenin başarıyı belirleyebildiğini",
+     "Üniversitenin çok zor olduğunu",
+     "Mühendisliğin cazip olmadığını"
+    ],
+    "explanation": "Kendine benzeyeni az gören kişi aidiyet hissetmekte zorlanır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesinin işlevi nedir?",
+    "correct": "Okura güven veren bir kapanış yapmak",
+    "wrong": [
+     "Okuru bir uzmana yönlendirmek",
+     "Yeni bir araştırmayı haber vermek",
+     "Önceki görüşlerinden geri adım atmak"
+    ],
+    "explanation": "Son cümle okura bulunduğu yeri hak ettiğini hatırlatır."
+   }
+  ]
+ },
+ "211": {
+  "title": "Uygulamanın Öbür Ucundakiler",
+  "category": "Bilgi/Açıklama",
+  "content": "Akşam yemeğini bir uygulama üzerinden sipariş ettiğinizde kapınıza gelen kurye, şehrin bir ucundan öbür ucuna gitmek için çağırdığınız sürücü ya da bir web sitesi aracılığıyla logo tasarımını yaptırdığınız grafiker, büyük olasılıkla bir şirketin bordrolu çalışanı değildir. Bu kişiler, “platform ekonomisi” ya da “gig ekonomisi” denen yeni bir çalışma düzeninin parçasıdır. İngilizcede “gig” sözcüğü, aslında müzisyenlerin tek gecelik konserlerini anlatır. Bu çalışma düzeninde de insanlar sürekli bir işte değil, tek tek görevlerde, iş başına ücret alarak çalışır.\n\nPlatform ekonomisi, akıllı telefonların yaygınlaşmasıyla birlikte son on beş yılda hızla büyüdü. Uygulamalar, hizmet almak isteyen kişilerle hizmet sunmak isteyenleri birbirine bağlar ve her işten bir komisyon alır. Platformun kendisi çoğu zaman ne bir araca ne bir restorana sahiptir; yalnızca iki tarafı buluşturan bir yazılım sunar. Bugün milyonlarca insan, ya tek geçim kaynağı olarak ya da asıl işinin yanında ek gelir elde etmek için bu platformlarda çalışıyor.\n\nBu çalışma biçiminin cazip yanları vardır. Pek çok çalışan, ne zaman ve ne kadar çalışacağına kendisinin karar verebilmesini önemli bir avantaj olarak görüyor. Öğrenciler derslerinin arasında, ebeveynler çocuklarının okul saatlerinde çalışabiliyor. İş bulmanın zor olduğu dönemlerde platformlar, hızlı bir gelir kapısı da olabiliyor. Tüketiciler açısından ise hizmetlere ulaşmak hiç olmadığı kadar kolay ve hızlı hâle geldi. Serbest çalışan çevirmenler, yazılımcılar ve tasarımcılar da bu platformlar sayesinde dünyanın dört bir yanındaki müşterilere ulaşabiliyor. Küçük bir kasabada yaşayan biri, evinden çıkmadan başka bir kıtadaki bir şirket için iş yapabiliyor.\n\nNe var ki bu esnekliğin bir bedeli de var. Platform çalışanları çoğu zaman şirketlerin “bağımsız yüklenicisi” sayılır, yani yasal olarak işçi kabul edilmezler. Bu nedenle pek çok ülkede düzenli bir maaş, ücretli izin, sağlık sigortası ya da emeklilik hakkı gibi güvencelerden yararlanamazlar. Kazançları büyük ölçüde talebe bağlıdır ve günden güne değişebilir. Hastalandıklarında ya da bir kaza geçirdiklerinde gelirleri bir anda kesilebilir. Kuryelerin ve sürücülerin araç, yakıt ve bakım masraflarını çoğu zaman kendileri karşılaması, eline geçen gerçek kazancı azaltır.\n\nBir başka tartışma konusu, algoritmaların yönetimidir. Hangi çalışana hangi işin verileceğine, ücretin ne kadar olacağına ve hatta bir çalışanın platformdan çıkarılıp çıkarılmayacağına çoğu zaman bir yazılım karar verir. Müşterilerin verdiği yıldızlı puanlamalar bu kararlarda belirleyici olabilir. Çalışanlar, bu kararların nasıl verildiğini bilmediklerini ve itiraz edecek bir muhatap bulmakta zorlandıklarını söylüyor. Kuryeler için hız baskısı da ayrı bir sorundur. Siparişi olabildiğince çabuk teslim etme zorunluluğu, trafikte risk almaya yol açabiliyor. Türkiye'de de kalabalık şehirlerde motosikletli kuryelerin karıştığı kazalar, bu işin güvenlik boyutunu sık sık gündeme getiriyor.\n\nSon yıllarda bazı ülkeler bu konuda yeni düzenlemeler yapmaya başladı. Bazı mahkemeler, belirli platformların çalışanlarının aslında işçi sayılması gerektiğine karar verdi. Avrupa Birliği de platform çalışanlarının haklarını güçlendirmeyi amaçlayan kurallar üzerinde çalışıyor. Tüketicilerin de bu tartışmada bir rolü var. Bir kuryeye ya da sürücüye verilen düşük puanın, o kişinin işini doğrudan etkileyebildiğini bilmek, değerlendirme yaparken daha dikkatli olmayı gerektiriyor. Hava koşulları kötüyken teslimatın birkaç dakika gecikmesine anlayış göstermek de küçük ama anlamlı bir davranış olabilir.\n\nTartışmanın özünde ise şu soru yatıyor: Esneklik ve güvence aynı anda sağlanabilir mi? Bazı uzmanlar bunun mümkün olduğunu, örneğin çalışanların birden fazla platformda biriktirdiği hakları taşıyabileceği yeni sistemlerle sağlanabileceğini savunuyor. Bu sorunun yanıtı, gelecekte milyonlarca insanın nasıl çalışacağını belirleyecek.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre “gig” sözcüğü özgün anlamıyla neyi anlatır?",
+    "correct": "Bir gecelik müzik gösterisini",
+    "wrong": [
+     "Uzun süreli bir iş sözleşmesini",
+     "Çevrimiçi bir alışveriş türünü",
+     "Tek bir müşteriye verilen işi"
+    ],
+    "explanation": "Sözcük müzisyenlerin tek gecelik konserlerini anlatır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kurye, sürücü ve grafiker örneklerini birleştiren ortak nokta nedir?",
+    "correct": "Görev başına ücret almaları",
+    "wrong": [
+     "Aynı şirkette görev yapmaları",
+     "Yalnızca geceleri çalışmaları",
+     "Benzer eğitimden geçmeleri"
+    ],
+    "explanation": "Hepsi sürekli bir işte değil, tek tek görevlerde çalışır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Platformlar gelirini nasıl elde eder?",
+    "correct": "Her işten pay alarak",
+    "wrong": [
+     "Araç işleterek",
+     "Üyelik ücreti alarak",
+     "Devlet desteğiyle"
+    ],
+    "explanation": "Her işten bir komisyon alırlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Platform çalışanları yasal olarak çoğu zaman nasıl tanımlanır?",
+    "correct": "Bağımsız yüklenici",
+    "wrong": [
+     "Kadrolu kamu memuru",
+     "Bordrolu çalışan",
+     "Şirketin ortağı"
+    ],
+    "explanation": "Şirketlerin bağımsız yüklenicisi sayılırlar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kuryelerin gerçek kazancının düşmesinin nedeni nedir?",
+    "correct": "Araç giderlerini üstlenmeleri",
+    "wrong": [
+     "Müşterilerin bahşiş vermemesi",
+     "Siparişlerin giderek azalması",
+     "Vergilerin her yıl artması"
+    ],
+    "explanation": "Araç, yakıt ve bakım masraflarını kendileri karşılar."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Algoritmik yönetimde çalışanların temel şikâyeti nedir?",
+    "correct": "Kararların şeffaf olmaması",
+    "wrong": [
+     "Ücretlerin elden verilmesi",
+     "Puanlamanın hiç yapılmaması",
+     "Yazılımların sık bozulması"
+    ],
+    "explanation": "Kararların nasıl verildiğini bilmiyor, itiraz edecek muhatap bulamıyorlar."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar tüketicilerden hangi tutumu bekler?",
+    "correct": "Puan verirken özenli olma",
+    "wrong": [
+     "Sipariş vermeyi bırakma",
+     "Platformlara dava açma",
+     "Kuryelere iş teklif edilmesi"
+    ],
+    "explanation": "Düşük puan çalışanın işini etkileyebildiği için dikkatli olunmalıdır."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta dile getirilen uzman önerisinin özü nedir?",
+    "correct": "Hakların taşınabilir olması",
+    "wrong": [
+     "Platformların devletleşmesi",
+     "Esnek işin yasaklanması",
+     "Sigortanın kaldırılması"
+    ],
+    "explanation": "Birden fazla platformda biriken hakların taşınabileceği sistemler önerilir."
+   }
+  ]
+ },
+ "224": {
+  "title": "Etiketteki Görünmeyen Bedel",
+  "category": "Bilgi/Açıklama",
+  "content": "Birkaç on yıl önce giyim mağazaları yılda iki kez, ilkbahar-yaz ve sonbahar-kış sezonlarında yeni koleksiyonlar sunardı. Bugün ise bazı büyük markalar mağazalarına neredeyse her hafta yeni ürünler getiriyor. Podyumlarda görülen bir tasarım, birkaç hafta içinde çok daha düşük bir fiyatla raflarda yerini alıyor. Bu üretim ve tüketim biçimine “hızlı moda” deniyor. Sosyal medya da bu döngüyü hızlandırıyor. Bir fotoğrafta aynı kıyafetle ikinci kez görünmek istemeyen ya da her hafta yeni bir akımı takip etmek isteyen kullanıcılar, sürekli yeni ürün satın almaya yönlendiriliyor. Kimi içerik üreticileri, bir alışverişte aldıkları onlarca parçayı tanıttıkları videolarla milyonlarca kişiye ulaşıyor.\n\nHızlı moda, giysileri çok daha ucuz ve erişilebilir hâle getirdi. Ancak bu ucuzluğun, etikette görünmeyen bedelleri var. Dünyada her yıl yaklaşık yüz milyar parça giysi üretildiği tahmin ediliyor. Tüketiciler ise eskiye göre çok daha fazla giysi satın alıyor, ama her birini çok daha kısa süre kullanıyor. Bazı araştırmalara göre ucuz bir giysi, atılmadan önce ortalama yalnızca birkaç kez giyiliyor.\n\nGiyim üretimi büyük miktarda su ve enerji tüketir. En çok kullanılan kumaşlardan biri olan pamuk, yetiştirilmesi için çok su isteyen bir bitkidir. Tek bir pamuklu tişört üretmek için gereken su, bir kişinin iki ila üç yıl içeceği suya eşit olarak hesaplanıyor. Kumaş boyama ve işleme süreçlerinde kullanılan kimyasallar, gerekli önlemler alınmadığında nehirlere karışarak suyu kirletebiliyor. Polyester gibi plastik kökenli sentetik kumaşlar ise petrolden üretiliyor ve yıkandıkça suya mikroplastik lifler bırakıyor.\n\nKullanılmış giysilerin akıbeti de bir sorun. Atılan giysilerin çok küçük bir bölümü yeni giysilere dönüştürülebiliyor. Büyük bölümü ya çöp alanlarına gidiyor ya da yakılıyor. Gelişmiş ülkelerden ikinci el olarak başka ülkelere gönderilen giysilerin bir kısmı da satılamadığı için oralarda çöpe dönüşüyor. Şili'deki Atacama Çölü'nde biriken devasa giysi yığınları, bu durumun en çarpıcı örneklerinden biri olarak dünya basınında yer aldı.\n\nHızlı modanın insani boyutu da tartışılıyor. Üretimin büyük bölümü, iş gücünün ucuz olduğu ülkelerdeki fabrikalarda yapılıyor. Bu fabrikalarda çalışanlar çoğu zaman düşük ücretlerle, uzun saatler boyunca ve kimi zaman güvensiz koşullarda çalışıyor. 2013'te Bangladeş'te çöken Rana Plaza binasında binden fazla tekstil işçisinin hayatını kaybetmesi, sektörün çalışma koşullarına dünyanın dikkatini çekti.\n\nBazı markalar bu eleştirilere yanıt olarak “çevre dostu” ya da “sürdürülebilir” adı verilen koleksiyonlar çıkarıyor. Ancak uzmanlar, bu ifadelerin her zaman gerçeği yansıtmadığı konusunda uyarıyor. Toplam üretimin yalnızca küçük bir kısmını oluşturan bir koleksiyonla markanın tamamını çevreci gösterme çabasına “yeşil aklama” deniyor. Bu nedenle bir ürünün gerçekten sürdürülebilir olup olmadığını anlamak için güvenilir sertifikalara ve markanın üretim süreci hakkında paylaştığı somut bilgilere bakmak gerekiyor.\n\nPeki tüketiciler ne yapabilir? Uzmanlar, en sürdürülebilir giysinin zaten gardırobumuzda olan giysi olduğunu hatırlatıyor. Daha az ama daha kaliteli ve uzun ömürlü giysiler almak, giysileri onararak daha uzun süre kullanmak, ikinci el alışverişi ve giysi takası, bu alandaki etkiyi azaltmanın yolları arasında yer alıyor. Giysileri daha düşük sıcaklıkta yıkamak ve kurutma makinesi yerine açık havada kurutmak da hem enerji tasarrufu sağlar hem de kumaşın ömrünü uzatır. Bir giysiyi satın almadan önce “Bunu en az otuz kez giyer miyim?” diye sormak, basit ama etkili bir yöntem olarak öneriliyor. Sonuçta modanın kendisi değil, onu tüketme hızımız asıl sorunu oluşturuyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Eskiden giyim mağazaları yeni koleksiyonu ne sıklıkla sunardı?",
+    "correct": "Yılda iki dönem",
+    "wrong": [
+     "Her ayın başında",
+     "Üç ayda bir",
+     "Her yaz sonunda"
+    ],
+    "explanation": "İlkbahar-yaz ve sonbahar-kış olmak üzere yılda iki kez."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sosyal medyanın hızlı modadaki rolü nedir?",
+    "correct": "Alımı sıklaştırması",
+    "wrong": [
+     "Fiyatları düşürmesi",
+     "Üretimi yavaşlatması",
+     "Kumaşı iyileştirmesi"
+    ],
+    "explanation": "Aynı kıyafetle görünmeme isteği ve akımlar sürekli alışverişe yönlendirir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın “etikette görünmeyen bedel” ile kastettiği nedir?",
+    "correct": "Fiyata yansımayan zararlar",
+    "wrong": [
+     "Vergi olarak ödenen tutarlar",
+     "Kargo için alınan ücretler",
+     "Ucuz giysilerin yüksek fiyatı"
+    ],
+    "explanation": "Ucuzluğun çevresel ve insani maliyetleri fiyatta görünmez."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sentetik kumaşlar yıkandıkça suya ne bırakır?",
+    "correct": "Plastik kökenli lifler",
+    "wrong": [
+     "Boya artığı tuzlar",
+     "Doğal pamuk lifleri",
+     "Petrol kökenli kimyasal"
+    ],
+    "explanation": "Polyester gibi kumaşlar mikroplastik lif bırakır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Atacama Çölü örneği hangi sorunu gösterir?",
+    "correct": "Satılmayan giysilerin birikmesini",
+    "wrong": [
+     "Çölde pamuk yetiştirildiğini",
+     "İkinci el giysilerin çok olduğunu",
+     "Giysilerin yeniden işlenebildiğini"
+    ],
+    "explanation": "Başka ülkelere gönderilen giysilerin bir kısmı oralarda çöpe dönüşür."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Rana Plaza olayı hangi konuya dikkat çekti?",
+    "correct": "Fabrikalardaki iş şartlarına",
+    "wrong": [
+     "Kumaş fiyatlarının artışına",
+     "Fabrikadaki üretim sürecine",
+     "Mağaza sayılarının azalmasına"
+    ],
+    "explanation": "Binanın çökmesi sektörün çalışma koşullarını gündeme getirdi."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yeşil aklama nasıl bir uygulamadır?",
+    "correct": "Az şeyle bütünü çevreci göstermek",
+    "wrong": [
+     "Geri dönüşümle yeni kumaş üretmek",
+     "Giysiyi doğal boyalarla renklendirmek",
+     "Atık suyu arıtarak nehre vermek"
+    ],
+    "explanation": "Küçük bir koleksiyonla markanın tamamını çevreci göstermeye çalışmaktır."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre temel sorun nedir?",
+    "correct": "Tüketim temposu",
+    "wrong": [
+     "Modanın varlığı",
+     "Kumaşın türü",
+     "Mağazanın yeri"
+    ],
+    "explanation": "Sorun modanın kendisi değil, onu tüketme hızımızdır."
+   }
+  ]
+ },
+ "235": {
+  "title": "İki Yol Arasında Bir Yaz",
+  "category": "Hikaye/Kurgu",
+  "content": "Deniz, üniversiteden mezun olduğu yaz iki seçenek arasında kaldı. Bir yanda İzmir'deki bir yazılım şirketinin iş teklifi vardı. Şirket ailesinin evine yakındı, maaş iyiydi ve ekipteki birkaç kişiyi stajından tanıyordu. Öbür yanda ise Hollanda'daki bir üniversiteden gelen yüksek lisans kabul mektubu duruyordu. Bu programa yıllardır girmek istiyordu; ama bu, iki yıl boyunca ailesinden, arkadaşlarından ve alıştığı her şeyden uzakta yaşamak demekti.\n\nDeniz günlerce karar veremedi. Annesi ona, kararın ona ait olduğunu, ama evden uzaklaşmasının kendisini çok üzeceğini söyledi. Babası ise hiçbir şey söylemedi, yalnızca “Sen ne istiyorsun?” diye sordu. Arkadaşlarından bazıları iş teklifini bir fırsat olarak görüyor, bazıları ise yurt dışı deneyiminin onu çok değiştireceğini söylüyordu. Herkes farklı bir şey önerdikçe Deniz daha da kararsızlaşıyordu. Geceleri uyuyamıyor, telefonunda her iki seçenekle ilgili saatlerce araştırma yapıyordu. Bir gün iş teklifini kabul etmeye karar veriyor, ertesi sabah fikrini değiştiriyordu. Kararsızlık, karar vermenin kendisinden daha yorucu olmaya başlamıştı.\n\nBir akşam, lisede ona fizik dersi vermiş olan öğretmeni Nihal Hanım'a bir mesaj yazdı. Ertesi gün bir kafede buluştular. Nihal Hanım ona kararı hemen vermesini değil, önce kendine birkaç soru sormasını önerdi: “On yıl sonra hangi seçimi yapmadığın için daha çok pişman olursun? Korktuğun için mi bir seçenekten kaçıyorsun, yoksa gerçekten istemediğin için mi?” Sonra ona bir kâğıda her iki seçeneğin olası sonuçlarını, hem iyi hem kötü yanlarıyla yazmasını söyledi. Nihal Hanım, kendisinin de gençken bir burs fırsatını, ailesini üzmemek için geri çevirdiğini anlattı. Bu kararından pişman olup olmadığını hâlâ bilmediğini, ama o gün kendi isteğini hiç dinlemediğini sonradan fark ettiğini söyledi.\n\nDeniz o gece kâğıda baktığında bir şeyi fark etti. İş teklifinin yanına yazdığı artıların çoğu güvenlik ve rahatlıkla ilgiliydi. Yüksek lisansın yanına yazdıkları ise heyecan, merak ve öğrenmekle. Eksilere bakınca da, yüksek lisansın eksilerinin çoğunun korku olduğunu gördü: yalnız kalma korkusu, dil engeli korkusu, başarısız olma korkusu. Bu korkular gerçekti, ama hiçbiri aşılmaz değildi. İş teklifinin eksileri ise daha sessizdi: her gün aynı yolu yürüyecek olmak, merak ettiği alanı hiç denememiş olmak ve yıllar sonra “Ya gitseydim?” diye düşünme ihtimali. Deniz, bu son cümleyi yazarken kalemi bir süre elinde tuttuğunu fark etti. Ertesi sabah annesiyle uzun bir kahvaltı yaptı ve kâğıdı ona da gösterdi. Annesi kâğıdı dikkatle okudu, gözleri dolsa da “Bunu yazan kişi kararını çoktan vermiş gibi” dedi.\n\nDeniz yüksek lisansı seçti. İzmir'deki şirkete teşekkür eden bir mektup yazdı ve ileride yeniden görüşebileceklerini umduğunu belirtti. Hollanda'daki ilk aylar kolay geçmedi. Yağmurlu günler, yalnız akşamlar ve anlamadığı bürokratik işlemler onu bazen bunalttı. Annesiyle her pazar akşamı görüntülü konuşuyor, bazen ekranın iki ucunda birlikte çay içiyorlardı. Ama zamanla yeni arkadaşlar edindi, dersleri sevdi ve kendisinin sandığından çok daha dayanıklı olduğunu keşfetti. İkinci yılın başında bir araştırma projesinde asistanlık yapmaya başladı; bu iş hem ona deneyim kazandırdı hem de giderlerini karşılamasına yardım etti.\n\nİki yıl sonra mezuniyet töreninde annesi ve babası da salondaydı. Deniz, kararını verdiği o yazı ve kafedeki konuşmayı düşündü. Tören bitince Nihal Hanım'a kısa bir teşekkür mesajı gönderdi. Doğru seçimi yaptığından emindi. Ama asıl öğrendiği, hangi seçeneği seçtiğinden çok, korkusunu değil isteğini dinleyerek karar vermenin önemiydi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "İzmir'deki teklif Deniz için neyi temsil ediyordu?",
+    "correct": "Tanıdık ve güvenli bir düzeni",
+    "wrong": [
+     "Hayalini kurduğu bir araştırmayı",
+     "Yurt dışında yeni bir yaşamı",
+     "Ailesinden uzak bir hayatı"
+    ],
+    "explanation": "Ailesine yakın, iyi maaşlı ve tanıdık bir ortamdı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deniz'e kabul mektubu hangi ülkeden geldi?",
+    "correct": "Hollanda",
+    "wrong": [
+     "Almanya",
+     "İzmir",
+     "Danimarka"
+    ],
+    "explanation": "Yüksek lisans kabulü Hollanda'daki bir üniversiteden geldi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Babasının sorusu diğer görüşlerden nasıl ayrılır?",
+    "correct": "Seçimi Deniz'in isteğine bırakır",
+    "wrong": [
+     "Kesin bir yönlendirme içerir",
+     "Annenin görüşünü tekrar eder",
+     "Arkadaşlarının fikrini destekler"
+    ],
+    "explanation": "Öneri vermez, yalnızca Deniz'in ne istediğini sorar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kararsızlık Deniz'i nasıl etkiliyordu?",
+    "correct": "Uykusunu kaçırıyordu",
+    "wrong": [
+     "İşini aksatıyordu",
+     "Ailesiyle küstürüyordu",
+     "Derslerini aksatıyordu"
+    ],
+    "explanation": "Geceleri uyuyamıyor, kararsızlık onu yoruyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Nihal Hanım'ın kendi gençliğini anlatmasının amacı nedir?",
+    "correct": "İç sesi dinlememenin bedelini göstermek",
+    "wrong": [
+     "Burs almanın zorluğunu ayrıntılı anlatmak",
+     "Deniz'i ailesinin tepkisine karşı uyarmak",
+     "Öğretmenliği bir meslek olarak önermek"
+    ],
+    "explanation": "Kendi isteğini dinlemediğini sonradan fark ettiğini anlatır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kâğıttaki listeden Deniz'in vardığı sonuç nedir?",
+    "correct": "Kaçınmasının korkudan doğduğu",
+    "wrong": [
+     "İş teklifinin daha kazançlı olduğu",
+     "Yurt dışının çok tehlikeli olduğu",
+     "Ailesinin ona karşı çıktığı"
+    ],
+    "explanation": "Yüksek lisansın eksilerinin çoğunun korku olduğunu gördü."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Annesi kâğıdı okuyunca ne dedi?",
+    "correct": "Kararın verilmiş göründüğünü",
+    "wrong": [
+     "Gitmesine izin vermediğini",
+     "Listeyi yeniden yazmasını",
+     "İşi kabul etmesi gerektiğini"
+    ],
+    "explanation": "Bunu yazanın kararını çoktan vermiş gibi olduğunu söyledi."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün iletisi nedir?",
+    "correct": "Kararda iç sesin rehber olması",
+    "wrong": [
+     "Yurt dışında okumanın şart olması",
+     "Aileden uzak yaşamanın zor olması",
+     "İş tekliflerini reddetmemek"
+    ],
+    "explanation": "Asıl öğrenilen, korku yerine isteği dinleyerek karar vermektir."
+   }
+  ]
+ },
+ "243": {
+  "title": "Kötünün Ağır Basan Yükü",
+  "category": "Bilgi/Açıklama",
+  "content": "Gün içinde on kişi işinizi övse, bir kişi de eleştirse, akşam eve döndüğünüzde hangisini düşünürsünüz? Çoğumuz için yanıt bellidir: o tek eleştiriyi. Psikologlar bu eğilime “olumsuzluk yanlılığı” adını veriyor. Buna göre insan beyni, olumsuz olaylara, bilgilere ve duygulara, aynı büyüklükteki olumlu olanlara göre daha güçlü tepki verir ve onları daha uzun süre hatırlar. Bu durum yalnızca büyük olaylarda değil, gündelik hayatın küçük anlarında da kendini gösterir. Güzel geçen bir tatilin sonunda yaşanan bir uçak rötarı, bütün tatilin anısını gölgeleyebilir. Bir restoranda harika bir yemek yiyip garsonun kabalığıyla karşılaşan biri, o restoranı çoğu zaman garsonla hatırlar.\n\nBu eğilimin kökenleri evrimsel geçmişimize uzanıyor. Atalarımız için bir çalının arkasındaki hışırtıyı rüzgâr sanmak yerine yırtıcı bir hayvan sanmak, hayatta kalma açısından daha güvenliydi. Tehlikeyi gözden kaçırmanın bedeli ölüm olabilirdi; boş yere korkmanın bedeli ise yalnızca biraz enerji kaybıydı. Bu yüzden tehditlere karşı daha duyarlı olan bireyler hayatta kalıp genlerini aktarma konusunda daha başarılı oldu. Sonuçta beynimiz, iyi haberleri kaçırma pahasına kötü haberleri yakalamaya ayarlandı.\n\nAraştırmalar bu eğilimin hayatın pek çok alanında etkili olduğunu gösteriyor. Psikolog Roy Baumeister ve arkadaşlarının 2001'de yayımladığı ünlü bir makale, “Kötü, iyiden daha güçlüdür” başlığını taşıyordu. Makalede, ilişkilerde, öğrenmede ve izlenim oluşturmada olumsuz deneyimlerin olumlu olanlardan daha kalıcı izler bıraktığını gösteren çok sayıda çalışma derlendi. İlişki araştırmacısı John Gottman ise uzun süreli ve mutlu ilişkilerde her olumsuz etkileşime karşılık yaklaşık beş olumlu etkileşim bulunduğunu ileri sürdü. Gottman'a göre tek bir kırıcı söz, ancak birkaç sıcak ve destekleyici davranışla dengelenebiliyor. Öğretmenlerin öğrencilere geri bildirim verirken önce güçlü yönleri, sonra geliştirilmesi gereken yanları vurgulaması da bu bulguyla uyumlu bir yaklaşım olarak görülüyor. Ancak eleştirinin tamamen saklanması da bu yaklaşımın amacı değil.\n\nOlumsuzluk yanlılığı, haber tüketimimizi de şekillendiriyor. Olumsuz başlıklar daha çok tıklanıyor ve paylaşılıyor. Bu da medya kuruluşlarını, dikkat çekmek için daha çok olumsuz habere yönlendirebiliyor. Sonuç olarak pek çok insan, dünyanın gerçekte olduğundan daha tehlikeli ve kötüye gittiğini düşünüyor. Oysa uzun vadeli verilere bakıldığında, örneğin aşırı yoksulluk ve çocuk ölümleri gibi alanlarda son yüzyılda büyük ilerlemeler kaydedildiği görülüyor. Bu ilerlemeler yavaş ve sessiz gerçekleştiği için haber olmuyor; bir felaket ise tek bir günde dünyanın gündemine oturabiliyor.\n\nBu eğilim kararlarımızı da etkiliyor. Ekonomistler, insanların bir miktar parayı kaybetmekten duydukları üzüntünün, aynı miktarı kazanmaktan duydukları sevinçten genellikle daha büyük olduğunu buldu. “Kayıptan kaçınma” adı verilen bu durum, kimi zaman insanları mantıklı riskler almaktan alıkoyabiliyor. Örneğin bir öğrenci, yeni bir kulübe katılmanın getireceği arkadaşlıkları değil, reddedilme ihtimalini düşünerek başvurmaktan vazgeçebilir. Bir yatırımcı ise değeri düşen bir hisseyi, zararı kabullenmemek için gereğinden uzun süre elinde tutabilir.\n\nOlumsuzluk yanlılığı tamamen ortadan kaldırılabilecek bir şey değil; çünkü beynimizin temel işleyişinin bir parçası. Ancak etkisini azaltmak mümkün. Psikologlar, gün sonunda yaşanan üç iyi şeyi yazmanın, olumlu deneyimlerin üzerinde bilinçli olarak biraz daha uzun durmanın ve bir eleştiriyle karşılaşınca aynı gün alınan olumlu geri bildirimleri de hatırlamanın faydalı olabileceğini söylüyor. Bazı araştırmacılar, bu eğilimin yaşla birlikte azaldığını da gözlemliyor; yaşlı yetişkinlerin olumlu bilgilere daha fazla dikkat ettiği görülüyor. Kısacası, beynimizin kötüye odaklanma eğilimini bilmek, ona karşı dengeli bir bakış geliştirmenin ilk adımı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde bu eğilime verilen ad nedir?",
+    "correct": "Olumsuzluk yanlılığı",
+    "wrong": [
+     "Onay yanlılığı",
+     "Çapalama etkisi",
+     "Seçici bellek kusuru"
+    ],
+    "explanation": "Psikologlar buna olumsuzluk yanlılığı diyor."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Restoran ve garson örneği neyi açıklar?",
+    "correct": "Tek bir kusurun anıyı gölgelemesini",
+    "wrong": [
+     "Yemeğin hizmetten önemli olmasını",
+     "Garsonların iyi yetiştirilmemesini",
+     "Restoranların aşırı pahalı olmasını"
+    ],
+    "explanation": "Kabalık bütün deneyimin hatırlanma biçimini belirler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Hışırtı örneğinde tehlikeyi abartmak neden avantajlıydı?",
+    "correct": "Yanılmanın bedeli az olduğu için",
+    "wrong": [
+     "Yırtıcıların sayıca az olduğu için",
+     "Rüzgârın çok sık estiği için",
+     "Yiyeceğin bol bulunduğu için"
+    ],
+    "explanation": "Boş yere korkmanın bedeli yalnızca biraz enerji kaybıydı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gottman'a göre mutlu ilişkilerde oran nasıldır?",
+    "correct": "Bir olumsuza karşı beş olumlu",
+    "wrong": [
+     "Bir olumsuza karşı üç olumlu",
+     "İki olumsuza karşı bir olumlu",
+     "Olumlu ve olumsuz eşit sayıda"
+    ],
+    "explanation": "Her olumsuz etkileşime karşılık yaklaşık beş olumlu etkileşim bulunur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "İlerlemelerin haber olmamasının nedeni nedir?",
+    "correct": "Ağır ve sessizce ilerlemeleri",
+    "wrong": [
+     "Gazetecilerin bunu bilmemesi",
+     "Verilerin gizli tutulmuş olması",
+     "Medyanın olumsuz habere yönelmesi"
+    ],
+    "explanation": "Yavaş ilerlemeler haber olmaz, felaketler bir günde gündeme gelir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Olumsuz başlıklarla ilgili hangi bilgi verilir?",
+    "correct": "Daha fazla yayıldığı",
+    "wrong": [
+     "Daha kısa yazıldığı",
+     "Daha az paylaşıldığı",
+     "Yasakla sınırlandığı"
+    ],
+    "explanation": "Olumsuz başlıklar daha çok tıklanıyor ve paylaşılıyor."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Değeri düşen hisseyi elde tutmak hangi kavrama örnektir?",
+    "correct": "Kayıptan kaçınma",
+    "wrong": [
+     "Risk sevme",
+     "Hızlı kazanç",
+     "Bilinçli yatırım"
+    ],
+    "explanation": "Zararı kabullenmemek kayıptan kaçınmanın bir sonucudur."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın vardığı yargı nedir?",
+    "correct": "Eğilim bilinerek dengelenebilir",
+    "wrong": [
+     "Eğilim yaşla birlikte silinir",
+     "Eğilim zararsız bir alışkanlıktır",
+     "Eğilim eğitimle silinebilir"
+    ],
+    "explanation": "Eğilimi bilmek dengeli bakışın ilk adımıdır."
+   }
+  ]
+ },
+ "251": {
+  "title": "Döngüyü Yeniden Kurmak",
+  "category": "Bilgi/Açıklama",
+  "content": "Her sabah uyanır uyanmaz telefonunuza uzanıyor musunuz? Eve girince ayakkabılarınızı hep aynı yere mi bırakıyorsunuz? Günlük davranışlarımızın büyük bölümü, üzerinde düşünmeden yaptığımız alışkanlıklardan oluşuyor. Bazı araştırmalar, gün içindeki davranışlarımızın yaklaşık yüzde kırkının bilinçli kararlarla değil, alışkanlıklarla gerçekleştiğini ileri sürüyor.\n\nAlışkanlıklar beynin enerji tasarrufu yapma yollarından biridir. Yeni bir davranışı ilk kez yaparken beyin çok çalışır; her adımı düşünmemiz gerekir. Araba kullanmayı öğrenmeye başladığınız ilk günleri hatırlayın: aynaya bakmak, vites değiştirmek, pedallara basmak ayrı ayrı dikkat isterdi. Davranış tekrarlandıkça beynin daha derin bölgelerinde, özellikle bazal ganglionlarda otomatik bir kalıp oluşur. Böylece bilinçli düşünceye ayrılan kaynaklar başka işlere kalır. Bu yüzden deneyimli bir sürücü, araba kullanırken rahatça sohbet edebilir ya da radyo dinleyebilir. Ancak bu verimliliğin bir bedeli de var: Beyin, iyi ve kötü alışkanlıklar arasında ayrım yapmaz. Her ikisini de aynı biçimde otomatikleştirir ve korur.\n\nGazeteci Charles Duhigg, alışkanlıkların işleyişini üç aşamalı bir döngüyle açıklar: işaret, rutin ve ödül. İşaret, davranışı başlatan tetikleyicidir; bir yer, bir saat, bir duygu ya da başka bir davranış olabilir. Rutin, yaptığımız davranışın kendisidir. Ödül ise beynin bu döngüyü hatırlamaya değer bulmasını sağlayan sonuçtur. Örneğin öğleden sonra yorgunluk hissetmek bir işarettir, kantine gidip tatlı almak rutin, kısa süreli enerji ve sohbet ise ödüldür. Bu döngü tekrarlandıkça işaret ile ödül arasındaki bağ güçlenir ve davranış otomatikleşir.\n\nKötü bir alışkanlıktan kurtulmak bu yüzden zordur: Döngü bir kez yerleştiğinde, işaret ortaya çıkar çıkmaz beyin ödülü beklemeye başlar. Duhigg'e göre alışkanlığı silmeye çalışmak yerine, aynı işaret ve ödülü koruyarak rutini değiştirmek daha etkilidir. Öğleden sonra yorgunluk hisseden kişi, tatlı yerine kısa bir yürüyüş yapıp bir arkadaşıyla sohbet ederek benzer bir ödüle ulaşabilir. Bunun için önce kişinin gerçekte hangi ödülü aradığını bulması gerekir. Tatlıya uzanan kişi aslında şekere mi, moladan doğan rahatlamaya mı, yoksa kantindeki sohbete mi ihtiyaç duyuyor? Duhigg, bunu anlamak için birkaç gün boyunca farklı rutinler deneyip işaretten kısa bir süre sonra isteğin geçip geçmediğini not etmeyi öneriyor.\n\nYeni bir alışkanlık edinmek isteyenler için de öneriler var. Yazar James Clear, büyük hedefler yerine çok küçük adımlarla başlamayı öneriyor. Her gün bir saat spor yapmayı hedeflemek yerine yalnızca iki dakika esneme yapmakla başlamak, davranışın sürekliliğini sağlamayı kolaylaştırır. Clear'a göre önemli olan, davranışın büyüklüğü değil, tekrarlanmasıdır; çünkü kimlik, tekrar eden küçük eylemlerle şekillenir. Her gün iki sayfa kitap okuyan biri, zamanla kendini “okuyan biri” olarak görmeye başlar. Clear ayrıca istenen davranışı kolaylaştırmayı, istenmeyeni ise zorlaştırmayı öneriyor: Sabah koşmak isteyen biri spor ayakkabılarını akşamdan kapının önüne koyabilir; daha az telefon kullanmak isteyen biri ise telefonunu başka bir odada şarj edebilir.\n\nBir başka yöntem ise yeni alışkanlığı mevcut bir alışkanlığa bağlamaktır. “Sabah kahvemi koyduktan sonra bir sayfa kitap okuyacağım” gibi bir plan, var olan davranışı yeni davranış için işarete dönüştürür. Alışkanlıklar bir gecede oluşmaz; bir araştırmada yeni bir davranışın otomatikleşmesinin ortalama altmış altı gün sürdüğü, ama kişiden kişiye çok değiştiği bulunmuştur. Aynı araştırmada, bir günü kaçırmanın süreci büyük ölçüde bozmadığı da görülmüştür. Bu nedenle uzmanlar, bir aksaklıktan sonra pes etmek yerine ertesi gün kaldığı yerden devam etmenin, mükemmel bir başlangıç yapmaktan daha önemli olduğunu vurguluyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı araştırmalara göre günlük davranışların ne kadarı alışkanlıktır?",
+    "correct": "Yaklaşık yüzde kırkı",
+    "wrong": [
+     "Yaklaşık yüzde altmışı",
+     "Yaklaşık yarıdan fazlası",
+     "Yaklaşık dörtte üçü"
+    ],
+    "explanation": "Davranışların yaklaşık yüzde kırkı alışkanlıkla gerçekleşir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sürücü örneğiyle anlatılan süreç nedir?",
+    "correct": "Tekrarla işin otomatikleşmesi",
+    "wrong": [
+     "Dikkatin giderek dağılması",
+     "Davranışın zamanla unutulması",
+     "Korkunun öğrenmeyi engellemesi"
+    ],
+    "explanation": "Tekrarlanan davranış otomatik bir kalıba dönüşür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Beynin iyi ve kötü alışkanlıkları ayırmaması neden önemlidir?",
+    "correct": "Zararlı kalıpların da yerleşmesi",
+    "wrong": [
+     "Yeni bilgilerin hızla silinmesi",
+     "Uyku düzeninin giderek bozulması",
+     "Kötü kalıpların daha zor yerleşmesi"
+    ],
+    "explanation": "Beyin her ikisini de aynı biçimde otomatikleştirir ve korur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Duhigg'in döngüsünde davranışı başlatan aşama hangisidir?",
+    "correct": "İşaret",
+    "wrong": [
+     "Ödül",
+     "Rutin",
+     "Kimlik"
+    ],
+    "explanation": "İşaret davranışı başlatan tetikleyicidir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Duhigg'e göre kötü alışkanlıkla başa çıkmanın yolu nedir?",
+    "correct": "Aradaki davranışı değiştirmek",
+    "wrong": [
+     "İşareti büsbütün yok etmek",
+     "Ödülden vazgeçmeyi öğrenmek",
+     "Döngüyü bilinçle hızlandırmak"
+    ],
+    "explanation": "İşaret ve ödül korunup rutin değiştirilmelidir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ayakkabıları kapı önüne koymak hangi ilkeye örnektir?",
+    "correct": "İstenen davranışı kolaylaştırma",
+    "wrong": [
+     "Kötü alışkanlığı cezalandırma",
+     "İstenmeyen davranışı zorlaştırma",
+     "Davranışı ödülle pekiştirme"
+    ],
+    "explanation": "İstenen davranışı kolaylaştırmanın bir yoludur."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Clear'a göre kimlik nasıl şekillenir?",
+    "correct": "Yinelenen ufak eylemlerle",
+    "wrong": [
+     "Tek ve büyük kararlarla",
+     "Başkalarının sözleriyle",
+     "Uzun soluklu planlamalarla"
+    ],
+    "explanation": "Kimlik tekrar eden küçük eylemlerle şekillenir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre bir günü kaçıran kişiye verilecek öğüt nedir?",
+    "correct": "Ertesi gün yine sürdürmesi",
+    "wrong": [
+     "Baştan yeni plan yapması",
+     "Hedefini iyice büyütmesi",
+     "Mükemmel başlangıç yapması"
+    ],
+    "explanation": "Aksaklıktan sonra pes etmeden devam etmek daha önemlidir."
+   }
+  ]
+ }
+}

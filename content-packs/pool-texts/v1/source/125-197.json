@@ -1,0 +1,668 @@
+{
+ "130": {
+  "title": "Sabahçılar ve Gece Kuşları",
+  "category": "Bilgi/Açıklama",
+  "content": "Bazı insanlar sabah altıda kendiliğinden uyanır, güne enerjik başlar ve akşam dokuz olmadan gözleri kapanır. Bazıları ise sabahları yataktan zor çıkar, öğleden sonra açılır ve gece yarısından sonra en verimli saatlerini yaşar. Uzun süre bu farklar tembellik ya da disiplin eksikliği olarak görüldü. Oysa bilim insanları, uyku ve uyanıklık saatlerimizin büyük ölçüde biyolojik olarak belirlendiğini gösteriyor. Bu bireysel zamanlamaya “kronotip” adı veriliyor. Araştırmacılar insanların çoğunun bu iki ucun arasında bir yerde durduğunu, yalnızca küçük bir bölümünün aşırı sabahçı ya da aşırı akşamcı olduğunu belirtiyor.\n\nKronotipimizi, beynin derinliklerinde bulunan ve vücudun iç saati olarak bilinen küçük bir bölge yönetir. Bu saat, yaklaşık yirmi dört saatlik bir döngüyle çalışır ve vücut ısısından hormon salgısına kadar pek çok işlevi düzenler. Sabah ışığı bu saati her gün yeniden ayarlar; tıpkı her gün biraz geri kalan bir saatin, doğru saate göre düzeltilmesi gibi. Akşam karanlık bastırdığında ise beyin, uykuyu kolaylaştıran melatonin hormonunu salgılamaya başlar. Sabahçı insanlarda bu hormon daha erken, akşamcı insanlarda ise daha geç salgılanır. Uykudan uyanmamıza yardım eden kortizol hormonunun sabah yükselişi de aynı biçimde kişiden kişiye farklı saatlerde gerçekleşir. Bu yüzden iki kişi aynı saatte yatsa bile, biri sabah dinç, diğeri yorgun uyanabilir.\n\nAraştırmalar, kronotipin kısmen kalıtsal olduğunu gösteriyor. İç saatin işleyişini etkileyen bazı genlerdeki küçük farklılıkların, kişinin sabahçı ya da akşamcı olmasında rol oynadığı biliniyor. Yaş da önemli bir etken. Çocuklar genellikle sabahçıdır. Ergenlik döneminde iç saat belirgin biçimde ileri kayar; bu yüzden pek çok genç gece geç saatlere kadar uyuyamaz ve sabah erken kalkmakta zorlanır. Yirmili yaşların sonundan itibaren bu kayma yavaş yavaş geri döner ve yaşlılıkta insanlar yeniden erken kalkmaya başlar. Bazı araştırmacılar, ergenlerin sabah çok erken başlayan derslerde dikkatlerini toplamakta zorlanmasının bu biyolojik kaymayla ilgili olduğunu savunuyor.\n\nSorun, toplumun çalışma ve okul saatlerinin çoğunlukla sabahçılara göre düzenlenmiş olmasıdır. Akşamcı biri, iş için her gün erken kalktığında, iç saatinin istediğinden çok daha az uyur. Hafta sonu ise geç saatlere kadar uyuyarak bu açığı kapatmaya çalışır. Bilim insanları, hafta içi ve hafta sonu uyku saatleri arasındaki bu farka “sosyal jet lag” adını veriyor. Sanki her hafta sonu başka bir saat dilimine gidip pazartesi geri dönüyormuşsunuz gibi. Bu durumun uzun vadede yorgunluk, dikkat sorunları ve bazı sağlık riskleriyle bağlantılı olduğu düşünülüyor. Kimi çalışmalar, sosyal jet lag yaşayan kişilerin ruh hâlinin daha sık dalgalandığını ve kahve gibi uyarıcılara daha çok başvurduğunu gösteriyor.\n\nKronotipimizi büyük ölçüde değiştiremesek de onunla daha uyumlu yaşamak mümkün. Sabah erkenden gün ışığına çıkmak ve akşamları parlak ekran ışığından kaçınmak, iç saati biraz öne çekmeye yardımcı olabilir. Mümkünse en çok dikkat gerektiren işleri, kendi en verimli saatlerimize denk getirmek de fayda sağlar. Bazı okullar ve şirketler de bu bilgileri dikkate alarak başlangıç saatlerini esnetmeye başladı. Örneğin Amerika'da derslerin bir saat geç başladığı bazı liselerde, öğrencilerin daha uzun uyuduğu, devamsızlığın azaldığı ve notların bir miktar yükseldiği bildirildi. Hafta sonları da hafta içiyle benzer saatlerde yatıp kalkmak, sosyal jet lagın etkisini hafifletebilir. Uzmanlar, akşamcıların sabahçılara göre daha tembel olmadığını, yalnızca farklı bir zaman çizelgesine göre çalıştığını vurguluyor. Herkesin en iyi saatleri farklıdır; önemli olan, kendi ritmimizi tanımak ve hayatımızı mümkün olduğunca ona göre düzenlemektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Giriş paragrafına göre uyku saatlerindeki farklar eskiden nasıl yorumlanıyordu?",
+    "correct": "Bir karakter zaafı olarak",
+    "wrong": [
+     "Bir hastalık belirtisi olarak",
+     "Kalıtsal bir özellik olarak",
+     "Mevsimsel değişim olarak"
+    ],
+    "explanation": "Farklar uzun süre tembellik ya da disiplin eksikliği sayıldı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmacılara göre insanların çoğu nerede durur?",
+    "correct": "İki ucun ortasında",
+    "wrong": [
+     "Aşırı sabahçı uçta",
+     "Aşırı akşamcı uçta",
+     "Sabahçılar grubunda"
+    ],
+    "explanation": "Çoğu insan iki ucun arasında bir yerdedir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Saat benzetmesiyle anlatılmak istenen nedir?",
+    "correct": "Işığın bedendeki ritmi sıfırlaması",
+    "wrong": [
+     "Saatin vücut ısısını sürekli ölçmesi",
+     "Uykunun her gece biraz kısalması",
+     "Hormonların her gün aynı kalması"
+    ],
+    "explanation": "Sabah ışığı biraz kayan iç saati her gün yeniden ayarlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Akşamcılarda melatonin ne zaman salgılanır?",
+    "correct": "Daha geç saatte",
+    "wrong": [
+     "Daha erken saatte",
+     "Öğle vaktinde",
+     "Gün doğarken"
+    ],
+    "explanation": "Akşamcılarda melatonin daha geç salgılanır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ergenlerin sabah derslerinde zorlanmasının metindeki açıklaması nedir?",
+    "correct": "Biyolojik ritmin geç kayması",
+    "wrong": [
+     "Derslerin giderek ağırlaşması",
+     "Gençlerin spordan uzaklaşması",
+     "Okulların evden uzak olması"
+    ],
+    "explanation": "Ergenlikte iç saat belirgin biçimde ileri kayar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "“Sosyal jet lag” benzetmesi hangi durumu anlatır?",
+    "correct": "Hafta içi ve sonu uykunun uyuşmaması",
+    "wrong": [
+     "Uçak yolculuğunun uykuyu bozması",
+     "Gece çalışanların hiç uyumaması",
+     "Kahvenin uykuyu tümüyle engelleyebilmesi"
+    ],
+    "explanation": "Hafta içi ve hafta sonu arasındaki uyku saati farkı anlatılır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sosyal jet lag yaşayanlarda hangi davranış daha sık görülür?",
+    "correct": "Uyarıcılara yönelme",
+    "wrong": [
+     "Erkenden yatağa girme",
+     "Daha az yemek yeme",
+     "Spora ağırlık verme"
+    ],
+    "explanation": "Kahve gibi uyarıcılara daha çok başvururlar."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın ana fikri nedir?",
+    "correct": "Kendi ritmimize uyum sağlamalıyız",
+    "wrong": [
+     "Herkes sabahçı olmaya çalışmalıdır",
+     "Okullar geç saatte bitmelidir",
+     "Ekranlar evden kaldırılmalıdır"
+    ],
+    "explanation": "Önemli olan kendi ritmimizi tanıyıp yaşamı ona göre düzenlemektir."
+   }
+  ]
+ },
+ "161": {
+  "title": "Yarım Kalan Diploma",
+  "category": "Hikaye/Kurgu",
+  "content": "Murat, kırk iki yaşında bir sabah, elinde bir dosyayla üniversitenin kayıt bürosunun önünde sıraya girdiğinde, kendini çevresindeki on sekiz yaşındaki gençlerin arasında biraz tuhaf hissetti. Yirmi yıl önce, babası hastalanınca ailesinin geçimine yardım etmek için mühendislik bölümünü ikinci sınıfta bırakmıştı. O günden beri bir oto yedek parça dükkânında çalışmış, sonra kendi dükkânını açmıştı. Evlenmiş, iki çocuğu olmuştu. Ama yarım kalan o diploma, içinde hep küçük bir sızı olarak kalmıştı.\n\nKararı vermek kolay olmamıştı. Eşi Sevgi onu başından beri desteklemişti, ama Murat'ın kafasında bir sürü soru vardı. Dükkânı kim çevirecekti? Yıllardır matematik çalışmamış biri derslere yetişebilir miydi? Arkadaşları ne diyecekti? Bir akşam yemekte, on beş yaşındaki kızı Elif ona dönüp “Baba, bana hep ‘Bir işi yarım bırakma’ demiyor musun?” diye sordu. Murat o gece uzun süre uyuyamadı. Ertesi sabah, kayıt için gerekli belgeleri toplamaya başladı. Önce yıllar önce aldığı derslerin sayılıp sayılmayacağını öğrenmek için bölüm sekreterliğini aradı. İkinci sınıftan değil, en baştan başlaması gerektiğini öğrenince bir an yeniden tereddüt etti. Sevgi ise “Dört yıl nasılsa geçecek. Soru, o dört yıl geçtiğinde elinde diploma olup olmayacağı” dedi.\n\nİlk dönem beklediğinden de zor geçti. Sabahları derse giriyor, öğleden sonra dükkâna geçiyor, akşamları da mutfak masasında ödev yapıyordu. Matematik dersinde ilk sınavdan düşük not aldığında okulu bırakmayı ciddi olarak düşündü. Kendini yaşlı ve yavaş hissediyordu. Derste gençlerin hesap makinesine dokunmadan çözdüğü soruları o dakikalarca düşünüyordu. Ama dersin hocası, sınav kâğıdını geri verirken ona bir not iliştirmişti: “Sorulara yaklaşımın doğru, eksik olan yalnızca pratik.” Murat notu birkaç kez okudu ve cüzdanına koydu. Zor günlerde bu kâğıdı çıkarıp tekrar okuyacaktı. Aynı hafta, kendisi gibi işini bırakmadan okuyan birkaç öğrenciyle tanıştı ve sorunlarının yalnızca kendine özgü olmadığını gördü.\n\nMurat, hocanın önerisiyle bölümdeki bir çalışma grubuna katıldı. Grubun diğer üyeleri yirmili yaşlardaydı. Başta aralarında bir mesafe vardı; ama zamanla bu değişti. Gençler, Murat'ın matematikte zorlandığı yerlerde ona yardım ediyordu. Murat ise yıllarca motorlarla uğraşmış biri olarak, makine derslerindeki soyut kavramları gerçek hayattan örneklerle açıklayabiliyordu. Bir gün grup arkadaşlarından Can, “Hocadan çok sen anlatınca anlıyorum” dedi. Murat ilk kez, yaşının bir dezavantaj değil, bir zenginlik olabileceğini düşündü.\n\nYıllar içinde Murat'ın notları yükseldi. Üçüncü yılda bir dersin asistanı, ondan staj yapan öğrencilere atölyede rehberlik etmesini istedi. Dükkânda yanında çalışan genç kalfası Emre'ye daha çok sorumluluk verdi ve Emre de işi başarıyla yürüttü. Akşamları kızı Elif'le aynı masada ders çalışmak, ikisi için de bir alışkanlığa dönüştü. İkisi bazen kimin daha çok soru çözeceği konusunda küçük yarışlar yapıyordu. Elif bazen babasına geometri sorusu soruyor, Murat bazen kızından bir bilgisayar programını nasıl kullanacağını öğreniyordu.\n\nMezuniyet töreninde Murat'ın adı okunduğunda, salondaki en yüksek alkış ön sıradaki dört kişiden geldi: Sevgi, Elif, küçük oğlu Kerem ve dükkândan izin alıp gelen Emre. Murat diplomasını alırken yirmi yıl önceki kendini düşündü. O gün dükkânın kapısını kapatırken yaşadığı çaresizliği hatırladı. O genç adama şimdi bir şey söyleyebilseydi, yolun uzun olabileceğini ama kapının hiçbir zaman tümüyle kapanmadığını anlatmak isterdi. Törenden sonra Elif, babasının cübbesini giyip bir fotoğraf çektirdi ve gülerek “Sıra bende” dedi. Akşam evde küçük bir kutlama yaptılar. Murat, masadaki tabakları toplarken bir sonraki hedefini düşünmeye başlamıştı bile: Belki bir gün yüksek lisans da yapabilirdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Murat'ın okulu bırakma nedeni neydi?",
+    "correct": "Ailesine destek olma gereği",
+    "wrong": [
+     "Derslerde başarısız olması",
+     "Mühendislikten hoşlanmaması",
+     "Başka bir şehre taşınması gereği"
+    ],
+    "explanation": "Babası hastalanınca ailesinin geçimine yardım etmek için bıraktı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Elif'in sorusu Murat'ı neden etkiledi?",
+    "correct": "Kendi öğüdünü hatırlattığı için",
+    "wrong": [
+     "Kızının ona çok kızdığı için",
+     "Dükkânın zararda olduğu için",
+     "Eşinin bu karara karşı çıktığı için"
+    ],
+    "explanation": "Murat'ın kendi söylediği söz ona geri döndü."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sevgi tereddüt eden Murat'a ne söyledi?",
+    "correct": "Zamanın zaten geçeceğini",
+    "wrong": [
+     "Dükkânı hemen kapatmasını",
+     "İşi Emre'ye bırakmasını",
+     "Kaydı bir yıl ertelemesini"
+    ],
+    "explanation": "Dört yıl nasılsa geçecek, önemli olan sonunda diploma olmasıdır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hoca sınav kâğıdına iliştirdiği notta ne yazmıştı?",
+    "correct": "Eksiğin pratik olduğunu",
+    "wrong": [
+     "Bölümü hemen bırakmasını",
+     "Notunun yükseleceğini",
+     "Derse daha erken gelmesini"
+    ],
+    "explanation": "Yaklaşımın doğru, eksik olan yalnızca pratik."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çalışma grubunda Murat'ın katkısı neydi?",
+    "correct": "Kavramları somut örneklerle anlatmak",
+    "wrong": [
+     "Gençlere matematik dersi vermek",
+     "Grubun toplantılarını düzenlemek",
+     "Ders notlarını temize çekip paylaşmak"
+    ],
+    "explanation": "Motorlardan edindiği deneyimle soyut kavramları somutlaştırdı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Can'ın sözü Murat'ın hangi düşünceye varmasını sağladı?",
+    "correct": "Yaşının bir değer olabileceği",
+    "wrong": [
+     "Hocaların yetersiz kaldığı",
+     "Grubu bırakmasının doğru olacağı",
+     "Gençlerin derse çalışmadığı"
+    ],
+    "explanation": "Yaşının dezavantaj değil zenginlik olabileceğini düşündü."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat okurken dükkânı kim yürüttü?",
+    "correct": "Kalfası Emre",
+    "wrong": [
+     "Eşi Sevgi",
+     "Kızı Elif",
+     "Komşusu Hasan"
+    ],
+    "explanation": "Dükkânı genç kalfası Emre başarıyla yürüttü."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün iletisi nedir?",
+    "correct": "Öğrenmenin yaşı yoktur",
+    "wrong": [
+     "Aile işi önceliklidir",
+     "Mühendislik zor bir iştir",
+     "Gençler daha kolay öğrenir"
+    ],
+    "explanation": "Murat, kapının hiçbir zaman tümüyle kapanmadığını anlatmak ister."
+   }
+  ]
+ },
+ "195": {
+  "title": "Adım Adım Düşünmek",
+  "category": "Bilgi/Açıklama",
+  "content": "Yazarlar, filozoflar ve bilim insanları yüzyıllardır yürüyüşün düşünceyi beslediğini söyler. Antik Yunan filozofu Aristoteles'in öğrencileriyle yürüyerek ders yaptığı anlatılır. Charles Darwin, evinin bahçesindeki bir patikada her gün birkaç tur atar ve en karmaşık sorunlarını bu yürüyüşlerde düşünürdü. Besteci Beethoven'ın da öğleden sonraları uzun yürüyüşlere çıktığı ve yanında küçük bir defter taşıdığı bilinir. Peki bu yalnızca bir alışkanlık mı, yoksa yürümenin beynimiz üzerinde gerçekten özel bir etkisi mi var?\n\nSon yıllarda yapılan araştırmalar, ikinci seçeneğin doğru olduğunu gösteriyor. Stanford Üniversitesi'nde yapılan bir deneyde katılımcılardan, sıradan bir nesne için olabildiğince çok yaratıcı kullanım alanı bulmaları istendi. Örneğin bir tuğla ya da bir düğme ne işe yarayabilirdi? Bu tür sorular, psikolojide yaratıcı düşünmeyi ölçmek için sıkça kullanılır. Katılımcıların bir kısmı bu görevi otururken, bir kısmı ise koşu bandında ya da açık havada yürürken yaptı. Yürüyen katılımcıların ürettiği yaratıcı fikirlerin sayısı, oturanlarınkinden ortalama yüzde altmış daha fazlaydı. Dahası, bu etki yürüyüş bittikten kısa bir süre sonra da devam ediyordu. İlginç olan, koşu bandında boş bir duvara bakarak yürüyenlerin de açık havada yürüyenlere yakın sonuç almasıydı. Bu da etkinin yalnızca manzaradan değil, yürüme hareketinin kendisinden kaynaklandığını düşündürüyor. Ancak aynı araştırmada, tek bir doğru yanıtı olan sorularda yürümenin belirgin bir avantaj sağlamadığı da görüldü. Yani yürüyüş, özellikle yeni fikirler üretmeye ve farklı olasılıkları düşünmeye yardım ediyor.\n\nYürüyüşün beyne etkisi yalnızca yaratıcılıkla sınırlı değil. Düzenli yürüyüş, beyne giden kan akışını artırır ve beyin hücrelerinin sağlığını destekleyen bazı maddelerin salgılanmasını sağlar. Yaşlı yetişkinlerle yapılan bir çalışmada, bir yıl boyunca haftada üç gün kırk dakika yürüyen katılımcıların, belleğiyle ilgili önemli bir beyin bölgesi olan hipokampusun hacminin biraz büyüdüğü gözlendi. Hareketsiz kalan karşılaştırma grubunda ise bu bölge, yaşla birlikte beklendiği gibi küçülmüştü. Araştırmacılar, bu büyümenin kabaca bir iki yıllık yaşlanmayı geri çevirmeye denk geldiğini hesapladı. Yürüyen katılımcıların bellek testlerindeki performansı da bir miktar iyileşmişti.\n\nYürüyüşün ruh hâline etkisi de önemli. Özellikle doğada yapılan yürüyüşlerin stresi ve kaygıyı azalttığı, olumsuz düşüncelerin kafada dönüp durmasını hafiflettiği bulundu. Bir araştırmada, doksan dakika boyunca yeşil bir parkta yürüyen kişilerin, aynı süre kalabalık bir cadde boyunca yürüyenlere göre olumsuz düşüncelere daha az takıldığı görüldü. Beyin taramalarında, park yürüyüşünden sonra kaygı ve kara kara düşünmeyle ilişkili bir beyin bölgesindeki etkinliğin azaldığı da gözlendi.\n\nBu bulguların günlük hayatımız için anlamı açık. Bir sorunla uğraşırken kafanız tıkandığında, masada oturmaya devam etmek yerine kısa bir yürüyüşe çıkmak işe yarayabilir. Telefonla konuşurken odada dolaşmak bile, kimi insanlara daha akıcı düşünme imkânı veriyor. Bazı şirketler, toplantılarını odada oturarak değil, yürüyerek yapmayı denemeye başladı. Yan yana yürüyen iki kişinin, karşılıklı oturan iki kişiye göre daha rahat konuştuğu ve fikirlerini daha kolay paylaştığı da gözlemleniyor. Uzmanlar, günde yarım saatlik tempolu bir yürüyüşün bile hem beden hem zihin sağlığına katkı sağladığını vurguluyor. Üstelik yürüyüş, özel bir ekipman, para ya da beceri gerektirmeyen, hemen herkesin yapabileceği bir etkinlik. Asansör yerine merdiveni kullanmak, kısa mesafeleri araba yerine yürüyerek gitmek ya da öğle arasında binanın çevresinde bir tur atmak, bu alışkanlığı gündelik hayata katmanın kolay yolları arasında. Belki de Darwin'in bahçesindeki o patikanın sırrı, hiç de sır değildi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Giriş paragrafındaki ünlü kişi örneklerinin işlevi nedir?",
+    "correct": "Yürüyüş-düşünce bağını örneklemek",
+    "wrong": [
+     "Bu kişilerin hayat öykülerini anlatmak",
+     "Müzik ile bilimi karşılaştırmak",
+     "Bahçe düzenlemesini okura önermek"
+    ],
+    "explanation": "Yürüyüşün düşünceyi beslediği görüşü örneklerle desteklenir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Stanford deneyinde katılımcılardan ne istendi?",
+    "correct": "Nesneye yeni kullanımlar bulmak",
+    "wrong": [
+     "Bir tuğla duvarı hızla örmek",
+     "Bir gömleğe düğme dikmeyi öğrenmek",
+     "Bir şiiri baştan ezberlemek"
+    ],
+    "explanation": "Sıradan bir nesne için yaratıcı kullanım alanları bulmaları istendi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Koşu bandı sonucu araştırmacılara ne düşündürdü?",
+    "correct": "Etkenin hareketin kendisi olduğunu",
+    "wrong": [
+     "Manzaranın en belirleyici olduğunu",
+     "Duvarın dikkati çok dağıttığını",
+     "Bantların zararlı olabildiğini"
+    ],
+    "explanation": "Boş duvara bakarak yürüyenler de benzer sonuç aldı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yürümenin hangi tür görevlerde belirgin yarar sağlamadığı görüldü?",
+    "correct": "Tek doğru yanıtı olan sorularda",
+    "wrong": [
+     "Uzun metin okuma görevlerinde",
+     "Resim çizme etkinliklerinde",
+     "Yeni fikirler üretme görevlerinde"
+    ],
+    "explanation": "Tek doğru yanıtı olan sorularda belirgin avantaj görülmedi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yürüyüş yapan yaşlılarda hangi beyin bölgesi biraz büyüdü?",
+    "correct": "Hipokampus",
+    "wrong": [
+     "Beyin sapı",
+     "Beyincik",
+     "Alın lobu"
+    ],
+    "explanation": "Bellekle ilgili hipokampusun hacmi biraz büyüdü."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Park ve cadde karşılaştırması neyi ortaya koyar?",
+    "correct": "Yeşil ortamın kaygıyı daha çok azalttığını",
+    "wrong": [
+     "Cadde yürüyüşünün daha yorucu olduğunu",
+     "Parkların genellikle kalabalık olduğunu",
+     "Uzun yürüyüşlerin bazen zararlı olabileceğini"
+    ],
+    "explanation": "Parkta yürüyenler olumsuz düşüncelere daha az takıldı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yan yana yürüyen kişilerle ilgili ne gözlemleniyor?",
+    "correct": "Kolayca sohbet ettikleri",
+    "wrong": [
+     "Daha hızlı yoruldukları",
+     "Birbirini az dinledikleri",
+     "Daha çok tartıştıkları"
+    ],
+    "explanation": "Karşılıklı oturanlara göre daha rahat konuşup fikir paylaşırlar."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son cümlede Darwin'e yeniden değinilmesinin amacı nedir?",
+    "correct": "Başa dönerek sözü bağlamak",
+    "wrong": [
+     "Darwin'in hatasını göstermek",
+     "Yeni bir bilgiyi tanıtmak",
+     "Okuru bahçeye davet etmek"
+    ],
+    "explanation": "Girişteki örneğe dönülerek metin toparlanır."
+   }
+  ]
+ },
+ "163": {
+  "title": "Kavanozdaki Canlılar",
+  "category": "Bilgi/Açıklama",
+  "content": "Yoğurt, turşu, boza, tarhana, kefir, ekşi maya ekmeği... Bu yiyeceklerin hepsinin ortak bir özelliği var: Hepsi, mikroorganizmaların yardımıyla hazırlanan fermente gıdalardır. Fermantasyon, bakteri, maya ya da küf gibi küçük canlıların, besinlerdeki şekeri ve nişastayı başka maddelere dönüştürmesidir. İnsanlık, bu süreci binlerce yıldır kullanıyor; ama bilim, fermente gıdaların sağlığımıza etkilerini ancak son yıllarda ayrıntılı biçimde incelemeye başladı. Fermantasyonu ilk kez bilimsel olarak açıklayan kişi, on dokuzuncu yüzyılda Fransız bilim insanı Louis Pasteur'dü. Pasteur, şarabın ve sütün değişiminin kendiliğinden değil, canlı mikroorganizmaların etkinliği sonucunda gerçekleştiğini gösterdi.\n\nFermantasyonun ilk ve en eski amacı, yiyecekleri saklamaktı. Buzdolabının olmadığı dönemlerde süt birkaç saat içinde bozulabilirdi; ama yoğurda dönüştürüldüğünde günlerce dayanıyordu. Lahana ya da salatalık, tuzlu suda bekletilerek turşu yapıldığında aylarca saklanabiliyordu. Bunun nedeni, fermantasyon sırasında üretilen asitlerin, yiyecekleri bozan zararlı mikroorganizmaların çoğalmasını engellemesidir. Fermantasyon aynı zamanda yiyeceklerin tadını, kokusunu ve dokusunu da değiştirir. Peynirin keskin aroması ya da ekşi maya ekmeğinin hoş ekşiliği, bu dönüşümün sonucudur. Fermantasyon kimi zaman besin değerini de artırır. Örneğin bazı fermente süt ürünlerinde laktoz miktarı azaldığı için, sütü sindirmekte zorlanan kişiler yoğurt ve kefiri daha kolay tüketebilir. Bazı tahıl ve baklagillerde ise fermantasyon, sindirimi zorlaştıran maddeleri azaltarak minerallerin daha iyi emilmesini sağlar.\n\nBugün bilim insanlarının asıl ilgisini çeken, fermente gıdaların bağırsaklarımızla ilişkisi. Bağırsaklarımızda trilyonlarca mikroorganizmadan oluşan bir topluluk yaşar. Bilim insanları bu topluluğa “bağırsak mikrobiyotası” adını veriyor. Bu mikroorganizmalar yalnızca sindirime yardım etmekle kalmaz; bazı vitaminleri üretir, bağışıklık sistemiyle iletişim kurar ve zararlı mikropların yerleşmesini zorlaştırır. Araştırmalar, mikrobiyotası çeşitli olan kişilerin genellikle daha sağlıklı olduğunu gösteriyor. Mikrobiyotanın bileşimi; beslenme, yaş, kullanılan ilaçlar, özellikle de antibiyotikler ve yaşam tarzı gibi pek çok etkene bağlı olarak kişiden kişiye büyük farklılık gösterir. Bilim insanları, bağırsak mikroorganizmalarıyla beyin arasında bile bir iletişim olabileceğini araştırıyor.\n\nFermente gıdalar, bu topluluğu nasıl etkiliyor? Stanford Üniversitesi'nde yapılan bir çalışmada, katılımcılardan bir grup on hafta boyunca beslenmelerine her gün birkaç porsiyon fermente gıda ekledi. Başka bir grup ise lifli gıdaları artırdı. Fermente gıda tüketen grupta bağırsak mikrobiyotasının çeşitliliği belirgin biçimde arttı ve vücuttaki iltihaplanmayla ilgili bazı göstergeler azaldı. Lifli gıda grubunda ise bu kısa sürede benzer bir değişim görülmedi; araştırmacılar bunun için daha uzun bir süre gerekebileceğini belirtti. Çalışma, küçük bir katılımcı grubuyla yapıldığı için sonuçların daha büyük araştırmalarla doğrulanması gerekiyor.\n\nAncak uzmanlar, abartılı beklentilere karşı da uyarıyor. Fermente gıdaların her türlü hastalığa iyi geldiğine dair iddialar bilimsel olarak kanıtlanmış değil. Ayrıca her fermente ürün canlı mikroorganizma içermez. Ekmek pişirilirken mayalar ölür; bazı turşular da raf ömrünü uzatmak için ısıl işlemden geçirilir ya da sirkeyle hazırlanır. Marketlerde satılan bazı “probiyotik” içeceklerde ise yüksek miktarda şeker bulunabilir. Turşu gibi bazı fermente gıdalar da çok fazla tuz içerdiği için ölçülü tüketilmelidir. Bağışıklık sistemi zayıf olan kişilerin ise canlı mikroorganizma içeren ürünleri tüketmeden önce doktorlarına danışması öneriliyor.\n\nSonuç olarak fermente gıdalar, dengeli bir beslenmenin lezzetli ve yararlı bir parçası olabilir. Geleneksel mutfağımızda zaten önemli bir yer tutan yoğurt, ayran, kefir ve turşu gibi yiyecekler, bu bilimsel bulgularla yeniden değer kazanıyor. Uzmanlar, tek bir “mucize” ürüne güvenmek yerine, sebze, meyve, tam tahıl ve baklagillerle zengin bir beslenmenin içine farklı fermente gıdaları da katmayı öneriyor. Evde yoğurt mayalamak ya da turşu kurmak gibi geleneksel yöntemler, hem bu yiyecekleri daha az şeker ve katkı maddesiyle tüketmenin hem de kuşaktan kuşağa aktarılan bir mutfak bilgisini yaşatmanın keyifli bir yolu olabilir. Anneannelerimizin kiler raflarında sıra sıra dizilen kavanozlar, belki de bugünün bilim insanlarının ancak keşfettiği bir bilgeliği taşıyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fermantasyonu ilk kez bilimsel olarak kim açıkladı?",
+    "correct": "Louis Pasteur",
+    "wrong": [
+     "Robert Koch",
+     "Isaac Newton",
+     "Antoine Lavoisier"
+    ],
+    "explanation": "Pasteur, değişimin mikroorganizmalardan kaynaklandığını gösterdi."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Giriş paragrafına göre fermantasyonun özü nedir?",
+    "correct": "Mikropların şekeri dönüştürmesi",
+    "wrong": [
+     "Besinlerin güneşte kurutulması",
+     "Yiyeceklerin tuzla kaplanması",
+     "Sütün yüksek ısıda kaynatılması"
+    ],
+    "explanation": "Küçük canlılar şekeri ve nişastayı başka maddelere dönüştürür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Turşunun aylarca dayanmasının nedeni nedir?",
+    "correct": "Oluşan asidin bozulmayı önlemesi",
+    "wrong": [
+     "Kavanozun ağzının sıkıca kapanması",
+     "Sebzelerin olgun toplanması",
+     "Tuzun sebzedeki suyu çekmesi"
+    ],
+    "explanation": "Üretilen asitler zararlı mikroorganizmaların çoğalmasını engeller."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sütü sindirmekte zorlananlar hangi ürünleri daha kolay tüketebilir?",
+    "correct": "Yoğurt ve kefir",
+    "wrong": [
+     "Peynir ve tereyağı",
+     "Ayran ve süt",
+     "Dondurma ve krema"
+    ],
+    "explanation": "Bu ürünlerde laktoz miktarı azalmıştır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bağırsak mikrobiyotasının görevlerinden biri nedir?",
+    "correct": "Bağışıklığa katkı sunmak",
+    "wrong": [
+     "Zararlı mikropları çoğaltmak",
+     "Kemikleri güçlendirmek",
+     "Yağı deri altına taşımak"
+    ],
+    "explanation": "Bağışıklık sistemiyle iletişim kurar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Stanford çalışmasının sonuçlarına neden temkinli yaklaşılmalıdır?",
+    "correct": "Katılımcı sayısının az olması",
+    "wrong": [
+     "Sürenin çok uzun tutulması",
+     "Lifli gıdaların zararlı çıkması",
+     "Gıdaların bozulmuş olması"
+    ],
+    "explanation": "Küçük bir grupla yapıldığı için doğrulanması gerekir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hangi üründe pişirme sırasında mayalar ölür?",
+    "correct": "Ekmek",
+    "wrong": [
+     "Kefir",
+     "Yoğurt",
+     "Boza"
+    ],
+    "explanation": "Ekmek pişirilirken mayalar ölür."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın önerisi nedir?",
+    "correct": "Çeşitli ve dengeli beslenmek",
+    "wrong": [
+     "Her gün yalnızca turşu yemek",
+     "Hazır probiyotik içecek almak",
+     "Lifli gıdaları azaltmak"
+    ],
+    "explanation": "Tek mucize ürün yerine zengin bir beslenme önerilir."
+   }
+  ]
+ },
+ "197": {
+  "title": "Kepengin Ardındaki Hikâye",
+  "category": "Hikaye/Kurgu",
+  "content": "Leyla, babasının vefatından üç ay sonra, Kadıköy'deki küçük kırtasiye dükkânının kepengini ilk kez kendi eliyle kaldırdığında içeriye toz ve eski kâğıt kokusu doldu. Babası bu dükkânı kırk yıl boyunca işletmişti. Mahallenin çocukları ilk defterlerini, ilk boya kalemlerini buradan almış, öğrenciler ödevlerinin fotokopisini burada çektirmişti. Leyla ise İstanbul'da bir reklam ajansında grafik tasarımcı olarak çalışıyordu ve dükkânı ne yapacağına henüz karar verememişti. Rafların üzerinde babasının el yazısıyla yazılmış küçük fiyat etiketleri duruyordu. Tezgâhın üzerindeki eski hesap makinesi ve yanındaki çay bardağı, sanki babası birkaç dakikalığına dışarı çıkmış gibi yerli yerindeydi.\n\nAilesindeki herkes ona dükkânı satmasını öneriyordu. Ağabeyi, kırtasiyelerin artık internet satışları ve büyük zincir mağazalarla rekabet edemediğini, dükkânın son yıllarda zar zor ayakta durduğunu söylüyordu. Leyla, babasının hesap defterlerini incelediğinde ağabeyinin haklı olduğunu gördü. Kazanç her yıl biraz daha azalmıştı. Babası, eski müşterilerine veresiye defter tutmaya devam etmiş, kirasını ise birikimlerinden ödemişti. Leyla, babasının bu durumu neden kimseye söylemediğini düşündü. Belki de ailesini üzmek istememiş, belki de dükkânı kapatmayı hiçbir zaman bir seçenek olarak görmemişti.\n\nYine de Leyla dükkânı hemen satmaya gönlü razı olmadı. Birkaç hafta boyunca akşamları işten çıkınca dükkânı açtı ve tezgâhın arkasına oturdu. İçeri girenlerin çoğu bir şey satın almaktan çok babasını anmaya, onunla ilgili bir anıyı paylaşmaya geliyordu. Yaşlı bir kadın, oğlunun üniversite sınavına girerken kullandığı kalemi babasının hediye ettiğini anlattı. Bir lise öğrencisi, babasının ona okul gazetesi için kâğıt ve mürekkep ayırdığını, parasını da “bir gün ödersin” diyerek almadığını söyledi. Leyla o akşam eve dönerken uzun süre düşündü. Babasının dükkânda yalnızca kalem ve defter değil, bir mahallenin hikâyesini de sattığını fark etmişti. Bu hikâyeyi bir satış sözleşmesiyle bitirmek, ona doğru gelmiyordu.\n\nBir akşam, eski bir müşterinin kızı olan ve şimdi resim öğretmenliği yapan Zeynep dükkâna geldi. Konuşurken Zeynep, mahallede çocukların ve yetişkinlerin bir araya gelip resim yapabileceği, el işi öğrenebileceği bir yer olmadığından yakındı. Leyla'nın aklında bir fikir belirdi. Ajansta yıllardır başka şirketlerin ürünleri için fikir üretiyordu; belki şimdi kendi hikâyesi için bir fikir üretme zamanıydı. Dükkânın arka tarafındaki depoyu boşaltıp burayı küçük bir atölyeye dönüştürebilirdi. Hafta içi akşamları ve hafta sonları Zeynep'in çocuklara resim dersi verebileceğini, kendisinin de yetişkinlere kaligrafi ve defter ciltleme gibi atölyeler düzenleyebileceğini düşündü.\n\nFikir ilk başta herkese tuhaf geldi. Annesi, “Baban da hep böyle hayaller kurardı” diyerek gülümsedi ama kararı Leyla'ya bıraktı. Ağabeyi, bunun Leyla'nın işine ve birikimine zarar vereceğinden endişeliydi. Leyla ise ajanstaki işini bırakmadan, önce küçük bir deneme yapmaya karar verdi. Hafta sonunu depoyu boşaltmak ve duvarları boyamakla geçirdi. Zeynep eski masaları zımparalayıp yeniledi. İlk atölyeye yalnızca altı kişi geldi. Ama katılanlar fotoğraflarını mahalle gruplarında paylaşınca, ikinci atölyenin kontenjanı birkaç saat içinde doldu. Atölyeye gelenler çıkarken dükkândan defter, kalem ve boya da alıyordu. Birkaç ay içinde mahalledeki bir okul, öğrencileri için atölyede düzenli etkinlikler yapmak üzere Leyla'yla anlaştı.\n\nBir yıl sonra dükkân artık yalnızca bir kırtasiye değildi. Raflarda yine defterler ve kalemler duruyordu, ama arka odadan çocuk sesleri ve kahkahalar geliyordu. Leyla ajanstaki işini yarı zamanlıya çevirmişti. Kazanç hâlâ büyük değildi, ama dükkân artık kirasını kendisi çıkarıyor, hatta küçük bir kâr bile bırakıyordu. Ağabeyi de bir hafta sonu oğluyla birlikte atölyeye gelmiş, yeğeninin yaptığı resmi gururla telefonuna kaydetmişti. Babasının veresiye defterini ise tezgâhın altındaki çekmecede saklıyordu. Bazen açıp içindeki tanıdık el yazısına bakıyor ve babasının bu dükkânı neden hiç kapatmadığını şimdi çok daha iyi anlıyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dükkândaki eşyaların betimlenmesi okurda hangi duyguyu uyandırır?",
+    "correct": "Babanın varlığının sürdüğü hissini",
+    "wrong": [
+     "Dükkânın çok dağınık olduğu hissini",
+     "Leyla'nın işinden bıktığı hissini",
+     "Mahallenin terk edildiği hissini"
+    ],
+    "explanation": "Eşyalar, sanki babası kısa süreliğine dışarı çıkmış gibi yerindedir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ağabeyine göre dükkânın sorunu neydi?",
+    "correct": "Rekabete dayanamaması",
+    "wrong": [
+     "Kirasının çok artması",
+     "Mahallenin göç vermesi",
+     "Malların eskimesi"
+    ],
+    "explanation": "İnternet ve zincir mağazalarla rekabet edemiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Hesap defterleri babanın hangi yönünü ortaya koyar?",
+    "correct": "Zararı göze alacak bağlılığını",
+    "wrong": [
+     "İşini çok kötü yönettiğini",
+     "Ailesinden para sakladığını",
+     "Dükkânı gizlice satmak istediğini"
+    ],
+    "explanation": "Kirayı birikimlerinden ödeyerek dükkânı açık tutmuştu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Leyla'nın dükkânda geçirdiği akşamlar ona ne kazandırdı?",
+    "correct": "Dükkânın semtteki yerini kavramasını",
+    "wrong": [
+     "Mahallenin dükkânı unuttuğunu görmesini",
+     "Yeni müşterilerden sipariş almasını",
+     "Dükkânı en yüksek fiyata satabilmesini"
+    ],
+    "explanation": "Babanın bir mahallenin hikâyesini de sattığını fark etti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep mahallede neyin eksikliğinden yakındı?",
+    "correct": "Ortak sanat mekânının",
+    "wrong": [
+     "Bir halk kütüphanesinin",
+     "Bir spor salonunun",
+     "Bir çocuk oyun parkının"
+    ],
+    "explanation": "Resim ve el işi için bir araya gelinecek yer yoktu."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Leyla'nın önce küçük bir deneme yapması neyi gösterir?",
+    "correct": "Riski ölçülü almayı seçtiğini",
+    "wrong": [
+     "Fikre aslında hiç inanmadığını",
+     "Ağabeyine içten içe kızdığını",
+     "Ajanstan ayrılmak istediğini"
+    ],
+    "explanation": "Ajanstaki işini bırakmadan önce denemeyi tercih etti."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "İkinci atölyenin hızla dolmasında ne etkili oldu?",
+    "correct": "Çevrimiçi paylaşımlar",
+    "wrong": [
+     "Gazetedeki büyük ilan",
+     "Okulun yaptığı duyuru",
+     "Ağabeyinin yardımı"
+    ],
+    "explanation": "Katılanlar fotoğrafları mahalle gruplarında paylaştı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda veresiye defteri neyi simgeler?",
+    "correct": "Babadan kalan anlayışın sürmesini",
+    "wrong": [
+     "Dükkânın borç içinde kalmasını",
+     "Leyla'nın hesap tutamamasını",
+     "Müşterilerin güvenini yitirmesini"
+    ],
+    "explanation": "Defter, babanın değerlerinin devam ettiğini gösterir."
+   }
+  ]
+ },
+ "125": {
+  "title": "Perdedeki Görünmez Mesaj",
+  "category": "Bilgi/Açıklama",
+  "content": "1957 yılının yazında, James Vicary adında bir pazarlama araştırmacısı, gazetecileri toplayarak çarpıcı bir açıklama yaptı. Vicary'nin anlattığına göre, New Jersey'deki bir sinema salonunda altı hafta boyunca film gösterilirken perdeye saniyenin üç binde biri kadar kısa süren iki mesaj yansıtılmıştı: “Kola için” ve “Patlamış mısır ye.” Mesajlar o kadar hızlı geçiyordu ki izleyicilerin hiçbiri onları bilinçli olarak fark etmemişti. Yine de Vicary'ye göre bu dönemde sinemadaki kola satışları yüzde on sekiz, patlamış mısır satışları ise yüzde elli yedi artmıştı. Vicary, bu sonuçların reklamcılıkta yeni bir çağ başlatacağını ileri sürüyor ve geliştirdiği yöntemi şirketlere satmayı umuyordu. Açıklamanın zamanlaması da dikkat çekiciydi: Televizyon hızla yayılıyor, reklamcılık sektörü büyüyor ve insanlar bu yeni gücün sınırlarını merak ediyordu.\n\nAçıklama büyük bir panik yarattı. Gazeteler, insanların zihnine haberleri olmadan girilebileceğini ve davranışlarının gizlice yönlendirilebileceğini yazdı. Bu tekniğe “bilinçaltı reklam” adı verildi. Aynı yıl yayımlanan ve reklamcıların insanları nasıl etkilediğini anlatan bir kitap da bu korkuyu besledi. Bazı ülkelerde televizyon ve radyoda bilinçaltı mesaj kullanımını yasaklayan düzenlemeler yapıldı. Pek çok kişi, siyasetçilerin ya da şirketlerin bu yöntemle toplumu kontrol edebileceğinden endişe ediyordu. Kimi yorumcular, bu teknolojinin seçimleri bile etkileyebileceğini ileri sürdü. O dönemin soğuk savaş atmosferinde, zihin kontrolü korkusu zaten yaygındı ve Vicary'nin iddiası bu korkuya kolayca eklemlendi.\n\nAncak kısa sürede şüpheler ortaya çıktı. Başka araştırmacılar Vicary'nin deneyini tekrarlamaya çalıştı, ama hiçbiri benzer sonuçlar elde edemedi. Kanada'da bir televizyon kanalı, canlı yayın sırasında izleyicilere fark edilmeyecek kadar kısa süreyle “Şimdi telefon edin” mesajını gösterdi. Kanala gelen telefon sayısında hiçbir artış olmadı. Sorular çoğaldıkça Vicary'nin anlattıkları da tutarsız görünmeye başladı. Söz konusu sinemanın küçük bir salon olduğu ve altı hafta boyunca bu kadar çok izleyiciyi ağırlamasının mümkün görünmediği ortaya çıktı. Sonunda, 1962'de bir dergiye verdiği röportajda Vicary, deneyin aslında hiç yapılmadığını, çok az veriyle ortaya atılmış bir iddia olduğunu kabul etti. Başı sıkışan şirketine müşteri çekmek için bu hikâyeyi uydurmuştu.\n\nPeki bilinçaltı algı tümüyle bir efsane mi? Psikologlar bu konuda daha dengeli bir tablo çiziyor. Beynimizin, bilinçli olarak fark etmediğimiz bazı uyaranları gerçekten işleyebildiği laboratuvar deneyleriyle gösterildi. Örneğin ekranda çok kısa süre gösterilen bir sözcük, kişinin ardından gelen bir sözcüğü daha hızlı tanımasını sağlayabiliyor. Bu etkiye “hazırlama” adı veriliyor. Benzer biçimde, fark edilmeyecek kadar kısa gösterilen gülen ya da kızgın bir yüz, kişinin hemen ardından gördüğü nötr bir resmi biraz daha olumlu ya da olumsuz değerlendirmesine yol açabiliyor. Ancak bu etkiler genellikle çok küçük ve kısa ömürlü. Kişiyi istemediği bir şeyi yapmaya ya da yeni bir ürün satın almaya yönlendirmekten çok uzak.\n\nHollanda'da yapılan bir çalışma bu sınırı iyi gösteriyor. Katılımcıların bir kısmına bir bilgisayar görevi sırasında fark edemeyecekleri kadar kısa süreyle bir içecek markasının adı gösterildi. Bu katılımcılar, eğer zaten susamışlarsa, deneyin sonunda o markayı biraz daha sık tercih etti. Susamamış katılımcılarda ise hiçbir etki görülmedi. Yani bilinçaltı bir uyaran, en fazla zaten var olan bir isteği hafifçe yönlendirebiliyor; yoktan bir istek yaratamıyor. Araştırmacılar ayrıca bu etkinin laboratuvarın kontrollü ortamında ortaya çıktığını, gerçek hayatın gürültüsü ve dikkat dağıtıcıları arasında çok daha zayıf kalacağını vurguluyor.\n\nVicary'nin hikâyesi, bilim tarihinde önemli bir ders olarak anlatılıyor. Bir iddia ne kadar çarpıcı olursa olsun, bağımsız araştırmacılar tarafından tekrarlanıp doğrulanmadan kabul edilmemelidir. Bugün bile pek çok kişi bilinçaltı reklamın güçlü bir silah olduğuna inanıyor. Oysa reklamların bizi asıl etkileyen yanı, gizli mesajlar değil, açıkça gördüğümüz ama üzerinde fazla düşünmediğimiz görüntüler, müzikler ve tekrarlar. Bir şarkının sürekli çalınması ya da bir markanın her yerde karşımıza çıkması, o markayı tanıdık ve güvenilir hissetmemize yol açabiliyor. Ünlü kişilerin bir ürünü kullanırken gösterilmesi ya da bir reklamın mutlu aile sahneleriyle ilişkilendirilmesi de duygularımıza seslenen, son derece açık ama etkili yöntemler. Bu yüzden uzmanlara göre gizli mesajlardan korkmaktan çok, açıkça gördüğümüz mesajları eleştirel bir gözle değerlendirmeyi öğrenmek daha önemli.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Vicary'ye göre mesajlar perdede ne kadar süre görünüyordu?",
+    "correct": "Saniyenin üç binde biri",
+    "wrong": [
+     "Bir saniyenin yarısı",
+     "Tam beş saniye kadar",
+     "Saniyenin onda biri kadar"
+    ],
+    "explanation": "Mesajlar saniyenin üç binde biri kadar kısaydı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Açıklamanın zamanlamasının dikkat çekici olmasının nedeni nedir?",
+    "correct": "Reklamcılığın hızla büyüdüğü bir dönem olması",
+    "wrong": [
+     "Sinemaların kapanmak üzere olduğu bir dönem olması",
+     "Kola satışlarının düştüğü bir dönem olması",
+     "Gazetelerin reklamı yasakladığı bir dönem olması"
+    ],
+    "explanation": "Televizyon yayılıyor, reklam sektörü büyüyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Vicary'nin iddiasının kolayca kabul görmesinde hangi etken rol oynadı?",
+    "correct": "Dönemin zihin kontrolü kaygısı",
+    "wrong": [
+     "Deneyin tekrar edilmiş olması",
+     "Bilim insanlarının verdiği onay",
+     "Sinemanın çok büyük olması"
+    ],
+    "explanation": "Soğuk savaş atmosferindeki korku iddiayı besledi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kanada'daki yayın denemesinin sonucu neyi gösterdi?",
+    "correct": "Gizli mesajın işe yaramadığını",
+    "wrong": [
+     "İzleyicilerin mesajı okuduğunu",
+     "Kanalın yayını durdurduğunu",
+     "Telefon hatlarının bozulduğunu"
+    ],
+    "explanation": "Telefon sayısında hiçbir artış olmadı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Vicary deneyle ilgili gerçeği ne zaman kabul etti?",
+    "correct": "1962'de",
+    "wrong": [
+     "1957'de",
+     "1970'te",
+     "1959'da"
+    ],
+    "explanation": "1962'deki bir röportajda deneyin yapılmadığını kabul etti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazar bilinçaltı algıyı nasıl değerlendirir?",
+    "correct": "Var olan ama etkisi sınırlı bir olgu",
+    "wrong": [
+     "Tümüyle uydurulmuş bir kavram",
+     "Davranışı belirleyen büyük bir güç",
+     "Yalnızca çocukları etkileyen bir olgu"
+    ],
+    "explanation": "Etkiler gerçek ama küçük ve kısa ömürlüdür."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Hollanda çalışmasında susamış ve susamamış katılımcıların farkı neyi gösterir?",
+    "correct": "Uyaranın ancak mevcut isteği yönlendirdiğini",
+    "wrong": [
+     "Susuzluğun reklamın etkisini engellediğini",
+     "Markanın tadının seçimde çok önemli olduğunu",
+     "Deneyin sonuçlarının birbiriyle çeliştiğini"
+    ],
+    "explanation": "Etki yalnızca zaten susamış olanlarda görüldü."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın okura önerisi nedir?",
+    "correct": "Açık mesajlara eleştirel yaklaşmak",
+    "wrong": [
+     "Reklamlardan büsbütün kaçmak",
+     "Gizli mesajları dikkatle araştırmak",
+     "Ünlülerin önerilerine kulak asmamak"
+    ],
+    "explanation": "Açıkça görülen mesajları eleştirel gözle değerlendirmek daha önemlidir."
+   }
+  ]
+ }
+}

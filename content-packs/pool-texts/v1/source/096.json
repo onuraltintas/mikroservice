@@ -1,0 +1,113 @@
+{
+ "96": {
+  "title": "Yavaş Bakmak",
+  "category": "Deneme",
+  "content": "Bir müzeye girdiğinizde duvarda asılı duran bir tablonun önünde kaç saniye durursunuz? Araştırmalar, ziyaretçilerin bir sanat eserine ortalama yalnızca birkaç saniye baktığını gösteriyor. Çoğumuz eseri bir an süzer, yanındaki etiketi okur, belki bir fotoğrafını çeker ve bir sonrakine geçeriz. Oysa bir eserle gerçekten tanışmak için çok daha fazla zamana ihtiyaç vardır.\n\nFotoğraf çekmek de sanıldığı kadar masum olmayabilir. Bir psikoloğun müzede yaptığı bir deneyde, katılımcılardan bazı eserlerin fotoğrafını çekmeleri, bazılarına ise yalnızca bakmaları istendi. Ertesi gün yapılan testte katılımcılar, fotoğrafını çektikleri eserleri, yalnızca baktıklarına göre daha az hatırladı. Araştırmacı, fotoğraf makinesinin bir tür dış bellek gibi işlediğini; insanların hatırlama işini makineye bıraktığını öne sürdü.\n\nBu düşünceden yola çıkan bazı müzeler, son yıllarda “yavaş bakma” adı verilen etkinlikler düzenlemeye başladı. Her yıl nisan ayında dünyanın pek çok ülkesindeki müze ve galerilerde aynı gün yavaş bakma etkinlikleri düzenleniyor. Bu etkinliklerde katılımcılardan, yalnızca birkaç esere, her birine on dakika ya da daha uzun süre bakmaları istenir. Telefonlar kapatılır, etiketler okunmaz. Katılımcılar önce yalnızca gördüklerini fark etmeye çalışır: renkler, çizgiler, ışığın nereden geldiği, figürlerin duruşu. Ancak bundan sonra eserin ne anlattığı üzerine düşünülür. Etkinliğin sonunda katılımcılar küçük gruplar hâlinde bir araya gelip gördüklerini paylaşır. Aynı esere bakan farklı kişilerin bambaşka ayrıntılar fark ettiğini görmek, katılımcıları çoğu zaman şaşırtır.\n\nYavaş bakmayı deneyenlerin çoğu benzer bir deneyim anlatır. İlk birkaç dakika sıkıcı geçer; insan dikkatinin dağıldığını, başka şeyler düşündüğünü fark eder. Hatta bazıları saatine bakıp sürenin bitmesini bekler. Ama sabredildiğinde, eser yavaş yavaş açılmaya başlar. İlk bakışta fark edilmeyen ayrıntılar ortaya çıkar: arka planda küçük bir figür, bir yüzdeki belli belirsiz gülümseme, bir köşede bırakılmış ince bir fırça izi. Kişi, eserin ilk izleniminden çok farklı bir şey anlattığını görebilir.\n\nYavaş bakmanın değeri yalnızca sanatla sınırlı değildir. Eğitimciler, bu yöntemin öğrencilerin dikkat ve gözlem becerilerini geliştirdiğini belirtiyor. Bazı tıp fakültelerinde, geleceğin doktorlarının hastaları daha dikkatli gözlemleyebilmesi için öğrencilere müzelerde resim inceleme dersleri veriliyor. Bu derslerin ilklerinden birini başlatan bir Amerikan üniversitesinde yapılan değerlendirmede, resim inceleme eğitimi alan öğrencilerin hasta fotoğraflarındaki ayrıntıları daha başarılı biçimde tanımladığı görüldü. Bir resimde ayrıntıları fark etmeyi öğrenen öğrencinin, hastasının yüzündeki küçük değişiklikleri de daha kolay fark edebileceği düşünülüyor.\n\nYavaş bakmanın bir başka yanı da sabırla ilgilidir. Hızlı tüketime alıştığımız bir dünyada, tek bir şeye uzun süre odaklanmak giderek zorlaşıyor. Yavaş bakma, bu alışkanlığa karşı küçük bir direniş gibidir. Bize, bir şeyi gerçekten tanımanın zaman istediğini hatırlatır. Tıpkı bir insanı tanımak gibi, bir eseri tanımak da bir anlık bakışla değil, ona ayrılan zaman ve dikkatle mümkündür.\n\nBunu denemek için bir müzeye gitmek de gerekmez. Penceredeki bir ağaca, bir fincan çaya ya da bir yakınımızın yüzüne birkaç dakika gerçekten bakmak bile, her gün gördüğümüz şeylerde neleri kaçırdığımızı fark ettirebilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre ziyaretçiler bir esere ortalama ne kadar bakar?",
+    "correct": "Birkaç saniye",
+    "wrong": [
+     "Birkaç dakika",
+     "On dakika",
+     "Bir saat"
+    ],
+    "explanation": "Ziyaretçiler bir esere ortalama yalnızca birkaç saniye bakar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Müzedeki deneyde fotoğraf çeken katılımcıların eserleri daha az hatırlaması nasıl açıklanmıştır?",
+    "correct": "Anımsama görevini cihaza devretmeleri",
+    "wrong": [
+     "Çekilen fotoğrafların bulanık çıkması",
+     "Eserlerin onlara çok sıkıcı gelmesi",
+     "Müzedeki kalabalığın dikkati dağıtması"
+    ],
+    "explanation": "Fotoğraf makinesi bir tür dış bellek gibi işler; insanlar hatırlamayı ona bırakır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yavaş bakma etkinliklerinde katılımcılar ilk olarak ne yapar?",
+    "correct": "Önce sadece gördüklerine dikkat eder",
+    "wrong": [
+     "Eserin yanındaki etiketi dikkatle okur",
+     "Eserin fotoğrafını çekip paylaşır",
+     "Sanatçının hayatını internette araştırır"
+    ],
+    "explanation": "Katılımcılar önce yalnızca renkleri, çizgileri, ışığı ve figürleri fark etmeye çalışır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Etkinlik sonundaki paylaşım katılımcılara ne gösterir?",
+    "correct": "Herkesin aynı eserde başka şeyler gördüğünü",
+    "wrong": [
+     "Bütün katılımcıların aynı ayrıntıları gördüğünü",
+     "Eserlerin anlaşılmasının çok kolay olduğunu",
+     "Etiketlerin gereksiz bilgiler içerdiğini"
+    ],
+    "explanation": "Aynı esere bakan farklı kişiler bambaşka ayrıntılar fark eder."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yavaş bakmayı deneyenlerin deneyimi hangi süreçle özetlenebilir?",
+    "correct": "Önce sıkılma, sonra yeni ayrıntılar bulma",
+    "wrong": [
+     "Başından sonuna sürekli artan bir heyecan",
+     "Hiçbir şey değişmeden geçen uzun bir süre",
+     "Önce keşif, sonra giderek artan bir sıkıntı"
+    ],
+    "explanation": "İlk dakikalar sıkıcı geçer; sabredilince eser yavaş yavaş açılır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı tıp fakültelerinde öğrencilere resim inceleme dersi verilmesinin amacı nedir?",
+    "correct": "Gözlem becerilerini hasta için güçlendirmek",
+    "wrong": [
+     "Öğrencilerin ileride ressam olmasını sağlamak",
+     "Müzelerin ziyaretçi sayısını artırmak",
+     "Öğrencilerin stresini tümüyle yok etmek"
+    ],
+    "explanation": "Geleceğin doktorlarının hastaları daha dikkatli gözlemleyebilmesi amaçlanır."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar yavaş bakmayı neden “küçük bir direniş” olarak niteler?",
+    "correct": "Hıza alışmış dünyaya ters düştüğü için",
+    "wrong": [
+     "Müzelerin kurallarına karşı çıktığı için",
+     "Sanatçılara karşı bir tepki olduğu için",
+     "Telefonları tümüyle yasakladığı için"
+    ],
+    "explanation": "Hızlı tüketime alıştığımız bir dünyada tek bir şeye uzun süre odaklanmak bir direniş gibidir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki önerisinin özü nedir?",
+    "correct": "Alışık olduğumuz şeyleri de incelemek",
+    "wrong": [
+     "Her hafta düzenli olarak müzeye gitmek",
+     "Evdeki tabloları sık sık değiştirmek",
+     "Fotoğraf makinesini hiç kullanmamak"
+    ],
+    "explanation": "Yavaş bakmak için müzeye gitmek gerekmez; gündelik şeylere de dikkatle bakılabilir."
+   }
+  ]
+ }
+}

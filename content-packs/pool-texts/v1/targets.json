@@ -1,0 +1,3947 @@
+[
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 1,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 1
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 1,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 2
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 3
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 4
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 5
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 6
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 7
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 8
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 2,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 9
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 10
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 11
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 12
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 13
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 14
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 15
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 16
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 17
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 18
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 19
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 20
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 21
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 22
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 23
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 24
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 25
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 26
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 27
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 28
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 3,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 29
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 30
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 31
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 32
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 33
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 34
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 35
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 36
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 270,
+  "max": 330,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 37
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 38
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 39
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 650,
+  "max": 800,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 40
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 41
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 42
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 43
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 44
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 45
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 46
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 47
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 48
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 49
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 480,
+  "max": 540,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 50
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 51
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 4,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 52
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 53
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 54
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 55
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 56
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 57
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 58
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 59
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 270,
+  "max": 330,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 60
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 61
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 62
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 650,
+  "max": 800,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 63
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 300,
+  "max": 400,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 64
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 65
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 66
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 67
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 68
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 69
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 70
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 850,
+  "max": 1000,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 71
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 72
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 73
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 74
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 480,
+  "max": 540,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 75
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 76
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 5,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 77
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 78
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 79
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 80
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 81
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 82
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 83
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 84
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 270,
+  "max": 330,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 85
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 450,
+  "max": 550,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 86
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 87
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 88
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 89
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 650,
+  "max": 800,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 90
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 300,
+  "max": 400,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 91
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 92
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 93
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 94
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 95
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 96
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 97
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 850,
+  "max": 1000,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 98
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 99
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 100
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 101
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 480,
+  "max": 540,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 102
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 103
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 6,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 104
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 105
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 106
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 107
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 108
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 109
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 110
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 111
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 270,
+  "max": 330,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 112
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 450,
+  "max": 550,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 113
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 114
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 115
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 116
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 650,
+  "max": 800,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 117
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 300,
+  "max": 400,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 118
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 119
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 120
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 121
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 122
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 123
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 124
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 576,
+  "max": 660,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 125
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 850,
+  "max": 1000,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 126
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 127
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 128
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 129
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 480,
+  "max": 540,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 130
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 131
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 7,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 132
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 133
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 134
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 135
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 136
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 137
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 138
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 139
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 140
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 270,
+  "max": 330,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 141
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 450,
+  "max": 550,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 142
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 143
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 144
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 145
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 146
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 650,
+  "max": 800,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 147
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 300,
+  "max": 400,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 148
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 149
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 150
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 151
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 152
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 153
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 154
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 850,
+  "max": 1000,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 155
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 156
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 576,
+  "max": 660,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 157
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 158
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 159
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 364,
+  "max": 446,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 160
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 480,
+  "max": 540,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 161
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 162
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 522,
+  "max": 597,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 163
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 164
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 1000,
+  "max": 1050,
+  "kind": "band",
+  "need": 8,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 165
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 166
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 167
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 168
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 169
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 180,
+  "max": 240,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 170
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 216,
+  "max": 264,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 171
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 4,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 172
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 240,
+  "max": 300,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 173
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 450,
+  "max": 550,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 174
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 202,
+  "max": 248,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 175
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 5,
+  "min": 270,
+  "max": 330,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 176
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 177
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 144,
+  "max": 176,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 178
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 179
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 180
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 650,
+  "max": 800,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 181
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 300,
+  "max": 400,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 182
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 183
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 236,
+  "max": 289,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 184
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 2,
+  "min": 378,
+  "max": 463,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 185
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 337,
+  "max": 413,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 186
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 3,
+  "min": 432,
+  "max": 528,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "SubvocalizationReduction"
+  ],
+  "slot": 187
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 188
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 850,
+  "max": 1000,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 189
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 576,
+  "max": 660,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 190
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 5,
+  "min": 770,
+  "max": 850,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RSVP"
+  ],
+  "slot": 191
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 192
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 2,
+  "min": 247,
+  "max": 303,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 193
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 364,
+  "max": 446,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 194
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 3,
+  "min": 480,
+  "max": 540,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 195
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 580,
+  "max": 638,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 196
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 4,
+  "min": 522,
+  "max": 597,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 197
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 198
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 1000,
+  "max": 1050,
+  "kind": "band",
+  "need": 9,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 199
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 200
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 201
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 126,
+  "max": 154,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 202
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 203
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 204
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 205
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 206
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 207
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 208
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 300,
+  "max": 400,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 209
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 210
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 486,
+  "max": 559,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 211
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 700,
+  "max": 750,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 212
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 162,
+  "max": 199,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 213
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 214
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 612,
+  "max": 704,
+  "kind": "fill",
+  "need": 10,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 215
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 216
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 217
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 218
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 168,
+  "max": 206,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 219
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 220
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 213,
+  "max": 262,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "RegressionReduction"
+  ],
+  "slot": 221
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 222
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 223
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 486,
+  "max": 559,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 224
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 225
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 690,
+  "max": 749,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 226
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 5,
+  "min": 612,
+  "max": 704,
+  "kind": "fill",
+  "need": 11,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 227
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 228
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 229
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 230
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 231
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 400,
+  "max": 440,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 232
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 300,
+  "max": 364,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction"
+  ],
+  "slot": 233
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 234
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 486,
+  "max": 559,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 235
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 12,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 236
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 237
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 238
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 239
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 240
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 400,
+  "max": 440,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 241
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 242
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 486,
+  "max": 559,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 243
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 13,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 244
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 245
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 246
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 247
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 248
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 400,
+  "max": 440,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 249
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 250
+ },
+ {
+  "age": "Genç yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000004",
+  "level": 4,
+  "min": 486,
+  "max": 559,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 251
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 14,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 252
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 253
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 254
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 255
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 256
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 3,
+  "min": 400,
+  "max": 440,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP",
+   "SubvocalizationReduction"
+  ],
+  "slot": 257
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 258
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 15,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 259
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 260
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 2,
+  "min": 220,
+  "max": 275,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 261
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 262
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 1,
+  "min": 200,
+  "max": 300,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "FreeReading"
+  ],
+  "slot": 263
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 264
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 540,
+  "max": 594,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 265
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 16,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 266
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 17,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 267
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 17,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 268
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 17,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 269
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 540,
+  "max": 594,
+  "kind": "fill",
+  "need": 17,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 270
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 17,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 271
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 18,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 272
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 3,
+  "min": 275,
+  "max": 350,
+  "kind": "fill",
+  "need": 18,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 273
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 300,
+  "max": 400,
+  "kind": "fill",
+  "need": 18,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 274
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 4,
+  "min": 500,
+  "max": 540,
+  "kind": "fill",
+  "need": 18,
+  "exercises": [
+   "Chunking",
+   "FreeReading",
+   "RSVP"
+  ],
+  "slot": 275
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 540,
+  "max": 594,
+  "kind": "fill",
+  "need": 18,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 276
+ },
+ {
+  "age": "Yetişkin",
+  "ageGroupId": "10000000-0000-0000-0000-000000000003",
+  "level": 1,
+  "min": 360,
+  "max": 450,
+  "kind": "fill",
+  "need": 18,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 277
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 19,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 278
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 300,
+  "max": 400,
+  "kind": "fill",
+  "need": 19,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 279
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 540,
+  "max": 594,
+  "kind": "fill",
+  "need": 19,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 280
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 560,
+  "max": 638,
+  "kind": "fill",
+  "need": 19,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 281
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 20,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 282
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 300,
+  "max": 400,
+  "kind": "fill",
+  "need": 20,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 283
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 540,
+  "max": 594,
+  "kind": "fill",
+  "need": 20,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 284
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 560,
+  "max": 638,
+  "kind": "fill",
+  "need": 20,
+  "exercises": [
+   "Chunking",
+   "RSVP",
+   "RegressionReduction"
+  ],
+  "slot": 285
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 21,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 286
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 300,
+  "max": 400,
+  "kind": "fill",
+  "need": 21,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 287
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 5,
+  "min": 540,
+  "max": 594,
+  "kind": "fill",
+  "need": 21,
+  "exercises": [
+   "Chunking",
+   "RegressionReduction",
+   "SubvocalizationReduction"
+  ],
+  "slot": 288
+ },
+ {
+  "age": "Çocuk",
+  "ageGroupId": "10000000-0000-0000-0000-000000000001",
+  "level": 1,
+  "min": 160,
+  "max": 200,
+  "kind": "fill",
+  "need": 22,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 289
+ },
+ {
+  "age": "Genç",
+  "ageGroupId": "10000000-0000-0000-0000-000000000002",
+  "level": 2,
+  "min": 300,
+  "max": 400,
+  "kind": "fill",
+  "need": 22,
+  "exercises": [
+   "Chunking",
+   "FreeReading"
+  ],
+  "slot": 290
+ }
+]

@@ -1,0 +1,668 @@
+{
+ "269": {
+  "title": "Işığı Yutan Boşluklar",
+  "category": "Bilgi/Açıklama",
+  "content": "Kara delikler, evrenin en gizemli ve en aşırı nesnelerinden biridir. Kütle çekimleri o kadar güçlüdür ki, çok yaklaşan hiçbir şey, ışık bile, onlardan kaçamaz. Bu yüzden kara delikler doğrudan görülemez. Peki görülemeyen bir şeyin var olduğunu nasıl biliyoruz?\n\nKara deliklerin varlığı, ilk kez kuramsal hesaplarla öngörüldü. Albert Einstein 1915'te genel görelilik kuramını yayımladığında, kütle çekimini uzay ve zamanın bükülmesi olarak açıkladı. Kısa süre sonra Alman fizikçi Karl Schwarzschild, Einstein'ın denklemlerinden, yeterince küçük bir alana sıkışmış büyük bir kütlenin çevresinde ışığın bile kaçamayacağı bir bölge oluşabileceğini hesapladı. Einstein bile uzun süre bu tür nesnelerin gerçekte var olabileceğine inanmadı. “Kara delik” adı ise ancak 1960'larda yaygınlaştı.\n\nKara deliklerin nasıl oluştuğunu anlamak için yıldızların yaşamına bakmak gerekir. Bir yıldız, merkezinde hidrojen atomlarını birleştirerek enerji üretir. Bu enerji dışarı doğru bir basınç yaratır ve yıldızın kendi ağırlığı altında çökmesini engeller. Güneş'ten en az yirmi kat daha büyük bir yıldızın yakıtı bittiğinde ise bu denge bozulur. Yıldızın dış katmanları büyük bir patlamayla uzaya saçılır; buna süpernova denir. Merkezde kalan madde ise kendi kütle çekimiyle inanılmaz bir yoğunluğa ulaşana kadar çöker. Bu çöküşün sonunda bir kara delik ortaya çıkar.\n\nBir kara deliğin çevresinde, geri dönüşün olmadığı bir sınır vardır. Bu sınıra olay ufku denir. Olay ufkunu geçen her şey, kara deliğin içine düşer ve bir daha dışarı çıkamaz. Olay ufkunun dışında ise madde hâlâ kaçabilir. Kara deliğin çevresine düşen gaz ve toz, içine çekilmeden önce büyük bir hızla döner, sürtünme nedeniyle milyonlarca dereceye kadar ısınır ve güçlü ışınlar yayar. Gökbilimciler kara delikleri işte bu parlak çevreden ve yakınlarındaki yıldızların hareketlerinden tanır.\n\nKara deliğe yaklaşan bir cisim çok tuhaf etkilerle karşılaşır. Kütle çekimi, cismin kara deliğe yakın ucunu uzak ucundan çok daha güçlü çeker. Bu fark o kadar büyüktür ki cisim, bir makarna gibi uzayıp incelir. Bilim insanları bu olaya şakayla karışık “spagettileşme” adını verir. Ayrıca güçlü kütle çekimi zamanın akışını da yavaşlatır. Uzaktaki bir gözlemciye göre, olay ufkuna yaklaşan bir saat giderek daha yavaş tıkırdar.\n\nGalaksimizin merkezinde, Yay takımyıldızı yönünde, Güneş'in yaklaşık dört milyon katı kütleye sahip dev bir kara delik bulunur. Bilim insanları bunu, o bölgedeki yıldızların çok kısa sürede ve çok yüksek hızlarla tuhaf yörüngeler çizdiğini gözlemleyerek anladı. Bu yıldızların böyle hareket edebilmesi için ortada görünmeyen ama çok büyük bir kütle bulunmalıydı. Bu çalışmalar 2020 yılında Nobel Fizik Ödülü'ne layık görüldü.\n\n2019 yılında ise tarihî bir adım atıldı. Dünyanın farklı yerlerindeki radyo teleskopları birleştirilerek, gezegen büyüklüğünde sanal bir teleskop oluşturuldu. Bu teleskopla, elli beş milyon ışık yılı uzaklıktaki M87 galaksisinin merkezindeki kara deliğin gölgesinin ilk görüntüsü elde edildi. Görüntüde, parlak bir halkanın ortasında karanlık bir boşluk görünüyordu. Üç yıl sonra aynı yöntemle kendi galaksimizin merkezindeki kara deliğin görüntüsü de yayımlandı. Bu görüntüler, yüz yıl önce yalnızca kâğıt üzerindeki hesaplarda var olan bir fikrin gerçekliğini gözler önüne serdi.\n\nYine de kara delikler hakkındaki pek çok soru hâlâ yanıt bekliyor. Olay ufkunun içinde neler olduğu, oraya düşen bilginin ne olduğu ve kara deliklerin sonsuza dek var olup olmayacağı, bugün fizikçilerin en çok tartıştığı konular arasında yer alıyor. Ünlü fizikçi Stephen Hawking, kara deliklerin çok küçük miktarda ışınım yayarak inanılmaz derecede uzun bir sürede buharlaşabileceğini öne sürmüştü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kara deliklerin doğrudan görülememesinin nedeni nedir?",
+    "correct": "Işığın bile oradan kaçamaması",
+    "wrong": [
+     "Evrenin uzak köşelerinde olmaları",
+     "Küçük ve buz gibi olmaları",
+     "Hızla sürekli yer değiştirmeleri"
+    ],
+    "explanation": "Çok yaklaşan hiçbir şey, ışık bile kaçamaz."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kara delik fikrini Einstein'ın denklemlerinden ilk hesaplayan kimdir?",
+    "correct": "Karl Schwarzschild",
+    "wrong": [
+     "Stephen Hawking",
+     "Sir Isaac Newton",
+     "Edwin Powell Hubble"
+    ],
+    "explanation": "Schwarzschild bu bölgenin oluşabileceğini hesapladı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Einstein'ın tutumu kara deliklerle ilgili hangi durumu gösterir?",
+    "correct": "Öngörünün kuşkuyla karşılandığını",
+    "wrong": [
+     "Einstein'ın onları ilk gözlemlediğini",
+     "Hesapların baştan yanlış olduğunu",
+     "Adı Einstein'ın kendisinin koyduğunu"
+    ],
+    "explanation": "Einstein bile bu nesnelerin gerçekte var olabileceğine uzun süre inanmadı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir yıldızın kendi ağırlığıyla çökmesini ne engeller?",
+    "correct": "İçerideki enerjinin dış basıncı",
+    "wrong": [
+     "Yıldızın soğuk dış katmanları",
+     "Diğer yıldızların güçlü çekimi",
+     "Yıldızın kendi çevresinde dönmesi"
+    ],
+    "explanation": "Merkezde üretilen enerji dışarı doğru basınç yaratır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Olay ufkunu diğer bölgelerden ayıran özellik nedir?",
+    "correct": "Geri dönüşü olmayan sınır olması",
+    "wrong": [
+     "Kara deliğin en sıcak katmanı olması",
+     "Işığın en hızlı aktığı yer olması",
+     "Yıldızların doğduğu bölge olması"
+    ],
+    "explanation": "Olay ufkunu geçen bir daha dışarı çıkamaz."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Spagettileşmenin nedeni nedir?",
+    "correct": "Çekimin iki uçta farklı olması",
+    "wrong": [
+     "Kara deliğin yüksek sıcaklığı",
+     "Cismin çok hızlı dönüp ısınması",
+     "Zamanın orada tümden durması"
+    ],
+    "explanation": "Yakın uç uzak uçtan çok daha güçlü çekilir."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraf kara delikler hakkında neyi vurgular?",
+    "correct": "Pek çok sorunun hâlâ yanıt beklediğini",
+    "wrong": [
+     "Bütün gizemlerin artık tümüyle çözüldüğünü",
+     "Hawking'in kuramının çürütüldüğünü",
+     "Kara deliklerin yakında yok olacağını"
+    ],
+    "explanation": "Olay ufkunun içi ve kara deliklerin geleceği hâlâ tartışılıyor."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk kara delik görüntüsü hangi galaksiye aittir?",
+    "correct": "M87 adlı gökada",
+    "wrong": [
+     "Samanyolu kolu",
+     "Andromeda bölgesi",
+     "Macellan bulutu"
+    ],
+    "explanation": "M87 galaksisinin merkezindeki kara deliğin görüntüsü elde edildi."
+   }
+  ]
+ },
+ "270": {
+  "title": "Kehanet Gerçekleşmeyince",
+  "category": "Bilgi/Açıklama",
+  "content": "1954 yılında Amerikalı psikolog Leon Festinger ve arkadaşları, ilginç bir grubu yakından izlemeye başladı. Grubun lideri, uzaydan gelen mesajlar aldığını ve dünyanın belirli bir tarihte büyük bir selle yok olacağını iddia ediyordu. Ona inananlar işlerinden ayrılmış, evlerini ve eşyalarını satmış, kurtarılacakları günü beklemeye başlamıştı. Festinger, grubu içeriden gözlemlemek için araştırmacılarını üye gibi gruba kattı ve kehanet gerçekleşmediğinde neler olacağını merak etti.\n\nBeklenen gün geldi ve sessizce geçti. Ne sel oldu ne de grubu kurtaracak bir uzay aracı göründü. Pek çok kişi, böyle bir durumda grup üyelerinin yanıldıklarını kabul edeceğini düşünürdü. Oysa olan bunun tam tersiydi. Lider, grubun inancı sayesinde dünyanın kurtarıldığını açıkladı. Daha önce dışarıya pek açılmayan grup üyeleri, bu kez gazetecileri arayarak inançlarını yaymaya başladı. Kehanet çürüdükçe, inanç daha da güçlenmişti. Festinger ve arkadaşları bu gözlemleri 1956'da “Kehanet Gerçekleşmediğinde” adlı bir kitapta topladı. Kitap, insanların inançlarını nasıl koruduğunu anlamak isteyen pek çok araştırmacıya ilham verdi.\n\nFestinger bu ve benzeri gözlemlerden yola çıkarak, 1957'de “bilişsel çelişki” kuramını ortaya attı. Kurama göre insanlar, birbiriyle çelişen iki düşünceyi ya da bir düşünce ile davranışlarını aynı anda taşıdıklarında rahatsızlık duyar. Bu rahatsızlık, açlık ya da susuzluk gibi giderilmesi gereken bir gerginlik yaratır. Kişi bu gerginliği azaltmak için ya davranışını değiştirir ya da düşüncesini değiştirir ya da çelişkiyi küçültecek yeni açıklamalar bulur. Grubun üyeleri için yanıldıklarını kabul etmek, evlerini ve işlerini boşuna bıraktıkları anlamına geliyordu. Bu kadar büyük bir bedeli ödedikten sonra inançlarını bırakmak yerine yeni bir açıklamaya sarılmak, daha az acı vericiydi.\n\nBilişsel çelişkinin gündelik hayatta da pek çok örneği vardır. Sigaranın zararlı olduğunu bilen ama sigarayı bırakmayan biri, “Dedem de içiyordu ama doksan yaşına kadar yaşadı” diyerek çelişkiyi hafifletebilir. Pahalı bir telefon alan biri, aldığı modelin kusurlarını görmezden gelip üstünlüklerini abartabilir. Çok uğraşarak girdiği bir kulüpten memnun olmayan bir öğrenci, kulübün aslında ne kadar değerli olduğunu kendine anlatabilir. Araştırmalar, bir şey için ne kadar çok emek ya da para harcarsak, ona o kadar çok değer verme eğiliminde olduğumuzu gösteriyor. Bu yüzden zorlu sınavlarla girilen gruplar, üyelerinin gözünde genellikle daha çekici görünür.\n\nBilişsel çelişki her zaman kötü sonuçlar doğurmaz. Bazen bu rahatsızlık, davranışlarımızı değiştirmemiz için güçlü bir itici güç olabilir. Örneğin çevreyi korumanın önemli olduğunu düşünen ama her gün tek kullanımlık plastik bardak kullanan biri, bu çelişkiyi fark ettiğinde kendi bardağını taşımaya başlayabilir. Sağlık kampanyalarında da bu etkiden yararlanılır: İnsanlara kendi değerleriyle davranışları arasındaki farkı hatırlatmak, onları değişime yönlendirebilir.\n\nFestinger ve meslektaşı James Carlsmith'in 1959'da yaptığı ünlü bir deney bu etkiyi açıkça gösterdi. Katılımcılara çok sıkıcı bir iş yaptırıldı. Ardından onlardan, bekleyen bir sonraki katılımcıya işin çok eğlenceli olduğunu söylemeleri istendi. Bunun için bir gruba bir dolar, diğerine yirmi dolar ödendi. Daha sonra katılımcılara işin gerçekte ne kadar eğlenceli olduğu soruldu. Şaşırtıcı biçimde, bir dolar alanlar işi yirmi dolar alanlardan daha eğlenceli bulduklarını söyledi. Yirmi dolar alanlar yalan söylemelerini paraya bağlayabiliyordu. Bir dolar alanların ise böyle bir gerekçesi yoktu; onlar da çelişkiyi, işin aslında o kadar da sıkıcı olmadığına inanarak çözdüler.\n\nBu bilgiler bize kendi düşüncelerimize karşı daha dikkatli olmayı öğretir. Bir görüşü savunurken onu gerçekten kanıtlara dayandırdığımız için mi, yoksa ondan vazgeçmek bize ağır geleceği için mi savunduğumuzu sorgulamak, daha sağlıklı kararlar vermemize yardımcı olabilir. Yanıldığımızı kabul etmek ilk anda zor gelse de, uzun vadede bizi hatalı yollarda ısrar etmekten kurtarır. Belki de en akıllıca davranış, fikir değiştirmeyi bir zayıflık değil, öğrenmenin doğal bir parçası olarak görmektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Festinger grubu nasıl inceledi?",
+    "correct": "Ekibini gizlice gruba soktu",
+    "wrong": [
+     "Grubun liderine mektup yazdı",
+     "Gazetelerdeki haberleri derledi",
+     "Üyelere anket formu dağıttı"
+    ],
+    "explanation": "Araştırmacılarını üye gibi gruba kattı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kehanet gerçekleşmeyince grup üyelerinin davranışı nasıl değişti?",
+    "correct": "Görüşlerini duyurmaya giriştiler",
+    "wrong": [
+     "Gruptan hemen ayrılıp dağıldılar",
+     "Polise başvurup şikâyetçi oldular",
+     "Liderlerini suçlayıp kovdular"
+    ],
+    "explanation": "Gazetecileri arayarak inançlarını yaymaya başladılar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kurama göre çelişkili düşünceler kişide ne yaratır?",
+    "correct": "Gidermek istenen bir gerilim",
+    "wrong": [
+     "Kalıcı bir mutluluk duygusu",
+     "Ani ve geçici bir unutkanlık",
+     "Karşı konulmaz bir uyku isteği"
+    ],
+    "explanation": "Çelişki açlık gibi giderilmesi gereken bir gerginlik yaratır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Grup üyeleri için yanılgıyı kabul etmek neden zordu?",
+    "correct": "Ödenen bedeli boşa çıkarması",
+    "wrong": [
+     "Liderin onları cezalandırması",
+     "Gazetecilerin alay etmesi",
+     "Yasaların bunu ağır suç sayması"
+    ],
+    "explanation": "Evlerini ve işlerini boşuna bıraktıkları anlamına gelirdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zorlu sınavlarla girilen grupların daha çekici görünmesi nasıl açıklanır?",
+    "correct": "Emeğin değeri yükseltmesi",
+    "wrong": [
+     "Üyelerinin daha zeki olması",
+     "Grupların ücretsiz olması",
+     "Bu grupların kalabalık olması"
+    ],
+    "explanation": "Bir şeye ne kadar emek verirsek o kadar değer veririz."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Plastik bardak örneği çelişkinin hangi yönünü gösterir?",
+    "correct": "İyi bir değişimi tetikleyebilmesini",
+    "wrong": [
+     "Bireye daima zarar verdiğini",
+     "Çevre sorunlarının çözülemeyeceğini",
+     "Kampanyaların işe yaramadığını"
+    ],
+    "explanation": "Fark edilen çelişki davranışı iyi yönde değiştirebilir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bir dolar alan katılımcıların işi daha eğlenceli bulmasının nedeni nedir?",
+    "correct": "Yalana bir dış gerekçe bulamamaları",
+    "wrong": [
+     "Deneyde öbürlerinden az yorulmaları",
+     "İşi gerçekten sevmiş olmaları",
+     "Parayı önemsememiş olmaları"
+    ],
+    "explanation": "Yirmi dolar alanlar yalanı paraya bağlayabiliyordu; bir dolar alanlar bağlayamadı."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki önerisi nedir?",
+    "correct": "Görüşlerin dayanağını sorgulamak",
+    "wrong": [
+     "Her fikri hemen terk edivermek",
+     "Fikirlerimizi sıkıca savunmak",
+     "Başkalarının fikirlerini küçümsemek"
+    ],
+    "explanation": "Bir görüşü kanıtlara mı yoksa vazgeçme zorluğuna mı dayandırdığımızı sorgulamak."
+   }
+  ]
+ },
+ "271": {
+  "title": "Evde Güvenli Adımlar",
+  "category": "Bilgi/Açıklama",
+  "content": "Düşmeler, ileri yaştaki insanlar için en önemli sağlık risklerinden biridir. Dünya Sağlık Örgütü'ne göre altmış beş yaş üstündeki her üç kişiden biri yılda en az bir kez düşüyor. Bu düşmelerin bir kısmı kalça kırığı gibi ciddi yaralanmalara yol açıyor. Kalça kırığı ise yaşlı bir insanın hareket kabiliyetini uzun süre kısıtlayabiliyor, hatta bağımsız yaşamını sona erdirebiliyor. Üstelik bir kez düşen kişi, yeniden düşme korkusuyla hareket etmekten kaçınmaya başlıyor. Hareketsizlik kasları zayıflattığı için bu da yeni düşmelerin riskini artıran bir kısır döngü yaratıyor.\n\nİyi haber şu ki, uzmanlara göre düşmelerin büyük bölümü önlenebilir. Düşmelerin çoğu, dışarıda değil, insanların en güvende hissettiği yerde, yani kendi evlerinde gerçekleşiyor. Bu yüzden evde yapılacak bazı basit düzenlemeler büyük fark yaratabiliyor. Bu düzenlemelerin çoğu pahalı değildir ve bir hafta sonu içinde yapılabilir. Yaşlı bir yakını olanların, evi onun gözünden, yavaş yavaş dolaşarak incelemesi iyi bir başlangıçtır.\n\nUzmanlar işe önce zemine bakarak başlamayı öneriyor. Kayan küçük halılar, yerde gelişigüzel duran kablolar ve dağınık eşyalar en sık rastlanan tehlikelerdir. Halıların altına kaymaz bant yapıştırmak ya da onları kaldırmak, kabloları duvar kenarlarına sabitlemek önemli bir adımdır. Islak zeminiyle banyo, evin en tehlikeli yerlerinden biridir. Küvetin ve duşun içine kaymaz paspas koymak, klozetin ve duşun yanına tutunma barları takmak düşme riskini belirgin biçimde azaltır.\n\nEvin aydınlatması da en az zemin kadar önemlidir. Özellikle gece tuvalete giderken karanlıkta yürümek ciddi bir risk oluşturur. Yatak odasından banyoya giden yola hareket algılayan küçük gece lambaları yerleştirmek bu riski azaltır. Merdivenlerin iki tarafında da sağlam tırabzan bulunmalı ve basamaklar iyi aydınlatılmalıdır. Sık kullanılan eşyaların, uzanmak ya da tabureye çıkmak gerektirmeyecek raflara yerleştirilmesi de önemlidir; yükseğe uzanırken dengeyi kaybetmek çok kolaydır.\n\nEvdeki düzenlemelerin yanında kişinin kendi sağlığı da önemlidir. Düzenli egzersiz, özellikle denge ve kas gücünü artıran hareketler, düşme riskini önemli ölçüde azaltır. Bazı ilaçlar baş dönmesine yol açabileceği için kullanılan ilaçların düzenli olarak doktorla gözden geçirilmesi gerekir. Gözlüklerin numarasının güncel olması ve kaymayan tabanlı, ayağı saran ayakkabılar giyilmesi de basit ama etkili önlemlerdir.\n\nSon olarak, yalnız yaşayan yaşlıların bir düşme sonrasında yardım çağırabilmesi hayati önem taşır. Boyuna takılan acil durum düğmeleri ya da düşmeyi algılayan akıllı saatler bu konuda yardımcı olabilir. Düşen bir kişinin uzun süre yerde yardımsız kalması, yaralanmanın kendisinden daha ciddi sorunlara yol açabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dünya Sağlık Örgütü'ne göre 65 yaş üstündekilerin ne kadarı yılda en az bir kez düşer?",
+    "correct": "Üçte biri",
+    "wrong": [
+     "Yarısı",
+     "Onda biri",
+     "Dörtte üçü"
+    ],
+    "explanation": "Her üç kişiden biri yılda en az bir kez düşüyor."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Metinde sözü edilen kısır döngü nedir?",
+    "correct": "Ürkekliğin tehlikeyi büyütmesi",
+    "wrong": [
+     "Kırıkların yeniden kırılması",
+     "Doktorların sık ilaç değiştirmesi",
+     "Ailenin sürekli ev değiştirmesi"
+    ],
+    "explanation": "Korku hareketsizliğe, hareketsizlik kas zayıflığına ve yeni düşmelere yol açar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yaşlı bir yakının evini “onun gözünden” incelemek neden önerilir?",
+    "correct": "Riskleri onun gözüyle görmek için",
+    "wrong": [
+     "Evi çok daha güzel döşeyebilmek için",
+     "Aylık kirayı hesaplamak için",
+     "Eski eşyaları satıp atmak için"
+    ],
+    "explanation": "Riskleri yaşlı kişinin bakış açısıyla fark etmek kolaylaşır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Banyoda düşme riskini azaltan önlemlerden biri nedir?",
+    "correct": "Tutunacak bar takmak",
+    "wrong": [
+     "Aynayı büyük boy yapmak",
+     "Kapıyı kilitlemek",
+     "Suyu sıcak tutmak"
+    ],
+    "explanation": "Klozetin ve duşun yanına tutunma barları takılmalı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gece lambalarının özellikle önemli olmasının nedeni nedir?",
+    "correct": "Gece görmenin zorlaşması",
+    "wrong": [
+     "Gece elektriğin ucuz olması",
+     "Lambaların uykuyu getirmesi",
+     "Hırsıza karşı koruması"
+    ],
+    "explanation": "Gece tuvalete giderken karanlıkta yürümek ciddi risk oluşturur."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kullanılan ilaçların gözden geçirilmesinin nedeni nedir?",
+    "correct": "Bazılarının baş döndürebilmesi",
+    "wrong": [
+     "İlaçların fazlasıyla pahalı olması",
+     "Doktorların bunu çok sevmesi",
+     "İlaçların çabucak bozulması"
+    ],
+    "explanation": "Bazı ilaçlar baş dönmesine yol açabilir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre düşme riskini azaltan egzersizler hangileridir?",
+    "correct": "Denge ve kuvvet çalışmaları",
+    "wrong": [
+     "Hızlı koşu ve yüksek atlama",
+     "Yalnızca nefes egzersizleri",
+     "Çok ağır yük kaldırma"
+    ],
+    "explanation": "Denge ve kas gücünü artıran hareketler riski azaltır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraf hangi tehlikeye dikkat çeker?",
+    "correct": "Uzun süre yardımsız kalmaya",
+    "wrong": [
+     "Akıllı saatlerin pahalılığına",
+     "Acil düğmelerin bozulmasına",
+     "Komşuların uzakta oturmasına"
+    ],
+    "explanation": "Yerde uzun süre yardımsız kalmak yaralanmadan daha ciddi olabilir."
+   }
+  ]
+ },
+ "275": {
+  "title": "Ayaklarımızın Altındaki Hazine",
+  "category": "Bilgi/Açıklama",
+  "content": "Dünya'daki suyun yaklaşık yüzde doksan yedisi denizlerde ve okyanuslarda bulunan tuzlu sudur. Geri kalan küçük tatlı su payının büyük kısmı ise kutuplardaki buzullarda donmuş hâldedir. İnsanların kolayca ulaşabileceği tatlı suyun önemli bir bölümü ise göllerde ya da nehirlerde değil, görünmeyen bir yerde, yerin altındadır. Yerin derinliklerinde saklanan bu sulara yeraltı suyu denir.\n\nYağmur ya da kar suyu toprağa düştüğünde bir kısmı buharlaşır, bir kısmı akarsulara karışır, bir kısmı da toprağın içine süzülür. Toprağın içinde aşağı doğru ilerleyen su, kum, çakıl ve çatlaklı kayalardan oluşan katmanlarda birikir. Suyu içinde tutabilen bu katmanlara akifer adı verilir. Akifer, sanıldığı gibi yerin altında uzanan büyük bir göl ya da nehir değildir. Daha çok, gözenekleri suyla dolmuş dev bir süngere benzer. Su bu katmanlarda son derece yavaş hareket eder; bazen bir kilometre ilerlemesi yüzyıllar sürer. Bazı derin akiferlerdeki su, binlerce yıl önce yağmış yağmurlardan gelir.\n\nYeraltı suyu, dünya nüfusunun neredeyse yarısının içme suyu kaynağıdır. Tarımda kullanılan sulama suyunun da büyük bir kısmı, çoğu zaman yüzlerce metre derinliğe inen kuyulardan pompalarla çekilir. Kurak bölgelerde ise yeraltı suyu çoğu zaman tek kaynaktır. Yeraltı suyunun bir başka önemli işlevi daha vardır: Pek çok nehir, göl ve sulak alan, özellikle yağışın az olduğu yaz aylarında, varlığını yerin altından sızan bu suya borçludur. Yani yeraltı suyu azaldığında yalnızca kuyular değil, yeryüzündeki su kaynakları da kurumaya başlar.\n\nNe var ki son yıllarda dünyanın pek çok yerinde yeraltı suyu, doğanın yeniden doldurabileceğinden çok daha hızlı tüketiliyor. Uydu ölçümleri, dünyadaki büyük akiferlerin üçte birinden fazlasının hızla boşaldığını gösteriyor. Türkiye'de de özellikle Konya Kapalı Havzası gibi tarımın yoğun olduğu bölgelerde, yeraltı suyu seviyesinin her yıl metrelerce düştüğü bildiriliyor. Aşırı su çekimi yalnızca suyun azalmasına yol açmıyor. Toprağın altındaki su boşaldığında, üstteki katmanlar destek bulamayıp çöküyor. Konya ovasında son yıllarda sayıları hızla artan obruklar, yani yerin aniden çökmesiyle oluşan derin çukurlar, bu sürecin en çarpıcı sonuçlarından biri olarak gösteriliyor.\n\nYeraltı sularının bir başka sorunu da kirlenmedir. Tarlalarda kullanılan gübreler ve tarım ilaçları, yağmur suyuyla birlikte toprağa süzülerek akiferlere karışabilir. Düzensiz çöp depolama alanları ve sanayi atıkları da benzer bir tehlike oluşturur. Su yerin altında çok yavaş hareket ettiği için, bir akifer bir kez kirlendiğinde temizlenmesi onlarca, hatta yüzlerce yıl sürebilir. Bu yüzden uzmanlar, yeraltı sularını korumanın onları sonradan temizlemeye çalışmaktan çok daha kolay ve ucuz olduğunu vurguluyor.\n\nSorunun en zor yanı, gözle görülmemesidir. Bir gölün kuruduğunu herkes fark eder; ama yerin yüz metre altındaki bir akiferin boşalması, kuyular kuruyana ya da toprak çökene kadar çoğu zaman gözden kaçar.\n\nYeraltı suyunu korumanın yolları var. Damla sulama gibi suyu doğrudan bitkinin köküne veren yöntemler, salma sulamaya göre çok daha az su harcar. Kurak bölgelerde çok su isteyen ürünler yerine daha az su gerektiren bitkileri yetiştirmek de önemli bir adımdır. Kaçak kuyuların denetlenmesi ve yağmur suyunun toplanarak toprağa geri kazandırılması da akiferlerin yeniden dolmasına yardımcı olabilir. Kentlerde ise betonla kaplanan alanlar arttıkça yağmur suyu toprağa süzülemeden kanalizasyona akıyor. Parklar, yeşil alanlar ve suyu geçiren zemin kaplamaları, yağmurun yeniden toprağa ulaşmasını sağlayarak bu soruna küçük ama değerli bir çözüm sunuyor. Kısacası bugün tasarruf edilen her damla, gelecek kuşakların içeceği sudur.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dünya'daki suyun yüzde kaçı tuzludur?",
+    "correct": "Yüzde doksanı aşkın",
+    "wrong": [
+     "Aşağı yukarı yarısı",
+     "Yaklaşık dörtte biri",
+     "Yüzde onu kadarı"
+    ],
+    "explanation": "Suyun yaklaşık yüzde doksan yedisi tuzludur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Akiferin bir süngere benzetilmesinin nedeni nedir?",
+    "correct": "Suyu gözeneklerinde tutması",
+    "wrong": [
+     "Suyun içinde serbestçe akması",
+     "Yumuşak ve esnek olması",
+     "Sürekli şekil değiştirmesi"
+    ],
+    "explanation": "Akifer, gözenekleri suyla dolmuş dev bir süngere benzer."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı derin akiferlerdeki su nereden gelir?",
+    "correct": "Çok eski yağışlardan",
+    "wrong": [
+     "Denizden sızan sulardan",
+     "Fabrika atıklarından",
+     "Buzulların erimesinden"
+    ],
+    "explanation": "Bazı derin akiferlerdeki su binlerce yıl önce yağmış yağmurlardan gelir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yeraltı suyunun azalması yüzey sularını neden etkiler?",
+    "correct": "Göl ve nehirlerin ondan beslenmesi",
+    "wrong": [
+     "Yağmurların bütünüyle durması",
+     "Denizlerin giderek tatlılaşması",
+     "Toprağın tuzlanıp iyice sertleşmesi"
+    ],
+    "explanation": "Pek çok nehir ve göl, yerin altından sızan suya borçludur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Konya ovasındaki obrukların artmasının nedeni nedir?",
+    "correct": "Boşalan katmanın yükü taşıyamaması",
+    "wrong": [
+     "Bölgede depremlerin giderek çoğalması",
+     "Toprağa çok fazla su verilmesi",
+     "Madenlerde patlamalar yapılması"
+    ],
+    "explanation": "Su boşalınca üstteki katmanlar destek bulamayıp çöker."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kirlenmiş bir akiferin temizlenmesi neden çok uzun sürer?",
+    "correct": "Akışın son derece ağır olması",
+    "wrong": [
+     "Temizlik makinesinin azlığı",
+     "Akiferlerin çok sıcak olması",
+     "Kirin hızla çoğalıp yayılması"
+    ],
+    "explanation": "Su yerin altında çok yavaş hareket ettiği için temizlik onlarca yıl sürebilir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre sorunun en zor yanı nedir?",
+    "correct": "Gözden uzak kalıp fark edilmemesi",
+    "wrong": [
+     "Çözümünün yasalarca engellenmesi",
+     "Bilim insanlarının ilgisiz kalması",
+     "Yağmurun hiç ama hiç yağmaması"
+    ],
+    "explanation": "Akiferin boşalması kuyular kuruyana kadar gözden kaçar."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta önerilen çözümlerin ortak amacı nedir?",
+    "correct": "Tüketimi azaltıp akiferi doldurmak",
+    "wrong": [
+     "Her yere daha derin kuyular açmak",
+     "Tarımı tümden yasaklayıp durdurmak",
+     "Kentlere daha çok beton dökmek"
+    ],
+    "explanation": "Damla sulama, uygun ürün seçimi ve yağmur suyu toplama bu amaca hizmet eder."
+   }
+  ]
+ },
+ "276": {
+  "title": "Harflerin Devrimi",
+  "category": "Bilgi/Açıklama",
+  "content": "On beşinci yüzyılın ortalarına kadar Avrupa'da kitaplar elle yazılıyordu. Manastırlardaki yazıcılar, bir kitabı kopyalamak için aylarca, bazen yıllarca çalışırdı. Bu yüzden kitaplar son derece pahalıydı ve yalnızca kiliselerin, krallıkların ve zengin ailelerin kütüphanelerinde bulunurdu. Bir köylünün hayatı boyunca tek bir kitaba bile sahip olması neredeyse imkânsızdı. Üstelik her kopyalama işleminde yazıcıların küçük hatalar yapması kaçınılmazdı. Aynı kitabın farklı kopyaları arasında, zamanla sözcüklerin, hatta bütün cümlelerin değiştiği görülürdü.\n\n1450'li yıllarda Almanya'nın Mainz kentinde yaşayan kuyumcu Johannes Gutenberg, bu durumu kökünden değiştirecek bir buluş geliştirdi: hareketli metal harflerle çalışan baskı makinesi. Baskı tekniği aslında yeni değildi. Çin'de yüzyıllar önce tahta kalıplarla baskı yapılıyordu ve Kore'de metal harfler de kullanılmıştı. Ancak Gutenberg'in sistemi, birkaç yeniliği bir araya getirmesiyle öne çıkıyordu. Gutenberg her harf için ayrı bir metal kalıp döktü. Bu harfler bir çerçeve içinde sözcüklere ve satırlara dizilebiliyor, sayfa basıldıktan sonra sökülüp yeni bir sayfa için yeniden kullanılabiliyordu. Kuyumculuk deneyimi sayesinde, kurşun, kalay ve antimon karışımından dayanıklı ve kolay dökülen harfler üretmeyi başardı. Metal harflere iyi yapışan yağ bazlı bir mürekkep geliştirdi. Sayfaları basmak için de bölgede üzüm sıkmakta kullanılan ahşap preslerden esinlendi. Bu parçaların her biri tek başına çok yeni sayılmazdı; ama hepsini tek bir düzen içinde birleştiren ilk kişi Gutenberg oldu.\n\nGutenberg'in bastığı en ünlü eser, yaklaşık 1455'te tamamlanan ve bugün “Gutenberg İncili” olarak bilinen kitaptır. Yaklaşık yüz seksen kopya basıldığı tahmin edilen bu eserin günümüze ulaşan nüshaları, dünyanın en değerli kitapları arasında sayılır. Ne var ki Gutenberg, buluşunun maddi karşılığını göremedi. Çalışmalarını sürdürebilmek için zengin bir tüccar olan Johann Fust'tan büyük miktarda borç almıştı. Borcunu ödeyemeyince Fust onu mahkemeye verdi ve matbaa atölyesinin önemli bir kısmına el koydu. Gutenberg hayatının son yıllarını görece yoksulluk içinde geçirdi. Bugün dünyanın en etkili buluşlarından birinin sahibi olarak anılsa da, kendi döneminde adı pek az biliniyordu.\n\nMatbaa kısa sürede Avrupa'ya yayıldı. 1500 yılına gelindiğinde Avrupa'nın iki yüz elliden fazla kentinde matbaa vardı ve milyonlarca kitap basılmıştı. Bir elle kopyalama ustasının bir yılda yapabileceğinden çok daha fazlası, bir matbaada birkaç haftada üretilebiliyordu. Kitapların fiyatı hızla düştü ve okuma yazma bilen insan sayısı artmaya başladı. Venedik gibi ticaret kentleri, kısa sürede kitap basımının önemli merkezleri hâline geldi. Kitap satıcıları, yayınevleri ve kütüphaneler çoğaldı; okumak, yavaş yavaş seçkinlerin ayrıcalığı olmaktan çıktı.\n\nMatbaanın etkileri yalnızca kitapların ucuzlamasıyla sınırlı kalmadı. Bilim insanları, buluşlarını ve gözlemlerini aynı anda pek çok kentteki meslektaşlarıyla paylaşabilir hâle geldi. Bir deneyin sonucu, her kopyada aynı biçimde aktarılıyordu; elle kopyalamada sık görülen hatalar ortadan kalkıyordu. Bu, bilimsel bilginin birikmesini ve sınanmasını kolaylaştırdı. Fikirler daha hızlı yayılmaya başladı; din, siyaset ve toplum üzerine yazılan broşürler kısa sürede binlerce kişiye ulaşabiliyordu. Örneğin 1517'de Martin Luther'in kilise uygulamalarını eleştiren metinleri, matbaa sayesinde birkaç hafta içinde Almanya'nın dört bir yanına yayıldı ve büyük bir dinsel ayrılığın başlamasına katkıda bulundu. Yerel diller de bu süreçte güç kazandı, çünkü kitaplar artık yalnızca Latince değil, halkın konuştuğu dillerde de basılıyordu.\n\nOsmanlı İmparatorluğu'nda ise Arap harfleriyle Türkçe kitap basan ilk matbaa, 1727'de İbrahim Müteferrika tarafından İstanbul'da kuruldu. Müteferrika matbaasında sözlükler, tarih ve coğrafya kitapları basıldı. Bu gecikmenin nedenleri tarihçiler arasında hâlâ tartışılıyor; hattatların meslek kaygıları, el yazmasına duyulan saygı ve basılı kitaplara olan sınırlı talep, öne sürülen açıklamalar arasında yer alıyor.\n\nBugün pek çok düşünür, internetin yarattığı değişimi matbaanın etkisine benzetiyor. Her iki buluş da bilgiyi daha önce hiç olmadığı kadar hızlı ve ucuz biçimde yayarak, kimin konuşabileceğini ve kimin dinleneceğini yeniden belirledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elle kopyalamanın bir başka sorunu neydi?",
+    "correct": "Nüshaların zamanla değişmesi",
+    "wrong": [
+     "Mürekkebin çok çabuk kuruması",
+     "Kitapların fazlasıyla hafif olması",
+     "Okurların az sayfa istemesi"
+    ],
+    "explanation": "Yazıcıların küçük hataları zamanla sözcükleri ve cümleleri değiştirirdi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gutenberg'in mesleği neydi?",
+    "correct": "Kuyumcu",
+    "wrong": [
+     "Rahip",
+     "Tüccar",
+     "Marangoz"
+    ],
+    "explanation": "Gutenberg Mainz'da yaşayan bir kuyumcuydu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazara göre Gutenberg'i öncü kılan nedir?",
+    "correct": "Teknikleri tek düzende toplaması",
+    "wrong": [
+     "Baskıyı dünyada ilk kez düşünmesi",
+     "Kâğıdı da kendisinin icat etmesi",
+     "Yalnızca tahta kalıplar kullanması"
+    ],
+    "explanation": "Parçalar yeni değildi; hepsini birleştiren ilk kişi oydu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gutenberg'in hayatının sonundaki durumu hangi çelişkiyi gösterir?",
+    "correct": "Ününe karşın sıkıntı çekmesini",
+    "wrong": [
+     "Zengin olup buluşu satmasını",
+     "Ünlü olup hiç kitap basmamasını",
+     "Davayı kazanıp kenti terk etmesini"
+    ],
+    "explanation": "Dünyanın en etkili buluşlarından birini yapsa da yoksulluk içinde öldü."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "1500 yılına gelindiğinde Avrupa'da kaç kentte matbaa vardı?",
+    "correct": "İki yüz elliyi aşkın",
+    "wrong": [
+     "Yalnızca on ikiden az",
+     "Yaklaşık elli kadar",
+     "Beş binin üzerinde"
+    ],
+    "explanation": "Avrupa'nın iki yüz elliden fazla kentinde matbaa vardı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Matbaanın bilime katkısı neydi?",
+    "correct": "Bilginin aynen ve hızla yayılması",
+    "wrong": [
+     "Bilim insanlarının çok zenginleşmesi",
+     "Deneylerin çok daha ucuz olması",
+     "Latincenin her yere yayılması"
+    ],
+    "explanation": "Her kopyada aynı biçimde aktarılan sonuçlar bilgiyi biriktirmeyi kolaylaştırdı."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Osmanlı'da Türkçe kitap basan ilk matbaa ne zaman kuruldu?",
+    "correct": "1727",
+    "wrong": [
+     "1455",
+     "1517",
+     "1500"
+    ],
+    "explanation": "İbrahim Müteferrika 1727'de İstanbul'da kurdu."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar matbaa ile internet arasında hangi benzerliği kurar?",
+    "correct": "Bilginin yayılışını dönüştürmeleri",
+    "wrong": [
+     "İkisinin de Almanya'da ortaya çıkması",
+     "İkisinin de çok pahalı olması",
+     "Kitapları ortadan kaldırmaları"
+    ],
+    "explanation": "Her iki buluş bilgiyi hızlı ve ucuz yayarak kimin konuşacağını yeniden belirledi."
+   }
+  ]
+ },
+ "277": {
+  "title": "Paketin Arka Yüzü",
+  "category": "Bilgi/Açıklama",
+  "content": "Markette bir ürünü alırken çoğumuz önce fiyatına, sonra da paketin ön yüzündeki göz alıcı yazılara bakarız. “Doğal”, “hafif”, “şeker ilavesiz” ya da “tam tahıllı” gibi ifadeler ürünü sağlıklı gösterir. Oysa bir ürünün gerçekte ne içerdiğini anlamanın en güvenilir yolu, paketin arka yüzündeki etiketi okumaktır.\n\nEtiketteki ilk önemli bilgi, içindekiler listesidir. Bu listede malzemeler, ürün içindeki miktarlarına göre çoktan aza doğru sıralanır. Yani listenin başında yazan malzeme, üründe en çok bulunan malzemedir. Örneğin “tam tahıllı” diye satılan bir bisküvinin içindekiler listesinde ilk sırada beyaz un, ikinci sırada şeker yer alıyorsa, ürünün aslında ne kadar tam tahıllı olduğu sorgulanmalıdır. Şeker de etiketlerde her zaman “şeker” adıyla geçmez. Glikoz şurubu, fruktoz, mısır şurubu, dekstroz ve maltoz gibi farklı adlar da şeker anlamına gelir. Bunlar listede ayrı ayrı yazıldığında, şekerin toplam miktarı ilk bakışta gözden kaçabilir.\n\nEtiketteki ikinci önemli bölüm, besin değerleri tablosudur. Bu tabloda ürünün enerji değeri, yağ, doymuş yağ, karbonhidrat, şeker, protein ve tuz miktarları yer alır. Burada dikkat edilmesi gereken en önemli nokta, değerlerin hangi miktar için verildiğidir. Çoğu etikette değerler yüz gram için verilir, ama bazı ürünlerde bir porsiyon için yazılır. Üretici, porsiyonu gerçekte yenen miktardan çok küçük göstererek değerleri olduğundan düşük gösterebilir.\n\nPaketlerin ön yüzündeki ifadeler de dikkatle değerlendirilmelidir. “Yağı azaltılmış” bir ürün, kaybedilen tadı telafi etmek için daha fazla şeker içerebilir. “Şeker ilavesiz” bir meyve suyu, meyvenin kendi şekeri nedeniyle yine de çok şekerli olabilir. “Doğal” sözcüğünün ise çoğu zaman yasal olarak kesin bir tanımı yoktur.\n\nEtiketlerde sağlığımız açısından önemli başka bilgiler de bulunur. Alerjen maddeler, yani fıstık, süt, yumurta, gluten ya da susam gibi bazı insanlarda alerjik tepkiye yol açabilen malzemeler, içindekiler listesinde genellikle kalın harflerle belirtilir. Alerjisi olan kişiler için bu bilgi hayati önem taşır. Tarihlerle ilgili iki farklı ifadeye de dikkat etmek gerekir. “Son tüketim tarihi”, et ve süt ürünleri gibi çabuk bozulan yiyeceklerde kullanılır ve bu tarihten sonra ürün tüketilmemelidir. “Tavsiye edilen tüketim tarihi” ise ürünün en iyi kalitesini koruduğu süreyi gösterir. Bu tarih geçmiş olan makarna, pirinç ya da bisküvi gibi ürünler, doğru saklandıklarında çoğu zaman güvenle tüketilebilir. Bu farkı bilmek, gereksiz yere yiyecek atılmasını da önler.\n\nEtiket okumak ilk başta zaman alıcı görünse de, birkaç alışveriş sonra alışkanlık hâline gelir. Sık aldığınız ürünlerin etiketlerini bir kez dikkatle incelemek, sağlıklı seçimler yapmanın en kolay yollarından biridir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre ürün hakkında en güvenilir bilgi nerede bulunur?",
+    "correct": "Paketin arkasındaki etikette",
+    "wrong": [
+     "Paketin önündeki yazılarda",
+     "Marketin indirim tabelasında",
+     "Televizyon reklamlarında"
+    ],
+    "explanation": "Gerçek içeriği anlamanın yolu arka yüzdeki etiketi okumaktır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İçindekiler listesinde malzemeler nasıl sıralanır?",
+    "correct": "Çoktan aza doğru",
+    "wrong": [
+     "Alfabe sırasıyla",
+     "Azdan çoğa doğru",
+     "Fiyatlarına göre"
+    ],
+    "explanation": "Malzemeler miktarlarına göre çoktan aza sıralanır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şekerin farklı adlarla yazılması tüketiciyi nasıl etkileyebilir?",
+    "correct": "Toplamı görmesini zorlaştırır",
+    "wrong": [
+     "Ürünü daha ucuza almasını sağlar",
+     "Alerjisini kolayca tetikler",
+     "Lezzetli bulmasını sağlar"
+    ],
+    "explanation": "Ayrı adlarla yazılınca şekerin toplamı gözden kaçabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Porsiyonun küçük gösterilmesi ne amaçla yapılabilir?",
+    "correct": "Değerleri düşük göstermek",
+    "wrong": [
+     "Paketi daha hafif yapmak",
+     "Satış fiyatını yükseltmek",
+     "Etiketi biraz kısaltmak"
+    ],
+    "explanation": "Porsiyon küçük gösterilince değerler düşük görünür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "“Yağı azaltılmış” bir ürünle ilgili yazarın uyarısı nedir?",
+    "correct": "Fazla şeker içerebileceği",
+    "wrong": [
+     "İçinde yağ hiç bulunmadığı",
+     "Daha pahalıya satılacağı",
+     "Çok çabuk bozulacağı"
+    ],
+    "explanation": "Kaybedilen tat daha fazla şekerle telafi edilebilir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Alerjen maddeler etikette genellikle nasıl gösterilir?",
+    "correct": "Koyu bir yazıyla",
+    "wrong": [
+     "Kırmızı renkle",
+     "Küçük yıldızla",
+     "Ayrı bir etiketle"
+    ],
+    "explanation": "Alerjenler genellikle kalın harflerle belirtilir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "İki tarih ifadesini ayırt etmek neden önemlidir?",
+    "correct": "Gereksiz israfı önlediği için",
+    "wrong": [
+     "Daha ucuza alışveriş sağladığı için",
+     "Alerjileri engellediği için",
+     "Etiketi kolay okuttuğu için"
+    ],
+    "explanation": "Tavsiye edilen tarihi geçmiş bazı ürünler güvenle tüketilebilir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazar okura nasıl yaklaşır?",
+    "correct": "Yüreklendirici ve pratik",
+    "wrong": [
+     "Suçlayıcı ve çok sert",
+     "Alaycı ve küçümseyici",
+     "Kaygılı ve iyice karamsar"
+    ],
+    "explanation": "Etiket okumanın kolayca alışkanlık olacağını söyleyerek yüreklendirir."
+   }
+  ]
+ }
+}

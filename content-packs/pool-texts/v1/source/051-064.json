@@ -1,0 +1,224 @@
+{
+ "64": {
+  "title": "Ortak Ev",
+  "category": "Hikaye/Kurgu",
+  "content": "Defne üniversitenin ikinci yılında yurttan ayrılıp iki arkadaşıyla birlikte ev kiralamaya karar verdi. Yurtta kalmak ona artık dar gelmeye başlamıştı. Kendi odası, kendi mutfağı ve kendi düzeni olsun istiyordu. Arkadaşları Ece ve Bora da aynı şeyi düşünüyordu. Üçü de bunun özgürlük demek olduğunu düşünüyor, sorumluluk tarafını pek hesaba katmıyordu.\n\nEv aramak sandıklarından çok daha zordu. Kampüse yakın evlerin kirası çok yüksekti, uygun fiyatlı olanlar ise ya çok uzaktı ya da bakımsızdı. İki hafta boyunca neredeyse her gün ev gezdiler. Sonunda okula yarım saat uzaklıkta, üç odalı, eski ama aydınlık bir daire buldular. Ev sahibi yaşlı bir kadındı ve onlara kirayı her ay zamanında ödemelerini, komşuları rahatsız etmemelerini söyledi. Depozito için gereken parayı denkleştirmek için üçü de birikimlerinin büyük bölümünü harcadı.\n\nİlk haftalar heyecanla geçti. Evi birlikte boyadılar, ikinci el eşyalar alıp yerleştirdiler. Ama kısa süre sonra küçük sorunlar ortaya çıkmaya başladı. Bulaşıklar lavaboda birikiyor, kimin çöpü çıkaracağı konusunda tartışmalar yaşanıyordu. Elektrik faturası geldiğinde ise hepsi şaşırdı; tahmin ettiklerinden neredeyse iki kat fazlaydı. Bora geceleri bilgisayarını hiç kapatmıyor, Ece ise kışın ısıtıcıyı uzun süre açık bırakıyordu. Defne de çamaşır makinesini yarı dolu çalıştırdığını fark etti. Kimse bilerek savurganlık yapmıyordu; yalnızca hiçbiri daha önce bir evin giderlerini hesaplamak zorunda kalmamıştı.\n\nBir akşam Defne bir toplantı önerdi. Mutfak masasının etrafına oturdular ve sorunları tek tek konuştular. Önce bir ev işleri çizelgesi hazırladılar; her hafta görevler sırayla değişecekti. Ortak harcamalar için de bir defter tuttular. Markete kim giderse aldıklarını ve ödediği tutarı yazıyor, ay sonunda hesap eşit bölünüyordu. Faturaları azaltmak için birkaç kural koydular: Odadan çıkarken ışığı kapatmak, ısıtıcıyı yalnızca gerektiğinde kullanmak.\n\nBu düzen her zaman kusursuz işlemedi. Bazen biri görevini unuttu, bazen yine küçük kırgınlıklar yaşandı. Ama artık sorunları biriktirmek yerine hemen konuşuyorlardı. Bir sorun çıktığında suçlu aramak yerine çözüm arıyorlardı ve bu, aralarındaki gerginliği büyük ölçüde azalttı. Ay sonunda gelen fatura bir öncekinden belirgin biçimde düşüktü.\n\nYıl sonunda Defne, evde yaşamanın ona derslerden daha fazlasını öğrettiğini düşündü. Para yönetmeyi, başkalarıyla uzlaşmayı ve bir sorunu büyümeden çözmeyi bu küçük dairede öğrenmişti. Ertesi yıl için kira sözleşmesini yenilerken üçü de aynı evde kalmak istediklerini söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Üç arkadaşın ev kiralama kararıyla ilgili hangi yargı metinle uyumludur?",
+    "correct": "İşin getireceği yükümlülükleri düşünmemişlerdi",
+    "wrong": [
+     "Evin giderlerini önceden ayrıntılı hesaplamışlardı",
+     "Yurttan ayrılmayı ailelerinin isteğiyle seçmişlerdi",
+     "Kampüse yakın bir ev bulacaklarından emindiler"
+    ],
+    "explanation": "Üçü de ev kiralamayı özgürlük olarak görüyor, sorumluluk tarafını hesaba katmıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Buldukları daire nasıl bir yerdi?",
+    "correct": "Eski ama ışık alan, üç odalı bir ev",
+    "wrong": [
+     "Yeni ve kampüse yürüme mesafesinde",
+     "Bakımsız ama kirası çok düşük bir ev",
+     "Tek odalı ve bahçeli küçük bir ev"
+    ],
+    "explanation": "Okula yarım saat uzaklıkta, üç odalı, eski ama aydınlık bir daire buldular."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ev sahibinin onlardan istediklerinden biri hangisidir?",
+    "correct": "Ödemeyi her ay geciktirmemeleri",
+    "wrong": [
+     "Evi her yıl yeniden boyamaları",
+     "Eşyaları yeni olarak almaları",
+     "Misafirlerini önceden bildirmeleri"
+    ],
+    "explanation": "Ev sahibi kirayı her ay zamanında ödemelerini ve komşuları rahatsız etmemelerini istedi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elektrik faturasının beklenenden yüksek gelmesinin asıl nedeni nedir?",
+    "correct": "Gider hesabı yapma deneyimlerinin olmaması",
+    "wrong": [
+     "Ev sahibinin faturayı yanlış hesaplamış olması",
+     "Evin elektrik tesisatının eski olması",
+     "İçlerinden birinin bilerek israf etmesi"
+    ],
+    "explanation": "Kimse bilerek savurganlık yapmıyordu; hiçbiri daha önce bir evin giderlerini hesaplamamıştı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ortak harcamalar nasıl paylaştırıldı?",
+    "correct": "Yazılan tutarlar ay sonunda eşit bölündü",
+    "wrong": [
+     "Her biri kendi alışverişini ayrı ödedi",
+     "Faturaları sırayla biri tek başına ödedi",
+     "Harcamaların tümünü Defne üstlendi"
+    ],
+    "explanation": "Markete gidenin yazdığı tutarlar ay sonunda eşit bölünüyordu."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gerginliğin azalmasında hangi tutum değişikliğinin payı vardır?",
+    "correct": "Kusurlu aramak yerine çözüme yönelmeleri",
+    "wrong": [
+     "Görevleri unutanların evden ayrılması",
+     "Faturaları ev sahibinin ödemeye başlaması",
+     "Kırgınlıkların artık hiç yaşanmaması"
+    ],
+    "explanation": "Sorun çıktığında suçlu aramak yerine çözüm aramaları gerginliği azalttı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yeni düzenin işe yaradığını gösteren somut kanıt hangisidir?",
+    "correct": "Sonraki faturanın belirgin biçimde azalması",
+    "wrong": [
+     "Hiç kimsenin görevini bir daha unutmaması",
+     "Ev sahibinin onlara teşekkür mektubu yazması",
+     "Komşuların evden hiç şikâyet etmemesi"
+    ],
+    "explanation": "Ay sonunda gelen fatura bir öncekinden belirgin biçimde düşüktü."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana düşüncesi hangisidir?",
+    "correct": "Ortak yaşam önemli hayat becerileri kazandırır",
+    "wrong": [
+     "Öğrencilerin yurtta kalması her yönden iyidir",
+     "Ev kiralamak öğrenciler için gereksiz bir yüktür",
+     "Arkadaşlarla yaşamak çoğu zaman ilişkiyi bozar"
+    ],
+    "explanation": "Defne para yönetmeyi, uzlaşmayı ve sorun çözmeyi bu evde öğrendiğini düşündü."
+   }
+  ]
+ },
+ "51": {
+  "title": "Kendini Onaran Beton",
+  "category": "Bilgi/Açıklama",
+  "content": "Roma'daki Pantheon'un kubbesi yaklaşık 1900 yıldır ayakta duruyor. Üstelik bu kubbe, içinde hiç demir donatı bulunmayan, dünyanın en büyük donatısız beton kubbesi olma özelliğini hâlâ koruyor. Akdeniz kıyılarında Romalıların inşa ettiği liman yapıları ise yüzyıllardır deniz dalgalarına dayanıyor. Oysa bugün yaptığımız betonarme yapıların pek çoğu, birkaç on yıl içinde onarıma ihtiyaç duyabiliyor. Bugünkü betonun ömrü genellikle elli ile yüz yıl arasında hesaplanıyor. Bu durum, araştırmacıları uzun süredir aynı soruya yöneltiyor: Romalıların betonunu bu kadar dayanıklı kılan neydi?\n\nRoma betonu, bugünkü betondan farklı malzemelerle yapılıyordu. Romalılar kireci, volkanik kül ve taş parçalarıyla karıştırıyordu. Bu volkanik külün en iyi bilinen kaynağı, Napoli yakınlarındaki Pozzuoli bölgesiydi; bu yüzden bu tür küle bugün de puzolan adı veriliyor. Kireç ile volkanik kül su ile birleştiğinde, malzemeleri birbirine sıkıca bağlayan bir yapı oluşuyordu. Romalı mimar Vitruvius, yaklaşık iki bin yıl önce yazdığı mimarlık kitabında bu karışımın nasıl hazırlanacağını ayrıntılı biçimde anlatmıştı. Romalılar malzemeyi yapının bölümüne göre de değiştiriyordu. Pantheon'un kubbesinde, alt kısımlarda ağır taş parçaları kullanılırken yukarı çıktıkça daha hafif volkanik taşlara geçildi. Böylece kubbenin kendi ağırlığı azaltıldı.\n\nUzun süre, Roma betonunun gücünün yalnızca bu volkanik külden kaynaklandığı düşünüldü. Ancak son yıllarda yapılan araştırmalar tabloya yeni ayrıntılar ekledi. Bilim insanları eski Roma betonu örneklerini incelediklerinde, içlerinde milimetre boyutunda beyaz kireç parçacıkları buldu. Daha önce bu parçacıkların, Romalıların malzemeyi iyi karıştıramamasından kaynaklanan kusurlar olduğu sanılıyordu. Ancak bazı araştırmacılar bu açıklamayı tatmin edici bulmadı. Malzemeyi bu kadar özenle seçen ve tarif eden Romalıların, karıştırma gibi temel bir aşamada sürekli hata yapması onlara pek inandırıcı gelmiyordu.\n\n2023'te yayımlanan bir çalışma, bu parçacıkların aslında bir kusur değil, betonun gizli bir özelliği olabileceğini öne sürdü. Araştırmacılara göre Romalılar kireci, bugün yaygın olduğu gibi önceden suyla söndürerek değil, sönmemiş hâlde ve sıcak olarak karışıma katıyordu. Sönmemiş kireç suyla karşılaştığında çok ısınır. Bu yöntem, karışım sırasında yüksek sıcaklık oluşturuyor ve kireç parçacıklarının tamamen dağılmadan beton içinde kalmasına yol açıyordu.\n\nBu kireç parçacıklarının önemi, betonda bir çatlak oluştuğunda ortaya çıkıyor. Çatlaktan içeri sızan su, kireç parçacığına ulaştığında onunla tepkimeye giriyor ve kalsiyum içeren bir çözelti oluşturuyor. Bu çözelti zamanla kristalleşerek çatlağı dolduruyor. Böylece beton, küçük çatlakları kendi kendine onarabiliyor. Kireç parçacıkları, betonun içine yerleştirilmiş küçük onarım depoları gibi davranıyor; bir çatlak oluşana kadar bekliyor, ardından devreye giriyor. Araştırmacılar bu fikri sınamak için hem Roma yöntemiyle hem de günümüz yöntemiyle beton örnekleri hazırladı, ikisini de çatlatıp içlerinden su geçirdi. Roma yöntemiyle hazırlanan örneklerde çatlaklar birkaç hafta içinde kapanırken, diğer örneklerde su akmaya devam etti.\n\nDeniz yapılarında ise başka bir süreç işliyor. Başka bir araştırma grubu, deniz suyunun Roma betonundaki volkanik külle tepkimeye girerek yeni mineral kristallerin büyümesini sağladığını gösterdi. Yani bizim betonumuzu aşındıran deniz suyu, Roma betonunu zamanla daha da sağlamlaştırıyor olabilir. Bu kristaller, yapının içindeki boşlukları doldurarak bir tür iç iskelet gibi çalışıyor ve betonun kırılmaya karşı direncini artırıyor.\n\nBu bulgular, Roma betonunun her bakımdan bugünkü betondan üstün olduğu anlamına gelmiyor. Roma betonu, modern betona göre daha yavaş sertleşiyor ve basınca karşı genellikle daha az dayanıklı. Bugünkü gökdelenler ve köprüler, çelik donatılı modern beton olmadan yapılamazdı. Modern beton, kısa sürede yüksek dayanım kazandığı için inşaatların hızla tamamlanmasını da sağlıyor. Öte yandan çelik donatı, paslandığında genişleyerek betonu içeriden çatlatabiliyor; Roma yapılarında böyle bir sorun yoktu, çünkü içlerinde çelik bulunmuyordu.\n\nYine de Roma betonunun sırları, mühendisler için önemli dersler içeriyor. Kendi çatlaklarını onarabilen bir beton, yapıların ömrünü uzatabilir ve bakım masraflarını azaltabilir. Daha uzun ömürlü yapılar, daha az yeni beton üretmek anlamına gelir. Bu da önemlidir, çünkü çimento üretimi dünyadaki karbondioksit salımının önemli bir bölümünden sorumludur. Bugün bazı şirketler, Roma yönteminden esinlenen yeni beton karışımları üzerinde çalışıyor. Belki de geleceğin yapıları, iki bin yıllık bir tarifin bugünün bilgisiyle yeniden yorumlanmasıyla yükselecek.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pantheon'un kubbesini özel kılan özellik hangisidir?",
+    "correct": "Çeliksiz en büyük beton kubbe oluşu",
+    "wrong": [
+     "Yalnızca mermerden yapılmış olması",
+     "Deniz kıyısında inşa edilmiş olması",
+     "Yakın zamanda yeniden yapılmış olması"
+    ],
+    "explanation": "Pantheon'un kubbesi dünyanın en büyük donatısız beton kubbesidir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Puzolan adı nereden gelir?",
+    "correct": "Külün çıkarıldığı bir yer adından",
+    "wrong": [
+     "Külü ilk kullanan mimarın adından",
+     "Romalıların kullandığı bir taştan",
+     "Kirecin söndürülme yönteminden"
+    ],
+    "explanation": "Volkanik külün bilinen kaynağı Pozzuoli olduğu için bu küle puzolan denir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bazı araştırmacılar kireç parçacıklarının kusur olduğu açıklamasını neden yeterli bulmadı?",
+    "correct": "Özenli Romalıların sürekli hata yapması akla yatmadığı için",
+    "wrong": [
+     "Parçacıkların yalnızca liman yapılarında bulunduğu için",
+     "Vitruvius'un kitabında bu parçacıklardan söz edilmediği için",
+     "Parçacıkların modern betonda da bulunduğu bilindiği için"
+    ],
+    "explanation": "Malzemeyi özenle seçen Romalıların karıştırmada sürekli hata yapması inandırıcı gelmiyordu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "2023 çalışmasına göre Romalılar kireci karışıma nasıl katıyordu?",
+    "correct": "Söndürmeden, ısıl tepkimeyle",
+    "wrong": [
+     "Önce suda bekleterek soğuk",
+     "Toz hâline getirip kurutarak",
+     "Deniz suyuyla karıştırarak"
+    ],
+    "explanation": "Kireç önceden söndürülmeden, sönmemiş ve sıcak hâlde karışıma katılıyordu."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar kireç parçacıklarını neden onarım deposuna benzetir?",
+    "correct": "Çatlak oluşunca harekete geçip onu kapattıkları için",
+    "wrong": [
+     "Betonun içindeki suyu sürekli dışarı attıkları için",
+     "İnşaat sırasında betonun hızla donmasını sağladıkları için",
+     "Yapının ağırlığını taşıyan ana unsur oldukları için"
+    ],
+    "explanation": "Parçacıklar çatlak oluşana kadar bekler, sonra suyla tepkimeye girip çatlağı doldurur."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Deniz suyunun iki tür beton üzerindeki etkisi nasıl karşılaştırılabilir?",
+    "correct": "Birini yıpratıp diğerini güçlendirebilir",
+    "wrong": [
+     "İkisini de aynı hızla ve ölçüde aşındırır",
+     "İkisinin de çatlaklarını zamanla kapatır",
+     "İkisine de kayda değer bir etkide bulunmaz"
+    ],
+    "explanation": "Deniz suyu modern betonu aşındırırken Roma betonunda yeni kristallerin büyümesini sağlar."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre Roma betonunun modern betona göre zayıf yanı hangisidir?",
+    "correct": "Sertleşmesinin daha uzun sürmesi",
+    "wrong": [
+     "Deniz suyunda çok hızlı aşınması",
+     "İçindeki çeliğin paslanması",
+     "Kendi çatlaklarını onaramaması"
+    ],
+    "explanation": "Roma betonu daha yavaş sertleşir ve basınca genellikle daha az dayanıklıdır."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazara göre Roma betonu üzerine yapılan araştırmaların değeri nedir?",
+    "correct": "Uzun ömürlü ve çevreye duyarlı yapılara yol açabilmesi",
+    "wrong": [
+     "Modern betonun kullanımını kısa sürede sona erdirmesi",
+     "Gökdelenlerin Roma yöntemiyle yapılabileceğini kanıtlaması",
+     "Çimento üretimini tümüyle gereksiz hâle getirmesi"
+    ],
+    "explanation": "Kendini onaran beton yapıların ömrünü uzatır ve daha az çimento üretimi gerektirir."
+   }
+  ]
+ }
+}

@@ -1,0 +1,557 @@
+{
+ "21": {
+  "title": "Şehrin Sıcak Adası",
+  "category": "Bilgi/Açıklama",
+  "content": "Yaz günlerinde şehir merkezinden kırsala doğru yolculuk eden biri, havanın yavaş yavaş serinlediğini fark edebilir. Bu yalnızca bir his değildir. Ölçümler, büyük şehirlerin merkezlerinin çevrelerindeki kırsal alanlardan çoğu zaman birkaç derece daha sıcak olduğunu gösteriyor. Bu olaya kentsel ısı adası adı veriliyor.\n\nBilim insanları bu farkı yalnız termometrelerle değil, uydulardan çekilen ısıl görüntülerle de izliyor. Bu görüntülerde şehirler, çevrelerindeki ormanlık ve tarım alanlarının ortasında turuncu ve kırmızı lekeler gibi görünür. Aynı şehrin içinde bile farklar dikkat çekicidir: Geniş bir parkın çevresi, birkaç sokak ötedeki otoparktan belirgin biçimde serin olabilir. Bu da sorunun yalnızca şehrin büyüklüğüyle değil, nasıl inşa edildiğiyle ilgili olduğunu gösteriyor.\n\nKentsel ısı adasının birkaç nedeni vardır. Birincisi, şehirlerin yüzeyini kaplayan malzemelerdir. Asfalt, beton ve koyu renkli çatılar, güneş ışığını büyük ölçüde emer ve gün boyunca ısı depolar. Akşam olduğunda bu yüzeyler depoladıkları ısıyı yavaş yavaş havaya bırakır. Bu yüzden ısı adası etkisi özellikle geceleri belirgin hâle gelir; kırsal alanlar gece hızla serinlerken şehir merkezleri sıcak kalır.\n\nİkinci neden, bitki örtüsünün azlığıdır. Ağaçlar ve otlar, yapraklarından su buharlaştırarak çevrelerini serinletir. Ayrıca gölge yaparak yüzeylerin ısınmasını önler. Bitki örtüsü azaldıkça bu doğal serinletme de azalır. Toprağın yerini su geçirmeyen yüzeylerin alması, yağmur suyunun buharlaşarak serinlik sağlamasını da engeller.\n\nÜçüncü neden, şehirde üretilen ısıdır. Araçların motorları, fabrikalar ve klimalar, çevreye sürekli ısı verir. İşin ironik yanı, sıcak günlerde daha çok çalışan klimaların dış ünitelerinin sokaklara daha da fazla sıcak hava üflemesidir. Yüksek ve sık binalar da rüzgârın şehir içinde dolaşmasını zorlaştırarak sıcak havanın sokaklarda hapsolmasına yol açar.\n\nIsı adası etkisinin sonuçları yalnızca rahatsızlıkla sınırlı değildir. Sıcak hava dalgaları sırasında şehirlerde yaşayan yaşlılar, küçük çocuklar ve kronik hastalığı olanlar daha büyük risk altındadır. Serinlemek için harcanan enerji arttıkça elektrik tüketimi yükselir ve elektrik şebekesi zorlanabilir. Sıcak hava, kirletici maddelerin havada daha kolay tepkimeye girmesine de yol açarak hava kalitesini düşürebilir.\n\nBu etkiyi azaltmak için çeşitli yollar deneniyor. Çatıları ve kaldırımları açık renkli malzemelerle kaplamak, güneş ışığının daha fazla yansımasını sağlıyor. Sokaklara ağaç dikmek, parkları genişletmek ve bina çatılarını bitkilerle kaplamak gölge ve serinlik sağlıyor. Bazı şehirler, rüzgârın dolaşabilmesi için yeni yapılaşmada binaların yerleşimini de dikkate alıyor. Bu çözümlerin her biri tek başına küçük bir fark yaratsa da birlikte uygulandığında şehirleri belirgin biçimde serinletebiliyor.\n\nİklim değişikliğiyle birlikte sıcak hava dalgalarının sıklaşması bekleniyor. Dünya nüfusunun giderek daha büyük bir bölümünün şehirlerde yaşadığı düşünülürse, şehirleri serin tutmak yalnızca konfor değil, halk sağlığı meselesi hâline geliyor. Belki de bir sonraki sıcak yaz gününde bir ağacın gölgesine sığındığımızda, o ağacın şehre yaptığı katkıyı biraz daha iyi anlarız.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kentsel ısı adası neyi ifade eder?",
+    "correct": "Şehir merkezlerinin daha sıcak olmasını",
+    "wrong": [
+     "Kırsal alanların daha çok ısınmasını",
+     "Denizdeki küçük adaların sıcak iklimini",
+     "Şehirlerin yazın soğuk kalmasını"
+    ],
+    "explanation": "Büyük şehirlerin merkezleri, çevrelerindeki kırsal alanlardan çoğu zaman birkaç derece daha sıcaktır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Park ile otopark arasındaki sıcaklık farkı neyi gösterir?",
+    "correct": "Şehrin yapılanma biçiminin önemini",
+    "wrong": [
+     "Parkların daha kalabalık olduğunu",
+     "Uydu ölçümlerinin hatalı olduğunu",
+     "Otoparkların daha gölgeli olduğunu"
+    ],
+    "explanation": "Aynı şehrin içindeki farklar, sorunun şehrin nasıl inşa edildiğiyle ilgili olduğunu gösterir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Isı adası etkisi neden en çok geceleri belirginleşir?",
+    "correct": "Biriken ısı akşam salındığı için",
+    "wrong": [
+     "Klimalar gece daha çok çalıştığı için",
+     "Gece rüzgâr hiç esmediği için",
+     "Ay ışığı yüzeyleri ısıttığı için"
+    ],
+    "explanation": "Asfalt ve beton gün boyu ısı depolar, akşam bu ısıyı yavaş yavaş havaya bırakır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ağaçlar çevrelerini nasıl serinletir?",
+    "correct": "Su buharlaştırıp gölge yaparak",
+    "wrong": [
+     "Rüzgârı tümüyle durdurarak",
+     "Toprağı gün boyu soğuk tutarak",
+     "Güneş ışığını depolayarak"
+    ],
+    "explanation": "Yapraklarından su buharlaştırır ve gölge yaparak yüzeylerin ısınmasını önlerler."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazarın klimalarla ilgili \"ironik\" bulduğu durum nedir?",
+    "correct": "Serinletirken dışarıyı ısıtmaları",
+    "wrong": [
+     "Sıcak günlerde sık sık bozulmaları",
+     "Elektrik faturalarını yükseltmeleri",
+     "Gürültü kirliliği yaratmaları"
+    ],
+    "explanation": "Sıcakta daha çok çalışan klimaların dış üniteleri sokaklara daha fazla sıcak hava üfler."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sıcak hava dalgalarında şehirde kimler daha büyük risk altındadır?",
+    "correct": "Bedeni sıcağa dayanıksız olanlar",
+    "wrong": [
+     "Sporcular, işçiler ve sürücüler",
+     "Öğrenciler, öğretmenler ve memurlar",
+     "Turistler, satıcılar ve garsonlar"
+    ],
+    "explanation": "Yaşlılar, küçük çocuklar ve kronik hastalığı olanlar daha büyük risk altındadır."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çatı ve kaldırımlarda açık renkli malzeme neden tercih edilir?",
+    "correct": "Gelen ışınları geri çevirdiği için",
+    "wrong": [
+     "Daha ucuza ve hızlı yapıldığı için",
+     "Yağmur suyunu çok daha iyi tuttuğu için",
+     "Uzaktan daha güzel göründüğü için"
+    ],
+    "explanation": "Açık renkli yüzeyler güneş ışığının daha fazlasını yansıtır."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar son paragrafta neyi vurgular?",
+    "correct": "Serin şehirler halk sağlığı için gereklidir",
+    "wrong": [
+     "Sıcak hava dalgaları her yıl azalmaktadır",
+     "Ağaçlar şehirlerde yalnızca süs için dikilir",
+     "Kırsal yaşam şehirden her yönüyle zordur"
+    ],
+    "explanation": "Sıcak dalgalar sıklaşırken şehirleri serin tutmak bir konfor değil, halk sağlığı meselesidir."
+   }
+  ]
+ },
+ "22": {
+  "title": "Kuyruktaki Sayılar",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulda öğrenci temsilcisi seçimleri yaklaşırken Berk'in aday olacağı kimsenin aklına gelmezdi. Sınıfın sessiz öğrencilerinden biriydi; derslerde nadiren söz alır, teneffüslerde çoğunlukla kütüphanede otururdu. Ama o yıl bir şey onu harekete geçirdi.\n\nOkulun kantininde öğle arasında uzun kuyruklar oluşuyor, öğrencilerin çoğu yemeğini almadan ders zili çalıyordu. Berk aylardır bunu izliyordu ve her gün aç kalan arkadaşlarının şikâyetlerini dinliyordu. Bir gün kuyrukta beklerken saatini tuttu ve sıradaki her öğrencinin ortalama ne kadar beklediğini hesapladı. Sonra birkaç gün boyunca aynı ölçümü tekrarladı. Sonuç şaşırtıcıydı: Teneffüsün neredeyse yarısı kuyrukta geçiyordu.\n\nBerk bu sayılarla aday olmaya karar verdi. Ablası, kalabalık önünde konuşmaktan çekinen kardeşinin bu kararına önce şaşırdı, sonra konuşmasını hazırlamasına yardım etti. Akşamları salonda, ailesinin önünde konuşmasını defalarca prova etti. İlk denemelerde sesi titriyor, sayıları karıştırıyordu. Ablası ona, sayıları ezberlemek yerine küçük bir grafiğe dökmesini önerdi. Berk kuyruğun uzunluğunu gösteren basit bir çizim hazırladı.\n\nSeçim günü geldiğinde diğer adaylar büyük vaatlerde bulundu: daha uzun teneffüsler, okul gezileri, yeni spor alanları. Berk ise yalnızca tek bir sorundan söz etti ve ölçtüğü sayıları gösterdi. Çözüm önerisi de basitti: Kantinde iki ayrı kasa açmak ve öğrencilerin sabahtan yemek siparişi verebilmesini sağlamak.\n\nKonuşması kısa sürdü ve salonda pek alkış almadı. Berk seçimi kazanamayacağını düşündü; diğer adayların coşkulu konuşmaları yanında kendi sözleri ona kuru ve sıkıcı gelmişti. Ama oylar sayıldığında ikinci olmuştu; birinciyle arasında yalnızca birkaç oy vardı. Seçimi kazanan arkadaşı Zeynep, sonuç açıklandıktan sonra yanına geldi. Berk'in hazırladığı ölçümlerin çok ikna edici olduğunu söyledi ve kantin konusunu birlikte okul yönetimine götürmeyi önerdi.\n\nOkul müdürüyle yapılan görüşmede Berk yine çizimini gösterdi. Müdür, kantin işletmecisiyle konuşacağını ama ek bir kasanın masraf getireceğini söyledi. Berk bunu da düşünmüştü: Sabah siparişleri sayesinde öğle saatlerinde daha az personelle daha çok öğrenciye hizmet verilebileceğini anlattı. Müdür, önerinin bir ay denenmesini kabul etti.\n\nİki ay sonra kantinde ikinci kasa açıldı. Sabah sipariş sistemi de denemeye alındı. İlk haftalarda siparişler karıştı, bazı öğrenciler sistemi kullanmayı unuttu. Berk ve Zeynep sınıfları tek tek dolaşıp sistemi anlattılar. Ay sonunda kuyruklar belirgin biçimde kısaldı ve öğrenciler teneffüslerini yeniden bahçede geçirmeye başladı. Berk, temsilci seçilmemiş olsa da bir sorunu çözmenin her zaman bir unvan gerektirmediğini öğrendi. Bir sonraki yıl yine aday olmayı düşünüyordu; bu kez söyleyecek daha fazla şeyi vardı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Berk'in aday olması neden şaşırtıcıydı?",
+    "correct": "Sessiz ve içine kapanık biri olduğu için",
+    "wrong": [
+     "Okula bu yıl yeni gelmiş olduğu için",
+     "Ders notları oldukça düşük olduğu için",
+     "Daha önce iki kez seçimi kaybetmiş olduğu için"
+    ],
+    "explanation": "Sınıfın sessiz öğrencilerindendi; nadiren söz alır, teneffüsleri kütüphanede geçirirdi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Berk'in kuyrukta süre tutması neyi gösterir?",
+    "correct": "Sorunu verilerle anlamaya çalıştığını",
+    "wrong": [
+     "Kantin işletmecisine çok kızdığını",
+     "Matematik ödevi için veri topladığını",
+     "Teneffüslerden çok sıkıldığını"
+    ],
+    "explanation": "Birkaç gün ölçüm yaparak teneffüsün ne kadarının kuyrukta geçtiğini hesapladı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ablası Berk'e ne önerdi?",
+    "correct": "Verileri basit bir görsele çevirmesini",
+    "wrong": [
+     "Konuşmasını tümüyle ezberlemesini",
+     "Seçimden çekilip başkasını desteklemesini",
+     "Daha çok ve büyük vaatte bulunmasını"
+    ],
+    "explanation": "Sayıları ezberlemek yerine küçük bir grafiğe dökmesini önerdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Berk'in konuşmasını diğerlerinden ayıran neydi?",
+    "correct": "Tek bir soruna kanıtla odaklanması",
+    "wrong": [
+     "Herkesten uzun ve coşkulu olması",
+     "Okul gezileri ve spor alanı vaat etmesi",
+     "Esprili ve eğlenceli bir dil kullanması"
+    ],
+    "explanation": "Diğerleri büyük vaatlerde bulunurken Berk yalnızca kantin sorununu ölçtüğü sayılarla anlattı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Seçimde Berk kaçıncı oldu?",
+    "correct": "İkinci",
+    "wrong": [
+     "Birinci",
+     "Üçüncü",
+     "Sonuncu"
+    ],
+    "explanation": "Oylar sayıldığında ikinci olmuştu; birinciyle arasında birkaç oy vardı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep'in Berk'e yaptığı öneri onun hakkında ne gösterir?",
+    "correct": "İyi fikre açık olduğunu",
+    "wrong": [
+     "Berk'ten çekindiğini",
+     "Seçimden pişman olduğunu",
+     "Kantini hiç kullanmadığını"
+    ],
+    "explanation": "Seçimi kazanmasına rağmen rakibinin ikna edici çalışmasını takdir edip onunla birlikte çalışmayı önerdi."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Berk'in masraf itirazını önceden düşünmüş olması neyi gösterir?",
+    "correct": "Önerisini iyice hazırladığını",
+    "wrong": [
+     "Müdürle tartışmak istediğini",
+     "Kantinde çalışmak istediğini",
+     "Masrafı kendisinin ödeyeceğini"
+    ],
+    "explanation": "Sabah siparişlerinin personel ihtiyacını azaltacağını anlatarak itiraza hazırlıklı olduğunu gösterdi."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Berk bu deneyimden hangi dersi çıkardı?",
+    "correct": "Unvan olmadan da sorun çözülebilir",
+    "wrong": [
+     "Seçimi kaybetmek her şeyi bitirir",
+     "Büyük vaatler seçimi kazandırır",
+     "Okul yönetimi öğrencileri dinlemez"
+    ],
+    "explanation": "Temsilci seçilmese de kantin sorununu çözmeye katkıda bulundu."
+   }
+  ]
+ },
+ "26": {
+  "title": "Emanet Anahtar",
+  "category": "Hikaye/Kurgu",
+  "content": "Aynur, yan dairedeki yaşlı komşusu Kemal Bey'in yıllardır kapının önündeki paspasın altına yedek anahtar bıraktığını biliyordu. Bir akşam işten dönerken Kemal Bey'i merdivenlerde, elinde poşetlerle, telaşla ceplerini ararken buldu. Anahtarını evde unutmuş, kapıyı çekip çıkmıştı. Paspasın altına baktılar ama yedek anahtar da yerinde değildi.\n\nKemal Bey çok üzgündü. Yedek anahtarı birkaç hafta önce torununa verdiğini, sonra geri almayı unuttuğunu hatırladı. Torunu ise şehrin öbür ucunda oturuyordu. Çilingir çağırmak hem pahalı hem de vakit alıcıydı. Üstelik poşetlerdeki dondurulmuş yiyecekler eriyecekti.\n\nAynur onu kendi evine davet etti, bir çay demledi. Kemal Bey'in torununu telefonla aradılar. Torun, işten çıkınca anahtarı getireceğini söyledi. Beklerken uzun uzun sohbet ettiler; Kemal Bey gençliğini, Aynur da çocukluğunun geçtiği kasabayı anlattı. Aynur, yıllardır aynı katta oturdukları hâlde Kemal Bey'in eskiden bir öğretmen olduğunu ilk kez öğrendi.\n\nTorun gece dokuza doğru geldi. Kemal Bey evine girmeden önce Aynur'a döndü ve bir öneride bulundu. Yedek anahtarı artık paspasın altına değil, ona bırakmak istiyordu. Aynur da kendi yedek anahtarını ona verdi. İki komşu, o akşamdan sonra birbirine güvenle emanet edilen bir anahtarla bağlanmıştı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kemal Bey merdivende neden telaşlıydı?",
+    "correct": "Eve girecek anahtarı yoktu",
+    "wrong": [
+     "Poşetlerinin biri yırtılmıştı",
+     "Asansör yine bozulmuştu",
+     "Kapısını açık bırakmıştı"
+    ],
+    "explanation": "Anahtarını evde unutup kapıyı çekip çıkmıştı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yedek anahtar neden paspasın altında değildi?",
+    "correct": "Torununda kalmıştı",
+    "wrong": [
+     "Biri onu çalmıştı",
+     "Kaybolup gitmişti",
+     "Komşuya verilmişti"
+    ],
+    "explanation": "Birkaç hafta önce torununa vermiş, geri almayı unutmuştu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çilingir çağırmanın istenmemesinin nedenlerinden biri nedir?",
+    "correct": "Yiyeceklerin bozulma tehlikesi",
+    "wrong": [
+     "Yakında çilingir bulunmaması",
+     "Kapının zarar görecek olması",
+     "Komşuların gece rahatsız olması"
+    ],
+    "explanation": "Çilingir pahalı ve vakit alıcıydı; üstelik poşetlerdeki dondurulmuş yiyecekler eriyecekti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Aynur'un Kemal Bey'i evine davet etmesi neyi gösterir?",
+    "correct": "Yardımsever bir komşu olduğunu",
+    "wrong": [
+     "Onu yıllardır yakından tanıdığını",
+     "Yalnız çay içmeyi sevdiğini",
+     "Kendi torununu beklediğini"
+    ],
+    "explanation": "Zor durumdaki komşusuna kapısını açıp bekleme süresince ona eşlik etti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Aynur sohbet sırasında ne öğrendi?",
+    "correct": "Komşusunun eski bir öğretmen olduğunu",
+    "wrong": [
+     "Komşusunun torunuyla küs olduğunu",
+     "Komşusunun da aynı kasabadan geldiğini",
+     "Komşusunun yakında taşınacağını"
+    ],
+    "explanation": "Kemal Bey'in eskiden öğretmen olduğunu ilk kez öğrendi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yıllarca aynı katta oturup bunu bilmemesi neyi gösterir?",
+    "correct": "Komşuluğun yüzeysel kaldığını",
+    "wrong": [
+     "Kemal Bey'in sır sakladığını",
+     "Aynur'un yeni taşındığını",
+     "Apartmanın kalabalık olduğunu"
+    ],
+    "explanation": "Komşu olmalarına rağmen o akşama kadar gerçekten konuşmamışlardı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kemal Bey yedek anahtar için ne önerdi?",
+    "correct": "Aynur'a emanet etmeyi",
+    "wrong": [
+     "Torununa geri vermeyi",
+     "Paspasın altına koymayı",
+     "Kapıcıya bırakmayı"
+    ],
+    "explanation": "Yedek anahtarı paspasın altına değil, Aynur'a bırakmak istedi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana düşüncesi hangisidir?",
+    "correct": "Küçük aksilikler güven bağı kurabilir",
+    "wrong": [
+     "Anahtarlar paspas altında saklanmalı",
+     "Çilingirler genellikle çok pahalıdır",
+     "Yaşlıların yalnız yaşaması doğru değil"
+    ],
+    "explanation": "Unutulan bir anahtar, iki komşunun birbirine anahtarını emanet edecek kadar yakınlaşmasına yol açtı."
+   }
+  ]
+ },
+ "27": {
+  "title": "Kahve ve Yorgunluk",
+  "category": "Bilgi/Açıklama",
+  "content": "Sabah kahvesi pek çok insan için günün vazgeçilmez başlangıcıdır. Bir fincan kahveden sonra uykunun açıldığını, dikkatin toparlandığını hissederiz. Bu etkinin arkasında kahvedeki kafein ve beynimizdeki küçük bir kimyasal oyun vardır. Kafein yalnız kahvede değil, çayda, kolalı içeceklerde ve bazı çikolatalarda da bulunur.\n\nGün boyunca uyanık kaldıkça beynimizde adenozin adlı bir madde birikir. Adenozin, beyindeki belirli alıcılara bağlanarak sinir hücrelerinin etkinliğini yavaşlatır. Biriken adenozin, akşama doğru yorgunluk ve uyku isteği olarak hissedilir. Uyuduğumuzda adenozin düzeyi yeniden düşer ve sabah zinde uyanırız. Uykusuz geçen bir gecenin ertesinde bu birikim tam temizlenmediği için gün boyu ağırlık hissedebiliriz.\n\nKafein, yapı bakımından adenozine benzer. Bu yüzden adenozinin bağlandığı alıcılara o da bağlanabilir. Ancak bağlandığında adenozin gibi yavaşlatıcı bir etki yapmaz. Alıcıları işgal ederek adenozinin onlara ulaşmasını engeller. Böylece yorgunluk sinyali beyne tam olarak iletilmez ve kendimizi daha uyanık hissederiz. Yani kafein bize yeni enerji vermez; var olan yorgunluğu bir süreliğine gizler.\n\nKafeinin etkisi sanıldığından uzun sürer. Vücuttaki kafeinin yarısının atılması, kişiden kişiye değişmekle birlikte, ortalama beş saat kadar sürer. Öğleden sonra içilen bir kahve, bu nedenle gece uykusunu etkileyebilir. Kafein etkisini yitirdiğinde ise bu sürede birikmiş olan adenozin bir anda alıcılara ulaşır. Pek çok kişinin hissettiği öğleden sonra çöküşü bundan kaynaklanabilir. Bu çöküşü yeni bir kahveyle bastırmak ise döngüyü sürdürür ve akşam uykuya dalmayı daha da zorlaştırır.\n\nBu, kahvenin zararlı olduğu anlamına gelmez. Ölçülü tüketildiğinde çoğu yetişkin için güvenli kabul edilir. Ancak çok fazla kafein çarpıntı, huzursuzluk ve uyku sorunlarına yol açabilir; hamileler ve bazı rahatsızlıkları olanlar için önerilen miktar daha düşüktür. Ama kafeinin yorgunluğu ortadan kaldırmadığını, yalnızca ertelediğini bilmek, ne zaman ve ne kadar kahve içeceğimize karar verirken işe yarayabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Metne göre kafein nelerde bulunur?",
+    "correct": "Kahve, çay, kola ve çikolata",
+    "wrong": [
+     "Süt, ayran, yoğurt ve peynir",
+     "Su, maden suyu ve meyve suyu",
+     "Ekmek, pirinç ve makarna"
+    ],
+    "explanation": "Kafein kahvenin yanı sıra çay, kolalı içecekler ve bazı çikolatalarda da bulunur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Adenozin beyinde ne yapar?",
+    "correct": "Beyin etkinliğini frenler",
+    "wrong": [
+     "Uyanıklığı bir anda artırır",
+     "Belleği kalıcı biçimde onarır",
+     "Akşamları iştahı bastırır"
+    ],
+    "explanation": "Alıcılara bağlanarak sinir hücrelerinin etkinliğini yavaşlatır; birikince yorgunluk hissedilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kafeinin uyanıklık etkisi nasıl ortaya çıkar?",
+    "correct": "Bitkinlik uyarısını susturarak",
+    "wrong": [
+     "Vücuda yeni enerji ekleyerek",
+     "Adenozin üretimini artırarak",
+     "Kan şekerini hızla yükselterek"
+    ],
+    "explanation": "Kafein adenozinin alıcılarını işgal eder; yorgunluk sinyali beyne tam iletilmez."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "\"Kafein bize yeni enerji vermez\" sözü ne anlatır?",
+    "correct": "Bitkinliğin geçici örtüldüğünü",
+    "wrong": [
+     "Kahvenin hiç besin değeri olmadığını",
+     "Kafeinin hiç etkisi olmadığını",
+     "Kahvenin enerjiyi yok ettiğini"
+    ],
+    "explanation": "Kafein var olan yorgunluğu bir süreliğine gizler; ortadan kaldırmaz."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Vücuttaki kafeinin yarısının atılması ortalama ne kadar sürer?",
+    "correct": "5 saat",
+    "wrong": [
+     "1 saat",
+     "2 saat",
+     "12 saat"
+    ],
+    "explanation": "Kişiden kişiye değişse de ortalama beş saat kadar sürer."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Öğleden sonra hissedilen çöküşün nedeni ne olabilir?",
+    "correct": "Biriken adenozinin birden etki etmesi",
+    "wrong": [
+     "Öğle yemeğinin çok fazla ve ağır olması",
+     "Kahvenin vücutta zehir oluşturması",
+     "Öğleden sonra gün ışığının azalması"
+    ],
+    "explanation": "Kafein etkisini yitirince bu sürede biriken adenozin bir anda alıcılara ulaşır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çöküşü yeni bir kahveyle bastırmanın sakıncası nedir?",
+    "correct": "Kısır döngüyü besleyip uykuyu bozar",
+    "wrong": [
+     "Midede yanma ve hazımsızlık yapar",
+     "Kahvenin etkisini tümüyle siler",
+     "Ertesi sabah şiddetli baş ağrısı yapar"
+    ],
+    "explanation": "Yeni kahve döngüyü sürdürür ve akşam uykuya dalmayı zorlaştırır."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın kahve konusundaki tutumu nedir?",
+    "correct": "Bilinçli ve ölçülü içilmesini önerir",
+    "wrong": [
+     "Tümüyle bırakılmasını savunur",
+     "Sınırsız içilebileceğini söyler",
+     "Yalnızca sabah içilmesini şart koşar"
+    ],
+    "explanation": "Kahvenin zararlı olmadığını ama kafeinin yorgunluğu ertelediğini bilerek içilmesi gerektiğini söyler."
+   }
+  ]
+ },
+ "30": {
+  "title": "Pamuk'un Kutusu",
+  "category": "Hikaye/Kurgu",
+  "content": "Elif'in kedisi Pamuk'un yeni bir yatağı vardı. Annesi yatağı pazardan almıştı. Elif yatağı görünce çok sevindi. Yumuşak, mavi ve kocamandı. Elif yatağı odasının en sıcak köşesine, kaloriferin yanına koydu ve Pamuk'u çağırdı. Pamuk'un bu yatağa bayılacağından emindi.\n\nPamuk yatağa baktı, kokladı ve gidip bir karton kutunun içine yattı. Kutu, yatağın geldiği eski karton kutuydu. Pamuk kutunun içinde rahatça kıvrıldı. Elif çok şaşırdı ve biraz da üzüldü. \"Ama yatağın orada!\" dedi. Pamuk gözlerini kapattı.\n\nErtesi gün de Pamuk kutuda uyudu. Elif annesine sordu. Annesi, kedilerin dar ve kapalı yerlerde kendilerini güvende hissettiğini söyledi. Kutunun duvarları Pamuk'u dört bir yandan saran bir yuva gibiydi. Elif bir fikir buldu. Mavi yatağı kutunun içine yerleştirdi.\n\nO akşam Pamuk kutuya girdi, yumuşak yatağın üstünde döndü ve kıvrılıp uyudu. Elif sevinçle gülümsedi ve annesine koştu. Artık hem kutu hem yatak Pamuk'undu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Pamuk'un yeni yatağı nasıldı?",
+    "correct": "Yumuşak, mavi ve büyük",
+    "wrong": [
+     "Sert, kırmızı ve küçük",
+     "Tahta, sarı ve dar",
+     "Yuvarlak, pembe ve alçak"
+    ],
+    "explanation": "Yatak yumuşak, mavi ve kocamandı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif yatağı nereye koydu?",
+    "correct": "Sıcak peteğin yanına",
+    "wrong": [
+     "Pencerenin önüne",
+     "Yatağının altına",
+     "Mutfağın bir köşesine"
+    ],
+    "explanation": "Yatağı odasının en sıcak köşesine, kaloriferin yanına koydu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pamuk ilk gece nerede uyudu?",
+    "correct": "Karton bir kutuda",
+    "wrong": [
+     "Elif'in yatağında",
+     "Mavi yatağında",
+     "Koltuğun üstünde"
+    ],
+    "explanation": "Yatağın geldiği eski karton kutunun içine yattı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Elif neden biraz üzüldü?",
+    "correct": "Yatağı beğenilmedi sandığı için",
+    "wrong": [
+     "Kutu birden yırtılıverdiği için",
+     "Pamuk biraz hastalandığı için",
+     "Annesi ona biraz kızdığı için"
+    ],
+    "explanation": "Pamuk'un yeni yatağa bayılacağını düşünüyordu ama kedi kutuda yattı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Annesine göre kediler nerede kendini güvende hisseder?",
+    "correct": "Sıkışık ve kuytu yerlerde",
+    "wrong": [
+     "Geniş ve açık yerlerde",
+     "Yüksek ve aydınlık yerlerde",
+     "Sıcak ve nemli yerlerde"
+    ],
+    "explanation": "Kediler dar ve kapalı yerlerde kendilerini güvende hisseder."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Elif yatağı neden kutunun içine yerleştirdi?",
+    "correct": "Kedisi ikisini birden sevsin diye",
+    "wrong": [
+     "Yatak tozlanıp kirlenmesin diye",
+     "Kutuyu atmak istemediği için",
+     "Annesi böyle yapmasını istediği için"
+    ],
+    "explanation": "Kutunun verdiği güven ile yatağın yumuşaklığını birleştirmek istedi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Pamuk'un o akşam kutudaki yatağa kıvrılması neyi gösterir?",
+    "correct": "Çözümün işe yaradığını",
+    "wrong": [
+     "Kutudan sıkıldığını",
+     "Yatağı hiç sevmediğini",
+     "Elif'e çok kızdığını"
+    ],
+    "explanation": "Kutunun içine konan yumuşak yatağı hemen benimsedi; Elif'in fikri işe yaramıştı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Bu hikâyeden ne öğreniriz?",
+    "correct": "Sorunlara akıllıca çözüm bulunabilir",
+    "wrong": [
+     "Kediler yataklarda hiç uyumak istemez",
+     "Eski kutular hemen atılmalıdır",
+     "Pahalı eşyalar en iyi eşyalardır"
+    ],
+    "explanation": "Elif kedisinin neyi sevdiğini anlayıp iki şeyi birleştirerek sorunu çözdü."
+   }
+  ]
+ }
+}

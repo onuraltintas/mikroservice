@@ -1,0 +1,557 @@
+{
+ "4": {
+  "title": "Arıların Dansı",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir arı çiçeklerle dolu bir bahçe bulduğunda, bu haberi kovandaki arkadaşlarına iletmek ister. Ama arılar konuşamaz. Peki yiyeceğin yerini nasıl anlatırlar? Bilim insanları bu sorunun cevabını arıları uzun yıllar izleyerek buldu: Arılar dans eder. Bu dansı ilk kez ayrıntılı biçimde inceleyen Avusturyalı bilim insanı Karl von Frisch, çalışmaları sayesinde Nobel Ödülü kazandı.\n\nYiyecek kovana yakınsa arı, peteklerin üstünde küçük daireler çizerek döner. Bu dans, \"Yakında bir yerde yiyecek var, çevreyi arayın\" anlamına gelir. Diğer arılar dans eden arının üstündeki çiçek kokusunu da alır. Böylece hangi çiçeği arayacaklarını bilirler. Dans ne kadar hızlı ve canlıysa, bulunan yiyeceğin de o kadar bol ve tatlı olduğu düşünülür.\n\nYiyecek uzaktaysa dans değişir. Arı önce düz bir çizgi boyunca yürür ve bu sırada karnını hızla sağa sola sallar. Sonra bir yandan dönerek başlangıç noktasına gelir ve aynı çizgiyi yeniden yürür. Buna sallanma dansı denir. Arının düz yürürken hangi yöne baktığı, yiyeceğin güneşe göre hangi yönde olduğunu gösterir. Sallanma ne kadar uzun sürerse, yiyecek de o kadar uzaktadır.\n\nKovanın içi karanlıktır. Bu yüzden diğer arılar dansı gözleriyle değil, dans eden arıya dokunarak ve onun titreşimlerini hissederek izler. Birkaç tur dansı takip eden arılar, sonra kovandan çıkıp tarif edilen yöne uçar. Güneş gün boyunca gökyüzünde yer değiştirdiği için arılar dansın yönünü de saat ilerledikçe biraz değiştirir. Böylece tarif hep doğru kalır.\n\nBir kovanda binlerce arı yaşar ve hepsinin beslenmesi gerekir. Bu küçük dans sayesinde arılar en iyi çiçekleri çabucak bulur, zamanlarını ve enerjilerini boşa harcamaz. Bir dahaki sefere bahçede bir arı gördüğünüzde, onun belki de birkaç dakika önce bir dansla buraya yönlendirildiğini düşünebilirsiniz.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Arılar yiyeceğin yerini birbirine nasıl anlatır?",
+    "correct": "Kovanda özel hareketler yaparak",
+    "wrong": [
+     "Vızıldayarak şarkı söyleyerek",
+     "Çiçeklere koku izi bırakarak",
+     "Kovanın kapısında sırayla bekleyerek"
+    ],
+    "explanation": "Arılar konuşamaz; bilim insanlarının gözlemine göre yiyeceğin yerini dans ederek anlatırlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Diğer arılar hangi çiçeği arayacaklarını nasıl anlar?",
+    "correct": "Dansçının üstündeki kokudan",
+    "wrong": [
+     "Dansın kaç tur sürdüğünden",
+     "Kovanın kapısındaki izlerden",
+     "Dansçının kanat renginden"
+    ],
+    "explanation": "Dans eden arının üstündeki çiçek kokusunu alarak hangi çiçeği arayacaklarını bilirler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sallanma dansında sallanmanın uzun sürmesi ne anlama gelir?",
+    "correct": "Yiyeceğe uzun bir yol olduğu",
+    "wrong": [
+     "Çiçeklerin çok az nektar verdiği",
+     "Güneşin batmak üzere olduğu",
+     "Arının çok yorulmuş olduğu"
+    ],
+    "explanation": "Sallanma ne kadar uzun sürerse yiyecek de o kadar uzaktadır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kovandaki arılar dansı neden dokunarak izler?",
+    "correct": "İçeride görmek mümkün olmadığı için",
+    "wrong": [
+     "Dans çok hızlı ve kısa sürdüğü için",
+     "Gözleri çok küçük olduğu için",
+     "Dansçı onlara izin vermediği için"
+    ],
+    "explanation": "Kovanın içi karanlıktır; arılar dansı titreşimleri hissederek takip eder."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arılar dansın yönünü gün içinde neden biraz değiştirir?",
+    "correct": "Güneşin konumu değiştiği için",
+    "wrong": [
+     "Çiçekler yer değiştirdiği için",
+     "Kovan rüzgârla döndüğü için",
+     "Arılar dansı unuttuğu için"
+    ],
+    "explanation": "Yön güneşe göre anlatılır; güneş gün boyunca yer değiştirdiği için tarifin doğru kalması gerekir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Daire dansı neden ayrıntılı bir yön bilgisi içermez?",
+    "correct": "Yiyecek zaten yakında olduğu için",
+    "wrong": [
+     "Arılar yön bilgisini bilmediği için",
+     "Kovan çok küçük kaldığı için",
+     "Çiçekler her yerde aynı olduğu için"
+    ],
+    "explanation": "Daire dansı yakındaki yiyecek içindir; arıların çevreyi araması yeterlidir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre dans arılara ne kazandırır?",
+    "correct": "Boşa çaba harcamama",
+    "wrong": [
+     "Güçlü kanat kasları",
+     "Yeni kovan kurma gücü",
+     "Daha uzun bir yaşam"
+    ],
+    "explanation": "Dans sayesinde en iyi çiçekleri çabucak bulur, zamanlarını ve enerjilerini boşa harcamazlar."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metinden hangi sonuç çıkarılabilir?",
+    "correct": "Arılar karmaşık bir iletişim kurar",
+    "wrong": [
+     "Arılar yalnızca kokuyla haberleşir",
+     "Dans yalnız eğlence için yapılır",
+     "Arılar birbirine hiç yardım etmez"
+    ],
+    "explanation": "Dansın biçimi, süresi ve yönü farklı bilgiler taşır; bu da arıların gelişmiş bir iletişimi olduğunu gösterir."
+   }
+  ]
+ },
+ "5": {
+  "title": "Rafların Arasında",
+  "category": "Hikaye/Kurgu",
+  "content": "Elif üniversitenin ikinci haftasında kütüphanede yarı zamanlı işe başladı. Görevi, geri getirilen kitapları raflardaki yerlerine yerleştirmekti. İlk gün bunun kolay olacağını düşündü. Ne de olsa okumayı seviyordu ve kitapların arasında olmak hoşuna gidiyordu. Birkaç kitap alıp rafların arasına girdi ve kaybolup gitti.\n\nKitaplar alfabetik sırayla değil, sırt etiketlerindeki numaralara göre diziliyordu. Her numara bir konuyu gösteriyordu. Elif aynı rafın önünde yarım saat dolaştı, sonunda kütüphaneci Nermin Hanım'dan yardım istedi.\n\nNermin Hanım ona etiketleri okumayı gösterdi. Önce ilk sayılara bakacak, konunun bulunduğu sırayı bulacak, sonra ayrıntılı numaralara geçecekti. Bir kitabı yanlış rafa koymanın, onu kaybetmekle aynı şey olduğunu da ekledi. Yanlış yere konan bir kitap, belki aylarca kimse tarafından bulunamazdı.\n\nElif ertesi gün küçük bir not kâğıdına numaraların anlamlarını yazdı ve kâğıdı önlüğünün cebine koydu. Her kitabı yerleştirmeden önce numarayı kâğıttakiyle karşılaştırdı. İlk günler yavaş ilerledi, arkasında bekleyen arabadaki kitaplar bir türlü azalmadı. Bir hafta sonra artık nota bakmıyordu. Ay sonunda ise bir öğrenciye aradığı kitabın yerini, bilgisayara bakmadan gösterdi. Öğrenci teşekkür edip uzaklaşırken Elif, ilk gün rafların arasında nasıl kaybolduğunu hatırlayıp gülümsedi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Elif'in kütüphanedeki görevi neydi?",
+    "correct": "İade edilen kitapları yerleştirmek",
+    "wrong": [
+     "Okuyuculara kitap ödünç verip almak",
+     "Yeni gelen kitapları kaydetmek",
+     "Okuma salonunu düzenli tutmak"
+    ],
+    "explanation": "Görevi, geri getirilen kitapları raflardaki yerlerine koymaktı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elif ilk gün neden rafların arasında kayboldu?",
+    "correct": "Rafların düzenini bilmediği için",
+    "wrong": [
+     "Kitaplar çok ağır olduğu için",
+     "Kütüphane çok kalabalık olduğu için",
+     "Arabadaki kitaplar karıştığı için"
+    ],
+    "explanation": "Kitaplar alfabetik değil numaralara göre diziliyordu ve Elif bu düzeni henüz bilmiyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kitaplar raflara neye göre diziliyordu?",
+    "correct": "Konu numaralarına göre",
+    "wrong": [
+     "Yazar soyadlarına göre",
+     "Basım yıllarına göre",
+     "Boyutlarına göre"
+    ],
+    "explanation": "Kitaplar, her biri bir konuyu gösteren sırt etiketi numaralarına göre diziliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nermin Hanım'a göre yanlış rafa konan kitap neden kaybolmuş sayılır?",
+    "correct": "Aranan yerde bulunamayacağı için",
+    "wrong": [
+     "Kitap zamanla yıpranacağı için",
+     "Kimse onu okumak istemeyeceği için",
+     "Kütüphane ceza vereceği için"
+    ],
+    "explanation": "Yanlış yere konan bir kitap aylarca kimse tarafından bulunamayabilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nermin Hanım etiketlerde önce neye bakmasını söyledi?",
+    "correct": "Baştaki sayılara",
+    "wrong": [
+     "Sondaki harflere",
+     "Kitabın adına",
+     "Yazarın adına"
+    ],
+    "explanation": "Önce ilk sayılara bakıp konunun sırasını bulacak, sonra ayrıntılı numaralara geçecekti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elif'in not kâğıdı hazırlaması neyi gösterir?",
+    "correct": "Öğrenmek için yöntem geliştirdiğini",
+    "wrong": [
+     "İşi bırakmayı ciddi biçimde düşündüğünü",
+     "Nermin Hanım'a pek güvenmediğini",
+     "Kütüphaneden hiç hoşlanmadığını"
+    ],
+    "explanation": "Numaraların anlamını yazıp her kitapta karşılaştırarak işi öğrenmenin bir yolunu buldu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay sonunda Elif ne yapabiliyordu?",
+    "correct": "Kitap yerlerini ezbere biliyordu",
+    "wrong": [
+     "Yeni kitapları kendisi alıyordu",
+     "Okuma salonunu tek başına yönetiyordu",
+     "Nermin Hanım'ın yerini tutuyordu"
+    ],
+    "explanation": "Bir öğrenciye aradığı kitabın yerini bilgisayara bakmadan gösterdi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana düşüncesi hangisidir?",
+    "correct": "Beceri, sabırlı pratikle kazanılır",
+    "wrong": [
+     "Kütüphanecilik çok kolay bir iştir",
+     "Yardım istemek zayıflık göstergesidir",
+     "Kitaplar alfabetik dizilmelidir"
+    ],
+    "explanation": "İlk gün kaybolan Elif, yardım alıp düzenli çalışarak bir ayda işi ustalıkla yapar hâle geldi."
+   }
+  ]
+ },
+ "7": {
+  "title": "Balkondaki Domates",
+  "category": "Hikaye/Kurgu",
+  "content": "Nazan, apartmanın küçük balkonunda ilk kez domates yetiştirmeye karar verdiğinde komşusu Sevim Hanım gülümsemişti. \"Balkonda domates olmaz, güneş yetmez,\" demişti.\n\nNazan yine de vazgeçmedi. Çocukken köyde dedesinin bahçesinde domates topladığı yazları hatırlıyordu. Pazardan iki fide aldı. Büyük bir saksıya toprak doldurdu ve fideleri dikti. İlk haftalarda fideler uzadı ama incecik kaldı, yaprakları sarardı. Nazan balkonu gün boyu izledi ve güneşin yalnızca öğleden sonra birkaç saat vurduğunu fark etti.\n\nSaksıyı balkonun öbür köşesine taşıdı. Fidelerin yanına bir çubuk dikip gövdelerini gevşekçe bağladı. Toprağı her sabah parmağıyla yokladı, yalnız kuruduğunda suladı. Fazla suyun kökleri çürütebileceğini bir fidancıdan öğrenmişti. Rüzgârlı günlerde saksıyı duvarın dibine çekti. Birkaç hafta içinde yapraklar koyu yeşile döndü, ilk sarı çiçekler açtı.\n\nTemmuz sonunda dallarda yeşil, sert domatesler belirdi. Nazan her sabah onlara bakıyor, rengin ne zaman döneceğini merak ediyordu. Sabırsızlanıp bir tanesini erken koparmak istedi ama vazgeçti.\n\nAğustosun başında Nazan, avucunu dolduran kırmızı bir domatesi Sevim Hanım'ın kapısına götürdü. Sevim Hanım domatesi evirip çevirdi, kokladı ve hiçbir şey söylemeden gülümsedi. Ertesi gün kendi balkonuna da bir saksı yerleştirdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Sevim Hanım balkonda neden domates olmayacağını düşündü?",
+    "correct": "Yeterli güneş almayacağı için",
+    "wrong": [
+     "Balkon çok küçük olduğu için",
+     "Fideler pahalı olduğu için",
+     "Komşular şikâyet edeceği için"
+    ],
+    "explanation": "\"Balkonda domates olmaz, güneş yetmez,\" demişti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nazan'ı domates yetiştirmeye özendiren anı neydi?",
+    "correct": "Köyde geçen çocukluk yazları",
+    "wrong": [
+     "Annesinin mutfaktaki sebzeleri",
+     "İzlediği bir bahçe programı",
+     "Pazarcının verdiği öğütler"
+    ],
+    "explanation": "Çocukken köyde dedesinin bahçesinde domates topladığı yazları hatırlıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Fidelerin ilk haftalarda incecik kalıp sararmasının nedeni nedir?",
+    "correct": "Yeterince ışık almamaları",
+    "wrong": [
+     "Fazla sulanmış olmaları",
+     "Toprağın verimsiz olması",
+     "Saksının çok küçük olması"
+    ],
+    "explanation": "Nazan, balkona güneşin yalnızca öğleden sonra birkaç saat vurduğunu fark etti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nazan saksıyı neden balkonun öbür köşesine taşıdı?",
+    "correct": "Güneşten daha çok yararlanmak için",
+    "wrong": [
+     "Rüzgârın etkisinden korumak için",
+     "Fideleri Sevim Hanım'dan saklamak için",
+     "Sulamayı daha kolay yapmak için"
+    ],
+    "explanation": "Güneşin az vurduğunu görünce fideleri daha çok ışık alacakları yere taşıdı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nazan bir fidancıdan ne öğrenmişti?",
+    "correct": "Fazla suyun kökü bozabileceğini",
+    "wrong": [
+     "Fidelerin günde iki kez sulanacağını",
+     "Gübrenin her hafta verileceğini",
+     "Çiçeklerin koparılması gerektiğini"
+    ],
+    "explanation": "Fazla suyun kökleri çürütebileceğini öğrenmişti; bu yüzden toprak kuruyunca suluyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nazan'ın yeşil domatesi koparmaktan vazgeçmesi neyi gösterir?",
+    "correct": "Olgunlaşmayı beklemeyi seçtiğini",
+    "wrong": [
+     "Domatesleri pek sevmediğini",
+     "Komşusunun tepkisinden çekindiğini",
+     "Dalın kırılmasından korktuğunu"
+    ],
+    "explanation": "Sabırsızlandığı hâlde domatesin kendiliğinden kızarmasını bekledi."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sevim Hanım'ın ertesi gün balkonuna saksı koyması neyi gösterir?",
+    "correct": "Görüşünü değiştirdiğini",
+    "wrong": [
+     "Nazan'ı biraz kıskandığını",
+     "Balkonunu yenilediğini",
+     "Domatesi beğenmediğini"
+    ],
+    "explanation": "Balkonda domates olmayacağını söyleyen Sevim Hanım, sonucu görünce kendisi de denemeye karar verdi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metinden çıkarılabilecek ders hangisidir?",
+    "correct": "Deneyen, yargıyı değiştirebilir",
+    "wrong": [
+     "Komşuların sözü dikkate alınmalıdır",
+     "Balkonda sebze yetiştirilemez",
+     "Domates yalnız köyde yetişir"
+    ],
+    "explanation": "Nazan vazgeçmeyip denedi ve sorunları çözdü; sonunda kuşkulu komşusunun görüşü de değişti."
+   }
+  ]
+ },
+ "10": {
+  "title": "Mavi Eldiven",
+  "category": "Hikaye/Kurgu",
+  "content": "Kaan okuldan eve döndüğünde bir eldiveninin eksik olduğunu fark etti. Mavi, yünlü bir eldivendi. Ninesi onu kendi elleriyle örmüştü. Bileğinde de küçük beyaz bir yıldız vardı.\n\nKaan çok üzüldü. Eldiveni nerede düşürmüş olabileceğini düşündü ama bir türlü hatırlayamadı. Ertesi sabah okula giderken yere dikkatle baktı. Eldiven yolda yoktu. Okulun bahçesinde de yoktu. Kaan sınıfa girerken hâlâ eldiveni düşünüyordu.\n\nTeneffüste Kaan, sınıf öğretmenine durumu anlattı. Öğretmeni onu okulun girişindeki bir kutuya götürdü. Kutunun üstünde \"Kayıp Eşyalar\" yazıyordu. İçinde bir atkı, iki bere ve tek bir eldiven vardı. Mavi ve yünlü bir eldiven!\n\nKaan eldiveni eline aldı ve bileğine baktı. Küçük beyaz yıldız oradaydı. Bu onun eldiveniydi. Eldiveni bulan kişi onu kutuya bırakmıştı. Kaan o akşam ninesine teşekkür etmek için telefon açtı. Bir de söz verdi: Bundan sonra eldivenlerini cebine koymadan sınıftan çıkmayacaktı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kaan eve dönünce hangi eşyasının eksik olduğunu fark etti?",
+    "correct": "Bir eldiveninin",
+    "wrong": [
+     "Bir beresinin",
+     "Mavi atkısının",
+     "Okul çantasının"
+    ],
+    "explanation": "Eve döndüğünde bir eldiveninin eksik olduğunu fark etti."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaan'ın eldivenini kim örmüştü?",
+    "correct": "Ninesi",
+    "wrong": [
+     "Annesi",
+     "Teyzesi",
+     "Kendisi"
+    ],
+    "explanation": "Eldiveni ninesi kendi elleriyle örmüştü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kaan sabah okula giderken neden yere dikkatle baktı?",
+    "correct": "Eldiveni bulmayı umduğu için",
+    "wrong": [
+     "Yollar buzla kaplı olduğu için",
+     "Cebinden para düşürdüğü için",
+     "Arkadaşını beklediği için"
+    ],
+    "explanation": "Eldiveni nerede düşürdüğünü bilmiyordu; yolda bulabileceğini düşündü."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kayıp eşya kutusunda neler vardı?",
+    "correct": "Birkaç kışlık giysi",
+    "wrong": [
+     "Birkaç okul kitabı",
+     "Birkaç oyuncak top",
+     "Birkaç spor çantası"
+    ],
+    "explanation": "Kutuda bir atkı, iki bere ve tek bir eldiven vardı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Eldiveni bulan kişi için ne söylenebilir?",
+    "correct": "Sahibine ulaşsın istemiş",
+    "wrong": [
+     "Eldiveni beğenip almış",
+     "Kaan'ı önceden tanıyormuş",
+     "Eldiveni çöpe atmak istemiş"
+    ],
+    "explanation": "Bulduğu eldiveni kayıp eşya kutusuna bırakmıştı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kaan eldivenin kendisinin olduğunu nasıl anladı?",
+    "correct": "Üstündeki işaretinden",
+    "wrong": [
+     "Üstüne yazılı adından",
+     "Avucundaki küçük lekeden",
+     "Ninesinin kokusundan"
+    ],
+    "explanation": "Eldivenin bileğindeki küçük beyaz yıldızı görünce onun kendi eldiveni olduğunu anladı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaan ninesine neden telefon açtı?",
+    "correct": "Ona minnet duyduğu için",
+    "wrong": [
+     "Yeni eldiven istediği için",
+     "Özür dilemek istediği için",
+     "Onu eve çağırdığı için"
+    ],
+    "explanation": "O akşam ninesine teşekkür etmek için telefon açtı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Kaan'ın verdiği söz neyi gösterir?",
+    "correct": "Olaydan ders çıkardığını",
+    "wrong": [
+     "Eldivenlerden sıkıldığını",
+     "Öğretmenine kızdığını",
+     "Ninesinden korktuğunu"
+    ],
+    "explanation": "Eldivenlerini cebine koymadan sınıftan çıkmayacağına söz vererek aynı şeyin tekrar olmamasını istedi."
+   }
+  ]
+ },
+ "11": {
+  "title": "Pencereye Bakan Fide",
+  "category": "Hikaye/Kurgu",
+  "content": "Zeynep'in sınıfında bir saksı vardı. Saksıda küçük bir fasulye fidesi büyüyordu. Öğretmenleri, fideye her gün sırayla bir öğrencinin bakacağını söyledi. Bakan öğrenci toprağı yoklayacak, kuruysa biraz su verecekti. Pazartesi günü sıra Zeynep'teydi.\n\nZeynep sabah erkenden okula geldi. Fideye baktı ve şaşırdı. Fidenin bütün yaprakları pencereye doğru dönmüştü. Sanki dışarıyı görmek istiyordu. Zeynep önce toprağa dokundu, biraz nemliydi. Sonra saksıyı yavaşça çevirdi. Yapraklar artık sınıfın içine bakıyordu.\n\nErtesi sabah Zeynep yine fideye baktı. Yapraklar bir kez daha pencereye dönmüştü. Zeynep merak etti. Fide geceleri kendi kendine mi dönüyordu? Teneffüste durumu öğretmenine anlattı.\n\nÖğretmeni gülümsedi. Bitkilerin büyümek için güneş ışığına ihtiyaç duyduğunu söyledi. Fide, ışığın geldiği yöne doğru eğiliyordu. Böylece yapraklarına daha çok ışık düşüyordu.\n\nZeynep bir deney yapmak istedi. Saksıyı her gün biraz çevirdi ve fideyi izledi. Fide her seferinde yavaşça pencereye döndü. Zeynep gördüklerini bir deftere çizdi. Her çizimin altına günü ve saati yazdı.\n\nHafta sonunda arkadaşlarına çizimlerini gösterdi. Herkes fidenin ışığı nasıl bulduğunu konuştu. Bir arkadaşı, evdeki çiçeklerin de pencereye baktığını söyledi. Öğretmenleri, fideyi pencerenin önüne koymaya karar verdi. Zeynep artık her sabah ilk iş fidenin hangi yöne baktığını kontrol ediyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Fideye bakan öğrencinin görevi neydi?",
+    "correct": "Toprağı yoklayıp gerekirse sulamak",
+    "wrong": [
+     "Fideyi her gün başka saksıya dikmek",
+     "Fidenin boyunu cetvelle ölçüp yazmak",
+     "Yapraklardaki tozu tek tek silmek"
+    ],
+    "explanation": "Bakan öğrenci toprağı yoklayacak, kuruysa biraz su verecekti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep sabah fideyi görünce neden şaşırdı?",
+    "correct": "Fide yön değiştirmiş olduğu için",
+    "wrong": [
+     "Fide bir gecede çok uzadığı için",
+     "Toprağı kupkuru kalmış olduğu için",
+     "Fide sarı çiçekler açtığı için"
+    ],
+    "explanation": "Fidenin bütün yaprakları pencereye doğru dönmüştü."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yaprakların yeniden pencereye dönmesi Zeynep'i neyi merak etmeye yöneltti?",
+    "correct": "Fidenin kendi kendine dönüşünü",
+    "wrong": [
+     "Fidenin hasta olup olmadığını",
+     "Saksının kırık olup olmadığını",
+     "Fidenin su isteyip istemediğini"
+    ],
+    "explanation": "Saksıyı çevirmesine rağmen yapraklar yine pencereye bakınca fidenin kendi kendine dönüp dönmediğini merak etti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Fide neden pencereye doğru eğiliyordu?",
+    "correct": "Daha çok ışık alabilmek için",
+    "wrong": [
+     "Daha çok su içebilmek için",
+     "Sınıftaki sesten kaçmak için",
+     "Soğuk havadan korunmak için"
+    ],
+    "explanation": "Bitkiler büyümek için güneş ışığına ihtiyaç duyar; fide ışığın geldiği yöne eğiliyordu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep deneyde gördüklerini nasıl kaydetti?",
+    "correct": "Deftere çizip tarih düşerek",
+    "wrong": [
+     "Fotoğraf çekip saklayarak",
+     "Öğretmenine anlatıp yazdırarak",
+     "Sınıf tahtasına not alarak"
+    ],
+    "explanation": "Gördüklerini deftere çizdi, her çizimin altına günü ve saati yazdı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep'in deneyi neyi doğruladı?",
+    "correct": "Fidenin her defa aydınlığa yöneldiğini",
+    "wrong": [
+     "Fidenin çevrildikçe büyümeyi durdurduğunu",
+     "Fidenin yalnız geceleri hareket ettiğini",
+     "Saksının yerinin hiç önemli olmadığını"
+    ],
+    "explanation": "Saksıyı her gün çevirdi; fide her seferinde yavaşça pencereye döndü."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Öğretmen sonunda neye karar verdi?",
+    "correct": "Fideyi aydınlık yere almaya",
+    "wrong": [
+     "Fideyi okul bahçesine dikmeye",
+     "Sınıfa yeni fideler almaya",
+     "Deneyi hemen orada bitirmeye"
+    ],
+    "explanation": "Öğretmen fideyi pencerenin önüne koymaya karar verdi."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metinden hangi sonuç çıkarılabilir?",
+    "correct": "Merak edip gözlemlemek çok öğretir",
+    "wrong": [
+     "Bitkiler hiç yer değiştirmemelidir",
+     "Fideler yalnız karanlıkta büyür",
+     "Öğretmenler her soruyu hemen bilir"
+    ],
+    "explanation": "Zeynep fark ettiği bir şeyi sordu, deney yapıp kaydetti ve bitkilerin ışığa yöneldiğini kendisi gördü."
+   }
+  ]
+ }
+}

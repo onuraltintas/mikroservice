@@ -1,0 +1,668 @@
+{
+ "205": {
+  "title": "Sessiz Sensör",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulun robot takımında dört kişiydiler: Kerem, Ada, Burak ve Lale. Üç aydır bölgesel yarışmaya hazırlanıyorlardı. Robotlarının görevi, bir pistte ilerleyip renkli küpleri toplamak ve doğru kutulara bırakmaktı. Takımın kodlarını çoğunlukla Kerem yazıyordu. Kerem, en iyi programcının kendisi olduğunu düşünür, başkalarının önerilerini pek dinlemezdi. Takım toplantılarında da çoğu zaman o konuşur, diğerleri ise ne zaman söz alacaklarını bilemeden beklerdi. Lale özellikle sessiz kalır, fikirlerini defterine yazmakla yetinirdi.\n\nYarışmadan bir gün önce son denemeyi yaptılar. Robot, kırmızı küpü sürekli mavi kutuya bırakıyordu. Kerem kodu defalarca kontrol etti ama hatayı bulamadı. Lale, sorunun kodda değil, robotun renk sensöründe olabileceğini söyledi. Kerem önce bunu dinlemedi. Sorunun kendi yazdığı kodda olamayacağından emindi, ama saatler geçmesine rağmen hiçbir şey değişmedi. Burak ile Ada da artık umutlarını yitirmeye başlamış, yarışmaya katılmaktan vazgeçmeyi konuşuyordu.\n\nSonunda yorgun düşen Kerem, Lale'nin önerisini denemeye razı oldu. Lale sensörün önündeki küçük plastik kapağın çizildiğini ve ışığı yanlış yansıttığını fark etti. Kapağı değiştirdiklerinde robot küpleri kusursuz biçimde doğru kutulara bırakmaya başladı. Takımdaki herkes sevinçle bağırdı; Kerem ise bir süre sessizce ekrana baktı.\n\nErtesi gün yarışmada on iki takım arasında ikinci oldular. Birincilikle aralarındaki fark yalnızca birkaç puandı. Ödül töreninden sonra Kerem, herkesin önünde Lale'ye teşekkür etti ve bundan sonra toplantılarda herkesin sırayla konuşmasını önerdi. Bir takımın gücünün, tek bir kişinin ne kadar iyi olduğundan değil, herkesin birbirini ne kadar dinlediğinden geldiğini o gün öğrenmişti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Robotun yarışmadaki görevi neydi?",
+    "correct": "Küpleri renklerine göre kutulara koymak",
+    "wrong": [
+     "Pistte rakiplerinden hızlı tur atmak",
+     "Pistteki engellerin üstünden atlamak",
+     "Renkli küplerden yüksek bir kule kurmak"
+    ],
+    "explanation": "Küpleri toplayıp doğru kutulara bırakması gerekiyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Lale'nin fikirlerini yalnızca defterine yazmasının nedeni ne olabilir?",
+    "correct": "Konuşmaya pek alan tanınmaması",
+    "wrong": [
+     "Takıma ve yarışmaya ilgi duymaması",
+     "Defterine yazmaktan hoşlanması",
+     "Robotlar hakkında bilgisi olmaması"
+    ],
+    "explanation": "Toplantılarda çoğunlukla Kerem konuştuğu için diğerleri söz alamıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Son denemede robot hangi hatayı yapıyordu?",
+    "correct": "Kırmızıyı yanlış kutuya bırakıyordu",
+    "wrong": [
+     "Sürekli olarak pistin dışına çıkıyordu",
+     "Küpleri yerden bir türlü kaldıramıyordu",
+     "Pistte hiç yerinden kıpırdamıyordu"
+    ],
+    "explanation": "Robot kırmızı küpü sürekli mavi kutuya bırakıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kerem'in Lale'nin önerisini önce dinlememesinin nedeni nedir?",
+    "correct": "Kendi işine aşırı güvenmesi",
+    "wrong": [
+     "Lale'yle bir süredir küs olması",
+     "Yeni sensörün çok pahalı olması",
+     "Yarışmanın iptal edilmesi"
+    ],
+    "explanation": "Sorunun kendi yazdığı kodda olamayacağından emindi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sorunun asıl kaynağı neydi?",
+    "correct": "Çizik bir plastik kapak",
+    "wrong": [
+     "Koddaki bir yazım hatası",
+     "Robotun bitmiş pilleri",
+     "Robotun kırık tekerleği"
+    ],
+    "explanation": "Sensörün önündeki plastik kapak çizilmiş, ışığı yanlış yansıtıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Herkes sevinirken Kerem'in sessizce ekrana bakması neyi düşündürür?",
+    "correct": "Kendi tutumunu sorguladığını",
+    "wrong": [
+     "Robottan hoşlanmadığını",
+     "Yarışmadan çekileceğini",
+     "Lale'ye hâlâ kızgın olduğunu"
+    ],
+    "explanation": "Lale'yi dinlemediği için yaşadıklarını düşünmeye başlamıştır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Takım yarışmayı kaçıncı sırada bitirdi?",
+    "correct": "İkinci sırada",
+    "wrong": [
+     "Birinci sırada",
+     "Üçüncü sırada",
+     "On ikinci"
+    ],
+    "explanation": "On iki takım arasında ikinci oldular."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Kerem'in herkesin sırayla konuşmasını önermesi neyi gösterir?",
+    "correct": "Yaşadığından ders çıkardığını",
+    "wrong": [
+     "Toplantılardan çok sıkıldığını",
+     "Takım kaptanlığını bırakacağını",
+     "Lale'yi kusurlu bulduğunu"
+    ],
+    "explanation": "Herkesi dinlemenin önemini öğrenip toplantı düzenini değiştirmek ister."
+   }
+  ]
+ },
+ "206": {
+  "title": "Bilyeli Buluş",
+  "category": "Bilgi/Açıklama",
+  "content": "Bugün her çantada, her masada bulunan tükenmez kalem, aslında yalnızca seksen yıllık bir icattır. Ondan önce insanlar mürekkebe batırılan dip kalemleri ya da dolma kalemler kullanıyordu. Bu kalemler sık sık mürekkep döker, kâğıdı lekeler ve yazının kurumasını beklemeyi gerektirirdi. Solak olanlar için durum daha da zordu, çünkü elleri yazdıkları satırın üzerinden geçerken taze mürekkebi bulaştırıyordu.\n\nTükenmez kalemi geliştiren kişi, Macar gazeteci László Bíró'dur. Bíró, gazete basımında kullanılan mürekkebin çok hızlı kuruduğunu ve kâğıdı lekelemediğini fark etti. Ancak bu mürekkep, dolma kalemin ince ucundan akamayacak kadar koyuydu. Bíró, kimyager olan kardeşi György ile birlikte bu soruna bir çözüm aradı. Denemeleri yıllar sürdü. Çözüm, kalemin ucuna yerleştirilen küçük bir metal bilyeydi. Bilye kâğıt üzerinde dönerken bir yüzüyle mürekkebi alıyor, diğer yüzüyle kâğıda sürüyordu. Bu sayede koyu mürekkep düzgün bir şekilde akabiliyordu. Bilye aynı zamanda kalemin ucunu kapatarak mürekkebin kurumasını da önlüyordu.\n\nKardeşler buluşlarının patentini 1938'de aldılar. İkinci Dünya Savaşı sırasında Arjantin'e göç ettiler ve kalemi orada üretmeye başladılar. Kalemin büyük avantajı kısa sürede fark edildi. İngiliz hava kuvvetleri binlerce kalem sipariş etti. Özellikle pilotlar için çok kullanışlıydı, çünkü yüksek irtifada hava basıncı değiştiğinde dolma kalemler mürekkep sızdırıyordu.\n\nBugün hâlâ pek çok ülkede tükenmez kaleme, mucidinin adından dolayı “biro” denir. Kalemin ucundaki bilye düşüncesi ise bugün hâlâ neredeyse hiç değişmeden kullanılıyor. Arjantin'de ise Bíró'nun doğum günü olan 29 Eylül, Mucitler Günü olarak kutlanmaktadır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tükenmez kalemden önce hangi kalemler kullanılıyordu?",
+    "correct": "Mürekkebe batırılan kalemler",
+    "wrong": [
+     "Kurşun ve renkli kalemler",
+     "Keçeli kalem ve fosforlu kalem",
+     "Tebeşir ve kara kalemler"
+    ],
+    "explanation": "Dip kalemler ve dolma kalemler kullanılıyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Solak kişilerin sorunu neden daha büyüktü?",
+    "correct": "Yazdıkları yere elleri değdiği için",
+    "wrong": [
+     "Kalemleri tutmakta zorlandıkları için",
+     "Mürekkebe alerjileri olduğu için",
+     "Satırları sağdan sola yazdıkları için"
+    ],
+    "explanation": "Elleri satırın üzerinden geçerken taze mürekkebi bulaştırıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bíró hangi mürekkebi kaleme uyarlamak istedi?",
+    "correct": "Matbaada kullanılanı",
+    "wrong": [
+     "Ressamların boyasını",
+     "Daktilo şeridini",
+     "Mürekkep balığınınkini"
+    ],
+    "explanation": "Gazete basımında kullanılan hızlı kuruyan mürekkebi fark etti."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bilyenin çözdüğü temel sorun nedir?",
+    "correct": "Yoğun sıvının uçtan geçememesi",
+    "wrong": [
+     "Kalemin elde çok ağır durması",
+     "Kâğıdın sık sık yırtılması",
+     "Kalemin çok pahalıya mal olması"
+    ],
+    "explanation": "Koyu mürekkep ince uçtan akamıyordu; bilye bunu sağladı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bilyenin mürekkebin kurumasını önlemesi hangi özelliğinden kaynaklanır?",
+    "correct": "Kalemin ağzını kapalı tutması",
+    "wrong": [
+     "Yazarken sürekli ısınması",
+     "Mürekkebi sulandırıp inceltmesi",
+     "Kâğıt yüzeyini nemlendirmesi"
+    ],
+    "explanation": "Bilye kalemin ucunu kapatarak mürekkebin kurumasını önlüyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bíró kardeşler kalemi hangi ülkede üretmeye başladı?",
+    "correct": "Arjantin'de",
+    "wrong": [
+     "Macaristan",
+     "İngiltere'de",
+     "Fransa'da"
+    ],
+    "explanation": "Savaş sırasında Arjantin'e göç edip orada üretmeye başladılar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kalemin pilotlara özellikle uygun olmasının nedeni nedir?",
+    "correct": "Basınç değişiminde sızdırmaması",
+    "wrong": [
+     "Diğer kalemlerden hafif olması",
+     "Karanlıkta parıldayabilmesi",
+     "Diğerlerinden çok ucuza satılması"
+    ],
+    "explanation": "Yüksek irtifada dolma kalemler sızdırırken tükenmez kalem sızdırmıyordu."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraf Bíró'nun hangi yönünü vurgular?",
+    "correct": "Buluşunun bıraktığı kalıcı izi",
+    "wrong": [
+     "Gazetecilik kariyerindeki başarıyı",
+     "Arjantin'de kazandığı serveti",
+     "Savaş sırasındaki kahramanlığını"
+    ],
+    "explanation": "Kaleme adının verilmesi ve Mucitler Günü buluşun kalıcılığını gösterir."
+   }
+  ]
+ },
+ "207": {
+  "title": "Karanlıkta Yol Gösteren Işık",
+  "category": "Bilgi/Açıklama",
+  "content": "Yüzyıllar boyunca denizciler için en büyük tehlikelerden biri, karanlıkta kayalıklara ya da sığlıklara çarpmaktı. Kıyıya yaklaşan bir gemi, gece yolunu bulamazsa birkaç dakika içinde batabilirdi. Bu yüzden insanlar çok eski zamanlardan beri tehlikeli kıyılara deniz fenerleri inşa etti. Bilinen en ünlü örneklerden biri, Antik Çağ'da Mısır'ın İskenderiye kentinde yapılan ve dünyanın yedi harikasından biri sayılan feneridir. Yaklaşık yüz metre yüksekliğindeki bu yapının ışığının, kırk kilometreyi aşkın uzaklıktan görülebildiği anlatılır. Fener yüzyıllar boyunca ayakta kaldı, ancak sonunda depremler yüzünden yıkıldı.\n\nİlk fenerlerde ışık kaynağı, kulenin tepesinde yakılan büyük ateşlerdi. Daha sonra ateşin yerini mumlar ve yağ lambaları aldı. Ancak bu ışıklar uzaktan zor görülüyordu, çünkü ışığın büyük bölümü her yöne dağılıp boşa gidiyordu. Aynalarla ışığı tek yöne toplamak denendi, ama aynalar kısa sürede kararıyor ve ışığın önemli bir kısmını yutuyordu. Cam mercekler de bir çözüm gibi görünüyordu, ama yeterince güçlü bir mercek o kadar kalın ve ağır olmalıydı ki, kulenin tepesine taşınması neredeyse imkânsızdı.\n\n1822'de Fransız fizikçi Augustin Fresnel bu soruna dâhice bir çözüm buldu. Fresnel, kalın ve ağır bir mercek yerine, iç içe geçmiş halkalardan oluşan bir mercek tasarladı. Her halka, ışığı aynı noktaya doğru büken ince bir cam parçasıydı. Bu sayede mercek hem çok daha hafif hem de çok daha etkili oldu. Fresnel merceği sayesinde bir lambanın ışığı, kilometrelerce uzaktan görülebilen güçlü bir ışın hâline geldi. Bugün aynı ilke, araba farlarında ve tiyatro sahnelerinin spot ışıklarında da kullanılıyor.\n\nFenerlerin bir başka akıllıca özelliği de ışıklarının dilidir. Her fenerin kendine özgü bir yanıp sönme düzeni vardır. Örneğin biri her beş saniyede bir kez, bir diğeri her on saniyede iki kez yanıp söner. Denizciler bu düzeni haritalarında yazan bilgilerle karşılaştırarak hangi feneri gördüklerini, dolayısıyla nerede olduklarını anlayabilir. Bugün uydu sistemleri gemilerin yolunu bulmasını büyük ölçüde kolaylaştırdı ve pek çok fener artık insansız çalışıyor. Yine de fenerler, elektronik sistemler arızalandığında denizcilerin güvenebileceği bir yedek olarak hâlâ görev başında.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Antik Çağ'ın en ünlü feneri nerede bulunuyordu?",
+    "correct": "Mısır'da, İskenderiye'de",
+    "wrong": [
+     "Yunanistan'da, Atina'da",
+     "İtalya'da, Roma kentinde",
+     "Boğaz'da, İstanbul'da"
+    ],
+    "explanation": "Mısır'ın İskenderiye kentinde yapılmıştı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Metne göre fenerlerin yapılma amacı nedir?",
+    "correct": "Gemilerin karaya oturmasını önlemek",
+    "wrong": [
+     "Kıyı kentlerinin sokaklarını aydınlatmak",
+     "Yaklaşan düşman gemilerini gözetlemek",
+     "Geceleri balıkları kıyıya çekmek"
+    ],
+    "explanation": "Fenerler, gemilerin karanlıkta kayalık ve sığlıklara çarpmasını önler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Eski fener ışıklarının uzaktan zor görülmesinin nedeni nedir?",
+    "correct": "Işığın her yöne saçılıp ziyan olması",
+    "wrong": [
+     "Ateşin çok küçük bir alanda yakılması",
+     "Fener kulelerinin çok alçak yapılması",
+     "Gemilerin kıyıdan çok uzakta geçmesi"
+    ],
+    "explanation": "Işığın büyük bölümü her yöne dağılıp boşa gidiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kalın cam merceklerin kullanılamamasının nedeni nedir?",
+    "correct": "Taşınamayacak kadar ağır olmaları",
+    "wrong": [
+     "Işığı çok kısa sürede söndürmeleri",
+     "Kolayca kararıp paslanmaları",
+     "Yalnızca gündüz çalışmaları"
+    ],
+    "explanation": "Yeterince güçlü bir mercek kuleye taşınamayacak kadar ağır olurdu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fresnel merceği nasıl bir yapıdadır?",
+    "correct": "Halka hâlinde camlardan oluşur",
+    "wrong": [
+     "Tek parçadan oluşan kalın bir camdır",
+     "Yan yana dizilmiş aynalardan oluşur",
+     "Parlatılmış metal bir levhadır"
+    ],
+    "explanation": "Fresnel iç içe geçmiş halkalardan oluşan bir mercek tasarladı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Fresnel'in ilkesinin bugün araba farlarında da kullanılması neyi gösterir?",
+    "correct": "Fikrin başka işlerde de işe yaradığını",
+    "wrong": [
+     "Fenerlerin artık hiçbir işe yaramadığını",
+     "Arabaların denizde de yol alabildiğini",
+     "Farların fenerlerden daha eski olduğunu"
+    ],
+    "explanation": "Aynı ilke farklı aydınlatma araçlarına da uyarlanmıştır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Denizciler hangi fenerin önünden geçtiklerini nasıl anlar?",
+    "correct": "Yanıp sönme düzeninden",
+    "wrong": [
+     "Işığın renginin tonundan",
+     "Kulenin yüksekliğinden",
+     "Fener sireninin sesinden"
+    ],
+    "explanation": "Her fenerin kendine özgü bir yanıp sönme düzeni vardır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın günümüz fenerleriyle ilgili görüşü nedir?",
+    "correct": "Hâlâ yedek olarak gerekli oldukları",
+    "wrong": [
+     "Uydular yüzünden gereksiz kaldıkları",
+     "Bir an önce yıkılmaları gerektiği",
+     "Sadece birer müzeye dönüştükleri"
+    ],
+    "explanation": "Elektronik sistemler arızalandığında güvenilecek bir yedek olarak hâlâ görevdedirler."
+   }
+  ]
+ },
+ "209": {
+  "title": "Üç Kutulu Bütçe",
+  "category": "Bilgi/Açıklama",
+  "content": "İlk maaşını alan pek çok genç, aynı duyguyu yaşar: Hesaba yatan para ilk gün büyük görünür, ama ayın ortasına gelindiğinde nereye gittiği anlaşılmadan erimeye başlar. Bu durumun önüne geçmek için finans uzmanlarının sıkça önerdiği basit bir yöntem vardır: 50/30/20 kuralı. Kural, ABD'li siyasetçi ve hukuk profesörü Elizabeth Warren'ın kızıyla birlikte yazdığı bir kitapla yaygınlaştı. Amacı, karmaşık tablolar ve hesaplarla uğraşmadan herkesin uygulayabileceği bir çerçeve sunmaktı.\n\nKural, ele geçen net geliri üç bölüme ayırmayı önerir. Gelirin yüzde ellisi zorunlu ihtiyaçlara ayrılır. Kira, faturalar, market alışverişi, ulaşım ve varsa kredi taksitleri bu gruba girer. Yani bunlar, ödenmediğinde hayatın aksayacağı giderlerdir. Gelirin yüzde otuzu isteklere ayrılır. Dışarıda yemek yemek, sinemaya gitmek, yeni kıyafetler almak ya da bir hobiye para harcamak bu bölümün içindedir. Kalan yüzde yirmi ise birikime ve borç ödemeye gider. Örneğin net geliri yirmi bin lira olan biri, on bin lirayı zorunlu giderlere, altı bin lirayı isteklere, dört bin lirayı da birikime ayırır.\n\nKuralın en güçlü yanı, herkesin kolayca anlayabileceği sadeliğidir. Her harcamayı tek tek planlamak yerine, kişi yalnızca üç kutu düşünür. Ayrıca kural, keyif için harcamayı yasaklamaz; aksine ona açıkça bir pay ayırır. Bu da bütçeye uymayı kolaylaştırır, çünkü kendini sürekli kısıtlanmış hisseden biri bir süre sonra bütçeyi bütünüyle bırakma eğilimindedir.\n\nAncak uzmanlar, oranların herkes için aynı olamayacağını da hatırlatıyor. Kiraların yüksek olduğu büyük şehirlerde yaşayan biri için zorunlu giderler gelirin yarısını kolayca aşabilir. Böyle durumlarda oranlar kişinin koşullarına göre esnetilebilir. Önemli olan, birikime küçük de olsa düzenli bir pay ayırmaktır. Gelirin yüzde beşini her ay kenara koymak bile, hiç biriktirmemekten çok daha iyidir ve zamanla bir alışkanlığa dönüşür.\n\nBirikimi kolaylaştırmanın en etkili yollarından biri da onu otomatik hâle getirmektir. Maaşın yattığı gün belirli bir tutarın ayrı bir hesaba kendiliğinden aktarılması, “ay sonunda ne kalırsa biriktiririm” yaklaşımından çok daha başarılı sonuç verir. Çünkü ay sonunda çoğu zaman hiçbir şey kalmaz. Para gözden uzak olunca, harcanma ihtimali de azalır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kuralı yaygınlaştıranların temel amacı neydi?",
+    "correct": "Kolay uygulanır bir çerçeve sunmak",
+    "wrong": [
+     "Bankaların kâr oranlarını artırmak",
+     "Mevcut vergi kurallarını değiştirmek",
+     "Gençleri borsadan uzak tutmak"
+    ],
+    "explanation": "Amaç, hesaplarla uğraşmadan herkesin uygulayabileceği bir çerçeveydi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kurala göre gelirin yüzde otuzu nereye ayrılır?",
+    "correct": "Keyfî harcamalara",
+    "wrong": [
+     "Kira ve faturalara",
+     "Birikim hesabına",
+     "Vergi ödemelerine"
+    ],
+    "explanation": "Yüzde otuz isteklere ayrılır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hangisi zorunlu ihtiyaçlar grubuna girer?",
+    "correct": "Elektrik faturası",
+    "wrong": [
+     "Hafta sonu sineması",
+     "Yeni sezon bir mont",
+     "Restoran yemeği"
+    ],
+    "explanation": "Faturalar ödenmediğinde hayatın aksayacağı zorunlu giderlerdir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Net geliri yirmi bin lira olan biri birikime ne kadar ayırır?",
+    "correct": "Dört bin lira",
+    "wrong": [
+     "Altı bin lira",
+     "On bin lira",
+     "İki bin lira"
+    ],
+    "explanation": "Örnekte dört bin lira birikime ayrılır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kuralın keyfe pay ayırmasının bütçeye katkısı nedir?",
+    "correct": "Bütçeye uymayı kolaylaştırması",
+    "wrong": [
+     "Bütün harcamaları kısıp kesmesi",
+     "Birikime ayrılan payı büyütmesi",
+     "Bütün borçları hemen kapatması"
+    ],
+    "explanation": "Kendini kısıtlanmış hisseden biri bütçeyi bırakma eğilimindedir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Büyük şehirde yaşayanlar için kuralda ne değişebilir?",
+    "correct": "Zorunlu giderlerin payı artar",
+    "wrong": [
+     "Birikime artık hiç pay ayrılmaz",
+     "Kiralar kendiliğinden ucuzlar",
+     "Kural bütünüyle geçersiz olur"
+    ],
+    "explanation": "Kiralar yüksek olduğu için zorunlu giderler yarıyı aşabilir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlara göre birikimi kolaylaştırmanın etkili yolu nedir?",
+    "correct": "Parayı kendiliğinden ayırmak",
+    "wrong": [
+     "Ay sonunda kalanı biriktirmek",
+     "Cebinde nakit para taşımak",
+     "Yeni bir kredi kartı almak"
+    ],
+    "explanation": "Maaş günü belirli tutarın otomatik aktarılması önerilir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesindeki düşünce hangi davranış ilkesine dayanır?",
+    "correct": "Erişimi zor paranın korunması",
+    "wrong": [
+     "Paranın zamanla değer kaybetmesi",
+     "Bankaların yüksek faiz vermesi",
+     "Maaşların sık sık geç yatması"
+    ],
+    "explanation": "Para gözden uzak olunca harcanma ihtimali azalır."
+   }
+  ]
+ },
+ "210": {
+  "title": "İçimizdeki Ses",
+  "category": "Bilgi/Açıklama",
+  "content": "Zor bir sınava girmeden önce içinizden “Yapabilirsin” dediğiniz oldu mu? Birçok insan kendi kendine konuşur, ama bunu çoğu zaman fark etmez. Psikologlar bu iç sese “iç konuşma” adını veriyor ve onun performansımızı sandığımızdan fazla etkilediğini söylüyor. İç konuşma, yalnızca sınav ya da yarışma gibi anlarda değil, gün boyunca karar verirken, plan yaparken ve bir hatayı değerlendirirken de sürekli çalışır.\n\nSon yıllarda yapılan araştırmalar, kişinin kendine nasıl hitap ettiğinin bile önemli olduğunu gösteriyor. Michigan Üniversitesi'nde yapılan bir çalışmada, stresli bir konuşma öncesinde kendilerine “ben” yerine kendi adlarıyla ya da “sen” diye seslenen katılımcıların daha sakin oldukları ve daha başarılı konuşmalar yaptıkları görüldü. Dinleyiciler de bu kişilerin konuşmalarını daha ikna edici bulmuştu. Araştırmacılara göre bu küçük değişiklik, kişinin kendisine bir arkadaşına bakar gibi biraz dışarıdan bakmasını sağlıyor.\n\nUzmanlar, iç sesin içeriğine de dikkat edilmesini öneriyor. “Hep beceriksizim” gibi genellemeler yerine “Bu kez hazırlığım yetmedi” gibi somut ve geçici ifadeler, kişinin hatasından ders almasını kolaylaştırıyor. Çünkü genelleme, değiştirilemeyecek bir kusur gibi algılanırken, somut bir ifade düzeltilebilecek bir sorunu işaret ediyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Psikologlar kişinin kendi kendine konuşmasına ne ad verir?",
+    "correct": "İç konuşma süreci",
+    "wrong": [
+     "Dış ses süreci",
+     "Sessiz okuma süreci",
+     "Düşünce okuma süreci"
+    ],
+    "explanation": "Psikologlar bu iç sese iç konuşma adını verir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "İç konuşmanın yalnız sınav anlarında olmadığı bilgisi neyi vurgular?",
+    "correct": "Gündelik hayatın tümüne yayıldığını",
+    "wrong": [
+     "Sadece küçük çocuklarda görüldüğünü",
+     "Sınavların ruh sağlığına zararlı olduğunu",
+     "İstenildiğinde kolayca susturulabildiğini"
+    ],
+    "explanation": "İç konuşma karar, plan ve değerlendirme sırasında da sürekli çalışır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Daha başarılı olan katılımcılar kendilerine nasıl seslendi?",
+    "correct": "Adlarıyla ya da sen diye",
+    "wrong": [
+     "Yalnızca ben diyerek",
+     "Hiç seslenmeden durarak",
+     "Sürekli olarak biz diyerek"
+    ],
+    "explanation": "Kendilerine adlarıyla ya da sen diye seslendiler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Araştırmacılara göre adla seslenmenin işe yaramasının nedeni nedir?",
+    "correct": "Kendine dostu gibi bakabilmesi",
+    "wrong": [
+     "Daha hızlı konuşmasını sağlaması",
+     "Dinleyicilerin dikkatini dağıtması",
+     "Konuşmanın süresini kısaltması"
+    ],
+    "explanation": "Kişinin kendisine bir arkadaşına bakar gibi dışarıdan bakmasını sağlar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Dinleyicilerin değerlendirmesi araştırmaya ne katar?",
+    "correct": "Etkinin başkalarınca da görüldüğünü",
+    "wrong": [
+     "Dinleyicilerin çoğunun yanıldığını",
+     "Bütün araştırmanın geçersiz olduğunu",
+     "Konuşmaların çok kısa sürdüğünü"
+    ],
+    "explanation": "Dinleyicilerin de konuşmaları daha ikna edici bulması etkinin nesnel olduğunu gösterir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlar hangi tür iç ifadeleri öneriyor?",
+    "correct": "Belirli ve kalıcı olmayanları",
+    "wrong": [
+     "Genel ve kalıcı olanları",
+     "Uzun ve çok ayrıntılı olanları",
+     "Sert ve eleştirel olanları"
+    ],
+    "explanation": "Somut ve geçici ifadeler önerilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Genellemelerin zararlı olmasının nedeni nedir?",
+    "correct": "Kalıcı bir kusur sanılmaları",
+    "wrong": [
+     "Çok uzun cümleler olmaları",
+     "Çevredekileri incitmeleri",
+     "Dil bilgisi hataları içermeleri"
+    ],
+    "explanation": "Genelleme değiştirilemeyecek bir kusur gibi algılanır."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin genel amacı nedir?",
+    "correct": "İç sesi bilinçli kullanmayı önermek",
+    "wrong": [
+     "Sınav kaygısının nedenlerini sıralamak",
+     "Topluluk önünde konuşmayı öğretmek",
+     "Michigan Üniversitesi'ni tanıtmak"
+    ],
+    "explanation": "Metin iç konuşmanın etkisini ve doğru kullanımını anlatır."
+   }
+  ]
+ },
+ "213": {
+  "title": "Buzdolabındaki Ekmek",
+  "category": "Bilgi/Açıklama",
+  "content": "Ekmeği daha uzun süre taze tutmak için buzdolabına koyanlar az değildir. Oysa bu yöntem, beklenenin tam tersine, ekmeğin daha çabuk bayatlamasına neden olur. Bu bilgi pek çok kişiye şaşırtıcı gelir, çünkü buzdolabının yiyecekleri koruduğunu düşünmeye alışmışızdır. Bunun sebebi, ekmeğin içindeki nişastanın davranışıdır.\n\nEkmek fırında pişerken hamurdaki nişasta su emerek yumuşar. Ekmek soğudukça nişasta molekülleri yavaş yavaş yeniden bir araya gelir ve suyu dışarı iter. Ekmeğin sertleşip kurumasının asıl nedeni, sanıldığı gibi havada kuruması değil, budur. Bu süreç, buzdolabı sıcaklığında oda sıcaklığına göre çok daha hızlı ilerler. Bu yüzden buzdolabındaki ekmek, tezgâhtaki ekmeğe göre birkaç kat daha hızlı bayatlar. Buzdolabının ekmeğe tek yararı, nemli havada küflenmeyi geciktirmesidir.\n\nPeki ekmek nasıl saklanmalı? Ekmeği birkaç gün içinde tüketecekseniz, en iyisi onu bir bez torbada ya da ekmek kutusunda oda sıcaklığında saklamaktır. Daha uzun süre saklamak istiyorsanız dondurucu doğru seçimdir, çünkü çok düşük sıcaklıkta bayatlama neredeyse durur. Dondurulmuş dilimleri kızartma makinesinde ısıtmak, onları neredeyse taze hâline döndürür. Bayatlamış ekmeği atmak yerine kızartma ya da galeta unu yapmak da israfı önler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ekmeği buzdolabında saklamak neye yol açar?",
+    "correct": "Erkenden sertleşmesine",
+    "wrong": [
+     "Daha uzun taze kalmasına",
+     "Tadının tatlanmasına",
+     "Kabuğunun yumuşamasına"
+    ],
+    "explanation": "Buzdolabı ekmeğin daha çabuk bayatlamasına neden olur."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar bu bilginin neden şaşırtıcı geldiğini söyler?",
+    "correct": "Soğuğun her şeyi koruduğu sanılması",
+    "wrong": [
+     "Ekmeğin her yıl biraz daha pahalanması",
+     "Mahallede fırınların az olması",
+     "Nişastanın tadının tatlı olması"
+    ],
+    "explanation": "Buzdolabının yiyecekleri koruduğunu düşünmeye alışmışızdır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ekmek soğudukça nişasta molekülleri ne yapar?",
+    "correct": "Birleşip nemi dışarı atar",
+    "wrong": [
+     "Dağılıp daha çok su emer",
+     "Eriyip bütünüyle kaybolur",
+     "Tatlı bir şekere dönüşür"
+    ],
+    "explanation": "Moleküller bir araya gelip suyu dışarı iter."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ekmeğin sertleşmesinin asıl nedeni nedir?",
+    "correct": "İç yapıdaki nişasta değişimi",
+    "wrong": [
+     "Ekmeğin açık havada kuruması",
+     "Kabuğun zamanla kalınlaşması",
+     "Hamurdaki mayanın ölmesi"
+    ],
+    "explanation": "Sertleşme havada kurumaktan değil nişastanın davranışından kaynaklanır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Buzdolabının ekmeğe yararlı olabileceği tek durum hangisidir?",
+    "correct": "Nemli havada küfü geciktirmesi",
+    "wrong": [
+     "Ekmeği daha da yumuşak tutması",
+     "Ekmeğin tadını güçlendirmesi",
+     "Kabuğunu daha çıtır yapması"
+    ],
+    "explanation": "Tek yararı nemli havada küflenmeyi geciktirmesidir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ekmeği uzun süre saklamak için en uygun yer neresidir?",
+    "correct": "Derin dondurucu",
+    "wrong": [
+     "Buzdolabı rafı",
+     "Mutfaktaki tezgâh",
+     "Fırının içi"
+    ],
+    "explanation": "Uzun süre için dondurucu doğru seçimdir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Dondurucunun buzdolabından farklı sonuç vermesinin nedeni nedir?",
+    "correct": "Aşırı soğukta bayatlamanın durması",
+    "wrong": [
+     "Dondurucunun içinin daha nemli olması",
+     "Ekmeğin orada hafifçe ısınması",
+     "Dondurucunun içine ışık girmesi"
+    ],
+    "explanation": "Çok düşük sıcaklıkta bayatlama neredeyse durur."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın okura yaklaşımı nasıldır?",
+    "correct": "Pratik öneriler sunan",
+    "wrong": [
+     "Sert ve suçlayıcı bir",
+     "Alaycı ve küçümseyen",
+     "Kararsız ve çekingen"
+    ],
+    "explanation": "Saklama, ısıtma ve değerlendirme için uygulanabilir öneriler sunar."
+   }
+  ]
+ }
+}

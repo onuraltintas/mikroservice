@@ -1,0 +1,668 @@
+{
+ "160": {
+  "title": "Saksıdaki Temizlik Efsanesi",
+  "category": "Bilgi/Açıklama",
+  "content": "Evde birkaç saksı bitkisi bulundurmanın havayı temizlediğini pek çok kez duymuşsunuzdur. Kimi bitki satıcıları, bazı türlerin “doğal hava temizleyicisi” olduğunu söyleyerek ürünlerini tanıtır. Sosyal medyada da her odaya kaç bitki konması gerektiğini anlatan paylaşımlar sıkça dolaşır. Peki bu inanç ne kadar doğru? Bu soruyu yanıtlamak için önce fikrin nereden çıktığına, sonra da bilim insanlarının bu konuda yıllar içinde neler bulduğuna bakmak gerekiyor.\n\nBu düşüncenin kaynağı, 1989 yılında yayımlanan bir NASA çalışmasıdır. Araştırmacılar, uzay istasyonlarında havayı temizlemenin yollarını arıyordu. Bunun için birkaç bitki türünü küçük, kapalı cam hücrelere koydular ve hücrelere bazı zararlı kimyasallar verdiler. Birkaç saat sonra hücrelerdeki kimyasal miktarının belirgin biçimde azaldığını gördüler. Bu sonuç kısa sürede basına yansıdı ve “bitkiler evinizin havasını temizler” fikri dünyaya yayıldı. Çalışmada en başarılı bulunan türlerin listesi, bugün bile pek çok çiçekçide ve internet sitesinde “hava temizleyen bitkiler” başlığıyla paylaşılıyor. Ne var ki araştırmacıların kendisi, bu sonuçların büyük binalara uygulanabilmesi için daha fazla çalışma gerektiğini belirtmişti.\n\nAncak sonraki yıllarda bilim insanları, bu çalışmanın gerçek evlere ne ölçüde uyduğunu sorgulamaya başladı. Deneydeki hücreler yalnızca birkaç metreküp büyüklüğündeydi ve tamamen kapalıydı. Gerçek bir evde ise hava sürekli olarak kapılar, pencereler ve havalandırma yoluyla dışarıyla yer değiştirir. 2019'da yayımlanan bir derleme, onlarca araştırmanın sonuçlarını bir arada inceledi. Araştırmacılar, bir odadaki havayı NASA deneyindeki kadar temizlemek için metrekare başına onlarca, hatta yüzlerce bitki gerektiğini hesapladı. Oysa birkaç dakika pencereyi açmak, aynı etkiyi çok daha kolay sağlıyordu. Başka bir deyişle, salonunuzu bir ormana çevirseniz bile havadaki değişim, kısa bir havalandırmanın sağladığından daha az olabilir. Üstelik deneylerde kimyasalları azaltan şeyin yalnızca yapraklar değil, büyük ölçüde saksı toprağındaki mikroplar olduğu da anlaşıldı.\n\nBu, saksı bitkilerinin işe yaramadığı anlamına gelmiyor. Araştırmalar, bitkilerle dolu ortamlarda çalışan insanların kendilerini daha iyi hissettiğini, stresin azaldığını ve dikkatin arttığını gösteriyor. Bitki bakmak, birçok kişi için rahatlatıcı bir uğraş. Yeşil bir köşe, odayı daha davetkâr ve sıcak gösteriyor. Hastanelerde yapılan bazı çalışmalarda, penceresinden ağaç gören hastaların daha az ağrı kesiciye ihtiyaç duyduğu ve daha çabuk taburcu olduğu bildirildi. Ancak bu yararlar havayı temizlemekten değil, insanın doğayla kurduğu bağdan kaynaklanıyor gibi görünüyor.\n\nUzmanlar, evdeki havanın kalitesini gerçekten artırmak için başka yollar öneriyor. Evi her gün düzenli olarak havalandırmak, yemek pişirirken aspiratör kullanmak, kapalı alanda sigara içmemek ve kimyasal temizlik ürünlerini ölçülü kullanmak, bitkilerden çok daha etkili. Yani bitkilerinizi sevmek için çok iyi nedenleriniz var; ama pencereyi açmayı unutmayın.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Giriş paragrafında yazarın amacı nedir?",
+    "correct": "Yaygın bir inancı sorgulamaya açmak",
+    "wrong": [
+     "Bitki satıcılarını şikâyet etmek",
+     "Bitki bakımının inceliklerini öğretmek",
+     "Sosyal medyayı sert eleştirmek"
+    ],
+    "explanation": "Yazar, bitkilerin havayı temizlediği inancının doğruluğunu sorar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "NASA deneyinde bitkiler nereye konmuştu?",
+    "correct": "Küçük ve kapalı cam bölmelere",
+    "wrong": [
+     "Uzay istasyonundaki odalara",
+     "Geniş ve havadar bir seraya",
+     "Bir ofisin geniş pencere önlerine"
+    ],
+    "explanation": "Bitkiler küçük, kapalı cam hücrelere konmuştu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Deney sonucunun evlere uymamasının temel nedeni nedir?",
+    "correct": "Evlerde havanın sürekli yenilenmesi",
+    "wrong": [
+     "Evdeki bitkilerin başka türden olması",
+     "Deneyin yalnızca gece yapılması",
+     "Evlerde kimyasal madde bulunmaması"
+    ],
+    "explanation": "Gerçek evde hava kapı, pencere ve havalandırmayla dışarıyla yer değiştirir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deneylerde kimyasalları azaltan asıl etken neydi?",
+    "correct": "Topraktaki canlılar",
+    "wrong": [
+     "Bitkinin kökleri",
+     "Cam bölme duvarları",
+     "Yaprak gözenekleri"
+    ],
+    "explanation": "Etkinin büyük ölçüde saksı toprağındaki mikroplardan geldiği anlaşıldı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "2019 derlemesinin vardığı sonuç neyi gösterir?",
+    "correct": "Gereken bitki sayısının aşırı olduğunu",
+    "wrong": [
+     "Bitkilerin havayı hızla kirlettiğini",
+     "NASA deneyinin hiç yapılmadığını",
+     "Pencere açmanın bitkiden zararlı olduğunu"
+    ],
+    "explanation": "Metrekare başına onlarca, hatta yüzlerce bitki gerekir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hastane örneği metinde hangi düşünceyi destekler?",
+    "correct": "Yeşilin ruhsal iyiliğe katkısını",
+    "wrong": [
+     "Bitkilerin ilaç yerine geçtiğini",
+     "Hastanelerin havasının temiz olduğunu",
+     "Ağaçların ağrıyı tümden kestiğini"
+    ],
+    "explanation": "Ağaç gören hastaların daha az ağrı kesici kullanması doğayla bağın yararına örnektir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlara göre ev havasını iyileştirmenin etkili yolu nedir?",
+    "correct": "Pencereyi sık açmak",
+    "wrong": [
+     "Daha çok bitki almak",
+     "Saksıları büyütmek",
+     "Kapıları kapalı tutmak"
+    ],
+    "explanation": "Evi her gün düzenli havalandırmak bitkilerden etkilidir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesinin ana iletisi nedir?",
+    "correct": "Bitki, havalandırmanın yerini tutmaz",
+    "wrong": [
+     "Bitkiler evlerden çıkarılmalıdır",
+     "Pencereler sürekli kapalı kalmalıdır",
+     "Bitkiler havayı en iyi biçimde temizler"
+    ],
+    "explanation": "Bitkileri sevmek için neden çok, ama pencereyi açmak gerekir."
+   }
+  ]
+ },
+ "194": {
+  "title": "Öğretmenin Yeni Dersi",
+  "category": "Hikaye/Kurgu",
+  "content": "Hatice Hanım otuz iki yıl ilkokul öğretmenliği yapmış, emekli olduktan sonra da mahallesinin vazgeçilmez insanlarından biri olmuştu. Komşuların çocuklarına kitap okur, pazarda herkesle sohbet eder, faturalarını her ay bankanın şubesine gidip kendi eliyle öderdi. Ama bir sabah şubenin kapısında bir duyuru gördü: Şube ay sonunda kapanacaktı. Duyuruda, işlemlerin artık telefon uygulamasından yapılabileceği yazıyordu.\n\nHatice Hanım o gün eve canı sıkkın döndü. Akıllı telefonu vardı, ama onu yalnızca torunlarıyla görüntülü konuşmak ve fotoğraflara bakmak için kullanıyordu. Bir uygulamayla para göndermek, ona tehlikeli ve karmaşık geliyordu. Ya yanlış bir tuşa basar da parasını başkasına gönderirse? Ya biri şifresini ele geçirirse? Gazetede okuduğu dolandırıcılık haberleri aklına geldi. Bir an, faturalarını ödemesi için oğluna başvurmayı düşündü; ama hayatı boyunca işlerini kendisi görmüş biri olarak bu fikir hoşuna gitmedi.\n\nAkşam, üniversitede okuyan torunu Ece'yi aradı. Ece hafta sonu gelip ona uygulamayı göstermeyi teklif etti. Cumartesi günü ikisi mutfak masasına oturdu. Ece, her adımı acele etmeden gösterdi ve anneannesinden her işlemi kendi parmağıyla yapmasını istedi. Hatice Hanım bir deftere adımları kendi el yazısıyla not etti. Ece bir şeyi yanlış anladığında bunu tekrar tekrar sormasının hiç sorun olmadığını söyledi. “Sen bana okuma yazmayı öğretirken de böyle sabırlıydın” dedi gülerek. Hatice Hanım, öğrencilerine yıllarca söylediği bir sözü hatırladı: Soru sormaktan utanılmaz. Ece ona önemli bir kural da öğretti: Banka, şifresini ya da telefonuna gelen doğrulama kodunu hiçbir zaman telefonla sormazdı. Böyle bir arama gelirse hemen kapatmalıydı.\n\nİlk birkaç hafta kolay geçmedi. Bir keresinde ekranda hangi düğmeye basacağını bulamadı ve uygulamayı kapatıp yeniden açtı. Bir başka gün elektrik faturasını ödedi mi, ödemedi mi emin olamadı ve defterine bakarak işlemin geçmişini kontrol etmeyi öğrendi. Her başarılı işlemden sonra kendine küçük bir onay işareti koyuyordu. Zamanla defterine daha az bakmaya, işlemleri daha hızlı yapmaya başladı. Bir ay dolmadan torunlarına uygulama üzerinden harçlık bile göndermişti.\n\nİki ay sonra bir gün telefonu çaldı. Arayan kişi kendini bankanın görevlisi olarak tanıttı ve hesabında şüpheli bir işlem olduğunu, bunu durdurmak için telefonuna gelen kodu söylemesi gerektiğini anlattı. Hatice Hanım bir an tereddüt etti, sonra Ece'nin sözlerini hatırladı. Kibarca telefonu kapattı ve bankanın resmi numarasını arayarak durumu bildirdi. Görevli, hesabında hiçbir sorun olmadığını ve bunun bilinen bir dolandırıcılık yöntemi olduğunu söyledi.\n\nO akşam Hatice Hanım, olanları mahalledeki arkadaşlarına anlattı. Ertesi hafta da kendi evinde, tıpkı yıllar önce sınıfında yaptığı gibi, birkaç komşusuna uygulamayı nasıl kullanacaklarını göstermeye başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şubenin kapanması Hatice Hanım için ne anlama geliyordu?",
+    "correct": "Alışkın olduğu düzenin bozulması",
+    "wrong": [
+     "Yeni bir işe başlama zorunluluğu",
+     "Mahalleden taşınma gerekliliği",
+     "Emekli maaşının kesilmesi"
+    ],
+    "explanation": "Faturalarını yıllardır şubeye gidip ödüyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hatice Hanım telefonu önceleri ne için kullanıyordu?",
+    "correct": "Torunlarıyla görüşmek",
+    "wrong": [
+     "Faturalarını ödemek",
+     "Haberleri takip etmek",
+     "Alışverişini yapmak"
+    ],
+    "explanation": "Telefonu torunlarıyla görüntülü konuşmak ve fotoğraf bakmak için kullanıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Oğlundan yardım isteme fikrinin hoşuna gitmemesi onun hangi yönünü gösterir?",
+    "correct": "Kendi işini görme isteği",
+    "wrong": [
+     "Oğluna duyduğu öfke",
+     "Teknolojiye olan merakı",
+     "Paraya verdiği büyük önem"
+    ],
+    "explanation": "Hayatı boyunca işlerini kendisi görmüş biriydi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ece anneannesine hangi kuralı öğretti?",
+    "correct": "Bankanın kod sormayacağını",
+    "wrong": [
+     "Şifrenin deftere yazılacağını",
+     "Her ay şubeye gidileceğini",
+     "Uygulamanın silinmesini"
+    ],
+    "explanation": "Banka şifreyi ya da doğrulama kodunu telefonla sormaz."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ece'nin her işlemi anneannesine yaptırmasının amacı nedir?",
+    "correct": "Yaparak öğrenmesini sağlamak",
+    "wrong": [
+     "İşi daha çabuk bitirmek",
+     "Hatalarını deftere kaydetmek",
+     "Telefonu ona hediye etmek"
+    ],
+    "explanation": "Kendi parmağıyla yapması öğrenmeyi kalıcı kılar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Defterdeki onay işaretleri Hatice Hanım için ne işe yarıyordu?",
+    "correct": "İlerlemesini izlemek",
+    "wrong": [
+     "Faturaları hesaplamak",
+     "Şifreleri saklamak",
+     "Torunlara göstermek"
+    ],
+    "explanation": "Her başarılı işlemden sonra işaret koyarak gelişimini izliyordu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şüpheli aramadan sonra Hatice Hanım ne yaptı?",
+    "correct": "Bankanın resmî hattını aradı",
+    "wrong": [
+     "Kodu arayana hemen söyledi",
+     "Telefonunu kapatıp sakladı",
+     "Ece'den kodu göndermesini istedi"
+    ],
+    "explanation": "Telefonu kapatıp bankanın resmi numarasını aradı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Hatice Hanım'ın davranışı neyi gösterir?",
+    "correct": "Öğrendiğini paylaşma isteğini",
+    "wrong": [
+     "Bankaya güvenini yitirdiğini",
+     "Telefonu bırakmaya karar verdiğini",
+     "Komşularından yardım istediğini"
+    ],
+    "explanation": "Komşularına uygulamayı öğretmeye başladı."
+   }
+  ]
+ },
+ "223": {
+  "title": "Kumun Ortasında Hayat",
+  "category": "Bilgi/Açıklama",
+  "content": "Çöller, yeryüzünün en zorlu yaşam alanlarından biridir. Bazı çöllerde yıllarca tek damla yağmur düşmez. Gündüz sıcaklık kırk beş dereceyi aşarken gece donma noktasına yaklaşabilir. Toprak çoğu zaman kumlu ve besince fakirdir. Buna rağmen çöller, bu koşullara şaşırtıcı biçimlerde uyum sağlamış yüzlerce bitki türüne ev sahipliği yapar. Bu bitkilerin sırrı, suyu bulmak, depolamak ve korumak için geliştirdikleri yöntemlerde saklıdır. Bilim insanları bu yöntemleri genel olarak üç grupta topluyor: suyu depolamak, suyu derinlerde ya da geniş alanlarda aramak ve kuraklıktan tümüyle kaçmak. Pek çok bitki bu yollardan birkaçını aynı anda kullanır.\n\nSuyu depolayan bitkilerin en tanıdığı kaktüslerdir. Kaktüslerin kalın, etli gövdeleri bir su deposu gibi çalışır. Amerika'daki dev saguaro kaktüsü, tek bir yağmurdan sonra yüzlerce litre su depolayabilir. Gövdesindeki akordeon benzeri kıvrımlar, kaktüs su aldıkça genişler, kurak dönemde ise büzülür. Kaktüslerin yaprak yerine dikenleri vardır. Yaprakların geniş yüzeyi suyun buharlaşmasına yol açacağından, dikenler hem su kaybını azaltır hem de bitkiyi susuz kalmış hayvanlardan korur. Dikenler ayrıca gövdenin çevresinde ince bir gölge ve hareketsiz bir hava tabakası oluşturarak bitkiyi serin tutar. Kaktüsün dış yüzeyini kaplayan kalın ve mumsu tabaka da suyun dışarı sızmasını engeller. Bu tabaka, güneş ışığının bir kısmını geri yansıtarak gövdenin aşırı ısınmasını da önler.\n\nBazı çöl bitkileri ise suyu derinlerde arar. Örneğin mesquite ağacının kökleri, yer altındaki suya ulaşmak için elli metreden fazla derine inebilir. Başka bazı bitkiler ise tam tersi bir yol izler: Köklerini toprağın hemen altına, geniş bir alana yayarlar. Böylece kısa süren bir yağmurun ardından, su buharlaşmadan önce mümkün olduğunca fazlasını emebilirler. Bu iki strateji birbirine zıt gibi görünse de amaçları aynıdır: Çölde ender bulunan suya, rakiplerinden önce ulaşmak. Bazı bitkiler kökleriyle toprağa, yakınlarında başka bitkilerin büyümesini zorlaştıran maddeler bile salgılar.\n\nÇöl bitkilerinin bir başka önemli uyumu, nefes alma zamanlarıyla ilgilidir. Bitkiler, fotosentez için gereken karbondioksiti yapraklarındaki küçük gözeneklerden alır. Ancak bu gözenekler açıkken su da buhar olarak dışarı kaçar. Kaktüs gibi pek çok çöl bitkisi, gözeneklerini gündüz değil, havanın serin olduğu gece saatlerinde açar. Gece aldıkları karbondioksiti depolar ve gündüz, gözenekleri kapalıyken fotosentezde kullanırlar. Bu sayede çok daha az su kaybederler. Bu yöntem, sıradan bitkilere göre bazen on kata kadar su tasarrufu sağlayabilir. Ananas gibi bazı tarım bitkileri de aynı yöntemi kullanır.\n\nBazı çöl bitkileri ise kuraklıkla savaşmak yerine ondan kaçmayı seçer. Bunlara “kısa ömürlüler” denir. Tohumları yıllarca toprakta bekler ve ancak yeterli yağmur yağdığında çimlenir. Birkaç hafta içinde büyür, çiçek açar, tohum verir ve ölürler. Yani yaşam döngülerini, yağmurun izin verdiği o kısa zamana sığdırırlar. Yağışlı bir yılda, kurak ve çıplak görünen bir çöl bu yüzden bir anda rengârenk çiçeklerle kaplanabilir. Bilim insanları bu olaya “çöl çiçeklenmesi” adını veriyor. Şili'deki Atacama Çölü'nde birkaç yılda bir yaşanan bu olay, dünyanın dört bir yanından ziyaretçi çekiyor. Tohumların bu kadar uzun süre canlı kalabilmesi, sert ve su geçirmeyen kabukları sayesinde mümkün oluyor.\n\nÇöl bitkilerinin uyumları, insanlar için de ilham kaynağı oluyor. Mühendisler, kaktüs dikenlerinin sisten su toplama biçimini inceleyerek su sıkıntısı çeken bölgeler için sis toplama ağları tasarlıyor. Tarım araştırmacıları ise kuraklığa dayanıklı bitkilerin genlerini inceleyerek, iklim değişikliğiyle daha kurak hâle gelen bölgelerde yetiştirilebilecek ürünler geliştirmeye çalışıyor. Kısacası çöl, ilk bakışta boş ve cansız görünse de, doğanın en yaratıcı çözümlerinden bazılarını barındırıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Giriş paragrafında çöl koşullarının anlatılmasının amacı nedir?",
+    "correct": "Bitkilerin uyumunu öne çıkarmak",
+    "wrong": [
+     "Çölde yaşamın imkânsız olduğunu",
+     "Çöl turizmini okura tanıtmak",
+     "İklim değişikliğini açıklamak"
+    ],
+    "explanation": "Zor koşullar, bitkilerin uyum yollarının ne kadar şaşırtıcı olduğunu vurgular."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaktüslerde yaprakların yerini ne alır?",
+    "correct": "Dikenler",
+    "wrong": [
+     "Kökler",
+     "Çiçekler",
+     "Tohumlar"
+    ],
+    "explanation": "Kaktüslerin yaprak yerine dikenleri vardır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kaktüs gövdesindeki kıvrımların işlevi nedir?",
+    "correct": "Su miktarına göre genişleyip daralmak",
+    "wrong": [
+     "Güneş ışığını gövdeye yönlendirmek",
+     "Hayvanların gövdeye tırmanmasını önlemek",
+     "Tohumları rüzgârla uzağa taşımak"
+    ],
+    "explanation": "Kaktüs su aldıkça genişler, kurak dönemde büzülür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Derin ve yüzeysel kök stratejilerinin ortak amacı nedir?",
+    "correct": "Kıt suya rakiplerden önce erişmek",
+    "wrong": [
+     "Toprağı rüzgâra karşı sağlamlaştırmak",
+     "Bitkiyi böceklerden uzak tutmak",
+     "Tohumları yer altında saklamak"
+    ],
+    "explanation": "İki stratejinin amacı da ender bulunan suya önce ulaşmaktır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaktüsler gözeneklerini ne zaman açar?",
+    "correct": "Gece",
+    "wrong": [
+     "Öğle",
+     "Sabah",
+     "Gündüz"
+    ],
+    "explanation": "Gözeneklerini serin gece saatlerinde açarlar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Gözeneklerin gündüz kapalı kalması neden yararlıdır?",
+    "correct": "Su kaçışını önlediği için",
+    "wrong": [
+     "Karbonu dışarı attığı için",
+     "Gövdeyi ısıttığı için",
+     "Kökleri büyüttüğü için"
+    ],
+    "explanation": "Gözenekler açıkken su buhar olarak kaçar."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kısa ömürlü bitkilerin tohumları ne zaman çimlenir?",
+    "correct": "Yeterince yağınca",
+    "wrong": [
+     "Her ilkbaharda",
+     "Sıcaklık yükselince",
+     "Rüzgârlı günlerde"
+    ],
+    "explanation": "Tohumlar ancak yeterli yağmur yağdığında çimlenir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın metne katkısı nedir?",
+    "correct": "Konuyu insan yaşamına bağlamak",
+    "wrong": [
+     "Önceki bilgileri yalanlamak",
+     "Yeni bir bitki türünü tanıtmak",
+     "Çölün korunmasını istemek"
+    ],
+    "explanation": "Bitkilerin uyumlarından mühendislik ve tarımda yararlanıldığını anlatır."
+   }
+  ]
+ },
+ "234": {
+  "title": "Sahnenin Arkasındaki Orman",
+  "category": "Hikaye/Kurgu",
+  "content": "Selin, okulun tiyatro kulübünün yıl sonu oyunu için seçmelerin yapılacağını duyduğunda heyecandan yerinde duramadı. Bu yıl sahnelenecek oyun, sevdiği bir masal uyarlamasıydı ve başrol tam ona göreydi. Haftalarca evde aynanın karşısında replikleri çalıştı, kardeşini seyirci yaparak sahneleri canlandırdı. Seçme günü geldiğinde elleri titriyordu, ama elinden gelenin en iyisini yaptığını düşünüyordu.\n\nİki gün sonra kulüp panosuna oyuncu listesi asıldı. Selin listeyi baştan sona iki kez okudu. Başrol, sınıf arkadaşı Duru'ya verilmişti. Selin'in adı ise listenin en altında, “dekor ve sahne ekibi” başlığının altındaydı. Gözlerinin dolduğunu hissetti ve kimseye görünmeden koridorun sonundaki lavaboya gitti. O gün derslerde hiçbir şeye odaklanamadı. Teneffüste Duru'nun arkadaşlarıyla sevinçle konuştuğunu gördü ve onu tebrik etmesi gerektiğini bildiği hâlde yanına gidemedi. İçinde hem kırgınlık hem de bu duygudan duyduğu bir utanç vardı. Duru'nun hiçbir suçu olmadığını biliyordu.\n\nAkşam annesine kulübü bırakmayı düşündüğünü söyledi. Annesi onu dinledi, hemen bir şey söylemedi. Sonra, “Bırakmak senin hakkın. Ama bir karar vermeden önce dekor ekibine bir hafta katılıp görmeye ne dersin?” diye sordu. Selin isteksizce kabul etti. Annesi, kendisinin de lisede voleybol takımına seçilemediğini, ama takımın istatistiklerini tutarken oyunu çok daha iyi anlamaya başladığını anlattı. “Bazen istemediğimiz bir kapı, bilmediğimiz bir odaya açılır” dedi.\n\nDekor ekibinin ilk toplantısında kulübün danışman öğretmeni Kerem Bey, oyunun geçtiği büyülü ormanın sahnede nasıl görüneceğini tartıştı. Selin önce sessizce, biraz da küskün bir hâlde dinledi. Sonra, resim dersinde öğrendiği gölgelendirme tekniğiyle ağaçlara derinlik verilebileceğini söyledi. Kerem Bey fikri çok beğendi ve Selin'den küçük bir çizim hazırlamasını istedi. Selin o akşam eve gidip saatlerce çizim yaptı. İlk taslağı beğenmedi ve kâğıdı buruşturup yeniden başladı. Gece yarısına doğru, ağaçların arasından süzülen ay ışığını gösteren bir çizim ortaya çıkmıştı. Sabah, okula giderken çizimi çantasında katlanmasın diye dikkatle taşıdı.\n\nSonraki haftalarda Selin, okuldan sonra spor salonunda büyük kartonlara ağaçlar, çiçekler ve dev bir ay çizdi. Ekipteki diğer öğrencilerle birlikte eski kumaşlardan perdeler diktiler, ışıklarla denemeler yaptılar. Mavi bir ışığın ormanı gece gibi, sarı bir ışığın ise sabah gibi gösterdiğini keşfettiler. Selin, ekipteki dokuzuncu sınıftan Arda'ya gölgelendirmeyi öğretti; Arda da ona tahtadan sağlam bir çerçeve yapmayı gösterdi. Her akşam üstü boya lekeli ellerle ama keyifle eve dönüyordu. Bir gün provaları izlerken Duru'nun bir sahnede zorlandığını fark etti. Molada yanına gidip, kendi çalışırken kullandığı bir yöntemi anlattı: repliği önce fısıldayarak, sonra yavaş yavaş sesi yükselterek söylemek. Duru ona teşekkür etti ve o günden sonra iki kız provalardan sonra birlikte eve yürümeye başladı.\n\nOyun gecesi salon tıklım tıklımdı. Selin, sahne arkasında ekip arkadaşlarıyla birlikte ışıkların başında bekliyordu. Kalbi, seçme gününde olduğu kadar hızlı atıyordu. Perde açıldığında seyirciler, sahnede beliren büyülü ormanı görünce hep bir ağızdan “Vay!” diye bağırdılar. Oyunun sonunda oyuncular selamlamaya çıktıktan sonra Kerem Bey, dekor ekibini de sahneye çağırdı. Alkışlar bir kez daha yükseldi. Duru, Selin'in elini tutup onu ön sıraya çekti ve kulağına “Bu orman olmasaydı oyun da olmazdı” diye fısıldadı.\n\nO gece eve dönerken Selin, birkaç hafta önce kulübü bırakmayı düşündüğünü hatırladı ve gülümsedi. Annesinin sözü aklına geldi. Başrolü almamıştı, ama sahnede herkesin hayranlıkla baktığı ormanı o yaratmıştı. Bu, ona en az alkış kadar iyi gelmişti. Gelecek yıl yine seçmelere katılmaya karar verdi; ama hangi görevi alırsa alsın, ondan zevk alabileceğini artık biliyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in seçmeye hazırlanış biçimi onun hangi özelliğini gösterir?",
+    "correct": "Emek vermeye istekli oluşunu",
+    "wrong": [
+     "Kardeşini sürekli kıskanmasını",
+     "Sahneden hiç korkmamasını",
+     "Masalları ezbere bilmesini"
+    ],
+    "explanation": "Haftalarca replik çalışmış, sahneleri canlandırmıştı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Selin'in Duru'yu tebrik edememesinin nedeni nedir?",
+    "correct": "Kırgınlıkla utancı bir arada yaşaması",
+    "wrong": [
+     "Duru'nun ona haksızlık etmiş olması",
+     "Teneffüsün çok kısa sürmüş olması",
+     "Duru'yla daha önce hiç konuşmamış olması"
+    ],
+    "explanation": "İçinde hem kırgınlık hem de bu duygudan utanç vardı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Annesi Selin'e ne önerdi?",
+    "correct": "Dekor ekibini kısaca denemesini",
+    "wrong": [
+     "Kulübü hemen o gün bırakmasını",
+     "Öğretmeniyle konuyu tartışmasını",
+     "Başka bir okula nakil olmasını"
+    ],
+    "explanation": "Karar vermeden önce dekor ekibine bir hafta katılmasını önerdi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annenin voleybol anısının Selin'e iletisi nedir?",
+    "correct": "Beklenmedik yolların fırsat sunabileceği",
+    "wrong": [
+     "Sporun tiyatrodan daha önemli olduğu",
+     "İstatistik tutmanın son derece zor olduğu",
+     "Takımlara herkesin seçilmesi gerektiği"
+    ],
+    "explanation": "İstemediğimiz bir kapı bilmediğimiz bir odaya açılabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selin ilk toplantıda hangi öneriyi getirdi?",
+    "correct": "Işık ve gölgeyle hacim vermeyi",
+    "wrong": [
+     "Ağaçları eski kumaştan dikmeyi",
+     "Oyunu başka bir yere taşımayı",
+     "Sahneye dev bir ay maketi koymayı"
+    ],
+    "explanation": "Resim dersinde öğrendiği gölgelendirmeyle ağaçlara derinlik verilebileceğini söyledi."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in Duru'ya yardım etmesi ilişkilerini nasıl etkiledi?",
+    "correct": "Aralarında dostluk doğmasını sağladı",
+    "wrong": [
+     "Duru'nun rolü bırakmasına yol açtı",
+     "Kerem Bey'in onu uyarmasına yol açtı",
+     "İkisinin yarışmasını sertleştirdi"
+    ],
+    "explanation": "O günden sonra birlikte eve yürümeye başladılar."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Arda Selin'e ne öğretti?",
+    "correct": "Tahtadan iskelet kurmayı",
+    "wrong": [
+     "Işıkları renklendirmeyi",
+     "Replikleri ezberlemeyi",
+     "Eski kumaştan perde dikmeyi"
+    ],
+    "explanation": "Arda ona tahtadan sağlam çerçeve yapmayı gösterdi."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri nedir?",
+    "correct": "Her görevde anlam bulunabilir",
+    "wrong": [
+     "Başrol başarının tek ölçüsüdür",
+     "Seçmelere katılmak gereksizdir",
+     "Dekor ekibi kolay bir iştir"
+    ],
+    "explanation": "Selin hangi görevi alırsa alsın ondan zevk alabileceğini öğrendi."
+   }
+  ]
+ },
+ "242": {
+  "title": "Turuncu Kanatlı Yolcular",
+  "category": "Bilgi/Açıklama",
+  "content": "Her sonbahar, Kanada ve Amerika Birleşik Devletleri'nin kuzeyinde milyonlarca turuncu-siyah kanatlı kelebek, uzun bir yolculuğa çıkar. Bunlar kral kelebekleridir. Güneye doğru uçarak dört bin kilometreden fazla yol katederler ve kışı Meksika'nın orta kesimindeki dağlık ormanlarda geçirirler. Avuç içinden küçük, yalnızca yarım gram ağırlığındaki bir böceğin bu kadar uzun bir yolu nasıl aştığı, bilim insanlarını uzun yıllar boyunca meraklandırdı. Bu yolculuk, böcekler dünyasında bilinen en uzun göçlerden biri.\n\nKral kelebeklerinin göçünü daha da şaşırtıcı yapan bir özellik var: Göçe çıkan kelebeklerin hiçbiri bu yolu daha önce gitmemiştir. Yazın kuzeyde yaşayan kelebekler yalnızca birkaç hafta yaşar. Ancak sonbaharda doğan özel bir kuşak, sekiz ay kadar yaşayabilir. Güneye göç eden işte bu kuşaktır. Bu kelebeklerin bedeni, göçe hazırlanırken yumurta üretmeyi erteler ve enerjisini yağ olarak depolar. Yol boyunca çiçeklerin nektarıyla beslenerek bu yağ deposunu yenilerler. Uzun mesafeleri, sıcak hava akımlarına binip süzülerek, kanatlarını az çırparak aşarlar. İlkbaharda bu kelebekler kuzeye doğru yola çıkar, yolda yumurtlar ve ölür. Yolculuğu, onların çocukları ve torunları sürdürür. Yani güneye giden kelebekler, kuzeye dönen kelebeklerin büyük büyükanne ve büyükbabalarıdır.\n\nPeki daha önce hiç gitmedikleri bir yeri nasıl buluyorlar? Araştırmalar, kral kelebeklerinin yönlerini bulmak için güneşi bir pusula gibi kullandığını gösteriyor. Ancak güneş gün boyunca gökyüzünde yer değiştirdiği için, kelebeklerin günün saatini de bilmesi gerekir. Bilim insanları, kelebeklerin antenlerinde bir tür biyolojik saat bulunduğunu keşfetti. Antenleri boyanan ya da kesilen kelebekler yönlerini şaşırıyor. Beyinlerindeki özel hücreler ise güneşin açısını ve gökyüzündeki ışığın yönünü algılıyor. Kelebek, bu iki bilgiyi birleştirerek sabah güneşi solunda, öğleden sonra ise sağında tutarak güneybatıya doğru ilerliyor. Bazı araştırmalar, kelebeklerin bulutlu günlerde Dünya'nın manyetik alanından da yararlanabileceğini öne sürüyor.\n\nKelebeklerin göç ettiği bölgeyi bilim insanları ancak 1975'te bulabildi. Kanadalı zoolog Fred Urquhart, yıllarca gönüllülerin yardımıyla kelebeklerin kanatlarına küçük etiketler yapıştırdı. Etiketli kelebekleri bulan kişiler, onları nerede bulduklarını bildiriyordu. Sonunda Meksika'daki dağlık bir bölgede, ağaçların gövdelerini ve dallarını tümüyle kaplayan milyonlarca kelebek keşfedildi. Kelebekler o kadar yoğundu ki bazı dallar, ağırlıklarına dayanamayıp kırılıyordu. Kelebekler bu serin ve nemli dağ ormanlarında, hareketsizce birbirlerine sokularak kışı geçiriyor. Ormanın sık ağaçları, onları hem soğuktan hem de yağmurdan koruyan bir battaniye işlevi görüyor.\n\nBugün kral kelebekleri ciddi tehlikelerle karşı karşıya. Tırtılları yalnızca sütleğen adı verilen bir bitkiyle beslenir. Bu bitkinin özsuyundaki acı ve zehirli maddeler, tırtılın vücudunda birikir ve onu kuşlar için tatsız bir lokmaya dönüştürür. Kelebeğin parlak turuncu rengi de yırtıcılara bu tehlikeyi haber veren bir uyarı işaretidir. Yani sütleğen, kelebek için hem besin hem de bir savunma kalkanıdır. Tarım alanlarında kullanılan otla mücadele ilaçları, bu bitkinin büyük ölçüde yok olmasına yol açtı. Meksika'daki kışlama ormanlarında yapılan ağaç kesimi ve iklim değişikliğinin getirdiği aşırı hava olayları da kelebekleri tehdit ediyor. Son otuz yılda kışlama bölgesindeki kelebek sayısının büyük ölçüde azaldığı tahmin ediliyor.\n\nAma umut verici gelişmeler de var. Kuzey Amerika'da pek çok okul, belediye ve aile, bahçelerine sütleğen ekerek kelebekler için “mola istasyonları” oluşturuyor. Meksika'da da kışlama ormanları koruma altına alındı ve yerel halk, ormanı kesmek yerine kelebekleri görmeye gelen turistlere rehberlik ederek gelir elde etmeye başladı. Gönüllü vatandaşlar da her yıl kelebekleri sayarak ve etiketleyerek bilim insanlarına veri sağlamaya devam ediyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kral kelebekleri kışı nerede geçirir?",
+    "correct": "Meksika'daki dağ ormanlarında",
+    "wrong": [
+     "Kanada'nın soğuk kuzey kıyılarında",
+     "Güney Amerika'nın çöllerinde",
+     "Amerika'nın büyük ovalarında"
+    ],
+    "explanation": "Kışı Meksika'nın orta kesimindeki dağlık ormanlarda geçirirler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Göçü şaşırtıcı yapan özellik nedir?",
+    "correct": "Yolu önceden bilenin olmaması",
+    "wrong": [
+     "Kelebeklerin çok ağır olması",
+     "Göçün yalnızca gece yapılması",
+     "Kelebeklerin hiç beslenmemesi"
+    ],
+    "explanation": "Göçe çıkan kelebeklerin hiçbiri bu yolu daha önce gitmemiştir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Göçmen kuşağın bedeni yolculuğa nasıl hazırlanır?",
+    "correct": "Üremeyi geciktirip enerji depolayarak",
+    "wrong": [
+     "Kanatlarını büyütüp kalınlaştırarak",
+     "Antenlerini kısaltıp sertleştirerek",
+     "Rengini koyulaştırıp parlak hâle getirerek"
+    ],
+    "explanation": "Yumurta üretmeyi erteler, enerjisini yağ olarak depolar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kelebeklerin biyolojik saati nerededir?",
+    "correct": "Antenlerinde",
+    "wrong": [
+     "Kanatlarında",
+     "Bacaklarında",
+     "Gözlerinde"
+    ],
+    "explanation": "Antenlerinde bir tür biyolojik saat bulunur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kelebeğin güneşi kullanırken saati de bilmesi neden gerekir?",
+    "correct": "Güneşin konumu saatle değiştiğinden",
+    "wrong": [
+     "Geceleri hiç uçamadıkları için",
+     "Saat farklarını hesapladıkları için",
+     "Bulutlar güneşi çoğu zaman örttüğü için"
+    ],
+    "explanation": "Güneş gökyüzünde yer değiştirdiği için yön bulmada zaman bilgisi gerekir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Urquhart'ın çalışmasında gönüllülerin katkısı neydi?",
+    "correct": "Bulunan işaretli kelebeği haber vermek",
+    "wrong": [
+     "Kelebekleri laboratuvarda yetiştirmek",
+     "Meksika'daki ormanları satın almak",
+     "Kelebeklerin kanatlarını renkli boyamak"
+    ],
+    "explanation": "Etiketli kelebekleri bulanlar bulundukları yeri bildiriyordu."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Sütleğenin azalması kelebekleri neden tehdit eder?",
+    "correct": "Tırtılların başka besini olmadığından",
+    "wrong": [
+     "Kelebeklerin rengini soldurduğu için",
+     "Göç yolunu iki katına çıkardığı için",
+     "Ormanları zamanla kurutup yok ettiği için"
+    ],
+    "explanation": "Tırtıllar yalnızca sütleğenle beslenir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın tutumu nasıldır?",
+    "correct": "Umutlu bir tutum",
+    "wrong": [
+     "Kayıtsız bir tutum",
+     "Karamsar bir tutum",
+     "Alaycı bir tutum"
+    ],
+    "explanation": "Paragraf koruma çabalarını umut verici gelişmeler olarak sunar."
+   }
+  ]
+ },
+ "250": {
+  "title": "Küfün Armağanı, Direncin Bedeli",
+  "category": "Bilgi/Açıklama",
+  "content": "1928 yılının bir eylül sabahı, İskoç bilim insanı Alexander Fleming tatilden laboratuvarına döndüğünde, bakteri üretmek için hazırladığı kaplardan birinde tuhaf bir şey fark etti. Kaba bir küf bulaşmıştı ve küfün çevresindeki bakteriler ölmüştü. Fleming, küfün bakterileri öldüren bir madde ürettiğini anladı ve bu maddeye penisilin adını verdi. Bu tesadüfi keşif, tıp tarihinin en önemli dönüm noktalarından biri oldu. Yine de penisilinin ilaç olarak kullanılabilmesi on yıldan fazla sürdü. Küfün ürettiği madde çok az miktardaydı ve saflaştırılması zordu. Bu sorunu, Oxford Üniversitesi'nden Howard Florey ve Ernst Chain liderliğindeki bir ekip çözdü.\n\nPenisilin, 1940'larda yaygın olarak kullanılmaya başlandığında dünya değişti. Bundan önce küçük bir yara enfeksiyonu, zatürre ya da boğaz iltihabı bile ölümcül olabiliyordu. Antibiyotikler sayesinde bu hastalıklar kolayca tedavi edilebilir hâle geldi. Ameliyatlar çok daha güvenli oldu, doğum sırasında yaşanan ölümler azaldı ve insan ömrü uzadı. Antibiyotik çağı başladığında pek çok doktor, bulaşıcı hastalıkların yakında tarihe karışacağına inanıyordu. Sonraki on yıllarda bilim insanları onlarca farklı antibiyotik geliştirdi. Ancak 1980'lerden sonra yeni antibiyotik keşifleri büyük ölçüde yavaşladı. Yeni bir ilacı geliştirmek on yıldan uzun sürebiliyor ve çok pahalıya mal oluyor.\n\nAncak Fleming, 1945'te Nobel Ödülü'nü alırken bir uyarıda bulunmuştu: Antibiyotikler yanlış kullanılırsa bakteriler onlara karşı direnç kazanabilirdi. Bu uyarı ne yazık ki gerçek oldu. Bakteriler çok hızlı çoğalır; bazıları yirmi dakikada bir ikiye bölünür. Her bölünmede genlerde küçük değişiklikler, yani mutasyonlar ortaya çıkabilir. Bir antibiyotik kullanıldığında, bakterilerin çoğu ölür. Ama şans eseri ilaca dayanıklı bir mutasyon taşıyan birkaç bakteri hayatta kalır ve çoğalır. Zamanla, ilacın etkilemediği bir bakteri topluluğu oluşur. Bu süreç, doğal seçilimin gözümüzün önünde işleyen bir örneğidir. Dahası, bakteriler direnç genlerini yalnızca yavrularına değil, yanlarındaki başka bakterilere de aktarabilir. Böylece direnç, farklı bakteri türleri arasında da yayılabilir.\n\nDirencin yayılmasını hızlandıran bazı insan davranışları var. Antibiyotikler yalnızca bakterilere etki eder; grip ve soğuk algınlığı gibi virüslerin neden olduğu hastalıklarda hiçbir işe yaramaz. Buna rağmen pek çok kişi, soğuk algınlığında antibiyotik kullanmak istiyor. Gereksiz her kullanım, vücuttaki zararsız bakterileri de etkileyerek dirençli olanlara yer açıyor. Üstelik bağırsaklarımızda yaşayan ve sindirime yardım eden yararlı bakterilerin dengesi de bozulabiliyor. Bir diğer sorun, tedavinin yarıda bırakılması. Kendini iyi hisseden hasta ilacı bırakınca, en dayanıklı bakteriler vücutta kalıp çoğalabiliyor. Ayrıca bazı ülkelerde hayvancılıkta, hayvanların daha hızlı büyümesi için antibiyotik kullanılıyor; bu da dirençli bakterilerin yiyecekler ve çevre yoluyla yayılmasına yol açabiliyor.\n\nBugün Dünya Sağlık Örgütü, antibiyotik direncini insanlığın karşı karşıya olduğu en büyük sağlık tehditlerinden biri olarak görüyor. Dirençli enfeksiyonlar yüzünden her yıl yüz binlerce insan hayatını kaybediyor. Kimi hastanelerde, bilinen antibiyotiklerin neredeyse hiçbirine yanıt vermeyen bakteriler görülmeye başlandı. Hekimler bu tür enfeksiyonlarda, yan etkileri yüksek ve uzun yıllardır pek kullanılmayan eski ilaçlara başvurmak zorunda kalıyor. Uzmanlar, önlem alınmazsa basit enfeksiyonların yeniden ölümcül hâle gelebileceği bir döneme girilebileceği konusunda uyarıyor.\n\nBu sorunla mücadelede herkesin yapabileceği şeyler var. Antibiyotikleri yalnızca doktor önerdiğinde kullanmak, tedaviyi doktorun söylediği süre boyunca tamamlamak ve artan ilaçları başkalarına vermemek bunların başında geliyor. Eczaneden reçetesiz antibiyotik almamak da önemli bir adım. Elleri düzenli yıkamak ve aşıları zamanında yaptırmak da enfeksiyonları, dolayısıyla antibiyotik ihtiyacını azaltıyor. Bilim insanları da bakterileri öldüren virüsler gibi yeni tedavi yollarını araştırıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fleming neyin bakterileri öldürdüğünü fark etti?",
+    "correct": "Kaptaki küf mantarının",
+    "wrong": [
+     "Odanın yüksek ısısının",
+     "Kullandığı boyaların",
+     "Kabın cam kapağının"
+    ],
+    "explanation": "Küfün çevresindeki bakteriler ölmüştü."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Penisilinin ilaç olması neden yıllar aldı?",
+    "correct": "Az üretilip zor arıtılabildiği için",
+    "wrong": [
+     "Fleming onu gizli tuttuğu için",
+     "Hastalar ondan çok korktuğu için",
+     "Savaş araştırmaları durdurduğu için"
+    ],
+    "explanation": "Madde çok azdı ve saflaştırılması zordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Antibiyotiklerden önceki dönemin anlatılmasının amacı nedir?",
+    "correct": "Bu ilaçların etkisini belirginleştirmek",
+    "wrong": [
+     "Eski doktorları sert dille eleştirmek",
+     "Zatürrenin belirtilerini sıralamak",
+     "Doğum oranlarını yıllara göre karşılaştırmak"
+    ],
+    "explanation": "Küçük enfeksiyonların bile ölümcül olabildiği hatırlatılarak değişim vurgulanır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Direnç hangi süreçle gelişir?",
+    "correct": "Dayanıklı azınlığın hızla çoğalmasıyla",
+    "wrong": [
+     "Bütün bakterilerin aynı anda değişmesiyle",
+     "İlacın vücutta zehre dönüşmesiyle",
+     "Bağışıklığın zamanla zayıflamasıyla"
+    ],
+    "explanation": "İlaca dayanıklı mutasyon taşıyan birkaç bakteri hayatta kalıp çoğalır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı bakteriler ne kadar sürede ikiye bölünür?",
+    "correct": "Yirmi dakikada",
+    "wrong": [
+     "Bir saat içinde",
+     "Bir gün içinde",
+     "Beş dakikada"
+    ],
+    "explanation": "Bazıları yirmi dakikada bir ikiye bölünür."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Tedaviyi yarıda bırakmanın sakıncası nedir?",
+    "correct": "En güçlülerin hayatta kalabilmesi",
+    "wrong": [
+     "İlacın etkisinin birden artması",
+     "Virüslerin vücuda kolayca girmesi",
+     "Hastanın geceleri uykusunun kaçması"
+    ],
+    "explanation": "İlacı bırakınca en dayanıklı bakteriler kalıp çoğalabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Antibiyotikler hangi hastalıkta işe yaramaz?",
+    "correct": "Soğuk algınlığı",
+    "wrong": [
+     "Yara iltihabı",
+     "Boğaz iltihabı",
+     "Bakteriyel zatürre"
+    ],
+    "explanation": "Virüslerin neden olduğu grip ve soğuk algınlığında etkisizdir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın ana iletisi nedir?",
+    "correct": "Herkesin bu konuda katkı sunabileceği",
+    "wrong": [
+     "Sorunun artık çözümsüz kaldığı",
+     "Sorumluluğun bilim insanlarında olduğu",
+     "İlaçların tümden bırakılması gerektiği"
+    ],
+    "explanation": "Herkesin yapabileceği şeyler sıralanır."
+   }
+  ]
+ }
+}

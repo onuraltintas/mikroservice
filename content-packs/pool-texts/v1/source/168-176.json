@@ -1,0 +1,668 @@
+{
+ "168": {
+  "title": "Vantuzlu Deniz Dâhisi",
+  "category": "Bilgi/Açıklama",
+  "content": "Denizlerin en ilginç canlılarından biri ahtapottur. Dünyada üç yüzden fazla ahtapot türü yaşar; bazıları bir parmak boyunda kalırken bazılarının kolları birkaç metreye ulaşır. Ahtapotun sekiz kolu vardır ve her kolun altında yüzlerce vantuz bulunur. Bu vantuzlar, ahtapotun kayalara tutunmasına ve avını sıkıca yakalamasına yardım eder. Vantuzlar yalnızca tutunmaya da yaramaz; dokundukları şeyin tadını da alabilir. Yani bir ahtapot, koluyla dokunduğu bir yengecin tadını ağzına götürmeden anlayabilir. Ahtapotun beyninin büyük bir kısmı da kollarına dağılmıştır. Bu nedenle her kol, bir ölçüde kendi kararını verebilir.\n\nAhtapotun vücudunda kemik yoktur. Bu yüzden çok dar yerlerden geçebilir. Gövdesi büyük olsa bile, gagası kadar küçük bir delikten kolayca sıyrılıp çıkabilir. Bu yetenek, onları avcılardan saklanırken de korur. Akvaryumlarda yaşayan bazı ahtapotların geceleri kapaklı tanklarından kaçtığı, yandaki tanka geçip oradaki balıkları yedikten sonra sabah olmadan kendi tankına döndüğü bile görülmüştür. Bakıcılar bunu ancak sabahları balıkların neden azaldığını araştırırken, gece kameralarının kayıtlarını izleyince anlayabilmiştir.\n\nAhtapotlar renk değiştirmede de ustadır. Derilerinde renk keseleri bulunur. Bu keseleri birkaç saniye içinde açıp kapatarak kayaya, kuma ya da yosuna benzeyebilirler. Üstelik ahtapotlar, bilim insanlarına göre renkleri ayırt edemez; buna rağmen çevrelerine bu kadar iyi uyum sağlamaları hâlâ bir sırdır. Bazen düşmanlarını korkutmak için parlak renklere bürünürler. Tehlike çok büyükse ve kaçacak başka bir yol kalmamışsa, koyu bir mürekkep püskürtür ve bu bulutun arkasında hızla uzaklaşırlar.\n\nBilim insanları ahtapotların çok zeki olduğunu düşünüyor. Deneylerde kavanozların kapağını açmayı, labirentten çıkış yolunu bulmayı ve bazı insanları yüzlerinden tanımayı öğrenebildikleri görülmüştür. Bir araştırmada, kendisini sık sık rahatsız eden bir bakıcıya her gördüğünde su püskürten bir ahtapot bile anlatılır. Ahtapotların bu zekâya rağmen çoğunlukla yalnızca bir ya da iki yıl yaşaması ise bilim insanlarını hâlâ şaşırtmaktadır. Bu kadar kısa bir ömürde nasıl bu kadar çok şey öğrenebildikleri, denizlerin henüz çözülmemiş bilmecelerinden biridir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahtapotun vantuzları tutunmanın yanında ne işe yarar?",
+    "correct": "Tat almaya",
+    "wrong": [
+     "Yüzmeye",
+     "Görmeye",
+     "Nefes almaya"
+    ],
+    "explanation": "Vantuzlar dokundukları şeyin tadını da alabilir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kolların kendi kararını verebilmesinin nedeni nedir?",
+    "correct": "Sinir sisteminin kollara yayılmış olması",
+    "wrong": [
+     "Her kolun yüzlerce vantuzla kaplı olması",
+     "Kolların gövdeden birkaç kat uzun olması",
+     "Ahtapotun tam sekiz kola sahip olması"
+    ],
+    "explanation": "Beyninin büyük bir kısmı kollarına dağılmıştır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahtapot dar deliklerden nasıl geçebilir?",
+    "correct": "İskeleti bulunmadığı için",
+    "wrong": [
+     "Kolları çok uzun olduğu için",
+     "Rengini değiştirebildiği için",
+     "Mürekkep püskürttüğü için"
+    ],
+    "explanation": "Vücudunda kemik olmadığı için gagası kadar deliklerden geçebilir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gece kaçan ahtapotun durumu ancak kayıtlarla anlaşılabildi; bu neyi gösterir?",
+    "correct": "İzini bırakmadan hareket ettiğini",
+    "wrong": [
+     "Bakıcıların balıkları saymadığını",
+     "Balıkların kendi tankından atladığını",
+     "Kameraların uzun süre bozuk kaldığını"
+    ],
+    "explanation": "Sabaha kendi tankına döndüğü için kayıtlar izlenene kadar anlaşılmadı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Büyük tehlikede ahtapot ne yapar?",
+    "correct": "Karanlık bir sıvı saçıp uzaklaşır",
+    "wrong": [
+     "Kumun ve kayaların altına gömülür",
+     "Kollarından birini koparıp bırakır",
+     "Suyun yüzeyine çıkıp bekler"
+    ],
+    "explanation": "Koyu mürekkep püskürtüp bulutun arkasında uzaklaşır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Metne göre ahtapotun renk uyumundaki şaşırtıcı yön nedir?",
+    "correct": "Renk görmeden çevresine benzeyebilmesi",
+    "wrong": [
+     "Yalnızca geceleri renk değiştirebilmesi",
+     "Renginin değişmesinin saatler alması",
+     "Derisinin yalnızca kırmızıya dönmesi"
+    ],
+    "explanation": "Bilim insanlarına göre renkleri ayırt edemez ama çevresine çok iyi uyum sağlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahtapotların deneylerde öğrenebildiği şeylerden biri hangisidir?",
+    "correct": "Bazı insanların yüzlerini tanımak",
+    "wrong": [
+     "İnsanlar gibi ses çıkarıp konuşmak",
+     "Karada saatlerce yürüyebilmek",
+     "Duvardaki saati okuyabilmek"
+    ],
+    "explanation": "Bazı insanları yüzlerinden tanımayı öğrenebilirler."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta bilim insanlarını şaşırtan karşıtlık nedir?",
+    "correct": "Zekâlarına rağmen kısa yaşamaları",
+    "wrong": [
+     "Zeki oldukları hâlde öğrenememeleri",
+     "Uzun yaşamalarına karşın az bilmeleri",
+     "Yalnız yaşayıp sürü kurmaları"
+    ],
+    "explanation": "Çok zeki olmalarına karşın çoğu yalnızca bir iki yıl yaşar."
+   }
+  ]
+ },
+ "170": {
+  "title": "Mahallenin Çınarı",
+  "category": "Hikaye/Kurgu",
+  "content": "Mahallenin ortasında çok yaşlı bir çınar ağacı vardı. Gövdesi o kadar kalındı ki, Ali ile iki arkadaşı el ele tutuşsa bile onu saramazdı. Yazın çocuklar onun gölgesinde oynar, yaşlılar altındaki bankta oturup sohbet ederdi. Dallarında serçeler ve kumrular yuva yapar, sabahları mahalleyi cıvıltılarıyla uyandırırdı.\n\nBir sabah ağacın gövdesine bir kâğıt asıldığını gördüler. Kâğıtta, yol genişletileceği için ağacın kesileceği yazıyordu. Ali çok üzüldü. Eve koşup dedesine anlattı. Dedesi, bu ağacın kendi dedesinin zamanından beri orada olduğunu söyledi. Ali'nin babası da çocukken aynı ağacın dallarına tırmanmış, bir keresinde düşüp dizini yaralamıştı.\n\nAli o gece uzun süre uyuyamadı. Ertesi sabah bir şey yapmaya karar verdi. Arkadaşlarıyla birlikte ağacın resmini çizdiler ve altına ağacın neden önemli olduğunu yazdılar. Gölgesini, kuş yuvalarını ve banktaki sohbetleri anlattılar. Mahallede kapı kapı dolaşıp imza topladılar. Topladıkları imza sayısı iki yüzü geçti. Sonra bütün resimleri ve imzaları belediyeye götürdüler.\n\nBelediye başkanı çocukları odasında kabul etti ve resimlere tek tek baktı. Birkaç hafta sonra güzel bir haber geldi. Yol, ağacın etrafından dolaşacak şekilde yeniden çizilmişti. Çınar yerinde kaldı. Gövdesine asılan kâğıdın yerine ise çocukların çizdiği resimlerden biri asıldı. O yaz, gölgesinde oynayan çocuklar, ağacın eskisinden de yeşil göründüğünü söylediler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çınarın gövdesi ne kadar kalındı?",
+    "correct": "Üç kişi kolları ile saramıyordu",
+    "wrong": [
+     "Bir çocuk kolayca sarabiliyordu",
+     "İki kişi rahatça sarabiliyordu",
+     "Uzun bir iple bile ölçülemiyordu"
+    ],
+    "explanation": "Ali ile iki arkadaşı el ele tutuşsa bile saramazdı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ağacın kesilecek olmasının nedeni neydi?",
+    "correct": "Caddenin büyütülecek olması",
+    "wrong": [
+     "Ağacın hastalanmış olması",
+     "Bir bina yapılacak olması",
+     "Büyük dallarının kırılmış olması"
+    ],
+    "explanation": "Kâğıtta yol genişletileceği için kesileceği yazıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dedenin ve babanın anıları ağacın hangi özelliğini vurgular?",
+    "correct": "Kuşaklar boyu yaşamın parçası olmasını",
+    "wrong": [
+     "Meyvelerinin çok lezzetli olmasını",
+     "Dallarının tırmanmaya elverişsizliğini",
+     "Gölgesinin yıldan yıla küçülmesini"
+    ],
+    "explanation": "Ağaç dededen toruna her kuşağın hayatında yer almıştır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar belediyeye neler götürdü?",
+    "correct": "Çizimleri ve imzaları",
+    "wrong": [
+     "Mektuplar ve fotoğraflar",
+     "Fidanlar ve tohumlar",
+     "Ağaçtan düşen kuş yuvaları"
+    ],
+    "explanation": "Resimleri ve topladıkları imzaları götürdüler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çocukların imza toplaması neyi amaçlıyordu?",
+    "correct": "Mahallenin desteğini göstermeyi",
+    "wrong": [
+     "Belediyeden yardım parası istemeyi",
+     "Mahalleye yeni bir park açtırmayı",
+     "Okulda resim ödülü kazanmayı"
+    ],
+    "explanation": "İmzalar, mahallede pek çok kişinin ağacı korumak istediğini gösterir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sonunda yol ile ilgili ne karar verildi?",
+    "correct": "Ağacın çevresinden geçirilmesi",
+    "wrong": [
+     "Yol çalışmasının sonsuza dek durması",
+     "Yolun bir şerit daha genişletilmesi",
+     "Ağacın sökülüp parka taşınması"
+    ],
+    "explanation": "Yol ağacın etrafından dolaşacak şekilde yeniden çizildi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kâğıdın yerine çocukların resminin asılması neyi simgeler?",
+    "correct": "Kötü haberin yerini sevincin alması",
+    "wrong": [
+     "Okulda açılan resim yarışmasını",
+     "Belediyenin çocuklara kızmasını",
+     "Ağacın kesileceği günün yaklaştığını"
+    ],
+    "explanation": "Kesilme haberinin yerini, kurtarılmanın sevinci almıştır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öyküden çıkarılabilecek en uygun ders hangisidir?",
+    "correct": "El ele vermek sonucu değiştirebilir",
+    "wrong": [
+     "Ağaçlar yollardan daha önemsizdir",
+     "Büyüklere soru sormak doğru değildir",
+     "Çocuklar ağaca tırmanmamalıdır"
+    ],
+    "explanation": "Çocukların ortak çabası ağacın kurtulmasını sağlamıştır."
+   }
+  ]
+ },
+ "171": {
+  "title": "Gökkuşağının Sırrı",
+  "category": "Bilgi/Açıklama",
+  "content": "Yağmurdan hemen sonra güneş açtığında, gökyüzünde bazen renkli bir yay belirir. Buna gökkuşağı deriz. Peki bu renkler nereden gelir? Gökkuşağının sırrı, aslında beyaz gördüğümüz güneş ışığının içinde saklıdır. Bu sırrı ilk kez yaklaşık üç yüz elli yıl önce ünlü bilim insanı Isaac Newton, ışığı cam bir prizmadan geçirerek göstermişti.\n\nGüneş ışığı bize beyaz görünür, ama içinde birçok renk bir arada bulunur. Bu renkler kırmızı, turuncu, sarı, yeşil, mavi, lacivert ve mordur. Işık havada yol alırken renkler karışık hâlde ilerler. Ancak ışık bir su damlasının içine girdiğinde yolu biraz eğilir. Her renk farklı ölçüde eğildiği için renkler birbirinden ayrılır. Damlanın arka yüzüne çarpan ışık geri döner ve damladan çıkarken renkler daha da açılır. Havada asılı kalan milyonlarca damla, bu renkleri aynı anda gözümüze gönderir ve gökyüzünde renkli bir yay görürüz.\n\nGökkuşağını görebilmek için güneşin arkamızda, yağmur damlalarının ise önümüzde olması gerekir. Bu yüzden gökkuşağı çoğunlukla sabah erken ya da akşamüstü, güneş alçaktayken görülür. Öğle saatlerinde güneş çok yüksekte olduğu için gökkuşağı genellikle oluşmaz ya da ufkun altında kalır. Uçaktan bakan yolcular ise bazen gökkuşağını yay şeklinde değil, tam bir halka olarak görebilir, çünkü yukarıdan bakınca ufuk gökkuşağının alt yarısını kapatmaz.\n\nGökkuşağını evde de yapabilirsiniz. Güneşli bir günde sırtınızı güneşe verip bahçe hortumuyla havaya ince su serpin. Damlaların arasında küçük bir gökkuşağı belirecektir. Ayrıca güneş gören bir pencerenin önüne içi su dolu bir bardak koyarak yere düşen renkleri de izleyebilirsiniz.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Newton ışığın içindeki renkleri neyle göstermişti?",
+    "correct": "Cam bir parça ile",
+    "wrong": [
+     "Parlak bir ayna ile",
+     "Büyüteç merceği ile",
+     "Yanan bir mum ile"
+    ],
+    "explanation": "Işığı cam bir prizmadan geçirerek göstermişti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Işık su damlasına girince ne olur?",
+    "correct": "Yönü biraz değişir",
+    "wrong": [
+     "Bir anda söner",
+     "Isınıp buhar olur",
+     "Hızı ikiye katlanır"
+    ],
+    "explanation": "Işık damlanın içine girince yolu biraz eğilir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Renklerin birbirinden ayrılmasının nedeni nedir?",
+    "correct": "Her rengin başka açıda sapması",
+    "wrong": [
+     "Damlaların farklı renkte olması",
+     "Güneşin renk renk parlaması",
+     "Rüzgârın ışığı her yöne savurması"
+    ],
+    "explanation": "Her renk farklı ölçüde eğildiği için ayrılır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gökkuşağını görmek için güneş nerede olmalıdır?",
+    "correct": "Arkamızda",
+    "wrong": [
+     "Önümüzde",
+     "Tam tepede",
+     "Sağımızda"
+    ],
+    "explanation": "Güneş arkamızda, damlalar önümüzde olmalıdır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Öğle saatlerinde gökkuşağının pek görülmemesinin nedeni nedir?",
+    "correct": "Güneşin çok yüksekte olması",
+    "wrong": [
+     "Öğlen havanın daha kuru olması",
+     "Öğle vakti yağmurun dinmiş olması",
+     "Öğlen ışığın renksiz olması"
+    ],
+    "explanation": "Güneş çok yüksekte olduğundan gökkuşağı oluşmaz ya da ufkun altında kalır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Uçaktan gökkuşağının halka biçiminde görülebilmesi neyi gösterir?",
+    "correct": "Yerden bakınca bir kısmın gizlendiğini",
+    "wrong": [
+     "Uçak motorlarının gökkuşağı oluşturduğunu",
+     "Gökkuşağının sadece geceleyin oluştuğunu",
+     "Yükseklerde renk sırasının değiştiğini"
+    ],
+    "explanation": "Yerden bakınca ufuk alt yarısını kapatır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Evde gökkuşağı yapmak için hortumla su serperken nasıl durulmalıdır?",
+    "correct": "Arkamız güneşe dönük biçimde",
+    "wrong": [
+     "Yüzümüz güneşe dönük biçimde",
+     "Bir ağacın gölgesinde oturarak",
+     "Gözlerimizi sıkıca kapatarak"
+    ],
+    "explanation": "Sırtımızı güneşe verip suyu havaya serperiz."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın amacı nedir?",
+    "correct": "Okuru kendi denemesine özendirmek",
+    "wrong": [
+     "Gökkuşağının tehlikelerini anlatmak",
+     "Newton'un çocukluğunu tanıtmak",
+     "Bahçenin nasıl sulanacağını öğretmek"
+    ],
+    "explanation": "Son paragraf evde gökkuşağı oluşturmanın yollarını anlatır."
+   }
+  ]
+ },
+ "173": {
+  "title": "Çitteki Eldivenler",
+  "category": "Hikaye/Kurgu",
+  "content": "Kış tatilinin son günüydü. Emre, kar topu oynamak için parka gitmeden önce annesinin ördüğü kırmızı eldivenlerini taktı. Bu eldivenleri çok severdi, çünkü üzerlerinde annesinin özenle işlediği küçük beyaz yıldızlar vardı. Annesi onları bütün bir sonbahar boyunca, akşamları televizyon karşısında oturup ilmek ilmek örmüştü.\n\nParkta arkadaşlarıyla saatlerce oynadılar. Kardan bir kale yaptılar, birbirlerine kar topu attılar. Emre ısınınca eldivenlerini çıkarıp bir bankın üstüne koydu. Akşam olup eve dönerken onları almayı tamamen unuttu. Ancak kapının önüne geldiğinde ellerinin buz gibi olduğunu fark etti.\n\nEmre hemen parka geri koştu. Bankın üstüne baktı, ama eldivenler orada değildi. Çevreyi aradı, karın altını eşeledi. Bir çocuğa ve köpeğini gezdiren yaşlı bir adama sordu, ama kimse kırmızı eldiven görmemişti. Hava kararmaya başlamıştı. Üzgün bir şekilde eve döndü ve annesine olanları anlattı. Annesinin kızacağını sanıyordu, ama annesi ona sarıldı ve yarın birlikte yeniden bakabileceklerini söyledi.\n\nErtesi sabah parka gittiklerinde ilginç bir şey gördüler. Parkın girişindeki çitin üzerine bir eldiven takılmıştı. Bir kırmızı eldiven, yanında da küçük bir not: “Bunu bankın üstünde buldum. Sahibi gelir diye buraya astım.” Diğer eldiven de birkaç adım ötedeki çitin üzerindeydi. İkisi de kuru ve temizdi; biri onları karın içinde ıslanmasın diye özenle silkelemişti.\n\nEmre çok sevindi. Eldivenleri hemen taktı ve ellerinin yeniden ısındığını hissetti. Notu yazan kişiyi tanımıyordu, ama ona bir teşekkür etmek istedi. Eve dönünce bir kâğıda büyük harflerle “Eldivenlerimi bulduğunuz için teşekkür ederim. Emre” yazdı. Notu çitin aynı yerine astı. Ertesi gün baktığında notun altına biri gülen bir yüz çizmişti. O günden sonra Emre de parkta bulduğu kayıp eşyaları çite asmaya başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Emre'nin eldivenlere özellikle değer vermesinin nedeni nedir?",
+    "correct": "Annesinin elinden çıkmış olmaları",
+    "wrong": [
+     "Mağazadan pahalıya alınmış olmaları",
+     "Kardeşinden ödünç alınmış olmaları",
+     "Kazandığı bir ödül olmaları"
+    ],
+    "explanation": "Annesi onları bütün sonbahar ilmek ilmek örmüştü."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Emre eldivenlerini nereye bırakmıştı?",
+    "correct": "Bir bankın üzerine",
+    "wrong": [
+     "Kardan kalenin içine",
+     "Bir ağacın dalına",
+     "Bahçe kapısının önüne"
+    ],
+    "explanation": "Isınınca eldivenleri çıkarıp bir bankın üstüne koydu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Emre parkta eldivenleri kimlere sordu?",
+    "correct": "Bir çocukla köpekli bir adama",
+    "wrong": [
+     "Arkadaşlarına ve öğretmenine",
+     "Parkın bekçisine ve bahçıvana",
+     "Bütün komşularına tek tek"
+    ],
+    "explanation": "Bir çocuğa ve köpeğini gezdiren yaşlı bir adama sordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annenin tepkisi Emre'nin beklediğinden nasıl farklıydı?",
+    "correct": "Öfke yerine şefkat gösterdi",
+    "wrong": [
+     "Ona yeni eldiven satın aldı",
+     "Onu tekrar parka yolladı",
+     "Ona bir hafta ceza verdi"
+    ],
+    "explanation": "Kızacağını sanıyordu ama annesi ona sarıldı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Eldivenlerin kuru ve temiz bulunması bulan kişi hakkında ne düşündürür?",
+    "correct": "Başkasının eşyasına özen gösterdiğini",
+    "wrong": [
+     "Eldivenleri kendisi için istediğini",
+     "Emre'nin ailesini yakından tanıdığını",
+     "Parkta bekçi olarak çalıştığını"
+    ],
+    "explanation": "Eldivenleri ıslanmasın diye silkelemiş, özenle çite asmıştı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Emre'nin notuna ertesi gün ne eklenmişti?",
+    "correct": "Gülümseyen bir çizim",
+    "wrong": [
+     "Kısa bir cevap mektubu",
+     "Bulan kişinin adı",
+     "Bir çift yeni eldiven"
+    ],
+    "explanation": "Notun altına biri gülen bir yüz çizmişti."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Emre'nin de kayıp eşyaları çite asmaya başlaması neyi gösterir?",
+    "correct": "Gördüğü iyiliği sürdürmek istediğini",
+    "wrong": [
+     "Bulduğu eşyaları satmak istediğini",
+     "Parktaki çitleri süslemek istediğini",
+     "Annesinin kızmasından korktuğunu"
+    ],
+    "explanation": "Kendisine yapılan iyiliği o da başkalarına yapmaya başlar."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana düşüncesi hangisidir?",
+    "correct": "Bir iyilik yeni iyiliklere yol açar",
+    "wrong": [
+     "Karlı havada parkta oynamak tehlikelidir",
+     "Kaybolan her eşya er geç bulunur",
+     "Eldivenler mutlaka elde örülmelidir"
+    ],
+    "explanation": "Yabancının iyiliği Emre'yi de iyilik yapmaya yöneltir."
+   }
+  ]
+ },
+ "175": {
+  "title": "Buzların Efendisi",
+  "category": "Bilgi/Açıklama",
+  "content": "Kutup ayıları, dünyanın en soğuk yerlerinden biri olan Kuzey Kutbu'nda yaşar. Burada kışın sıcaklık sıfırın altında kırk dereceye kadar düşebilir. Peki kutup ayıları bu soğukta nasıl üşümez? Bunun cevabı, vücutlarının bu zorlu yere uyum sağlamış özelliklerinde gizlidir.\n\nKutup ayılarının kürkü beyaz görünür, ama aslında tüyleri renksizdir ve içleri boştur. Bu boş tüyler, ışığı yansıttığı için beyaz görünür. Kürkün altındaki derileri ise simsiyahtır, yani koyu renklidir. Siyah deri, güneşin sıcaklığını daha iyi emer. Derinin altında da kalın bir yağ tabakası bulunur. Bu yağ, vücut ısısının dışarı kaçmasını önler ve ayıyı buzlu suda yüzerken de korur.\n\nKutup ayıları aynı zamanda çok iyi birer yüzücüdür. Saatlerce, hatta günlerce durmadan yüzebilirler. Ön patileri bir tabak kadar geniştir. Bu geniş patilerle hem kürek çeker gibi suda ilerler hem de karın üzerinde batmadan yürürler. Patilerinin altındaki küçük tümsekler ise kaygan buzda kaymalarını önler. Asıl yiyecekleri foklardır. Fokları yakalamak için buzun üzerindeki deliklerin başında sabırla beklerler. Fok nefes almak için yüzeye çıktığında ayı hızla davranır.\n\nNe yazık ki kutup ayılarının yaşadığı buzullar her yıl biraz daha eriyor. Buz azaldıkça ayıların avlanması zorlaşıyor. Bazı ayılar yiyecek bulmak için eskisinden çok daha uzun mesafeler yüzmek zorunda kalıyor ve bu yolculuklar onları yoruyor. Bilim insanları, dünyanın ısınmasını yavaşlatmanın bu güzel hayvanları korumanın en önemli yolu olduğunu söylüyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kuzey Kutbu'nda kışın sıcaklık kaç dereceye kadar düşebilir?",
+    "correct": "Eksi kırk",
+    "wrong": [
+     "Eksi yirmi",
+     "Eksi beş",
+     "Eksi yüz"
+    ],
+    "explanation": "Sıcaklık sıfırın altında kırk dereceye kadar düşebilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup ayısının tüyleri gerçekte nasıldır?",
+    "correct": "Saydam ve oyuk",
+    "wrong": [
+     "Beyaz ve dolu",
+     "Siyah ve kalın",
+     "Sarımsı ve kısa"
+    ],
+    "explanation": "Tüyleri renksizdir ve içleri boştur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Siyah derinin ayıya sağladığı yarar nedir?",
+    "correct": "Güneşten gelen ısıyı tutması",
+    "wrong": [
+     "Ayının karda görünmez olması",
+     "Fokları uzaktan korkutması",
+     "Derinin suyu hiç geçirmemesi"
+    ],
+    "explanation": "Siyah deri güneşin sıcaklığını daha iyi emer."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yağ tabakasının özellikle yüzerken önemli olmasının nedeni nedir?",
+    "correct": "Buzlu suda vücut ısısını koruması",
+    "wrong": [
+     "Ayının suda daha hızlı ilerlemesi",
+     "Tüylerin suda hemen kuruması",
+     "Ayının su altında kalabilmesi"
+    ],
+    "explanation": "Yağ, ısının kaçmasını önleyerek buzlu suda da korur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Patilerin altındaki tümsekler ne işe yarar?",
+    "correct": "Kaymayı engeller",
+    "wrong": [
+     "Suda hızı artırır",
+     "Avı yakalar",
+     "Isıyı saklar"
+    ],
+    "explanation": "Tümsekler kaygan buzda kaymalarını önler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ayının deliğin başında beklemesi hangi bilgiye dayanır?",
+    "correct": "Fokun nefes için yukarı geleceğine",
+    "wrong": [
+     "Fokların delikte yuva yaptığına",
+     "Buzun orada kendiliğinden kırılacağına",
+     "Diğer ayıların yardıma geleceğine"
+    ],
+    "explanation": "Fok nefes almak için yüzeye çıkınca ayı hızla davranır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Buzların erimesi ayıları nasıl etkiliyor?",
+    "correct": "Yiyecek bulmalarını güçleştiriyor",
+    "wrong": [
+     "Kürklerini daha koyu renge çeviriyor",
+     "Daha fazla yavru yapmalarını sağlıyor",
+     "Yüzmeyi unutmalarına neden oluyor"
+    ],
+    "explanation": "Buz azaldıkça avlanmak zorlaşır ve daha uzun yüzmeleri gerekir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki tutumu nasıldır?",
+    "correct": "Kaygılı ve uyarıcı",
+    "wrong": [
+     "Neşeli ve şakacı",
+     "İlgisiz ve tarafsız",
+     "Öfkeli ve suçlayıcı"
+    ],
+    "explanation": "Buzulların erimesinden kaygılanır ve korumak için çözüm gösterir."
+   }
+  ]
+ },
+ "176": {
+  "title": "En Sıcak Resim",
+  "category": "Hikaye/Kurgu",
+  "content": "Selin'in en büyük hayali, okulun resim yarışmasını kazanmaktı. Bu yıl yarışmanın konusu “Benim Mahallem” idi. Selin günlerce ne çizeceğini düşündü. Sonunda mahallelerindeki küçük fırını çizmeye karar verdi. Fırıncı Hüseyin Amca her sabah çocuklara sıcak simit uzatır, herkese adıyla seslenirdi. Selin'e göre mahallenin kalbi bu fırındı; sabahları bütün sokak onun kokusuyla uyanırdı.\n\nSelin resmine büyük bir özenle başladı. Fırının mavi kapısını, camdaki ekmekleri, kapının önünde simit bekleyen çocukları çizdi. Her akşam okuldan döner dönmez masasına oturuyor, saatlerce boyuyordu. Hüseyin Amca'nın beyaz şapkasını tam doğru çizebilmek için fırına üç kez gidip ona dikkatle bakmıştı. Resmi bitirmesine bir gün kala, küçük kardeşi Can yanlışlıkla resmin üzerine bir bardak meyve suyu döktü. Fırının kapısı da, simit bekleyen çocuklar da turuncu bir lekenin altında kaldı.\n\nSelin önce çok kızdı ve ağladı. Kardeşine bağırdı, sonra odasına kapanıp kapıyı çarptı. Bütün emeğinin bir anda boşa gittiğini düşünüyordu. Can da üzülmüştü; köşede başı önünde bekliyordu. Annesi Selin'in yanına oturdu ve ona, lekenin resmi bitirmediğini, belki ona yeni bir şey katabileceğini söyledi. Selin gözyaşlarını silip yeniden masaya oturdu ve bir süre lekeye uzun uzun baktı. Turuncu leke, fırının bacasından çıkan sıcak bir buhara benziyordu.\n\nSelin fırçasını aldı ve lekenin çevresine ince çizgiler ekledi. Leke, fırından yükselen sıcak ekmek kokusuna dönüştü. Hatta Can'ı da yanına çağırdı ve ona, kokunun içine küçük kuşlar çizdirdi. Can kuşları çizerken dilini dişlerinin arasına sıkıştırmış, büyük bir dikkatle çalışıyordu. Selin onu izlerken öfkesinin yavaş yavaş geçtiğini fark etti.\n\nYarışmada Selin birinci olmadı, ama jüri onun resmine “en sıcak resim” ödülünü verdi. Jüri, resimdeki sıcaklığın neredeyse kokusunun duyulabileceğini söyledi. Selin ödülü alırken Can'ın elini tuttu. Çünkü bu ödülü aslında ikisinin birlikte kazandığını düşünüyordu. Eve dönerken de ikisi Hüseyin Amca'nın fırınına uğrayıp birer simit aldılar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selin resminde neyi çizmeye karar verdi?",
+    "correct": "Semtteki ekmekçiyi",
+    "wrong": [
+     "Okulun bahçesini",
+     "Kendi evlerinin önünü",
+     "Mahalle parkını"
+    ],
+    "explanation": "Mahallelerindeki küçük fırını çizmeye karar verdi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in fırına üç kez gitmesi onun hangi özelliğini gösterir?",
+    "correct": "Titiz ve özenli olmasını",
+    "wrong": [
+     "Simit yemeyi çok sevmesini",
+     "Her işte acele etmesini",
+     "Herkesten çok utanmasını"
+    ],
+    "explanation": "Şapkayı doğru çizebilmek için gidip dikkatle bakmıştı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Resmi kim ve nasıl bozdu?",
+    "correct": "Kardeşi bir içecek dökerek",
+    "wrong": [
+     "Annesi yanlışlıkla su dökerek",
+     "Selin, boya kabını devirerek",
+     "Can, resmi ikiye yırtarak"
+    ],
+    "explanation": "Küçük kardeşi Can yanlışlıkla meyve suyu döktü."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annenin sözleri Selin'e nasıl bir bakış kazandırdı?",
+    "correct": "Kötü görüneni fırsata çevirme",
+    "wrong": [
+     "Resmi en baştan yeniden çizme",
+     "Kardeşini hemen cezalandırma",
+     "Yarışmaya katılmaktan vazgeçme"
+    ],
+    "explanation": "Lekenin resme yeni bir şey katabileceğini söyledi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selin'e turuncu leke neye benziyordu?",
+    "correct": "Bacadan çıkan dumana",
+    "wrong": [
+     "Bir turuncu kediye",
+     "Akşamüstü batan güneşe",
+     "Masadaki bir portakala"
+    ],
+    "explanation": "Leke fırının bacasından çıkan sıcak buhara benziyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Selin'in Can'ı da çizmeye çağırması neyi gösterir?",
+    "correct": "Kardeşini bağışladığını",
+    "wrong": [
+     "Resimden sıkıldığını",
+     "Kuş çizmeyi bilmediğini",
+     "Annesinden korktuğunu"
+    ],
+    "explanation": "Kardeşini resme katarak onu affettiğini gösterir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selin'in resmi hangi ödülü aldı?",
+    "correct": "En sıcak resim ödülü",
+    "wrong": [
+     "Yarışma birinciliği",
+     "Jüri özel ödülü",
+     "En renkli resim ödülü"
+    ],
+    "explanation": "Jüri onun resmine en sıcak resim ödülünü verdi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öyküden çıkarılabilecek ders hangisidir?",
+    "correct": "Aksilikler bazen yeni güzellikler doğurur",
+    "wrong": [
+     "Yarışmalarda yalnız birincilik değerlidir",
+     "Küçük kardeşlerden uzak durulmalıdır",
+     "Resimler meyve suyundan korunmalıdır"
+    ],
+    "explanation": "Lekeden doğan fikir resme yeni bir değer katmıştır."
+   }
+  ]
+ }
+}

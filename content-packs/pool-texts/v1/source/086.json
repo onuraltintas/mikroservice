@@ -1,0 +1,113 @@
+{
+ "86": {
+  "title": "Uzayda Bir Gün",
+  "category": "Bilgi/Açıklama",
+  "content": "Başımızın yaklaşık dört yüz kilometre üstünde, Dünya'nın çevresinde dönen büyük bir laboratuvar var: Uluslararası Uzay İstasyonu. Farklı ülkelerin birlikte inşa ettiği bu istasyon, bir futbol sahası kadar yer kaplar. Parçaları yıllar boyunca uzaya taşınarak birleştirilmiştir. İstasyonda farklı ülkelerden gelen astronotlar aylarca birlikte yaşar ve çalışır. Peki uzayda bir gün nasıl geçer?\n\nUzay istasyonu, Dünya'nın çevresindeki bir turu yaklaşık doksan dakikada tamamlar. Bu yüzden astronotlar bir günde on altı kez güneşin doğuşunu ve batışını görür. Bu durumda gece ile gündüzü ayırmak zorlaşır. Bu kadar sık değişen ışık, vücudun uyku düzenini şaşırtabilir. Astronotlar bu nedenle günlerini saate göre düzenler. Belirli saatlerde uyanır, çalışır, yemek yer ve uyurlar.\n\nİstasyondaki en büyük fark, ağırlıksızlıktır. Astronotlar yere basmaz, havada süzülür. Bir yerden bir yere giderken duvarlardaki tutamaklara tutunarak kendilerini iterler. Bırakılan bir kalem yere düşmez, havada asılı kalır. Bu yüzden istasyondaki eşyaların çoğu cırt cırtlı bantlarla duvarlara tutturulur. İlginç bir başka değişiklik de astronotların boyudur. Ağırlıksız ortamda omurgadaki sıkışma azaldığı için astronotların boyu birkaç santimetre uzayabilir. Dünya'ya döndüklerinde ise boyları eski hâline gelir.\n\nUyumak da Dünya'dakinden farklıdır. Astronotlar, küçük odalarının duvarına bağlanmış uyku tulumlarında uyur. Havada süzülüp bir yere çarpmamak için tulumun içine girip fermuarını kapatırlar. Ağırlıksızlıkta yukarı ve aşağı olmadığı için, dik ya da yan uyumak arasında bir fark yoktur. Bazı astronotlar ilk gecelerde kollarının havada süzülmesine alışamadıklarını, uyurken kollarını tulumun içine sokmak zorunda kaldıklarını anlatır.\n\nYemek yemek de dikkat ister. Yiyecekler genellikle paketlerde gelir. Ekmek kırıntıları havada uçuşup cihazlara kaçabileceği için astronotlar ekmek yerine çoğunlukla ince ve yuvarlak lavaş benzeri ekmekler yer. Sıvılar bardaktan içilmez; çünkü su, bardaktan çıkıp havada yuvarlak damlalar hâlinde süzülür. Bu yüzden içecekler pipetli torbalardan içilir. Temizlik için de su idareli kullanılır. İstasyonda duş yoktur; astronotlar ıslak havlularla temizlenir ve köpürmeyen özel şampuanlar kullanır.\n\nİstasyonda su çok değerlidir, çünkü her damla Dünya'dan getirilmek zorundadır. Bu nedenle istasyonda kullanılan suyun büyük bölümü geri kazanılır. Astronotların nefesindeki nem ve hatta idrarları bile özel makinelerde temizlenerek yeniden içme suyuna dönüştürülür.\n\nAstronotlar her gün yaklaşık iki saat spor yapar. Bunun önemli bir nedeni vardır. Ağırlıksız ortamda kaslar ve kemikler, vücudu taşımak zorunda kalmadığı için zamanla zayıflar. Düzenli egzersiz, bu kaybı azaltır. Yine de aylarca uzayda kalan astronotlar Dünya'ya döndüklerinde ilk günlerde yürümekte ve dengelerini korumakta zorlanabilir. Vücutlarının yeniden yerçekimine alışması biraz zaman alır. Astronotlar koşu bandında koşarken düşmemek için kendilerini kemerlerle banda bağlar.\n\nAstronotların günlerinin büyük bölümü ise bilimsel deneylerle geçer. Bazı günler istasyonun dışına çıkıp onarım yapmaları da gerekir; bu uzay yürüyüşleri saatlerce sürebilir. Ağırlıksızlığın bitkiler, hayvanlar ve insan vücudu üzerindeki etkileri incelenir. Bu deneylerden elde edilen bilgiler, hem gelecekteki uzun uzay yolculuklarına hazırlanmak hem de Dünya'daki bazı sorunları çözmek için kullanılır.\n\nBütün bu zorluklara rağmen pek çok astronot, istasyondaki en güzel anın pencereden Dünya'ya bakmak olduğunu söyler. Yukarıdan bakıldığında ülkeler arasındaki sınırlar görünmez; mavi okyanuslar, beyaz bulutlar ve geceleri ışıl ışıl parlayan şehirler, gezegenimizin ne kadar güzel ve ne kadar korunmaya değer olduğunu hatırlatır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uluslararası Uzay İstasyonu yeryüzünden yaklaşık ne kadar yüksektedir?",
+    "correct": "400 kilometre",
+    "wrong": [
+     "40 kilometre",
+     "4 bin kilometre",
+     "40 bin kilometre"
+    ],
+    "explanation": "İstasyon başımızın yaklaşık dört yüz kilometre üstündedir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Astronotların günlerini saate göre düzenlemesinin nedeni nedir?",
+    "correct": "Gün ışığının sık değişip zamanı karıştırması",
+    "wrong": [
+     "İstasyonda dışarıyı gösteren pencere olmaması",
+     "Dünya'daki ailelerinin bunu talep etmesi",
+     "İstasyonun Dünya çevresini günde bir kez dolaşması"
+    ],
+    "explanation": "İstasyon günde on altı kez gün doğumu yaşadığı için gece ile gündüz karışır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İstasyondaki eşyaların duvarlara tutturulmasının nedeni nedir?",
+    "correct": "Ortalıkta süzülüp dağılmamaları için",
+    "wrong": [
+     "Kırılıp parçalanmamaları için",
+     "Astronotların onları çalmaması için",
+     "Duvarların daha düzgün görünmesi için"
+    ],
+    "explanation": "Ağırlıksızlıkta bırakılan eşyalar havada asılı kalır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzayda astronotların boyunun uzamasının nedeni nedir?",
+    "correct": "Belkemiğindeki basıncın azalması",
+    "wrong": [
+     "Uzayda daha çok beslenmeleri",
+     "Her gün iki saat spor yapmaları",
+     "Tulumlarında dik biçimde uyumaları"
+    ],
+    "explanation": "Ağırlıksız ortamda omurgadaki sıkışma azaldığı için boy birkaç santimetre uzayabilir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Astronotların sıradan ekmek yerine ince ekmekler yemesinin nedeni nedir?",
+    "correct": "Kırıntıların aletlere zarar verebilmesi",
+    "wrong": [
+     "Normal ekmeğin uzayda çabuk küflenmesi",
+     "İnce ekmeklerin daha çok enerji vermesi",
+     "İstasyonda hiç ekmek fırını olmaması"
+    ],
+    "explanation": "Ekmek kırıntıları havada uçuşup cihazlara kaçabilir."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "İstasyonda su ihtiyacı nasıl karşılanır?",
+    "correct": "Kullanılan su temizlenip geri kazanılır",
+    "wrong": [
+     "Her hafta Dünya'dan yeni su gönderilir",
+     "Uzaydaki buzlar eritilerek elde edilir",
+     "Astronotlar çok az su içerek idare eder"
+    ],
+    "explanation": "Nefesteki nem ve idrar bile temizlenerek içme suyuna dönüştürülür."
+   },
+   {
+    "p": 7,
+    "type": 2,
+    "bloom": 5,
+    "text": "Astronotların her gün spor yapmasının asıl amacı nedir?",
+    "correct": "Kas ve kemiklerin zayıflamasını önlemek",
+    "wrong": [
+     "Boş saatlerini eğlenerek değerlendirmek",
+     "Koşu bandının bozulmasını engellemek",
+     "Uzay yürüyüşlerine yarışarak hazırlanmak"
+    ],
+    "explanation": "Ağırlıksızlıkta kaslar ve kemikler zayıflar; egzersiz bu kaybı azaltır."
+   },
+   {
+    "p": 9,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta Dünya'nın uzaydan görünüşüyle ilgili vurgulanan düşünce nedir?",
+    "correct": "Gezegenimizin değerli ve korunmaya layık olduğu",
+    "wrong": [
+     "Ülke sınırlarının uzaydan kolayca ayırt edildiği",
+     "Astronotların Dünya'ya dönmek istemediği",
+     "Okyanusların uzaydan bakınca görünmediği"
+    ],
+    "explanation": "Yukarıdan bakıldığında sınırlar görünmez; gezegenin güzelliği ve korunması gerektiği hatırlanır."
+   }
+  ]
+ }
+}
