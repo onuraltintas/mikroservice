@@ -89,7 +89,7 @@ export function sectionsFor(site: SiteKey, group: string) {
 export const SITE_KIND_FORMS: Record<SiteKind, SiteKindForm> = {
   site: { label: 'Site ayarları', fields: ['title', 'body', 'seo'], titleLabel: 'Site adı', bodyLabel: 'Alt bilgideki tanıtım cümlesi', single: true },
   hero: { label: 'Giriş bölümü', fields: ['title', 'body', 'link', 'secondaryLink', 'image'], titleLabel: 'Başlık', bodyLabel: 'Açıklama', linkLabel: 'Ana düğme', single: true },
-  section: { label: 'Bölüm başlığı', fields: ['slug', 'title', 'body'], titleLabel: 'Başlık', bodyLabel: 'Başlığın altındaki açıklama' },
+  section: { label: 'Bölüm başlığı', fields: ['slug', 'title', 'body', 'link'], titleLabel: 'Başlık', bodyLabel: 'Başlığın altındaki açıklama', linkLabel: 'Bağlantı (yalnız ana sayfadaki Ürünler bölümünde görünür)' },
   product: { label: 'Ürün kartı', fields: ['title', 'subtitle', 'body', 'highlights', 'brand', 'link', 'image'], titleLabel: 'Ürün adı', subtitleLabel: 'Kısa tanım', bodyLabel: 'Açıklama', linkLabel: 'Karta tıklanınca' },
   audience: { label: 'Kimler için kartı', fields: ['title', 'body', 'icon', 'link'], titleLabel: 'Başlık', bodyLabel: 'Metin', linkLabel: 'Bağlantı' },
   faq: { label: 'Soru', fields: ['title', 'body'], titleLabel: 'Soru', bodyLabel: 'Yanıt' },

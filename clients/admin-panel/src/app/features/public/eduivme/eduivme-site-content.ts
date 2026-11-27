@@ -66,6 +66,22 @@ export const BRAND_MARKS: Record<SiteBrand, { mark: string; scope: 'eduivme' | '
   km: { mark: '/brand/kurs-yonetimi.svg', scope: 'eduivme' }
 };
 
+/** The product a link leads to, by its address: a card that sends visitors to a product's own site wears that product's colours. */
+export function brandForLink(url: string | null | undefined): SiteBrand | null {
+  if (!url) return null;
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const on = (domain: string) => host === domain || host.endsWith(`.${domain}`);
+  if (on('maxkoc.com')) return 'maxkoc';
+  if (on('masterhizliokuma.com')) return 'ho';
+  if (on('maxkampus.com')) return 'km';
+  return null;
+}
+
 /** Stroke icons (24 px grid) the admin picks by name. */
 export const SITE_ICON_PATHS: Record<SiteIcon, string> = {
   calendar: 'M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',

@@ -61,6 +61,9 @@ import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.compon
               <header class="head">
                 <h2 id="products-title">{{ section(home, 'products')?.title || 'Ürünler' }}</h2>
                 @if (section(home, 'products')?.body) { <p>{{ section(home, 'products')?.body }}</p> }
+                @if (section(home, 'products')?.linkLabel && section(home, 'products')?.linkUrl) {
+                  <a class="head__link" [eduivmeHref]="section(home, 'products')!.linkUrl">{{ section(home, 'products')!.linkLabel }}</a>
+                }
               </header>
               <ul class="products">
                 @for (product of home.products; track product.id) {
