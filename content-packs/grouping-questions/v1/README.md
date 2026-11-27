@@ -1,5 +1,9 @@
 # Kelime Gruplama paket metinleri: anlama soruları v1 (26.11.2026)
 
+> **UYGULANMAZ (26.11.2026).** Paketin 60 metninden 57'si 18.11.2026'da canlıda başka metinlerle değiştirilmişti
+> (`content-packs/reading-content-v3`). Bu sorular eski metinlere göre yazıldı; md5 koruması canlıda durdurdu ve
+> hiçbir şey değişmedi. Yerine: `content-packs/shared-pool/v1` ve canlı metinlere göre yazılan 8'er soru.
+
 Kelime Gruplama her metinden sonra tam 4 anlama sorusu sorar ve yalnız en az 4 geçerli sorusu olan metinleri seçer
 (kullanıcı kararı, 26.11.2026). `content-packs/grouping/v1` paketinin 60 metninin sorusu yoktu. Bu paket her birine
 4 soru ekler (toplam 240). Metinler ve egzersizler değişmez.
