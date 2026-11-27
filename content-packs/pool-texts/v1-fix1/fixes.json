@@ -1,0 +1,46 @@
+[
+  {
+    "id": "d7b70000-0000-5000-8000-000000002005",
+    "why": "Bay Havuç: Mert'in neden güldüğü metinde yazmıyordu; soru metinde yazan tepkiye çevrildi.",
+    "questionText": "Mert'in \"Bay Havuç\" adına çok gülmesi neyi gösterir?",
+    "explanation": "Elif kardan adama Bay Havuç adını koyunca Mert bu ada çok güldü; adı komik buldu.",
+    "optionA": "Ablasının bulduğu adı beğenmediğini",
+    "optionB": "Kardan adamdan biraz korktuğunu",
+    "optionC": "Oyundan çabucak sıkılıp gittiğini",
+    "optionD": "Adı komik ve eğlenceli bulduğunu",
+    "correctAnswer": "D"
+  },
+  {
+    "id": "d7b70000-0000-5000-8000-000000001065",
+    "why": "Buzların Babaları: çeldiriciler okumadan elenecek kadar zayıftı; doğru şık metindeki bilgiye bağlandı.",
+    "questionText": "Erkek penguen yumurtayı neden ayaklarının üstünde taşır?",
+    "explanation": "Erkek yumurtayı ayaklarının üstüne koyup deri katmanıyla örter ve soğukta sıcak tutar.",
+    "optionA": "Dişi dönünce yumurtayı ona vermek için",
+    "optionB": "Yumurtayı yırtıcılardan gizlemek için",
+    "optionC": "Denize giderken yanında götürmek için",
+    "optionD": "Yumurtayı soğuktan iyice korumak için",
+    "correctAnswer": "D"
+  },
+  {
+    "id": "d7b70000-0000-5000-8000-000000000410",
+    "why": "İlk Bağış: doğru şıkkın ifadesi bozuktu.",
+    "questionText": "Selin bağış yapmaya karar vermeden önce neden çadırın önünde bekledi?",
+    "explanation": "Selin iğneden çok korktuğu için çadırın önünde birkaç dakika kararsız kaldı.",
+    "optionA": "İğnenin acıtmasından çekindiği için",
+    "optionB": "Babasının gelmesini beklediği için",
+    "optionC": "Kampüste dersine geç kaldığı için",
+    "optionD": "Formu nereden alacağını bilmediği için",
+    "correctAnswer": "A"
+  },
+  {
+    "id": "d7b70000-0000-5000-8000-000000000196",
+    "why": "Kaçan Otobüs: bir çeldirici anlamsızdı; metinle ilgili akla yatkın bir çeldiriciyle değiştirildi.",
+    "questionText": "Yönetici Can'ın cevabını neden en somut buldu?",
+    "explanation": "Can zor durumla nasıl başa çıktığını o sabah yaşadığı bir örnekle anlattı.",
+    "optionA": "Yeni yaşanmış bir olaya dayandığı için",
+    "optionB": "Can ezberlenmiş cümleleri tekrarladığı için",
+    "optionC": "Can gecikmesi için özür dilediği için",
+    "optionD": "Şirketin sitesinden bilgi verdiği için",
+    "correctAnswer": "A"
+  }
+]
