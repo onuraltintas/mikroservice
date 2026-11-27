@@ -9,6 +9,7 @@ import { CookiesComponent } from './cookies/cookies.component';
 import { KvkkComponent } from './kvkk/kvkk.component';
 import { PrivacyComponent } from './privacy/privacy.component';
 import { TermsComponent } from './terms/terms.component';
+import { PUBLIC_SITE_URL } from '../../core/utils/public-site-url';
 
 interface LegalPageCase {
   component: Type<unknown>;
@@ -106,7 +107,7 @@ describe('Legal pages SEO', () => {
 
       it('sets its own canonical, title, description and social url on init', () => {
         create();
-        const ownUrl = `${window.location.origin}${page.path}`;
+        const ownUrl = `${PUBLIC_SITE_URL}${page.path}`;
         const description = meta('name="description"');
 
         expect(canonical()).toBe(ownUrl);
@@ -124,7 +125,7 @@ describe('Legal pages SEO', () => {
       it('restores the previous canonical, title and meta tags when it is left', () => {
         create().destroy();
 
-        expect(canonical()).toBe(`${window.location.origin}/`);
+        expect(canonical()).toBe(`${PUBLIC_SITE_URL}/`);
         expect(document.title).toBe(PREVIOUS.title);
         expect(meta('name="description"')).toBe(PREVIOUS.description);
         expect(meta('property="og:title"')).toBe(PREVIOUS.ogTitle);

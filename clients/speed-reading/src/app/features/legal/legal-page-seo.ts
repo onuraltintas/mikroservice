@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { SeoService } from '../../core/services/seo.service';
+import { canonicalPageUrl } from '../../core/utils/public-site-url';
 
 export interface LegalPageSeoConfig {
   /** Route path of the page, for example `/legal/cookies`. */
@@ -37,7 +38,7 @@ export class LegalPageSeo {
   private readonly seo = inject(SeoService);
 
   apply(config: LegalPageSeoConfig): () => void {
-    const url = `${this.document.location.origin}${config.path}`;
+    const url = canonicalPageUrl(config.path);
     const title = `${config.heading} | ${SITE_NAME}`;
     const keys = [...TITLE_KEYS, ...DESCRIPTION_KEYS, ...URL_KEYS];
 

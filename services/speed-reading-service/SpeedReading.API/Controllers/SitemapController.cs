@@ -22,13 +22,10 @@ public sealed class SitemapController(ISpeedReadingCms cms, IConfiguration confi
         var baseUrl = ResolvePublicBaseUrl(configuration).TrimEnd('/');
         XNamespace sitemap = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
-        var locations = new List<string> { baseUrl + "/" };
-        locations.AddRange(pages.Items
-            .Where(page => page.IsPublished && !page.SeoSettings.NoIndex)
-            .Select(page => $"{baseUrl}/pages/{Uri.EscapeDataString(page.Slug)}"));
-        locations.AddRange(posts.Items
-            .Where(post => post.IsPublished && !post.SeoSettings.NoIndex)
-            .Select(post => $"{baseUrl}/blog/{Uri.EscapeDataString(post.Slug)}"));
+        var locations = BuildLocations(
+            baseUrl,
+            pages.Items.Where(page => page.IsPublished && !page.SeoSettings.NoIndex).Select(page => page.Slug),
+            posts.Items.Where(post => post.IsPublished && !post.SeoSettings.NoIndex).Select(post => post.Slug));
 
         var document = new XDocument(
             new XDeclaration("1.0", "UTF-8", null),
@@ -36,6 +33,53 @@ public sealed class SitemapController(ISpeedReadingCms cms, IConfiguration confi
                 new XElement(sitemap + "url", new XElement(sitemap + "loc", location)))));
 
         return Content(document.ToString(SaveOptions.DisableFormatting), "application/xml", Encoding.UTF8);
+    }
+
+    // Public pages of the standalone site that are not CMS content (27.11.2026).
+    // Keep in step with clients/speed-reading public and legal routes.
+    public static readonly string[] StaticPaths =
+    [
+        "/",
+        "/hakkimizda",
+        "/iletisim",
+        "/fiyatlandirma",
+        "/blog",
+        "/sss",
+        "/legal/privacy",
+        "/legal/kvkk",
+        "/legal/cookies",
+        "/legal/terms",
+        "/legal/speed-reading-newsletter-consent",
+    ];
+
+    // First path segments that belong to app routes; a CMS page with such a slug is
+    // not reachable at /{slug} and is left out.
+    private static readonly HashSet<string> ReservedSegments = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "admin", "auth", "student", "teacher", "editor", "coaching", "legal", "error", "no-access",
+        "blog", "sss", "hakkimizda", "iletisim", "fiyatlandirma", "api", "pages",
+    };
+
+    // CMS pages are served at /{slug} by the client (public.routes ':slug'), blog posts at /blog/{slug}.
+    public static IReadOnlyList<string> BuildLocations(
+        string baseUrl,
+        IEnumerable<string> pageSlugs,
+        IEnumerable<string> postSlugs)
+    {
+        var root = baseUrl.TrimEnd('/');
+        var paths = new List<string>(StaticPaths);
+        paths.AddRange(pageSlugs
+            .Select(slug => slug.Trim().Trim('/'))
+            .Where(slug => slug.Length > 0 && !slug.Contains('/') && !ReservedSegments.Contains(slug))
+            .Select(slug => "/" + Uri.EscapeDataString(slug)));
+        paths.AddRange(postSlugs
+            .Select(slug => slug.Trim().Trim('/'))
+            .Where(slug => slug.Length > 0 && !slug.Contains('/'))
+            .Select(slug => "/blog/" + Uri.EscapeDataString(slug)));
+        return paths
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(path => root + path)
+            .ToList();
     }
 
     private string ResolvePublicBaseUrl(IConfiguration configuration)

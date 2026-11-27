@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { canonicalPageUrl } from '../utils/public-site-url';
 
 export interface SeoConfig {
     title?: string;
@@ -68,8 +69,9 @@ export class SeoService {
         }
 
         // URL
-        const canonicalUrl = seoConfig.canonicalUrl || seoConfig.url;
-        if (canonicalUrl) {
+        const configuredUrl = seoConfig.canonicalUrl || seoConfig.url;
+        if (configuredUrl) {
+            const canonicalUrl = canonicalPageUrl(configuredUrl);
             this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
             this.meta.updateTag({ name: 'twitter:url', content: canonicalUrl });
             this.setCanonicalUrl(canonicalUrl);
@@ -181,7 +183,7 @@ export class SeoService {
             document.head.appendChild(link);
         }
 
-        link.setAttribute('href', url);
+        link.setAttribute('href', canonicalPageUrl(url));
     }
 
     setNoIndex(noIndex: boolean): void {

@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SafeHtmlPipe } from '../../../../shared/pipes/safe-html.pipe';
+import { canonicalPageUrl } from '../../../../core/utils/public-site-url';
 
 @Component({
     selector: 'app-dynamic-page',
@@ -64,7 +65,7 @@ export class DynamicPageComponent implements OnInit {
     }
 
     updateMetaTags(page: PageDto): void {
-        const fallbackUrl = `${window.location.origin}/${page.slug}`;
+        const fallbackUrl = canonicalPageUrl(`/${page.slug}`);
         const settings = page.seoSettings ?? { noIndex: false };
         const canonicalUrl = settings.canonicalUrl?.trim() || fallbackUrl;
         const image = settings.ogImage?.trim() || undefined;

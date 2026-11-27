@@ -5,6 +5,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { PlatformLegalPagesService } from '../../../core/services/platform-legal-pages.service';
 import { CookiesComponent } from './cookies.component';
+import { PUBLIC_SITE_URL } from '../../../core/utils/public-site-url';
 
 describe('CookiesComponent', () => {
   let fixture: ComponentFixture<CookiesComponent>;
@@ -56,13 +57,13 @@ describe('CookiesComponent', () => {
   });
 
   it('points the canonical link at its own /legal/cookies URL, not the home page', () => {
-    expect(canonicalHref()).toBe(`${window.location.origin}/legal/cookies`);
-    expect(canonicalHref()).not.toBe(`${window.location.origin}/`);
+    expect(canonicalHref()).toBe(`${PUBLIC_SITE_URL}/legal/cookies`);
+    expect(canonicalHref()).not.toBe(`${PUBLIC_SITE_URL}/`);
   });
 
   it('restores the previous canonical when the page is left', () => {
     fixture.destroy();
-    expect(canonicalHref()).toBe(`${window.location.origin}/`);
+    expect(canonicalHref()).toBe(`${PUBLIC_SITE_URL}/`);
   });
 
   it('loads the public cookie policy from the shared legal-pages slug', () => {
