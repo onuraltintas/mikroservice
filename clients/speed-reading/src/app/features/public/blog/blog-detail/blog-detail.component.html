@@ -48,34 +48,34 @@
                     </div>
                 </div>
 
-                <!-- Featured Image -->
-                <div class="featured-image">
-                    <div class="image-placeholder" aria-hidden="true"></div>
-                    <img *ngIf="post.coverImageUrl" [src]="post.coverImageUrl" [alt]="post.title"
+                <!-- Featured Image: shown only when the post has a cover, so a post without one has no empty box. -->
+                <div *ngIf="post.coverImageUrl && !coverFailed" class="featured-image">
+                    <img [src]="post.coverImageUrl" [alt]="post.title"
                         class="cover-image" loading="eager" fetchpriority="high" decoding="async"
-                        referrerpolicy="no-referrer" (error)="hideBrokenCover($event)">
+                        referrerpolicy="no-referrer" (error)="coverFailed = true">
                 </div>
 
                 <!-- Social Share -->
                 <div class="social-share">
-                    <span>Paylaş:</span>
-                    <div class="share-buttons">
-                        <button mat-icon-button type="button" aria-label="Facebook'ta paylaş" class="facebook">
-                            <mat-icon>facebook</mat-icon>
-                        </button>
-                        <button mat-icon-button type="button" aria-label="X'te paylaş" class="twitter">
-                            <mat-icon>tag</mat-icon>
-                        </button>
-                        <button mat-icon-button type="button" aria-label="LinkedIn'de paylaş" class="linkedin">
-                            <mat-icon>business</mat-icon>
-                        </button>
-                        <button mat-icon-button type="button" aria-label="Bağlantıyı paylaş" class="share">
-                            <mat-icon>share</mat-icon>
-                        </button>
-                        <button mat-icon-button type="button" aria-label="Yazıyı yer imlerine ekle" class="bookmark">
-                            <mat-icon>bookmark_border</mat-icon>
+                    <span id="share-label">Paylaş:</span>
+                    <div class="share-buttons" role="group" aria-labelledby="share-label">
+                        <a mat-icon-button class="facebook" [href]="shareLinks(post).facebook" target="_blank" rel="noopener noreferrer"
+                            aria-label="Facebook'ta paylaş (yeni sekmede açılır)">
+                            <mat-icon aria-hidden="true">facebook</mat-icon>
+                        </a>
+                        <a mat-icon-button class="twitter" [href]="shareLinks(post).x" target="_blank" rel="noopener noreferrer"
+                            aria-label="X'te paylaş (yeni sekmede açılır)">
+                            <mat-icon aria-hidden="true">tag</mat-icon>
+                        </a>
+                        <a mat-icon-button class="linkedin" [href]="shareLinks(post).linkedin" target="_blank" rel="noopener noreferrer"
+                            aria-label="LinkedIn'de paylaş (yeni sekmede açılır)">
+                            <mat-icon aria-hidden="true">business</mat-icon>
+                        </a>
+                        <button mat-icon-button type="button" class="share" aria-label="Bağlantıyı kopyala" (click)="copyLink(post)">
+                            <mat-icon aria-hidden="true">link</mat-icon>
                         </button>
                     </div>
+                    <span class="share-status" role="status" aria-live="polite">{{ shareStatus }}</span>
                 </div>
 
                 <!-- Article Content -->
@@ -89,8 +89,7 @@
                     <div class="avatar-large">{{ getAuthorInitials(post.author) }}</div>
                     <div>
                         <p class="label">Yazı Yazarı</p>
-                        <h3>{{ post.author }}</h3>
-                        <p>{{ post.author || 'Anonim' }}</p>
+                        <h3>{{ post.author || 'Master Hızlı Okuma' }}</h3>
                     </div>
                 </div>
 
@@ -117,16 +116,14 @@
             <aside class="sidebar">
                 <div class="sticky-sidebar">
                     <!-- Table of Contents -->
-                    <mat-card class="toc-card">
-                        <h3>
-                            <mat-icon>menu_book</mat-icon>
+                    <mat-card *ngIf="headings(post.content).length > 1" class="toc-card">
+                        <h3 id="toc-title">
+                            <mat-icon aria-hidden="true">menu_book</mat-icon>
                             İçindekiler
                         </h3>
-                        <nav class="toc-links">
-                            <a href="#giris">Giriş</a>
-                            <a href="#temel-kavramlar">Temel Kavramlar</a>
-                            <a href="#uygulama">Uygulama Teknikleri</a>
-                            <a href="#sonuc">Sonuç</a>
+                        <nav class="toc-links" aria-labelledby="toc-title">
+                            <button *ngFor="let heading of headings(post.content); let i = index" type="button"
+                                (click)="scrollToHeading(i)">{{ heading }}</button>
                         </nav>
                     </mat-card>
 

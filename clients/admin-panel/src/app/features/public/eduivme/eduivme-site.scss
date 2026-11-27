@@ -11,6 +11,8 @@ ul, ol { list-style: none; padding: 0; }
 .head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
 .head h2 { font-size: clamp(28px, 3vw, 38px); font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
 .head p { max-width: 42em; color: var(--ds-muted); font-size: 18px; line-height: 1.6; }
+.head__link { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; color: var(--ds-link); font-size: 17px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.head__link:hover { text-decoration-thickness: 2px; }
 .loading { display: grid; place-items: center; min-height: 60vh; }
 
 // ---- Opening block ----

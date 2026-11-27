@@ -2,13 +2,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { EduivmeSiteService, SitePageView, SitePublicEntry } from '../../../core/services/eduivme-site.service';
+import { EduivmeSiteService, SiteBrand, SitePageView, SitePublicEntry } from '../../../core/services/eduivme-site.service';
 import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { EduivmeHrefDirective } from './eduivme-link.directive';
-import { BRAND_MARKS, DEFAULT_PAGES, SITE_ICON_PATHS, sectionOf } from './eduivme-site-content';
+import { BRAND_MARKS, DEFAULT_PAGES, SITE_ICON_PATHS, brandForLink, sectionOf } from './eduivme-site-content';
 import { EduivmeSiteLayoutComponent } from './eduivme-site-layout.component';
 
-/** eduivme.com/urunler/{slug}: the page of a product that has no site of its own (first: Kurs Yönetimi). */
+/**
+ * eduivme.com/urunler/{slug}: the page of a product that has no site of its own (first: Kurs Yönetimi), or a guide page
+ * such as "Hangi ürün kime uygun" whose cards lead to the products' own sites.
+ */
 @Component({
   selector: 'app-eduivme-product-page',
   standalone: true,
@@ -67,11 +70,19 @@ import { EduivmeSiteLayoutComponent } from './eduivme-site-layout.component';
               <header class="head"><h2 id="audiences-title">{{ section(data, 'audiences')?.title || 'Kimler için' }}</h2>@if (section(data, 'audiences')?.body) {<p>{{ section(data, 'audiences')?.body }}</p>}</header>
               <ul class="pair">
                 @for (audience of data.audiences; track audience.id; let i = $index) {
-                  <li class="audience" [attr.data-brand]="i % 2 === 0 ? 'eduivme' : 'maxkoc'" [class.audience--accent]="i % 2 === 0">
-                    <span class="audience__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="icon(audience)"/></svg></span>
+                  @let product = productOf(audience);
+                  <li class="audience" [attr.data-brand]="product ? scopeOf(product) : (i % 2 === 0 ? 'eduivme' : 'maxkoc')"
+                    [class.audience--accent]="!product && i % 2 === 0" [class.audience--product]="!!product">
+                    @if (product) {
+                      <img class="audience__mark" [src]="markOf(product)" alt="" width="56" height="56">
+                    } @else {
+                      <span class="audience__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="icon(audience)"/></svg></span>
+                    }
                     <h3>{{ audience.title }}</h3>
                     @if (audience.body) { <p>{{ audience.body }}</p> }
-                    @if (audience.linkLabel && audience.linkUrl) { <a class="audience__link" [eduivmeHref]="audience.linkUrl">{{ audience.linkLabel }}</a> }
+                    @if (audience.linkLabel && audience.linkUrl) {
+                      <a class="audience__link" [eduivmeHref]="audience.linkUrl">{{ audience.linkLabel }}@if (product) {<span class="ds-visually-hidden"> (ürünün kendi sitesi)</span>}</a>
+                    }
                   </li>
                 }
               </ul>
@@ -161,4 +172,8 @@ export class EduivmeProductPageComponent implements OnInit {
   section(data: SitePageView, slug: string): SitePublicEntry | undefined { return sectionOf(data.sections, slug); }
   mark(entry: SitePublicEntry): string { return BRAND_MARKS[entry.brand ?? 'eduivme'].mark; }
   icon(entry: SitePublicEntry): string { return SITE_ICON_PATHS[entry.icon ?? 'star'] ?? SITE_ICON_PATHS.star; }
+  /** A "Kimler için" card that leads to a product's own site is that product's card (its mark and colours). */
+  productOf(entry: SitePublicEntry): SiteBrand | null { return entry.brand ?? brandForLink(entry.linkUrl); }
+  scopeOf(brand: SiteBrand): string { return BRAND_MARKS[brand].scope; }
+  markOf(brand: SiteBrand): string { return BRAND_MARKS[brand].mark; }
 }
