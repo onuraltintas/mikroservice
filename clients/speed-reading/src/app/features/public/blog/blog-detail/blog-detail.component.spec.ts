@@ -70,4 +70,41 @@ describe('BlogDetailComponent CMS covers', () => {
     expect(relatedImage.alt).toBe(relatedPost.title);
     expect(relatedImage.loading).toBe('lazy');
   });
+  it('leaves out the cover box when the post has no cover', () => {
+    fixture.componentInstance.post = { ...post, coverImageUrl: undefined };
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.featured-image')).toBeNull();
+  });
+
+  it('builds the table of contents from the post\'s own headings', () => {
+    fixture.componentInstance.post = {
+      ...post,
+      content: '<p>Giriş</p><h2>Hızlı okuma nedir?</h2><p>…</p><h2>Okuma &amp; anlama</h2><h3>Alt başlık</h3>'
+    };
+    fixture.detectChanges();
+
+    const items = [...fixture.nativeElement.querySelectorAll('.toc-links button')].map((item: Element) => item.textContent?.trim());
+    expect(items).toEqual(['Hızlı okuma nedir?', 'Okuma & anlama']);
+    expect(fixture.nativeElement.textContent).not.toContain('Temel Kavramlar');
+  });
+
+  it('hides the table of contents when the post has fewer than two headings', () => {
+    fixture.componentInstance.post = { ...post, content: '<h2>Tek başlık</h2><p>Metin</p>' };
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.toc-card')).toBeNull();
+  });
+
+  it('shares the post\'s public address', () => {
+    const links = [...fixture.nativeElement.querySelectorAll('.share-buttons a')] as HTMLAnchorElement[];
+
+    expect(links.length).toBe(3);
+    for (const link of links) {
+      expect(link.getAttribute('href')).toContain(encodeURIComponent('/blog/okuma-aliskanligi'));
+      expect(link.target).toBe('_blank');
+      expect(link.rel).toContain('noopener');
+    }
+    expect(fixture.nativeElement.querySelector('.share-buttons .bookmark')).toBeNull();
+  });
 });
