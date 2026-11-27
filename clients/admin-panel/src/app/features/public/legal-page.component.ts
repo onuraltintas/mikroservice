@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IdentityService, PlatformLegalPageDto } from '../../core/services/identity.service';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { injectSiteBrand } from '../../core/brand/site-brand';
+import { SiteSeoService } from '../../core/services/site-seo.service';
 
 @Component({
   selector: 'app-platform-legal-page',
@@ -42,7 +43,9 @@ export class PlatformLegalPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly identity = inject(IdentityService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly seo = inject(SiteSeoService);
   readonly page = signal<PlatformLegalPageDto | null>(null);
+  private slug = '';
   readonly loading = signal(true);
   readonly notFound = signal(false);
   readonly error = signal(false);
@@ -50,6 +53,7 @@ export class PlatformLegalPageComponent implements OnInit {
   ngOnInit(): void {
     this.route.paramMap.pipe(switchMap(params => {
       const slug = params.get('slug');
+      this.slug = slug ?? '';
       if (!slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
         this.loading.set(false);
         this.notFound.set(true);
@@ -71,6 +75,41 @@ export class PlatformLegalPageComponent implements OnInit {
       else this.notFound.set(result.notFound || !result.page);
       this.error.set(result.error);
       this.loading.set(false);
+      this.applySeo(this.slug);
     });
   }
+
+  /** Search results and link previews: each document has its own title, description and canonical address. */
+  private applySeo(slug: string): void {
+    const page = this.page();
+    const brand = this.brand.name;
+    const heading = page?.title?.trim() || LEGAL_TITLES[slug] || 'Yasal belge';
+    this.seo.apply({
+      title: `${heading} | ${brand}`,
+      description: (LEGAL_DESCRIPTIONS[slug]?.(brand) ?? summary(page?.content)) || `${brand} yasal belgeleri.`,
+      path: `/legal/${slug}`,
+      siteName: brand,
+      noIndex: !page
+    });
+  }
+}
+
+const LEGAL_TITLES: Readonly<Record<string, string>> = {
+  privacy: 'Gizlilik politikası',
+  kvkk: 'KVKK aydınlatma metni',
+  cookies: 'Çerez politikası'
+};
+
+const LEGAL_DESCRIPTIONS: Readonly<Record<string, (brand: string) => string>> = {
+  privacy: brand => `${brand} hizmetlerinde kişisel verilerin hangi amaçla toplandığı, nasıl kullanıldığı ve nasıl korunduğu.`,
+  kvkk: () => 'Kişisel verilerin 6698 sayılı KVKK kapsamında işlenmesine ilişkin aydınlatma metni ve başvuru hakları.',
+  cookies: brand => `${brand} sitelerinde kullanılan çerezler, amaçları ve çerez tercihlerinizi nasıl yöneteceğiniz.`
+};
+
+/** First sentences of a document, for its description: plain text, at most 155 characters. */
+function summary(content: string | null | undefined): string {
+  const text = (content ?? '').replace(/[#*_>`]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length <= 155) return text;
+  const cut = text.slice(0, 155);
+  return `${cut.slice(0, cut.lastIndexOf(' ') > 100 ? cut.lastIndexOf(' ') : 155)}…`;
 }

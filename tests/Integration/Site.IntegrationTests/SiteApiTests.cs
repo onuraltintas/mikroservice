@@ -158,6 +158,8 @@ public sealed class SiteApiTests : IAsyncLifetime
         var xml = await client.GetStringAsync("/api/site/sites/maxkampus/sitemap.xml");
         Assert.Contains("<loc>https://maxkampus.com/blog/veliyle-iletisim</loc>", xml);
         Assert.Contains("<loc>https://maxkampus.com/fiyatlar</loc>", xml);
+        Assert.Contains("<loc>https://maxkampus.com/yasal/privacy</loc>", xml);
+        Assert.Contains("<loc>https://maxkampus.com/yasal/kvkk</loc>", xml);
         Assert.DoesNotContain("/sayfa/iletisim", xml);
         Assert.DoesNotContain("taslak-yazi", xml);
 

@@ -10,7 +10,9 @@ export interface SocialPreview { title: string; description: string | null; url:
 
 const GA_ID_PATTERN = /^G-[A-Z0-9]{4,15}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const STATIC_PATHS = ['/coaching', '/coaching/faq', '/coaching/blog', '/coaching/newsletter'];
+// Public legal documents both sites link from every footer (27.11.2026: listed in the sitemaps).
+const LEGAL_PATHS = ['/legal/privacy', '/legal/kvkk'];
+const STATIC_PATHS = ['/coaching', '/coaching/faq', '/coaching/blog', '/coaching/newsletter', ...LEGAL_PATHS];
 // Alan adı planı (18.11.2026): the public Coaching pages live on maxkoc.com.
 /** Brand decision 18.11.2026: maxkoç is the Koçluk product (students and parents); every other address is eduivme. */
 export type SiteBrand = 'maxkoc' | 'eduivme';
@@ -61,6 +63,8 @@ export function buildRobots(origin: string): string {
     'Allow: /coaching',
     'Disallow: /dashboard',
     'Disallow: /coaching-portal',
+    'Disallow: /coaching/newsletter/confirm',
+    'Disallow: /coaching/newsletter/unsubscribe',
     'Disallow: /auth',
     'Disallow: /staff',
     'Disallow: /api',
@@ -84,7 +88,7 @@ export function buildSitemap(origin: string, entries: readonly SitemapEntry[]): 
 
 /** eduivme.com's sitemap: the home page and the published product pages (site-service). */
 export function buildEduivmeSitemap(origin: string, pages: readonly { slug: string; lastModified: string }[]): string {
-  const urls: { loc: string; lastmod?: string }[] = [{ loc: `${origin}/` }];
+  const urls: { loc: string; lastmod?: string }[] = [{ loc: `${origin}/` }, ...LEGAL_PATHS.map(path => ({ loc: `${origin}${path}` }))];
   for (const page of pages) {
     if (!SLUG_PATTERN.test(page.slug)) continue;
     const date = new Date(page.lastModified);

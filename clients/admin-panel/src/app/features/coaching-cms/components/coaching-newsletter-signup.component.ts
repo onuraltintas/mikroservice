@@ -6,6 +6,7 @@ import { firstValueFrom, forkJoin } from 'rxjs';
 import { CoachingNewsletterCaptchaService } from '../../../core/services/coaching-newsletter-captcha.service';
 import { CoachingManagementService } from '../../../core/services/coaching-management.service';
 import { IdentityService } from '../../../core/services/identity.service';
+import { SiteSeoService } from '../../../core/services/site-seo.service';
 
 @Component({
   selector: 'app-coaching-newsletter-signup',
@@ -53,6 +54,7 @@ export class CoachingNewsletterSignupComponent implements OnInit {
   private readonly identity = inject(IdentityService);
   private readonly coaching = inject(CoachingManagementService);
   private readonly captcha = inject(CoachingNewsletterCaptchaService);
+  private readonly seo = inject(SiteSeoService);
   readonly email = signal('');
   readonly consentGiven = signal(false);
   readonly honeypot = signal('');
@@ -66,6 +68,11 @@ export class CoachingNewsletterSignupComponent implements OnInit {
   readonly error = signal('');
 
   ngOnInit(): void {
+    this.seo.apply({
+      title: 'Koçluk bülteni | maxkoç',
+      description: 'Koçluk, hedef belirleme ve çalışma alışkanlıklarıyla ilgili maxkoç duyurularını e-posta ile alın.',
+      path: '/coaching/newsletter'
+    });
     forkJoin({
       privacy: this.identity.getPublicLegalPage('privacy'),
       consent: this.identity.getPublicLegalPage('coaching-newsletter-consent')

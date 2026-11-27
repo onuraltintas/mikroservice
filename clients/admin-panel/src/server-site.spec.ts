@@ -16,6 +16,8 @@ describe('server site helpers (O11)', () => {
     const robots = buildRobots('https://maxkoc.com');
     expect(robots).toContain('Allow: /coaching');
     expect(robots).toContain('Disallow: /coaching-portal');
+    expect(robots).toContain('Disallow: /coaching/newsletter/confirm');
+    expect(robots).toContain('Disallow: /coaching/newsletter/unsubscribe');
     expect(robots).toContain('Disallow: /dashboard');
     expect(robots).toContain('Sitemap: https://maxkoc.com/sitemap.xml');
   });
@@ -35,6 +37,8 @@ describe('server site helpers (O11)', () => {
       { kind: 'Block', slug: 'hero', lastModified: '2026-10-17T08:00:00Z' }
     ]);
     expect(xml).toContain('<loc>https://eduivme.com/coaching</loc>');
+    expect(xml).toContain('<loc>https://eduivme.com/legal/privacy</loc>');
+    expect(xml).toContain('<loc>https://eduivme.com/legal/kvkk</loc>');
     expect(xml).toContain('<loc>https://eduivme.com/coaching/pages/kurumlar</loc><lastmod>2026-10-20</lastmod>');
     expect(xml).toContain('<loc>https://eduivme.com/coaching/blog/lgs-hazirlik</loc><lastmod>2026-10-17</lastmod>');
     expect(xml).not.toContain('bad');
@@ -109,6 +113,8 @@ describe('eduivme.com (19.11.2026)', () => {
       { slug: '../kotu', lastModified: '2026-11-19T06:00:00Z' }
     ]);
     expect(xml).toContain('<loc>https://eduivme.com/</loc>');
+    expect(xml).toContain('<loc>https://eduivme.com/legal/privacy</loc>');
+    expect(xml).toContain('<loc>https://eduivme.com/legal/kvkk</loc>');
     expect(xml).toContain('<loc>https://eduivme.com/urunler/kurs-yonetimi</loc><lastmod>2026-11-19</lastmod>');
     expect(xml).not.toContain('kotu');
     expect(productPagePreviewTarget('/urunler/kurs-yonetimi')).toBe('kurs-yonetimi');

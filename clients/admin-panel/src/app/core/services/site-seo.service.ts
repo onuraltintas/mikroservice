@@ -13,6 +13,8 @@ export interface SiteSeo {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[] | null;
   /** og:site_name; the maxkoç pages leave it out, eduivme.com passes 'eduivme'. */
   siteName?: string;
+  /** Keeps the page out of search results (for example a document that is not published yet). */
+  noIndex?: boolean;
 }
 
 export const SITE_NAME = 'maxkoç';
@@ -49,6 +51,8 @@ export class SiteSeoService {
     this.meta.updateTag({ name: 'twitter:image', content: image });
     this.setCanonical(url);
     this.setJsonLd(seo.jsonLd ?? null);
+    if (seo.noIndex) this.meta.updateTag({ name: 'robots', content: 'noindex' });
+    else this.document.head.querySelector('meta[name="robots"]')?.remove();
   }
 
   /** The site's organization and search entry, for the home page. */

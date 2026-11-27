@@ -3,6 +3,7 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { PlatformLegalPage, PlatformLegalPagesService } from '../../core/services/platform-legal-pages.service';
 import { PlatformLegalPageComponent } from './platform-legal-page.component';
+import { PUBLIC_SITE_URL } from '../../core/utils/public-site-url';
 
 describe('PlatformLegalPageComponent', () => {
   let fixture: ComponentFixture<PlatformLegalPageComponent>;
@@ -38,5 +39,28 @@ describe('PlatformLegalPageComponent', () => {
     await createComponent('accessibility-policy', throwError(() => ({ status: 404 })));
 
     expect(fixture.nativeElement.textContent).toContain('henüz yayımlanmadı');
+  });
+
+  it('gives a published document its own title, description and canonical address', async () => {
+    await createComponent('speed-reading-newsletter-consent', of({
+      slug: 'speed-reading-newsletter-consent', title: 'Bülten onay metni',
+      content: 'Bu metin bülten aboneliği için açık rızanızı açıklar.', isPublished: true, version: 1,
+      createdAt: '2026-01-01T00:00:00Z'
+    }));
+
+    expect(document.title).toBe('Bülten onay metni | Master Hızlı Okuma');
+    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href'))
+      .toBe(`${PUBLIC_SITE_URL}/legal/speed-reading-newsletter-consent`);
+    expect(document.head.querySelector('meta[name="description"]')?.getAttribute('content'))
+      .toBe('Bu metin bülten aboneliği için açık rızanızı açıklar.');
+    fixture.destroy();
+  });
+
+  it('keeps an unpublished document out of search results', async () => {
+    await createComponent('accessibility-policy', throwError(() => ({ status: 404 })));
+
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toContain('noindex');
+    fixture.destroy();
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).not.toContain('noindex');
   });
 });
