@@ -1,5 +1,7 @@
 // eduivme.com (19.11.2026): the parent brand's showcase. Colours come only from the --ds-* tokens; a product card or an
-// audience card takes its own brand's colours through data-brand. No gradients; one motion (the hero's dot).
+// audience card takes its own brand's colours through data-brand. 27.11.2026: livelier (user decision): soft brand-coloured
+// light in the opening block, floating product marks, cards that rise into view and lift on hover; all of it off under
+// reduced motion (public-motion.scss).
 :host { display: block; }
 h1, h2, h3, p, ul, ol { margin: 0; }
 ul, ol { list-style: none; padding: 0; }
@@ -16,7 +18,19 @@ ul, ol { list-style: none; padding: 0; }
 .loading { display: grid; place-items: center; min-height: 60vh; }
 
 // ---- Opening block ----
-.hero { overflow: hidden; background: var(--ds-visual-bg); color: var(--ds-visual-text); }
+.hero { position: relative; overflow: hidden; isolation: isolate; background: var(--ds-visual-bg); color: var(--ds-visual-text); }
+.hero__glow { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hero__blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.4; animation: public-drift 16s ease-in-out infinite; }
+.hero__blob--koc { width: 420px; height: 420px; right: 4%; top: -160px; background: var(--ds-primary); }
+.hero__blob--ho { width: 340px; height: 340px; right: 30%; bottom: -200px; background: var(--ds-primary); animation-delay: -6s; }
+.hero__blob--km { width: 300px; height: 300px; left: -120px; top: 30%; background: var(--ds-accent); opacity: 0.22; animation-delay: -11s; }
+// Light theme: the opening block is light too (27.11.2026), the brand light shows through as soft colour.
+:host-context(html:not(.dark)) .hero { --ds-visual-bg: var(--ds-bg); --ds-visual-text: var(--ds-text); --ds-visual-muted: var(--ds-muted); }
+:host-context(html:not(.dark)) .hero__blob { opacity: 0.3; }
+:host-context(html:not(.dark)) .hero a:focus-visible { outline-color: var(--ds-focus); }
+:host-context(html:not(.dark)) .hero__blob--km { opacity: 0.35; }
+:host-context(html:not(.dark)) .hero__family li { background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+@keyframes chip-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
 .hero__inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 48px;
   max-width: 1200px; margin: 0 auto; padding: 88px 24px 96px; box-sizing: border-box; }
 .hero__text { display: flex; flex-direction: column; gap: 22px; }
@@ -38,7 +52,9 @@ ul, ol { list-style: none; padding: 0; }
 .hero__stem { fill: var(--ds-visual-text); }
 .hero__arc { stroke: var(--ds-accent); opacity: 0.55; }
 .hero__dot { fill: var(--ds-accent); transform-box: fill-box; transform-origin: center; animation: dot-arrives 900ms cubic-bezier(.2, .9, .3, 1.25) both 150ms; }
-.hero__chip { position: absolute; border-radius: 16px; box-shadow: 0 18px 30px -16px rgb(0 0 0 / 0.55); }
+.hero__chip { position: absolute; border-radius: 16px; box-shadow: 0 18px 30px -16px rgb(0 0 0 / 0.55); animation: chip-bob 6s ease-in-out infinite; }
+.hero__chip--1 { animation-delay: -2s; }
+.hero__chip--2 { animation-delay: -4s; }
 .hero__chip--0 { left: -6px; top: 196px; transform: rotate(-8deg); }
 .hero__chip--1 { right: -18px; top: 236px; transform: rotate(7deg); }
 .hero__chip--2 { left: 54px; bottom: -4px; transform: rotate(4deg); }
@@ -72,7 +88,8 @@ ul, ol { list-style: none; padding: 0; }
 
 // ---- Audience cards ----
 .audiences { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-.audience { display: flex; flex-direction: column; gap: 10px; padding: 26px; border: 1px solid var(--ds-line); border-radius: 18px; background: var(--ds-surface); color: var(--ds-text); }
+.audience { display: flex; flex-direction: column; gap: 10px; padding: 26px; border: 1px solid var(--ds-line); border-top: 5px solid var(--ds-primary); border-radius: 18px; background: var(--ds-surface); color: var(--ds-text); }
+.audience--accent { border-top-color: var(--ds-accent); }
 .audience__icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; margin-bottom: 6px;
   border-radius: 16px; background: var(--ds-soft); color: var(--ds-primary); }
 .audience--accent .audience__icon { background: color-mix(in srgb, var(--ds-accent) 26%, var(--ds-surface)); color: var(--ds-text); }
@@ -103,7 +120,7 @@ ul, ol { list-style: none; padding: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__dot { animation: none; }
+  .hero__dot, .hero__blob, .hero__chip { animation: none; }
   .product, .faq summary::after { transition: none; }
   .product:hover { transform: none; }
 }

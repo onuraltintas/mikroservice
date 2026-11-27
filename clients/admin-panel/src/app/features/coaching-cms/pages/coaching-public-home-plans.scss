@@ -1,0 +1,56 @@
+// maxkoc.com home, plans (27.11.2026): who pays, period and students are chosen; the price card shows the package picked.
+/* Plans: who pays, period and students are chosen; the price card shows the package that was picked. */
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: var(--ds-success-soft); color: var(--ds-success); font-size: 15px; font-weight: 600; }
+.picker { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 28px; padding: 32px; border: 1px solid var(--ds-line); border-radius: 28px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+.picker__controls { display: flex; flex-direction: column; gap: 22px; }
+.segmented { display: inline-flex; flex-wrap: wrap; align-self: flex-start; gap: 4px; padding: 4px; border-radius: 14px; background: var(--ds-soft); }
+.segmented button, .seats__list button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: transparent; color: var(--ds-text);
+  font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease; }
+.segmented button[aria-pressed='true'] { background: var(--ds-surface); color: var(--ds-primary); box-shadow: 0 1px 2px rgba(23, 43, 77, 0.1), 0 4px 12px -6px rgba(23, 43, 77, 0.3); }
+.segmented button:focus-visible, .seats__list button:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
+.save { margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--ds-accent); color: var(--ds-on-accent); font-size: 12px; font-weight: 700; }
+.seats { display: flex; flex-direction: column; gap: 10px; }
+.seats__label { font-weight: 600; }
+.seats__list { display: flex; flex-wrap: wrap; gap: 8px; }
+.seats__list button { min-width: 64px; border: 1px solid var(--ds-line); background: var(--ds-surface); font-variant-numeric: tabular-nums; }
+.seats__list button:hover { border-color: var(--ds-primary); }
+.seats__list button[aria-pressed='true'] { border-color: var(--ds-primary); background: var(--ds-primary); color: var(--ds-on-primary); }
+.picker__terms { color: var(--ds-muted); font-size: 15px; line-height: 1.6; }
+.price-card { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 28px; border-radius: 22px; background: var(--ds-primary); color: var(--ds-on-primary); overflow: hidden; isolation: isolate; }
+.price-card::after { content: ''; position: absolute; right: -70px; top: -70px; z-index: -1; width: 200px; height: 200px; border-radius: 50%; border: 26px solid color-mix(in srgb, var(--ds-on-primary) 14%, transparent); }
+.price-card__who { font-size: 14px; font-weight: 600; opacity: 0.85; }
+.price-card__name { font-size: 18px; font-weight: 700; }
+.price-card__price strong { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.price-card__price span { font-size: 16px; opacity: 0.85; }
+.price-card__facts { display: flex; flex-direction: column; gap: 6px; padding: 0; list-style: none; font-size: 15px; }
+.price-card__facts strong { font-variant-numeric: tabular-nums; }
+.price-card__cta { margin-top: 8px; background: var(--ds-accent); border-color: var(--ds-accent); color: var(--ds-on-accent); }
+.price-card__cta:hover { filter: brightness(0.95); }
+.price-card__cta:focus-visible, .price-card__login:focus-visible { outline: 3px solid var(--ds-on-primary); outline-offset: 2px; }
+.price-card__login { display: inline-flex; align-self: center; align-items: center; min-height: 44px; color: var(--ds-on-primary); font-size: 14px; font-weight: 600; }
+.picker__features { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 12px; padding-top: 24px; border-top: 1px solid var(--ds-line); }
+.picker__features-title { font-weight: 700; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px 20px; padding: 0; list-style: none; }
+.feature-grid li, .plan__features li { display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; }
+.tick { display: inline-grid; flex: none; width: 22px; height: 22px; place-items: center; margin-top: 1px; border-radius: 50%; background: var(--ds-success-soft); color: var(--ds-success); }
+
+.cards--plans { grid-template-columns: repeat(auto-fit, minmax(280px, 380px)); justify-content: center; }
+.plan__audience { color: var(--ds-primary); font-size: 14px; font-weight: 600; }
+.plan--featured { border: 2px solid var(--ds-primary); box-shadow: var(--ds-shadow); }
+.plan__price { margin-top: 6px; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.plan__terms { color: var(--ds-muted); font-size: 14px; }
+.plan__features { display: flex; flex-direction: column; gap: 8px; padding: 0; list-style: none; }
+.plan__actions { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: auto; padding-top: 8px; }
+.plan__login { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
+
+.free { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; padding: 22px 26px; border-radius: 20px; background: var(--ds-science-bg); color: var(--ds-text); }
+.free__icon { display: inline-grid; width: 52px; height: 52px; place-items: center; border-radius: 14px; background: var(--ds-surface); color: var(--ds-science-fg); }
+.free > div { flex: 1 1 280px; }
+.free__title { font-size: 18px; font-weight: 700; }
+.free p:not(.free__title) { color: var(--ds-text); opacity: 0.86; }
+
+/* Dark theme stays calm: the price card is a raised surface with a brand edge. */
+:host-context(html.dark) .price-card, :host-context(html.dark) .closing { background: var(--ds-soft); color: var(--ds-text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ds-primary) 45%, transparent); }
+:host-context(html.dark) .price-card__login { color: var(--ds-link); }
+:host-context(html.dark) .price-card::after, :host-context(html.dark) .closing__ring { border-color: color-mix(in srgb, var(--ds-primary) 18%, transparent); }
+@media (max-width: 960px) { .picker { grid-template-columns: 1fr; padding: 20px; } }

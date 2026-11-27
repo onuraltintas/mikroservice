@@ -5,13 +5,14 @@ describe('ThemeMenuComponent', () => {
   beforeEach(() => { localStorage.removeItem('theme'); document.documentElement.classList.remove('dark'); });
   afterEach(() => { localStorage.removeItem('theme'); document.documentElement.classList.remove('dark'); });
 
-  it('offers light, dark and the device setting, and keeps the choice in this browser', () => {
+  it('opens light, offers light, dark and the device setting, and keeps the choice in this browser', () => {
     const fixture = TestBed.createComponent(ThemeMenuComponent);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const buttons = [...element.querySelectorAll('.theme__menu button')] as HTMLButtonElement[];
     expect(buttons.map(button => button.textContent?.trim())).toEqual(['Açık', 'Koyu', 'Cihaz ayarına göre']);
-    expect(element.querySelector('summary')?.getAttribute('aria-label')).toBe('Görünüm: Cihaz ayarına göre');
+    // 27.11.2026: without a saved choice the site opens light.
+    expect(element.querySelector('summary')?.getAttribute('aria-label')).toBe('Görünüm: Açık');
 
     buttons[1].click();
     fixture.detectChanges();

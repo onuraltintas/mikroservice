@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RevealDirective } from '../../../shared/public-site/reveal.directive';
 import { RouterLink } from '@angular/router';
 import { CoachingCmsEntry, CoachingManagementPage, CoachingManagementService, CoachingSubscriptionPlan } from '../../../core/services/coaching-management.service';
 import { parseCoachingCmsContent } from '../coaching-cms-content';
@@ -9,19 +10,20 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
 @Component({
   selector: 'app-coaching-public-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RevealDirective],
   template: `
     <div class="home">
       <section class="hero" aria-labelledby="coaching-home-title">
+        <div class="hero__glow" aria-hidden="true"><span class="hero__blob hero__blob--ink"></span><span class="hero__blob hero__blob--sun"></span><span class="hero__blob hero__blob--leaf"></span></div>
         <div class="hero__copy">
-          @if (hero()?.eyebrow) { <p class="hero__note">{{ hero()?.eyebrow }}</p> }
+          @if (hero()?.eyebrow) { <p class="hero__eyebrow"><span class="hero__dot" aria-hidden="true"></span>{{ hero()?.eyebrow }}</p> }
           <h1 id="coaching-home-title" class="hero__title">{{ hero()?.title || 'Sınava giden yol, haftalık bir plandan geçer.' }}</h1>
           <p class="hero__lead">{{ hero()?.summary || 'Boş saatlerini işaretle, planın hazırlansın. Her gün ne çalışacağını bil, deneme netlerini takip et, koçunla haftayı birlikte değerlendir.' }}</p>
           @if (hero()?.content) {
             <div class="cms-copy cms-copy--hero">
               @for (segment of contentSegments(hero()!.content); track $index) {
                 @if (segment.type === 'heading') { <h2>{{ segment.value }}</h2> }
-                @else if (segment.type === 'list') { <ul>@for (item of segment.items; track $index) { <li>{{ item }}</li> }</ul> }
+                @else if (segment.type === 'list') { <ul class="ticks">@for (item of segment.items; track $index) { <li>{{ item }}</li> }</ul> }
                 @else if (segment.type === 'image') { <img [src]="segment.src" [alt]="segment.alt" /> }
                 @else { <p>{{ segment.value }}</p> }
               }
@@ -41,6 +43,7 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
               <div class="week__day" [class.week__day--today]="day.today">
                 <span class="week__name">{{ day.name }}</span>
                 @for (lesson of day.lessons; track $index) { <span class="week__lesson" [attr.data-subject]="lesson.subject">{{ lesson.label }}</span> }
+                @if (day.today) { <span class="week__today">Bugün</span> }
               </div>
             }
           </div>
@@ -49,10 +52,11 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
             <span>Son deneme <strong>72 net</strong></span>
             <span>Hedef <strong>80 net</strong></span>
           </div>
+          <div class="week__progress" aria-hidden="true"><span style="width: 90%"></span></div>
         </figure>
       </section>
 
-      <section id="nasil" class="band" aria-labelledby="coaching-process-title">
+      <section id="nasil" class="band" aria-labelledby="coaching-process-title" publicReveal>
         <div class="section-head">
           <h2 id="coaching-process-title">{{ processHeading()?.title || 'Nasıl çalışır?' }}</h2>
           <p>{{ processHeading()?.summary || 'Hedef belirleme, planlı çalışma ve düzenli değerlendirme; öğrenci, öğretmen ve veli aynı planın üzerinde.' }}</p>
@@ -60,9 +64,9 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
         <ol class="steps">
           @if (processBlocks().length) {
             @for (block of processBlocks(); track block.id; let index = $index) {
-              <li class="step">
-                <span class="step__no">{{ index + 1 }}. adım</span>
-                <h3>{{ block.title }}</h3>
+              <li class="step" [attr.data-tone]="tone(index)" [publicReveal]="index">
+                <span class="step__no" aria-hidden="true">{{ index + 1 }}</span>
+                <h3><span class="ds-visually-hidden">{{ index + 1 }}. adım: </span>{{ block.title }}</h3>
                 @if (block.summary) { <p>{{ block.summary }}</p> }
                 <div class="cms-copy">
                   @for (segment of contentSegments(block.content); track $index) {
@@ -75,15 +79,15 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
               </li>
             }
           } @else {
-            <li class="step"><span class="step__no">1. adım</span><h3>Hedefini ve boş saatlerini gir</h3><p>Hangi sınava hazırlandığını, okul dışında hangi saatlerde çalışabileceğini işaretle.</p></li>
-            <li class="step"><span class="step__no">2. adım</span><h3>Planın günlere bölünsün</h3><p>Dersler ve konular haftaya yerleşir. Her gün açtığında yalnız o günün işlerini görürsün.</p></li>
-            <li class="step"><span class="step__no">3. adım</span><h3>Koçunla haftayı değerlendir</h3><p>Denemelerin, ödevlerin ve çalıştığın süre koçunun ekranında. Bir sonraki haftayı birlikte ayarlarsınız.</p></li>
+            <li class="step" data-tone="math" publicReveal="0"><span class="step__no" aria-hidden="true">1</span><h3><span class="ds-visually-hidden">1. adım: </span>Hedefini ve boş saatlerini gir</h3><p>Hangi sınava hazırlandığını, okul dışında hangi saatlerde çalışabileceğini işaretle.</p></li>
+            <li class="step" data-tone="turkish" publicReveal="1"><span class="step__no" aria-hidden="true">2</span><h3><span class="ds-visually-hidden">2. adım: </span>Planın günlere bölünsün</h3><p>Dersler ve konular haftaya yerleşir. Her gün açtığında yalnız o günün işlerini görürsün.</p></li>
+            <li class="step" data-tone="science" publicReveal="2"><span class="step__no" aria-hidden="true">3</span><h3><span class="ds-visually-hidden">3. adım: </span>Koçunla haftayı değerlendir</h3><p>Denemelerin, ödevlerin ve çalıştığın süre koçunun ekranında. Bir sonraki haftayı birlikte ayarlarsınız.</p></li>
           }
         </ol>
       </section>
 
       <section class="section" aria-labelledby="coaching-areas-title">
-        <div class="section-head section-head--row">
+        <div class="section-head section-head--row" publicReveal>
           <div>
             <h2 id="coaching-areas-title">{{ areaHeading()?.title || 'Herkes aynı planı kendi yerinden görür' }}</h2>
             @if (areaHeading()?.summary) { <p>{{ areaHeading()?.summary }}</p> }
@@ -91,15 +95,16 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
           @if (areaHeading()?.linkUrl) { <a [href]="areaHeading()?.linkUrl" class="ds-link">{{ areaHeading()?.linkLabel || 'Ayrıntılar' }}</a> }
         </div>
         @if (blocks().length) {
-          <div class="cards" aria-label="Koçluk ana sayfa içerikleri">
-            @for (block of blocks(); track block.id) {
-              <article class="card">
+          <div class="cards cards--people" aria-label="Koçluk ana sayfa içerikleri">
+            @for (block of blocks(); track block.id; let index = $index) {
+              <article class="card person public-lift" [attr.data-tone]="tone(index)" [publicReveal]="index">
+                <span class="person__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="personIcon(index)"/></svg></span>
                 <h3>{{ block.title }}</h3>
                 @if (block.summary) { <p class="card__lead">{{ block.summary }}</p> }
                 <div class="cms-copy">
                   @for (segment of contentSegments(block.content); track $index) {
                     @if (segment.type === 'heading') { <h4>{{ segment.value }}</h4> }
-                    @else if (segment.type === 'list') { <ul>@for (item of segment.items; track $index) { <li>{{ item }}</li> }</ul> }
+                    @else if (segment.type === 'list') { <ul class="ticks">@for (item of segment.items; track $index) { <li>{{ item }}</li> }</ul> }
                     @else if (segment.type === 'image') { <img [src]="segment.src" [alt]="segment.alt" /> }
                     @else { <p>{{ segment.value }}</p> }
                   }
@@ -108,16 +113,17 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
             }
           </div>
         } @else {
-          <div class="cards">
-            <article class="card"><h3>Öğrenci</h3><p class="card__lead">Günün işleri, haftalık süre, deneme netleri ve koçundan mesajlar.</p><a routerLink="/auth/register/student" class="ds-link">Ücretsiz kaydol</a></article>
-            <article class="card"><h3>Veli</h3><p class="card__lead">Çocuğunun izin verdiği kadarını görür: haftalık uyum, denemeler, görüşmeler.</p><a href="https://veli.maxkoc.com/auth/login" class="ds-link">Veli girişi</a></article>
-            <article class="card"><h3>Öğretmen ve kurum</h3><p class="card__lead">Öğrencilerin planlarını, ödevlerini ve gelişimini tek listede takip eder.</p><a href="https://ogretmen.eduivme.com/auth/register/teacher" class="ds-link">Öğretmen olarak katıl</a></article>
+          <div class="cards cards--people">
+            <article class="card person public-lift" data-tone="math" publicReveal="0"><span class="person__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="personIcon(0)"/></svg></span><h3>Öğrenci</h3><p class="card__lead">Günün işleri, haftalık süre, deneme netleri ve koçundan mesajlar.</p><a routerLink="/auth/register/student" class="ds-link">Ücretsiz kaydol</a></article>
+            <article class="card person public-lift" data-tone="turkish" publicReveal="1"><span class="person__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="personIcon(1)"/></svg></span><h3>Veli</h3><p class="card__lead">Çocuğunun izin verdiği kadarını görür: haftalık uyum, denemeler, görüşmeler.</p><a href="https://veli.maxkoc.com/auth/login" class="ds-link">Veli girişi</a></article>
+            <article class="card person public-lift" data-tone="science" publicReveal="2"><span class="person__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="personIcon(2)"/></svg></span><h3>Öğretmen ve kurum</h3><p class="card__lead">Öğrencilerin planlarını, ödevlerini ve gelişimini tek listede takip eder.</p><a href="https://ogretmen.eduivme.com/auth/register/teacher" class="ds-link">Öğretmen olarak katıl</a></article>
           </div>
         }
       </section>
 
-      <section id="planlar" class="section" aria-labelledby="public-plans-title">
-        <div class="section-head">
+      <section id="planlar" class="section plans" aria-labelledby="public-plans-title">
+        <div class="section-head section-head--center" publicReveal>
+          <p class="pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Öğrenciler ücretsiz kullanır</p>
           <h2 id="public-plans-title">{{ plansHeading()?.title || 'Planlar' }}</h2>
           <p>{{ plansHeading()?.summary || 'Öğrenci, öğretmen ve kurumlar için koçluk planları.' }}</p>
         </div>
@@ -127,54 +133,96 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
             <button type="button" class="ds-btn ds-btn--quiet" (click)="loadPlans()">Yeniden dene</button>
           </div>
         } @else if (plans().length) {
-          <div class="cards">
-            <!-- 23.11.2026: teacher and institution packages (several student counts and periods) are one card each. -->
-            @for (group of packageGroups(); track group.audience) {
-              <article class="card plan" [class.plan--featured]="group.audience === 'Institution'" [attr.data-testid]="'plan-group-' + group.audience">
-                <p class="plan__audience">{{ group.audience === 'Institution' ? 'Kurumlar için' : 'Öğretmenler için' }}</p>
-                <h3>{{ group.audience === 'Institution' ? 'Kurum paketleri' : 'Öğretmen paketleri' }}</h3>
-                <p class="card__lead">{{ group.minSeats }}–{{ group.maxSeats }} öğrenci, {{ group.periods }}. Her pakette bütün özellikler var; paketler yalnız öğrenci sayısı ve süreyle ayrılır.</p>
-                <p class="plan__price">{{ priceText(group.cheapest) }}'den başlayan</p>
-                <p class="plan__terms">Öğrenciler ücretsiz kullanır. Ödemeyi {{ group.audience === 'Institution' ? 'kurum' : 'öğretmen' }} yapar; dönem içinde ek öğrenci alınabilir.</p>
-                @if (group.features.length) {
-                  <ul class="plan__features">
-                    @for (feature of group.features; track feature) {
-                      <li><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>{{ feature }}</span></li>
+          @if (picked(); as pick) {
+            <!-- 27.11.2026: teacher and institution packages are chosen here (who pays, period, students) and priced openly. -->
+            <div class="picker" data-testid="plan-picker" publicReveal>
+              <div class="picker__controls">
+                @if (packageGroups().length > 1) {
+                  <div class="segmented" role="group" aria-label="Kimin için">
+                    @for (group of packageGroups(); track group.audience) {
+                      <button type="button" [attr.aria-pressed]="pick.group.audience === group.audience" (click)="chooseAudience(group.audience)"
+                        [attr.data-testid]="'plan-group-' + group.audience">{{ group.audience === 'Institution' ? 'Kurumlar için' : 'Öğretmenler için' }}</button>
                     }
-                  </ul>
+                  </div>
                 }
-                <div class="plan__actions">
-                  <a [routerLink]="group.audience === 'Institution' ? '/auth/register/institution' : '/auth/register/teacher'" [queryParams]="campaign()"
-                    [attr.data-testid]="'plan-group-register-' + group.audience" class="ds-btn ds-btn--primary ds-btn--block">{{ group.audience === 'Institution' ? 'Kurum olarak kaydol' : 'Öğretmen olarak kaydol' }}</a>
-                  <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/coaching-portal' }" class="ds-link plan__login">Hesabım var, giriş yap</a>
+                @if (pick.periods.length > 1) {
+                  <div class="segmented" role="group" aria-label="Ödeme dönemi">
+                    @for (days of pick.periods; track days) {
+                      <button type="button" [attr.aria-pressed]="pick.days === days" (click)="chooseDays(days)">
+                        {{ periodLabel(days) }}@if (days >= 360 && pick.bestSaving > 0) {<span class="save">%{{ pick.bestSaving }}'e varan tasarruf</span>}
+                      </button>
+                    }
+                  </div>
+                }
+                <div class="seats">
+                  <p class="seats__label" id="seat-label">Kaç öğrenci?</p>
+                  <div class="seats__list" role="group" aria-labelledby="seat-label">
+                    @for (seats of pick.seatOptions; track seats) {
+                      <button type="button" [attr.aria-pressed]="pick.seats === seats" (click)="chooseSeats(seats)">{{ seats }}</button>
+                    }
+                  </div>
                 </div>
-              </article>
-            }
-            @for (plan of singlePlans(); track plan.id) {
-              <article class="card plan" [class.plan--featured]="plan.audience === 'Institution'" [attr.data-testid]="'plan-' + plan.slug">
-                <p class="plan__audience">{{ audienceLabel(plan) }}</p>
-                <h3>{{ plan.name }}</h3>
-                <p class="card__lead">{{ plan.description }}</p>
-                <p class="plan__price">{{ plan.isContactOnly ? (plan.audience === 'Institution' ? 'Kurumunuza özel' : 'Teklif alın') : priceText(plan) }}</p>
-                <p class="plan__terms">{{ plan.isContactOnly ? 'Fiyat ve koşullar için bizimle iletişime geçin' : plan.durationDays + ' gün erişim' }}@if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly) {, {{ plan.trialDays }} gün ücretsiz deneme }</p>
-                @if (plan.includedStudentSeats) { <p class="plan__terms">{{ plan.includedStudentSeats }} öğrenci koltuğu</p> }
-                @if (plan.features.length) {
-                  <ul class="plan__features">
-                    @for (feature of plan.features; track feature) {
-                      <li><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>{{ feature }}</span></li>
+                <p class="picker__terms">Her pakette bütün özellikler var; paketler yalnız öğrenci sayısı ve süreyle ayrılır. Dönem içinde ek öğrenci alınabilir.</p>
+              </div>
+              <div class="price-card" [attr.data-testid]="'plan-' + pick.plan.slug">
+                <p class="price-card__who">{{ pick.group.audience === 'Institution' ? 'Kurum paketi' : 'Öğretmen paketi' }}</p>
+                <p class="price-card__name">{{ pick.plan.name }}</p>
+                <p class="price-card__price" aria-live="polite"><strong>{{ priceText(pick.plan) }}</strong><span> / {{ periodLabel(pick.days).toLocaleLowerCase('tr') }}</span></p>
+                <ul class="price-card__facts">
+                  <li>Öğrenci başına ayda yaklaşık <strong>{{ amountText(pick.perStudentMonthly) }}</strong></li>
+                  @if (pick.saving > 0) { <li>3 aylık ödemeye göre <strong>{{ amountText(pick.saving) }}</strong> tasarruf</li> }
+                  @if (pick.plan.extraSeatPrice) { <li>Ek öğrenci: {{ amountText(pick.plan.extraSeatPrice) }}</li> }
+                </ul>
+                <a [routerLink]="pick.group.audience === 'Institution' ? '/auth/register/institution' : '/auth/register/teacher'" [queryParams]="campaign()"
+                  [attr.data-testid]="'plan-group-register-' + pick.group.audience" (click)="selectPlan(pick.plan)"
+                  class="ds-btn ds-btn--large ds-btn--block price-card__cta">{{ pick.group.audience === 'Institution' ? 'Kurum olarak kaydol' : 'Öğretmen olarak kaydol' }}</a>
+                <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/coaching-portal' }" class="price-card__login">Hesabım var, giriş yap</a>
+              </div>
+              @if (pick.group.features.length) {
+                <div class="picker__features">
+                  <p class="picker__features-title">Her pakette</p>
+                  <ul class="feature-grid">
+                    @for (feature of pick.group.features; track feature) {
+                      <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>{{ feature }}</li>
                     }
                   </ul>
-                }
-                <div class="plan__actions">
-                  @if (plan.isContactOnly) {
-                    <a routerLink="/coaching/pages/kurumlar" [queryParams]="campaign()" class="ds-btn ds-btn--secondary ds-btn--block">{{ plan.audience === 'Institution' ? 'Kurum çözümlerini incele' : 'Bilgi al' }}</a>
-                  } @else {
-                    <a [routerLink]="registerLink(plan)" [queryParams]="registerParams(plan)" [attr.data-testid]="'plan-register-' + plan.slug" (click)="selectPlan(plan)" class="ds-btn ds-btn--primary ds-btn--block">{{ plan.audience === 'Teacher' ? 'Öğretmen olarak kaydol' : plan.audience === 'Institution' ? 'Kurum olarak kaydol' : ((plan.trialDays ?? 0) > 0 ? 'Kaydol ve ücretsiz dene' : 'Kaydol ve başla') }}</a>
-                    <a routerLink="/auth/login" [queryParams]="{ returnUrl: plan.audience === 'Teacher' ? '/coaching-portal' : '/coaching-portal/account/payments' }" class="ds-link plan__login">Hesabım var, giriş yap</a>
+                </div>
+              }
+            </div>
+          }
+          @if (singlePlans().length) {
+            <div class="cards cards--plans">
+              @for (plan of singlePlans(); track plan.id; let index = $index) {
+                <article class="card plan public-lift" [class.plan--featured]="plan.audience === 'Institution'" [attr.data-testid]="'plan-' + plan.slug" [publicReveal]="index">
+                  <p class="plan__audience">{{ audienceLabel(plan) }}</p>
+                  <h3>{{ plan.name }}</h3>
+                  <p class="card__lead">{{ plan.description }}</p>
+                  <p class="plan__price">{{ plan.isContactOnly ? (plan.audience === 'Institution' ? 'Kurumunuza özel' : 'Teklif alın') : priceText(plan) }}</p>
+                  <p class="plan__terms">{{ plan.isContactOnly ? 'Fiyat ve koşullar için bizimle iletişime geçin' : plan.durationDays + ' gün erişim' }}@if ((plan.trialDays ?? 0) > 0 && !plan.isContactOnly) {, {{ plan.trialDays }} gün ücretsiz deneme }</p>
+                  @if (plan.includedStudentSeats) { <p class="plan__terms">{{ plan.includedStudentSeats }} öğrenci koltuğu</p> }
+                  @if (plan.features.length) {
+                    <ul class="plan__features">
+                      @for (feature of plan.features; track feature) {
+                        <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span>{{ feature }}</span></li>
+                      }
+                    </ul>
                   }
-                </div>
-              </article>
-            }
+                  <div class="plan__actions">
+                    @if (plan.isContactOnly) {
+                      <a routerLink="/coaching/pages/kurumlar" [queryParams]="campaign()" class="ds-btn ds-btn--secondary ds-btn--block">{{ plan.audience === 'Institution' ? 'Kurum çözümlerini incele' : 'Bilgi al' }}</a>
+                    } @else {
+                      <a [routerLink]="registerLink(plan)" [queryParams]="registerParams(plan)" [attr.data-testid]="'plan-register-' + plan.slug" (click)="selectPlan(plan)" class="ds-btn ds-btn--primary ds-btn--block">{{ plan.audience === 'Teacher' ? 'Öğretmen olarak kaydol' : plan.audience === 'Institution' ? 'Kurum olarak kaydol' : ((plan.trialDays ?? 0) > 0 ? 'Kaydol ve ücretsiz dene' : 'Kaydol ve başla') }}</a>
+                      <a routerLink="/auth/login" [queryParams]="{ returnUrl: plan.audience === 'Teacher' ? '/coaching-portal' : '/coaching-portal/account/payments' }" class="ds-link plan__login">Hesabım var, giriş yap</a>
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+          }
+          <div class="free" publicReveal>
+            <span class="free__icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5zM6 12v5c3 2 9 2 12 0v-5"/></svg></span>
+            <div><p class="free__title">Öğrenci misin?</p><p>Hesap açmak ve planını kullanmak ücretsiz. Öğretmenin ya da kurumun seni davet edebilir.</p></div>
+            <a routerLink="/auth/register/student" [queryParams]="campaign()" class="ds-btn ds-btn--secondary">Ücretsiz hesap aç</a>
           </div>
         } @else if (plansLoaded()) {
           <p class="empty">Yayınlanmış koçluk planı henüz yok. Planlar yayınlandığında burada görünecek.</p>
@@ -183,14 +231,14 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
 
       @if (blog().items.length) {
         <section class="section" aria-labelledby="public-blog-title">
-          <div class="section-head section-head--row">
+          <div class="section-head section-head--row" publicReveal>
             <div><h2 id="public-blog-title">{{ blogHeading()?.title || 'Daha iyi bir çalışma rutini için' }}</h2>@if (blogHeading()?.summary) { <p>{{ blogHeading()?.summary }}</p> }</div>
             <a [href]="blogHeading()?.linkUrl || '/coaching/blog'" class="ds-link">{{ blogHeading()?.linkLabel || 'Tüm yazılar' }}</a>
           </div>
           <div class="cards">
-            @for (post of blog().items; track post.id) {
-              <a [routerLink]="['/coaching/blog', post.slug]" class="card card--link">
-                @if (isCoachingMediaUrl(post.coverImageUrl)) { <img [src]="post.coverImageUrl" [alt]="post.title" class="card__image" /> }
+            @for (post of blog().items; track post.id; let index = $index) {
+              <a [routerLink]="['/coaching/blog', post.slug]" class="card card--link public-lift" [attr.data-tone]="tone(index)" [publicReveal]="index">
+                @if (isCoachingMediaUrl(post.coverImageUrl)) { <img [src]="post.coverImageUrl" [alt]="post.title" class="card__image" /> } @else { <span class="card__band" aria-hidden="true"></span> }
                 <p class="card__meta">{{ post.publishedAt || post.scheduledPublishAt || post.updatedAt || post.createdAt | date:'dd.MM.yyyy' }}@if (post.author) {, {{ post.author }}}</p>
                 <h3>{{ post.title }}</h3>
                 <p class="card__lead card__clamp">{{ post.summary || post.content }}</p>
@@ -202,10 +250,10 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
 
       @if (testimonials().length) {
         <section class="section" aria-labelledby="coaching-testimonials-title">
-          <div class="section-head"><h2 id="coaching-testimonials-title">{{ testimonialsHeading()?.title || 'Koçluk kullanıcılarından' }}</h2>@if (testimonialsHeading()?.summary) { <p>{{ testimonialsHeading()?.summary }}</p> }</div>
+          <div class="section-head" publicReveal><h2 id="coaching-testimonials-title">{{ testimonialsHeading()?.title || 'Koçluk kullanıcılarından' }}</h2>@if (testimonialsHeading()?.summary) { <p>{{ testimonialsHeading()?.summary }}</p> }</div>
           <div class="cards">
-            @for (item of testimonials(); track item.id) {
-              <figure class="card quote">
+            @for (item of testimonials(); track item.id; let index = $index) {
+              <figure class="card quote" [publicReveal]="index">
                 @if (isCoachingMediaUrl(item.imageUrl)) { <img [src]="item.imageUrl" [alt]="item.title" class="quote__image" /> }
                 <blockquote>“{{ item.content }}”</blockquote>
                 <figcaption><strong>{{ item.title }}</strong>@if (item.summary) { <span>{{ item.summary }}</span> }</figcaption>
@@ -217,8 +265,8 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
 
       @if (faq().length) {
         <section class="section" aria-labelledby="coaching-home-faq-title">
-          <div class="section-head"><h2 id="coaching-home-faq-title">{{ faqHeading()?.title || 'Sık sorulan sorular' }}</h2>@if (faqHeading()?.summary) { <p>{{ faqHeading()?.summary }}</p> }</div>
-          <div class="faq">
+          <div class="section-head" publicReveal><h2 id="coaching-home-faq-title">{{ faqHeading()?.title || 'Sık sorulan sorular' }}</h2>@if (faqHeading()?.summary) { <p>{{ faqHeading()?.summary }}</p> }</div>
+          <div class="faq" publicReveal>
             @for (item of faq(); track item.id) {
               <details>
                 <summary>{{ item.title }}</summary>
@@ -236,100 +284,17 @@ import { SiteSeoService } from '../../../core/services/site-seo.service';
         </section>
       }
 
-      <section class="closing" aria-labelledby="coaching-cta-title">
-        <div>
+      <section class="closing" aria-labelledby="coaching-cta-title" publicReveal>
+        <span class="closing__ring closing__ring--1" aria-hidden="true"></span><span class="closing__ring closing__ring--2" aria-hidden="true"></span>
+        <div class="closing__copy">
           <h2 id="coaching-cta-title">{{ closingCta()?.title || 'Bu haftanın planını bugün kur.' }}</h2>
           <p>{{ closingCta()?.summary || 'Hesap açmak ücretsiz. Boş saatlerini gir, ilk haftan hazır olsun.' }}</p>
         </div>
-        <a [href]="closingCta()?.linkUrl || '/auth/register/student'" class="ds-btn ds-btn--primary ds-btn--large">{{ closingCta()?.linkLabel || 'Ücretsiz hesap aç' }}</a>
+        <a [href]="closingCta()?.linkUrl || '/auth/register/student'" class="ds-btn ds-btn--large closing__cta">{{ closingCta()?.linkLabel || 'Ücretsiz hesap aç' }}</a>
       </section>
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .home { display: flex; flex-direction: column; gap: 72px; color: var(--ds-text); }
-    h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; }
-
-    .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: center; gap: 56px; padding-top: 24px; }
-    .hero__copy { display: flex; flex-direction: column; gap: 20px; }
-    .hero__title { max-width: 620px; font-size: clamp(36px, 4.6vw, 56px); font-weight: 700; line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; }
-    .hero__lead { max-width: 560px; color: var(--ds-muted); font-size: 19px; line-height: 1.6; }
-    .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
-    .hero__note { color: var(--ds-muted); font-size: 15px; }
-
-    .week { padding: 20px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius); background: var(--ds-surface); box-shadow: var(--ds-shadow); }
-    .week__head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; }
-    .week__head span { color: var(--ds-muted); font-size: 14px; }
-    .week__days { display: flex; flex-direction: column; gap: 6px; }
-    .week__day { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 10px; border-radius: var(--ds-radius-control); }
-    .week__day--today { background: var(--ds-soft); box-shadow: inset 4px 0 0 var(--ds-accent); }
-    .week__name { width: 40px; color: var(--ds-muted); font-size: 14px; font-weight: 600; }
-    .week__lesson { padding: 3px 9px; border-radius: 6px; font-size: 13px; font-weight: 600; background: var(--ds-bg); color: var(--ds-text); }
-    .week__lesson[data-subject='math'] { background: var(--ds-math-bg); color: var(--ds-math-fg); }
-    .week__lesson[data-subject='turkish'] { background: var(--ds-turkish-bg); color: var(--ds-turkish-fg); }
-    .week__lesson[data-subject='science'] { background: var(--ds-science-bg); color: var(--ds-science-fg); }
-    .week__lesson[data-subject='history'] { background: var(--ds-history-bg); color: var(--ds-history-fg); }
-    .week__foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--ds-line); color: var(--ds-muted); font-size: 14px; }
-    .week__foot strong { color: var(--ds-text); font-variant-numeric: tabular-nums; }
-
-    .section, .band { display: flex; flex-direction: column; gap: 24px; }
-    .band { padding: 40px; border-radius: var(--ds-radius); background: var(--ds-surface); border: 1px solid var(--ds-line); }
-    .section-head { display: flex; flex-direction: column; gap: 8px; max-width: 680px; }
-    .section-head--row { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; max-width: none; }
-    .section-head--row > div { display: flex; flex-direction: column; gap: 8px; max-width: 680px; }
-    .section-head h2 { font-size: clamp(26px, 2.6vw, 32px); font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; }
-    .section-head p { color: var(--ds-muted); font-size: 17px; line-height: 1.6; }
-
-    .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 0; list-style: none; }
-    .step { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 3px solid var(--ds-primary); }
-    .step__no { color: var(--ds-primary); font-size: 14px; font-weight: 600; }
-    .step h3 { font-size: 19px; font-weight: 600; line-height: 1.3; }
-    .step p { color: var(--ds-muted); line-height: 1.6; }
-
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    .card { display: flex; flex-direction: column; gap: 10px; padding: 22px; border: 1px solid var(--ds-line); border-radius: var(--ds-radius); background: var(--ds-surface); color: var(--ds-text); }
-    .card h3 { font-size: 19px; font-weight: 600; line-height: 1.3; }
-    .card__lead { color: var(--ds-muted); line-height: 1.6; }
-    .card__meta { color: var(--ds-muted); font-size: 14px; }
-    .card__image { width: 100%; height: 160px; border-radius: var(--ds-radius-control); object-fit: cover; }
-    .card__clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .card--link { text-decoration: none; transition: border-color 150ms ease; }
-    .card--link:hover { border-color: var(--ds-primary); }
-    .card .ds-link { margin-top: auto; align-self: flex-start; }
-
-    .plan__audience { color: var(--ds-primary); font-size: 14px; font-weight: 600; }
-    .plan--featured { border-color: var(--ds-primary); box-shadow: var(--ds-shadow); }
-    .plan__price { margin-top: 6px; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .plan__terms { color: var(--ds-muted); font-size: 14px; }
-    .plan__features { display: flex; flex-direction: column; gap: 8px; padding: 0; list-style: none; }
-    .plan__features li { display: flex; gap: 8px; line-height: 1.5; }
-    .plan__features svg { flex: none; margin-top: 4px; color: var(--ds-success); }
-    .plan__actions { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: auto; padding-top: 8px; }
-    .plan__login { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
-
-    .quote blockquote { line-height: 1.6; }
-    .quote figcaption span { margin-left: 8px; color: var(--ds-muted); }
-    .quote__image { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-
-    .faq { border: 1px solid var(--ds-line); border-radius: var(--ds-radius); background: var(--ds-surface); }
-    .faq details + details { border-top: 1px solid var(--ds-line); }
-    .faq summary { display: flex; align-items: center; min-height: 52px; padding: 0 18px; font-weight: 600; cursor: pointer; }
-    .faq .cms-copy { padding: 0 18px 18px; }
-
-    .cms-copy { display: flex; flex-direction: column; gap: 10px; color: var(--ds-muted); line-height: 1.6; }
-    .cms-copy h2, .cms-copy h3, .cms-copy h4 { color: var(--ds-text); font-size: 16px; font-weight: 600; }
-    .cms-copy ul { padding-left: 20px; }
-    .cms-copy img { max-height: 288px; border-radius: var(--ds-radius-control); object-fit: cover; }
-    .cms-copy p { white-space: pre-wrap; }
-
-    .empty { padding: 20px; border: 1px dashed var(--ds-field); border-radius: var(--ds-radius); color: var(--ds-muted); }
-    .closing { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 36px 40px; border-radius: var(--ds-radius); background: var(--ds-visual-bg); }
-    .closing h2 { font-size: 26px; font-weight: 700; line-height: 1.2; }
-    .closing p { margin-top: 6px; color: var(--ds-visual-muted); }
-    .ds-alert .ds-btn--quiet { margin-left: -8px; }
-
-    @media (max-width: 960px) { .hero { grid-template-columns: 1fr; gap: 32px; } .steps { grid-template-columns: 1fr; } .band, .closing { padding: 24px; } }
-  `]
+  styleUrls: ['./coaching-public-home-hero.scss', './coaching-public-home.component.scss', './coaching-public-home-plans.scss']
 })
 export class CoachingPublicHomeComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
@@ -426,6 +391,56 @@ export class CoachingPublicHomeComponent implements OnInit {
     const cheapest = [...tiers].sort((a, b) => a.price - b.price)[0];
     return { audience, tiers, minSeats: Math.min(...seats), maxSeats: Math.max(...seats), periods, features, cheapest };
   }).filter(group => group !== null));
+  readonly chosenAudience = signal<'Teacher' | 'Institution' | null>(null);
+  readonly chosenDays = signal<number | null>(null);
+  readonly chosenSeats = signal<number | null>(null);
+  /** The package the visitor picked (audience, period, students), with what it costs per student and saves per year. */
+  readonly picked = computed(() => {
+    const groups = this.packageGroups();
+    if (!groups.length) return null;
+    const group = groups.find(item => item.audience === this.chosenAudience()) ?? groups[0];
+    const periods = [...new Set(group.tiers.map(plan => plan.durationDays))].sort((a, b) => a - b);
+    const days = periods.includes(this.chosenDays() ?? -1) ? this.chosenDays()! : periods[periods.length - 1];
+    const seatOptions = [...new Set(group.tiers.map(plan => plan.includedStudentSeats!))].sort((a, b) => a - b);
+    const wanted = this.chosenSeats();
+    const seats = wanted !== null && seatOptions.includes(wanted) ? wanted : seatOptions[Math.min(2, seatOptions.length - 1)];
+    const plan = group.tiers.find(item => item.durationDays === days && item.includedStudentSeats === seats)
+      ?? group.tiers.find(item => item.includedStudentSeats === seats) ?? group.tiers[0];
+    const yearlySaving = (count: number) => {
+      const year = group.tiers.find(item => item.includedStudentSeats === count && item.durationDays >= 360);
+      const short = group.tiers.filter(item => item.includedStudentSeats === count && item.durationDays < 360).sort((a, b) => b.durationDays - a.durationDays)[0];
+      if (!year || !short) return { amount: 0, percent: 0 };
+      const asYear = short.price * Math.round(year.durationDays / short.durationDays);
+      return { amount: Math.max(0, asYear - year.price), percent: asYear > 0 ? Math.max(0, Math.round((1 - year.price / asYear) * 100)) : 0 };
+    };
+    const months = Math.max(1, Math.round(plan.durationDays / 30));
+    return {
+      group, periods, days, seatOptions, seats, plan,
+      perStudentMonthly: plan.price / (plan.includedStudentSeats || 1) / months,
+      saving: plan.durationDays >= 360 ? yearlySaving(seats).amount : 0,
+      bestSaving: Math.max(0, ...seatOptions.map(count => yearlySaving(count).percent))
+    };
+  });
+
+  chooseAudience(audience: 'Teacher' | 'Institution'): void { this.chosenAudience.set(audience); this.chosenSeats.set(null); }
+  chooseDays(days: number): void { this.chosenDays.set(days); }
+  chooseSeats(seats: number): void { this.chosenSeats.set(seats); }
+  periodLabel(days: number): string { return days >= 360 ? 'Yıllık' : days % 30 === 0 ? `${days / 30} aylık` : `${days} günlük`; }
+
+  /** An amount in the plans' currency without decimals ("66 ₺"). */
+  amountText(value: number): string {
+    const currency = /^[A-Z]{3}$/.test(this.currency() ?? '') ? this.currency()! : 'TRY';
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value);
+  }
+
+  private readonly tones = ['math', 'turkish', 'science', 'history'] as const;
+  tone(index: number): string { return this.tones[index % this.tones.length]; }
+  /** Student, parent, teacher, then a chart: the people cards' icons by position. */
+  personIcon(index: number): string {
+    return ['M22 10L12 5 2 10l10 5 10-5zM6 12v5c3 2 9 2 12 0v-5', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-4-6.3',
+      'M4 5h16v11H4zM8 20h8M12 16v4', 'M4 20V10M10 20V4M16 20v-8M22 20H2'][index % 4];
+  }
+
   readonly singlePlans = computed(() => {
     const grouped = new Set(this.packageGroups().flatMap(group => group.tiers));
     return this.plans().filter(plan => !grouped.has(plan));

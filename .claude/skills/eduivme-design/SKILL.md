@@ -63,6 +63,12 @@ Kullanılmaz:
 
 Koyu tema sade kalır, gölge yok.
 
+## Halka açık siteler: tema ve hareket (kullanıcı kararı, 27.11.2026)
+- **Tema:** eduivme.com, maxkoc.com ve maxkampus.com varsayılan olarak **açık** açılır; cihazın koyu ayarı tek başına siteyi koyu yapmaz. Her sitenin üst çubuğunda koyu/açık geçiş düğmesi var (`app-theme-toggle`, maxkampüs'te Görünüm menüsü); seçim `theme` anahtarında saklanır, "Cihaz ayarına göre" ancak seçilirse uygulanır.
+- **Renk ve canlılık (halka açık sayfalar):** giriş bölümünde ürün renklerinde yumuşak, bulanık ışık lekeleri ve renkli kartlar kullanılabilir; açık temada giriş bölümü de açıktır. Koyu tema sade kalır (lekeler soluk, büyük renkli paneller yüzey rengine döner).
+- **Hareket:** bloklar ilk kez göründüğünde yukarı doğru belirir (`publicReveal`), basılabilir kartlar üzerine gelince hafifçe kalkar (`public-lift`), giriş bölümündeki örnek kart yavaşça süzülür. İçerik varsayılan olarak görünürdür (arama motoru ve JS'siz ziyaretçi için); `prefers-reduced-motion` açıksa hiç hareket yok. Ortak stiller `clients/shared/styles/_public-motion.scss`.
+- Bu kurallar uygulama içi paneller için değil; panellerde yukarıdaki sade ölçü geçerli.
+
 ## Kural: sabit renk yok
 - Bileşenlerde ham hex yazma; anlamlı değişkenleri kullan (`--sp-*`, `--coaching-*` ya da yeni tasarım değişkenleri).
 - Her yüzey açık ve koyu temada birlikte tasarlanır. Beyaz zemin üstünde temadan gelen açık yazı rengi kalmasın; 18.11.2026 hatası buydu: koyu temada egzersiz metni beyaz zeminde beyaz yazıyla çıkıyordu.

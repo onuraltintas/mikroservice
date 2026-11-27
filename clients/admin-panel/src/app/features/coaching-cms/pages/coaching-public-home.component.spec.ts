@@ -78,6 +78,34 @@ describe('CoachingPublicHomeComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Ücret bilgisi için giriş yapın');
   });
 
+  it('lets teachers and institutions pick a package and shows its price per student and yearly saving', () => {
+    const tier = (audience: 'Teacher' | 'Institution', seats: number, days: number, price: number): CoachingSubscriptionPlan => ({
+      ...basePlan(`${audience}-${seats}-${days}`, `${seats} öğrenci, ${days >= 360 ? '1 yıl' : '3 ay'}`, audience),
+      isContactOnly: false, price, durationDays: days, includedStudentSeats: seats, features: ['Veli paneli'], extraSeatPrice: 300 });
+    const fixture = setup([
+      tier('Teacher', 3, 90, 897), tier('Teacher', 3, 365, 2388), tier('Teacher', 10, 90, 2247), tier('Teacher', 10, 365, 5988),
+      tier('Teacher', 20, 90, 3747), tier('Teacher', 20, 365, 9990), tier('Institution', 25, 90, 3747), tier('Institution', 25, 365, 9990)
+    ]);
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    const card = () => page.querySelector('[data-testid="plan-picker"] .price-card') as HTMLElement;
+    expect(card().textContent).toContain('20 öğrenci, 1 yıl');
+    expect(card().textContent).toContain('9.990');
+    expect(page.textContent).toContain("%33'e varan tasarruf");
+    const press = (label: string) => ([...page.querySelectorAll('[data-testid="plan-picker"] button')] as HTMLButtonElement[])
+      .find(button => button.textContent!.trim() === label || button.textContent!.trim().startsWith(label + ' '))!.click();
+    (page.querySelector('.seats__list button') as HTMLButtonElement).click(); fixture.detectChanges();
+    expect(card().textContent).toContain('3 öğrenci, 1 yıl');
+    expect(card().textContent).toContain('1.200');
+    press('3 aylık'); fixture.detectChanges();
+    expect(card().textContent).toContain('3 öğrenci, 3 ay');
+    expect(card().textContent).not.toContain('tasarruf');
+    press('Kurumlar için'); fixture.detectChanges();
+    expect(card().textContent).toContain('25 öğrenci');
+    expect((page.querySelector('[data-testid="plan-group-register-Institution"]') as HTMLAnchorElement).getAttribute('href')).toContain('/auth/register/institution');
+    expect(page.textContent).toContain('Öğrenci misin?');
+  });
+
   it('shows a load error with a retry instead of "no plans" when the plan service fails', () => {
     const fixture = setup([]);
     const service = TestBed.inject(CoachingManagementService) as unknown as { getPublicSubscriptionPlans: ReturnType<typeof vi.fn> };
