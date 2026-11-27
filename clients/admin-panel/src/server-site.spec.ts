@@ -32,6 +32,7 @@ describe('server site helpers (O11)', () => {
   it('lists the fixed pages and the published CMS pages and posts', () => {
     const xml = buildSitemap('https://eduivme.com', [
       { kind: 'Page', slug: 'kurumlar', lastModified: '2026-10-20T08:00:00Z' },
+      { kind: 'Page', slug: 'sikca-sorulan-sorular', lastModified: '2026-10-20T08:00:00Z' },
       { kind: 'Blog', slug: 'lgs-hazirlik', lastModified: '2026-10-17T08:00:00Z' },
       { kind: 'Blog', slug: '../bad<slug>', lastModified: '2026-10-17T08:00:00Z' },
       { kind: 'Block', slug: 'hero', lastModified: '2026-10-17T08:00:00Z' }
@@ -43,6 +44,7 @@ describe('server site helpers (O11)', () => {
     expect(xml).toContain('<loc>https://eduivme.com/coaching/blog/lgs-hazirlik</loc><lastmod>2026-10-17</lastmod>');
     expect(xml).not.toContain('bad');
     expect(xml).not.toContain('hero');
+    expect(xml).not.toContain('sikca-sorulan-sorular');
     expect(xml.startsWith('<?xml')).toBe(true);
   });
 
@@ -134,5 +136,16 @@ describe('CachedFetcher answer shapes (live check 19.11.2026)', () => {
     expect(await cached.json('http://x/coaching')).toEqual([{ slug: 'a' }]);
     expect(await cached.json('http://x/site-sitemap')).toEqual([{ slug: 'kurs-yonetimi', lastModified: '2026-11-19T06:00:00Z' }]);
     expect(await cached.json('http://x/site-page')).toEqual({ page: { title: 'Kurs Yönetimi' } });
+  });
+});
+
+describe('permanentRedirect (27.11.2026)', () => {
+  it('sends the starter FAQ content page to the FAQ page and leaves other paths alone', async () => {
+    const { permanentRedirect } = await import('./server-site');
+    expect(permanentRedirect('/coaching/pages/sikca-sorulan-sorular')).toBe('/coaching/faq');
+    expect(permanentRedirect('/coaching/pages/sikca-sorulan-sorular/')).toBe('/coaching/faq');
+    expect(permanentRedirect('/coaching/pages/kurumlar')).toBeNull();
+    expect(permanentRedirect('/coaching/faq')).toBeNull();
+    expect(permanentRedirect('/coaching/pages/../x')).toBeNull();
   });
 });

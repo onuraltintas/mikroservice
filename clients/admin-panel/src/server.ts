@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import { googleAuthOpenerPolicy, resolveServerAllowedHosts, serverTrustProxyHeaders } from './server-config';
-import { CachedFetcher, SITE_BRAND_NAME, SitemapEntry, SocialPreview, brandForHost, buildRobots, buildEduivmeSitemap, buildSitemap, cmsPreviewTarget, enrichHead, isEduivmeSiteHost, productPagePreviewTarget, publicOrigin } from './server-site';
+import { CachedFetcher, SITE_BRAND_NAME, SitemapEntry, SocialPreview, brandForHost, buildRobots, buildEduivmeSitemap, buildSitemap, cmsPreviewTarget, enrichHead, isEduivmeSiteHost, permanentRedirect, productPagePreviewTarget, publicOrigin } from './server-site';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -37,6 +37,13 @@ const requestBrand = (req: express.Request) => brandForHost(req.get('x-forwarded
 app.get('/favicon.ico', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.sendFile(join(browserDistFolder, 'brand', `${requestBrand(req)}.ico`));
+});
+
+// A CMS page shown at another address answers with a permanent redirect, not a copy of that page.
+app.get('/coaching/pages/:slug', (req, res, next) => {
+  const target = permanentRedirect(req.path);
+  if (target) res.redirect(301, target);
+  else next();
 });
 
 app.get('/robots.txt', (req, res) => {
