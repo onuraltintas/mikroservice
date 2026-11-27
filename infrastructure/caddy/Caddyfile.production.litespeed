@@ -299,6 +299,19 @@ admin.eduivme.com:80 {
 		}
 	}
 
+	# The legal pages (/legal/privacy, /legal/kvkk) read the shared, public legal documents on eduivme.com itself. The
+	# management redirect below sent these reads to admin.eduivme.com, where the browser blocks the credentialed
+	# cross-origin response, so the pages showed "not published" (27.11.2026).
+	@sharedLegalPages {
+		method GET
+		path /api/platform/legal-pages /api/platform/legal-pages/*
+	}
+	handle @sharedLegalPages {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
 	@management path /auth /auth/* /dashboard /dashboard/* /other-site /api /api/* /hubs /hubs/*
 	handle @management {
 		redir https://admin.eduivme.com{uri} 302
