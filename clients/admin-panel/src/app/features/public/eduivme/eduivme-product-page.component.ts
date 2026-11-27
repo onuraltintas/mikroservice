@@ -72,7 +72,7 @@ import { EduivmeSiteLayoutComponent } from './eduivme-site-layout.component';
                 @for (audience of data.audiences; track audience.id; let i = $index) {
                   @let product = productOf(audience);
                   <li class="audience" [attr.data-brand]="product ? scopeOf(product) : (i % 2 === 0 ? 'eduivme' : 'maxkoc')"
-                    [class.audience--accent]="!product && i % 2 === 0" [class.audience--product]="!!product">
+                    [class.audience--accent]="!product && i % 2 === 0" [class.audience--product]="!!product" [class.audience--km]="product === 'km'">
                     @if (product) {
                       <img class="audience__mark" [src]="markOf(product)" alt="" width="56" height="56">
                     } @else {

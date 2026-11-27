@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { LanguageService } from '../../../core/services/language.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NavigationItemDto, PublicCmsService } from '../../../core/services/public-cms.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 interface PublicNavLink {
   href: string;
@@ -29,6 +30,8 @@ export class NavbarComponent implements OnInit {
   mobileMenuOpen = false;
 
   private languageService = inject(LanguageService);
+  /** Light/dark switch of the public site (the same choice as the student panel's, `sp-theme`). */
+  readonly theme = inject(ThemeService);
   private readonly auth = inject(AuthService);
   /**
    * Live test #58 (user decision 17.11.2026): a signed-in visitor is offered their panel instead of "Giriş yap".
