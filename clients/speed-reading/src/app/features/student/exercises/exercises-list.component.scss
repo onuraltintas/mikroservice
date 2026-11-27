@@ -106,24 +106,34 @@
 
 .category-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 32px;
     padding: 16px;
-    background: white;
+    background: var(--sp-surface);
     border-radius: 12px;
     box-shadow: 0 2px 4px color-mix(in srgb, var(--ui-text) 10%, transparent);
-    overflow-x: auto;
 }
 
+/* 26.11.2026: buttons keep their own width; on narrow screens they wrap instead of shrinking under their label. */
 .category-tabs button {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 24px;
+    min-height: 44px;
+    padding: 10px 16px;
     border-radius: 8px;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
     white-space: nowrap;
+}
+
+.category-tabs button .material-icons {
+    flex: none;
+    width: 20px;
+    overflow: hidden;
+    font-size: 20px;
 }
 
 .category-tabs button:hover {
@@ -132,11 +142,8 @@
 
 .category-tabs button.active {
     background: var(--ui-brand);
-    color: white;
-}
-
-.category-tabs button.active mat-icon {
-    color: white;
+    border-color: var(--ui-brand);
+    color: var(--sp-on-primary);
 }
 
 .loading-container {
@@ -359,18 +366,8 @@ mat-card-actions {
     }
 
     .category-tabs {
-        overflow-x: auto;
         padding: 12px;
         margin-bottom: 24px;
-
-        /* Hide scrollbar for cleaner look */
-        scrollbar-width: none;
-
-        /* Firefox */
-        &::-webkit-scrollbar {
-            display: none;
-            /* Chrome/Safari */
-        }
     }
 
     .page-header {

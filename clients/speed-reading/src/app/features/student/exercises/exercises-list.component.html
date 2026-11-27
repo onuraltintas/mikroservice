@@ -23,8 +23,8 @@
 
     <div class="category-tabs">
         @for (cat of categories; track cat) {
-        <button class="sp-btn" [class.active]="selectedCategory === cat" (click)="filterByCategory(cat)">
-            <span class="material-icons">{{ getCategoryIcon(cat) }}</span>
+        <button type="button" class="sp-btn" [class.active]="selectedCategory === cat" [attr.aria-pressed]="selectedCategory === cat" (click)="filterByCategory(cat)">
+            <span class="material-icons" aria-hidden="true">{{ getCategoryIcon(cat) }}</span>
             {{ cat === 'all' ? 'Tümü (' + exercises.length + ')' : cat }}
         </button>
         }
