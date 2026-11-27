@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { RevealDirective } from '../../../shared/public-site/reveal.directive';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { CoachingCmsEntry, CoachingManagementService } from '../../../core/services/coaching-management.service';
@@ -7,20 +8,37 @@ import { parseCoachingCmsContent } from '../coaching-cms-content';
 @Component({
   selector: 'app-coaching-public-faq',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RevealDirective],
   template: `
-    <section class="mx-auto max-w-4xl space-y-7" aria-labelledby="coaching-faq-title">
-      <header class="faq-heading rounded-[1.75rem] px-6 py-8 sm:px-9 sm:py-10"><p class="text-sm font-semibold text-[var(--ds-link)]">{{ heading()?.eyebrow || 'Koçluk desteği' }}</p><h1 id="coaching-faq-title" class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{{ heading()?.title || 'Sıkça sorulan sorular' }}</h1>@if (heading()?.summary) {<p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--ds-muted)]">{{ heading()?.summary }}</p>}</header>
-      @if (loading()) { <p role="status" class="text-center text-sm text-[var(--ds-muted)]">Sorular yükleniyor…</p> }
-      @if (error()) { <p role="alert" class="rounded-xl bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</p> }
-      <div class="divide-y divide-[var(--ds-line)] rounded-2xl border border-[var(--ds-line)] bg-[var(--ds-surface)] px-5">
-        @for (item of entries(); track item.id) {<details class="py-5"><summary class="cursor-pointer font-semibold">{{ item.title }}</summary><div class="cms-article mt-3 space-y-3 text-sm leading-7 text-[var(--ds-muted)]">@for (segment of contentSegments(item.content); track $index) { @if (segment.type === 'heading') { <h2 class="font-semibold text-[var(--ds-text)]">{{ segment.value }}</h2> } @else if (segment.type === 'list') { <ul class="list-disc space-y-1 pl-5">@for (part of segment.items; track $index) { <li>{{ part }}</li> }</ul> } @else if (segment.type === 'image') { <img [src]="segment.src" [alt]="segment.alt" class="max-h-72 rounded-xl object-cover" /> } @else { <p class="whitespace-pre-wrap">{{ segment.value }}</p> } }</div></details>} @empty { @if (!loading() && !error()) { <p class="py-8 text-sm text-[var(--ds-muted)]">Henüz yayınlanmış bir soru yok.</p> } }
-      </div>
-    </section>
+    <div class="sub sub--narrow">
+      <header class="band-hero" aria-labelledby="coaching-faq-title">
+        <div class="band-hero__glow" aria-hidden="true"><span class="band-hero__blob band-hero__blob--ink"></span><span class="band-hero__blob band-hero__blob--sun"></span></div>
+        <p class="eyebrow">{{ heading()?.eyebrow || 'Koçluk desteği' }}</p>
+        <h1 id="coaching-faq-title">{{ heading()?.title || 'Sıkça sorulan sorular' }}</h1>
+        @if (heading()?.summary) { <p class="band-hero__lead">{{ heading()?.summary }}</p> }
+      </header>
+      @if (loading()) { <p role="status" class="status">Sorular yükleniyor…</p> }
+      @if (error()) { <p role="alert" class="ds-alert ds-alert--warning">{{ error() }}</p> }
+      @if (entries().length) {
+        <div class="faq" publicReveal>
+          @for (item of entries(); track item.id) {
+            <details>
+              <summary>{{ item.title }}</summary>
+              <div class="faq__answer">
+                @for (segment of contentSegments(item.content); track $index) {
+                  @if (segment.type === 'heading') { <h2>{{ segment.value }}</h2> }
+                  @else if (segment.type === 'list') { <ul>@for (part of segment.items; track $index) { <li>{{ part }}</li> }</ul> }
+                  @else if (segment.type === 'image') { <img [src]="segment.src" [alt]="segment.alt" /> }
+                  @else { <p>{{ segment.value }}</p> }
+                }
+              </div>
+            </details>
+          }
+        </div>
+      } @else if (!loading() && !error()) { <p class="empty">Henüz yayınlanmış bir soru yok.</p> }
+    </div>
   `,
-  styles: [`
-    .faq-heading { border: 1px solid var(--ds-line); background: var(--ds-surface); }
-  `]
+  styleUrl: './coaching-public-subpage.scss'
 })
 export class CoachingPublicFaqComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);

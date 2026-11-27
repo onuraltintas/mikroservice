@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { RevealDirective } from '../../../shared/public-site/reveal.directive';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { SiteSeoService } from '../../../core/services/site-seo.service';
 import { RouterLink } from '@angular/router';
@@ -7,23 +8,40 @@ import { CoachingCmsEntry, CoachingManagementPage, CoachingManagementService } f
 @Component({
   selector: 'app-coaching-public-blog',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RevealDirective],
   template: `
-    <section class="mx-auto max-w-6xl space-y-7" aria-labelledby="coaching-blog-title">
-      <header class="blog-heading rounded-[1.75rem] px-6 py-8 sm:px-9 sm:py-10"><p class="text-sm font-semibold text-[var(--ds-link)]">{{ heading()?.eyebrow || 'Koçluk kaynakları' }}</p><h1 id="coaching-blog-title" class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{{ heading()?.title || 'Öğrenme yolculuğuna eşlik eden yazılar' }}</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--ds-muted)]">{{ heading()?.summary || 'Hedef belirleme, çalışma planı ve koçluk görüşmeleri için uygulamaya dönük kısa rehberler.' }}</p></header>
-      @if (loading()) { <p role="status" class="text-center text-sm text-[var(--ds-muted)]">Yazılar yükleniyor…</p> }
-      @if (error()) { <div role="alert" class="rounded-xl bg-(--ui-danger-soft) p-4 text-sm text-(--ui-danger)">{{ error() }}</div> }
-      <div class="grid gap-4 md:grid-cols-2">@for (post of page().items; track post.id) {<article class="blog-list-card rounded-2xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-6">@if (isCoachingMediaUrl(post.coverImageUrl)) {<img [src]="post.coverImageUrl" [alt]="post.title" class="mb-4 h-48 w-full rounded-xl object-cover" />}<p class="text-xs font-medium text-[var(--ds-muted)]">{{ post.publishedAt || post.scheduledPublishAt || post.updatedAt || post.createdAt | date:'dd MMMM yyyy' }} @if (post.author) {<span>, {{ post.author }}</span>}</p><h2 class="mt-3 text-xl font-semibold leading-7 tracking-tight">{{ post.title }}</h2><p class="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-[var(--ds-muted)]">{{ post.summary || post.content.slice(0, 400) }}</p><a [routerLink]="['/coaching/blog', post.slug]" class="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-[var(--ds-link)]">Yazıyı oku <span aria-hidden="true">→</span></a></article>} @empty { @if (!loading()) { <p class="col-span-full rounded-2xl border border-dashed border-[var(--ds-field)] p-10 text-center text-sm text-[var(--ds-muted)]">Henüz yayınlanmış yazı yok. Yeni yazılar eklendiğinde burada görebilirsiniz.</p> } }</div>
-      <nav class="flex items-center justify-between border-t border-[var(--ds-line)] pt-5" aria-label="Yazı sayfaları"><button type="button" class="rounded-lg border border-[var(--ds-field)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--ds-bg)] disabled:cursor-not-allowed disabled:opacity-50" (click)="changePage(-1)" [disabled]="page().pageNumber <= 1 || loading()">← Önceki</button><span class="text-sm text-[var(--ds-muted)]" aria-live="polite">Sayfa {{ page().pageNumber }} / {{ totalPages() }}</span><button type="button" class="rounded-lg border border-[var(--ds-field)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--ds-bg)] disabled:cursor-not-allowed disabled:opacity-50" (click)="changePage(1)" [disabled]="page().pageNumber >= totalPages() || loading()">Sonraki →</button></nav>
-    </section>
+    <div class="sub">
+      <header class="band-hero" aria-labelledby="coaching-blog-title">
+        <div class="band-hero__glow" aria-hidden="true"><span class="band-hero__blob band-hero__blob--ink"></span><span class="band-hero__blob band-hero__blob--sun"></span></div>
+        <p class="eyebrow">{{ heading()?.eyebrow || 'Koçluk kaynakları' }}</p>
+        <h1 id="coaching-blog-title">{{ heading()?.title || 'Öğrenme yolculuğuna eşlik eden yazılar' }}</h1>
+        <p class="band-hero__lead">{{ heading()?.summary || 'Hedef belirleme, çalışma planı ve koçluk görüşmeleri için uygulamaya dönük kısa rehberler.' }}</p>
+      </header>
+      @if (loading()) { <p role="status" class="status">Yazılar yükleniyor…</p> }
+      @if (error()) { <div role="alert" class="ds-alert ds-alert--warning">{{ error() }}</div> }
+      <div class="cards">
+        @for (post of page().items; track post.id; let index = $index) {
+          <article class="card public-lift" [attr.data-tone]="tone(index)" [publicReveal]="index % 2">
+            @if (isCoachingMediaUrl(post.coverImageUrl)) { <img [src]="post.coverImageUrl" [alt]="post.title" class="card__image" /> }
+            <p class="card__meta">{{ post.publishedAt || post.scheduledPublishAt || post.updatedAt || post.createdAt | date:'dd MMMM yyyy' }}@if (post.author) {<span>, {{ post.author }}</span>}</p>
+            <h2><a [routerLink]="['/coaching/blog', post.slug]">{{ post.title }}</a></h2>
+            <p class="card__lead">{{ post.summary || post.content.slice(0, 400) }}</p>
+            <span class="card__more" aria-hidden="true">Yazıyı oku</span>
+          </article>
+        } @empty {
+          @if (!loading()) { <p class="empty">Henüz yayınlanmış yazı yok. Yeni yazılar eklendiğinde burada görebilirsiniz.</p> }
+        }
+      </div>
+      @if (totalPages() > 1) {
+        <nav class="pager" aria-label="Yazı sayfaları">
+          <button type="button" class="ds-btn ds-btn--secondary" (click)="changePage(-1)" [disabled]="page().pageNumber <= 1 || loading()">Önceki sayfa</button>
+          <span aria-live="polite">Sayfa {{ page().pageNumber }} / {{ totalPages() }}</span>
+          <button type="button" class="ds-btn ds-btn--secondary" (click)="changePage(1)" [disabled]="page().pageNumber >= totalPages() || loading()">Sonraki sayfa</button>
+        </nav>
+      }
+    </div>
   `,
-  styles: [`
-    .blog-heading { border: 1px solid var(--ds-line); background: var(--ds-surface); }
-    .blog-list-card { display: flex; flex-direction: column; min-height: 15rem; transition: border-color .15s ease; }
-    .blog-list-card:hover { border-color: var(--ds-primary); }
-    .blog-list-card a { margin-top: auto; padding-top: 1rem; }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
-  `]
+  styleUrl: './coaching-public-subpage.scss'
 })
 export class CoachingPublicBlogComponent implements OnInit {
   private readonly service = inject(CoachingManagementService);
@@ -45,6 +63,7 @@ export class CoachingPublicBlogComponent implements OnInit {
     });
     this.load(1);
   }
+  tone(index: number): string { return ['math', 'turkish', 'science', 'history'][index % 4]; }
   totalPages(): number { return Math.max(1, Math.ceil(this.page().totalCount / this.page().pageSize)); }
   changePage(delta: number): void { this.load(Math.max(1, Math.min(this.totalPages(), this.page().pageNumber + delta))); }
   isCoachingMediaUrl(value: string | null | undefined): value is string {

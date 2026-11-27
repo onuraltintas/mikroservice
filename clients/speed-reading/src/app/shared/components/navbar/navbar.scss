@@ -2,14 +2,15 @@
 :host { position: sticky; top: 0; z-index: 100; display: block; }
 
 .navbar { border-bottom: 1px solid var(--ds-line); background: color-mix(in srgb, var(--ds-surface) 94%, transparent); backdrop-filter: blur(8px); }
-.container { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1168px; height: 72px; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
+.container { display: flex; align-items: center; justify-content: flex-start; gap: 16px; max-width: 1240px; height: 72px; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
 
 .logo { display: flex; align-items: center; gap: 10px; color: var(--ds-text); text-decoration: none; }
 .logo-icon { display: flex; }
-.logo span { font-size: 18px; font-weight: 600; }
+.logo { flex: none; }
+.logo span { font-size: 18px; font-weight: 600; white-space: nowrap; }
 
-.nav-links { display: flex; align-items: center; gap: 4px; }
-.nav-links > a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--ds-radius-control); color: var(--ds-text); font-size: 15px; font-weight: 500; text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.nav-links > a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; white-space: nowrap; border-radius: var(--ds-radius-control); color: var(--ds-text); font-size: 15px; font-weight: 500; text-decoration: none; }
 .nav-links > a:hover { background: var(--ds-soft); }
 .nav-links > a.nav-cta { margin-left: 8px; padding: 0 18px; border-radius: var(--ds-radius-button); background: var(--ds-primary); color: var(--ds-on-primary); }
 .nav-links > a.nav-cta:hover { background: var(--ds-primary-hover); }
@@ -21,7 +22,7 @@
 .mobile-toggle { display: none; place-items: center; width: 44px; height: 44px; border: 0; border-radius: var(--ds-radius-control); background: none; color: var(--ds-text); cursor: pointer; }
 .mobile-menu { display: none; }
 
-@media (max-width: 1024px) {
+@media (max-width: 1180px) {
   .container { height: 64px; padding: 0 16px; }
   .desktop-only { display: none; }
   .mobile-toggle { display: grid; }
@@ -30,3 +31,12 @@
   .mobile-menu-content > a:not(.ds-btn) { display: flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--ds-text); font-weight: 500; text-decoration: none; }
   .mobile-menu-content .ds-btn { margin-top: 8px; }
 }
+
+// Light/dark switch (27.11.2026)
+.theme-btn { display: inline-grid; flex: none; width: 44px; height: 44px; place-items: center; margin-left: 8px; padding: 0; border: 1px solid var(--ds-line);
+  border-radius: 12px; background: var(--ds-surface); color: var(--ds-text); cursor: pointer; transition: background-color .2s ease, border-color .2s ease; }
+.theme-btn:hover { border-color: var(--ds-primary); background: var(--ds-soft); }
+.theme-btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
+.theme-btn mat-icon { width: 22px; height: 22px; font-size: 22px; }
+@media (max-width: 1180px) { .theme-btn { margin-left: auto; } }
+@media (prefers-reduced-motion: reduce) { .theme-btn { transition: none; } }

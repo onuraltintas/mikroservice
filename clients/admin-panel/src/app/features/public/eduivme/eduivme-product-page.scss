@@ -32,3 +32,5 @@
 // A "Kimler için" card that leads to a product's own site carries the product's mark and colours.
 .audience__mark { width: 56px; height: 56px; margin-bottom: 6px; border-radius: 14px; }
 .audience--product { border-top: 4px solid var(--ds-primary); }
+// maxkampüs wears the eduivme graphite with the kehribar band, as on the home page's product card.
+.audience--km { border-top-color: var(--ds-accent); }

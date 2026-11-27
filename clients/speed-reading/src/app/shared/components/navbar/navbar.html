@@ -30,6 +30,12 @@
             <a class="ds-btn ds-btn--primary nav-cta" routerLink="/auth/register">Ücretsiz başla</a>
         </div>
 
+        <!-- Light/dark (27.11.2026): the site opens light; one press switches and the choice is kept in this browser. -->
+        <button type="button" class="theme-btn" (click)="theme.toggle()" [class.scrolled]="isScrolled"
+            [attr.aria-label]="theme.isDark ? 'Açık temaya geç' : 'Koyu temaya geç'" [attr.title]="theme.isDark ? 'Açık temaya geç' : 'Koyu temaya geç'">
+            <mat-icon aria-hidden="true">{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+
         <!-- Mobile Toggle -->
         <button type="button" class="mobile-toggle" (click)="toggleMobileMenu()"
             [attr.aria-label]="mobileMenuOpen ? 'Menüyü kapat' : 'Menüyü aç'"
