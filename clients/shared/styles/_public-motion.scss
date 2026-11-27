@@ -1,0 +1,21 @@
+// Motion of the public sites (eduivme.com, maxkoc.com, maxkampus.com; 27.11.2026). One rise-in as blocks scroll into
+// view (RevealDirective adds the classes), a gentle lift on cards that can be pressed, and nothing at all when the
+// visitor asked for reduced motion.
+.reveal-pending { opacity: 0; transform: translateY(28px); }
+.reveal-run { transition: opacity 600ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms); }
+
+.public-lift { transition: transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 250ms ease, border-color 250ms ease; }
+@media (hover: hover) {
+  .public-lift:hover { transform: translateY(-4px);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--ds-primary) 8%, transparent), 0 22px 44px -22px color-mix(in srgb, var(--ds-primary) 55%, transparent); }
+}
+
+@keyframes public-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes public-drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(18px, -14px) scale(1.06); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pending { opacity: 1; transform: none; }
+  .reveal-run, .public-lift { transition: none; }
+  .public-lift:hover { transform: none; }
+}

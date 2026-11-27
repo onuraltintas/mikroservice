@@ -3,11 +3,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { CoachingCmsEntry, CoachingCmsNavigationItem, CoachingManagementService } from '../../../core/services/coaching-management.service';
 import { SiteAnalyticsService } from '../../../core/services/site-analytics.service';
+import { ThemeToggleComponent } from '../../../shared/public-site/theme-toggle.component';
 
 @Component({
   selector: 'app-coaching-public-cms-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterOutlet, ThemeToggleComponent],
   template: `
     <div class="site" data-brand="maxkoc">
       <a class="skip ds-btn ds-btn--primary" href="#main-content">İçeriğe geç</a>
@@ -23,6 +24,7 @@ import { SiteAnalyticsService } from '../../../core/services/site-analytics.serv
             }
           </nav>
           <div class="site__actions">
+            <app-theme-toggle />
             <a href="/auth/login?returnUrl=%2Fcoaching-portal" class="ds-btn ds-btn--quiet">Giriş yap</a>
             <a [href]="branding()?.linkUrl || '/auth/register/student'" class="ds-btn ds-btn--primary">{{ branding()?.linkLabel || 'Ücretsiz başla' }}</a>
           </div>
@@ -55,14 +57,14 @@ import { SiteAnalyticsService } from '../../../core/services/site-analytics.serv
     .skip { position: absolute; left: 12px; top: -80px; z-index: 50; }
     .skip:focus { top: 12px; }
     .site__header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--ds-line); background: color-mix(in srgb, var(--ds-surface) 94%, transparent); backdrop-filter: blur(8px); }
-    .site__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; max-width: 1200px; margin: 0 auto; padding: 12px 24px; }
+    .site__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; max-width: 1280px; margin: 0 auto; padding: 12px 24px; }
     .site__brand { display: flex; align-items: center; gap: 10px; color: var(--ds-text); text-decoration: none; }
     .site__name { display: block; font-size: 18px; font-weight: 700; line-height: 1.1; }
     .site__note { display: block; color: var(--ds-muted); font-size: 12px; }
-    .site__nav { display: flex; flex-wrap: wrap; gap: 4px; margin-right: auto; }
-    .site__nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--ds-radius-control); color: var(--ds-text); font-size: 15px; font-weight: 500; text-decoration: none; }
-    .site__nav a:hover { background: var(--ds-soft); }
-    .site__actions { display: flex; align-items: center; gap: 8px; }
+    .site__nav { display: flex; flex-wrap: nowrap; gap: 2px; margin-right: auto; }
+    .site__nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 10px; color: var(--ds-text); font-size: 15px; font-weight: 500; text-decoration: none; white-space: nowrap; transition: background-color 200ms ease, color 200ms ease; }
+    .site__nav a:hover { background: var(--ds-soft); color: var(--ds-primary); }
+    .site__actions { display: flex; flex: none; align-items: center; gap: 8px; }
     .site__actions .ds-btn { min-height: 44px; }
     .site__main { flex: 1; width: 100%; max-width: 1200px; box-sizing: border-box; margin: 0 auto; padding: 32px 24px 72px; outline: none; }
     .site__footer { border-top: 1px solid var(--ds-line); background: var(--ds-surface); }
@@ -74,6 +76,10 @@ import { SiteAnalyticsService } from '../../../core/services/site-analytics.serv
     .site__links a, .site__links button { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ds-text); font: inherit; font-size: 14px; text-decoration: none; cursor: pointer; }
     .site__links a:hover, .site__links button:hover { color: var(--ds-link); text-decoration: underline; text-underline-offset: 3px; }
     .site__copyright { grid-column: 1 / -1; margin: 0; padding-top: 16px; border-top: 1px solid var(--ds-line); color: var(--ds-muted); font-size: 13px; }
+    @media (max-width: 1240px) {
+      .site__nav { order: 3; width: 100%; overflow-x: auto; }
+      .site__actions { margin-left: auto; }
+    }
     @media (max-width: 760px) {
       .site__bar { padding: 10px 16px; }
       .site__nav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; }

@@ -2,6 +2,7 @@
 // Colours only through --ds-* tokens (data-brand="eduivme" on <html>); the site adds its warm soft tone (--mk-soft).
 @use '../../../../shared/styles/design-tokens';
 @use '../../../../shared/styles/design-components';
+@use '../../../../shared/styles/public-motion';
 
 [data-brand='eduivme'] {
   --mk-soft: #FDF3DC;

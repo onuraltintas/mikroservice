@@ -20,17 +20,23 @@ describe('DarkModeService', () => {
   const create = () => TestBed.inject(DarkModeService);
   const html = () => document.documentElement;
 
-  it('follows the system by default without writing a choice', () => {
+  it('opens light by default, even on a dark device, without writing a choice', () => {
     systemDark = true;
     const theme = create();
-    expect(theme.mode()).toBe('system');
-    expect(theme.isDarkMode()).toBe(true);
-    expect(html().classList.contains('dark')).toBe(true);
-    expect(html().style.colorScheme).toBe('dark');
+    expect(theme.mode()).toBe('light');
+    expect(theme.isDarkMode()).toBe(false);
+    expect(html().classList.contains('dark')).toBe(false);
+    expect(html().style.colorScheme).toBe('light');
     expect(localStorage.getItem('theme')).toBeNull();
   });
 
+  it('follows the device when the visitor chose "system"', () => {
+    localStorage.setItem('theme', 'system'); systemDark = true;
+    expect(create().isDarkMode()).toBe(true);
+  });
+
   it('tracks a later system change while following the system', () => {
+    localStorage.setItem('theme', 'system');
     const theme = create();
     expect(theme.isDarkMode()).toBe(false);
     systemDark = true; listeners.forEach(listener => listener({ matches: true }));

@@ -33,14 +33,25 @@ export class ProseComponent {
   standalone: true,
   imports: [PlanCardsComponent, ProseComponent, RouterLink],
   template: `
-    <section class="mk-section"><div class="mk-wrap">
-      <h1 class="page-title">{{ page()?.subtitle || 'Öğrenci sayınıza göre fiyat' }}</h1>
-      @if (page()?.body) { <div class="mk-lead"><mk-prose [text]="page()!.body" /></div> }
+    <section class="mk-section pricing"><div class="mk-wrap">
+      <div class="pricing__head mk-enter">
+        <span class="mk-pill">Öğrenci başı aylık fiyat, gizli ücret yok</span>
+        <h1 class="page-title">{{ page()?.subtitle || 'Öğrenci sayınıza göre fiyat' }}</h1>
+        @if (page()?.body) { <div class="mk-lead"><mk-prose [text]="page()!.body" /></div> }
+      </div>
       <mk-plan-cards [notes]="store.home()?.plans ?? []" />
-      <p class="mk-muted after">Daha fazla öğrenciniz mi var? <a routerLink="/iletisim">Bize yazın</a>, kurumunuza uygun planı birlikte belirleyelim.</p>
+      <p class="after">Daha fazla öğrenciniz mi var? <a routerLink="/iletisim">Bize yazın</a>, kurumunuza uygun planı birlikte belirleyelim.</p>
     </div></section>
   `,
-  styles: `.page-title { margin: 0 0 12px; font-size: clamp(30px, 4vw, 40px); } .after { margin-top: 24px; }`
+  styles: `
+    .pricing { position: relative; overflow: hidden; isolation: isolate; }
+    .pricing::before { content: ''; position: absolute; z-index: -1; left: 50%; top: -260px; width: 760px; height: 520px; translate: -50% 0; border-radius: 50%;
+      background: var(--ds-accent); opacity: 0.18; filter: blur(80px); }
+    .pricing__head { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 32px; text-align: center; }
+    .pricing__head .mk-lead { margin: 0 auto; }
+    .page-title { margin: 0; font-size: clamp(32px, 4.6vw, 48px); letter-spacing: -0.02em; }
+    .after { margin-top: 28px; text-align: center; color: var(--ds-muted); }
+  `
 })
 export class PricingComponent implements OnInit {
   readonly store = inject(SiteStore);

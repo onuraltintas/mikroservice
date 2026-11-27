@@ -5,14 +5,15 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 /**
  * Colour theme: light, dark or the system setting (T1, 31.10.2026). The choice lives in the `theme` localStorage key,
- * which public/theme-boot.js also reads to apply the theme before Angular starts. Without a saved choice the system
- * setting is followed, including later changes, and nothing is written.
+ * which public/theme-boot.js also reads to apply the theme before Angular starts. Without a saved choice every site opens
+ * light (27.11.2026: a dark device setting no longer turns the sites dark on its own); "system" is an explicit choice,
+ * and then later changes of the device setting are followed. Nothing is written until the visitor chooses.
  */
 @Injectable({
     providedIn: 'root'
 })
 export class DarkModeService {
-    readonly mode = signal<ThemeMode>('system');
+    readonly mode = signal<ThemeMode>('light');
     readonly isDarkMode = signal<boolean>(false);
     private readonly platformId = inject(PLATFORM_ID);
     private systemDark = false;
@@ -26,7 +27,7 @@ export class DarkModeService {
             if (this.mode() === 'system') this.apply();
         });
         const saved = this.read();
-        this.mode.set(saved === 'light' || saved === 'dark' ? saved : 'system');
+        this.mode.set(saved === 'dark' || saved === 'system' ? saved : 'light');
         this.apply();
     }
 

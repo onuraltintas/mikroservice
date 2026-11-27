@@ -5,6 +5,7 @@ import { SiteSeoService } from '../../core/services/site-seo.service';
 import { EduivmeHrefDirective } from './eduivme/eduivme-link.directive';
 import { AUDIENCE_SCOPES, BRAND_MARKS, DEFAULT_HOME, SITE_ICON_PATHS, sectionOf, siteLink } from './eduivme/eduivme-site-content';
 import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.component';
+import { RevealDirective } from '../../shared/public-site/reveal.directive';
 
 /**
  * eduivme.com: the parent brand's showcase of every product (user decisions 19.11.2026). All text comes from
@@ -14,13 +15,14 @@ import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.compon
 @Component({
   selector: 'app-eduivme-home',
   standalone: true,
-  imports: [EduivmeSiteLayoutComponent, EduivmeHrefDirective],
+  imports: [EduivmeSiteLayoutComponent, EduivmeHrefDirective, RevealDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-eduivme-site-layout [site]="view()?.site ?? null" [products]="view()?.products ?? []" [home]="true">
       @if (view(); as home) {
         @if (home.hero; as hero) {
           <section class="hero" data-brand="eduivme" aria-labelledby="hero-title">
+            <div class="hero__glow" aria-hidden="true"><span class="hero__blob hero__blob--koc" data-brand="maxkoc"></span><span class="hero__blob hero__blob--ho" data-brand="ho"></span><span class="hero__blob hero__blob--km"></span></div>
             <div class="hero__inner">
               <div class="hero__text">
                 <h1 id="hero-title">{{ hero.title }}</h1>
@@ -58,7 +60,7 @@ import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.compon
         @if (home.products.length) {
           <section id="urunler" class="band band--soft" aria-labelledby="products-title">
             <div class="wrap">
-              <header class="head">
+              <header class="head" publicReveal>
                 <h2 id="products-title">{{ section(home, 'products')?.title || 'Ürünler' }}</h2>
                 @if (section(home, 'products')?.body) { <p>{{ section(home, 'products')?.body }}</p> }
                 @if (section(home, 'products')?.linkLabel && section(home, 'products')?.linkUrl) {
@@ -66,9 +68,9 @@ import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.compon
                 }
               </header>
               <ul class="products">
-                @for (product of home.products; track product.id) {
-                  <li>
-                    <a class="product" [attr.data-brand]="scope(product)" [class.product--km]="product.brand === 'km'" [eduivmeHref]="product.linkUrl">
+                @for (product of home.products; track product.id; let i = $index) {
+                  <li [publicReveal]="i">
+                    <a class="product public-lift" [attr.data-brand]="scope(product)" [class.product--km]="product.brand === 'km'" [eduivmeHref]="product.linkUrl">
                       <span class="product__band" aria-hidden="true"></span>
                       <span class="product__head">
                         <img [src]="product.imageUrl || mark(product)" alt="" width="56" height="56">
@@ -102,13 +104,13 @@ import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.compon
         @if (home.audiences.length) {
           <section id="kimler" class="band" aria-labelledby="audiences-title">
             <div class="wrap">
-              <header class="head">
+              <header class="head" publicReveal>
                 <h2 id="audiences-title">{{ section(home, 'audiences')?.title || 'Kimler için' }}</h2>
                 @if (section(home, 'audiences')?.body) { <p>{{ section(home, 'audiences')?.body }}</p> }
               </header>
               <ul class="audiences">
                 @for (audience of home.audiences; track audience.id; let i = $index) {
-                  <li [attr.data-brand]="audienceScope(i)" class="audience" [class.audience--accent]="i === 2">
+                  <li [attr.data-brand]="audienceScope(i)" class="audience public-lift" [class.audience--accent]="i === 2" [publicReveal]="i">
                     <span class="audience__icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="icon(audience)"/></svg></span>
                     <h3>{{ audience.title }}</h3>
                     @if (audience.body) { <p>{{ audience.body }}</p> }
@@ -125,11 +127,11 @@ import { EduivmeSiteLayoutComponent } from './eduivme/eduivme-site-layout.compon
         @if (home.faqs.length) {
           <section id="sss" class="band" aria-labelledby="faq-title">
             <div class="wrap wrap--narrow">
-              <header class="head">
+              <header class="head" publicReveal>
                 <h2 id="faq-title">{{ section(home, 'faq')?.title || 'Sık sorulanlar' }}</h2>
                 @if (section(home, 'faq')?.body) { <p>{{ section(home, 'faq')?.body }}</p> }
               </header>
-              <div class="faq">
+              <div class="faq" publicReveal>
                 @for (faq of home.faqs; track faq.id; let first = $first) {
                   <details [open]="first"><summary>{{ faq.title }}</summary><p>{{ faq.body }}</p></details>
                 }

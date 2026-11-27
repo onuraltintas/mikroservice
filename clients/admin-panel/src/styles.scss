@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use './app/features/coaching-portal/layout/coaching-student-tokens';
+@use '../../shared/styles/public-motion';
 @use './app/features/coaching-portal/layout/coaching-student-surfaces';
 @use './app/features/coaching-portal/layout/coaching-student-shell';
 @use './app/features/coaching-portal/layout/coaching-student-work';

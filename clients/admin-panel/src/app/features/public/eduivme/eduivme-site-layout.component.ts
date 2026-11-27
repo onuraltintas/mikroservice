@@ -3,12 +3,13 @@ import { RouterLink } from '@angular/router';
 import { SitePublicEntry } from '../../../core/services/eduivme-site.service';
 import { EDUIVME_SITE_URLS } from '../../../../../shared/eduivme-sites';
 import { EduivmeHrefDirective } from './eduivme-link.directive';
+import { ThemeToggleComponent } from '../../../shared/public-site/theme-toggle.component';
 
 /** The frame of eduivme.com: header with the sign-in menu, the page, and the footer. */
 @Component({
   selector: 'app-eduivme-site-layout',
   standalone: true,
-  imports: [RouterLink, EduivmeHrefDirective],
+  imports: [RouterLink, EduivmeHrefDirective, ThemeToggleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="site" data-brand="eduivme">
@@ -23,6 +24,7 @@ import { EduivmeHrefDirective } from './eduivme-link.directive';
             <a [eduivmeHref]="home ? '#kimler' : '/#kimler'">Kimler için</a>
             <a [eduivmeHref]="home ? '#sss' : '/#sss'">Sık sorulanlar</a>
           </nav>
+          <app-theme-toggle class="theme" />
           <div class="signin">
             <button type="button" class="ds-btn ds-btn--secondary signin__button" [attr.aria-expanded]="menuOpen()" aria-controls="signin-menu" (click)="toggleMenu()">
               Giriş yap
@@ -82,6 +84,7 @@ import { EduivmeHrefDirective } from './eduivme-link.directive';
     .brand--light { color: var(--ds-visual-text); }
     .nav { display: flex; gap: 4px; margin-left: auto; }
     .nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--ds-radius-control); color: var(--ds-muted); font-weight: 500; text-decoration: none; }
+    .nav a { transition: background-color 200ms ease, color 200ms ease; }
     .nav a:hover { background: var(--ds-soft); color: var(--ds-text); }
     .signin { position: relative; }
     .signin__button { gap: 6px; }
@@ -104,6 +107,7 @@ import { EduivmeHrefDirective } from './eduivme-link.directive';
 
     @media (max-width: 860px) {
       .nav { display: none; }
+      .theme { margin-left: auto; }
       .signin { margin-left: auto; }
       .foot__inner { grid-template-columns: 1fr 1fr; }
       .foot__brand { grid-column: 1 / -1; }
