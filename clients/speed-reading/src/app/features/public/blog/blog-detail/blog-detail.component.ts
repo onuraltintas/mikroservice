@@ -11,6 +11,7 @@ import { finalize } from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar';
 import { SafeHtmlPipe } from '../../../../shared/pipes/safe-html.pipe';
 import { FooterComponent } from '../../../../shared/components/footer/footer';
+import { canonicalPageUrl } from '../../../../core/utils/public-site-url';
 
 @Component({
     selector: 'app-blog-detail',
@@ -89,7 +90,7 @@ export class BlogDetailComponent implements OnInit {
     }
 
     updateMetaTags(post: BlogPostDto) {
-        const fallbackUrl = `${window.location.origin}/blog/${post.slug}`;
+        const fallbackUrl = canonicalPageUrl(`/blog/${post.slug}`);
         const settings = post.seoSettings ?? { noIndex: false };
         const canonicalUrl = settings.canonicalUrl?.trim() || fallbackUrl;
         const image = settings.ogImage?.trim() || post.coverImageUrl;

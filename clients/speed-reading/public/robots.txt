@@ -4,22 +4,31 @@ Allow: /
 # Sitemap
 Sitemap: https://masterhizliokuma.com/sitemap.xml
 
-# Admin, Auth ve Dashboard sayfalarını indeksleme (private areas)
+# Signed-in areas (admin, sign-in, student and teacher screens) are not indexed.
 Disallow: /admin/
 Disallow: /auth/
 Disallow: /student/
 Disallow: /teacher/
 Disallow: /editor/
+Disallow: /error/
 
 # API endpoints
 Disallow: /api/
-# The /legal/cookies, /legal/privacy, /legal/kvkk and /legal/terms pages load
-# their public policy text from these exact endpoints. Longest match wins, so
+# Public pages load their content from these read-only endpoints, so search
+# engines must be able to fetch them to see the page. Longest match wins, so
 # only these paths are crawlable under /api/.
+# /legal/cookies, /legal/privacy, /legal/kvkk and /legal/terms:
 Allow: /api/platform/legal-pages/cookies$
 Allow: /api/platform/legal-pages/privacy$
 Allow: /api/platform/legal-pages/kvkk$
 Allow: /api/platform/legal-pages/speed-reading-terms$
+# Home page, navigation, CMS pages (/help, /<slug>) and the blog:
+Allow: /api/speed-reading/cms/landing
+Allow: /api/speed-reading/cms/navigation
+Allow: /api/speed-reading/cms/pages/
+Allow: /api/speed-reading/cms/blog
+# Pricing on the home page and /fiyatlandirma:
+Allow: /api/speed-reading/subscription-plans
 
-# Statik dosyalar
+# Static files
 Disallow: /*.json$

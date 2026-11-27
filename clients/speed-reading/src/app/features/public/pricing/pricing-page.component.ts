@@ -3,6 +3,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 import { SeoService } from '../../../core/services/seo.service';
 import { PricingSectionComponent } from '../home/sections/pricing-section/pricing-section';
+import { canonicalPageUrl } from '../../../core/utils/public-site-url';
 
 @Component({
   selector: 'app-pricing-page',
@@ -24,7 +25,7 @@ export class PricingPageComponent implements OnInit {
     this.seoService.updateTags({
       title: 'Fiyatlandırma | Hızlı Okuma',
       description: 'Hızlı okuma hedeflerinize uygun abonelik planını seçin.',
-      url: `${window.location.origin}/fiyatlandirma`,
+      url: canonicalPageUrl('/fiyatlandirma'),
       type: 'website'
     });
   }

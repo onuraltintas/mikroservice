@@ -14,7 +14,27 @@ const LEGAL_PAGES = [
   { component: 'terms/terms.component.ts', slug: 'speed-reading-terms' },
 ];
 const ALLOWED_API_PATHS = LEGAL_PAGES.map(({ slug }) => `/api/platform/legal-pages/${slug}`);
-const EXPECTED_ALLOW_LINES = ALLOWED_API_PATHS.map((path) => `Allow: ${path}$`);
+// Read-only content endpoints the public pages (home, navigation, CMS pages such as
+// /help, blog, pricing) load; without them crawlers see these pages empty (27.11.2026).
+const CONTENT_ALLOW_PREFIXES = [
+  '/api/speed-reading/cms/landing',
+  '/api/speed-reading/cms/navigation',
+  '/api/speed-reading/cms/pages/',
+  '/api/speed-reading/cms/blog',
+  '/api/speed-reading/subscription-plans',
+];
+const CONTENT_URLS = [
+  '/api/speed-reading/cms/landing?group=home&language=tr',
+  '/api/speed-reading/cms/navigation?menu=header',
+  '/api/speed-reading/cms/pages/help',
+  '/api/speed-reading/cms/blog?page=1',
+  '/api/speed-reading/cms/blog/hizli-okuma-nedir-nasil-ogrenilir',
+  '/api/speed-reading/subscription-plans',
+];
+const EXPECTED_ALLOW_LINES = [
+  ...ALLOWED_API_PATHS.map((path) => `Allow: ${path}$`),
+  ...CONTENT_ALLOW_PREFIXES.map((path) => `Allow: ${path}`),
+];
 
 // Groups as Google reads them: consecutive user-agent lines share the rules below them.
 function parseGroups(text) {
@@ -78,6 +98,12 @@ const STILL_BLOCKED = [
   '/api/auth/login',
   '/api/users/me',
   '/api/speed-reading/cms/pages',
+  '/api/speed-reading/cms/recaptcha',
+  '/api/speed-reading/cms/newsletter/subscribe',
+  '/api/speed-reading/cms/contact',
+  '/api/speed-reading/admin/cms/pages/help',
+  '/api/speed-reading/sessions',
+  '/api/billing/v1/subscriptions',
   ...ALLOWED_API_PATHS.flatMap((path) => [`${path}-extra`, `${path}/extra`, `${path}?v=1`, `${path}.json`]),
 ];
 
@@ -89,6 +115,9 @@ function assertCrawlPolicy(text) {
     for (const path of ALLOWED_API_PATHS) {
       assert.equal(allows(rules, path), true, `${agent} must be allowed to fetch ${path}`);
     }
+    for (const path of CONTENT_URLS) {
+      assert.equal(allows(rules, path), true, `${agent} must be allowed to fetch ${path}`);
+    }
     for (const page of ['/legal/cookies', '/legal/privacy', '/legal/kvkk', '/legal/terms']) {
       assert.equal(allows(rules, page), true, `${agent} must be allowed to fetch ${page}`);
     }
@@ -98,7 +127,7 @@ function assertCrawlPolicy(text) {
   }
   for (const group of groups) {
     const apiAllows = group.rules.filter((rule) => rule.allow && rule.pattern.startsWith('/api')).map((rule) => rule.line);
-    assert.deepEqual(apiAllows.slice().sort(), EXPECTED_ALLOW_LINES.slice().sort(), `group ${group.agents.join(', ')} must allow only the four legal policy paths under /api/`);
+    assert.deepEqual(apiAllows.slice().sort(), EXPECTED_ALLOW_LINES.slice().sort(), `group ${group.agents.join(', ')} must allow only the legal policy and public content paths under /api/`);
   }
 }
 
@@ -114,7 +143,7 @@ test('each dedicated legal page reads its text from its exact shared legal-pages
   }
 });
 
-test('robots.txt lets Googlebot fetch only the four public legal policy API paths', () => {
+test('robots.txt lets Googlebot fetch only the public legal policy and content API paths', () => {
   assertCrawlPolicy(robots);
 });
 

@@ -6,6 +6,8 @@ export const environment = {
   speedReadingApiUrl: '/api/speed-reading',
   centralAdminUrl: 'https://admin.eduivme.com/dashboard',
   centralAdminLoginUrl: 'https://admin.eduivme.com/auth/login',
+  // Canonical address of the public site; www and other hosts are folded onto it (27.11.2026).
+  publicSiteUrl: 'https://masterhizliokuma.com',
   // Alan adı planı (18.11.2026): every group has its own address.
   coachingSiteUrl: 'https://maxkoc.com',
   parentSiteUrl: 'https://veli.maxkoc.com',

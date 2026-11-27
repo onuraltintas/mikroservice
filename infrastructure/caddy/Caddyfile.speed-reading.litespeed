@@ -6,6 +6,12 @@
     }
 }
 
+# www is not a separate site. Search engines indexed www pages as duplicates of
+# the canonical host, so www answers with a permanent redirect (27.11.2026).
+www.masterhizliokuma.com:80 {
+    redir https://masterhizliokuma.com{uri} 301
+}
+
 # Standalone Hızlı Okuma edge. LiteSpeed terminates public TLS and forwards
 # masterhizliokuma.com to this loopback listener.
 :80 {
