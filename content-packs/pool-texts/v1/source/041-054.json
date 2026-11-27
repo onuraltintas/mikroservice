@@ -1,0 +1,779 @@
+{
+ "41": {
+  "title": "İlk Bağış",
+  "category": "Hikaye/Kurgu",
+  "content": "On sekiz yaşını doldurduktan birkaç hafta sonra Selin, üniversitenin kampüsünde kurulan kan bağışı çadırının önünden geçerken durdu. Babası yıllardır düzenli olarak kan bağışı yapardı ve Selin de reşit olunca ilk fırsatta bağış yapacağına kendi kendine söz vermişti. Ama iğneden çok korkuyordu. Çadırın önünde birkaç dakika kararsız bekledi, sonra içeri girdi.\n\nÖnce kısa bir form doldurdu. Görevli hemşire, sağlık durumuyla ilgili sorular sordu, tansiyonunu ve kanındaki demir düzeyini ölçtü. Selin'in bağış yapabileceği anlaşılınca onu rahat bir koltuğa oturttu. Selin iğneye bakmamak için başını çevirdi. Hemşire onunla sohbet etti, nerede okuduğunu, hangi bölümde olduğunu sordu. Selin konuşurken iğnenin ne zaman girdiğini fark etmedi bile.\n\nBağış on dakikadan kısa sürdü. Selin sırasında hafif bir baş dönmesi hissetti ama hemşire bunun olağan olduğunu söyledi. Sonra ona bir meyve suyu ve bisküvi verdiler, bir süre dinlenmesini istediler. Hemşire, bağışlanan kanın birkaç parçaya ayrılarak birden fazla hastaya yardım edebileceğini anlattı.\n\nSelin çadırdan çıkarken kolundaki küçük bandaja baktı. Korktuğu şeyin aslında ne kadar kısa sürdüğünü düşündü. O akşam babasını aradı ve ona ilk bağışını anlattı. Babası çok sevindi; üç ay sonra birlikte gitmeye söz verdiler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Selin bağış yapmaya karar vermeden önce neden çadırın önünde bekledi?",
+    "correct": "Batmasından çekindiği şey yüzünden",
+    "wrong": [
+     "Babasının gelmesini beklediği için",
+     "Kampüste dersine geç kaldığı için",
+     "Formu nereden alacağını bilmediği için"
+    ],
+    "explanation": "Selin iğneden çok korktuğu için çadırın önünde birkaç dakika kararsız kaldı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in bağış yapma isteğinin kaynağı hangisidir?",
+    "correct": "Ailesinden gördüğü bir alışkanlık",
+    "wrong": [
+     "Hemşirenin onu çadıra çağırması",
+     "Okulda zorunlu tutulan bir uygulama",
+     "Kampüste kurulan çadırın büyüklüğü"
+    ],
+    "explanation": "Babası yıllardır düzenli olarak kan verdiği için Selin de reşit olunca bağış yapmaya söz vermişti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 1,
+    "text": "Bağıştan önce Selin'de hangi ölçüm yapıldı?",
+    "correct": "Kan basıncı ve demir değeri",
+    "wrong": [
+     "Boy, kilo ve göz ölçümü",
+     "Ateş, nabız ve kan şekeri",
+     "Kalp ritmi ve akciğer sesleri"
+    ],
+    "explanation": "Hemşire bağıştan önce Selin'in tansiyonunu ve kanındaki demir düzeyini ölçtü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hemşirenin Selin'le sohbet etmesinin amacı ne olabilir?",
+    "correct": "Dikkatini işlemden uzaklaştırmak",
+    "wrong": [
+     "Formdaki bilgileri doğrulamak",
+     "Hangi bölümde okuduğunu öğrenmek",
+     "Bağışın süresini uzatmak istemek"
+    ],
+    "explanation": "Selin konuşurken iğnenin girdiğini fark etmedi; sohbet onun korkusunu unutmasına yardım etti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bağış yaklaşık ne kadar sürdü?",
+    "correct": "Çeyrek saatten kısa",
+    "wrong": [
+     "Yarım saati aşkın",
+     "Bir saate yakın",
+     "Bir buçuk saati bulan"
+    ],
+    "explanation": "Metinde bağışın on dakikadan kısa sürdüğü belirtilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hemşireye göre bağışlanan kan nasıl kullanılabilir?",
+    "correct": "Bölünerek birkaç kişiye yarar",
+    "wrong": [
+     "Yalnızca tek bir hastaya verilir",
+     "Yıllarca bekletilip saklanır",
+     "Sadece ameliyatlarda kullanılır"
+    ],
+    "explanation": "Hemşire, kanın parçalara ayrılarak birden fazla hastaya yardım edebileceğini anlattı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in kolundaki bandaja bakarken vardığı düşünce nedir?",
+    "correct": "Korkusunu fazla büyüttüğü",
+    "wrong": [
+     "Bandajın uzun süre kalacağı",
+     "Bağışın çok acı verdiği",
+     "Hemşirenin özensiz çalıştığı"
+    ],
+    "explanation": "Selin, korktuğu şeyin aslında ne kadar kısa sürdüğünü düşündü."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonu Selin hakkında ne anlatır?",
+    "correct": "Yeniden bağışa niyetli olduğunu",
+    "wrong": [
+     "Babasıyla arasının bozulduğunu",
+     "Çadırdan pişmanlıkla ayrıldığını",
+     "İğne korkusunun giderek arttığını"
+    ],
+    "explanation": "Selin babasını arayıp anlattı ve üç ay sonra birlikte bağışa gitmeye söz verdiler."
+   }
+  ]
+ },
+ "48": {
+  "title": "Ekşi Mayanın Sırrı",
+  "category": "Bilgi/Açıklama",
+  "content": "Ekşi maya, yalnızca un ve sudan yapılan ama içinde canlı bir topluluk barındıran bir hamurdur. Un ile su karıştırılıp birkaç gün ılık bir yerde bekletildiğinde, havada ve unun içinde bulunan doğal mayalar ve bakteriler çoğalmaya başlar. Bu küçük canlılar, undaki şekerleri besin olarak kullanır. Birkaç gün sonra hamurun yüzeyinde kabarcıklar belirir ve hafif ekşi bir koku yayılır; bu, mayanın canlandığının işaretidir.\n\nMayalar bu şekerleri parçalarken karbondioksit gazı üretir. Gaz, hamurun içinde küçük kabarcıklar oluşturarak onu kabartır. Bakteriler ise asit üretir ve ekmeğe kendine özgü hafif ekşi tadını verir. Bu asit aynı zamanda ekmeğin daha geç bayatlamasına da yardım eder.\n\nEkşi mayayı canlı tutmak için düzenli olarak beslemek gerekir. Mayanın bir kısmı alınır, üzerine taze un ve su eklenir. Böylece canlılar yeni besin bulur ve maya her beslemeden sonra yeniden güçlenir. Bazı fırınlarda aynı ekşi mayanın yıllarca, hatta kuşaktan kuşağa beslenerek kullanıldığı anlatılır.\n\nEkşi mayalı ekmek yapmak sabır ister. Hamurun kabarması, hazır maya ile yapılan ekmeğe göre çok daha uzun sürer. Ama pek çok kişi, bu bekleyişin karşılığını ekmeğin tadında ve kokusunda aldığını söyler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Ekşi maya hangi malzemelerle hazırlanır?",
+    "correct": "Un ile su",
+    "wrong": [
+     "Un ve süt",
+     "Su ve şeker",
+     "Un ve yağ"
+    ],
+    "explanation": "Ekşi maya yalnızca un ve sudan yapılır; içindeki canlılar havadan ve undan gelir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yüzeyde kabarcıkların belirmesi ve ekşi koku neyin göstergesidir?",
+    "correct": "İçindeki canlıların etkinleştiğinin",
+    "wrong": [
+     "Hamurun bozulup kullanılamadığının",
+     "Hamura gereğinden fazla su konduğunun",
+     "Unun kalitesinin düşük olduğunun"
+    ],
+    "explanation": "Metne göre kabarcıklar ve hafif ekşi koku mayanın canlandığının işaretidir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hamuru kabartan gazı ne üretir?",
+    "correct": "Mayalar",
+    "wrong": [
+     "Asitler",
+     "Bakteriler",
+     "Fırın ısısı"
+    ],
+    "explanation": "Mayalar şekerleri parçalarken karbondioksit üretir ve bu gaz hamuru kabartır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bakterilerin ürettiği asit ekmeğe ne kazandırır?",
+    "correct": "Hafif ekşilik ve daha uzun tazelik",
+    "wrong": [
+     "Daha koyu bir renk ve sert bir kabuk",
+     "Daha fazla kabarma ve hafif doku",
+     "Tatlı bir tat ve yumuşak bir iç"
+    ],
+    "explanation": "Asit ekmeğe ekşi tadını verir ve geç bayatlamasına yardım eder."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mayanın düzenli beslenmesi neden gereklidir?",
+    "correct": "Canlıların besini zamanla tükendiği için",
+    "wrong": [
+     "Mayanın rengi zamanla koyulaştığı için",
+     "Unun içindeki tuz zamanla azaldığı için",
+     "Hamurun ekşi kokusu zamanla kaybolduğu için"
+    ],
+    "explanation": "Taze un ve su eklenince canlılar yeni besin bulur ve maya güçlenir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı fırınlarda aynı ekşi mayanın nasıl kullanıldığı anlatılır?",
+    "correct": "Kuşaklar boyunca",
+    "wrong": [
+     "Yalnızca bir gün",
+     "Her hafta yenisi",
+     "Bayramdan bayrama"
+    ],
+    "explanation": "Bazı fırınlarda aynı mayanın yıllarca, kuşaktan kuşağa beslenerek kullanıldığı anlatılır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ekşi mayalı ekmek ile hazır mayalı ekmek arasındaki fark nedir?",
+    "correct": "İlkinin hazırlığı daha uzun sürer",
+    "wrong": [
+     "Hazır maya ile ekmek hiç kabarmaz",
+     "Ekşi mayalı ekmek daha çabuk bayatlar",
+     "Hazır mayalı ekmek daha ekşi olur"
+    ],
+    "explanation": "Ekşi mayalı hamurun kabarması hazır mayaya göre çok daha uzun sürer."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta vurgulanan düşünce hangisidir?",
+    "correct": "Gösterilen sabrın lezzetle ödüllendiği",
+    "wrong": [
+     "Ekşi maya yapmanın gereksiz olduğu",
+     "Hazır mayanın sağlık için daha iyi olduğu",
+     "Ekmeğin tadının unla belirlendiği"
+    ],
+    "explanation": "Pek çok kişi uzun bekleyişin karşılığını ekmeğin tadında ve kokusunda aldığını söyler."
+   }
+  ]
+ },
+ "42": {
+  "title": "Kâğıdın İkinci Hayatı",
+  "category": "Bilgi/Açıklama",
+  "content": "Okulda ya da evde geri dönüşüm kutusuna attığımız bir gazete, birkaç hafta sonra bir yumurta kolisi, bir karton kutu ya da yeni bir defter olarak karşımıza çıkabilir. Kâğıdın geri dönüşümü, en eski ve en yaygın geri dönüşüm süreçlerinden biridir. Peki bir kâğıt parçası yeniden kâğıda nasıl dönüşür?\n\nToplanan kâğıtlar önce geri dönüşüm tesislerinde türlerine göre ayrılır. Gazeteler, ofis kâğıtları ve kartonlar farklı işlemlerden geçer. Ardından kâğıtlar büyük kazanlarda su ve bazı kimyasallarla karıştırılır. Kâğıdı oluşturan ince lifler birbirinden ayrılır ve kâğıt hamura dönüşür. Bu hamur süzgeçlerden geçirilerek zımba telleri, plastik parçalar ve bant gibi yabancı maddelerden temizlenir. Bazı işlemlerde mürekkep de köpük yardımıyla hamurdan ayrılır.\n\nTemizlenen hamur ince bir tabaka hâlinde serilir, sıkılarak suyu alınır ve sıcak silindirlerin arasından geçirilerek kurutulur. Böylece yeni kâğıt rulolar elde edilir.\n\nAncak kâğıt sonsuza kadar geri dönüştürülemez. Her dönüşümde lifler biraz daha kısalır ve zayıflar. Bir süre sonra lifler kâğıt oluşturamayacak kadar kısalır. Bu yüzden genellikle kâğıdın birkaç kez geri dönüştürülebildiği söylenir. Geri dönüştürülmüş kâğıdın kalitesini korumak için hamura bir miktar yeni lif de eklenir.\n\nGeri dönüşüm kutusuna ne attığımız da önemlidir. Yağ ya da yemek artığı bulaşmış kâğıtlar, örneğin yağlı bir pizza kutusu, hamurun kalitesini bozabilir ve bütün bir partinin işe yaramaz hâle gelmesine yol açabilir. Islak mendil, kâğıt havlu ve plastik kaplı kâğıt bardaklar da çoğu zaman kâğıt geri dönüşümüne uygun değildir. Bu yüzden kâğıdı temiz ve kuru biçimde ayırmak, sürecin başarılı olması için ilk adımdır.\n\nGeri dönüşümün yararı açıktır. Yeni kâğıt üretmek için kesilen ağaç sayısı azalır, enerji ve su tasarrufu sağlanır, çöp alanlarına giden atık miktarı düşer. Yine de en etkili yöntem, kâğıdı gereksiz yere kullanmamak ve kullandığımız kâğıdı iki yüzüyle değerlendirmektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Metne göre kâğıt geri dönüşümü nasıl bir süreçtir?",
+    "correct": "Uzun süredir uygulanan ve yaygın",
+    "wrong": [
+     "Yeni geliştirilmiş ve az bilinen",
+     "Yalnızca büyük kentlerde yapılan",
+     "Pahalı olduğu için terk edilen"
+    ],
+    "explanation": "Kâğıdın geri dönüşümü en eski ve en yaygın geri dönüşüm süreçlerinden biridir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tesise gelen kâğıtlarla yapılan ilk iş nedir?",
+    "correct": "Çeşitlerine göre gruplanması",
+    "wrong": [
+     "Kazanlarda suyla karıştırılması",
+     "Mürekkebin köpükle ayrılması",
+     "Sıcak silindirlerde kurutulması"
+    ],
+    "explanation": "Toplanan kâğıtlar önce tesislerde türlerine göre ayrılır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hamurun süzgeçlerden geçirilmesinin amacı nedir?",
+    "correct": "Kâğıt dışı parçaları ayıklamak",
+    "wrong": [
+     "Liflerin boyunu daha da uzatmak",
+     "Hamura yeni lifler eklemek",
+     "Kâğıtları türlerine ayırmak"
+    ],
+    "explanation": "Süzgeçler zımba teli, plastik ve bant gibi yabancı maddeleri hamurdan temizler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hamurdan yeni kâğıt elde edilirken suyu alınan tabaka nasıl kurutulur?",
+    "correct": "Isıtılmış merdanelerle",
+    "wrong": [
+     "Güneş altında bekletilerek",
+     "Kimyasallar eklenerek",
+     "Açık havada asılarak"
+    ],
+    "explanation": "Tabaka sıkılarak suyu alınır ve sıcak silindirlerin arasından geçirilerek kurutulur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kâğıdın geri dönüşüm sayısını sınırlayan şey nedir?",
+    "correct": "Liflerin her seferde kısalıp güç yitirmesi",
+    "wrong": [
+     "Mürekkebin hamurdan bir türlü ayrılamaması",
+     "Kazanlarda kullanılan suyun pahalı olması",
+     "Hamura her seferde yeni lif eklenmesi"
+    ],
+    "explanation": "Her dönüşümde lifler kısalır ve zayıflar; bir süre sonra kâğıt oluşturamaz."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yağlı bir pizza kutusunun geri dönüşüm kutusuna atılmasının sakıncası nedir?",
+    "correct": "Karışımın tamamını bozabilmesi",
+    "wrong": [
+     "Kutuların depoda fazla yer tutması",
+     "Kartonun fazla ağır gelmesi",
+     "Ayıklanmasının uzun sürmesi"
+    ],
+    "explanation": "Yağ bulaşmış kâğıt hamurun kalitesini bozar ve bütün bir partiyi işe yaramaz hâle getirebilir."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde geri dönüşümün yararları arasında hangisi sayılır?",
+    "correct": "Doğadan alınan ağacın azalması",
+    "wrong": [
+     "Kâğıt fiyatlarının hızla yükselmesi",
+     "Liflerin her seferde uzaması",
+     "Mürekkebin daha kolay çıkması"
+    ],
+    "explanation": "Geri dönüşümle kesilen ağaç sayısı azalır, enerji ve su tasarrufu sağlanır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazara göre en etkili yaklaşım hangisidir?",
+    "correct": "Tüketimi baştan azaltıp kâğıdı tam değerlendirmek",
+    "wrong": [
+     "Bütün kâğıtları ayırmadan geri dönüşüme atmak",
+     "Geri dönüştürülmüş kâğıdı yeni liflerle değiştirmek",
+     "Kâğıt yerine yalnızca plastik bardaklar kullanmak"
+    ],
+    "explanation": "Yazar, gereksiz kâğıt kullanmamayı ve kâğıdın iki yüzünü de kullanmayı en etkili yöntem olarak görür."
+   }
+  ]
+ },
+ "49": {
+  "title": "Arsadan Bahçeye",
+  "category": "Hikaye/Kurgu",
+  "content": "Mahallenin ortasındaki boş arsa, yıllardır çöp ve yabani otlarla doluydu. Belediye arsayı ne satabiliyor ne de bir şey yapabiliyordu; mahalleli de önünden geçerken başını çevirip geçiyordu. Bir bahar sabahı emekli öğretmen Nuran Hanım, arsanın kenarına küçük bir tabela dikti: \"Burayı birlikte bahçe yapalım. Cumartesi saat onda buradayım.\"\n\nİlk cumartesi yalnızca dört kişi geldi. Nuran Hanım'ın yanı sıra alt kattaki genç çift ve okul çağında iki kardeş vardı. Çöpleri topladılar, otları yoldular. Akşam olduğunda arsanın yalnızca küçük bir köşesi temizlenmişti, ama herkes yaptıklarından memnundu ve ertesi cumartesi yeniden gelmeye söz verdi.\n\nErtesi hafta gelenlerin sayısı arttı. Bir komşu eski tahtalardan yükseltilmiş tarhlar yaptı. Fırıncı, işten çıkan kahve telvelerini toprağa karıştırmak için getirmeye başladı. Bir başkası domates, biber ve fasulye fideleri getirdi. Gönüllüler, sulama için bir çizelge hazırladı. Her ailenin haftada bir gün sulama görevi vardı.\n\nHer şey kolay geçmedi. Temmuzda bir sabah, birkaç tarhın gece boyunca ezildiği ve fidelerin koparıldığı görüldü. Bazı gönüllüler o kadar üzüldü ki bahçeyi bırakmayı düşündü. Nuran Hanım ise bir toplantı yaptı. Bahçeyi tel örgüyle kapatmak yerine, akşamları da bahçede vakit geçirmeyi önerdi. Komşular sırayla akşam oturmaya geldi; bahçe boş kalmadıkça zarar veren de olmadı. Ezilen fidelerin yerine yenileri dikildi.\n\nYaz ortasında bahçe yeşermişti. Ama asıl değişen yalnızca arsa değildi. Yıllardır aynı sokakta oturan ama birbirini tanımayan insanlar, tarhların başında sohbet etmeye başlamıştı. Çocuklar akşamları bahçede oynuyor, yaşlılar gölgede çay içiyordu.\n\nHasat zamanı geldiğinde gönüllüler bahçede küçük bir şenlik düzenledi; herkes yetiştirdiği ürünlerle bir yemek pişirip getirdi. Ürünler eşit paylaşıldı, fazlası mahallenin aşevine bağışlandı. Belediye, bahçenin başarısını görünce arsanın bahçe olarak kalmasına karar verdi ve suyun bağlanması için yardım etti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Nuran Hanım komşuları bahçe işine nasıl çağırdı?",
+    "correct": "Arsaya bir yazı yerleştirerek",
+    "wrong": [
+     "Belediyeye bir dilekçe yazarak",
+     "Kapı kapı dolaşıp konuşarak",
+     "Okulda bir toplantı yaparak"
+    ],
+    "explanation": "Nuran Hanım arsanın kenarına bir tabela dikip cumartesi orada olacağını yazdı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Metnin başında mahallelinin arsaya karşı tutumu nasıldır?",
+    "correct": "İlgisiz ve mesafeli",
+    "wrong": [
+     "Meraklı ve istekli",
+     "Öfkeli ve şikâyetçi",
+     "Korkulu ve endişeli"
+    ],
+    "explanation": "Mahalleli arsanın önünden geçerken başını çevirip geçiyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk cumartesi çalışmaya kaç kişi katıldı?",
+    "correct": "4",
+    "wrong": [
+     "2",
+     "6",
+     "10"
+    ],
+    "explanation": "İlk cumartesi Nuran Hanım, genç çift ve iki kardeşle birlikte dört kişi geldi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fırıncının bahçeye katkısı ne oldu?",
+    "correct": "Toprak için telve getirmek",
+    "wrong": [
+     "Tahtadan tarhlar yapmak",
+     "Domates fideleri getirmek",
+     "Sulama çizelgesi hazırlamak"
+    ],
+    "explanation": "Fırıncı işten çıkan kahve telvelerini toprağa karıştırmak için getirdi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sulama çizelgesinin hazırlanması neyi sağlamıştır?",
+    "correct": "Görevin ailelere bölüşülmesini",
+    "wrong": [
+     "Tarhların tahtadan yapılmasını",
+     "Fidelerin daha hızlı büyümesini",
+     "Kahve telvesinin getirilmesini"
+    ],
+    "explanation": "Çizelgeyle her aile haftada bir gün sulama görevini üstlendi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Nuran Hanım'ın zarar karşısındaki önerisinin işe yaramasının nedeni nedir?",
+    "correct": "Bahçenin sürekli insanlarla dolu olması",
+    "wrong": [
+     "Tarhların etrafının tel örgüyle çevrilmesi",
+     "Belediyenin bahçeye bekçi göndermesi",
+     "Ezilen fidelerin hiç değiştirilmemesi"
+    ],
+    "explanation": "Komşular sırayla akşam oturmaya geldi; bahçe boş kalmadıkça zarar veren olmadı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yaz ortasında mahallede yaşanan değişim hangisidir?",
+    "correct": "Tanışmayan komşuların kaynaşması",
+    "wrong": [
+     "Arsanın yeniden satışa çıkarılması",
+     "Çocukların bahçeye girmemesi",
+     "Gönüllülerin bahçeyi bırakması"
+    ],
+    "explanation": "Birbirini tanımayan insanlar tarhların başında sohbet etmeye başladı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri hangisidir?",
+    "correct": "Ortak bir uğraş toplumu bir araya getirir",
+    "wrong": [
+     "Belediyeler arsaları hemen satmalıdır",
+     "Bahçeler yalnızca uzmanlarca yapılmalıdır",
+     "Emekliler gençlerden daha çok çalışır"
+    ],
+    "explanation": "Küçük bir bahçe çalışması hem arsayı hem de mahallelinin ilişkilerini değiştirdi."
+   }
+  ]
+ },
+ "44": {
+  "title": "Hayır Diyebilmek",
+  "category": "Deneme",
+  "content": "Bir arkadaşınız hafta sonu taşınmasına yardım etmenizi istiyor. O hafta sonu için uzun zamandır planladığınız bir işiniz var, üstelik çok yorgunsunuz. Yine de \"hayır\" demek zor geliyor. Belki arkadaşınız kırılır, belki sizi bencil bulur. Sonunda \"tamam\" dersiniz ve hafta sonunu istemeden geçirirsiniz. Bu tablo pek çok insana tanıdık gelir. Aynı şey iş yerinde fazladan bir görev üstlenirken, sınıfta bir arkadaşın ödevine yardım ederken ya da istemediğiniz bir davete katılırken de yaşanabilir.\n\nHayır diyememenin arkasında çoğu zaman sevilme ve kabul görme isteği yatar. İnsan sosyal bir varlıktır; grubun dışında kalmaktan, ilişkilerin bozulmasından korkar. Özellikle çocuklukta başkalarını memnun ettiği için takdir edilen kişiler, yetişkinlikte de kendi ihtiyaçlarını geri plana atmaya alışkın olabilir. Bir isteği geri çevirmek onlara, karşısındakini reddetmek gibi gelir. Kimi zaman da kişi, reddettiği anda karşı tarafın öfkeleneceğini ya da ilişkinin biteceğini düşünür; oysa bu korkular çoğu zaman gerçekte yaşanandan büyüktür.\n\nOysa bir isteği reddetmek ile bir kişiyi reddetmek aynı şey değildir. \"Bu hafta sonu sana yardım edemem\" demek, \"seni önemsemiyorum\" anlamına gelmez. Sürekli evet diyen biri ise zamanla yorgunluk, öfke ve kırgınlık biriktirebilir. İstemeden yapılan yardımlar çoğu zaman gönülsüz yapılır ve ilişkiye beklenen katkıyı sağlamaz. Hatta karşı taraf, bir şeylerin yolunda gitmediğini sezer.\n\nHayır diyememenin bir bedeli de zamandır. Başkalarının işlerine evet diyen kişi, kendi işlerine ayıracak vakit bulamaz. Ödevler, sınav hazırlığı ya da dinlenme sürekli ertelenir. Kişi gün sonunda yorgun düşer ama kendi hedeflerine bir adım bile yaklaşmadığını fark eder. Bu durum uzun vadede stresi artırır, uyku düzenini bozar ve kişinin kendine olan güvenini zayıflatır. Araştırmacılar, başkalarını memnun etmeye aşırı odaklanan kişilerin tükenmişlik yaşama olasılığının daha yüksek olduğunu belirtir.\n\nHayır demek bir beceridir ve öğrenilebilir. Uzmanlar birkaç basit öneride bulunur. İlki, hemen cevap vermemektir. \"Bir bakayım, sana akşam haber vereyim\" demek, isteği düşünmek için zaman kazandırır. İkincisi, kısa ve açık olmaktır. Uzun açıklamalar ve özürler, kararsızlık izlenimi verir ve tartışmayı uzatır. Gerekçe vermek elbette nezaketin bir parçasıdır, ama bir cümle çoğu zaman yeterlidir. Üçüncüsü, mümkünse bir alternatif sunmaktır: \"Cumartesi gelemem ama pazar akşamı kutuları açmana yardım edebilirim.\"\n\nSınır koymak ilk başta rahatsız edici olabilir. Ama zamanla hem kişinin kendine olan saygısını artırır hem de ilişkileri daha dürüst hâle getirir. Bir \"evet\"in değeri, gerektiğinde \"hayır\" diyebilen birinden geldiğinde artar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metnin başındaki örnekte kişi sonunda ne yapar?",
+    "correct": "İsteksizce yardım etmeyi kabul eder",
+    "wrong": [
+     "Arkadaşına planını açıkça anlatır",
+     "Taşınmayı başka bir güne ertelettirir",
+     "Hafta sonu için yeni bir iş bulur"
+    ],
+    "explanation": "Kişi hayır diyemez, tamam der ve hafta sonunu istemeden geçirir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre hayır diyememenin temelinde yatan duygu nedir?",
+    "correct": "Dışlanma endişesi",
+    "wrong": [
+     "Para kazanma isteği",
+     "Yalnız kalma isteği",
+     "Yorgunluk duygusu"
+    ],
+    "explanation": "İnsan sosyal bir varlık olarak gruptan dışlanmaktan ve ilişkilerin bozulmasından korkar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre hangi kişiler yetişkinlikte kendi ihtiyaçlarını geri plana atmaya daha yatkın olabilir?",
+    "correct": "Küçükken onay alarak övülenler",
+    "wrong": [
+     "Çocukken hiç arkadaşı olmayanlar",
+     "Çocuklukta çok ders çalışanlar",
+     "Kalabalık ailelerde büyüyenler"
+    ],
+    "explanation": "Çocuklukta başkalarını memnun ettiği için takdir edilenler bu eğilimi taşıyabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar bir isteği geri çevirmekle bir kişiyi reddetmeyi neden birbirinden ayırır?",
+    "correct": "Ret, karşıdakini önemsemediğimizi göstermez",
+    "wrong": [
+     "Sürekli evet demek ilişkiyi güçlendirir",
+     "Gönülsüz yardımlar ilişkiye katkı sağlar",
+     "Hafta sonu yardım edememek bencillik sayılır"
+    ],
+    "explanation": "Yazara göre yardım edemem demek, seni önemsemiyorum anlamına gelmez."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre sürekli evet demenin bedellerinden biri hangisidir?",
+    "correct": "Kişisel amaçlara vakit bulamaması",
+    "wrong": [
+     "Arkadaş sayısının giderek azalması",
+     "Ödevlerin daha erken bitirilmesi",
+     "Başkalarının işlerinin aksaması"
+    ],
+    "explanation": "Başkalarına evet diyen kişi kendi işlerine ayıracak vakit bulamaz ve hedeflerine yaklaşamaz."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanların ilk önerisi hangisidir?",
+    "correct": "Yanıtı bir süre bekletmek",
+    "wrong": [
+     "Uzun bir gerekçe yazmak",
+     "Hemen kısa bir özür dilemek",
+     "Bir başka arkadaşı önermek"
+    ],
+    "explanation": "İlk öneri hemen cevap vermemek ve isteği düşünmek için zaman kazanmaktır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Cumartesi gelemem ama pazar akşamı yardım edebilirim cümlesi hangi öneriye örnektir?",
+    "correct": "Başka bir yol önererek orta noktada buluşmaya",
+    "wrong": [
+     "Uzun açıklamalarla kararsızlık izlenimi vermeye",
+     "Hemen cevap vermeyip biraz zaman kazanmaya",
+     "Gerekçe göstermeden isteği hemen reddetmeye"
+    ],
+    "explanation": "Bu cümle, uzmanların üçüncü önerisi olan bir alternatif sunmaya örnektir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragrafta ulaştığı sonuç nedir?",
+    "correct": "Sınır çizmenin kişiye ve ilişkiye katkısı",
+    "wrong": [
+     "Hayır demenin ilişkileri sonunda bitirdiği",
+     "Evet demenin değerinin zamanla azalmadığı",
+     "Sınır koymanın baştan rahatlık sağladığı"
+    ],
+    "explanation": "Sınır koymak başta rahatsız etse de saygıyı artırır ve ilişkileri dürüst kılar."
+   }
+  ]
+ },
+ "53": {
+  "title": "Ela'nın Balık Haftası",
+  "category": "Hikaye/Kurgu",
+  "content": "Ela'nın sınıfında bir akvaryum vardı. İçinde üç küçük balık yaşıyordu. Öğretmenleri, her hafta bir öğrencinin balıklara bakacağını söyledi. Bu hafta sıra Ela'daydı. Ela bu görevi aldığı için çok heyecanlıydı.\n\nPazartesi sabahı Ela, balıklara bir tutam yem verdi. Balıklar hemen yüzeye çıkıp yemleri yediler. Ela onları izlerken çok eğlendi ve her birine bir ad koydu. Salı günü yine yem verdi. Çarşamba günü ise arkadaşlarıyla oyuna dalıp balıkları unuttu.\n\nPerşembe sabahı Ela akvaryuma baktı. Balıklar yavaş yavaş yüzüyordu. Ela çok üzüldü ve hemen öğretmenine koştu. Öğretmeni, balıkların bir gün aç kaldığını ama iyi olduklarını söyledi. Sonra Ela'ya küçük bir fikir verdi: Unutmamak için bir çizelge hazırlamak.\n\nEla bir kâğıda günlerin adlarını yazdı. Her gün yem verdikten sonra o günün yanına bir işaret koydu. Kâğıdı akvaryumun yanına, herkesin görebileceği bir yere astı. Cuma günü haftayı bitirdiğinde kâğıtta hiç boş gün kalmamıştı. Ela, kâğıdı bir sonraki arkadaşına verdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Akvaryumda kaç balık vardı?",
+    "correct": "3",
+    "wrong": [
+     "2",
+     "4",
+     "5"
+    ],
+    "explanation": "Sınıftaki akvaryumda üç küçük balık yaşıyordu."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Balıklara kim bakacaktı?",
+    "correct": "Her hafta sırayla bir öğrenci",
+    "wrong": [
+     "Her gün sınıfın kendi öğretmeni",
+     "Okuldaki temizlik görevlisi",
+     "Her sabah bütün sınıf birden"
+    ],
+    "explanation": "Öğretmen her hafta bir öğrencinin balıklara bakacağını söyledi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ela balıkları hangi gün unuttu?",
+    "correct": "Çarşamba",
+    "wrong": [
+     "Pazartesi",
+     "Salı",
+     "Perşembe"
+    ],
+    "explanation": "Çarşamba günü Ela arkadaşlarıyla oyuna dalıp balıkları unuttu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ela balıkları neden unuttu?",
+    "correct": "Oyuna kendini kaptırdı",
+    "wrong": [
+     "Yem kutusu bitmişti",
+     "Okula o gün gelmemişti",
+     "Öğretmen izin vermedi"
+    ],
+    "explanation": "Ela arkadaşlarıyla oyuna daldığı için balıkları unuttu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Perşembe sabahı balıklar yavaş yüzerken Ela ne hissetti?",
+    "correct": "Üzüntü ve telaş",
+    "wrong": [
+     "Sevinç ve merak",
+     "Öfke ve kıskançlık",
+     "Utanç ve korku"
+    ],
+    "explanation": "Ela çok üzüldü ve hemen öğretmenine koştu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Öğretmen Ela'ya ne önerdi?",
+    "correct": "Bir takip listesi yapmasını",
+    "wrong": [
+     "Balıklara iki kez yem vermesini",
+     "Görevi başkasına vermesini",
+     "Akvaryumun suyunu değiştirmesini"
+    ],
+    "explanation": "Öğretmen, unutmamak için bir çizelge hazırlama fikrini verdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ela kâğıttaki günlerin yanına neden işaret koydu?",
+    "correct": "Görevini yaptığını izlemek için",
+    "wrong": [
+     "Günlerin adını öğrenmek için",
+     "Arkadaşlarına bir süs yapmak için",
+     "Öğretmenden ödül almak için"
+    ],
+    "explanation": "Ela her gün yem verdikten sonra o günün yanına işaret koydu."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Bu öyküden çıkarılabilecek ders hangisidir?",
+    "correct": "Basit bir yöntem unutmayı önler",
+    "wrong": [
+     "Balıklar her gün yem istemez",
+     "Oyun oynamak derslere zarar verir",
+     "Görevler tek başına yapılmamalıdır"
+    ],
+    "explanation": "Ela çizelgeyi kullanınca haftayı hiç boş gün bırakmadan bitirdi."
+   }
+  ]
+ },
+ "54": {
+  "title": "Buzların Ayısı",
+  "category": "Bilgi/Açıklama",
+  "content": "Kutup ayıları, Kuzey Kutbu'nun buzlarla kaplı soğuk bölgelerinde yaşar. Orada kış çok uzun sürer, sıcaklık sıfırın çok altına iner. Rüzgâr sert eser ve aylarca güneş hiç doğmaz. Peki bu ayılar böyle bir soğukta nasıl yaşayabilir?\n\nKutup ayılarının vücudunu kalın bir kürk örter. Kürkün altında da kalın bir yağ tabakası bulunur. Bu yağ, tıpkı bir yorgan gibi vücut ısısının dışarı kaçmasını engeller. Ayıların derisi ise siyahtır. Siyah renk, güneşten gelen ısıyı daha iyi tutar. Ayakların altındaki tüyler de buzda kaymalarını önler ve ayaklarını üşümekten korur.\n\nKutup ayıları çok iyi yüzücüdür ve buzlu sudan hiç korkmaz. Geniş ön ayaklarını kürek gibi kullanarak buzlu suda uzun mesafeler yüzebilirler. Kalın yağ tabakası, suda yüzerken onları hem sıcak tutar hem de batmamalarına yardım eder. Avlarının çoğunu buzların üzerinde yakalarlar. En sevdikleri yiyecek foklardır. Ayılar, fokların nefes almak için buzda açtığı deliklerin başında saatlerce sessizce bekleyebilir. Fok başını çıkardığı anda ayı onu yakalamaya çalışır.\n\nAncak kutup ayıları bugün zor bir dönemden geçiyor. Havalar ısındıkça deniz buzları daha erken eriyor. Buz azalınca ayılar avlanmakta zorlanıyor ve aç kalabiliyor. Bilim insanları, kutup ayılarını korumak için buzların nasıl değiştiğini ve ayıların nerelere gittiğini yakından izliyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kutup ayıları nerede yaşar?",
+    "correct": "Kuzey Kutbu'nda",
+    "wrong": [
+     "Güney Kutbu'nda",
+     "Sıcak çöllerde",
+     "Tropik ormanlarda"
+    ],
+    "explanation": "Kutup ayıları Kuzey Kutbu'nun buzla kaplı soğuk bölgelerinde yaşar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Metinde yağ tabakasının yorgana benzetilmesinin nedeni nedir?",
+    "correct": "İkisinin de sıcaklığı içeride tutması",
+    "wrong": [
+     "İkisinin de beyaz renkte olması",
+     "İkisinin de yumuşak ve çok kalın olması",
+     "İkisinin de kışın kullanılması"
+    ],
+    "explanation": "Yağ tabakası, yorgan gibi vücut ısısının dışarı kaçmasını engeller."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup ayılarının derisi ne renktir?",
+    "correct": "Siyah",
+    "wrong": [
+     "Beyaz",
+     "Pembe",
+     "Kahverengi"
+    ],
+    "explanation": "Ayıların derisi siyahtır ve güneşten gelen ısıyı iyi tutar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ayakların altındaki tüyler ayıya ne sağlar?",
+    "correct": "Buzda dengeli yürümesini",
+    "wrong": [
+     "Suda daha hızlı yüzmesini",
+     "Avını kolay görmesini",
+     "Uzun süre uyumasını"
+    ],
+    "explanation": "Ayak altındaki tüyler buzda kaymayı önler ve ayakları üşümekten korur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kutup ayıları yüzerken neyi kürek gibi kullanır?",
+    "correct": "Ön pençelerini",
+    "wrong": [
+     "Arka pençesini",
+     "Kısa kuyruklarını",
+     "Uzun boyunlarını"
+    ],
+    "explanation": "Ayılar geniş ön ayaklarını kürek gibi kullanarak yüzer."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ayıların deliklerin başında beklemesi hangi bilgiye dayanır?",
+    "correct": "Avın soluklanmak için yüzeye geleceğine",
+    "wrong": [
+     "Deliklerin içinde balık saklandığına",
+     "Buzun o noktada daha sıcak olduğuna",
+     "Fokların deliklerde yavrularını büyüttüğüne"
+    ],
+    "explanation": "Foklar nefes almak için buzdaki deliklerden başını çıkarır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Buzların erken erimesi ayıları neden zor durumda bırakır?",
+    "correct": "Avlandıkları alan daraldığı için",
+    "wrong": [
+     "Sular çok fazla soğuduğu için",
+     "Kürkleri ıslanıp ağırlaştığı için",
+     "Kürklerini kaybettikleri için"
+    ],
+    "explanation": "Ayılar avlarını buzun üzerinde yakalar; buz azalınca avlanmakta zorlanırlar."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin son paragrafı neyi anlatır?",
+    "correct": "İklim değişiminin ayılara etkilerini",
+    "wrong": [
+     "Ayıların foklarla nasıl beslendiğini",
+     "Ayıların kalın kürkünün özelliklerini",
+     "Ayıların suda ne kadar iyi yüzdüğünü"
+    ],
+    "explanation": "Son paragraf ısınan havaların ve eriyen buzların ayıları zorladığını anlatır."
+   }
+  ]
+ }
+}

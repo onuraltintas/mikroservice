@@ -1,0 +1,224 @@
+{
+ "89": {
+  "title": "Arısız Bir Dünya",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir sabah uyandığınızda dünyadaki bütün arıların ortadan kalktığını düşünün. İlk bakışta bu, yalnızca bal üretiminin sona ermesi gibi görünebilir. Oysa sonuçları çok daha büyük olurdu; manavlardaki tezgâhların pek çoğu kısa sürede boşalmaya başlardı. Çünkü arılar, yiyeceklerimizin önemli bir bölümünün oluşmasında kilit bir rol oynar.\n\nBitkilerin meyve ve tohum verebilmesi için çiçeklerin tozlaşması gerekir. Tozlaşma, çiçeğin erkek organında üretilen polenin, aynı türden bir çiçeğin dişi organına taşınmasıdır. Bazı bitkiler bu iş için rüzgârdan yararlanır. Ama pek çok bitki, polenini taşıyacak bir hayvana ihtiyaç duyar. Bu hayvanların en önemlileri arılardır. Arılar çiçeklerden nektar toplarken vücutlarına yapışan polenleri bir çiçekten diğerine taşır. Bir bal arısı tek bir günde yüzlerce çiçeği ziyaret edebilir.\n\nArı denince çoğumuzun aklına yalnızca kovanlarda yaşayan bal arıları gelir. Oysa dünyada yirmi binden fazla arı türü bulunur. Bunların büyük bölümü kovan kurmaz, tek başına yaşar ve hiç bal üretmez. Tüylü ve iri yapılı bombus arıları gibi yabani türler, bazı bitkilerin tozlaşmasında bal arılarından bile daha etkilidir. Örneğin domates çiçekleri, polenlerini ancak güçlü bir titreşimle bırakır ve bombus arıları bu titreşimi kanatlarıyla oluşturabilir.\n\nElma, kiraz, badem, çilek, kabak ve kavun gibi pek çok ürün büyük ölçüde arıların tozlaşmasına bağlıdır. Araştırmalar, dünyada en çok tüketilen besin bitkilerinin önemli bir kısmının en azından bir ölçüde hayvanların tozlaşmasından yararlandığını gösteriyor.\n\nSon yıllarda pek çok ülkede arı sayısında kaygı verici düşüşler gözlendi. Bilim insanları bunun tek bir nedeni olmadığını düşünüyor. Tarımda kullanılan bazı ilaçlar, arıların yön bulma ve yuvalarına dönme becerisini bozabiliyor. Yabani çiçeklerin bulunduğu alanların azalması, arıların besin kaynaklarını daraltıyor. Arılara saldıran asalaklar ve hastalıklar da kovanları zayıflatıyor. İklimdeki değişimler ise çiçeklerin açtığı zamanla arıların etkin olduğu zaman arasındaki uyumu bozabiliyor.\n\nArıları korumak için herkesin yapabileceği şeyler var. Balkonlarda ve bahçelerde arıların sevdiği çiçekleri yetiştirmek, bahçede gereksiz ilaç kullanmamak ve yerel arıcıları desteklemek bunlardan bazılarıdır. Bahçenin bir köşesini biçmeden bırakmak da yabani arılara yuva ve besin sağlar. Küçük bir saksı lavanta bile, şehirdeki bir arı için önemli bir durak olabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne arıların yok olduğu bir sabahı düşündürerek başlamakla neyi amaçlar?",
+    "correct": "Arıların önemini çarpıcı biçimde göstermeyi",
+    "wrong": [
+     "Bal üretiminin aşamalarını ayrıntılı anlatmayı",
+     "Okuru arılara karşı korkutup uzaklaştırmayı",
+     "Manavlardaki meyve fiyatlarını karşılaştırmayı"
+    ],
+    "explanation": "Bu düşünce deneyi, arıların besin üretimindeki önemini çarpıcı biçimde gösterir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre tozlaşma nedir?",
+    "correct": "Polenin dişi organa ulaştırılması",
+    "wrong": [
+     "Çiçeklerin nektar üretip saklaması",
+     "Arıların kovanlarda bal yapması",
+     "Tohumların rüzgârla toprağa düşmesi"
+    ],
+    "explanation": "Tozlaşma, polenin aynı türden bir çiçeğin dişi organına taşınmasıdır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dünyada kaç arı türü bulunduğu belirtilmiştir?",
+    "correct": "20 binden fazla",
+    "wrong": [
+     "Yaklaşık 200",
+     "Yaklaşık 2 bin",
+     "5 milyondan fazla"
+    ],
+    "explanation": "Dünyada yirmi binden fazla arı türü bulunur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Domates çiçeklerinin tozlaşmasında bombus arılarını üstün kılan nedir?",
+    "correct": "Kanat titreşimiyle çiçeği sarsabilmeleri",
+    "wrong": [
+     "Kovanlarında çok fazla bal üretebilmeleri",
+     "Tek başına yaşayıp hiç kovan kurmamaları",
+     "Bal arılarından çok daha küçük olmaları"
+    ],
+    "explanation": "Domates çiçekleri poleni ancak güçlü bir titreşimle bırakır; bombus arıları bunu kanatlarıyla yapabilir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tarım ilaçlarının arılara verdiği zarar nasıl açıklanmıştır?",
+    "correct": "Yolunu bulup geri dönmesini güçleştirmesi",
+    "wrong": [
+     "Arıların daha çok bal üretmesine yol açması",
+     "Çiçeklerin daha erken açmasına neden olması",
+     "Asalakların kovanlara girmesini önlemesi"
+    ],
+    "explanation": "Bazı ilaçlar arıların yön bulma ve yuvaya dönme becerisini bozabilir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "İklim değişiminin arılar üzerindeki etkisi hangi uyumsuzlukla açıklanır?",
+    "correct": "Çiçek açma ile arı uçuşunun zamanının kayması",
+    "wrong": [
+     "Arıların sadece serin havalarda uçabilir olması",
+     "Kovanların aşırı sıcakta eriyip dağılması",
+     "Yağmurların çiçeklerdeki polenleri yıkaması"
+    ],
+    "explanation": "Çiçeklerin açtığı zamanla arıların etkin olduğu zaman arasındaki uyum bozulabilir."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre şehirde yaşayan biri arılara nasıl katkı sağlayabilir?",
+    "correct": "Balkonda arı dostu çiçekler büyüterek",
+    "wrong": [
+     "Kovanlardan doğrudan bal satın alarak",
+     "Bahçelerde daha çok ilaç kullanarak",
+     "Bahçedeki çimleri her hafta kısa biçerek"
+    ],
+    "explanation": "Balkonda lavanta gibi arıların sevdiği çiçekleri yetiştirmek yardımcı olur."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin bütününden çıkarılabilecek ana düşünce hangisidir?",
+    "correct": "Beslenmemiz büyük ölçüde arılara bağlıdır",
+    "wrong": [
+     "Arılar yalnızca bal üretimi için önemlidir",
+     "Arı sayısındaki düşüş tek bir nedene bağlıdır",
+     "Bitkilerin tümü rüzgârla tozlaşabilir"
+    ],
+    "explanation": "Arılar besin üretiminde kilit rol oynar; azalmaları önemli sonuçlar doğurur."
+   }
+  ]
+ },
+ "91": {
+  "title": "Eksik Olan",
+  "category": "Hikaye/Kurgu",
+  "content": "Murat, üniversiteyi bitirdikten sonra bir yıl boyunca iş aradı. Onlarca başvuru yaptı, birkaç görüşmeye çağrıldı ama hiçbirinden olumlu sonuç alamadı. Her reddedilişte biraz daha cesaretini kaybediyordu. Arkadaşlarının birer birer işe girdiğini görmek de onu daha çok üzüyordu. Bir süre sonra başvuru yapmayı bile ertelemeye başladı; her yeni ilan ona yeni bir hayal kırıklığı gibi görünüyordu.\n\nBir gün eski hocası Selim Bey'le karşılaştı. Selim Bey, Murat'ın durumunu dinledikten sonra ona görüşmelerde neler olduğunu sordu. Murat anlatırken bir şey fark etti: Görüşmelerde hep kendi eksiklerinden söz etmişti. Kendisine bir soru sorulduğunda, cevabını savunmak yerine özür diler gibi konuşuyordu. “Deneyimim az”, “Bu konuda pek bilgim yok” gibi cümlelerle başlıyordu.\n\nSelim Bey ona, işverenlerin yalnızca bir kişinin ne bildiğine değil, nasıl düşündüğüne ve öğrenmeye ne kadar açık olduğuna da baktığını anlattı. Murat'tan, okulda yaptığı projeleri, gönüllü çalışmalarını ve bir yaz boyunca çalıştığı kafede edindiği deneyimleri bir kâğıda yazmasını istedi. Murat önce bu deneyimlerin önemsiz olduğunu düşündü ve yazmakta tereddüt etti. Murat listeyi yazınca şaşırdı. Sandığından çok daha fazla şey yapmıştı. Kafede yoğun saatlerde müşterilerle ilgilenmeyi, beklenmedik sorunları çözmeyi ve ekip içinde çalışmayı öğrenmişti.\n\nSelim Bey, görüşmelere hazırlanırken bu deneyimleri somut örneklerle anlatmayı önerdi. Ayrıca her görüşmeden önce başvurduğu şirketi araştırmasını, onların neye ihtiyaç duyduğunu anlamaya çalışmasını söyledi. Murat bir arkadaşıyla birlikte deneme görüşmeleri yapmaya başladı. Arkadaşı ona zor sorular soruyor, Murat da cevaplarını kayda alıp sonra dinliyordu. İlk kayıtlarda sesinin ne kadar çekingen çıktığını duyunca şaşırdı; ama her denemede biraz daha rahat konuştuğunu fark etti.\n\nİki ay sonra katıldığı bir görüşmede, kendisine zor bir durumla nasıl başa çıktığı sorulduğunda, kafede bir akşam yaşanan elektrik kesintisini ve o sırada müşterileri nasıl idare ettiğini anlattı. Görüşmeyi yapan yönetici dikkatle dinledi ve birkaç soru daha sordu. Bir hafta sonra Murat'a telefonla iş teklif edildi. Yönetici, onu diğer adaylardan ayıran şeyin, deneyimlerini açık ve somut biçimde anlatabilmesi olduğunu söyledi.\n\nMurat ilk maaşını aldığı gün Selim Bey'i arayıp teşekkür etti. O gün, bir yıl boyunca aslında bilgisinin değil, kendine olan güveninin eksik olduğunu düşündü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Murat'ın başvuru yapmayı ertelemeye başlaması neyin sonucudur?",
+    "correct": "Art arda gelen retlerin yıldırması",
+    "wrong": [
+     "Arkadaşlarının ona iş bulmuş olması",
+     "Yeni ilanların çok az yayımlanması",
+     "Üniversiteye geri dönmek istemesi"
+    ],
+    "explanation": "Her reddedilişte cesaretini kaybediyor, yeni ilanları hayal kırıklığı olarak görüyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat, Selim Bey'e anlatırken neyi fark etti?",
+    "correct": "Zayıf yönlerini öne çıkardığını",
+    "wrong": [
+     "Görüşmelere sürekli geç kaldığını",
+     "Yanlış şirketlere başvurduğunu",
+     "Diplomasını yanında götürmediğini"
+    ],
+    "explanation": "Görüşmelerde hep kendi eksiklerinden söz ettiğini fark etti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selim Bey'e göre işverenler neye önem verir?",
+    "correct": "Adayın düşünce tarzına ve gelişime",
+    "wrong": [
+     "Yalnızca adayın okuduğu üniversiteye",
+     "Adayın kaç dil bildiğine ve yaşına",
+     "Görüşmenin ne kadar kısa sürdüğüne"
+    ],
+    "explanation": "İşverenler kişinin nasıl düşündüğüne ve öğrenmeye açıklığına da bakar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat kafede çalışırken neler öğrenmişti?",
+    "correct": "Kalabalıkta müşteriyle ilgilenmeyi",
+    "wrong": [
+     "Bozuk kahve makinesini tamir etmeyi",
+     "Kafenin muhasebesini yürütmeyi",
+     "Menüye yeni tarifler eklemeyi"
+    ],
+    "explanation": "Yoğun saatlerde müşterilerle ilgilenmeyi, sorun çözmeyi ve ekip içinde çalışmayı öğrenmişti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selim Bey'in şirketi önceden araştırma önerisinin amacı nedir?",
+    "correct": "Kurumun ihtiyacını baştan anlamak",
+    "wrong": [
+     "Görüşmeyi yapacak kişiyle tanışmak",
+     "Maaşı yüksek olan işleri seçmek",
+     "Şirkette çalışan arkadaş bulmak"
+    ],
+    "explanation": "Şirketin neye ihtiyaç duyduğunu anlamak, cevapları ona göre hazırlamayı sağlar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Murat'ın cevaplarını kaydedip dinlemesi ona ne kazandırdı?",
+    "correct": "Konuşmasını dışarıdan değerlendirebilmeyi",
+    "wrong": [
+     "Arkadaşının sorularını ezberleyebilmeyi",
+     "Görüşmeleri çevrim içi yapabilmeyi öğrenmeyi",
+     "Sesini her zamankinden yüksek çıkarmayı"
+    ],
+    "explanation": "İlk kayıtlarda çekingen olduğunu duydu ve her denemede daha rahat konuştu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yöneticiye göre Murat'ı diğer adaylardan ayıran neydi?",
+    "correct": "Yaşadıklarını net örneklerle aktarması",
+    "wrong": [
+     "Diğerlerinden daha uzun süre okumuş olması",
+     "Hocası Selim Bey'in onu önermiş olması",
+     "Kafede uzun yıllar boyunca çalışmış olması"
+    ],
+    "explanation": "Deneyimlerini açık ve somut biçimde anlatabilmesiydi."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Murat'ın son düşüncesi öykünün hangi ana fikrini ortaya koyar?",
+    "correct": "Başarı çoğu zaman kendine inanmakla başlar",
+    "wrong": [
+     "İş bulmak için yalnızca bilgi yeterlidir",
+     "Hocalar öğrencilerine mutlaka iş bulmalıdır",
+     "Kafede çalışmak herkes için iyi bir kariyerdir"
+    ],
+    "explanation": "Bir yıl boyunca eksik olan bilgisi değil, kendine olan güveniydi."
+   }
+  ]
+ }
+}

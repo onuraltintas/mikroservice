@@ -1,0 +1,557 @@
+{
+ "31": {
+  "title": "Bahçenin Yavaş Sakini",
+  "category": "Hikaye/Kurgu",
+  "content": "Dedemin bahçesinde Tosbik adında yaşlı bir kaplumbağa yaşar. Dedem onu yıllar önce bahçenin kenarındaki çalıların arasında bulmuş. O günden beri Tosbik bahçeden hiç ayrılmamış. Kabuğunun üstünde küçük, beyaz bir leke var; onu hemen bu lekeden tanırım.\n\nGeçen yaz dedemin yanında bir hafta kaldım. Her sabah Tosbik'i aramak benim görevimdi. Bazen domates fidelerinin altında, bazen taş duvarın gölgesinde buluyordum onu. Tosbik çok yavaş yürüyordu ama bütün bahçeyi gezmeyi biliyordu. En çok marul yapraklarını ve düşmüş çilekleri seviyordu.\n\nBir sabah Tosbik'i hiçbir yerde bulamadım. Bahçeyi baştan sona aradım. Çalıların arasına, kovaların arkasına baktım. Tosbik'in kaybolduğunu düşündüm ve korkuyla dedemin yanına koştum. Dedem gülümsedi ve beni bahçenin en sıcak köşesine götürdü. Tosbik orada, güneşin vurduğu bir taşın üstünde gözlerini kapatmış duruyordu.\n\nDedem, kaplumbağaların vücut sıcaklığını kendi başlarına ayarlayamadığını anlattı. Sabah serinliğinde güneşlenerek ısınıyorlarmış. Isındıktan sonra yemek yemeye ve dolaşmaya başlıyorlarmış. Öğlen sıcakta ise gölgeye çekiliyorlarmış.\n\nO günden sonra Tosbik'i aramaya önce güneşli taşlardan başladım. Öğleden sonraları ise onu gölgeli köşelerde, çalıların dibinde aradım. Artık nerede olacağını tahmin edebiliyordum. Dedem, onu benim kadar iyi tanıyan birinin olmadığını söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Tosbik'i yıllar önce kim bulmuştu?",
+    "correct": "Anlatıcının dedesi",
+    "wrong": [
+     "Anlatıcının babası",
+     "Komşu çocukları",
+     "Bahçıvan bir amca"
+    ],
+    "explanation": "Dede onu bahçenin kenarındaki çalıların arasında bulmuştu."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Anlatıcı Tosbik'i neyden tanır?",
+    "correct": "Kabuğundaki beyaz lekeden",
+    "wrong": [
+     "Boynundaki kırmızı ince ipten",
+     "Yürürken çıkardığı sesten",
+     "Kabuğunun büyüklüğünden"
+    ],
+    "explanation": "Kabuğunun üstündeki küçük beyaz lekeden hemen tanır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tosbik en çok neleri severdi?",
+    "correct": "Marul ve düşmüş çilekleri",
+    "wrong": [
+     "Elma ve armut kabuklarını",
+     "Ekmek ve peynir kırıntılarını",
+     "Domates ve biber yapraklarını"
+    ],
+    "explanation": "En çok marul yapraklarını ve düşmüş çilekleri seviyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Anlatıcı Tosbik'i bulamayınca neden korktu?",
+    "correct": "Kaybolduğunu sandığı için",
+    "wrong": [
+     "Dedesi ona kızacağı için",
+     "Bahçede yılan gördüğü için",
+     "Tosbik hasta göründüğü için"
+    ],
+    "explanation": "Bütün bahçeyi aramış, Tosbik'in kaybolduğunu düşünmüştü."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kaplumbağalar sabahları neden güneşlenir?",
+    "correct": "Bedenlerini ısıtmak için",
+    "wrong": [
+     "Kabuklarını kurutmak için",
+     "Böcekleri avlamak için",
+     "Uykularını açmak için"
+    ],
+    "explanation": "Vücut sıcaklıklarını kendileri ayarlayamazlar; sabah serinliğinde güneşte ısınırlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaplumbağalar öğle sıcağında ne yapar?",
+    "correct": "Serin yere geçer",
+    "wrong": [
+     "Toprağa gömülür",
+     "Havuza girip yüzer",
+     "Güneşte kalır"
+    ],
+    "explanation": "Öğlen sıcakta gölgeye çekilirler."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Anlatıcının Tosbik'in yerini tahmin edebilmesi neyi gösterir?",
+    "correct": "Onun alışkanlıklarını öğrendiğini",
+    "wrong": [
+     "Tosbik'in tek bir yerde kaldığını",
+     "Dedesinin ona yardım ettiğini",
+     "Bahçenin çok küçük olduğunu"
+    ],
+    "explanation": "Sabahları güneşli taşlara, öğleden sonra gölgeli köşelere bakması gerektiğini öğrenmişti."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Bu hikâyeden hangi ders çıkarılabilir?",
+    "correct": "Bir canlıyı tanımak gözlemle olur",
+    "wrong": [
+     "Kaplumbağalar evde beslenmelidir",
+     "Bahçe hayvanları kolayca kaybolur",
+     "Yaşlı hayvanlar çok yavaş yürür"
+    ],
+    "explanation": "Anlatıcı Tosbik'i izleyip davranışlarını anlayarak onu en iyi tanıyan kişi oldu."
+   }
+  ]
+ },
+ "32": {
+  "title": "Kulaklarıyla Görenler",
+  "category": "Bilgi/Açıklama",
+  "content": "Yarasalar geceleri avlanan hayvanlardır. Zifiri karanlıkta uçarken ağaçlara, duvarlara ya da birbirlerine çarpmazlar. Üstelik havada uçan minicik sinekleri bile yakalayabilirler. Oysa yarasaların bir kısmının gözleri pek iyi görmez, karanlıkta ise gözler zaten işe yaramaz. Peki yarasalar yollarını nasıl bulurlar?\n\nYarasaların çoğu yollarını seslerle bulur. Uçarken ağızlarından ya da burunlarından çok tiz sesler çıkarırlar. Bu sesler o kadar incedir ki insan kulağı onları duyamaz. Ses bir ağaca, bir duvara ya da bir böceğe çarpınca geri döner ve yarasanın kulağına ulaşır. Buna yankı denir.\n\nYarasa, yankının ne kadar sürede geri döndüğünden nesnenin ne kadar uzakta olduğunu anlar. Yankı çabuk dönüyorsa nesne yakındır, geç dönüyorsa uzaktadır. Yankının nasıl geldiğine bakarak nesnenin büyüklüğünü, şeklini ve hareket edip etmediğini de anlayabilir. Bir böceğe yaklaştıkça sesleri daha sık çıkarır ve böceğin tam yerini bulur. Bütün bunlar saniyenin küçük bir bölümünde olur.\n\nBu yönteme yankıyla yer bulma denir. Yunuslar da denizin altında benzer bir yöntem kullanır. İnsanlar da bu yöntemden esinlenerek gemilerde ve denizaltılarda kullanılan sonar adlı cihazları geliştirmiştir. Balıkçılar bu cihazlarla denizin altındaki balık sürülerini bulur.\n\nYarasaların büyük ve hareketli kulakları, geri dönen yankıları yakalamalarına yardım eder. Bazı yarasa türlerinin kulakları, başlarına göre oldukça büyüktür. Yani yarasalar karanlıkta gözleriyle değil, kulaklarıyla görür diyebiliriz.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Yarasalar ne zaman avlanır?",
+    "correct": "Gece karanlığında",
+    "wrong": [
+     "Sabahın erkeninde",
+     "Öğle sıcağında",
+     "Gün batarken"
+    ],
+    "explanation": "Yarasalar geceleri avlanan hayvanlardır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yarasaların çıkardığı sesleri neden duyamayız?",
+    "correct": "Çok tiz oldukları için",
+    "wrong": [
+     "Çok alçak oldukları için",
+     "Kısa sürdükleri için",
+     "Uzaktan geldikleri için"
+    ],
+    "explanation": "Sesler o kadar incedir ki insan kulağı onları duyamaz."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre yankı nedir?",
+    "correct": "Bir yüzeyden geri gelen ses",
+    "wrong": [
+     "Yarasanın kanat çırpma sesi",
+     "Böceklerin çıkardığı vızıltı",
+     "Rüzgârın ağaçlardaki uğultusu"
+    ],
+    "explanation": "Ses bir nesneye çarpıp geri döner ve yarasanın kulağına ulaşır; buna yankı denir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yankının çabuk dönmesi neyi gösterir?",
+    "correct": "Nesnenin yakında olduğunu",
+    "wrong": [
+     "Nesnenin çok büyük olduğunu",
+     "Böceğin hızla kaçtığını",
+     "Yarasanın yorulduğunu"
+    ],
+    "explanation": "Yankı çabuk dönüyorsa nesne yakındır, geç dönüyorsa uzaktadır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yarasa böceğe yaklaşınca sesleri neden daha sık çıkarır?",
+    "correct": "Böceğin yerini kesin bulmak için",
+    "wrong": [
+     "Böceği korkutup durdurmak için",
+     "Diğer yarasaları çağırmak için",
+     "Kendi yuvasının yerini bulmak için"
+    ],
+    "explanation": "Sesleri sıklaştırarak böceğin tam yerini bulur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "İnsanlar bu yöntemden esinlenerek hangi cihazı geliştirdi?",
+    "correct": "Sonar",
+    "wrong": [
+     "Radar",
+     "Pusula",
+     "Dürbün"
+    ],
+    "explanation": "Gemilerde ve denizaltılarda kullanılan sonar bu yöntemden esinlenmiştir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Büyük kulakların yarasaya yararı nedir?",
+    "correct": "Dönen sesleri iyice duyabilmek",
+    "wrong": [
+     "Uçarken havada dengede kalmak",
+     "Bedenini sıcakta serin tutmak",
+     "Düşmanlarını uzaktan korkutmak"
+    ],
+    "explanation": "Büyük ve hareketli kulaklar geri dönen yankıları yakalamaya yardım eder."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "\"Yarasalar kulaklarıyla görür\" sözüyle ne anlatılmak isteniyor?",
+    "correct": "Sesle çevreyi algıladıkları",
+    "wrong": [
+     "Gözlerinin kulakta olduğu",
+     "Kulaklarının çok büyük olduğu",
+     "Karanlıkta hiç uçmadıkları"
+    ],
+    "explanation": "Yarasalar çevrelerini gözle değil, seslerin yankısıyla tanır."
+   }
+  ]
+ },
+ "33": {
+  "title": "Zincir Çıkınca",
+  "category": "Hikaye/Kurgu",
+  "content": "Mert'in bisikletinin zinciri bir cumartesi sabahı, parka giderken yokuşun ortasında çıktı. Mert bisikletten indi ve zincire baktı. Zincir dişlilerden kaymış, yerde gevşekçe sallanıyordu. Elleri yağ olmasın diye zincire dokunmak istemedi. Bisikleti iterek eve döndü. Yokuşu çıkmak, bisikleti sürmekten çok daha yorucuydu.\n\nBabası işteydi ve akşama kadar dönmeyecekti. Mert bisikleti apartmanın önüne bıraktı ve bir süre üzgün üzgün baktı. O sırada alt kattaki komşuları Şükrü Amca balkondan seslendi. Şükrü Amca gençliğinde bisiklet tamircisi olarak çalışmıştı. Aşağı indi, elinde eski bir bez ve küçük bir alet kutusuyla.\n\nŞükrü Amca zinciri hemen takmadı. \"Önce neden çıktığını anlayalım, yoksa yine çıkar,\" dedi. Önce Mert'e zincirin nasıl çalıştığını gösterdi. Pedalı çevirince öndeki dişlinin zinciri çektiğini, zincirin de arka tekerleği döndürdüğünü anlattı. Zincirin çıkmasının nedenini de buldu: Arka tekerlek biraz gevşemişti ve zincir yeterince gergin değildi.\n\nSonra Mert'e bir anahtar verdi ve tekerleği nasıl sıkacağını gösterdi. Mert anahtarı çevirirken zorlandı, ama Şükrü Amca yardım etmedi; yalnızca nereden tutması gerektiğini söyledi. Tekerlek sıkılaşınca zinciri birlikte dişlilere geçirdiler. Mert bisikleti ters çevirip pedalı elleriyle çevirdi. Zincir dişlilerin üstünde düzgünce döndü.\n\nMert'in elleri simsiyah olmuştu ama hiç umursamadı. Kendi bisikletini kendi elleriyle onarmış olmak ona büyük bir gurur veriyordu. Şükrü Amca ona zinciri ayda bir silip biraz yağlamasını söyledi. Mert o öğleden sonra parka gitti. Ertesi hafta zinciri kendi başına sildi ve yağladı. Bir arkadaşının bisikletinin zinciri çıktığında ise ona ne yapacağını Mert gösterdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Mert'in bisikletinin zinciri nerede çıktı?",
+    "correct": "Rampayı çıkarken",
+    "wrong": [
+     "Parkın girişinde",
+     "Apartmanın önünde",
+     "Okula giden yolda"
+    ],
+    "explanation": "Parka giderken yokuşun ortasında zincir çıktı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mert zincire neden dokunmak istemedi?",
+    "correct": "Ellerinin kirlenmesini istemediği için",
+    "wrong": [
+     "Zincirin güneşte ısınmış olduğu için",
+     "Zinciri koparacağından çok korktuğu için",
+     "Babası buna izin vermediği için"
+    ],
+    "explanation": "Elleri yağ olmasın diye zincire dokunmadı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şükrü Amca gençliğinde ne iş yapmıştı?",
+    "correct": "Bisiklet ustalığı",
+    "wrong": [
+     "Otobüs şoförlüğü",
+     "Mobilya ustalığı",
+     "Kol saati tamirciliği"
+    ],
+    "explanation": "Gençliğinde bisiklet tamircisi olarak çalışmıştı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şükrü Amca'nın önce zincirin neden çıktığını araması neden önemliydi?",
+    "correct": "Sorunun tekrarlanmasını önlemek için",
+    "wrong": [
+     "Mert'i oyalayıp eğlendirmek için",
+     "Alet kutusundaki parçayı bulmak için",
+     "Babasının dönmesini beklemek için"
+    ],
+    "explanation": "\"Önce neden çıktığını anlayalım, yoksa yine çıkar,\" dedi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zincirin çıkmasının nedeni neydi?",
+    "correct": "Tekerin boşluk yapması",
+    "wrong": [
+     "Ön dişlinin kırılmış olması",
+     "Ön lastiğin patlaması",
+     "Sağ pedalın eğilmiş olması"
+    ],
+    "explanation": "Arka tekerlek gevşemişti ve zincir yeterince gergin değildi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şükrü Amca tekerleği neden Mert'e sıktırdı?",
+    "correct": "Kendi başına yapmayı öğretmek için",
+    "wrong": [
+     "Yorulup dinlenmek istediği için",
+     "Mert'in kol gücünü sınamak için",
+     "Kendi aletlerini zarardan korumak için"
+    ],
+    "explanation": "Yardım etmedi, yalnızca nereden tutacağını söyledi; amacı Mert'in işi öğrenmesiydi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şükrü Amca zincir için ne önerdi?",
+    "correct": "Ayda bir silip yağlamayı",
+    "wrong": [
+     "Her gün suyla yıkamayı",
+     "Yılda bir değiştirmeyi",
+     "Hiç dokunmadan bırakmayı"
+    ],
+    "explanation": "Zinciri ayda bir silip biraz yağlamasını söyledi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Mert'in arkadaşına yardım etmesi neyi gösterir?",
+    "correct": "Öğrendiğini paylaşmayı seçtiğini",
+    "wrong": [
+     "Arkadaşına böbürlenmek istediğini",
+     "Bisiklet tamircisi olacağını",
+     "Şükrü Amca'nın ona ısrar ettiğini"
+    ],
+    "explanation": "Şükrü Amca'dan öğrendiklerini bu kez kendisi bir arkadaşına gösterdi."
+   }
+  ]
+ },
+ "34": {
+  "title": "Görünmeyen Yol",
+  "category": "Bilgi/Açıklama",
+  "content": "Mutfakta yere düşen küçük bir kurabiye parçası, birkaç dakika içinde uzun bir karınca kuyruğuyla çevrilebilir. Karıncalar yiyeceği nasıl bu kadar çabuk bulur ve aynı yolu nasıl izler?\n\nYiyecek arayan bir karınca önce tek başına, rastgele dolaşır. Bu sırada yolunu kaybetmemek için güneşin yerine ve çevresindeki işaretlere dikkat eder. Yiyecek bulunca yuvasına dönerken yere çok küçük miktarda kokulu bir madde bırakır. Bu madde, yuvadan yiyeceğe uzanan görünmez bir iz oluşturur. Diğer karıncalar antenleriyle bu kokuyu alır ve izi takip ederek yiyeceğe ulaşır.\n\nYiyeceğe ulaşan her karınca, dönüş yolunda ize biraz daha koku ekler. Böylece iz giderek güçlenir ve daha çok karınca aynı yolu kullanır. Yuvaya en kısa yol en çabuk gidip gelinen yol olduğu için, bu yoldaki koku da en hızlı güçlenir. Yiyecek bitince karıncalar koku bırakmayı keser. İz zamanla kaybolur ve karıncalar başka yerlerde yiyecek aramaya başlar.\n\nBu sayede bir koloni, hiçbir karıncanın yöneticilik yapmasına gerek kalmadan, yiyeceğe giden yolu birlikte bulur. Bu yüzden mutfağa giren karıncaları uzaklaştırmak için yalnızca karıncaları silmek yetmez; yerdeki kokulu izi de temizlemek gerekir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Yere düşen kurabiyenin çevresi kısa sürede neyle dolabilir?",
+    "correct": "Sıra sıra dizilen karıncalarla",
+    "wrong": [
+     "Bir sürü sinek ve arı sürüsüyle",
+     "Toz ve kırıntı yığınıyla",
+     "Küçük mutfak böcekleriyle"
+    ],
+    "explanation": "Birkaç dakika içinde uzun bir karınca kuyruğuyla çevrilebilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yiyecek bulan karınca yuvaya dönerken ne yapar?",
+    "correct": "Ardında koku yolu bırakır",
+    "wrong": [
+     "Yiyeceği yuvaya sürükler",
+     "Diğerlerine sesle haber verir",
+     "Yuvanın kapısını kapatır"
+    ],
+    "explanation": "Dönerken yere küçük miktarda kokulu bir madde bırakır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tek başına dolaşan karınca yolunu kaybetmemek için neye dikkat eder?",
+    "correct": "Güneşin konumuna ve çevreye",
+    "wrong": [
+     "Yuvanın sesine ve kokusuna",
+     "Rüzgârın yönüne ve sıcağa",
+     "Diğer karıncaların ayak izine"
+    ],
+    "explanation": "Güneşin yerine ve çevresindeki işaretlere dikkat eder."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Diğer karıncalar yiyeceğe nasıl ulaşır?",
+    "correct": "Kokuyu duyargalarıyla izleyerek",
+    "wrong": [
+     "Gözleriyle yiyeceği görerek",
+     "İlk karıncanın peşine takılarak",
+     "Güneşin yönüne göre yürüyerek"
+    ],
+    "explanation": "Antenleriyle kokuyu alıp izi takip ederler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "En kısa yoldaki koku neden en hızlı güçlenir?",
+    "correct": "En sık o yolda gidip gelindiği için",
+    "wrong": [
+     "O yol en düz ve geniş yol olduğu için",
+     "Orada daha çok yiyecek bulunduğu için",
+     "Kraliçe karınca o yolu seçtiği için"
+    ],
+    "explanation": "Kısa yolda gidip gelmek daha çabuk olur; her dönüşte ize yeni koku eklenir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yiyecek bitince ne olur?",
+    "correct": "Koku izi zamanla kaybolur",
+    "wrong": [
+     "Karıncalar yuvayı terk eder",
+     "Koku izi daha da güçlenir",
+     "Karıncalar orada bekler"
+    ],
+    "explanation": "Karıncalar koku bırakmayı keser ve iz zamanla kaybolur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mutfaktaki karıncaları uzaklaştırmak için izi de silmek neden gerekir?",
+    "correct": "Koku diğerlerini oraya çağırır",
+    "wrong": [
+     "Karıncalar o izle beslenir",
+     "İz mutfağı kirli ve pis gösterir",
+     "Silinmeyen iz yuvaya dönüşür"
+    ],
+    "explanation": "İz kaldıkça diğer karıncalar onu takip ederek yeniden gelir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metne göre karınca kolonisinin çalışma biçiminin özelliği nedir?",
+    "correct": "Yönetici olmadan uyum içinde olması",
+    "wrong": [
+     "Tek bir lider karıncanın emir vermesi",
+     "Her karıncanın ayrı yol izlemesi",
+     "Yalnız geceleri yiyecek araması"
+    ],
+    "explanation": "Koloni hiçbir karıncanın yöneticilik yapmasına gerek kalmadan yolu birlikte bulur."
+   }
+  ]
+ },
+ "35": {
+  "title": "Dağın İçindeki Ateş",
+  "category": "Bilgi/Açıklama",
+  "content": "Yeryüzünün derinliklerinde sıcaklık o kadar yüksektir ki bazı kayalar erir. Erimiş bu kayaya magma denir. Magma, çevresindeki katı kayalardan daha hafif olduğu için yavaş yavaş yukarı doğru yükselir. Yer kabuğundaki çatlaklardan ya da zayıf noktalardan yüzeye ulaştığında bir volkan patlaması olur. Yüzeye çıkan magmaya artık lav adı verilir. Lav o kadar sıcaktır ki değdiği ağaçları ve evleri yakıp geçebilir.\n\nBir volkan patlaması her zaman aynı biçimde olmaz. Bazı volkanlarda lav akışkandır ve yamaçlardan bir nehir gibi yavaşça akar. İnsanlar bu tür akıntılardan genellikle uzaklaşabilecek zamanı bulur. Bazı volkanlarda ise magma koyu ve yapışkandır. İçindeki gazlar kolayca dışarı çıkamaz ve basınç giderek artar. Sonunda bu basınç büyük bir patlamayla boşalır. Havaya kül, taş parçaları ve sıcak gaz bulutları fırlar.\n\nVolkanik kül çok uzaklara taşınabilir. Büyük patlamalardan sonra kül bulutları rüzgârla binlerce kilometre yol alabilir. Uçaklar bu bulutların içinden geçemez, çünkü kül motorlara zarar verebilir. Bu yüzden büyük patlamalardan sonra bazen uçuşlar günlerce iptal edilir. Çok büyük patlamalarda havaya yayılan kül, güneş ışığını bir süre perdeleyerek dünyanın bazı bölgelerinde havanın serinlemesine bile yol açabilir.\n\nVolkanlar yalnızca yıkıcı değildir. Lav soğuyup katılaşınca yeni kayalar ve hatta yeni adalar oluşur. Volkanik küllerle zenginleşen topraklar çok verimli olur. Bu yüzden pek çok çiftçi, tehlikeye rağmen volkanların eteklerinde tarım yapar. Bazı ülkeler ise yerin altındaki sıcaklıktan yararlanarak elektrik üretir.\n\nBilim insanları volkanları sürekli izler. Yerdeki küçük sarsıntıları, volkandan çıkan gazları ve yamaçların şişip şişmediğini ölçerler. Hiçbir yöntem patlamanın gününü kesin olarak söyleyemez; ama bu ölçümler sayesinde bir patlamanın yaklaştığını önceden tahmin edip çevrede yaşayan insanları uyarabilirler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Magma neden yukarı doğru yükselir?",
+    "correct": "Çevresindeki kayalardan hafif olduğu için",
+    "wrong": [
+     "Yer kabuğu onu yukarı doğru emdiği için",
+     "Denizin suyu onu yukarı doğru ittiği için",
+     "Çevresindeki kayalardan ağır olduğu için"
+    ],
+    "explanation": "Magma çevresindeki katı kayalardan daha hafiftir."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yüzeye çıkan magmaya ne ad verilir?",
+    "correct": "Lav",
+    "wrong": [
+     "Kül",
+     "Kaya",
+     "Gaz"
+    ],
+    "explanation": "Yüzeye çıkan magmaya lav denir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bazı volkanlar neden büyük bir patlamayla boşalır?",
+    "correct": "Gazların sıkışıp basınç yapması",
+    "wrong": [
+     "Lavın çok akışkan ve hızlı olması",
+     "Volkanın içine yağmur dolması",
+     "Çevrede uzun süre deprem olmaması"
+    ],
+    "explanation": "Koyu ve yapışkan magmada gazlar çıkamaz, basınç artar ve büyük bir patlamayla boşalır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Lavın akışkan olduğu patlamalarda insanlar ne yapabilir?",
+    "correct": "Uzaklaşacak zamanı bulabilir",
+    "wrong": [
+     "Lavın üstünden yürüyüp geçebilir",
+     "Lavı hortumla söndürebilir",
+     "Evlerinde güvenle kalabilir"
+    ],
+    "explanation": "Akışkan lav yavaşça aktığı için insanlar genellikle uzaklaşacak zaman bulur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uçaklar kül bulutunun içinden neden geçemez?",
+    "correct": "Uçağın motorlarını bozabileceği için",
+    "wrong": [
+     "Pilotlar yolu göremeyeceği için",
+     "Bulutun içi çok soğuk olduğu için",
+     "Kül uçağı fazla ağırlaştıracağı için"
+    ],
+    "explanation": "Kül motorlara zarar verebilir; bu yüzden uçuşlar iptal edilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Çok büyük patlamalardan sonra hava neden serinleyebilir?",
+    "correct": "Güneşin önünün tozla kapanması",
+    "wrong": [
+     "Lavın denize akıp suyu soğutması",
+     "Volkanın içinin buz tutması",
+     "Rüzgârların yön değiştirmesi"
+    ],
+    "explanation": "Havaya yayılan kül güneş ışığını bir süre perdeler."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Volkan eteklerindeki topraklar neden verimlidir?",
+    "correct": "Külün getirdiği besinler sayesinde",
+    "wrong": [
+     "Bol yağmur aldığı ve sulandığı için",
+     "Lavın sıcaklığı toprağı ısıttığı için",
+     "Gübreyle sürekli beslendiği için"
+    ],
+    "explanation": "Volkanik küllerle zenginleşen topraklar çok verimli olur."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metne göre volkanlar için hangisi söylenebilir?",
+    "correct": "Hem yıkıcı hem de yararlı olabilirler",
+    "wrong": [
+     "Yalnızca zarar veren doğa olaylarıdır",
+     "Patlama günleri önceden kesin bilinir",
+     "Tümü yalnızca akışkan lav püskürtür"
+    ],
+    "explanation": "Volkanlar büyük zarar verebilir ama yeni topraklar, verimli araziler ve enerji de sağlar."
+   }
+  ]
+ }
+}

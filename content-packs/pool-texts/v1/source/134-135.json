@@ -1,0 +1,224 @@
+{
+ "134": {
+  "title": "İlk Adımlar",
+  "category": "Hikaye/Kurgu",
+  "content": "Kardeşim Duru bir yaşına yeni girmişti. Henüz yürüyemiyordu. Emekleyerek her yere gidiyor, bazen koltuğa tutunup ayağa kalkıyordu. Ama elini bıraktığı anda popo üstü yere oturuyordu. Ben de ona yürümeyi öğretmek için her gün ellerinden tutup onu salonda gezdiriyordum.\n\nBir akşam hepimiz salonda oturuyorduk. Duru koltuğa tutunmuş, annemin yanında duruyordu. Annem ona ellerini uzattı. Duru önce bir süre düşündü. Sonra koltuğu bıraktı ve bir adım attı. Ardından bir adım daha attı. Üçüncü adımda annemin kollarına düştü.\n\nHepimiz sevinçle alkışladık. Duru da bizimle birlikte el çırptı ve kahkahalarla güldü. Babam hemen telefonunu çıkarıp anneanneme haber verdi.\n\nO günden sonra Duru her gün biraz daha fazla adım attı. Bazen düştü, ama çoğu zaman ağlamadan yeniden kalktı. Ben de ona her seferinde alkış tutuyordum. Bir hafta sonra salonun bir ucundan öbür ucuna yürüyebiliyordu. Şimdi de koşmaya çalışıyor ve ben onun peşinden koşuyorum.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Duru kaç yaşındaydı?",
+    "correct": "1",
+    "wrong": [
+     "2",
+     "3",
+     "4"
+    ],
+    "explanation": "Duru bir yaşına yeni girmişti."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Duru koltuğun elini bıraktığında ne oluyordu?",
+    "correct": "Popo üstü yere oturuyordu",
+    "wrong": [
+     "Hemen koşmaya başlıyordu",
+     "Annesini çağırıp ağlıyordu",
+     "Koltuğa geri tırmanıyordu"
+    ],
+    "explanation": "Elini bıraktığı anda popo üstü yere oturuyordu."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Anlatıcı Duru'ya yardım etmek için ne yapıyordu?",
+    "correct": "Ellerinden tutarak yürütüyordu",
+    "wrong": [
+     "Ona her gün yeni oyuncak alıyordu",
+     "Ona masal kitapları okuyordu",
+     "Onu her gün parka götürüyordu"
+    ],
+    "explanation": "Her gün ellerinden tutup onu salonda gezdiriyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Duru kaçıncı adımda annesinin kollarına düştü?",
+    "correct": "Üçüncü",
+    "wrong": [
+     "Birinci",
+     "İkinci",
+     "Dördüncü"
+    ],
+    "explanation": "Üçüncü adımda annesinin kollarına düştü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Duru'nun koltuğu bırakmadan önce bir süre düşünmesi neyi gösterir?",
+    "correct": "Biraz kararsız kaldığını",
+    "wrong": [
+     "Çok uykusunun geldiğini",
+     "Annesine çok kızdığını",
+     "Yürümeyi çoktan bildiğini"
+    ],
+    "explanation": "Yeni bir şey denerken önce biraz tereddüt etti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babası Duru'nun ilk adımlarını kime haber verdi?",
+    "correct": "Anneanneye",
+    "wrong": [
+     "Dedesine",
+     "Öğretmenine",
+     "Teyzesine"
+    ],
+    "explanation": "Babası telefonunu çıkarıp anneanneye haber verdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Duru'nun düşünce yeniden kalkması onun hakkında ne anlatır?",
+    "correct": "Kolay vazgeçmediğini",
+    "wrong": [
+     "Çok yorgun düştüğünü",
+     "Düşmekten korktuğunu",
+     "Yürümek istemediğini"
+    ],
+    "explanation": "Düştüğünde çoğu zaman ağlamadan yeniden kalktı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Bu öykü bize ne anlatır?",
+    "correct": "Yeni beceriler deneyerek öğrenilir",
+    "wrong": [
+     "Bebekler yürümeyi bir günde öğrenir",
+     "Düşen bebekler mutlaka ağlar",
+     "Kardeşler birlikte oyun oynamaz"
+    ],
+    "explanation": "Duru düşe kalka, deneyerek yürümeyi öğrendi."
+   }
+  ]
+ },
+ "135": {
+  "title": "Tırtıldan Kelebeğe",
+  "category": "Bilgi/Açıklama",
+  "content": "Rengârenk kanatlarıyla çiçekten çiçeğe uçan kelebekler, hayatlarına bambaşka bir biçimde başlar. Bir kelebeğin yaşamı dört aşamadan oluşur: yumurta, tırtıl, pupa ve kelebek. Bu değişime başkalaşım denir. Her aşamada kelebek bambaşka bir görünüşe bürünür.\n\nDişi kelebek yumurtalarını genellikle bir yaprağın üzerine bırakır. Birkaç gün sonra yumurtadan küçük bir tırtıl çıkar. Tırtılın tek bir işi vardır: yemek. İlk yemeği çoğu zaman içinden çıktığı yumurtanın kabuğudur. Durmadan yaprak yer ve hızla büyür. Büyüdükçe derisi ona dar gelir ve tırtıl birkaç kez deri değiştirir.\n\nTırtıl yeterince büyüdüğünde bir dala tutunur ve çevresinde sert bir kabuk oluşturur. Bu aşamaya pupa denir. Dışarıdan bakıldığında pupa hiç kıpırdamıyormuş gibi görünür. Oysa içinde müthiş bir değişim yaşanır. Tırtılın vücudu adeta yeniden yapılır; kanatlar, uzun antenler ve ince bacaklar oluşur. Yaprak çiğneyen ağız da çiçeklerden nektar emmeye yarayan uzun bir hortuma dönüşür.\n\nBirkaç hafta sonra pupa çatlar ve içinden bir kelebek çıkar. Kelebeğin kanatları önce buruşuk ve ıslaktır. Kelebek kanatlarını bir süre açıp kapatarak kurutur. Ardından ilk uçuşuna başlar. Artık yaprak yemez; çiçeklerin tatlı özüyle beslenir. Yetişkin kelebek de yumurtalarını bir yaprağa bıraktığında döngü yeniden başlar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kelebeğin yaşamı kaç aşamadan oluşur?",
+    "correct": "4",
+    "wrong": [
+     "2",
+     "3",
+     "5"
+    ],
+    "explanation": "Yumurta, tırtıl, pupa ve kelebek olmak üzere dört aşamadan oluşur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tırtılın ilk yemeği çoğu zaman nedir?",
+    "correct": "Yumurtanın kabuğu",
+    "wrong": [
+     "Çiçeğin tatlı özü",
+     "Küçük böcekler",
+     "Dalın kuru kabuğu"
+    ],
+    "explanation": "İlk yemeği çoğu zaman içinden çıktığı yumurtanın kabuğudur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tırtılın deri değiştirmesinin nedeni nedir?",
+    "correct": "Büyüdükçe derisinin dar gelmesi",
+    "wrong": [
+     "Derisinin güneşte yanıp kuruması",
+     "Renginin zamanla solup değişmesi",
+     "Kuşlardan saklanmaya çalışması"
+    ],
+    "explanation": "Büyüdükçe derisi ona dar gelir ve deri değiştirir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar pupanın dışarıdan göründüğü ile içinde olanı nasıl karşılaştırır?",
+    "correct": "Durgun görünse de içinde büyük bir dönüşüm olur",
+    "wrong": [
+     "Pupa da tırtıl gibi sürekli yaprak yemeye devam eder",
+     "İçinde de dışında da hiçbir değişiklik olmaz",
+     "Pupa dışarıdan bakıldığında hızla kıpırdar"
+    ],
+    "explanation": "Dışarıdan kıpırdamıyormuş gibi görünse de içinde müthiş bir değişim yaşanır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pupa aşamasında ağız neye dönüşür?",
+    "correct": "Nektar emen bir hortuma",
+    "wrong": [
+     "Güçlü ve keskin dişlere",
+     "Sert ve küçük bir gagaya",
+     "Uzun ve ince bir antene"
+    ],
+    "explanation": "Yaprak çiğneyen ağız, nektar emmeye yarayan uzun bir hortuma dönüşür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kelebek pupadan çıktıktan sonra ilk olarak ne yapar?",
+    "correct": "Önce kanatlarını açıp kapayarak kurutur",
+    "wrong": [
+     "Hemen dalındaki yaprakları yemeye başlar",
+     "Yumurtalarını bırakacak bir yaprak arar",
+     "Yeniden pupanın içine girip saklanır"
+    ],
+    "explanation": "Kanatlarını bir süre açıp kapatarak kurutur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tırtıl ile kelebeğin beslenmesi arasındaki fark nedir?",
+    "correct": "Biri yaprak, öteki çiçek özüyle beslenir",
+    "wrong": [
+     "İkisi de sadece yaprak yiyerek beslenir",
+     "Tırtıl nektarla, kelebek yaprakla beslenir",
+     "İkisi de hiçbir şey yemeden yaşar"
+    ],
+    "explanation": "Tırtıl yaprak yer; kelebek çiçeklerin tatlı özüyle beslenir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin son cümlesine göre döngünün yeniden başlaması ne demektir?",
+    "correct": "Yeni yumurtalarla aşamaların tekrarlanması",
+    "wrong": [
+     "Kelebeğin kendisinin yeniden tırtıl olması",
+     "Pupanın yeniden kapanıp sertleşmesi",
+     "Kelebeğin her yıl yeni kanat çıkarması"
+    ],
+    "explanation": "Kelebek yumurtalarını bırakınca aynı aşamalar yeniden yaşanır."
+   }
+  ]
+ }
+}

@@ -1,0 +1,668 @@
+{
+ "116": {
+  "title": "Beyaz Altın",
+  "category": "Bilgi/Açıklama",
+  "content": "Bugün sofralarımızda en sıradan şeylerden biri olan tuz, tarih boyunca son derece değerli bir madde olarak görüldü. Buzdolabının icadından önce tuz, yiyecekleri bozulmadan saklamanın en etkili yollarından biriydi. Et ve balık tuzlanarak aylarca dayanabiliyordu. Bu yüzden tuza sahip olmak, kışı aç geçirmemek ve uzun yolculuklara çıkabilmek anlamına geliyordu. Türkçedeki “tuz ekmek hakkı” deyimi bile tuzun ne kadar değerli görüldüğünü anlatır.\n\nTuz, çok eski çağlardan beri iki ana yolla elde edildi. Deniz kıyısındaki topluluklar deniz suyunu sığ havuzlarda buharlaştırarak tuz topladı. Denizden uzak bölgelerde ise yer altındaki kaya tuzu yatakları kazılarak işletildi. Türkiye'de de Tuz Gölü gibi doğal kaynaklardan uzun süredir tuz elde ediliyor. Yazın gölün suyu çekildiğinde yüzeyde kalın, bembeyaz bir tuz tabakası oluşur ve bu tabaka toplanarak işlenir.\n\nTuzun değeri, onu bir ticaret malı ve hatta bir ödeme aracı hâline getirdi. Antik dünyada tuz taşıyan kervanlar, çölleri aşarak uzak bölgelere ulaştı. Bazı tarihçiler, İngilizcede “maaş” anlamına gelen “salary” sözcüğünün Latincede tuz anlamına gelen sözcükle ilişkili olduğunu söyler. Ancak Roma askerlerine maaşlarının tuzla ödendiğine dair yaygın anlatının kesin bir kanıtı olmadığını da belirtirler.\n\nTuz zaman zaman siyasi bir mesele de oldu. Pek çok devlet, tuz üretimini ve satışını kendi denetiminde tuttu ve tuzdan vergi aldı. Hindistan'da İngiliz yönetiminin tuz üzerine koyduğu vergiye karşı Mahatma Gandi'nin 1930'da düzenlediği yürüyüş, bağımsızlık mücadelesinin en bilinen olaylarından biri hâline geldi. Gandi ve destekçileri yaklaşık yirmi dört gün boyunca yüzlerce kilometre yürüyerek denize ulaştı ve yasağa rağmen deniz suyundan tuz elde etti. Bu basit eylem, sıradan insanların günlük hayatına dokunan bir konu üzerinden geniş kitleleri harekete geçirdiği için büyük etki yarattı.\n\nBugün tuz ucuz ve kolay bulunur. Hatta sağlık uzmanları, insanların gereğinden fazla tuz tükettiği konusunda uyarıyor. Dünya Sağlık Örgütü, yetişkinlerin günde beş gramdan, yani yaklaşık bir çay kaşığından az tuz tüketmesini öneriyor. Fazla tuz, yüksek tansiyon riskini artırıyor. Bir zamanlar uğruna savaşlar verilen bu madde, şimdi daha az kullanmamız önerilen bir madde hâline geldi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Buzdolabından önceki dönemde tuzun bu kadar değerli olmasının nedeni nedir?",
+    "correct": "Besinleri uzun süre korumaya yaraması",
+    "wrong": [
+     "Yemeklerin pişme süresini kısaltması",
+     "Sadece sarayların mutfaklarında kullanılması",
+     "Bütün hastalıkları iyileştirdiğine inanılması"
+    ],
+    "explanation": "Tuz, yiyecekleri bozulmadan saklamanın en etkili yollarındandı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Denizden uzak bölgelerde tuz nasıl elde edildi?",
+    "correct": "Yer altındaki yataklar kazılarak",
+    "wrong": [
+     "Yağmur suyu uzun süre kaynatılarak",
+     "Yakılan bitkilerin külü toplanarak",
+     "Göldeki balıklar kurutularak"
+    ],
+    "explanation": "Denizden uzak bölgelerde yer altındaki kaya tuzu yatakları kazıldı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tuz Gölü'nde tuz hangi mevsimde toplanır?",
+    "correct": "Yaz aylarında",
+    "wrong": [
+     "Kış aylarında",
+     "İlkbaharda",
+     "Sonbaharda"
+    ],
+    "explanation": "Yazın gölün suyu çekilince yüzeyde tuz tabakası oluşur ve toplanır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazarın Roma askerleriyle ilgili anlatıya yaklaşımı nasıldır?",
+    "correct": "Sık anlatılsa da doğrulanmadığını vurgular",
+    "wrong": [
+     "Anlatının kesin bir gerçek olduğunu savunur",
+     "Askerlerin hiç maaş almadığını ileri sürer",
+     "Anlatıyı ilk kendisinin bulduğunu söyler"
+    ],
+    "explanation": "Bu yaygın anlatının kesin bir kanıtı olmadığı belirtilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gandi'nin 1930'daki yürüyüşü neye karşı düzenlendi?",
+    "correct": "Tuz üzerindeki ağır vergiye",
+    "wrong": [
+     "Su kullanımına konan yasağa",
+     "Pamuk ticaretindeki sınıra",
+     "Toplu yürüyüş yasağına"
+    ],
+    "explanation": "Yürüyüş, İngiliz yönetiminin tuz üzerine koyduğu vergiye karşıydı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tuz yürüyüşünün geniş kitleleri etkilemesinin nedeni nedir?",
+    "correct": "Herkesin gündelik hayatına dokunması",
+    "wrong": [
+     "Yürüyüşün çok kısa bir sürede bitmesi",
+     "Yürüyüşe yalnızca Gandi'nin katılması",
+     "Tuzun Hindistan'da hiç bulunmaması"
+    ],
+    "explanation": "Sıradan insanların günlük hayatına dokunan bir konu olduğu için büyük etki yarattı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dünya Sağlık Örgütü yetişkinlere günde en fazla ne kadar tuz önerir?",
+    "correct": "5 gramdan az",
+    "wrong": [
+     "50 gramdan az",
+     "Yarım kilodan az",
+     "1 gramdan az"
+    ],
+    "explanation": "Yetişkinlerin günde beş gramdan az tuz tüketmesi önerilir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesinde vurgulanan çelişki nedir?",
+    "correct": "Değerli bir maddenin artık kısıtlanması",
+    "wrong": [
+     "Tuzun eskiden de bugün de çok pahalı olması",
+     "Tuz üretiminin bütünüyle sona ermesi",
+     "Tuzun tarih boyunca önemsenmemiş olması"
+    ],
+    "explanation": "Uğruna savaşlar verilen madde, şimdi daha az kullanılması önerilen bir madde oldu."
+   }
+  ]
+ },
+ "118": {
+  "title": "Kaygıyla Baş Etmek",
+  "category": "Hikaye/Kurgu",
+  "content": "Ece, üniversite sınavına üç ay kala her şeyin üstüne geldiğini hissetmeye başladı. Deneme sınavlarındaki puanları bir türlü yükselmiyordu. Geceleri yatağa yattığında kalbi hızla çarpıyor, kafasında bitmeyen bir liste dönüp duruyordu: çözemediği sorular, bitiremediği konular, ailesinin beklentileri. Bazı sabahlar okula gitmek bile ona çok zor geliyordu. Arkadaşlarıyla konuşmayı da bırakmıştı; herkesin kendisinden daha iyi hazırlandığını düşünüyordu.\n\nBir gün rehber öğretmeni Melek Hanım, Ece'yi odasına çağırdı. Son denemelerde Ece'nin sınav süresinin ortasında birden durduğunu, kâğıda boş boş baktığını fark etmişti. Ece, ilk başta her şeyin yolunda olduğunu, yalnızca biraz yorgun olduğunu söyledi. Ama Melek Hanım sabırla dinleyince, içinde biriktirdiği her şeyi anlattı. Konuşmanın sonunda Ece, aylardır ilk kez biraz hafiflediğini hissetti.\n\nMelek Hanım ona önce bir şeyi açıkladı: Belirli bir düzeyde kaygı, aslında insanı harekete geçiren, sınava hazırlanmasını sağlayan bir duyguydu. Sorun, kaygının o kadar büyümesiydi ki Ece'nin düşünmesini engelliyordu. Melek Hanım ayrıca, bu duyguları yaşayanın yalnızca Ece olmadığını, sınava hazırlanan pek çok öğrencinin benzer şeyler hissettiğini söyledi. Bunun üzerine birlikte küçük adımlardan oluşan bir plan yaptılar.\n\nİlk adım, dev görünen hedefi küçük parçalara bölmekti. Ece her akşam ertesi gün çalışacağı yalnızca üç konuyu bir kâğıda yazacaktı. İkinci adım, uykuya önem vermekti; geceleri geç saatlere kadar çalışmak yerine düzenli saatte yatacaktı. Üçüncüsü, sınav sırasında bir soruda takıldığında yavaşça nefes alıp vermeyi ve o soruyu geçip sonra dönmeyi deneyecekti.\n\nİlk haftalarda pek bir değişiklik olmadı. Ama zamanla Ece, gün sonunda yapılacaklar listesindeki maddelerin üstünü çizebildiğini görünce kendini daha iyi hissetmeye başladı. Uykusu düzene girdi. Haftada bir gün de çalışmaya ara verip arkadaşlarıyla yürüyüşe çıkmaya başladı; bu küçük molalar, ertesi gün daha verimli çalışmasını sağlıyordu. Bir deneme sınavında takıldığı bir soruyu geçip sonra rahatlıkla çözdüğünde, yöntemin işe yaradığına inandı.\n\nSınav günü Ece yine heyecanlıydı. Ama bu kez heyecanı onu durdurmadı. Sınavdan çıktığında, sonucu ne olursa olsun elinden gelenin en iyisini yaptığını biliyordu. Melek Hanım'a teşekkür etmek için okula uğradığında, öğrendiği yöntemleri artık sadece sınavlarda değil, zorlandığı her durumda kullanmayı düşündüğünü söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ece'nin yaşadığı kaygının belirtilerinden biri hangisidir?",
+    "correct": "Yatınca yüreğinin çarpması",
+    "wrong": [
+     "Sabahları çok erken uyanması",
+     "Derslere ilgisinin artması",
+     "Arkadaşlarıyla sık buluşması"
+    ],
+    "explanation": "Geceleri yatağa yattığında kalbi hızla çarpıyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Melek Hanım'ın Ece'yi odasına çağırmasının nedeni nedir?",
+    "correct": "Sınavda donup kaldığını fark etmesi",
+    "wrong": [
+     "Ece'nin sürekli derse geç kalması",
+     "Ece'nin ailesinin okula şikâyet etmesi",
+     "Puanlarının beklenmedik biçimde yükselmesi"
+    ],
+    "explanation": "Ece'nin sınav süresinin ortasında durduğunu, kâğıda boş boş baktığını fark etmişti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Melek Hanım'a göre kaygının asıl sorunu nedir?",
+    "correct": "Aşırı büyüyüp zihni felç etmesi",
+    "wrong": [
+     "Hiçbir koşulda yararlı olmaması",
+     "Yalnızca Ece'de görülmesi",
+     "Sınavdan sonra da sürmesi"
+    ],
+    "explanation": "Belirli düzeyde kaygı yararlıydı; sorun, düşünmeyi engelleyecek kadar büyümesiydi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Planın ilk adımı neydi?",
+    "correct": "Büyük hedefi küçük parçalara ayırmak",
+    "wrong": [
+     "Her gece sabaha kadar ders çalışmak",
+     "Deneme sınavlarına girmeyi bırakmak",
+     "Arkadaşlarıyla grup çalışması yapmak"
+    ],
+    "explanation": "İlk adım, dev görünen hedefi küçük parçalara bölmekti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Sınavda takılınca soruyu geçip sonra dönmenin yararı nedir?",
+    "correct": "Tek soruya takılıp süreyi yitirmemek",
+    "wrong": [
+     "Soruları ezberleyip sonra hatırlamak",
+     "Sınavı herkesten erken bitirmek",
+     "Kolay soruları tümüyle atlamak"
+    ],
+    "explanation": "Takılınca geçip sonra dönmek, bir soruda kilitlenmeyi önler."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ece'nin haftada bir gün yaptığı mola ona ne sağladı?",
+    "correct": "Sonraki gün daha iyi odaklanmasını",
+    "wrong": [
+     "Aynı gün daha çok konu bitirmesini",
+     "Kaygısının tümüyle bitmesini",
+     "Deneme puanlarının düşmesini"
+    ],
+    "explanation": "Bu küçük molalar ertesi gün daha verimli çalışmasını sağlıyordu."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sınav günü Ece'deki değişim nasıl özetlenebilir?",
+    "correct": "Heyecanını yönetebiliyordu",
+    "wrong": [
+     "Hiçbir heyecan hissetmedi",
+     "Sınava girmekten vazgeçti",
+     "Kaygısı eskisinden de arttı"
+    ],
+    "explanation": "Ece yine heyecanlıydı ama bu kez heyecanı onu durdurmadı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Ece'nin son sözleri öykünün hangi düşüncesini yansıtır?",
+    "correct": "Edinilen becerilerin her alanda işe yarayacağı",
+    "wrong": [
+     "Hayatta sınavlardan önemli hiçbir şey olmadığı",
+     "Rehber öğretmenlerin hiçbir işe yaramadığı",
+     "Kaygının her koşulda öğrenciye zarar verdiği"
+    ],
+    "explanation": "Ece yöntemleri zorlandığı her durumda kullanmayı düşündüğünü söyledi."
+   }
+  ]
+ },
+ "121": {
+  "title": "Kanın Gizemi",
+  "category": "Bilgi/Açıklama",
+  "content": "On dokuzuncu yüzyılda doktorlar, çok kan kaybeden hastaları kurtarmak için kan nakli yapmayı denedi. Bazı hastalar nakilden sonra hızla iyileşiyordu. Ama bazıları ağır tepkiler gösteriyor, hatta hayatını kaybediyordu. Bunun nedeni uzun süre anlaşılamadı.\n\nGizemi 1901 yılında Avusturyalı doktor Karl Landsteiner çözdü. Landsteiner, farklı kişilerden aldığı kan örneklerini birbirine karıştırdığında, bazılarının sorunsuz karıştığını, bazılarının ise topaklandığını gözlemledi. Bu gözlemden yola çıkarak insan kanının farklı gruplara ayrıldığını keşfetti. Bugün bildiğimiz A, B, AB ve 0 kan gruplarını tanımladı. Bu buluş, kan naklini güvenli hâle getirdi ve milyonlarca hayatın kurtulmasını sağladı. Landsteiner bu çalışmasıyla 1930'da Nobel Tıp Ödülü'nü aldı.\n\nKan gruplarını belirleyen şey, kırmızı kan hücrelerinin yüzeyindeki küçük işaretlerdir. A grubu kanda A işareti, B grubu kanda B işareti bulunur. AB grubunda iki işaret de vardır, 0 grubunda ise hiçbiri yoktur. Bağışıklık sistemimiz, kendi kanımızda bulunmayan bir işareti yabancı olarak algılar ve ona saldırır. Örneğin A grubu bir kişiye B grubu kan verilirse, vücut bu kanı yabancı sayar ve ciddi bir tepki gelişir.\n\nBu yüzden kan nakillerinde grupların uyumlu olması gerekir. 0 grubu kanın hücrelerinde A ya da B işareti bulunmadığı için, bu kan acil durumlarda farklı gruplardaki hastalara verilebilir. Bu nedenle 0 grubu kişilere çoğu zaman “genel verici” denir. AB grubu kişiler ise farklı gruplardan kan alabildikleri için “genel alıcı” olarak adlandırılır.\n\nKan gruplarının yanında bir de Rh faktörü vardır. Kanında bu faktör bulunan kişiler Rh pozitif, bulunmayanlar Rh negatif olarak adlandırılır. Kan grubu belirtilirken bu iki bilgi birlikte yazılır; örneğin “A Rh pozitif” gibi. Rh faktörü de 1940 yılında yine Landsteiner'in katıldığı bir çalışmayla keşfedildi. Bu bilgi özellikle hamilelikte önemlidir: Rh negatif bir anne ile Rh pozitif bir bebek arasında bazı durumlarda uyumsuzluk görülebilir ve doktorlar bunu önlemek için gerekli tedbirleri alır.\n\nKan gruplarının dağılımı dünyanın farklı bölgelerinde farklılık gösterir. Bazı toplumlarda 0 grubu çok yaygınken, başkalarında A ya da B grubu daha sık görülür. AB grubu ise genellikle en az rastlanan gruptur. Kan grubumuzu anne ve babamızdan aldığımız genler belirler; bu yüzden kan grubu, hayat boyu değişmez.\n\nKan, bugün bile laboratuvarda üretilemiyor. Hastanelerdeki kan ihtiyacı yalnızca gönüllü bağışçılarla karşılanabiliyor. Ameliyatlar, kazalar ve bazı hastalıkların tedavisi için her gün çok sayıda ünite kana ihtiyaç duyuluyor. Üstelik bağışlanan kanın bileşenleri sınırsız süre saklanamaz. Kırmızı kan hücreleri birkaç hafta, kanın pıhtılaşmasına yardım eden trombositler ise yalnızca birkaç gün dayanabilir. Bu yüzden bağışın tek seferlik değil, sürekli olması gerekir. Sağlıklı yetişkinlerin düzenli aralıklarla kan bağışında bulunması, bu nedenle büyük önem taşıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "On dokuzuncu yüzyıldaki kan nakillerinin sorunu neydi?",
+    "correct": "Sonuçların öngörülemez olması",
+    "wrong": [
+     "Hiçbir hastanın iyileşmemesi",
+     "Kanın saklanacak yer olmaması",
+     "Doktorların nakli yasaklaması"
+    ],
+    "explanation": "Bazı hastalar iyileşirken bazıları ağır tepkiler gösteriyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Landsteiner kan gruplarını nasıl keşfetti?",
+    "correct": "Örnekleri karıştırıp tepkileri gözleyerek",
+    "wrong": [
+     "Hastaların ailelerini tek tek inceleyerek",
+     "Kanı uzun süre buzdolabında bekleterek",
+     "Mikroskop altında virüsleri sayarak"
+    ],
+    "explanation": "Farklı kişilerden aldığı örnekleri karıştırınca bazılarının topaklandığını gördü."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kan grubunu belirleyen nedir?",
+    "correct": "Kırmızı hücre yüzeyindeki işaretler",
+    "wrong": [
+     "Kandaki şekerin ve tuzun toplam miktarı",
+     "Kanın rengi ile koyuluk derecesi",
+     "Kalbin bir dakikadaki atış hızı"
+    ],
+    "explanation": "Kan grubunu kırmızı kan hücrelerinin yüzeyindeki küçük işaretler belirler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "A grubu birine B grubu kan verilince tepki oluşmasının nedeni nedir?",
+    "correct": "Yabancı işarete karşı savunma başlatılması",
+    "wrong": [
+     "Verilen kanın vücuttan çok daha soğuk olması",
+     "İki kanın renklerinin birbirinden farklı olması",
+     "Kanın damara gereğinden hızlı verilmesi"
+    ],
+    "explanation": "Bağışıklık sistemi kendi kanında olmayan işareti yabancı sayıp saldırır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "0 grubu kişilere neden “genel verici” denir?",
+    "correct": "Kanında A ya da B işareti olmadığı için",
+    "wrong": [
+     "Her gruptan kan alabildikleri için",
+     "Kanları çok daha hızlı yenilendiği için",
+     "En sık görülen grup oldukları için"
+    ],
+    "explanation": "0 grubu kanın hücrelerinde A ya da B işareti bulunmaz."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Rh faktörünün hamilelikte önem taşımasının nedeni nedir?",
+    "correct": "Anne ve bebeğin Rh durumunun çatışabilmesi",
+    "wrong": [
+     "Hamilelik süresince Rh faktörünün kaybolması",
+     "Bebeğin kan grubunun sonradan değişmesi",
+     "Annenin kan grubunun tümüyle değişmesi"
+    ],
+    "explanation": "Rh negatif anne ile Rh pozitif bebek arasında uyumsuzluk görülebilir."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kan grubunun hayat boyu değişmemesinin nedeni nedir?",
+    "correct": "Kalıtımla belirlenmesi",
+    "wrong": [
+     "Beslenmeyle belirlenmesi",
+     "İklime bağlı olması",
+     "Sporla belirlenmesi"
+    ],
+    "explanation": "Kan grubunu anne ve babadan alınan genler belirler."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre bağışın sürekli olması neden gereklidir?",
+    "correct": "Kanın yapay üretilememesi ve kısa ömrü",
+    "wrong": [
+     "Bağışın yılda yalnızca bir kez yapılabilmesi",
+     "Hastanelerin kanı yurt dışına satması",
+     "İnsanların kan grubunun her yıl değişmesi"
+    ],
+    "explanation": "Kan laboratuvarda üretilemez ve bileşenleri uzun süre saklanamaz."
+   }
+  ]
+ },
+ "122": {
+  "title": "İyi Bir Özür",
+  "category": "Deneme",
+  "content": "Hepimiz zaman zaman bir arkadaşımızı kırar, bir sözümüzü tutamaz ya da bir hata yaparız. Böyle durumlarda “Özür dilerim” demek basit gibi görünür. Ama çoğumuz bunu söylemekte zorlanırız. Söylediğimizde de bazen durumu düzeltmek yerine daha da kötüleştiririz. Kimi zaman da özür dilemeyi, karşımızdakinin unutmasını umarak sonsuza dek erteleriz. Peki iyi bir özür nasıl olmalıdır?\n\nPsikologlar, gerçekten etkili bir özrün birkaç temel öğe içerdiğini söyler. Bunların ilki, ne yaptığımızı açıkça kabul etmektir. “Eğer bir şey olduysa özür dilerim” gibi belirsiz ifadeler, karşımızdakine aslında hatamızı kabul etmediğimiz mesajını verir. Bunun yerine “Toplantıya geleceğime söz verip gelmedim” gibi açık bir ifade, sorumluluk aldığımızı gösterir.\n\nİkinci öğe, karşımızdakinin ne hissettiğini anladığımızı göstermektir. “Seni beklettiğim için kendini değersiz hissetmiş olmalısın” demek, özür dilediğimiz kişiye onu dinlediğimizi ve önemsediğimizi anlatır. Üçüncü öğe ise durumu düzeltmek için ne yapabileceğimizi sormak ya da önermektir. Son olarak, aynı hatayı tekrarlamamak için çaba göstereceğimizi belirtmek de özrü güçlendirir. Ancak bu söz ancak davranışlarla desteklendiğinde anlam kazanır; aynı hatayı tekrar tekrar yapıp her seferinde özür dilemek, zamanla özrün inandırıcılığını yok eder.\n\nÖzrü zayıflatan bazı alışkanlıklar da vardır. Bunların en yaygını, özrün hemen ardından bir “ama” eklemektir. “Özür dilerim ama sen de beni sinirlendirdin” cümlesindeki “ama”, öncesindeki özrü neredeyse silip atar. Benzer biçimde, karşımızdakini aşırı hassas olmakla suçlamak ya da yaşananı küçümsemek de özrün değerini düşürür. Özrü uzun bir savunmaya dönüştürmek de iyi bir fikir değildir. Neden öyle davrandığımızı açıklamak bazen gerekli olabilir; ama açıklama özrün önüne geçtiğinde karşımızdaki kişi kendini dinlenmemiş hisseder.\n\nPeki neden özür dilemek bu kadar zordur? Bazı araştırmalar, insanların özür dilemenin onları güçsüz göstereceğinden ya da tüm suçu üstlenmek anlamına geleceğinden korktuğunu gösteriyor. Oysa içten bir özür, çoğu zaman ilişkiyi güçlendirir ve karşı taraf üzerinde beklenenden çok daha olumlu bir etki bırakır. Özür dileyebilen biri, hatalarıyla yüzleşebilecek kadar güçlü olduğunu da göstermiş olur. Liderlik üzerine yapılan bazı çalışmalar da hatalarını kabul edebilen yöneticilere çalışanların daha çok güvendiğini ortaya koyuyor.\n\nSon olarak unutmamak gerekir ki iyi bir özür, karşımızdakini hemen affetmeye zorlamaz. Affetmek zaman alabilir ve bu karar özür dilenen kişiye aittir. Yine de içtenlikle dilenmiş bir özür, bir ilişkinin sona ermesini önleyebilecek küçük ama güçlü bir adımdır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre özür dilemenin göründüğünden zor olmasının nedeni nedir?",
+    "correct": "Dile getirmekte güçlük çekmemiz",
+    "wrong": [
+     "Özür sözcüğünün çok uzun olması",
+     "Kimsenin bizden özür beklememesi",
+     "Özrün yalnız yazıyla yapılabilmesi"
+    ],
+    "explanation": "Çoğumuz özür dilemekte zorlanırız; bazen durumu daha da kötüleştiririz."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Etkili bir özrün ilk öğesi nedir?",
+    "correct": "Yapılanı açıkça kabullenmek",
+    "wrong": [
+     "Karşımızdakini de suçlamak",
+     "Konuyu hızla başka yöne çekmek",
+     "Karşı tarafa hediye almak"
+    ],
+    "explanation": "İlk öğe, ne yaptığımızı açıkça kabul etmektir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Eğer bir şey olduysa özür dilerim” ifadesinin sorunu nedir?",
+    "correct": "Hatayı gerçekte üstlenmemesi",
+    "wrong": [
+     "Söylenmesinin çok uzun sürmesi",
+     "Fazla resmî bir dil taşıması",
+     "İçinde özür sözcüğünün geçmemesi"
+    ],
+    "explanation": "Belirsiz ifade, hatamızı kabul etmediğimiz mesajını verir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Özrü güçlendiren öğelerden biri hangisidir?",
+    "correct": "Hatanın tekrarlanmayacağına dair çaba",
+    "wrong": [
+     "Özrü olabildiğince kısa tutup geçmek",
+     "Karşı tarafı hemen affetmeye zorlamak",
+     "Hatanın aslında önemsiz olduğunu söylemek"
+    ],
+    "explanation": "Aynı hatayı tekrarlamamak için çaba göstereceğimizi belirtmek özrü güçlendirir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre bir özrün ardından eklenen “ama” ne yapar?",
+    "correct": "Önceki sözlerin etkisini siler",
+    "wrong": [
+     "Özrü çok daha güçlü kılar",
+     "Karşı tarafı hemen sakinleştirir",
+     "Konuşmayı daha kibar yapar"
+    ],
+    "explanation": "“Ama”, öncesindeki özrü neredeyse silip atar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Özür bir savunmaya dönüştüğünde karşı taraf neden kendini kötü hisseder?",
+    "correct": "Dinlenmediği izlenimine kapılması",
+    "wrong": [
+     "Özrün gereğinden kısa tutulması",
+     "Açıklamanın hiç yapılmaması",
+     "Hediye beklentisinin karşılanmaması"
+    ],
+    "explanation": "Açıklama özrün önüne geçince karşı taraf kendini dinlenmemiş hisseder."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre insanlar özür dilemekten neden kaçınır?",
+    "correct": "Güçsüz görünmekten çekindikleri için",
+    "wrong": [
+     "Özrün yasak olduğunu sandıkları için",
+     "Özürlerin hiç işe yaramadığını bildikleri için",
+     "Karşılarındakini hiç tanımadıkları için"
+    ],
+    "explanation": "İnsanlar özür dilemenin onları güçsüz göstereceğinden ya da tüm suçu üstlenmek anlamına geleceğinden korkar."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki temel uyarısı nedir?",
+    "correct": "Bağışlama kararının karşı tarafa ait olduğu",
+    "wrong": [
+     "İyi bir özrün affedilmeyi mutlaka sağladığı",
+     "Özür dilemenin ilişkileri sona erdirdiği",
+     "Affetmenin hemen gerçekleşmesi gerektiği"
+    ],
+    "explanation": "İyi bir özür affetmeye zorlamaz; affetme kararı özür dilenen kişiye aittir."
+   }
+  ]
+ },
+ "141": {
+  "title": "Göldeki Sabah",
+  "category": "Hikaye/Kurgu",
+  "content": "Yaz tatilinde Arda, dedesiyle birlikte ilk kez balık tutmaya gitti. Sabah güneş doğmadan kalktılar ve göl kenarındaki küçük iskeleye yürüdüler. Dedesi oltaları hazırladı, Arda'ya oltayı nasıl tutacağını ve ipi nasıl suya atacağını gösterdi. Arda çok heyecanlıydı; daha ilk dakikada kocaman bir balık yakalayacağını hayal ediyordu.\n\nArda ilk atışını yaptı ve hemen beklemeye başladı. Bir dakika geçti, sonra beş dakika. Hiçbir şey olmadı. Arda sabırsızlanmaya başladı. Oltayı çekip ipi tekrar attı. Sonra bir daha. Her seferinde yemin suda kaldığından bile emin olamadan oltayı yeniden çekiyordu.\n\nDedesi gülümseyerek ona, balıkların ancak sakin suya yaklaştığını anlattı. Arda'nın sürekli oltayı çekip atması suyu dalgalandırıyor, balıkları korkutuyordu. “Balık tutmak, beklemeyi öğrenmektir” dedi dedesi. “Acele edersen balık gelmez.”\n\nArda bu kez oltayı attıktan sonra yerinden kıpırdamadı. Önce zor geldi; elleri oltayı çekmek için kaşınıyordu. Ama kendini tuttu ve suyun yüzeyini izledi. Gölün üzerinde sabah sisi yavaş yavaş kalkıyordu. Uzakta bir balıkçıl, tek ayağı üzerinde kıpırdamadan duruyordu. Arda, balıkçılın da balık beklediğini fark etti. Kuş ne kadar sabırlıydı! Birden balıkçıl gagasını hızla suya daldırdı ve ağzında küçük bir balıkla doğruldu. Arda dedesine baktı; dedesi de gülümseyerek başını salladı.\n\nYarım saat kadar sonra ipin ucundaki şamandıra birden suya gömüldü. Arda heyecanla oltayı çekti ama dedesi onu durdurdu. Balığın yemi iyice yutmasını beklemeleri gerekiyordu. Birkaç saniye sonra dedesiyle birlikte oltayı yavaşça çektiler. Suyun içinden gümüş renkli, avuç içi büyüklüğünde bir balık çıktı.\n\nArda balığa uzun uzun baktı. Sonra dedesine döndü ve onu suya geri bırakmak istediğini söyledi. Dedesi bu kararına çok sevindi. Ona, göldeki balıkların korunmasının, gelecek yıllarda da balık tutabilmeleri için önemli olduğunu anlattı. Balığı birlikte yavaşça suya bıraktılar. Eve dönerken Arda, bu sabah balıktan çok daha değerli bir şey öğrendiğini düşünüyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arda'nın balık tutmaya başlamadan önceki beklentisi nasıldı?",
+    "correct": "Çok kısa sürede iri bir balık tutmak",
+    "wrong": [
+     "Hiçbir balık yakalayamayacağını sanmak",
+     "Dedesinin balık tutmasını izlemek",
+     "Göl kenarında yüzmeyi öğrenmek"
+    ],
+    "explanation": "Arda ilk dakikada kocaman bir balık yakalayacağını hayal ediyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Arda ilk başta oltayı nasıl kullandı?",
+    "correct": "Durmadan çekip yeniden attı",
+    "wrong": [
+     "Uzun süre hiç kıpırdatmadı",
+     "Oltayı dedesine verip onu izledi",
+     "İpi suya atmadan elinde tuttu"
+    ],
+    "explanation": "Arda oltayı defalarca çekip ipi yeniden attı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dedesine göre Arda'nın neden balık tutamadığı nasıl açıklanır?",
+    "correct": "Durmadan oynayarak balıkları kaçırması",
+    "wrong": [
+     "Yemin göldeki balıklara uygun olmaması",
+     "Gölde hiçbir balığın yaşamaması",
+     "Oltanın ipinin gereğinden kısa olması"
+    ],
+    "explanation": "Sürekli çekip atmak suyu dalgalandırıp balıkları korkutuyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Arda'nın balıkçılı izlemesi ona ne kazandırdı?",
+    "correct": "Sabrın karşılığını bir örnekle görmesini",
+    "wrong": [
+     "Kuşların uçuşunu yakından öğrenmesini",
+     "Oltayı her seferinde daha hızlı çekmeyi",
+     "Sabah sisinin nasıl kalktığını anlamasını"
+    ],
+    "explanation": "Kıpırdamadan bekleyen balıkçıl sonunda balık yakaladı; Arda sabrın sonucunu gördü."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şamandıra suya gömüldüğünde dedesi Arda'yı neden durdurdu?",
+    "correct": "Yemin iyice yutulmasını beklemek için",
+    "wrong": [
+     "Oltanın kırılacağından korktuğu için",
+     "Oltayı kendisi çekmek istediği için",
+     "Balığın küçük olduğunu fark ettiği için"
+    ],
+    "explanation": "Balığın yemi iyice yutmasını beklemeleri gerekiyordu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yakaladıkları balık nasıldı?",
+    "correct": "Avuç içi kadar, gümüş renkli",
+    "wrong": [
+     "Kocaman, kıpkırmızı ve pullu",
+     "Simsiyah ve uzun kuyruklu",
+     "İri ve altın sarısı renkli"
+    ],
+    "explanation": "Suyun içinden gümüş renkli, avuç içi büyüklüğünde bir balık çıktı."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dedesinin balığın suya bırakılmasına sevinmesinin nedeni nedir?",
+    "correct": "Doğanın korunmasını önemsemesi",
+    "wrong": [
+     "Balığı pişirmekten hoşlanmaması",
+     "Balığın hasta olduğunu düşünmesi",
+     "Eve geç kalmaktan çekinmesi"
+    ],
+    "explanation": "Göldeki balıkların korunması gelecekte de balık tutabilmek için önemliydi."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Arda'nın “balıktan daha değerli bir şey” öğrendiğini düşünmesi neyi anlatır?",
+    "correct": "Bekleyebilmeyi ve doğaya özeni",
+    "wrong": [
+     "Balık tutmanın çok kolay olduğunu",
+     "Bir daha göle hiç gelmeyeceğini",
+     "Dedesinin çok yorgun düştüğünü"
+    ],
+    "explanation": "Arda sabrı ve doğaya saygıyı öğrendi."
+   }
+  ]
+ },
+ "143": {
+  "title": "Ay'ın Gizli Yüzü",
+  "category": "Bilgi/Açıklama",
+  "content": "Gece gökyüzüne baktığımızda Ay'ın yüzündeki gölgeleri görürüz. Bu gölgeler, Ay'ın yüzeyindeki geniş, koyu renkli ovalardır. Eskiden bunların deniz olduğu sanıldığı için bugün bile bu bölgelere “deniz” adı verilir. İlginç olan, bu desenin hiç değişmemesidir. Bir yıl sonra da, yüz yıl sonra da Ay'a baktığımızda hep aynı yüzü görürüz. Peki Ay bize neden hep aynı yüzünü gösterir?\n\nAy hem Dünya'nın çevresinde döner hem de kendi ekseni etrafında döner. İşin sırrı, bu iki dönüşün aynı sürede tamamlanmasıdır. Ay, Dünya'nın çevresindeki bir turu yaklaşık yirmi yedi günde tamamlar. Kendi ekseni etrafındaki bir dönüşü de tam olarak aynı sürede yapar. Bu yüzden Dünya'nın çevresinde dönerken bize hep aynı tarafı dönük kalır.\n\nBunu anlamak için basit bir deney yapabilirsiniz. Odanın ortasına bir sandalye koyun ve yüzünüz hep sandalyeye dönük olacak biçimde onun çevresinde bir tur atın. Turu tamamladığınızda, kendi çevrenizde de bir kez döndüğünüzü fark edeceksiniz. Ama sandalye, hep yüzünüzü görmüştür.\n\nBilim insanları bu uyumun zamanla oluştuğunu düşünüyor. Milyarlarca yıl önce Ay kendi çevresinde çok daha hızlı dönüyordu. Ancak Dünya'nın çekim gücü, Ay'ın dönüşünü yavaş yavaş frenledi ve sonunda bu iki hareketi eşitledi.\n\nAy'ın bizden hiç görünmeyen yüzü, insanlık tarafından ilk kez 1959'da bir uzay aracının çektiği fotoğraflarla görüldü. Bu yüze bazen “karanlık yüz” denir; ama aslında o yüz de güneş ışığı alır. Yeni ay döneminde, bizim göremediğimiz bu yüz tamamen aydınlıktır. Yani “karanlık” sözcüğü ışıksızlığı değil, bizim için bilinmezliği anlatır. 2019'da bir uzay aracı ilk kez Ay'ın bu yüzüne yumuşak iniş yaptı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'ın yüzeyindeki koyu bölgelere neden “deniz” denir?",
+    "correct": "Vaktiyle su dolu sanıldıkları için",
+    "wrong": [
+     "İçlerinde bugün de su bulunduğu için",
+     "Uzaktan masmavi göründükleri için",
+     "Işıkta dalgalanır gibi durdukları için"
+    ],
+    "explanation": "Eskiden bunların deniz olduğu sanıldığı için bu ad verilir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ay'ın bize hep aynı yüzünü göstermesinin sırrı nedir?",
+    "correct": "İki dönüşünü eşit sürede tamamlaması",
+    "wrong": [
+     "Kendi çevresinde hiç dönmemesi",
+     "Dünya'nın Ay'ı sürekli aydınlatması",
+     "Ay'ın Dünya'dan çok uzakta bulunması"
+    ],
+    "explanation": "Ay kendi çevresindeki dönüşü ile Dünya çevresindeki turunu aynı sürede tamamlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay Dünya'nın çevresindeki bir turu yaklaşık kaç günde tamamlar?",
+    "correct": "27",
+    "wrong": [
+     "7",
+     "14",
+     "365"
+    ],
+    "explanation": "Ay Dünya çevresindeki bir turu yaklaşık yirmi yedi günde tamamlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sandalye deneyi neyi göstermek için anlatılmıştır?",
+    "correct": "Çevresinde dönerken insanın da döndüğünü",
+    "wrong": [
+     "Sandalyenin dönerken yer değiştirdiğini",
+     "Ay'ın bir sandalyeye çok fazla benzediğini",
+     "Odanın Dünya'dan bile büyük olduğunu"
+    ],
+    "explanation": "Yüzünüz sandalyeye dönük tur atınca kendi çevrenizde de bir kez dönersiniz."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Milyarlarca yıl önce Ay'ın dönüşü nasıldı?",
+    "correct": "Kendi çevresinde daha hızlı dönüyordu",
+    "wrong": [
+     "Kendi çevresinde hiç dönmüyordu",
+     "Dünya'dan çok daha uzak yerdeydi",
+     "Dünya'nın çevresinde ters dolanıyordu"
+    ],
+    "explanation": "Ay kendi çevresinde çok daha hızlı dönüyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "İki hareketin eşitlenmesine ne yol açmıştır?",
+    "correct": "Dünya'nın çekiminin dönüşü yavaşlatması",
+    "wrong": [
+     "Güneş ışığının Ay'ı ısıtıp küçültmesi",
+     "Ay'daki denizlerin tümüyle kuruması",
+     "Ay'a çarpan göktaşlarının onu sürekli itmesi"
+    ],
+    "explanation": "Dünya'nın çekim gücü Ay'ın dönüşünü yavaş yavaş frenledi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'ın görünmeyen yüzü ilk kez ne zaman görüldü?",
+    "correct": "1959",
+    "wrong": [
+     "1929",
+     "1969",
+     "2019"
+    ],
+    "explanation": "İlk kez 1959'da bir uzay aracının çektiği fotoğraflarla görüldü."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazara göre “karanlık yüz” adlandırması neden yanıltıcıdır?",
+    "correct": "Güneş'in oraya da vurması",
+    "wrong": [
+     "O yüzün hiç ışık almaması",
+     "O yüzün Dünya'ya dönük olması",
+     "O yüzde canlıların bulunması"
+    ],
+    "explanation": "Bu yüz de güneş ışığı alır; “karanlık” sözcüğü bilinmezliği anlatır."
+   }
+  ]
+ }
+}

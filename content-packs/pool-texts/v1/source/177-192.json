@@ -1,0 +1,668 @@
+{
+ "177": {
+  "title": "Parmak Uçlarındaki Nasır",
+  "category": "Hikaye/Kurgu",
+  "content": "Arda on üç yaşına girdiğinde doğum günü hediyesi olarak ikinci el bir gitar istedi. Babası onu bir müzik dükkânına götürdü ve birlikte koyu kahverengi, gövdesinde küçük bir çizik olan bir gitar seçtiler. Arda o gece gitarı yatağının yanına koyup uyudu. Ertesi gün ünlü bir şarkıyı çalmayı öğrenecekti; buna emindi.\n\nİlk dersinde öğretmeni Murat Bey ona şarkı yerine basit akorlar gösterdi. Arda parmaklarını tellere bastırdığında hem tuhaf sesler çıktı hem de parmak uçları acıdı. Bir hafta sonra parmaklarında kırmızı izler vardı ve hâlâ tek bir şarkıyı baştan sona çalamıyordu. Arkadaşlarının videolarda kolayca çaldığı şarkıları izledikçe daha da hevesi kaçıyordu. Bir akşam gitarı köşeye bırakıp bu işin ona göre olmadığını söyledi.\n\nErtesi derste Murat Bey ona kendi ellerini gösterdi. Parmak uçları sertleşmişti. Arda'ya, her gitaristin bu acıyı yaşadığını, parmakların birkaç haftada güçlenip nasır tuttuğunu anlattı. Sonra bir öneride bulundu: Her gün yalnızca on beş dakika çalışacak, ama bir gün bile atlamayacaktı.\n\nArda öneriyi denedi. İlk günler sıkıcıydı; aynı akorları tekrar tekrar çalmak ona bitmeyen bir ödev gibi geliyordu. Ama üçüncü haftanın sonunda parmakları artık acımıyordu ve akorlar arasında daha hızlı geçebiliyordu. Bir akşam, aylardır çalmayı hayal ettiği şarkının ilk bölümünü hatasız çaldı. Mutfaktan annesinin alkışı duyuldu, odasının kapısında da babası gülümseyerek duruyordu. Arda o an, küçük ama düzenli adımların büyük hayallere nasıl ulaştırdığını anladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arda'nın ilk günkü beklentisi hakkında ne söylenebilir?",
+    "correct": "Fazlasıyla aceleci ve iyimserdi",
+    "wrong": [
+     "Babasının isteğine dayanıyordu",
+     "Öğretmeninin sözüne dayanıyordu",
+     "Oldukça karamsar ve isteksizdi"
+    ],
+    "explanation": "Bir gün içinde ünlü bir şarkıyı çalabileceğinden emindi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat Bey ilk derste Arda'ya ne gösterdi?",
+    "correct": "Temel akorları",
+    "wrong": [
+     "Ünlü bir şarkı",
+     "Nota okumayı",
+     "Gitar akordunu"
+    ],
+    "explanation": "Şarkı yerine basit akorlar gösterdi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arkadaşlarının videoları Arda'yı nasıl etkiledi?",
+    "correct": "Kendini kıyasladı, cesareti kırıldı",
+    "wrong": [
+     "Videolardan birkaç yeni akor öğrendi",
+     "Hemen kendi videosunu çekmek istedi",
+     "Arkadaşlarıyla bir müzik grubu kurdu"
+    ],
+    "explanation": "Kolayca çalan arkadaşlarını izledikçe hevesi kaçıyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat Bey'in önerisi neydi?",
+    "correct": "Kısa ama her gün çalışmak",
+    "wrong": [
+     "Haftada bir uzun çalışmak",
+     "Önce yalnız nota öğrenmek",
+     "Yeni bir gitar almak"
+    ],
+    "explanation": "Her gün on beş dakika, hiç atlamadan çalışmasını önerdi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Öğretmenin kendi ellerini göstermesinin amacı nedir?",
+    "correct": "Acının geçici olduğunu kanıtlamak",
+    "wrong": [
+     "Ne kadar ünlü olduğunu kanıtlamak",
+     "Gitarın tehlikeli olduğunu anlatmak",
+     "Arda'yı ders bırakmaya ikna etmek"
+    ],
+    "explanation": "Her gitaristin aynı acıyı yaşadığını, parmakların güçlendiğini gösterdi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Üçüncü haftanın sonunda ne değişmişti?",
+    "correct": "Parmaklarının ağrısı geçmişti",
+    "wrong": [
+     "Yeni bir öğretmen bulmuştu",
+     "Gitarı satmaya karar vermişti",
+     "Bütün şarkıları öğrenmişti"
+    ],
+    "explanation": "Parmakları artık acımıyordu ve akorlar arasında hızlı geçebiliyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annenin alkışı ve babanın gülümsemesi neyi gösterir?",
+    "correct": "Emeğinin evde fark edildiğini",
+    "wrong": [
+     "Ailesinin müziği hiç sevmediğini",
+     "Arda'nın yemeğe geç kaldığını",
+     "Annesinin de gitar çalabildiğini"
+    ],
+    "explanation": "Ailesi onun ilerlemesini görüp sevinmiştir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri hangisidir?",
+    "correct": "Sabırla sürdürülen emek sonuç verir",
+    "wrong": [
+     "Doğuştan yetenek olmadan müzik olmaz",
+     "İkinci el eşyalar dayanıksızdır",
+     "Müzik öğretmenleri sert olmalıdır"
+    ],
+    "explanation": "Arda küçük ama düzenli adımların hayallere götürdüğünü anlar."
+   }
+  ]
+ },
+ "179": {
+  "title": "Gençlerin Kayan Saati",
+  "category": "Bilgi/Açıklama",
+  "content": "Pek çok genç, akşam saatlerinde uykusunun gelmediğinden, sabahları ise yataktan zorlukla kalktığından yakınır. Anne babalar ve öğretmenler bunu çoğu zaman tembelliğe ya da geç saate kadar telefona bakmaya bağlar. Oysa araştırmalar, bu durumun önemli bir bölümünün vücudun içindeki biyolojik saatle ilgili olduğunu gösteriyor.\n\nİnsan vücudunda uyku ve uyanıklığı düzenleyen bir iç saat bulunur. Bu saat, hava karardığında melatonin adlı bir hormonun salgılanmasını sağlar ve bu hormon bize uyku getirir. Ergenlik döneminde ise melatonin salgısı yaklaşık bir iki saat gecikir. Yani bir genç, çocukluğundaki saatte yatağa girse bile uykuya dalmakta zorlanabilir. Buna karşın gençlerin her gece sekiz ila on saat uykuya ihtiyacı vardır. Bu ihtiyaç, büyümenin ve beynin gelişiminin sürdüğü bu yıllarda yetişkinlerinkinden bile fazladır.\n\nSorun, okulların genellikle erken saatte başlamasıyla büyür. Geç uyuyup erken kalkan bir genç, her gün birkaç saatlik uyku borcu biriktirir. Uykusuzluk dikkati dağıtır, öğrenmeyi zorlaştırır ve kişiyi daha sinirli yapar. Uzun süre devam eden uyku eksikliği bağışıklığı zayıflatabilir ve spor sırasında sakatlanma riskini artırabilir. Üstelik hafta sonu uzun uyuyarak bu borcu kapatmak da çoğu zaman mümkün olmaz.\n\nBu nedenle bazı ülkelerde lise derslerinin daha geç başlatılması denenmiştir. Bu okullarda öğrencilerin daha uzun uyuduğu, derslerde daha dikkatli olduğu ve okula geç kalma oranının düştüğü görülmüştür. Uzmanlar gençlere de kendi paylarına düşeni yapmalarını, örneğin yatmadan önce ekranları kapatmalarını ve hafta sonu bile benzer saatlerde uyumalarını öneriyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar ilk paragrafta hangi yaygın düşünceyi sorgular?",
+    "correct": "Geç kalkmanın sadece alışkanlık olduğunu",
+    "wrong": [
+     "Gençlerin geceleri hiç uyumadığını",
+     "Telefon kullanmanın hiç zararı olmadığını",
+     "Okulların çok geç saatte başladığını"
+    ],
+    "explanation": "Sorunun büyük kısmının biyolojik saatle ilgili olduğunu söyler."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uyku getiren hormonun adı nedir?",
+    "correct": "Melatonin",
+    "wrong": [
+     "Adrenalin",
+     "İnsülin",
+     "Serotonin"
+    ],
+    "explanation": "Hava kararınca salgılanan melatonin uyku getirir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gençlerin erken yatsa bile uyuyamamasının nedeni nedir?",
+    "correct": "Bedenin uyku sinyalini geç vermesi",
+    "wrong": [
+     "Gençlerin uyku ihtiyacının az olması",
+     "Yatak odalarının fazla aydınlık olması",
+     "Akşam yemeğinin çok geç yenmesi"
+    ],
+    "explanation": "Ergenlikte melatonin salgısı bir iki saat gecikir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gençlerin her gece kaç saat uykuya ihtiyacı vardır?",
+    "correct": "Sekiz ile on saat",
+    "wrong": [
+     "Beş ile altı saat",
+     "On iki ila on dört",
+     "Altı ile yedi saat"
+    ],
+    "explanation": "Gençlerin sekiz ila on saat uykuya ihtiyacı vardır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uyku borcunun hafta sonu kapatılamaması neyi gösterir?",
+    "correct": "Kaybın sonradan kolayca giderilemeyeceğini",
+    "wrong": [
+     "Hafta sonu tatilinin gereksiz olduğunu",
+     "Okulların cumartesi de açık olması gerektiğini",
+     "Spor yapmanın uyku süresini azalttığını"
+    ],
+    "explanation": "Kaybedilen uyku sonradan uzun uyuyarak kolayca geri alınamaz."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Uyku eksikliğinin spor sakatlıklarıyla ilişkisi neye dayanır?",
+    "correct": "Yorgun bedenin daha kolay incinmesine",
+    "wrong": [
+     "Sporcuların az uyuması gerektiğine",
+     "Spor salonlarının gece geç kapanmasına",
+     "Antrenmanların sabah yapılmasına"
+    ],
+    "explanation": "Uykusuzluk bağışıklığı ve dikkati zayıflatarak sakatlık riskini artırır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dersleri geç başlatan okullarda ne gözlenmiştir?",
+    "correct": "Öğrencilerin daha uzun uyuduğu",
+    "wrong": [
+     "Öğrencilerin daha geç yattığı",
+     "Sınav notlarının belirgin düştüğü",
+     "Ders saatlerinin kısaltıldığı"
+    ],
+    "explanation": "Öğrenciler daha uzun uyumuş ve derslerde daha dikkatli olmuştur."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre çözüm nasıl bir yaklaşım gerektirir?",
+    "correct": "Hem okulun hem gencin katkısını",
+    "wrong": [
+     "Sadece uyku ilacı kullanılmasını",
+     "Okulların bütünüyle kapatılmasını",
+     "Bütün ekranların yasaklanmasını"
+    ],
+    "explanation": "Okullar saatleri değiştirebilir, gençler de alışkanlıklarını düzenleyebilir."
+   }
+  ]
+ },
+ "180": {
+  "title": "Görünmeyen Kirlilik",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir pet şişe denize karıştığında yok olmaz; yalnızca küçülür. Doğada çürüyüp toprağa karışan bir elma kabuğunun aksine, plastik yüzlerce yıl boyunca varlığını sürdürebilir. Güneş ışığı, dalgalar ve tuzlu su plastiği yıllar içinde parçalara ayırır. Parçalar küçüldükçe küçülür ve sonunda beş milimetreden kısa, çoğu zaman gözle zor görülen tanelere dönüşür. Bilim insanları bunlara mikroplastik adını veriyor. Bugün dünyanın neredeyse her yerinde, en derin okyanus çukurlarından Kutup buzullarına ve yüksek dağların karlarına kadar mikroplastiğe rastlanıyor. Yapılan tahminlere göre her yıl milyonlarca ton plastik atık denizlere ulaşıyor.\n\nMikroplastiklerin yalnızca bir kısmı büyük çöplerin parçalanmasından gelir. Bir bölümü de günlük hayatımızda fark etmeden ürettiğimiz kaynaklardan çıkar. Sentetik kumaştan yapılmış bir kazak çamaşır makinesinde her yıkandığında binlerce ince lif suya karışır. Araba lastikleri yolda aşındıkça plastik içeren tozlar bırakır. Bazı kozmetik ürünlerin içine bile, cildi temizlesin diye minik plastik boncuklar eklenmiştir; neyse ki pek çok ülke bu boncukları artık yasaklamıştır. Bu parçacıkların çoğu atık su arıtma tesislerinden süzülemeyecek kadar küçük olduğu için nehirlere, oradan da denizlere ulaşır.\n\nDenizdeki küçük canlılar mikroplastikleri çoğu zaman besin sanarak yutar. Planktonları balıklar, küçük balıkları büyük balıklar yer. Böylece plastik parçacıklar besin zinciri boyunca yukarı doğru taşınır. Plastik parçacıkların yüzeyine denizdeki başka kirleticiler de tutunabilir; bu da yutan canlı için riski artırabilir. Araştırmacılar sofralarımıza gelen midye ve balıklarda, hatta deniz tuzunda mikroplastik bulmuştur. Son yıllarda yapılan çalışmalar, içme suyunda ve soluduğumuz havada da bu parçacıkların bulunabildiğini göstermiştir. Yani sorun yalnızca denizlerle sınırlı değildir.\n\nMikroplastiklerin insan sağlığına etkisi ise henüz tam olarak bilinmiyor. Bazı araştırmalar endişe verici sonuçlara işaret etse de bilim insanları kesin yargıya varmak için daha fazla veriye ihtiyaç olduğunu vurguluyor. Ancak bir konuda hemfikirler: Denize ulaşan plastiği sonradan toplamak neredeyse imkânsızdır. Bu yüzden en etkili çözüm, plastiğin doğaya karışmasını kaynağında önlemektir. Tek kullanımlık ürünleri azaltmak, çamaşırları daha dolu makinelerde ve daha düşük ısıda yıkamak, geri dönüşüme özen göstermek bu yolda atılabilecek küçük ama anlamlı adımlardır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mikroplastik hangi boyuttaki parçalara verilen addır?",
+    "correct": "Beş milimetreyi aşmayan",
+    "wrong": [
+     "Bir metreden uzun",
+     "On santimetreyi aşmayan",
+     "Bir avuç kadar büyük"
+    ],
+    "explanation": "Beş milimetreden kısa parçalara mikroplastik denir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Plastiğin elma kabuğuyla karşılaştırılmasının amacı nedir?",
+    "correct": "Doğada uzun süre kalıcı olduğunu vurgulamak",
+    "wrong": [
+     "Plastiğin meyveden yapıldığını anlatmak",
+     "Elmanın da denizi kirlettiğini söylemek",
+     "Çürüyen atığın daha tehlikeli olduğunu söylemek"
+    ],
+    "explanation": "Elma kabuğu çürürken plastik yüzlerce yıl kalır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre mikroplastiğin kaynaklarından biri hangisidir?",
+    "correct": "Sentetik giysilerin yıkanması",
+    "wrong": [
+     "Pamuklu çarşafların kurutulması",
+     "Cam şişelerin kırılıp dağılması",
+     "Kâğıt poşetlerin yakılması"
+    ],
+    "explanation": "Sentetik kazak her yıkandığında binlerce lif suya karışır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Parçacıkların denizlere ulaşabilmesinin nedeni nedir?",
+    "correct": "Arıtmadan kaçacak denli ufak olmaları",
+    "wrong": [
+     "Suyun içinde kısa sürede çözünmeleri",
+     "Rüzgârla uzaktaki denizlere taşınmaları",
+     "Nehirdeki balıkların onları taşıyıp götürmesi"
+    ],
+    "explanation": "Arıtma tesislerinden süzülemeyecek kadar küçüktürler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Plastiğin besin zincirinde yukarı taşınması ne anlama gelir?",
+    "correct": "Büyük canlılara ve bize kadar gelebilmesi",
+    "wrong": [
+     "Planktonların plastiği sindirip yok etmesi",
+     "Balıkların plastikten uzak durması",
+     "Denizlerin zamanla kendini temizlemesi"
+    ],
+    "explanation": "Küçük canlılardan büyüklere ve insana kadar ulaşır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mikroplastik dışında parçacıkların yüzeyine ne tutunabilir?",
+    "correct": "Başka kirleticiler",
+    "wrong": [
+     "İri deniz yosunları",
+     "İnce kum taneleri",
+     "Büyük tuz kristalleri"
+    ],
+    "explanation": "Yüzeylerine denizdeki başka kirleticiler tutunabilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bilim insanlarının sağlık etkisi konusundaki tutumu nasıldır?",
+    "correct": "Temkinli ve kanıt bekleyen",
+    "wrong": [
+     "Kesin ve oldukça korkutucu",
+     "İlgisiz ve hiç umursamayan",
+     "Rahat ve son derece iyimser"
+    ],
+    "explanation": "Endişe verici bulgular olsa da kesin yargı için daha fazla veri isterler."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar neden çözümün kaynağında önleme olduğunu savunur?",
+    "correct": "Sonradan toplamak pek mümkün değil",
+    "wrong": [
+     "Geri dönüşüm tesisleri oldukça pahalı",
+     "Denizler zamanla kendini temizler",
+     "Plastik üretimi her yerde yasak"
+    ],
+    "explanation": "Denize ulaşan plastiği toplamak neredeyse imkânsızdır."
+   }
+  ]
+ },
+ "182": {
+  "title": "Kahve Fincanındaki Bütçe",
+  "category": "Bilgi/Açıklama",
+  "content": "İşe giderken alınan bir kahve, öğle arasında atıştırılan bir paket kraker, gece yarısı yapılan küçük bir internet alışverişi... Bu harcamaların hiçbiri tek başına bütçeyi sarsacak kadar büyük görünmez. Ama ay sonunda hesap özetine bakan pek çok kişi, paranın nereye gittiğini anlayamaz. Ekonomistler bu duruma bazen “latte etkisi” adını veriyor. Kavram, adını pek çok kişinin her sabah neredeyse düşünmeden satın aldığı sütlü kahveden alır, ama yalnızca kahveyi değil, alışkanlığa dönüşmüş her küçük harcamayı kapsar.\n\nLatte etkisi, küçük ve düzenli harcamaların uzun vadede şaşırtıcı büyüklükte bir tutara ulaşmasını anlatır. Basit bir hesap yapalım. Her iş günü seksen liralık bir kahve alan biri, ayda yaklaşık yirmi iki gün çalışıyorsa, yalnızca kahveye ayda bin yedi yüz liradan fazla harcar. Bu tutar bir yılda yirmi bin lirayı geçer. Aynı parayı her ay bir kenara koyup birkaç yıl biriktiren biri için bu fark, bir tatil ya da acil durumlar için güvenli bir yastık anlamına gelebilir. Üstelik biriktirilen para bir yatırım aracında değerlendirilirse, zamanla getirisiyle birlikte daha da büyüyebilir.\n\nBu harcamaların fark edilmemesinin bir nedeni, beynimizin küçük tutarları ciddiye almamasıdır. Büyük bir alışveriş yaparken uzun uzun düşünürüz, fiyatları karşılaştırırız. Oysa birkaç liralık bir harcama için bu kadar düşünmeye gerek görmeyiz. Temassız ödeme ve kayıtlı kart bilgileri de ödeme anını neredeyse görünmez kılar; para elimizden çıkarken hiçbir şey hissetmeyiz. Araştırmalar, nakit parayla ödeme yapan kişilerin aynı ürün için kartla ödeyenlere göre daha az harcama eğiliminde olduğunu gösteriyor; çünkü cüzdandan çıkan banknotu görmek, harcamayı somut hâle getiriyor.\n\nAncak uzmanlar, latte etkisinin her küçük keyiften vazgeçmek anlamına gelmediğini de vurguluyor. Sabah kahvesi birine gerçekten mutluluk veriyorsa, ondan vazgeçmek yerine başka bir yerden kısmak daha akıllıca olabilir. Önemli olan, harcamaların farkında olmak ve onları bilinçli olarak seçmektir. Bunun için bir ay boyunca bütün harcamaları not etmek iyi bir başlangıçtır. Bunun için bir defter de, telefondaki basit bir uygulama da yeterlidir. Liste çıktığında çoğu kişi, hiç önemsemediği bir kalemin ne kadar büyüdüğünü görüp şaşırır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Latte etkisi kavramı adını nereden alır?",
+    "correct": "Sabahları alınan sütlü kahveden",
+    "wrong": [
+     "Bir ekonomistin soyadından",
+     "Ünlü bir kahve zincirinin adından",
+     "Bir bankanın kampanyasından"
+    ],
+    "explanation": "Kavram, her sabah alınan sütlü kahveden adını alır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne bir harcamalar listesiyle başlayarak neyi vurgular?",
+    "correct": "Bu giderlerin gündelik ve sıradan olduğunu",
+    "wrong": [
+     "Bu alışverişlerin kurallara aykırı olduğunu",
+     "Sadece gençlerin bu kadar harcadığını",
+     "İnternet alışverişinin pahalı olduğunu"
+    ],
+    "explanation": "Herkesin gün içinde yaptığı sıradan harcamaları örnek verir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metindeki hesaba göre kahveye yılda yaklaşık ne kadar harcanır?",
+    "correct": "Yirmi bin lirayı aşan",
+    "wrong": [
+     "İki bin lirayı aşmayan",
+     "Yalnızca beş yüz lira",
+     "Yüz bin liradan fazla"
+    ],
+    "explanation": "Ayda bin yedi yüz liradan fazla, yılda yirmi bin lirayı geçer."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yatırım aracından söz edilmesi hangi düşünceyi güçlendirir?",
+    "correct": "Paranın zamanla çoğalabileceğini",
+    "wrong": [
+     "Kahvenin aslında oldukça ucuz olduğunu",
+     "Yatırımın riskten uzak olduğunu",
+     "Tatile gitmenin israf olduğunu"
+    ],
+    "explanation": "Biriken para getirisiyle birlikte daha da büyüyebilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Küçük harcamaları fark etmememizin nedeni nedir?",
+    "correct": "Zihnimizin ufak tutarları önemsememesi",
+    "wrong": [
+     "Fiyatların her ay düzenli olarak düşmesi",
+     "Bankaların harcama bilgisi göndermemesi",
+     "Herkesin maaşının çok yüksek olması"
+    ],
+    "explanation": "Beynimiz küçük tutarları ciddiye almaz."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre hangi ödeme biçimi daha az harcamaya yol açar?",
+    "correct": "Nakit para",
+    "wrong": [
+     "Kredi kartı",
+     "Temassız",
+     "Taksitli ödeme"
+    ],
+    "explanation": "Nakitle ödeyenler kartla ödeyenlerden daha az harcar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Uzmanların küçük keyiflerle ilgili görüşü nedir?",
+    "correct": "Farkında olunursa korunabilirler",
+    "wrong": [
+     "Bunlar bütçeden tümüyle çıkarılmalıdır",
+     "Yalnızca hafta sonu yaşanmalıdır",
+     "Bunlar kredi kartıyla karşılanmalıdır"
+    ],
+    "explanation": "Önemli olan harcamaların farkında olup bilinçli seçmektir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin genel amacı nedir?",
+    "correct": "Para yönetiminde bilinç oluşturmak",
+    "wrong": [
+     "Kahve içmenin zararlarını anlatmak",
+     "Bir bankanın kredi ürününü tanıtmak",
+     "Ekonomistlerin görüşlerini eleştirmek"
+    ],
+    "explanation": "Metin küçük harcamaların farkına varmayı ve bilinçli seçmeyi öğütler."
+   }
+  ]
+ },
+ "184": {
+  "title": "Fiyatı Değişen Bilet",
+  "category": "Bilgi/Açıklama",
+  "content": "Aynı uçuş için bilet aradığınızda sabah gördüğünüz fiyatın akşam değiştiğini fark etmiş olabilirsiniz. Benzer biçimde, yağmurlu bir akşam taksi uygulamasında yolculuk ücreti birden yükselebilir. Bu durumun adı dinamik fiyatlandırmadır. Şirketler, bir ürünün ya da hizmetin fiyatını talebe, zamana ve hatta stok durumuna göre sürekli değiştirir. Bu uygulama yeni değildir, ama internet ve akıllı telefonlar sayesinde hiç olmadığı kadar yaygınlaşmıştır.\n\nDinamik fiyatlandırmanın mantığı basittir: Bir şeye talep arttığında fiyat yükselir, talep azaldığında düşer. Bayram öncesinde otobüs biletlerinin pahalanması ya da yaz sonunda otel fiyatlarının inmesi bunun bilinen örnekleridir. Ancak günümüzde bu değişiklikleri insanlar değil, büyük miktarda veriyi saniyeler içinde inceleyen bilgisayar programları yapıyor. Program, kaç kişinin o anda aynı ürüne baktığını, rakip firmaların fiyatlarını ve geçmiş yıllardaki satışları hesaba katarak yeni bir fiyat belirliyor.\n\nŞirketler bu yöntemin herkes için yararlı olduğunu savunur. Yoğun saatlerde yükselen taksi ücreti daha çok sürücüyü yola çıkmaya özendirir; boş kalacak bir uçak koltuğu da indirimle satılabilir. Eleştirmenler ise sistemin tüketiciyi belirsizlik içinde bıraktığını, özellikle acil ihtiyacı olanların daha fazla ödemek zorunda kaldığını söylüyor. Bazı eleştirmenler, programların kullanıcıların telefon modeline ya da arama geçmişine bakarak kişiye özel fiyat belirleyebileceğinden de endişe ediyor. Bu da aynı ürün için farklı kişilerin farklı ücret ödemesi anlamına gelebilir.\n\nTüketiciler için bazı basit yollar işe yarayabilir. Fiyatları birkaç gün boyunca takip etmek, mümkünse yoğun saatlerden kaçınmak ve farklı siteleri karşılaştırmak, daha uygun bir fiyat bulma olasılığını artırır. Bazı uygulamalar, seçtiğiniz bir ürünün fiyatı düştüğünde size bildirim de gönderebiliyor. Kısacası bu sistemde sabırlı ve bilgili tüketici daha kârlı çıkıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dinamik fiyatlandırmada fiyatı neler belirler?",
+    "correct": "İstek, zaman ve stok durumu",
+    "wrong": [
+     "Sadece ürünün üretim maliyeti",
+     "Devletin belirlediği tavan",
+     "Satıcının o anki ruh hâli"
+    ],
+    "explanation": "Fiyat talebe, zamana ve stok durumuna göre değişir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Akıllı telefonların bu konudaki rolü nedir?",
+    "correct": "Yöntemi çok daha yaygın kılmak",
+    "wrong": [
+     "Yöntemi ilk kez ortaya çıkarmak",
+     "Bütün fiyatları sabit tutmak",
+     "Biletleri tümüyle ücretsiz yapmak"
+    ],
+    "explanation": "Yöntem yeni değildir ama internetle hiç olmadığı kadar yaygınlaşmıştır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Günümüzde fiyat değişikliklerine kim karar veriyor?",
+    "correct": "Bilgisayar programları",
+    "wrong": [
+     "Müşteri temsilcileri",
+     "İlgili devlet kurumları",
+     "Mağazaların müdürleri"
+    ],
+    "explanation": "Değişiklikleri veriyi inceleyen bilgisayar programları yapıyor."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Program bir ürüne aynı anda çok kişinin baktığını görürse ne yapması beklenir?",
+    "correct": "Fiyatı artırması",
+    "wrong": [
+     "Fiyatı düşürmesi",
+     "Satışı durdurması",
+     "Stoku gizlemesi"
+    ],
+    "explanation": "Talep artınca fiyat yükselir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şirketlerin taksi örneğiyle savunduğu yarar nedir?",
+    "correct": "Arz ile talebin dengelenmesi",
+    "wrong": [
+     "Sürücülerin daha az çalışması",
+     "Yolcuların daha az ödemesi",
+     "Trafiğin hemen azalması"
+    ],
+    "explanation": "Yüksek ücret daha çok sürücüyü yola çıkmaya özendirir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Eleştirmenlerin kişiye özel fiyat konusundaki kaygısı neye dayanır?",
+    "correct": "Herkesin aynı şeye farklı ödemesine",
+    "wrong": [
+     "Telefon fiyatlarının sürekli artmasına",
+     "Uçuşların sık sık iptal edilmesine",
+     "Uygulamaların giderek yavaşlamasına"
+    ],
+    "explanation": "Telefon modeli ya da geçmişe göre fiyat belirlenmesi eşitsizlik doğurabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fiyat düştüğünde haber veren araç hangisidir?",
+    "correct": "Uygulama bildirimleri",
+    "wrong": [
+     "Havayolu şirketinin mektubu",
+     "Gazetelerdeki ilanlar",
+     "Acentenin yaptığı telefon"
+    ],
+    "explanation": "Bazı uygulamalar fiyat düşünce bildirim gönderir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraftaki önerilerin ortak noktası nedir?",
+    "correct": "Sabır ve kıyaslama gerektirmeleri",
+    "wrong": [
+     "Ek bir ödeme yapmayı gerektirmeleri",
+     "Sadece şirketlerin işine yaramaları",
+     "Yoğun saatlerde almayı önermeleri"
+    ],
+    "explanation": "Takip, karşılaştırma ve beklemek sabırlı bir tüketiciyi ödüllendirir."
+   }
+  ]
+ },
+ "192": {
+  "title": "Fazla Sevginin Zararı",
+  "category": "Bilgi/Açıklama",
+  "content": "Saksı bitkilerinin en sık ölme nedeni susuzluk değil, fazla sudur. Pek çok kişi bitkisini sevdiği için her gün sular. Oysa bitkinin kökleri de nefes almaya ihtiyaç duyar. Toprak sürekli ıslak kalırsa kökler havasız kalır ve çürümeye başlar. Çürüyen kökler suyu ve besini taşıyamaz hâle gelir; bitki, içinde bol su olduğu hâlde susuz kalmış gibi davranır.\n\nFazla sulanan bir bitkinin yaprakları sararır ve yumuşar. İlginç olan, bu belirtilerin susuz kalan bir bitkininkine benzemesidir. Bu yüzden bitkisinin solduğunu gören kişi, onu daha da çok sular ve sorunu büyütür. Bu kısır döngü, özellikle kışın, bitkilerin daha yavaş büyüdüğü ve daha az suya ihtiyaç duyduğu aylarda sık görülür.\n\nDoğru sulama zamanını anlamanın oldukça kolay bir yolu vardır. Parmağınızı toprağa iki boğum kadar batırın. Toprak bu derinlikte kuruysa sulama zamanı gelmiştir; hâlâ nemliyse birkaç gün daha bekleyin. Saksının altında fazla suyun akabileceği bir delik olması da kökleri korur. Tabakta biriken suyu yarım saat sonra boşaltmayı unutmayın. Şunu da akılda tutmak gerekir: Çoğu bitki için biraz susuz kalmak, sürekli ıslak toprakta beklemekten daha az zararlıdır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre saksı bitkilerinin en sık ölme nedeni nedir?",
+    "correct": "Aşırı sulama",
+    "wrong": [
+     "Yetersiz ışık",
+     "Susuzluk",
+     "Soğuk hava"
+    ],
+    "explanation": "Bitkiler en çok fazla sudan ölür."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çürüyen köklü bitkinin susuz kalmış gibi görünmesinin nedeni nedir?",
+    "correct": "Köklerin işlevini yitirmesi",
+    "wrong": [
+     "Toprağın kısa sürede kuruması",
+     "Saksının bitkiye dar gelmesi",
+     "Bütün yaprakların dökülmesi"
+    ],
+    "explanation": "Çürüyen kökler suyu ve besini taşıyamaz."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Sararan yaprakları görüp daha çok sulamak neden sorunu büyütür?",
+    "correct": "Asıl sorun fazla su olabilir",
+    "wrong": [
+     "Yaprakların suyu emmesi zordur",
+     "Musluk suyu çok pahalıdır",
+     "Bitki yalnızca ışık ister"
+    ],
+    "explanation": "Belirtiler susuzluğa benzediği için asıl sorun olan fazla su artırılır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bu sorun en çok hangi mevsimde görülür?",
+    "correct": "Kış ayları",
+    "wrong": [
+     "Yaz ayları",
+     "İlkbahar ayları",
+     "Sonbahar ayları"
+    ],
+    "explanation": "Özellikle kışın, bitkiler daha az su istediğinde görülür."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sulama zamanını anlamak için ne önerilir?",
+    "correct": "Toprağı parmakla yoklamak",
+    "wrong": [
+     "Yaprakları tek tek saymak",
+     "Saksıyı her gün tartmak",
+     "Duvardaki takvime bakmak"
+    ],
+    "explanation": "Parmağı iki boğum toprağa batırıp kuruluğa bakılır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tabakta biriken su için ne yapılmalıdır?",
+    "correct": "Bir süre sonra dökülmeli",
+    "wrong": [
+     "Bitkiye yeniden verilmeli",
+     "Olduğu gibi bırakılmalı",
+     "Gübreyle karıştırılmalı"
+    ],
+    "explanation": "Tabaktaki su yarım saat sonra boşaltılmalıdır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Saksının altındaki deliğin işlevi nedir?",
+    "correct": "Fazla suyu dışarı atmak",
+    "wrong": [
+     "Kökleri güneşe çıkarmak",
+     "Saksıyı hafifletmek",
+     "Böcekleri içeri almak"
+    ],
+    "explanation": "Delik fazla suyun akmasını sağlayarak kökleri korur."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin başlığındaki “fazla sevgi” ne anlatır?",
+    "correct": "İyi niyetli ama aşırı bakım",
+    "wrong": [
+     "Bitkiye her gün şarkı söylemek",
+     "Evde çok sayıda saksı tutmak",
+     "Yapraklara sık sık dokunmak"
+    ],
+    "explanation": "Bitkiyi sevdiği için her gün sulamak ona zarar verir."
+   }
+  ]
+ }
+}

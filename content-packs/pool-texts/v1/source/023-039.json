@@ -1,0 +1,557 @@
+{
+ "23": {
+  "title": "Kaynağa Sormak",
+  "category": "Deneme",
+  "content": "Bir trafik kazasını gören üç kişiden ifade alındığını düşünelim. Birincisi kırmızı arabanın hızla kavşağa girdiğini söyler. İkincisi ışığın sarıya döndüğünü, iki sürücünün de acele ettiğini anlatır. Üçüncüsü ise yalnızca bir fren sesi duyduğunu, başını çevirdiğinde arabaların çoktan çarpışmış olduğunu belirtir. Üç tanığın hiçbiri yalan söylemiyor olabilir. Ama anlattıkları birbirinden farklıdır. Olayı anlamak isteyen biri, bu anlatıların hangisine ne kadar güveneceğine karar vermek zorundadır. Bunun için her tanığın nerede durduğunu, neyi gerçekten görmüş olabileceğini ve olaydan bir çıkarı olup olmadığını düşünmesi gerekir.\n\nTarihçilerin işi, bu durumun çok daha karmaşık bir hâlidir. Geçmişte olan bir olayı kimse yeniden göremez. Elimizde yalnızca o olaydan geriye kalanlar vardır: mektuplar, günlükler, resmî belgeler, gazeteler, fotoğraflar, kalıntılar. Bunlara kaynak denir. Tarih yazımı, bu kaynakları toplamak kadar onları sorgulamayı da gerektirir. Buna kaynak eleştirisi adı verilir.\n\nKaynak eleştirisinde sorulan ilk soru, kaynağın kim tarafından, ne zaman ve hangi amaçla üretildiğidir. Bir olayı yaşayan birinin aynı gün yazdığı mektup, yıllar sonra yazılmış bir anı kitabından genellikle daha değerli kabul edilir. Çünkü insan belleği zamanla değişir; sonradan öğrenilenler, eski hatıralara karışabilir. Bir savaştan sonra kazanan tarafın yayımladığı bir bildiri ise olayları kendi bakış açısından anlatma eğiliminde olabilir.\n\nİkinci soru, kaynağın başka kaynaklarla uyuşup uyuşmadığıdır. Birbirinden bağımsız iki kaynak aynı ayrıntıyı veriyorsa, o ayrıntıya güven artar. Ancak burada da dikkatli olmak gerekir. İki kaynak aynı ayrıntıyı veriyor ama biri öbüründen kopyalanmışsa, aslında elimizde tek bir tanık vardır. Tarihçiler bu yüzden kaynakların birbirini nasıl etkilediğini de izlemeye çalışır.\n\nBazen sorun, kaynağın gerçekten iddia ettiği kişi tarafından yazılıp yazılmadığıdır. Tarih boyunca pek çok sahte belge üretilmiştir: Bir toprağın sahipliğini kanıtlamak, bir aileye soylu bir geçmiş kazandırmak ya da bir rakibi küçük düşürmek için. Tarihçiler bu tür belgeleri ayırt etmek için yazının dilini, kullanılan sözcüklerin o dönemde var olup olmadığını, kâğıdın ve mürekkebin yapısını inceler. Bir belgede, yazıldığı söylenen tarihten yüzyıl sonra ortaya çıkmış bir sözcük geçiyorsa, bu belge büyük olasılıkla sonradan üretilmiştir.\n\nÜçüncü soru, kaynağın ne söylemediğidir. Bir belgede anlatılmayanlar, bazen anlatılanlar kadar şey söyler. Örneğin bir dönemin resmî kayıtlarında kadınların ya da yoksulların neredeyse hiç geçmemesi, onların o toplumda yaşamadığı anlamına gelmez; kayıt tutanların kimleri önemli saydığını gösterir. Bu boşlukları doldurmak için tarihçiler mahkeme kayıtları, şarkılar, ev eşyaları gibi beklenmedik kaynaklara da başvurur.\n\nBütün bu sorulardan sonra tarihçi, elindeki parçaları bir araya getirip bir anlatı kurar. Ancak iyi bir tarihçi bu anlatıyı kesin bir gerçek gibi sunmaz. Hangi bilginin sağlam kaynaklara dayandığını, hangisinin tahmin olduğunu açıkça belirtir. Yeni bir kaynak bulunduğunda anlatıyı yeniden gözden geçirmeye hazırdır. Tarihin sürekli yeniden yazılması, bu yüzden bir zayıflık değil, yöntemin doğal bir sonucudur.\n\nKaynak eleştirisi yalnızca tarihçilerin işi değildir. Bugün her gün sayısız habere, paylaşıma ve iddiaya maruz kalıyoruz. Bir haberin kaynağını sormak, aynı bilginin başka yerlerde de geçip geçmediğine bakmak ve anlatılmayan yanları düşünmek, hepimizin işine yarayabilecek alışkanlıklardır. Tarihçinin yöntemi, kalabalık bir bilgi çağında yolumuzu bulmamıza yardım edebilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Trafik kazası örneği neyi göstermek için verilmiştir?",
+    "correct": "Doğru söyleyenlerin bile ayrıştığını",
+    "wrong": [
+     "Tanıkların çoğunun yalan söylediğini",
+     "Kazaların hızdan kaynaklandığını",
+     "Fren sesinin en güvenilir kanıt olduğunu"
+    ],
+    "explanation": "Üç tanık da yalan söylemiyor olabilir; yine de anlatıları farklıdır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre tarihçinin kullandığı kaynaklar nelerdir?",
+    "correct": "Olaydan günümüze kalan izler",
+    "wrong": [
+     "Tarihçinin kendi tahminleri",
+     "Olayı yeniden canlandıran filmler",
+     "Okul kitaplarındaki özetler"
+    ],
+    "explanation": "Mektuplar, günlükler, belgeler, fotoğraflar gibi olaydan geriye kalanlara kaynak denir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Olay günü yazılmış bir mektup neden anı kitabından değerli sayılır?",
+    "correct": "Bellek henüz değişmediği için",
+    "wrong": [
+     "Daha uzun ve ayrıntılı olduğu için",
+     "Resmî bir mühür taşıdığı için",
+     "Kazanan tarafça yazıldığı için"
+    ],
+    "explanation": "Bellek zamanla değişir; sonradan öğrenilenler eski hatıralara karışabilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Biri öbüründen kopyalanmış iki kaynak neden tek tanık sayılır?",
+    "correct": "İkinci kaynak yeni bilgi katmadığı için",
+    "wrong": [
+     "Kopyalar genellikle sahte olduğu için",
+     "Tarihçiler kopyaları hiç okumadığı için",
+     "İki kaynak birbiriyle çeliştiği için"
+    ],
+    "explanation": "Kopya, bağımsız bir gözlem değildir; aynı bilgiyi yalnızca tekrarlar."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sahte bir belgeyi ele veren ipuçlarından biri hangisidir?",
+    "correct": "Dönemde olmayan bir sözcük geçmesi",
+    "wrong": [
+     "Belgenin çok kısa ve özet olması",
+     "Yazarın adının belgede açıkça yazılması",
+     "Kâğıdın yıllar içinde sararması"
+    ],
+    "explanation": "Yazıldığı söylenen tarihten sonra ortaya çıkmış bir sözcük, belgenin sonradan üretildiğini gösterir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Resmî kayıtlarda bazı grupların neredeyse hiç geçmemesi neyi gösterir?",
+    "correct": "Kaydı tutanların önceliklerini",
+    "wrong": [
+     "O grupların hiç yaşamadığını",
+     "Kayıtların sonradan yok edildiğini",
+     "Tarihçilerin onları atladığını"
+    ],
+    "explanation": "Kayıt tutanların kimleri önemli saydığını gösterir; o insanların yokluğunu değil."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yazara göre iyi bir tarihçi anlatısını nasıl sunar?",
+    "correct": "Sağlam olanı tahminden ayırarak",
+    "wrong": [
+     "Kesin bir gerçek gibi sunarak",
+     "Yalnızca tek kaynağa dayanarak",
+     "Okurun beğenisine göre süsleyerek"
+    ],
+    "explanation": "Hangi bilginin sağlam kaynağa dayandığını, hangisinin tahmin olduğunu açıkça belirtir."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki önerisi nedir?",
+    "correct": "Gündelik bilgiye de eleştirel yaklaşmak",
+    "wrong": [
+     "Bütün tarih kitaplarını ezberlemek",
+     "Haberlerden ve paylaşımlardan uzak durmak",
+     "Yalnızca resmî belgelere güvenmek"
+    ],
+    "explanation": "Haberlerin kaynağını sormak, başka yerde geçip geçmediğine bakmak herkesin işine yarar."
+   }
+  ]
+ },
+ "36": {
+  "title": "Toprağın Altındaki Ağ",
+  "category": "Bilgi/Açıklama",
+  "content": "Ormanda yürürken yerde, bir ağacın kökünün yanında şemsiyeye benzeyen küçük bir mantar görebilirsiniz. Mantarlar ilk bakışta bitkiye benzer, ama aslında bitki değildir. Yeşil renkleri yoktur ve kendi besinlerini güneş ışığıyla üretemezler. Bilim insanları mantarları bitkilerden de hayvanlardan da ayrı bir canlı grubu olarak sınıflandırır.\n\nBir mantarın gördüğümüz kısmı, aslında onun yalnızca küçük bir parçasıdır. Asıl gövdesi toprağın altındadır. Toprağın altında incecik iplikler, kilometrelerce uzunlukta bir ağ gibi yayılır. Bu ipliklerin oluşturduğu ağa miselyum denir. Yerin üstünde gördüğümüz şemsiye biçimli kısım ise mantarın çoğalmak için çıkardığı bölümdür. Altındaki ince yapraklar arasında sporlar adı verilen çok küçük tozlar oluşur. Rüzgâr bu sporları uzaklara taşır ve uygun bir yere düşen spor yeni bir mantara dönüşebilir.\n\nMantarlar besinlerini çürüyen yapraklardan, ölmüş ağaç dallarından ve topraktaki atıklardan alır. Bu sırada onları parçalayarak toprağa karıştırırlar. Eğer mantarlar olmasaydı, ormanların zemini düşen yapraklar ve dallarla dolup taşardı. Mantarlar, doğanın temizlik görevlileri gibi çalışır.\n\nBazı mantarlar ağaçlarla iş birliği de yapar. Mantar iplikleri ağacın köklerine sarılır ve topraktan aldıkları suyu ve mineralleri ağaca verir. Ağaç da karşılığında yapraklarında ürettiği şekerin bir kısmını mantara verir. Bilim insanları, bazı ormanlarda ağaçların bu mantar ağı aracılığıyla birbirine bağlı olduğunu düşünüyor.\n\nMantarların bazıları yenebilir, bazıları ise çok zehirlidir. Zehirli mantarlar çoğu zaman yenebilenlere çok benzer. Bu yüzden ormanda bulunan mantarlar, bu konuda uzman olmayan biri tarafından asla toplanıp yenmemelidir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Metne göre mantarlar neden bitki sayılmaz?",
+    "correct": "Kendi besinini yapamadıkları için",
+    "wrong": [
+     "Toprağın altında yaşadıkları için",
+     "Çiçek ve meyve vermedikleri için",
+     "Ağaçların köküne yapıştıkları için"
+    ],
+    "explanation": "Yeşil renkleri yoktur ve besinlerini güneş ışığıyla üretemezler."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir mantarın asıl gövdesi nerededir?",
+    "correct": "Yer yüzeyinin altında",
+    "wrong": [
+     "Şapkasının tam içinde",
+     "Ağacın gövdesinde",
+     "Yaprakların arasında"
+    ],
+    "explanation": "Asıl gövde, toprağın altında ağ gibi yayılan ince ipliklerdir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sporların rüzgârla taşınması mantara ne sağlar?",
+    "correct": "Uzak yerlerde çoğalabilmeyi",
+    "wrong": [
+     "Daha hızlı büyüyebilmeyi",
+     "Kökleri temizleyebilmeyi",
+     "Kendini düşmanlardan korumayı"
+    ],
+    "explanation": "Uygun bir yere düşen spor yeni bir mantara dönüşebilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mantarlar neden doğanın temizlik görevlilerine benzetilir?",
+    "correct": "Ölü bitki artıklarını ayrıştırdıkları için",
+    "wrong": [
+     "Yaprakları rüzgârla süpürüp attıkları için",
+     "Zehirli maddeleri yok ettikleri için",
+     "Ormanı yangınlardan korudukları için"
+    ],
+    "explanation": "Çürüyen yaprak ve dalları parçalayıp toprağa karıştırırlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ağaç ile mantarın iş birliğinde ağaç mantara ne verir?",
+    "correct": "Ürettiği şekerin bir kısmını",
+    "wrong": [
+     "Topraktan aldığı bol suyu",
+     "Yapraklarında biriken sporları",
+     "Köklerinde biriken mineralleri"
+    ],
+    "explanation": "Ağaç yapraklarında ürettiği şekerin bir kısmını mantara verir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bu ilişkiye neden iş birliği denir?",
+    "correct": "İki tarafın da kazandığı için",
+    "wrong": [
+     "Mantarın ağaca zarar verdiği için",
+     "Ağacın mantarı beslediği için",
+     "İkisinin aynı yerde büyüdüğü için"
+    ],
+    "explanation": "Mantar ağaca su ve mineral, ağaç mantara şeker verir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ormanda bulunan mantarlar neden uzman olmayanlarca yenmemelidir?",
+    "correct": "Zararlıyı ayırt etmek zor olduğu için",
+    "wrong": [
+     "Bütün mantarlar zehirli olduğu için",
+     "Ormandan bir şey almak yasak olduğu için",
+     "Mantarlar çok çabuk bozulduğu için"
+    ],
+    "explanation": "Zehirli mantarlar yenebilenlere çok benzer."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin genel amacı nedir?",
+    "correct": "Mantarların doğadaki yerini tanıtmak",
+    "wrong": [
+     "Mantar yemeklerini tarif etmek",
+     "Ormanda uzun yürüyüşleri teşvik etmek",
+     "Mantar toplamayı herkese yasaklamak"
+    ],
+    "explanation": "Metin mantarların yapısını, beslenmesini ve doğadaki görevlerini anlatır."
+   }
+  ]
+ },
+ "37": {
+  "title": "Dört Kişilik Proje",
+  "category": "Hikaye/Kurgu",
+  "content": "Kerem'in sınıfı, okulun bilim şenliği için bir proje hazırlıyordu. Öğretmenleri Selin Hanım, öğrencileri dörder kişilik gruplara ayırdı. Kerem'in grubunda Ayşe, Bora ve Nil vardı. Konuları, bitkilerin farklı renkteki ışıklar altında nasıl büyüdüğüydü. Bu konuyu Nil önermiş, herkes de beğenmişti.\n\nİlk toplantıda herkes aynı anda konuşmaya başladı. Bora hemen deney düzeneğini kurmak istiyordu. Ayşe önce kitaplardan araştırma yapmak gerektiğini söyledi. Nil sessizce dinliyor, ara sıra bir şeyler not ediyordu. Kerem ise her şeyi kendisinin yapmasının daha hızlı olacağını düşünüyordu. Toplantı bir saat sürdü ve hiçbir karar alınamadı. Eve dönerken Kerem, grubun bu hâlde projeyi bitiremeyeceğinden endişelendi.\n\nErtesi gün Selin Hanım gruba bir öneride bulundu. Her öğrencinin en iyi yaptığı işi düşünmelerini istedi. Bora el işlerinde çok becerikliydi; düzeneği o kuracaktı. Ayşe araştırmayı ve raporun yazımını üstlendi. Nil'in notlarının ne kadar düzenli olduğu ortaya çıktı; ölçümleri o kaydedecekti. Kerem ise sunumu hazırlayacak ve şenlik günü projeyi anlatacaktı.\n\nÜç hafta boyunca aynı türden fasulye fidelerini kırmızı, mavi ve yeşil ışık altında büyüttüler. Bora ışıkları ayarlarken, Nil her gün fidelerin boyunu ölçüp bir çizelgeye yazdı. Ayşe ölçümleri kitaplarda okuduğu bilgilerle karşılaştırdı. İkinci haftada bir sorun çıktı: Mavi ışığın lambası yandı. Bora hemen yenisini buldu, Nil de o günkü ölçümün eksik kaldığını çizelgeye not etti. Kerem ise her hafta grubun ne yaptığını kısa bir özetle topladı.\n\nSonuçlar ilginçti. Kırmızı ve mavi ışık altındaki fideler iyi büyümüştü, yeşil ışık altındakiler ise cılız kalmıştı. Ayşe, bitkilerin yeşil ışığın çoğunu kullanmadan geri yansıttığını, bu yüzden yaprakların bize yeşil göründüğünü buldu.\n\nŞenlik günü Kerem projeyi anlatırken grubun her üyesinin katkısını tek tek söyledi. Jüri, projenin bilimsel yönü kadar grubun iş birliğini de övdü. Proje şenlikte ikinci oldu. Kerem o gün, her şeyi tek başına yapmaya çalışsaydı bu kadar iyi bir iş çıkaramayacaklarını anladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Grubun proje konusu neydi?",
+    "correct": "Işık renginin bitkilere etkisi",
+    "wrong": [
+     "Suyun bitkileri nasıl beslediği",
+     "Toprak türlerinin karşılaştırması",
+     "Bitkilerde çiçek açma zamanı"
+    ],
+    "explanation": "Konuları bitkilerin farklı renkteki ışıklar altında nasıl büyüdüğüydü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "İlk toplantıda neden karar alınamadı?",
+    "correct": "Herkesin farklı yöne çekmesi",
+    "wrong": [
+     "Konunun herkese çok zor gelmesi",
+     "Selin Hanım'ın gelmemesi",
+     "Malzemelerin eksik olması"
+    ],
+    "explanation": "Bora deney, Ayşe araştırma istiyordu; Kerem her şeyi kendi yapmak istiyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ölçüm görevinin Nil'e verilmesinin nedeni neydi?",
+    "correct": "Notlarının çok düzenli olması",
+    "wrong": [
+     "El işlerinde becerikli olması",
+     "Kalabalık önünde rahat konuşması",
+     "Kitaplardan araştırma yapması"
+    ],
+    "explanation": "Nil'in notlarının ne kadar düzenli olduğu ortaya çıkmıştı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin Hanım'ın önerisi grubun sorununu nasıl çözdü?",
+    "correct": "Görevleri güçlü yanlara göre dağıttı",
+    "wrong": [
+     "Kerem'i grubun tek yöneticisi yaptı",
+     "Projenin konusunu tümüyle değiştirdi",
+     "Grubu ikiye bölüp ayrı çalıştırdı"
+    ],
+    "explanation": "Herkes en iyi yaptığı işi üstlendi ve çalışma düzene girdi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "İkinci haftada hangi sorun çıktı?",
+    "correct": "Mavi ışık kaynağının bozulması",
+    "wrong": [
+     "Kırmızı ışıktaki fidelerin kuruması",
+     "Ölçüm çizelgesinin kaybolması",
+     "Nil'in hastalanıp gelmemesi"
+    ],
+    "explanation": "Mavi ışığın lambası yandı; Bora yenisini buldu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yeşil ışık altındaki fideler nasıldı?",
+    "correct": "Zayıf ve az gelişmişti",
+    "wrong": [
+     "En hızlı büyüyenlerdi",
+     "Çiçek açmaya başlamıştı",
+     "Kırmızılar kadar iyiydi"
+    ],
+    "explanation": "Yeşil ışık altındaki fideler cılız kalmıştı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ayşe'nin bulgusuna göre yapraklar neden yeşil görünür?",
+    "correct": "Yeşili emmeyip geri yansıttıkları için",
+    "wrong": [
+     "Yeşil ışığı en çok sevip emdikleri için",
+     "Toprağın rengini taşıdıkları için",
+     "Klorofil yeşil ışık ürettiği için"
+    ],
+    "explanation": "Bitkiler yeşil ışığın çoğunu kullanmadan geri yansıtır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Kerem'in vardığı sonuç hangisidir?",
+    "correct": "Ortak çalışma tek kişiden güçlüdür",
+    "wrong": [
+     "Sunum yapmak her şeyden önemlidir",
+     "Yarışmalar yalnız birinci için yapılır",
+     "Bilim projeleri çok zahmetlidir"
+    ],
+    "explanation": "Her şeyi tek başına yapsaydı bu kadar iyi bir iş çıkaramayacaklarını anladı."
+   }
+  ]
+ },
+ "38": {
+  "title": "İlk Yolculuk",
+  "category": "Hikaye/Kurgu",
+  "content": "Duru, on üç yaşına girdiğinde ilk kez kendi başına otobüsle okula gitti. Annesi her sabah onu arabayla bırakıyordu ama yeni işi yüzünden artık erkenden çıkması gerekiyordu. Gece boyunca Duru durakları, otobüsün numarasını ve ineceği yeri defalarca düşündü.\n\nSabah durağa vardığında kalbi hızla çarpıyordu ve elleri biraz terlemişti. Otobüs geldi, kartını okuttu ve pencere kenarındaki bir koltuğa oturdu. Her durakta, telefonundaki haritaya bakarak nerede olduğunu kontrol etti. Birkaç durak sonra otobüse elinde bastonla yaşlı bir kadın bindi. Otobüs kalabalıktı ve boş koltuk yoktu. Duru hemen ayağa kalkıp yerini ona verdi.\n\nKadın teşekkür etti ve Duru'ya hangi okula gittiğini sordu. Duru ilk kez tek başına yolculuk ettiğini söyleyince kadın gülümsedi. Kendi torununun da geçen yıl aynı heyecanı yaşadığını anlattı. Konuşurken Duru'nun heyecanı yavaş yavaş azaldı.\n\nOkulun durağına geldiğinde düğmeye bastı ve indi. Okul bahçesine girerken kendini bir gecede büyümüş gibi hissetti; arkadaşlarına da bunu hemen anlattı. Akşam annesine ilk sorusu, yarın da otobüsle gidip gidemeyeceği oldu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Duru neden otobüsle gitmeye başladı?",
+    "correct": "Annesinin işi değiştiği için",
+    "wrong": [
+     "Okulu yeni yere taşındığı için",
+     "Ailenin arabası bozulduğu için",
+     "Bunu kendisi istediği için"
+    ],
+    "explanation": "Annesinin yeni işi yüzünden erken çıkması gerekiyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Duru'nun gece boyunca durakları düşünmesi neyi gösterir?",
+    "correct": "Yolculuğa hazırlanmak istediğini",
+    "wrong": [
+     "Otobüsten hiç hoşlanmadığını",
+     "Yolu zaten ezbere bildiğini",
+     "Annesine hâlâ çok kızgın olduğunu"
+    ],
+    "explanation": "İlk kez tek başına gideceği için yolu zihninde tekrar tekrar gözden geçirdi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Duru nerede olduğunu nasıl izledi?",
+    "correct": "Telefondaki haritadan",
+    "wrong": [
+     "Şoförün anonslarından",
+     "Durak tabelalarından",
+     "Yanındaki yolcuya sorarak"
+    ],
+    "explanation": "Her durakta telefonundaki haritaya bakarak kontrol etti."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Duru'nun yerini yaşlı kadına vermesi onun hakkında ne gösterir?",
+    "correct": "Çevresine duyarlı olduğunu",
+    "wrong": [
+     "Ayakta durmayı sevdiğini",
+     "Kadını önceden de tanıdığını",
+     "İnecek durağa geldiğini"
+    ],
+    "explanation": "Otobüs kalabalıktı; bastonlu kadını görünce hemen kalktı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yaşlı kadın Duru'ya neyi anlattı?",
+    "correct": "Torununun benzer bir heyecanı",
+    "wrong": [
+     "Gençliğindeki otobüs yolculuklarını",
+     "Okulun eskiden nasıl olduğunu",
+     "Hastaneye gitmekte olduğunu"
+    ],
+    "explanation": "Torununun da geçen yıl aynı heyecanı yaşadığını anlattı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Duru'nun heyecanı neden azaldı?",
+    "correct": "Sohbetin onu biraz rahatlatması",
+    "wrong": [
+     "Otobüsün yavaş yavaş boşalması",
+     "Haritanın doğru yolu göstermesi",
+     "Okula iyice yaklaşmış olması"
+    ],
+    "explanation": "Kadınla konuşurken heyecanı yavaş yavaş azaldı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Okulun durağına gelince Duru ne yaptı?",
+    "correct": "Durak düğmesine basıp indi",
+    "wrong": [
+     "Şoföre yüksek sesle seslendi",
+     "Bir sonraki durakta indi",
+     "Annesini arayıp haber verdi"
+    ],
+    "explanation": "Okulun durağına gelince düğmeye bastı ve otobüsten indi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Duru'nun akşam annesine sorduğu soru neyi gösterir?",
+    "correct": "Özgüven kazandığını",
+    "wrong": [
+     "Arabayı özlediğini",
+     "Otobüsten korktuğunu",
+     "Arkadaş edindiğini"
+    ],
+    "explanation": "Ertesi gün de otobüsle gitmek istemesi, yolculuğun ona güven verdiğini gösterir."
+   }
+  ]
+ },
+ "39": {
+  "title": "Üç Renkten Milyonlarcası",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir telefonun ya da bilgisayarın ekranında gördüğümüz bütün renkler, aslında yalnızca üç rengin karışımından oluşur: kırmızı, yeşil ve mavi. Ekrana bir büyüteçle çok yakından bakarsanız, bu üç renkten oluşan minicik noktaları görebilirsiniz. Bu noktalara piksel denir.\n\nHer piksel, kırmızı, yeşil ve mavi ışık yayan üç küçük parçadan oluşur. Bu parçaların her biri farklı parlaklıkta yanabilir. Kırmızı ile yeşil birlikte parlak yandığında gözümüz sarıyı görür. Kırmızı ile mavi birleşince mor, yeşil ile mavi birleşince turkuaz ortaya çıkar. Üçü birden en parlak hâlde yandığında beyaz, hiçbiri yanmadığında ise siyah görürüz. Parlaklıklar değiştirilerek milyonlarca farklı renk elde edilebilir.\n\nBu durum, resim derslerinde boyalarla öğrendiklerimizden farklıdır. Boyaları karıştırdıkça renk koyulaşır; bütün renkleri karıştırırsak kahverengiye ya da siyaha yakın bir renk elde ederiz. Ekranda ise ışıklar birleştikçe renk açılır. Bunun nedeni, boyaların ışığın bir kısmını emerek renk vermesi, ekranın ise doğrudan ışık yaymasıdır.\n\nPeki neden tam bu üç renk? Gözümüzün arka kısmında renkleri algılayan üç tür hücre vardır. Bu hücrelerin bir türü en çok kırmızıya, biri yeşile, biri de maviye duyarlıdır. Beynimiz, bu üç hücreden gelen sinyallerin oranına bakarak hangi rengi gördüğümüze karar verir. Ekranlar da gözümüzün bu çalışma biçiminden yararlanır.\n\nEkranın çözünürlüğü, içinde ne kadar çok piksel bulunduğunu gösterir. Piksel sayısı arttıkça görüntü daha keskin ve ayrıntılı olur. Günümüzdeki bazı telefon ekranlarında milyonlarca piksel bulunur ve pikseller o kadar küçüktür ki normal uzaklıktan bakınca tek tek seçilemez. Gözümüz onları birleştirerek tek ve pürüzsüz bir görüntü olarak algılar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Ekrandaki renkler hangi üç rengin karışımıdır?",
+    "correct": "Kırmızı, yeşil ve mavi",
+    "wrong": [
+     "Kırmızı, sarı ve mavi",
+     "Sarı, yeşil ve lacivert",
+     "Beyaz, siyah ve gümüş"
+    ],
+    "explanation": "Ekrandaki bütün renkler kırmızı, yeşil ve mavinin karışımıdır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kırmızı ile yeşil birlikte parlak yanınca hangi renk görülür?",
+    "correct": "Sarı",
+    "wrong": [
+     "Mor",
+     "Turkuaz",
+     "Beyaz"
+    ],
+    "explanation": "Kırmızı ile yeşil birleşince göz sarıyı görür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ekranda milyonlarca renk nasıl elde edilir?",
+    "correct": "Üç ışığın parlaklıkları ayarlanarak",
+    "wrong": [
+     "Her renk için ayrı piksel kullanılarak",
+     "Boyalar katman katman sürülerek",
+     "Ekranın arka yüzü renkli boyanarak"
+    ],
+    "explanation": "Üç parçanın parlaklıkları değiştirilerek milyonlarca renk elde edilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Boyalar karıştırıldıkça renk neden koyulaşır?",
+    "correct": "Işığın bir bölümünü emdikleri için",
+    "wrong": [
+     "Boyalar kendi ışığını yaydığı için",
+     "Boya kuruyunca karardığı için",
+     "Fırça boyayı kirlettiği için"
+    ],
+    "explanation": "Boyalar ışığın bir kısmını emerek renk verir; karıştıkça daha çok ışık emilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gözümüzde renkleri algılayan kaç tür hücre vardır?",
+    "correct": "3",
+    "wrong": [
+     "1",
+     "2",
+     "4"
+    ],
+    "explanation": "Kırmızıya, yeşile ve maviye en duyarlı üç tür hücre vardır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ekranlar neden tam bu üç rengi kullanır?",
+    "correct": "Gözün yapısına uydukları için",
+    "wrong": [
+     "En ucuz renkler oldukları için",
+     "Boyalarla aynı oldukları için",
+     "Beyni en az yordukları için"
+    ],
+    "explanation": "Gözdeki üç tür hücre bu renklere duyarlıdır; ekranlar bundan yararlanır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ekranın çözünürlüğü neyi gösterir?",
+    "correct": "Ekrandaki nokta sayısını",
+    "wrong": [
+     "Ekranın parlaklık düzeyini",
+     "Renklerin canlılık düzeyini",
+     "Ekranın kaç inç olduğunu"
+    ],
+    "explanation": "Çözünürlük, ekranda ne kadar çok piksel bulunduğunu gösterir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Pikselleri tek tek göremememizin nedeni nedir?",
+    "correct": "Gözün küçük noktaları birleştirmesi",
+    "wrong": [
+     "Piksellerin hiç ışık yaymaması",
+     "Ekranın kalın camla kaplı olması",
+     "Piksellerin sürekli yer değiştirmesi"
+    ],
+    "explanation": "Pikseller çok küçüktür; göz onları birleştirip tek bir görüntü olarak algılar."
+   }
+  ]
+ }
+}

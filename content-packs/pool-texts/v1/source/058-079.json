@@ -1,0 +1,779 @@
+{
+ "58": {
+  "title": "Kar Tanesinin Yolculuğu",
+  "category": "Bilgi/Açıklama",
+  "content": "Kış aylarında gökyüzüne baktığınızda, birbirinin aynısı gibi görünen kar taneleri yağar. Ama bir kar tanesini büyüteçle incelerseniz, onun aslında çok ince işlenmiş bir buz kristali olduğunu görürsünüz. Üstelik bilim insanları, iki kar tanesinin tıpatıp aynı olmasının neredeyse imkânsız olduğunu söyler.\n\nKar tanesi bulutların içinde doğar. Bulutlar, havada asılı duran çok küçük su damlacıklarından oluşur. Hava çok soğuk olduğunda bu damlacıklardan biri, bir toz zerresinin ya da polenin çevresinde donar. Böylece küçük bir buz kristali oluşur. Bu kristal, çevresindeki su buharını üzerine çekerek büyümeye başlar. Yeterince ağırlaştığında da yeryüzüne doğru düşmeye başlar.\n\nSu donarken molekülleri belirli bir düzende dizilir. Bu düzen yüzünden kar tanelerinin çoğu altı köşeli ya da altı kollu olur. Kristal büyüdükçe kollarına yeni dallar eklenir. Kar tanesi düşerken bulutun içinde farklı sıcaklık ve nem bölgelerinden geçer. Her bölgede biraz farklı biçimde büyür. Hiçbir kar tanesi tam olarak aynı yoldan geçmediği için her birinin biçimi de farklı olur.\n\nKar tanelerinin biçimini en çok sıcaklık belirler. Sıfırın biraz altındaki havada ince, düz levhalar oluşur. Biraz daha soğuk havalarda iğne ya da küçük sütun biçiminde kristaller görülür. Bugün yıldız biçiminde çizdiğimiz o ünlü dallı kar taneleri ise belirli bir sıcaklıkta ve havada bol nem olduğunda oluşur.\n\nKar tanelerini ilk kez yakından fotoğraflayan kişi, Wilson Bentley adlı bir çiftçidir. Bentley, yüz yılı aşkın bir süre önce, mikroskoba bağladığı bir fotoğraf makinesiyle binlerce kar tanesinin fotoğrafını çekti. Kar taneleri çok çabuk eridiği için bu iş büyük sabır istiyordu; Bentley soğukta, eldivenle ve nefesini tutarak çalışırdı. Bu fotoğraflar, kar tanelerinin ne kadar çeşitli olduğunu herkese gösterdi. Bentley'e bu yüzden “Kar Tanesi Adam” adı verildi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Büyüteçle bakıldığında kar tanesinin aslında ne olduğu görülür?",
+    "correct": "Biçimli, donmuş küçük bir kristal",
+    "wrong": [
+     "Donmuş küçük bir yağmur damlası",
+     "Havada uçuşan beyaz bir toz zerresi",
+     "Bulutlardan kopan bir buhar parçası"
+    ],
+    "explanation": "Büyüteçle incelenen kar tanesinin çok ince işlenmiş bir buz kristali olduğu görülür."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Buz kristalinin oluşmaya başladığı çekirdek nedir?",
+    "correct": "Bir toz ya da polen parçacığı",
+    "wrong": [
+     "Bir yağmur damlasının ortası",
+     "Bulutun içindeki küçük bir taş",
+     "Kutuplardan gelen bir buz parçası"
+    ],
+    "explanation": "Su damlacığı bir toz zerresinin ya da polenin çevresinde donarak kristali başlatır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kristalin düşmeye başlamasının nedeni nedir?",
+    "correct": "Nemi toplayarak giderek ağırlaşması",
+    "wrong": [
+     "Bulutun içindeki rüzgârın durması",
+     "Havanın birden ısınmaya başlaması",
+     "Toz zerresinin kristalden ayrılması"
+    ],
+    "explanation": "Kristal çevresindeki buharı çekerek büyür ve yeterince ağırlaşınca düşer."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kar tanelerinin çoğu kaç köşeli ya da kaç kolludur?",
+    "correct": "6",
+    "wrong": [
+     "4",
+     "5",
+     "8"
+    ],
+    "explanation": "Su moleküllerinin diziliş düzeni yüzünden kar tanelerinin çoğu altı köşeli ya da altı kolludur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Her kar tanesinin biçiminin farklı olmasının nedeni nedir?",
+    "correct": "Her birinin farklı koşullardan geçmesi",
+    "wrong": [
+     "Her birinin farklı türden sudan oluşması",
+     "Bulutlardaki toz zerrelerinin renkli olması",
+     "Kar tanelerinin yere düşünce kırılması"
+    ],
+    "explanation": "Hiçbir kar tanesi aynı sıcaklık ve nem bölgelerinden geçmediği için her biri farklı büyür."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yıldız biçimli dallı kar taneleri için hangi koşul gerekir?",
+    "correct": "Belirli bir soğuk ve nemli hava",
+    "wrong": [
+     "Sıfırın biraz altında kuru hava",
+     "Çok sert esen ve tozlu bir rüzgâr",
+     "Güneşli ve bulutsuz bir gökyüzü"
+    ],
+    "explanation": "Dallı kar taneleri belirli bir sıcaklıkta ve havada bol nem olduğunda oluşur."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Wilson Bentley kar tanelerini nasıl görüntüledi?",
+    "correct": "Mikroskoba takılı bir makineyle",
+    "wrong": [
+     "Elle çizip boyayarak kopyalayıp",
+     "Kar tanelerini dondurup saklayarak",
+     "Büyük bir dürbünle uzaktan bakarak"
+    ],
+    "explanation": "Bentley mikroskoba bağladığı bir fotoğraf makinesiyle binlerce kar tanesini fotoğrafladı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Bentley'in çalışmasından hangi sonuç çıkarılabilir?",
+    "correct": "Sabırla yapılan gözlemin bilgiye katkısı",
+    "wrong": [
+     "Kar tanelerinin birbirine çok benzediği",
+     "Fotoğraf makinelerinin kolayca bozulduğu",
+     "Çiftçilerin bilimle uğraşmadığı"
+    ],
+    "explanation": "Bentley'in zor koşullarda sabırla çektiği fotoğraflar kar tanelerinin çeşitliliğini gösterdi."
+   }
+  ]
+ },
+ "59": {
+  "title": "Köyde Bir Yaz",
+  "category": "Hikaye/Kurgu",
+  "content": "Zeynep'in büyükannesi bir köyde yaşıyordu. Yaz tatilinde Zeynep ilk kez bir ay boyunca onun yanında kalacaktı. Şehirde büyüyen Zeynep, köyde neler yapacağını hiç bilmiyordu. Annesi onu otobüse bindirirken Zeynep biraz endişeliydi. Yanına kitaplarını ve tabletini almıştı, ama büyükannesinin evinde internet olmadığını öğrenince daha da çok kaygılandı.\n\nİlk sabah büyükannesi onu güneş doğarken uyandırdı. Birlikte tavukların kümesine gittiler. Büyükannesi ona yumurtaları nasıl toplayacağını gösterdi. Zeynep ilk yumurtayı eline aldığında şaşırdı, çünkü yumurta hâlâ sıcaktı. Sonra bahçeye gidip domatesleri suladılar. Öğlene kadar o kadar çok iş yaptılar ki Zeynep tabletini aklına bile getirmedi.\n\nGünler geçtikçe Zeynep köy hayatına alıştı. Sabahları yumurtaları kendi başına topluyordu. Öğleden sonraları büyükannesiyle birlikte reçel yapıyor, akşamları da evin önündeki ağacın altında oturup yıldızları izliyorlardı. Şehirde bu kadar çok yıldız hiç görmemişti. Büyükannesi ona yıldızların adlarını öğretti ve eskiden insanların yönlerini yıldızlara bakarak bulduğunu anlattı.\n\nBir gün büyük bir fırtına çıktı. Rüzgâr çok sert esti ve bahçedeki domates fidelerinin bazıları devrildi. Zeynep çok üzüldü; o fideleri her gün kendisi sulamıştı. Büyükannesi ise sakin kaldı. Fırtına dindikten sonra birlikte bahçeye çıktılar. Devrilen fideleri yeniden diktiler ve sopalara bağladılar. Büyükannesi, doğada bazen böyle şeylerin olabileceğini, önemli olanın yeniden başlamak olduğunu söyledi.\n\nAy sonunda annesi onu almaya geldi. Zeynep ayrılırken büyükannesine sarıldı ve gelecek yaz yine gelmeye söz verdi. Eve dönünce balkonda küçük bir saksıya domates fidesi dikti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep'in kaygısının artmasına ne yol açtı?",
+    "correct": "Orada bağlantı bulunmayacağını duyması",
+    "wrong": [
+     "Otobüsün çok uzun yol gideceğini öğrenmesi",
+     "Kitaplarını evde unuttuğunu fark etmesi",
+     "Annesinin de köye geleceğini duyması"
+    ],
+    "explanation": "Zeynep büyükannesinin evinde internet olmadığını öğrenince daha çok kaygılandı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep ilk yumurtayı eline aldığında neden şaşırdı?",
+    "correct": "Yumurtanın hâlâ ılık olması",
+    "wrong": [
+     "Yumurtanın çok küçük olması",
+     "Yumurtanın renkli olması",
+     "Yumurtanın kırık olması"
+    ],
+    "explanation": "Zeynep, yumurta hâlâ sıcak olduğu için şaşırdı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep'in öğlene kadar tabletini düşünmemesi neyi gösterir?",
+    "correct": "Yaptığı işlerin onu oyaladığını",
+    "wrong": [
+     "Tabletinin bozulmuş olduğunu",
+     "Büyükannesinin tableti aldığını",
+     "Kitap okumayı tercih ettiğini"
+    ],
+    "explanation": "Zeynep o kadar çok iş yaptı ki tableti aklına bile gelmedi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep ve büyükannesi akşamları ne yapıyordu?",
+    "correct": "Ağaç altında oturup göğe bakıyorlardı",
+    "wrong": [
+     "Bahçedeki fideleri suluyorlardı",
+     "Mutfakta birlikte reçel kaynatıyorlardı",
+     "Kümesteki tavukları besliyorlardı"
+    ],
+    "explanation": "Akşamları evin önündeki ağacın altında oturup yıldızları izliyorlardı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Büyükanne yıldızlarla ilgili hangi bilgiyi verdi?",
+    "correct": "Eskiden yön bulmaya yaradıklarını",
+    "wrong": [
+     "Yaz aylarında daha az göründüklerini",
+     "Şehirde daha parlak olduklarını",
+     "Tümünün aynı büyüklükte olduğunu"
+    ],
+    "explanation": "Büyükanne, eskiden insanların yönlerini yıldızlara bakarak bulduğunu anlattı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep'in fırtınaya bu kadar üzülmesinin nedeni nedir?",
+    "correct": "Emek verdiği fidelerin zarar görmesi",
+    "wrong": [
+     "Fırtınadan çok fazla korkmuş olması",
+     "Evin camlarının kırılmış olması",
+     "Tavukların kümesten kaçıp gitmiş olması"
+    ],
+    "explanation": "Zeynep devrilen fideleri her gün kendisi sulamıştı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Büyükannenin fırtınadan sonraki sözleri hangi tutumu yansıtır?",
+    "correct": "Zorluğa rağmen yeniden işe koyulmayı",
+    "wrong": [
+     "Doğaya karşı sürekli temkinli olmayı",
+     "Kaybedilen şeylere uzun süre üzülmeyi",
+     "Bahçe işlerini başkasına bırakmayı"
+    ],
+    "explanation": "Büyükanne, önemli olanın yeniden başlamak olduğunu söyledi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Zeynep'in eve dönünce balkona domates fidesi dikmesi neyi gösterir?",
+    "correct": "Köyde edindiği ilgiyi sürdürdüğünü",
+    "wrong": [
+     "Annesinin ondan bunu istediğini",
+     "Köydeki fidelerin kuruyup gittiğini",
+     "Balkonun çok boş ve sade kaldığını"
+    ],
+    "explanation": "Zeynep köyde öğrendiklerini şehirde de sürdürmek istedi."
+   }
+  ]
+ },
+ "60": {
+  "title": "Damla Damla Su",
+  "category": "Bilgi/Açıklama",
+  "content": "Yeryüzündeki suyun çok büyük bir kısmı okyanuslarda ve denizlerde bulunur. Ancak bu su tuzludur ve doğrudan içilemez. İçebildiğimiz tatlı su ise dünyadaki toplam suyun yalnızca küçük bir bölümünü oluşturur. Üstelik bu tatlı suyun çoğu kutuplardaki buzullarda donmuş hâldedir. Göllerde, nehirlerde ve yeraltında kullanabileceğimiz su ise çok daha azdır.\n\nBu yüzden suyu dikkatli kullanmak çok önemlidir. Pek çok ülkede insanlar su sıkıntısı çeker. Bazı bölgelerde çocuklar her gün kilometrelerce yürüyerek ailelerine su taşır. Bazı yerlerde yağmur az yağar, bazı yerlerde ise yeraltı suları hızla azalır. Nüfus arttıkça ve havalar ısındıkça bu sorunun daha da büyüyeceği düşünülüyor.\n\nPeki biz evde suyu nasıl koruyabiliriz? İlk adım, gereksiz yere akan suyu durdurmaktır. Dişlerimizi fırçalarken musluğu açık bırakırsak dakikalar içinde litrelerce su boşa gider. Musluğu yalnızca ağzımızı çalkalarken açmak bu kaybı önler. Aynı şey bulaşık yıkarken ve ellerimizi sabunlarken de geçerlidir. Damlayan bir musluk da küçük bir sorun gibi görünür, ama bir yıl boyunca damlayan bir musluk binlerce litre su harcayabilir.\n\nDuş da önemli bir yerdir. Evde kullanılan suyun büyük bir bölümü banyoda harcanır. Uzun duşlar yerine kısa duşlar almak çok su kazandırır. Çamaşır ve bulaşık makinelerini tam dolmadan çalıştırmamak da suyun daha verimli kullanılmasını sağlar. Sebze ve meyveleri yıkadığımız suyu biriktirip saksıdaki bitkileri sulamak için kullanabiliriz.\n\nBahçe sulamak için en uygun zaman sabah erken ya da akşam saatleridir. Öğle sıcağında verilen suyun bir kısmı, bitkilere ulaşmadan buharlaşır. Damla sulama gibi yöntemler ise suyu doğrudan bitkinin köküne ileterek israfı azaltır.\n\nBu adımların her biri küçük görünebilir. Ama bir evdeki herkes bu alışkanlıkları edindiğinde ve bunu milyonlarca ev yaptığında, korunan su miktarı çok büyük olur. Su, bugün de yarın da hepimizin ihtiyacı olan bir kaynaktır. Onu korumak, gelecekteki insanlara da su bırakmak demektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre yeryüzündeki tatlı suyun çoğu nerededir?",
+    "correct": "Kutuplarda donmuş olarak",
+    "wrong": [
+     "Yeraltında birikmiş hâlde",
+     "Göl ve nehirlerde akarken",
+     "Bulutlarda buhar hâlinde"
+    ],
+    "explanation": "Tatlı suyun çoğu kutuplardaki buzullarda donmuş hâldedir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Su sıkıntısının gelecekte artacağı düşüncesi neye dayanır?",
+    "correct": "İnsan sayısının ve sıcaklığın artmasına",
+    "wrong": [
+     "Denizlerin giderek daha tuzlu olmasına",
+     "Buzulların her yıl büyümeye başlamasına",
+     "Evlerde kullanılan musluk sayısına"
+    ],
+    "explanation": "Nüfus arttıkça ve havalar ısındıkça sorunun büyüyeceği düşünülüyor."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Diş fırçalarken su kaybını önlemek için ne önerilir?",
+    "correct": "Musluğu yalnızca çalkalarken açmak",
+    "wrong": [
+     "Dişleri günde bir kez fırçalamak",
+     "Sıcak su yerine soğuk su kullanmak",
+     "Fırçalamayı bir dakikada bitirmek"
+    ],
+    "explanation": "Musluğu sadece ağız çalkalanırken açmak gereksiz akan suyu önler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar damlayan musluk örneğiyle neyi vurgular?",
+    "correct": "Küçük kayıpların zamanla büyüdüğünü",
+    "wrong": [
+     "Muslukların sık sık değiştirilmesini",
+     "Damlayan suyun içilebilir olduğunu",
+     "Tamir işinin çok pahalı olduğunu"
+    ],
+    "explanation": "Bir yıl boyunca damlayan musluk binlerce litre su harcayabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Evde kullanılan suyun büyük bölümü nerede harcanır?",
+    "correct": "Banyoda",
+    "wrong": [
+     "Mutfakta",
+     "Bahçede",
+     "Balkonda"
+    ],
+    "explanation": "Metinde evde kullanılan suyun büyük bölümünün banyoda harcandığı belirtilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sebze ve meyve yıkama suyu nasıl değerlendirilebilir?",
+    "correct": "Saksı bitkilerine verilerek",
+    "wrong": [
+     "Bulaşık makinesine konarak",
+     "Duşta yeniden kullanılarak",
+     "İçme suyu olarak saklanarak"
+    ],
+    "explanation": "Bu su biriktirilip saksıdaki bitkileri sulamak için kullanılabilir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bahçeyi öğle saatinde sulamanın sakıncası nedir?",
+    "correct": "Suyun bir bölümünün havaya karışması",
+    "wrong": [
+     "Bitkilerin köklerinin hızla çürümesi",
+     "Toprağın fazla ıslanıp sertleşmesi",
+     "Damla sulamanın hiç işe yaramaması"
+    ],
+    "explanation": "Öğle sıcağında verilen suyun bir kısmı bitkilere ulaşmadan buharlaşır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragrafta ulaştığı sonuç hangisidir?",
+    "correct": "Bireysel adımlar birleşince büyük etki yapar",
+    "wrong": [
+     "Tek bir evin su tasarrufu yapması yeterlidir",
+     "Su sorunu yalnızca devletlerce çözülebilir",
+     "Küçük alışkanlıkların bir etkisi bulunmaz"
+    ],
+    "explanation": "Milyonlarca ev bu alışkanlıkları edindiğinde korunan su çok büyük olur."
+   }
+  ]
+ },
+ "65": {
+  "title": "Soru Sormayı Öğrenmek",
+  "category": "Hikaye/Kurgu",
+  "content": "Kemal, işe başladığı ilk hafta her sabah aynı korkuyla uyandı: Bir şeyi yanlış yapacak ve herkes onun bu işe uygun olmadığını anlayacaktı. Bir yazılım şirketine stajyer olarak alınmıştı. Ekibindeki herkes ona çok bilgili ve deneyimli görünüyordu.\n\nİkinci gün kendisine verilen küçük bir görevi tamamlayamadı. Saatlerce uğraştı ama kodu çalıştıramadı. Kimseye soramadı, çünkü sorarsa yetersiz görüneceğini düşünüyordu. Akşam eve döndüğünde kendini çok kötü hissediyordu. Belki de bu işi hiç istememeliydi diye düşündü ve o gece pek uyuyamadı.\n\nErtesi sabah ekip lideri Aylin Hanım, Kemal'in yanına oturdu. Görevin nasıl gittiğini sordu. Kemal utanarak sorunu anlattı. Aylin Hanım birkaç dakika içinde hatayı buldu. Sonra Kemal'e gülümsedi ve kendi ilk iş gününü anlattı. O da ilk haftasında hiçbir şey anlamadığını düşünmüş, ama soru sormaktan çekinmişti. “Burada soru sormak bir zayıflık değil, işin bir parçası” dedi.\n\nO günden sonra Kemal takıldığı yerlerde yardım istemeye başladı. Zamanla ekibindeki herkesin, deneyimli olanların bile, birbirine sürekli soru sorduğunu fark etti. Birkaç ay sonra yeni gelen bir stajyer ona bir soru sorduğunda, Kemal sabırla yanına oturdu ve Aylin Hanım'ın sözlerini ona tekrarladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kemal ilk hafta her sabah hangi kaygıyla uyandı?",
+    "correct": "Bir hata yapıp yetersiz görünmek",
+    "wrong": [
+     "İşe geç kalıp azar işitmek",
+     "Ekipten biriyle tartışmaya girmek",
+     "Stajının erkenden sona ermesi"
+    ],
+    "explanation": "Kemal bir şeyi yanlış yapıp işe uygun olmadığının anlaşılmasından korkuyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kemal görevde takıldığında neden kimseye danışmadı?",
+    "correct": "Bilgisiz sanılmaktan çekindiği için",
+    "wrong": [
+     "Ekibin çok meşgul olduğunu gördüğü için",
+     "Görevi kendisinin seçtiği için",
+     "Kodun neredeyse bittiğini sandığı için"
+    ],
+    "explanation": "Kemal sorarsa yetersiz görüneceğini düşünüyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Görevini tamamlayamadığı günün gecesi Kemal'e ne oldu?",
+    "correct": "Pek uyku uyuyamadı",
+    "wrong": [
+     "Erkenden uyudu",
+     "Kodu evde bitirdi",
+     "Aylin Hanım'ı aradı"
+    ],
+    "explanation": "Kemal kendini kötü hissetti ve o gece pek uyuyamadı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Aylin Hanım Kemal'in sorununu ne kadar sürede çözdü?",
+    "correct": "Birkaç dakikada",
+    "wrong": [
+     "Bir saat içinde",
+     "Yarım günde",
+     "Ertesi akşam"
+    ],
+    "explanation": "Aylin Hanım hatayı birkaç dakika içinde buldu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Aylin Hanım'ın kendi ilk iş gününü anlatmasının amacı nedir?",
+    "correct": "Kemal'in yaşadığının olağan olduğunu göstermek",
+    "wrong": [
+     "Kemal'e işi nasıl öğrendiğini övünerek anlatmak",
+     "Kemal'i daha çok çalışması için uyarmak",
+     "Kemal'e yeni bir görev vermeye hazırlanmak"
+    ],
+    "explanation": "Aylin Hanım da ilk haftasında benzer duygular yaşamıştı; bunu anlatarak Kemal'i rahatlattı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Aylin Hanım'ın sözlerine göre ekipte soru sormak nasıl görülür?",
+    "correct": "İşin olağan ve gerekli bir bölümü",
+    "wrong": [
+     "Yalnızca stajyerlere özgü bir hak",
+     "Deneyimsizliğin açık bir belirtisi",
+     "Liderin izniyle yapılan bir şey"
+    ],
+    "explanation": "Aylin Hanım soru sormanın zayıflık değil, işin bir parçası olduğunu söyledi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kemal zamanla ekip hakkında neyi fark etti?",
+    "correct": "Usta olanların da sık sık danıştığını",
+    "wrong": [
+     "Herkesin tek başına çalışmayı sevdiğini",
+     "Deneyimlilerin hiç hata yapmadığını",
+     "Ekibin stajyerlere ilgi göstermediğini"
+    ],
+    "explanation": "Kemal, deneyimli olanlar dahil herkesin birbirine soru sorduğunu fark etti."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Kemal'in yeni stajyere davranışı neyi gösterir?",
+    "correct": "Gördüğü desteği başkasına aktardığını",
+    "wrong": [
+     "Stajyerden sıkıldığını ve onu geçiştirdiğini",
+     "Aylin Hanım'ın yerine geçmek istediğini",
+     "Sorulara cevap vermekten kaçındığını"
+    ],
+    "explanation": "Kemal yeni stajyerin yanına sabırla oturdu ve Aylin Hanım'ın sözlerini ona tekrarladı."
+   }
+  ]
+ },
+ "73": {
+  "title": "Yaşayan Köprüler",
+  "category": "Bilgi/Açıklama",
+  "content": "Uzun yıllar boyunca köprüler, bir yerden bir yere geçmenin en kalıcı yolu olarak görüldü. Ama bazı köprüler yalnızca iki kıyıyı değil, insanların hayatlarını da birbirine bağlar. Bunun en ilginç örneklerinden biri, Hindistan'ın kuzeydoğusundaki yağmur ormanlarında bulunan yaşayan kök köprüleridir.\n\nBu bölge, dünyanın en çok yağmur alan yerlerinden biridir. Yağmur mevsiminde dereler taşar ve tahta köprüler kısa sürede çürüyüp yıkılır. Yörede yaşayan Khasi halkı, bu soruna yüzyıllar önce yaratıcı bir çözüm buldu. Kauçuk ağacının bir türünün havada sarkan köklerini, derenin karşı kıyısına doğru yönlendirmeye başladılar.\n\nKökler önce içi oyulmuş ağaç gövdelerinin ya da bambu çubukların içinden geçirilerek doğru yöne yönlendirilir. Yıllar içinde kökler karşı kıyıya ulaşır ve toprağa tutunur. Sonra yeni kökler de eklenir, birbirine dolanır ve kalınlaşır. Bir köprünün kullanılabilir hâle gelmesi on beş yıl, hatta daha uzun sürebilir.\n\nBu köprülerin en büyük özelliği, zamanla zayıflamak yerine güçlenmeleridir. Ağaç yaşadıkça kökler büyür ve köprü daha sağlam hâle gelir. Bazı köprülerin yüzlerce yıldır kullanıldığı düşünülmektedir. Kuşaklar boyunca her aile, köprünün bakımına katkıda bulunur. Bir köprüyü başlatan kişi çoğu zaman onun bittiğini göremez; köprüden torunları geçer.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yaşayan kök köprüleri nerede bulunur?",
+    "correct": "Hindistan'ın kuzeydoğu ormanlarında",
+    "wrong": [
+     "Hindistan'ın güneyindeki kıyılarda",
+     "Güney Amerika'nın yağmur ormanlarında",
+     "Afrika'nın büyük nehir vadilerinde"
+    ],
+    "explanation": "Bu köprüler Hindistan'ın kuzeydoğusundaki yağmur ormanlarındadır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın bazı köprülerin hayatları da bağladığını söylemesinin anlamı nedir?",
+    "correct": "Toplulukları kuşaklarca birleştirmeleri",
+    "wrong": [
+     "Köprülerin yalnızca iki kıyıyı birleştirmesi",
+     "Köprülerin çok uzun yollar boyunca uzanması",
+     "Köprülerin insan eliyle hızla kurulması"
+    ],
+    "explanation": "Kök köprüleri kuşaklar boyunca ortak emekle büyür ve korunur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Khasi halkının tahta yerine kök köprülere yönelmesinin nedeni nedir?",
+    "correct": "Ahşabın sürekli nemde çabuk bozulması",
+    "wrong": [
+     "Bölgede uygun ağaç bulunmaması",
+     "Kökten köprünün daha çabuk bitmesi",
+     "Tahta köprülerin çok daha pahalı olması"
+    ],
+    "explanation": "Yağmur mevsiminde tahta köprüler kısa sürede çürüyüp yıkılır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Köprüler için hangi ağacın kökleri kullanılır?",
+    "correct": "Bir tür kauçuk ağacının",
+    "wrong": [
+     "Bir tür meşe ağacının",
+     "Bir tür bambu bitkisinin",
+     "Bir tür palmiye ağacının"
+    ],
+    "explanation": "Köprüler, bir kauçuk ağacı türünün havada sarkan kökleriyle yapılır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kökler karşı kıyıya nasıl yönlendirilir?",
+    "correct": "Oyuk gövde ya da bambudan geçirilerek",
+    "wrong": [
+     "Ağır taşlarla bağlanıp suya batırılarak",
+     "Kalın iplerle çekilip ağaçlara asılarak",
+     "Toprağa gömülüp üstü kapatılarak"
+    ],
+    "explanation": "Kökler içi oyulmuş gövdelerin ya da bambu çubukların içinden geçirilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir kök köprüsünün kullanılabilir olması ne kadar sürebilir?",
+    "correct": "15 yıl veya daha uzun",
+    "wrong": [
+     "5 yıl veya daha kısa",
+     "1 yıl veya biraz fazla",
+     "3 ay veya biraz fazla"
+    ],
+    "explanation": "Bir köprünün kullanılabilir hâle gelmesi on beş yıl, hatta daha uzun sürebilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kök köprülerini sıradan köprülerden ayıran en önemli özellik nedir?",
+    "correct": "Yıllar içinde güçlenmeleri",
+    "wrong": [
+     "Yağmurda hiç ıslanmamaları",
+     "Çok kısa sürede yapılmaları",
+     "Bakıma ihtiyaç duymamaları"
+    ],
+    "explanation": "Ağaç yaşadıkça kökler büyür ve köprü güçlenir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son cümle bu köprülerle ilgili hangi düşünceyi öne çıkarır?",
+    "correct": "Bugünkü emeğin geleceğe bırakılan bir miras olduğunu",
+    "wrong": [
+     "Köprü yapımının yalnızca yaşlılara ait bir iş olduğunu",
+     "Torunların köprülerin bakımına hiç katılmadığını",
+     "Köprüyü başlatanın onu kısa sürede bitirdiğini"
+    ],
+    "explanation": "Köprüyü başlatan çoğu zaman bittiğini göremez; ondan torunları yararlanır."
+   }
+  ]
+ },
+ "78": {
+  "title": "Ağır Çanta",
+  "category": "Hikaye/Kurgu",
+  "content": "Mert'in okul çantası çok ağırdı. Her sabah çantayı sırtına alırken zorlanıyordu. Okula vardığında omuzları ağrıyordu. Bir gün babası çantayı kaldırdı ve şaşırdı. “Bu çantada ne var böyle?” diye sordu.\n\nMert çantayı masanın üstüne boşalttı. İçinden bütün ders kitapları, bütün defterler, iki kalem kutusu, bir top, oyuncak arabalar ve eski bir elma çıktı. Mert biraz utandı ve yüzü kızardı. Her gün bütün kitaplarını götürüyordu, çünkü hangi derslerin olduğunu hiç kontrol etmiyordu.\n\nBabası ona ders programını gösterdi. Birlikte ertesi günün derslerine baktılar. Mert yalnızca o günün kitaplarını ve defterlerini çantasına koydu. Oyuncakları masasının çekmecesine kaldırdı. Eski elmayı da çöpe attı. Çanta artık çok daha hafifti.\n\nErtesi sabah Mert çantasını kolayca sırtına aldı. Okula giderken koşabildi bile. Omuzları da hiç ağrımadı. O günden sonra Mert her akşam yatmadan önce çantasını ders programına göre hazırladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Mert okula varınca ne hissediyordu?",
+    "correct": "Omuzlarında ağrı",
+    "wrong": [
+     "Karnında açlık",
+     "Başında ağrı",
+     "Gözünde yorgunluk"
+    ],
+    "explanation": "Mert okula vardığında omuzları ağrıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 1,
+    "text": "Çantadan hangi yiyecek çıktı?",
+    "correct": "Eski bir elma",
+    "wrong": [
+     "Bir dilim ekmek",
+     "Bir paket bisküvi",
+     "Taze bir muz"
+    ],
+    "explanation": "Çantadan kitapların ve oyuncakların yanı sıra eski bir elma çıktı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Mert neden her gün bütün kitaplarını götürüyordu?",
+    "correct": "Günün derslerine bakmadığı için",
+    "wrong": [
+     "Öğretmeni her gün istediği için",
+     "Kitapları çok sevdiği için",
+     "Babası ona söylediği için"
+    ],
+    "explanation": "Mert hangi derslerin olduğunu hiç kontrol etmiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Mert'in yüzünün kızarması neyi gösterir?",
+    "correct": "Mahcup olduğunu",
+    "wrong": [
+     "Çok üşümüş olduğunu",
+     "Çok kızdığını",
+     "Hasta olduğunu"
+    ],
+    "explanation": "Mert çantasındakiler ortaya çıkınca utandı ve yüzü kızardı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mert oyuncaklarını nereye koydu?",
+    "correct": "Masasının çekmecesine",
+    "wrong": [
+     "Babasının dolabına",
+     "Çantasının ön cebine",
+     "Odasının kapı arkasına"
+    ],
+    "explanation": "Mert oyuncakları masasının çekmecesine kaldırdı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babası Mert'e çantayı hazırlamak için ne gösterdi?",
+    "correct": "Ders programını",
+    "wrong": [
+     "Yeni bir çantayı",
+     "Okulun yolunu",
+     "Bir resim kitabını"
+    ],
+    "explanation": "Babası Mert'e ders programını gösterdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ertesi sabah Mert'in koşabilmesinin nedeni nedir?",
+    "correct": "Çantasının hafiflemesi",
+    "wrong": [
+     "Okula geç kalması",
+     "Babasının onu çağırması",
+     "Yeni ayakkabı alması"
+    ],
+    "explanation": "Çanta yalnızca o günün kitaplarıyla hafiflemişti."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öyküden çıkarılabilecek ders hangisidir?",
+    "correct": "Önceden plan yapmak işimizi kolaylaştırır",
+    "wrong": [
+     "Oyuncaklar okula götürülmeye gerek duyar",
+     "Kitapların tümü her gün okula götürülür",
+     "Ağır çanta taşımak insanı çok güçlendirir"
+    ],
+    "explanation": "Mert çantasını programa göre hazırlayınca rahatladı."
+   }
+  ]
+ },
+ "79": {
+  "title": "Örümceğin İpeği",
+  "category": "Bilgi/Açıklama",
+  "content": "Örümcekler, ağlarını kendi vücutlarında ürettikleri ipekle örer. Örümcek ipeği, karnının ucundaki küçük organlardan sıvı olarak çıkar. Hava ile karşılaşınca ve örümcek onu çektikçe sıvı katılaşır ve ince bir iplik hâline gelir. Örümcek bu ipliği bacaklarıyla yönlendirerek ağını adım adım örer.\n\nÖrümcek ipeği bir saç telinden bile çok daha ince olmasına karşın çok dayanıklıdır. Aynı kalınlıktaki bir çelik telden bile daha güçlü olduğu söylenir. Üstelik çok esnektir; gerildiğinde kopmadan uzayabilir. Bu yüzden ağa çarpan bir sinek ağı yırtamaz. Sinek çırpındıkça ağ esner ve onu daha sıkı sarar.\n\nBir örümcek tek bir tür ipek üretmez. Bazı örümcekler yedi farklı ipek üretebilir. Ağın iskeletini oluşturan ipliklerle avı yakalayan yapışkan iplikler farklıdır. Örümcek ağın üzerinde yürürken yapışkan olmayan iplikleri kullanır, böylece kendi ağına yapışmaz. Ayaklarındaki ince tüyler de yapışmayı azaltır. Bazı örümcekler ise eskiyen ağlarını yiyerek ipeği yeniden kullanır.\n\nBilim insanları uzun zamandır örümcek ipeğini inceliyor. Ama örümcekleri bir arada beslemek zordur, çünkü birbirlerini yiyebilirler. Onun gibi güçlü ve hafif bir malzeme üretmeyi başarırlarsa, bu malzemeyi ameliyat ipliklerinden dayanıklı giysilere kadar pek çok alanda kullanabilirler. Küçük bir örümcek, bize doğanın ne kadar ustaca çözümler bulduğunu gösteriyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Örümcek ipeği vücuttan çıktığında nasıldır?",
+    "correct": "Akışkan",
+    "wrong": [
+     "Kupkuru",
+     "Toz gibi",
+     "Buz gibi"
+    ],
+    "explanation": "İpek, örümceğin karnının ucundaki organlardan sıvı olarak çıkar."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sıvının ipliğe dönüşmesini sağlayan nedir?",
+    "correct": "Havaya çıkıp çekilerek uzaması",
+    "wrong": [
+     "Güneşte uzun süre bekletilmesi",
+     "Örümceğin onu ağzıyla çiğnemesi",
+     "Yapraklara sürülüp kurutulması"
+    ],
+    "explanation": "Sıvı hava ile karşılaşınca ve örümcek onu çektikçe katılaşır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Örümcek ipeği neyle karşılaştırılmıştır?",
+    "correct": "Aynı kalınlıkta çelik telle",
+    "wrong": [
+     "Aynı uzunlukta pamuk iplikle",
+     "Aynı ağırlıkta naylon iple",
+     "Aynı genişlikte deri kayışla"
+    ],
+    "explanation": "İpeğin aynı kalınlıktaki çelik telden daha güçlü olduğu söylenir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ağa çarpan sineğin ağı yırtamamasının nedeni nedir?",
+    "correct": "İpeğin esneyip darbeyi karşılaması",
+    "wrong": [
+     "Sineğin çok hafif bir canlı olması",
+     "Örümceğin ağı sürekli onarması",
+     "Ağın çok kalın iplerden yapılması"
+    ],
+    "explanation": "İpek esnektir; gerildiğinde kopmadan uzar ve sineği sarar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı örümcekler kaç farklı ipek üretebilir?",
+    "correct": "7",
+    "wrong": [
+     "2",
+     "4",
+     "12"
+    ],
+    "explanation": "Bazı örümcekler yedi farklı ipek üretebilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Örümcek kendi ağına neden yapışmaz?",
+    "correct": "Yapışmayan iplere basarak yürüdüğü için",
+    "wrong": [
+     "Ağı ördükten sonra hemen terk ettiği için",
+     "Ağını her sabah yeniden ördüğü için",
+     "Ağın tam ortasında hiç durmadığı için"
+    ],
+    "explanation": "Örümcek yapışkan olmayan ipliklerde yürür; ayaklarındaki tüyler de yapışmayı azaltır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Örümcek ipeğinin çok miktarda üretilmesini zorlaştıran nedir?",
+    "correct": "Toplu hâlde bakılmalarının zorluğu",
+    "wrong": [
+     "İpeğin çok çabuk eriyip yok olması",
+     "Örümceklerin çok uzun yaşamaması",
+     "İpeğin yalnızca kışın üretilmesi"
+    ],
+    "explanation": "Örümcekler birbirini yiyebildiği için onları bir arada beslemek zordur."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesinde vurgulanan düşünce nedir?",
+    "correct": "Doğanın bize örnek olacak çözümler sunduğu",
+    "wrong": [
+     "Örümceklerin insanlar için tehlikeli olduğu",
+     "Bilim insanlarının çalışmayı bıraktığı",
+     "Örümcek ipeğinin artık giysilerde kullanıldığı"
+    ],
+    "explanation": "Küçük bir örümcek, doğanın ne kadar ustaca çözümler bulduğunu gösterir."
+   }
+  ]
+ }
+}

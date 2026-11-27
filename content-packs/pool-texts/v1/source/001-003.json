@@ -1,0 +1,335 @@
+{
+ "1": {
+  "title": "Bakkalın Kepengi",
+  "category": "Hikaye/Kurgu",
+  "content": "Murat, emekli olduktan sonraki ilk sabah her zamanki saatte uyandı. Otuz yıl boyunca altıyı çeyrek geçe kalkmıştı; bedeni bunu unutmamıştı. Yatakta bir süre tavana baktı. Saatin tik taklarını hiç bu kadar net duymamıştı. Gidecek bir işi, yetişecek bir servisi yoktu.\n\nMutfağa geçip çay demledi. Pencereden sokağa baktığında, yıllardır önünden geçtiği bakkalın kepengini ilk kez açılırken gördü. Bakkal Halil, kaldırımı süpürüyor, gazeteleri kapının önüne diziyordu.\n\nMurat bir süre izledikten sonra hırkasını giyip aşağı indi. Halil'e günaydın dedi, bir gazete aldı. Halil onu tanıdı ama adını bilmiyordu. Murat da onun adını kapının üstündeki tabeladan okumuştu. Otuz yıl aynı sokakta yaşamışlar, birbirlerine hiç gerçekten selam vermemişlerdi.\n\nErtesi sabah yine indi. Bu kez Halil ona bir sandalye uzattı. Birlikte birer çay içtiler; mahalleyi, değişen fiyatları, çoktan taşınmış eski komşuları konuştular. Halil, sokağın eskiden nasıl olduğunu anlatırken Murat hiç bilmediği şeyler öğrendi.\n\nBir ay sonra Murat'ın sabahları belli bir düzene girmişti. Gazetesini alıyor, çayını içiyor, sonra parka kadar yürüyordu. Erken kalkmayı bırakmamıştı ama artık acele etmiyordu. Emekliliğin bir boşluk değil, yıllardır yanından geçip gittiği şeyleri görmek için bir fırsat olduğunu düşünmeye başlamıştı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Murat emekliliğinin ilk sabahı neden erken uyandı?",
+    "correct": "Yılların alışkanlığı sürdüğü için",
+    "wrong": [
+     "Saatini kurmayı unuttuğu için",
+     "Sokaktan gelen sesle uyandığı için",
+     "Bakkala erken gitmek istediği için"
+    ],
+    "explanation": "Otuz yıl boyunca altıyı çeyrek geçe kalkmıştı; bedeni bu saati unutmamıştı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat pencereden ilk kez neyi gördü?",
+    "correct": "Dükkânın sabah açılışını",
+    "wrong": [
+     "Gazete dağıtıcısının gelişini",
+     "Komşularının işe gidişini",
+     "Servis aracının geçişini"
+    ],
+    "explanation": "Yıllardır önünden geçtiği bakkalın kepenginin açıldığını ilk kez gördü."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Otuz yıl gerçekten selamlaşmamış olmaları Murat hakkında ne gösterir?",
+    "correct": "Koşturmacada çevreyi fark etmediğini",
+    "wrong": [
+     "Halil'le aralarında bir küslük olduğunu",
+     "Murat'ın mahalleye yeni taşındığını",
+     "Bakkalın sık sık kapalı olduğunu"
+    ],
+    "explanation": "Aynı sokakta otuz yıl yaşadıkları hâlde tanışmamışlardı; iş temposu Murat'ın çevresini görmesine izin vermemişti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat bakkalın adını nereden öğrenmişti?",
+    "correct": "Dükkânın tabelasından",
+    "wrong": [
+     "Bir gazete haberinden",
+     "Komşusunun anlattığından",
+     "Halil'in kendi ağzından"
+    ],
+    "explanation": "Halil'in adını kapının üstündeki tabeladan okumuştu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Halil'in ikinci sabah sandalye uzatması neyi gösterir?",
+    "correct": "Murat'la sohbete açık olduğunu",
+    "wrong": [
+     "Dükkânı kapatmak üzere olduğunu",
+     "Murat'ın yorgun göründüğünü",
+     "Gazetelerin o gün geciktiğini"
+    ],
+    "explanation": "Sandalyeyi uzatıp birlikte çay içmeleri, Halil'in yeni tanıştığı komşusuyla vakit geçirmek istediğini gösterir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çay içerken neler konuştular?",
+    "correct": "Semti ve oradan taşınanları",
+    "wrong": [
+     "Emeklilik maaşını ve faturaları",
+     "Futbol maçlarını ve havayı",
+     "Halil'in çocuklarını ve okulu"
+    ],
+    "explanation": "Mahalleyi, değişen fiyatları ve taşınmış eski komşuları konuştular."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bir ay sonra Murat'ın sabahlarında ne değişmişti?",
+    "correct": "Acelesiz bir düzene oturmuştu",
+    "wrong": [
+     "Geç saatte kalkmaya başlamıştı",
+     "Bakkalda çalışmaya başlamıştı",
+     "Yürüyüşlerini tümüyle bırakmıştı"
+    ],
+    "explanation": "Erken kalkmayı sürdürüyordu ama gazete, çay ve yürüyüşten oluşan sabahlarında artık acele etmiyordu."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin vardığı düşünce hangisidir?",
+    "correct": "Yavaşlamak görmediklerimizi gösterir",
+    "wrong": [
+     "Emeklilik insanı yalnızlaştırır",
+     "Erken kalkmak sağlıklı bir alışkanlıktır",
+     "Mahalle bakkalları artık kayboluyor"
+    ],
+    "explanation": "Murat emekliliği bir boşluk değil, yıllarca yanından geçtiği şeyleri görme fırsatı olarak görmeye başlar."
+   }
+  ]
+ },
+ "2": {
+  "title": "Gösterge Hedef Olunca",
+  "category": "Deneme",
+  "content": "Bir hastanenin yönetimi, acil serviste hastaların çok uzun beklediğinden yakınan şikâyetler üzerine yeni bir kural koyar: Hiçbir hasta, kayıttan sonra dört saatten fazla beklemeyecektir. Kural açık, ölçülebilir ve iyi niyetlidir. Birkaç ay sonra raporlar sevindiricidir; dört saati aşan bekleme neredeyse ortadan kalkmıştır. Ancak yakından bakan biri tuhaf bir ayrıntı fark eder. Hastaların önemli bir bölümü, sürenin dolmasına birkaç dakika kala başka bir birime aktarılmakta, orada yeniden beklemeye başlamaktadır. Kâğıt üzerinde süre kısalmış, hastanın koridorda geçirdiği zaman ise pek değişmemiştir.\n\nBu örnek, iktisatçı Charles Goodhart'ın adıyla anılan bir gözlemi çok iyi özetler. Goodhart, bir göstergenin politika hedefi hâline getirildiğinde, eskiden taşıdığı bilgiyi yitirmeye başladığını söylemişti. Gözlem, sonradan daha yalın bir biçimde dolaşıma girdi: Bir ölçü hedefe dönüştüğünde iyi bir ölçü olmaktan çıkar. Sözün gücü, hepimizin gündelik hayatta tanıdığı bir durumu adlandırmasından gelir.\n\nGoodhart bu düşünceyi 1970'lerde, para politikası tartışmaları sırasında ortaya atmıştı. O yıllarda bazı merkez bankaları, ekonomideki para miktarını gösteren belirli ölçülere hedefler koymaya başlamıştı. Gözlenen şey şuydu: Bir ölçü hedef olarak ilan edilince bankalar ve piyasalar davranışlarını ona göre ayarlıyor, ölçü ile ekonominin geri kalanı arasındaki eski ilişki zayıflıyordu. Hemen hemen aynı dönemde sosyal bilimci Donald Campbell da benzer bir uyarıda bulunmuştu. Campbell'a göre bir toplumsal gösterge karar vermede ne kadar çok kullanılırsa, bozulma baskısına o kadar açık hâle geliyor ve izlemesi gereken süreci o kadar çarpıtıyordu. İki düşünür farklı alanlardan yola çıkmış, aynı sonuca varmıştı.\n\nBir göstergenin değeri, ölçmek istediğimiz şeyle arasındaki bağdan doğar. Acil serviste bekleme süresi, hizmetin ne kadar hızlı ve düzenli işlediği hakkında bize bir şey söyler; çünkü normal koşullarda hızlı işleyen bir servis, kısa bekleme süreleri üretir. Fakat süre tek başına ödüllendirildiğinde ya da cezalandırıldığında, insanlar yalnızca hizmeti hızlandırarak değil, sürenin nasıl ölçüldüğünü değiştirerek de sonuca ulaşabilir. Bağ kopar. Gösterge iyileşir, ama ölçmek istediğimiz şey olduğu yerde kalır; hatta kimi zaman, gösterge uğruna harcanan emek yüzünden daha da kötüleşir.\n\nBu davranışı kötü niyetle açıklamak kolaydır, ama çoğu zaman yanıltıcıdır. Hastaneyi aktaran çalışanlar büyük olasılıkla kimseyi kandırmak istemiyordu. Önlerine konan hedefi tutturmaya çalışıyorlardı ve sistem, bunun en kolay yolunu açık bırakmıştı. Göstergeyle oynamak, çoğu zaman bireylerin ahlakından çok, ölçme düzeninin tasarımıyla ilgilidir. Bir kuruluş, çalışanlarından belirli bir sayıyı tutturmalarını istediğinde, aslında onlara o sayıya giden bütün yolları denemelerini de söylemiş olur.\n\nAynı örüntü pek çok alanda karşımıza çıkar. Bir yazılım ekibinin verimliliği yazılan kod satırıyla ölçülürse, programcılar gereksiz uzun kod yazmaya yönelebilir. Bir çağrı merkezinde başarı görüşme süresinin kısalığıyla değerlendirilirse, çalışanlar sorunu çözmeden telefonu kapatmaya başlayabilir. Okullarda yalnızca sınav ortalamaları ödüllendirildiğinde, öğretim sınavda çıkacak soru tiplerine daralabilir. Her durumda sayı yükselir; ama sayının bize anlatması gereken öykü değişmiştir.\n\nBu konuda sıkça anlatılan bir öykü de vardır. Anlatıya göre bir kentte yılanların çoğalmasından tedirgin olan yönetim, getirilen her ölü yılan için para ödemeye karar verir. Bir süre sonra bazı kişilerin, ödül alabilmek için yılan yetiştirmeye başladığı anlaşılır. Ödül kaldırılınca yetiştirilen yılanlar salınır ve sorun eskisinden de büyür. Öykünün tarihsel ayrıntıları tartışmalıdır; yine de ders, kolayca akılda kalacak kadar açıktır. Bir davranışı ödüllendirirken, o ödüle giden en kestirme yolu da ödüllendirmiş oluruz.\n\nPeki bu, ölçmekten vazgeçmemiz gerektiği anlamına mı gelir? Hayır. Ölçüm olmadan bir hizmetin iyileşip iyileşmediğini, kaynakların nereye gittiğini, kimin zorlandığını bilemeyiz. Ölçümsüz yönetim, çoğu zaman en yüksek sesle konuşanın haklı çıktığı bir yönetimdir. Üstelik iyi kurulmuş bir gösterge, kimsenin dikkat etmediği bir sorunu görünür kılarak gerçek bir iyileşmenin de başlangıcı olabilir. Acil servisteki dört saat kuralı da, hiç değilse bekleme süresini herkesin konuştuğu bir konu hâline getirmişti. Sorun ölçmekte değil, tek bir göstergeyi gerçeğin yerine koymaktadır.\n\nBu tuzaktan korunmanın birkaç yolu önerilir. Birincisi, tek bir sayı yerine birbirini dengeleyen birkaç gösterge izlemektir. Acil servis örneğinde bekleme süresinin yanında birimler arası aktarım sayısı ve hasta memnuniyeti de izlenseydi, sorun çok daha erken görülürdü. İkincisi, göstergeleri zaman zaman değiştirmek ya da ayrıntılarını önceden ilan etmemektir; böylece sistemi ona göre ayarlamak zorlaşır. Üçüncüsü, sayıların yanında nitel bilgiye de yer açmaktır; çünkü bazı değerler, en dikkatli kurulmuş göstergelere bile sığmaz: Sahaya gitmek, çalışanlarla ve hizmeti alanlarla konuşmak, raporun göstermediğini görmenin hâlâ en güvenilir yoludur.\n\nBelki de en önemlisi, göstergenin bir araç olduğunu unutmamaktır. Sayılar dünyayı anlamamıza yardım eden birer pencere gibidir. Pencereyi silip parlatmak, dışarıdaki manzarayı değiştirmez. Bir kuruluş, sayıları iyileştirme çabasını gerçek işi iyileştirme çabasından ayırt edebildiği ölçüde ölçmeden yararlanır. Aksi hâlde raporlar her yıl biraz daha güzelleşirken, koridordaki hasta aynı sandalyede beklemeye devam eder.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yeni kuraldan birkaç ay sonra raporlar ne gösterdi?",
+    "correct": "Dört saat sınırının tutturulduğunu",
+    "wrong": [
+     "Şikâyetlerin iki katına çıktığını",
+     "Hastaların başka hastaneye gittiğini",
+     "Çalışan sayısının hızla azaldığını"
+    ],
+    "explanation": "Raporlara göre dört saati aşan bekleme neredeyse ortadan kalkmıştı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hastaları başka birime aktarmak sorunu neden çözmedi?",
+    "correct": "Koridorda geçen süre kısalmadığı için",
+    "wrong": [
+     "Aktarılan birimlerde doktor olmadığı için",
+     "Kural yalnız gece uygulandığı için",
+     "Raporlar baştan yanlış hesaplandığı için"
+    ],
+    "explanation": "Süre kâğıt üzerinde kısaldı; hasta öbür birimde yeniden beklediği için koridorda geçen zaman pek değişmedi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Goodhart bu düşünceyi hangi tartışmalar sırasında ortaya attı?",
+    "correct": "Merkez bankası hedefleri üzerine",
+    "wrong": [
+     "Sağlık hizmeti reformlarında",
+     "Okul sınavları üzerine çalışırken",
+     "Yazılım verimliliğini incelerken"
+    ],
+    "explanation": "1970'lerde merkez bankalarının para miktarı ölçülerine hedef koyduğu dönemde ortaya attı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Metne göre bir gösterge hangi durumda değerini yitirir?",
+    "correct": "Ölçtüğü şeyle bağı koptuğunda",
+    "wrong": [
+     "Çok sık ve hızlı hesaplandığında",
+     "Kamuoyuna duyurulmadığında",
+     "Birden fazla birimce izlendiğinde"
+    ],
+    "explanation": "Göstergenin değeri ölçülen şeyle bağından gelir; sonuç ölçme biçimi değiştirilerek tutturulursa bu bağ kopar."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar göstergeyle oynamayı nasıl açıklar?",
+    "correct": "Ölçme düzeninin doğal bir sonucu olarak",
+    "wrong": [
+     "Çalışanların ahlaki zayıflığı olarak",
+     "Yöneticilerin bilinçli bir hilesi olarak",
+     "Kaçınılmaz bir hesap hatası olarak"
+    ],
+    "explanation": "Yazara göre bu davranış çoğu zaman bireylerin ahlakından değil, hedefe giden kolay yolu açık bırakan ölçme düzeninden kaynaklanır."
+   },
+   {
+    "p": 7,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yılan öyküsünün metindeki işlevi nedir?",
+    "correct": "Ödülün yan yolları da beslediğini göstermek",
+    "wrong": [
+     "Kentlerdeki yılan sorununun boyutunu anlatmak",
+     "Öykünün tarihsel doğruluğunu kanıtlamak",
+     "Hayvanları korumanın önemini vurgulamak"
+    ],
+    "explanation": "Öykü, bir davranışı ödüllendirirken o ödüle giden kestirme yolun da ödüllendirildiğini somutlaştırır."
+   },
+   {
+    "p": 9,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yazarın tuzaktan korunmak için önerdiği yollardan biri hangisidir?",
+    "correct": "Birkaç göstergeyi birlikte takip etmek",
+    "wrong": [
+     "Bütün göstergeleri kamuya açıklamak",
+     "Yalnızca tek bir sayıya odaklanmak",
+     "Ölçme işini tümüyle dış kuruma bırakmak"
+    ],
+    "explanation": "Tek bir sayı yerine birbirini dengeleyen birkaç göstergenin izlenmesini önerir."
+   },
+   {
+    "p": 10,
+    "type": 3,
+    "bloom": 5,
+    "text": "Pencere benzetmesiyle anlatılmak istenen nedir?",
+    "correct": "Sayıyı düzeltmek gerçeği değiştirmez",
+    "wrong": [
+     "Raporlar her yıl daha zor okunur",
+     "Göstergeler çoğu zaman yanıltıcıdır",
+     "Nitel bilgi sayılardan daha değersizdir"
+    ],
+    "explanation": "Pencereyi parlatmak manzarayı değiştirmediği gibi, göstergeyi iyileştirmek de asıl işi iyileştirmez."
+   }
+  ]
+ },
+ "3": {
+  "title": "Saçak Altındaki Çamur Yuva",
+  "category": "Bilgi/Açıklama",
+  "content": "Kentlerde yaşayan pek çok kuş, yuvasını ağaçlara değil binalara yapar. Kırlangıçlar bunların en bilinenlerindendir. Uzun, çatallı kuyrukları ve hızlı uçuşlarıyla kolayca tanınırlar. İlkbaharda sıcak ülkelerden döner, çoğu zaman bir önceki yıl kullandıkları yuvayı yeniden bulurlar.\n\nKırlangıç yuvası çamurdan yapılır ve dışarıdan bakınca küçük, yarım bir kâseye benzer. Kuşlar gagalarıyla dere kenarından ya da yağmur sonrası oluşan su birikintilerinden küçük çamur topakları toplar. Bu topakları saçak altına, bir duvarın köşesine tek tek yapıştırırlar. Çamurun arasına ince otlar ve tüyler katarlar. Böylece yuva kuruduğunda dağılmaz. Kuşlar bir katı kurumadan üstüne yenisini eklemez; bu yüzden iş birkaç gün sürer. Bir yuvanın bitmesi için yüzlerce, bazen binden fazla çamur topağı gerekir.\n\nYuvanın yeri rastgele seçilmez. Saçak, yuvayı yağmurdan korur. Yüksek bir duvar da yavruları kedilerden ve başka avcılardan uzak tutar. Bu yüzden kırlangıçlar aynı binaya yıllarca geri döner. Eski bir yuvayı onarmak, yenisini baştan yapmaktan çok daha az emek ister.\n\nYavrular yumurtadan çıktıktan sonra anne ve baba kırlangıç gün boyu uçarak sinek ve küçük böcek yakalar. Bir yaz günü yuvaya yüzlerce kez yiyecek taşıyabilirler. Yavrular birkaç hafta içinde tüylenir ve uçmayı öğrenir. İlk uçuşlarından sonra da bir süre yuvaya dönüp geceyi orada geçirirler.\n\nSonbahar gelince kırlangıçlar yeniden uzun bir yolculuğa çıkar. Saçak altında boş kalan yuva ise ertesi baharı bekler. Bir binada kırlangıç yuvası görürseniz onu bozmamak gerekir. O yuva, belki de birkaç ay sonra binlerce kilometre öteden dönen aynı kuşları yeniden ağırlayacaktır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kırlangıçlar ilkbaharda ne yapar?",
+    "correct": "Göç ettikleri yerden dönerler",
+    "wrong": [
+     "Yeni bir ülkeye taşınırlar",
+     "Kış uykusundan uyanırlar",
+     "Ağaç dallarında yuva kurarlar"
+    ],
+    "explanation": "İlkbaharda sıcak ülkelerden döner, çoğu zaman eski yuvalarını yeniden bulurlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yuvaya ince otlar ve tüyler neden katılır?",
+    "correct": "Kuruyunca dağılmaması için",
+    "wrong": [
+     "Yuvaya yağmur girmesin diye",
+     "Yuva güzel görünsün diye",
+     "Çamur hızlı kurusun diye"
+    ],
+    "explanation": "Çamurun arasına katılan otlar ve tüyler, yuva kuruduğunda dağılmasını önler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bir yuvanın yapımı neden birkaç gün sürer?",
+    "correct": "Her katın önce kuruması gerektiği için",
+    "wrong": [
+     "Çamur bulmak çok zor olduğu için",
+     "Kuşlar yalnız sabahları çalıştığı için",
+     "Yuva oldukça büyük yapıldığı için"
+    ],
+    "explanation": "Kuşlar bir kat kurumadan üstüne yenisini eklemez; bu yüzden iş günlere yayılır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kırlangıçların yıllarca aynı binaya dönmesinin bir nedeni nedir?",
+    "correct": "Hazır yuvayı kullanmak kolay",
+    "wrong": [
+     "Başka binalarda saçak yoktur",
+     "Kediler yeni binalarda yaşar",
+     "Çamur yalnız orada bulunur"
+    ],
+    "explanation": "Eski bir yuvayı onarmak, yenisini baştan yapmaktan çok daha az emek ister."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yüksek bir duvar yuvayı neye karşı korur?",
+    "correct": "Avcı hayvanlara",
+    "wrong": [
+     "Sert rüzgârlara",
+     "Yağmur sularına",
+     "Yazın sıcağına"
+    ],
+    "explanation": "Yüksek duvar yavruları kedilerden ve başka avcılardan uzak tutar; yağmura karşı saçak korur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Anne ve baba kırlangıç yavruları neyle besler?",
+    "correct": "Uçarken yakaladıkları böceklerle",
+    "wrong": [
+     "Dereden tuttukları balıklarla",
+     "Bahçelerden topladıkları tohumlarla",
+     "Ağaçlardaki küçük meyvelerle"
+    ],
+    "explanation": "Gün boyu uçarak sinek ve küçük böcek yakalarlar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yavruların ilk uçuştan sonra da geceyi yuvada geçirmesi neyi gösterir?",
+    "correct": "Yuvayı hâlâ evleri saydıklarını",
+    "wrong": [
+     "Uçmayı henüz hiç bilmediklerini",
+     "Annelerinin onları çağırdığını",
+     "Kışı da yuvada geçireceklerini"
+    ],
+    "explanation": "Uçmayı öğrenseler de bir süre yuva onların güvenli barınağı olmaya devam eder."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 4,
+    "text": "Yazar kırlangıç yuvalarını neden bozmamak gerektiğini söyler?",
+    "correct": "Sahipleri baharda dönüp kullanacağı için",
+    "wrong": [
+     "Yuvalar binayı yağmurdan koruduğu için",
+     "Çamur yuvalar çok pahalı olduğu için",
+     "Yuvayı bozmak hiç de kolay olmadığı için"
+    ],
+    "explanation": "Boş kalan yuva ertesi baharı bekler; birkaç ay sonra aynı kuşları yeniden ağırlayabilir."
+   }
+  ]
+ }
+}

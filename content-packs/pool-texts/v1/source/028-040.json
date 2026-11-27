@@ -1,0 +1,335 @@
+{
+ "28": {
+  "title": "Fincandaki Görünmeyen Su",
+  "category": "Bilgi/Açıklama",
+  "content": "Sabah içtiğimiz bir fincan kahvenin ne kadar su gerektirdiğini sorsak, çoğumuz fincanı dolduran suyu düşünürüz. Oysa o fincanın arkasında çok daha büyük bir su miktarı vardır. Kahve ağacının yetişmesi için gereken yağmur ve sulama suyu, çekirdeklerin işlenmesinde kullanılan su, paketleme ve taşıma sırasında harcanan su hesaba katıldığında, tek bir fincan kahvenin arkasında yüz litreyi aşan bir su bulunduğu hesaplanıyor. Bu görünmeyen suya sanal su adı veriliyor; bir ürünün ya da kişinin bu yolla tükettiği toplam suya ise su ayak izi deniyor.\n\nKavram, 1990'ların başında İngiliz coğrafyacı John Anthony Allan tarafından ortaya atıldı. Allan, su sıkıntısı çeken Orta Doğu ülkelerinin bu sıkıntıyı nasıl idare ettiğini incelerken ilginç bir şey fark etti. Bu ülkeler, kendi topraklarında yetiştirmek için çok su gerektirecek tahılların bir kısmını dışarıdan satın alıyordu. Böylece aslında o tahılların yetişmesi için gereken suyu da, ürünle birlikte ithal etmiş oluyorlardı. Su bir ülkeden ötekine borularla değil, buğday çuvallarıyla taşınıyordu. Allan bu çalışmaları nedeniyle 2008 yılında Stockholm Su Ödülü'ne layık görüldü; kavram da kısa sürede su politikası tartışmalarının bir parçası hâline geldi.\n\nSanal su kavramı, bir ürünün üretim zincirinin tamamında kullanılan suyu görünür kılar. Ürünlere göre bu miktar büyük farklılıklar gösterir. Bir kilogram buğday için gereken su, bir kilogram sebze için gerekenden çok daha fazladır. Hayvansal ürünlerde ise miktar daha da artar, çünkü hayvanların yediği yemin yetiştirilmesi için gereken su da hesaba katılır. Bu nedenle bir kilogram sığır eti için hesaplanan su, aynı miktardaki tahıl için hesaplanandan kat kat yüksektir. Giyim de, pek çoğumuzun aklına gelmese de, bu hesabın dışında değildir. Pamuklu bir tişörtün arkasında, pamuğun sulanmasından kumaşın boyanmasına kadar binlerce litre su bulunabilir.\n\nBu hesapların hepsinde kullanılan suyun aynı türden olmadığını da belirtmek gerekir. Araştırmacılar suyu genellikle üç gruba ayırır. Yağmurdan gelen ve toprakta tutulan su yeşil su olarak adlandırılır. Nehirlerden, göllerden ya da yeraltından çekilip sulamada kullanılan su mavi sudur. Üretim sırasında kirlenen suyu temizlemek için gereken su miktarı ise gri su olarak hesaplanır. Yağmurla yetişen bir ürün ile kurak bir bölgede yeraltı suyu çekilerek sulanan bir ürün, toplam su miktarları aynı olsa bile çevreye çok farklı yükler bindirir.\n\nBu ayrım, sanal su tartışmasının en önemli noktalarından birini gösterir. Bir ürünün su ayak izinin büyük olması tek başına bir sorun değildir; önemli olan suyun nereden ve hangi koşullarda alındığıdır. Bol yağış alan bir bölgede yetişen bir ürünün suyu başka bir kullanıma ayrılamayacak yağmur sudur. Kurak bir bölgede yeraltı sularını tüketerek yetiştirilen bir ürün ise, o bölgenin geleceğini doğrudan etkileyebilir. Bazı ülkeler, su sıkıntısı yaşadıkları hâlde suyu yoğun tüketen ürünleri yetiştirip dışarıya satarak kendi su kaynaklarını farkında olmadan ihraç ediyor.\n\nSanal su kavramı, bireysel tercihlerimiz için de bir ipucu sunuyor. Bir ürünü alırken onun arkasındaki suyu düşünmek, israfın yalnızca musluğu açık bırakmak olmadığını hatırlatıyor. Çöpe atılan her yiyecek, onu yetiştirmek için harcanan suyun da boşa gitmesi demek. Bu yüzden yiyecek israfını azaltmak, su tasarrufunun belki de en etkili yollarından biri.\n\nBu bakış açısıyla gündelik su tüketimimize baktığımızda tablo değişir. Banyoda, mutfakta ve temizlikte kullandığımız su, bir kişinin bir günde tükettiği toplam suyun yalnızca küçük bir bölümünü oluşturur. Asıl büyük pay, yediğimiz yiyeceklerin, giydiğimiz giysilerin ve kullandığımız eşyaların arkasında saklıdır. Dişlerimizi fırçalarken musluğu kapatmak elbette önemlidir; ama kısa bir duşla tasarruf edilen su, bir öğünde israf edilen yiyeceğin arkasındaki suyun yanında oldukça küçük kalabilir.\n\nYine de bu hesapların sınırlarını bilmek gerekiyor. Sanal su miktarları, kullanılan yöntemlere ve bölgelere göre önemli ölçüde değişen tahminlerdir. Tek bir sayıya bakarak bir ürünü iyi ya da kötü ilan etmek yanıltıcı olabilir; aynı ürün, farklı bir iklimde ve farklı yöntemlerle çok daha az suyla da üretilebilir. Kavramın asıl değeri, kesin sayılar vermesinden çok, gözden kaçırdığımız bir bağlantıyı, yani tabağımızdaki yiyecekle uzaktaki bir nehir arasındaki ilişkiyi görmemizi sağlamasında yatıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Metne göre sanal su neyi ifade eder?",
+    "correct": "Üretim zincirinde harcanan gizli su",
+    "wrong": [
+     "Musluktan tüketilen günlük içme suyu",
+     "Bulutlarda taşınan ve yağmayan su",
+     "Şişelerde satılan arıtılmış kaynak suyu"
+    ],
+    "explanation": "Bir ürünün yetiştirilmesinden taşınmasına kadar kullanılan görünmeyen suya sanal su denir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Allan'a göre tahıl satın alan ülkeler aslında neyi de satın almış olur?",
+    "correct": "O ürün için gereken suyu",
+    "wrong": [
+     "Yeni tarım yöntemlerini",
+     "Başka ülkelerin iş gücünü",
+     "Ürünün yetiştiği toprağı"
+    ],
+    "explanation": "Tahılı dışarıdan alan ülke, onu yetiştirmek için gereken suyu da ürünle birlikte almış olur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Allan 2008'de hangi ödüle layık görüldü?",
+    "correct": "Stockholm Su Ödülü",
+    "wrong": [
+     "Nobel Ekonomi Ödülü",
+     "Dünya Çevre Ödülü",
+     "Avrupa Bilim Ödülü"
+    ],
+    "explanation": "Allan bu çalışmaları nedeniyle 2008'de Stockholm Su Ödülü'nü aldı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hayvansal ürünlerin sanal su miktarı neden yüksektir?",
+    "correct": "Hayvan yeminin suyu da eklendiği için",
+    "wrong": [
+     "Hayvanlar çok fazla su içtiği için",
+     "Et pişirilirken su harcandığı için",
+     "Ahırlar her gün bol suyla yıkandığı için"
+    ],
+    "explanation": "Hayvanların yediği yemin yetiştirilmesi için gereken su da hesaba katılır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nehirlerden ya da yeraltından çekilip sulamada kullanılan suya ne ad verilir?",
+    "correct": "Mavi su",
+    "wrong": [
+     "Yeşil su",
+     "Gri su",
+     "Beyaz su"
+    ],
+    "explanation": "Yağmur suyu yeşil, sulamada kullanılan su mavi, kirliliği temizlemek için gereken su gri su olarak adlandırılır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazara göre ayak izinin büyüklüğünden daha önemli olan nedir?",
+    "correct": "Suyun hangi koşulda alındığı",
+    "wrong": [
+     "Ürünün ne kadar pahalı olduğu",
+     "Ürünün hangi ülkede satıldığı",
+     "Suyun kaç kez kullanıldığı"
+    ],
+    "explanation": "Yağmur suyuyla yetişen ürün ile kurak bölgede yeraltı suyunu tüketen ürün çevreye çok farklı yük bindirir."
+   },
+   {
+    "p": 7,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kısa duş örneğiyle yazar neyi anlatmak ister?",
+    "correct": "Asıl tüketimin ürünlerde saklı olduğunu",
+    "wrong": [
+     "Duşun en çok su harcayan iş olduğunu",
+     "Kişisel tasarrufun tümüyle gereksiz olduğunu",
+     "Banyo suyunun geri kazanılabileceğini"
+    ],
+    "explanation": "Ev içi kullanım toplamın küçük bir bölümüdür; büyük pay yiyecek, giysi ve eşyaların arkasındadır."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazara göre kavramın asıl değeri nedir?",
+    "correct": "Gözden kaçan bağı görünür kılması",
+    "wrong": [
+     "Her ürün için kesin sayılar vermesi",
+     "Kötü ürünleri kolayca ayırt etmesi",
+     "Su ticaretini tümüyle durdurması"
+    ],
+    "explanation": "Sayılar tahmindir; kavramın değeri tabaktaki yiyecekle uzaktaki nehir arasındaki ilişkiyi göstermesidir."
+   }
+  ]
+ },
+ "29": {
+  "title": "Önceden İşaretli Kutu",
+  "category": "Deneme",
+  "content": "Yeni bir telefon aldığınızda ayarların çoğunu hiç değiştirmeden kullanmaya başlarsınız. Ekran parlaklığı, bildirim sesleri, gizlilik seçenekleri; hepsi üreticinin sizin için önceden seçtiği biçimde kalır. Bir iş yerinde emeklilik planına otomatik olarak kaydedilen çalışanların çoğu, yıllar boyunca bu kaydı değiştirmez. Bir web sitesinde önceden işaretlenmiş bir kutu, kullanıcıların büyük kısmı tarafından olduğu gibi bırakılır. Bu durumların ortak noktası, davranış bilimcilerin varsayılan seçenek etkisi dediği güçlü bir eğilimdir: İnsanlar, kendileri için önceden seçilmiş olan seçeneği büyük ölçüde değiştirmeden kabul eder.\n\nBu etkinin en çok tartışılan örneklerinden biri organ bağışıdır. Bazı ülkelerde vatandaşlar organ bağışçısı olmak için ayrıca başvurmak zorundadır; başvurmayan kişi bağışçı sayılmaz. Bazı ülkelerde ise herkes bağışçı kabul edilir ve istemeyen kişinin bunu bildirmesi gerekir. 2000'li yılların başında yapılan bir karşılaştırma, kültürel olarak birbirine yakın ülkeler arasında bile kayıtlı bağışçı oranlarının bu tek kurala bağlı olarak çarpıcı biçimde farklılaştığını gösterdi. Bağışı varsayılan kabul eden ülkelerde oranlar çok yüksekti, ayrıca başvuru isteyen ülkelerde ise oldukça düşük kalıyordu. İnsanların organ bağışına dair görüşleri bu kadar farklı değildi; değişen, yalnızca kimin harekete geçmesi gerektiğiydi. Kayıtlı bağışçı sayısının gerçek bağış sayısına nasıl yansıdığı ise ailelerin onayı ve sağlık sisteminin işleyişi gibi başka etkenlere de bağlıydı; bu yüzden araştırmacılar sonuçları dikkatle yorumlamak gerektiğini vurguladı.\n\nVarsayılan seçeneklerin bu kadar güçlü olmasının birkaç nedeni vardır. İlki, bir seçimi değiştirmenin çaba gerektirmesidir. Formu bulmak, okumak, doldurmak küçük de olsa bir zahmettir ve bu zahmet, insanların ertelemesine yol açar. İkincisi, varsayılan seçenek çoğu zaman bir öneri gibi algılanır. Bir kurumun bir seçeneği önceden işaretlemesi, insanlara onun makul ya da yaygın tercih olduğu izlenimini verir. Üçüncüsü, insanlar kayıplara kazançlardan daha fazla önem verme eğilimindedir. Varsayılandan ayrılmak, elde olanı kaybetmek gibi hissettirebilir. Üstelik değişikliğin sonucu kötü çıkarsa, kişi bundan kendini sorumlu tutar; varsayılanı kabul etmek ise sorumluluğu bir ölçüde başkasına bırakmak gibi gelir.\n\nKarar yorgunluğu da bu etkiyi güçlendirir. Gün boyunca verdiğimiz sayısız küçük karar, zihinsel enerjimizi tüketir. Yorulduğumuzda, karmaşık bir seçimi düşünmek yerine önümüzde hazır duran seçeneği kabul etmeye daha yatkın oluruz. Bir alışveriş sitesinin ödeme sayfasında, uzun bir formun sonunda karşımıza çıkan ek bir sigorta kutusu, belki de bu yüzden işaretli bırakılır. Günün sonunda yapılan alışverişlerde ya da yoğun bir iş gününün ardından doldurulan formlarda, insanların ayrıntılara daha az dikkat ettiği bilinir.\n\nVarsayılan seçeneğin gücü, onu tasarlayanlara büyük bir sorumluluk yükler. Bu güç, insanların kendi uzun vadeli çıkarlarına uygun davranmalarına yardım etmek için kullanılabilir. Çalışanları emeklilik planına otomatik olarak kaydeden ama çıkmak isteyenlere kolay bir yol bırakan şirketler, bu yöntemle birikim oranlarını belirgin biçimde artırmıştır. Aynı güç, kullanıcıların farkında olmadan istemedikleri hizmetlere abone olması, kişisel verilerini paylaşması ya da gereksiz ödemeler yapması için de kullanılabilir. Bu ikinci tür tasarımlara bazen karanlık örüntüler adı verilir.\n\nVarsayılan seçeneklerin etkisi enerji ve beslenme gibi alanlarda da gözlendi. Bazı bölgelerde elektrik sağlayıcıları, yenilenebilir kaynaklardan üretilen ve biraz daha pahalı olan tarifeyi varsayılan yaptığında, müşterilerin büyük çoğunluğunun bu tarifede kaldığı görüldü. Benzer biçimde bazı yemekhanelerde sebzeli yemeklerin tezgâhın başına, tatlıların ise sonuna konması, kimseye bir şey yasaklanmadan seçimleri değiştirebildi. İnsanlar hâlâ istediklerini seçebiliyordu; yalnızca önlerine ilk çıkan seçenek değişmişti.\n\nBu tür yöntemlere, 2008'de yayımlanan ve geniş yankı uyandıran bir kitabın ardından dürtme adı verildi. Kitabın yazarları, iktisatçı Richard Thaler ve hukukçu Cass Sunstein, kamu kurumlarının insanları yasaklarla zorlamak yerine seçim ortamını akıllıca düzenleyerek daha iyi kararlara yönlendirebileceğini savundu. Bu yaklaşım pek çok ülkede kamu politikalarına girdi; bazı hükümetler bu alanda çalışan özel birimler bile kurdu. Eleştirmenler ise kimin neyin \"daha iyi\" olduğuna karar vereceğini sordu. Onlara göre insanları farkında olmadıkları yollarla yönlendirmek, iyi niyetle yapılsa bile özerkliklerine saygısızlık olabilirdi. Savunucular, seçim ortamının zaten hiçbir zaman tarafsız olmadığını, bu yüzden onu bilinçli tasarlamanın daha dürüst olduğunu söyledi.\n\nBu nedenle tartışma, varsayılan seçeneklerin kullanılıp kullanılmaması üzerine değildir; çünkü bir seçeneği varsayılan yapmamak da bir tercihtir. Hiçbir kutuyu işaretlemeyen bir form da insanları belirli bir yöne iter. Asıl soru, varsayılanın kimin çıkarına göre belirlendiği ve değiştirmenin ne kadar kolay olduğudur. İyi tasarlanmış bir sistem, insanların büyük çoğunluğunun isteyeceği seçeneği varsayılan yapar, ama farklı düşünenlere de açık ve kolay bir çıkış sunar.\n\nBireyler olarak bu etkiden tümüyle kurtulmamız mümkün değildir; zaten her ayarı tek tek düşünmek de mümkün olmazdı. Ama önemli kararlarda, karşımıza hazır çıkan seçeneğin bilinçli bir tercih mi yoksa yalnızca bir başlangıç noktası mı olduğunu sormak, küçük bir alışkanlık olarak büyük fark yaratabilir. Varsayılanı bazen tam da doğru seçenek olduğu için kabul ederiz; önemli olan bunu bilerek yapmaktır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Varsayılan seçenek etkisi nedir?",
+    "correct": "Hazır seçeneği olduğu gibi bırakmak",
+    "wrong": [
+     "Her ayarı tek tek yeniden düzenlemek",
+     "En pahalı seçeneği bilerek tercih etmek",
+     "Seçenekler arasında kararsız kalmak"
+    ],
+    "explanation": "İnsanlar kendileri için önceden seçilmiş seçeneği büyük ölçüde değiştirmeden kabul eder."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Organ bağışı karşılaştırmasında oranları farklılaştıran neydi?",
+    "correct": "Başvuru yükünün kimde olduğu",
+    "wrong": [
+     "Halkın organ bağışına bakış açısı",
+     "Ülkelerin sağlık bütçelerinin farkı",
+     "Ailelerin inanç ve görüşleri"
+    ],
+    "explanation": "Görüşler benzerdi; değişen, bağışçı olmak mı yoksa olmamak mı için başvurmak gerektiğiydi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Varsayılan seçeneğin gücünün nedenlerinden biri hangisidir?",
+    "correct": "Başka bir seçime geçmenin zahmeti",
+    "wrong": [
+     "Seçeneklerin çoğunun ücretsiz olması",
+     "Formların yasal zorunluluk olması",
+     "İnsanların teknolojiyi sevmemesi"
+    ],
+    "explanation": "Formu bulmak, okumak, doldurmak küçük bir zahmettir ve insanlar ertelemeye eğilimlidir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Varsayılandan ayrılmak neden kayıp gibi hissettirebilir?",
+    "correct": "Elde olanı yitirmek gibi geldiği için",
+    "wrong": [
+     "Her değişiklik ek ücrete bağlı olduğu için",
+     "Kurumlar değişikliği cezalandırdığı için",
+     "Eski ayarlar silinip kaybolduğu için"
+    ],
+    "explanation": "İnsanlar kayıplara kazançlardan fazla önem verir; varsayılandan ayrılmak elde olanı kaybetmek gibi gelir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Karar yorgunluğu varsayılan etkisini nasıl güçlendirir?",
+    "correct": "Yorgunken hazır seçeneğe yönelmemiz",
+    "wrong": [
+     "Yorgunken daha çok araştırma yapmamız",
+     "Yorgunluğun dikkatimizi keskinleştirmesi",
+     "Yorgunken hiçbir karar vermememiz"
+    ],
+    "explanation": "Zihinsel enerji tükenince karmaşık seçimi düşünmek yerine önümüzdeki hazır seçeneği kabul ederiz."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Emeklilik planı örneğinde şirketler birikimi nasıl artırdı?",
+    "correct": "Otomatik kaydedip çıkışı kolay tutarak",
+    "wrong": [
+     "Çalışanlara her ay ek ikramiye ödeyerek",
+     "Planı tümüyle zorunlu hâle getirerek",
+     "Maaşları belirli oranda artırarak"
+    ],
+    "explanation": "Çalışanları otomatik kaydedip çıkmak isteyenlere kolay bir yol bıraktılar."
+   },
+   {
+    "p": 7,
+    "type": 2,
+    "bloom": 5,
+    "text": "Eleştirmenlere göre dürtme yaklaşımının sorunu nedir?",
+    "correct": "Gizli yönlendirmenin özerkliği zedelemesi",
+    "wrong": [
+     "Yasakların yeterince sert olmaması",
+     "Yöntemin devlete çok pahalıya mal olması",
+     "İnsanların seçenek sayısının fazla artması"
+    ],
+    "explanation": "İnsanları farkında olmadıkları yollarla yönlendirmek, iyi niyetle bile özerkliğe saygısızlık olabilir."
+   },
+   {
+    "p": 9,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son önerisi nedir?",
+    "correct": "Önemli kararlarda hazır seçeneği sorgulamak",
+    "wrong": [
+     "Bütün varsayılan ayarları her gün değiştirmek",
+     "Varsayılan seçeneklere hiç güvenmemek",
+     "Kararları tümüyle başkalarına bırakmak"
+    ],
+    "explanation": "Her ayarı düşünmek mümkün değildir; ama önemli kararlarda hazır seçeneğin bilinçli bir tercih olup olmadığını sormak gerekir."
+   }
+  ]
+ },
+ "40": {
+  "title": "Virajdaki Işık",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulun robotik takımı, bölge yarışmasına üç hafta kala büyük bir sorunla karşılaştı. Aylardır üzerinde çalıştıkları robot, deneme pistinde her seferinde aynı noktada yolunu şaşırıyordu. Pistin ortasındaki keskin virajda robot, siyah çizgiyi izlemek yerine düz gidiyor ve pistin dışına çıkıyordu. Takım, dokuzuncu ve onuncu sınıflardan beş öğrenciden oluşuyordu. Robotu sıfırdan kendileri tasarlamışlardı: iki motorlu, dört tekerlekli, önünde zemindeki çizgiyi okuyan bir ışık algılayıcısı bulunan küçük bir araç. Yarışmada robotların, siyah bir çizgiyle çizilmiş karmaşık bir parkuru en kısa sürede ve hiç dışarı çıkmadan tamamlaması gerekiyordu. Aylardır okuldan sonra laboratuvarda kalıyor, hafta sonları bile çalışıyorlardı. Takımın kaptanı Ela, sorunun yazılımda olduğundan emindi. Mekanik tasarımdan sorumlu Arda ise tekerleklerin kaydığını düşünüyordu. İkisi günlerce tartıştı; biri yazılımı değiştiriyor, öbürü tekerlekleri söküp yeniden takıyordu. Ama robot hâlâ virajı dönemiyordu ve takımdaki gerginlik her gün biraz daha artıyordu.\n\nTakımın danışman öğretmeni Kaan Bey, bir öğleden sonra laboratuvara geldiğinde ikisini yine tartışırken buldu. Onları susturmadı, hangisinin haklı olduğunu da söylemedi. Yalnızca bir soru sordu: \"Robotun virajda neden yanıldığını gösteren bir kanıtınız var mı?\" İkisi de sustu. Aslında ikisi de kendi tahmininden yola çıkıyordu; hiçbiri robotun virajda ne yaptığını gerçekten ölçmemişti.\n\nKaan Bey onlara bir öneride bulundu. Robotun içindeki ışık algılayıcısının okuduğu değerleri her an kaydetmesini ve bu kayıtları bir tabloya dökmelerini istedi. Böylece robotun virajda neyi \"gördüğünü\" anlayabilirlerdi. Takımın en sessiz üyesi olan Defne, bu işi üstlendi. Programlamayı seviyordu ama tartışmalarda pek söz almazdı. Aslında birkaç gün önce lambalara dair bir şüphesi olmuştu, ama Ela ile Arda'nın yüksek sesli tartışmasının arasında bunu söylemeye cesaret edememişti. Kaan Bey'in önerisi, ona sesini duyurabileceği bir yol açmıştı: Tartışmak yerine ölçmek.\n\nKayıt almak sanıldığı kadar kolay olmadı. İlk denemede robot o kadar çok veri kaydetti ki tablo okunamaz hâle geldi. Defne, robotun yalnızca virajdan önceki ve sonraki birkaç saniyeyi kaydetmesi için programı yeniden yazdı. Her turdan sonra verileri bilgisayara aktarıyor, grafiğe döküyor, bir önceki turla karşılaştırıyordu. Arkadaşları önce bu işin gereksiz uzun sürdüğünü düşündü. Ela bir ara, yarışmaya bu kadar az zaman kalmışken tablolarla uğraşmanın hata olduğunu bile söyledi.\n\nDefne iki akşam boyunca robotun her turundaki ölçümleri kaydetti. Sonuçları masaya koyduğunda tablo ortadaydı: Robot virajda çizgiyi kaybetmiyordu, çizgiyi hiç doğru okumuyordu. Laboratuvarın tavanındaki lambalardan biri tam virajın üzerine düşüyor ve parlak bir yansıma yapıyordu. Algılayıcı bu yansımayı beyaz zemin sanıyor, siyah çizgiyi göremiyordu. Ne yalnızca yazılım ne de yalnızca tekerlekler suçluydu. Sorun, ikisinin de aklına gelmeyen bir yerdeydi.\n\nBu bulgu takımın havasını değiştirdi. Ela ile Arda ilk kez aynı soruna birlikte baktılar. Arda, algılayıcının çevresine küçük siyah bir siper takmayı önerdi; böylece yukarıdan gelen ışık algılayıcıya ulaşmayacaktı. Ela ise yazılıma bir düzeltme ekledi: Robot her başladığında zemini ve çizgiyi bir kez ölçecek, ortamın ışığına göre kendini ayarlayacaktı. Yarışma salonunun ışıklarının laboratuvardakinden farklı olacağını da düşünmüşlerdi; aynı sorunun orada başka bir biçimde karşılarına çıkmasını istemiyorlardı.\n\nBir sonraki denemede robot virajı sorunsuz döndü. Laboratuvarda bir an sessizlik oldu; kimse gözlerine inanamıyordu. Ardından yirmi tur daha attılar; robot bir kez bile pistin dışına çıkmadı. Takım sevinçle bağırdığında Kaan Bey yalnızca gülümsedi ve onlara, yarışma günü de aynı ölçümleri kaydetmelerini hatırlattı.\n\nYarışma günü sabahı salona girdiklerinde ilk iş, robotlarının yarışma kurallarına uyup uymadığını gösteren denetimden geçmek oldu. Hakemler robotun boyutlarını ölçtü, kablolarını kontrol etti ve algılayıcının çevresindeki siperin kurallara uygun olduğunu onayladı. Takım üyelerinin elleri terliyordu; aylar süren emeğin birkaç dakikalık bir turla değerlendirilecek olması herkesi geriyordu. Yarışma günü salonun ışıkları gerçekten de çok farklıydı. Bazı takımların robotları, tıpkı onların robotu gibi virajlarda şaşırıyordu. Onların robotu ise başlangıçta ortamı ölçüp kendini ayarladı ve parkuru temiz bir şekilde tamamladı. Takım, bölge yarışmasında üçüncü oldu. Ödül töreninden sonra başka bir okulun öğrencileri gelip algılayıcıya taktıkları siperi sordu. Onların robotu da virajlarda zorlanmıştı ve nedenini bir türlü bulamamışlardı. Ela, sorunu nasıl bulduklarını anlatırken söze Defne'nin tablosuyla başladı.\n\nDönüş yolunda otobüste Arda, Ela'ya dönüp bir itirafta bulundu. Tartıştıkları günlerde aslında kendi haklı çıkmak için uğraştığını, sorunu çözmeyi neredeyse unuttuğunu söyledi. Ela gülümsedi; o da aynı şeyi yapmıştı. İkisi de Kaan Bey'in sorusunu hatırladı. Kanıtsız bir tartışma, ne kadar uzun sürerse sürsün, robotu bir milimetre bile ileri götürmemişti.\n\nO yılın sonunda takım, bir sonraki yıl katılacak yeni üyeler için laboratuvarın duvarına küçük bir not astı. Notta yalnızca şu soru yazıyordu: \"Bunu nereden biliyoruz?\"",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Robot deneme pistinde hangi sorunu yaşıyordu?",
+    "correct": "Dönemeçte çizgiyi kaçırıyordu",
+    "wrong": [
+     "Başlangıçta hiç hareket etmiyordu",
+     "Düz yolda çok yavaş gidiyordu",
+     "Sürekli kendi etrafında dönüyordu"
+    ],
+    "explanation": "Ortadaki keskin virajda çizgiyi izlemek yerine düz gidip pistin dışına çıkıyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ela ile Arda'nın tartışmaları neden sonuç vermedi?",
+    "correct": "İkisinin de ölçmeden tahmin yürütmesi",
+    "wrong": [
+     "Kaan Bey'in tartışmaya karışması",
+     "Robotun bazı parçalarının eksik olması",
+     "Defne'nin onlara yardım etmemesi"
+    ],
+    "explanation": "İkisi de kendi tahmininden yola çıkıyordu; robotun virajda ne yaptığını ölçen olmamıştı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Defne lambalarla ilgili şüphesini neden daha önce söylemedi?",
+    "correct": "Tartışmanın arasında çekindiği için",
+    "wrong": [
+     "Şüphesinden pek de emin olmadığı için",
+     "Ela'ya biraz kırgın olduğu için",
+     "Yarışmayı pek umursamadığı için"
+    ],
+    "explanation": "Ela ile Arda'nın yüksek sesli tartışmasının arasında söylemeye cesaret edememişti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Defne kayıt programını neden yeniden yazdı?",
+    "correct": "Kayıt fazla büyüyüp okunamadığı için",
+    "wrong": [
+     "Robotun pili çabuk bittiği için",
+     "Algılayıcı sık sık bozulduğu için",
+     "Ela ondan bunu yapmasını istediği için"
+    ],
+    "explanation": "İlk denemede o kadar çok veri kaydedildi ki tablo okunamaz hâle geldi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sorunun asıl nedeni neydi?",
+    "correct": "Lambadan gelen parlak yansıma",
+    "wrong": [
+     "Kayan ve aşınmış ön tekerlekler",
+     "Yazılımdaki küçük bir hata",
+     "Motorların yetersiz kalan gücü"
+    ],
+    "explanation": "Tavandaki lambanın virajdaki yansıması algılayıcıyı yanıltıyordu."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ela'nın yazılıma eklediği ayarın amacı neydi?",
+    "correct": "Farklı ışıkta da çizgiyi okuyabilmek",
+    "wrong": [
+     "Robotu daha da hızlandırabilmek",
+     "Pilin daha uzun dayanmasını sağlamak",
+     "Hakemlerin denetiminden geçmek"
+    ],
+    "explanation": "Robot her başlangıçta ortamın ışığını ölçüp kendini ayarlayacaktı; salonun ışıkları farklı olabilirdi."
+   },
+   {
+    "p": 9,
+    "type": 2,
+    "bloom": 5,
+    "text": "Arda'nın otobüsteki itirafı neyi gösterir?",
+    "correct": "Haklı çıkmayı sorundan önemli tuttuğunu",
+    "wrong": [
+     "Ela'yla takımda kalmak istemediğini",
+     "Robotu kendisinin bilerek bozduğunu",
+     "Yarışmayı mutlaka birinci bitirmek istediğini"
+    ],
+    "explanation": "Tartışırken haklı çıkmaya uğraşıp sorunu çözmeyi neredeyse unuttuğunu söyledi."
+   },
+   {
+    "p": 10,
+    "type": 3,
+    "bloom": 5,
+    "text": "Duvara asılan notun anlatmak istediği nedir?",
+    "correct": "Kanıta dayanmanın önemini",
+    "wrong": [
+     "Soru sormanın yasak olduğunu",
+     "Robotların karmaşık olduğunu",
+     "Bilgisayarlara güvenmeyi"
+    ],
+    "explanation": "\"Bunu nereden biliyoruz?\" sorusu, kararları tahmine değil ölçüme dayandırmayı hatırlatır."
+   }
+  ]
+ }
+}

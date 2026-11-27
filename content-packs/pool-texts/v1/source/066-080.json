@@ -1,0 +1,446 @@
+{
+ "66": {
+  "title": "Bozulmayan Besin",
+  "category": "Bilgi/Açıklama",
+  "content": "Arkeologlar Mısır'daki eski mezarları kazarken bazen içinde bal bulunan kaplara rastlamıştır. Anlatılanlara göre bu bal, binlerce yıl sonra bile bozulmamış hâldedir. Bu durum ilk bakışta şaşırtıcı gelebilir, çünkü mutfağımızdaki pek çok yiyecek birkaç gün içinde bozulur. Peki bal neden bu kadar uzun süre dayanır?\n\nBalın uzun ömrünün ilk sırrı, içindeki suyun çok az olmasıdır. Bal, büyük ölçüde şekerden oluşur ve içindeki su oranı genellikle yüzde yirminin altındadır. Yiyecekleri bozan bakteri ve mantarlar ise yaşamak ve çoğalmak için suya ihtiyaç duyar. Üstelik balın içindeki yoğun şeker, bu canlıların hücrelerindeki suyu dışarı çeker. Bu yüzden bala düşen bir mikrop, kısa sürede kuruyarak etkisiz hâle gelir.\n\nİkinci sır, balın asitli olmasıdır. Balın asitliği, pek çok mikrobun yaşayamayacağı bir ortam oluşturur. Üçüncü sır ise arılardan gelir. Arılar çiçek özünü bala dönüştürürken ona bir enzim ekler. Bu enzim, balın içinde az miktarda hidrojen peroksit oluşmasını sağlar. Hidrojen peroksit, yaraları temizlemek için kullanılan mikrop öldürücü bir maddedir. Bu üç özellik bir araya geldiğinde bal, mikroplar için neredeyse yaşanmaz bir yer hâline gelir.\n\nBu özelliklerin korunması için balın kapağı sıkıca kapalı tutulmalıdır. Bal, havadaki nemi kolayca emer. Açık bırakılan ya da ıslak kaşıkla alınan bal, zamanla su kazanır ve mayalanabilir. Mayalanan balın tadı ekşir ve üzerinde köpük oluşabilir.\n\nBazen kavanozdaki balın donup beyazlaştığı görülür. Buna kristalleşme denir. Pek çok kişi bunu balın bozulduğunun ya da sahte olduğunun işareti sanır. Oysa kristalleşme doğal bir süreçtir ve balın tadını bozmaz. Bazı bal türleri, içerdikleri şekerlerin oranına göre diğerlerinden daha çabuk kristalleşir. Kavanozu ılık suyun içinde bekletmek, balı yeniden akışkan hâle getirir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne Mısır mezarlarındaki bal örneğiyle başlayarak ne yapmak ister?",
+    "correct": "Okurda konuya yönelik merak uyandırmak",
+    "wrong": [
+     "Mısır tarihini ayrıntılı biçimde anlatmak",
+     "Arkeologların yöntemlerini eleştirmek",
+     "Mutfaktaki yiyecekleri korumayı öğretmek"
+    ],
+    "explanation": "Binlerce yıllık bozulmamış bal örneği, “Bal neden bozulmaz?” sorusuna merak uyandırır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Balın içindeki su oranı genellikle ne kadardır?",
+    "correct": "Yüzde yirminin altında",
+    "wrong": [
+     "Yüzde ellinin üstünde",
+     "Yüzde otuz ile kırk arası",
+     "Yüzde yetmişe yakın"
+    ],
+    "explanation": "Balın su oranı genellikle yüzde yirminin altındadır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bala düşen bir mikrop neden kısa sürede etkisiz kalır?",
+    "correct": "Yoğun şekerin hücresindeki suyu çekmesi",
+    "wrong": [
+     "Balın sıcaklığının çok yüksek olması",
+     "Arıların mikrobu baldan uzaklaştırması",
+     "Balın ışığı geçirmeyen bir yapısı olması"
+    ],
+    "explanation": "Yoğun şeker mikrobun hücresindeki suyu dışarı çeker ve mikrop kurur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Baldaki hidrojen peroksit nasıl oluşur?",
+    "correct": "Arıların kattığı bir enzim sayesinde",
+    "wrong": [
+     "Çiçek özünün güneşte kurumasıyla",
+     "Balın kavanozda uzun süre beklemesiyle",
+     "Balın içindeki suyun buharlaşmasıyla"
+    ],
+    "explanation": "Arılar bala bir enzim ekler; bu enzim az miktarda hidrojen peroksit oluşmasını sağlar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Islak kaşıkla bal almanın sakıncası nedir?",
+    "correct": "Balın su kazanıp ekşiyebilmesi",
+    "wrong": [
+     "Kaşığın balın rengini koyulaştırması",
+     "Balın hemen donup beyazlaşması",
+     "Kavanozun kapağının açık kalması"
+    ],
+    "explanation": "Su kazanan bal mayalanabilir; tadı ekşir ve köpük oluşabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Balın kapağının sıkıca kapalı tutulmasının nedeni nedir?",
+    "correct": "Havadaki nemi kolayca çekmesi",
+    "wrong": [
+     "Güneş ışığından hızla erimesi",
+     "Kokusunun çabucak yok olması",
+     "Böceklerin balı çok sevmesi"
+    ],
+    "explanation": "Bal havadaki nemi kolayca emer; kapalı tutmak su kazanmasını önler."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kristalleşmiş balla ilgili yaygın kanı hakkında metinden hangi sonuç çıkar?",
+    "correct": "Yerinde olmayan bir yargı olduğu",
+    "wrong": [
+     "Bilimsel olarak kanıtlandığı",
+     "Sahte ballar için geçerli olduğu",
+     "Tadın değişmesine dayandığı"
+    ],
+    "explanation": "Kristalleşme doğal bir süreçtir; bozulma ya da sahtelik işareti değildir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin ana konusu hangisidir?",
+    "correct": "Balın neden kolay kolay bozulmadığı",
+    "wrong": [
+     "Arıların çiçek özünü nasıl topladığı",
+     "Mısır mezarlarında yapılan kazılar",
+     "Balın yaraları temizleme yöntemleri"
+    ],
+    "explanation": "Metin az su, asitlik ve hidrojen peroksit gibi balın bozulmamasını sağlayan özellikleri anlatır."
+   }
+  ]
+ },
+ "74": {
+  "title": "Cumartesi Masalları",
+  "category": "Hikaye/Kurgu",
+  "content": "Kemal Bey emekli olduğunda ilk birkaç ay çok mutluydu. Sabahları erken kalkmak zorunda değildi, gazetesini ağır ağır okuyor, öğleden sonraları parkta yürüyüş yapıyordu. Ama aylar geçtikçe günler birbirine benzemeye başladı. Otuz beş yıl öğretmenlik yapmış biri olarak kendini işe yaramaz hissetmeye başladı. Eşi, onun eskisi kadar konuşmadığını ve akşamları televizyonun karşısında uyuyakaldığını fark ediyordu.\n\nBir gün mahalledeki halk kütüphanesine kitap almaya gittiğinde, panoda küçük bir ilan gördü: Kütüphane, cumartesi sabahları çocuklara kitap okuyacak gönüllüler arıyordu. Kemal Bey bir süre ilanın önünde durdu. Sonra görevliye gidip adını yazdırdı. Eve dönerken yıllardır hissetmediği bir heyecan duyuyordu.\n\nİlk cumartesi salonda yalnızca beş çocuk vardı. Kemal Bey biraz heyecanlıydı; yıllardır lise öğrencilerine ders vermişti ama küçük çocuklarla hiç çalışmamıştı. Bir masal kitabı açıp okumaya başladı. Çocukların gözleri kitabın resimlerine dikildi. Kemal Bey sesini değiştirerek kahramanları canlandırınca çocuklar kahkahalarla güldü. Okuma bittiğinde içlerinden biri, Defne adında yedi yaşında bir kız, “Gelecek hafta yine gelecek misiniz?” diye sordu.\n\nHaftalar geçtikçe salondaki çocukların sayısı arttı. Bazı aileler çocuklarını özellikle Kemal Bey'in okuma saatine getiriyordu. Kütüphanenin küçük salonu bir süre sonra yetmez oldu ve okumalar daha büyük bir odaya taşındı. Kemal Bey artık her hafta okuyacağı kitabı günler öncesinden seçiyor, okurken neyi nasıl anlatacağını düşünüyordu. Okumanın ardından çocuklarla hikâye üzerine konuşuyor, onların sorularını dinliyordu. Eşi, onun yeniden eski neşesine kavuştuğunu söylüyordu.\n\nBir yıl sonra kütüphane, Kemal Bey için küçük bir teşekkür töreni düzenledi. Çocuklar ona kendi çizdikleri resimlerden oluşan bir defter hediye etti. Kemal Bey teşekkür ederken sesi titredi. Kemal Bey defteri açtığında, ilk sayfada Defne'nin çizdiği bir resim gördü: Elinde kocaman bir kitap tutan, gözlüklü bir dede ve etrafında gülen çocuklar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kemal Bey'in emekliliğin ilerleyen aylarındaki ruh hâli nasıldı?",
+    "correct": "Kendini değersiz ve boşlukta hissediyordu",
+    "wrong": [
+     "Her gününü planlı ve neşeli geçiriyordu",
+     "Yeniden okula dönmek için hazırlanıyordu",
+     "Parkta yürüyüş yapmaktan çok hoşlanıyordu"
+    ],
+    "explanation": "Günler birbirine benzemeye başlayınca Kemal Bey kendini işe yaramaz hissetti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kemal Bey gönüllülük ilanını nerede gördü?",
+    "correct": "Kütüphanedeki panoda",
+    "wrong": [
+     "Mahalle gazetesinde",
+     "Parkın giriş kapısında",
+     "Okulun kapısında"
+    ],
+    "explanation": "Kemal Bey ilanı halk kütüphanesindeki panoda gördü."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk cumartesi Kemal Bey'in heyecanlanmasının nedeni neydi?",
+    "correct": "Daha önce küçük çocuklarla çalışmamış olması",
+    "wrong": [
+     "Salonun çocuklarla tıklım tıklım dolu olması",
+     "Okuyacağı kitabı evde unutmuş olması",
+     "Kütüphane görevlisinin onu izleyecek olması"
+    ],
+    "explanation": "Yıllarca lise öğrencilerine ders vermişti ama küçük çocuklarla hiç çalışmamıştı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Defne'nin okuma sonunda sorduğu soru neyi gösterir?",
+    "correct": "Okuma saatinden hoşlandığını",
+    "wrong": [
+     "Masalı iyi anlayamadığını",
+     "Kitabı kendi okumak istediğini",
+     "Bir daha gelmek istemediğini"
+    ],
+    "explanation": "Defne, Kemal Bey'in gelecek hafta yine gelip gelmeyeceğini sorarak memnuniyetini gösterdi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocukların sayısı artınca okumalar için ne yapıldı?",
+    "correct": "Daha geniş bir odaya geçildi",
+    "wrong": [
+     "Okumalar iki ayrı güne bölündü",
+     "Yeni gönüllüler çağrıldı",
+     "Yeni kayıtlar durduruldu"
+    ],
+    "explanation": "Küçük salon yetmeyince okumalar daha büyük bir odaya taşındı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kemal Bey'in kitapları günler öncesinden seçmesi onun hakkında neyi gösterir?",
+    "correct": "Bu işe özen ve ciddiyetle yaklaştığını",
+    "wrong": [
+     "Okumayı bir yük olarak gördüğünü",
+     "Çocukların seçimine güvenmediğini",
+     "Kütüphanenin bunu ondan talep ettiğini"
+    ],
+    "explanation": "Kemal Bey her hafta kitabı önceden seçip nasıl anlatacağını düşünüyordu."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Teşekkür sırasında Kemal Bey'in sesinin titremesi neyi anlatır?",
+    "correct": "Gördüğü sevgiden derinden etkilendiğini",
+    "wrong": [
+     "Topluluk önünde konuşmaktan korktuğunu",
+     "Törenin çok uzun sürmesinden yorulduğunu",
+     "Çocukların resimlerini beğenmediğini"
+    ],
+    "explanation": "Çocukların hazırladığı defter Kemal Bey'i duygulandırdı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana düşüncesi hangisidir?",
+    "correct": "Başkalarına katkı sunmak hayata yeniden anlam katar",
+    "wrong": [
+     "Emekliler zamanlarının çoğunu kütüphanede geçirmelidir",
+     "Küçük çocuklara kitap okumak sanıldığından zordur",
+     "Öğretmenler yalnızca lise öğrencilerine ders vermelidir"
+    ],
+    "explanation": "Gönüllü okumalar Kemal Bey'in neşesini ve kendine olan inancını geri getirdi."
+   }
+  ]
+ },
+ "80": {
+  "title": "Bukalemunun Renkleri",
+  "category": "Bilgi/Açıklama",
+  "content": "Bukalemunlar, renklerini değiştirebilen ilginç sürüngenlerdir. Pek çok kişi bukalemunların yalnızca saklanmak için renk değiştirdiğini düşünür. Oysa bilim insanları, bu değişimin başka nedenleri de olduğunu söylüyor. Bukalemunların çoğu Afrika'da ve Madagaskar adasında yaşar. Ağaçların dallarında dolaşır, uzun ve yapışkan dilleriyle böcek avlarlar.\n\nBukalemunun derisinde, ışığı yansıtan çok küçük kristaller bulunur. Bu kristaller birbirine yakın dizildiğinde deri bir renk, birbirinden uzaklaştığında başka bir renk görünür. Bukalemun sakinken kristaller sıkı dizilir ve hayvan genellikle yeşil görünür. Heyecanlandığında ise kristaller arasındaki boşluk artar ve deri sarı, turuncu ya da kırmızı renklere bürünebilir. Yani bukalemun derisine boya sürmez; ışığın deriden yansıma biçimini değiştirir.\n\nBukalemunlar renklerini çoğu zaman diğer bukalemunlarla iletişim kurmak için değiştirir. Örneğin iki erkek bukalemun karşılaştığında, parlak renklere bürünerek birbirine güçlerini gösterir. Kavgayı kaybeden bukalemun ise daha koyu ve soluk renklere döner. Dişi bukalemunlar da renkleriyle erkeklere ilgi duyup duymadıklarını gösterebilir.\n\nRenk değiştirmek, vücut ısısını ayarlamaya da yardım eder. Sabahın serin saatlerinde bukalemun daha koyu bir renge bürünür, çünkü koyu renkler güneşin ısısını daha iyi emer. Hava ısındığında ise daha açık renklere döner. Böylece fazla ısınmaktan korunur. Bukalemunun renkleri, tıpkı bir dil gibi, hem çevresine hem de kendi durumuna dair pek çok şey anlatır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bukalemunlar ne ile beslenir?",
+    "correct": "Böceklerle",
+    "wrong": [
+     "Yapraklarla",
+     "Balıklarla",
+     "Meyvelerle"
+    ],
+    "explanation": "Bukalemunlar uzun ve yapışkan dilleriyle böcek avlar."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre bukalemunlarla ilgili yaygın düşünce nasıldır?",
+    "correct": "Eksik bir düşüncedir",
+    "wrong": [
+     "Doğru bir düşüncedir",
+     "Kanıtlanmış bir gerçektir",
+     "Dişilere özgü bir bilgidir"
+    ],
+    "explanation": "Bukalemunlar yalnızca saklanmak için değil, başka nedenlerle de renk değiştirir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bukalemunun derisinde rengi değiştiren nedir?",
+    "correct": "Işığı yansıtan küçük kristaller",
+    "wrong": [
+     "Derinin altındaki renkli boyalar",
+     "Vücuda yapışan çiçek tozları",
+     "Derinin üstündeki ince pullar"
+    ],
+    "explanation": "Derideki kristallerin dizilişi değişince ışığın yansıması ve renk değişir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bukalemun heyecanlandığında derisinde ne olur?",
+    "correct": "Kristaller açılır ve renk ısınır",
+    "wrong": [
+     "Kristaller sıkışır ve deri yeşerir",
+     "Deri kalınlaşıp sertleşmeye başlar",
+     "Deriye yeni bir boya karışır"
+    ],
+    "explanation": "Kristaller arasındaki boşluk artar ve deri sarı, turuncu ya da kırmızıya döner."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İki erkek bukalemun karşılaştığında ne yapar?",
+    "correct": "Parlak renklerle güç gösterir",
+    "wrong": [
+     "Hemen saklanıp kaçmaya başlar",
+     "Soluk renklere bürünüp bekler",
+     "Birlikte avlanmaya başlar"
+    ],
+    "explanation": "Erkekler parlak renklere bürünerek birbirine güçlerini gösterir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kavgayı kaybeden bukalemunun koyu ve soluk renklere dönmesi ne anlama gelir?",
+    "correct": "Yenildiğini kabul ettiği",
+    "wrong": [
+     "Saldırmaya hazırlandığı",
+     "Hastalandığı ve üşüdüğü",
+     "Ava çıkmaya hazırlandığı"
+    ],
+    "explanation": "Soluk renkler, kaybeden bukalemunun geri çekildiğini gösterir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bukalemun sabahları neden koyu bir renge bürünür?",
+    "correct": "Güneşin ısısından daha çok yararlanmak için",
+    "wrong": [
+     "Gece boyunca kirlenen derisini gizlemek için",
+     "Diğer bukalemunları korkutup kaçırmak için",
+     "Avlarını daha kolay görebilmek için"
+    ],
+    "explanation": "Koyu renkler güneşin ısısını daha iyi emer; bukalemun serin sabahlarda ısınır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin son cümlesinde renklerin bir dile benzetilmesinin nedeni nedir?",
+    "correct": "Renklerin bir şeyler anlattığı için",
+    "wrong": [
+     "Bukalemunların konuşabildiği için",
+     "Renklerin çok çeşitli olduğu için",
+     "Bukalemunların şarkı söylediği için"
+    ],
+    "explanation": "Renkler hem çevresine hem de bukalemunun kendi durumuna dair bilgi verir."
+   }
+  ]
+ },
+ "68": {
+  "title": "Neden Erteleriz?",
+  "category": "Deneme",
+  "content": "Teslim tarihi yaklaşan bir ödeviniz var. Masaya oturuyorsunuz, bilgisayarı açıyorsunuz. Ama ödeve başlamak yerine önce masayı topluyorsunuz, sonra bir bardak çay yapıyorsunuz, ardından “Bir dakika bakayım” diyerek telefonunuzu elinize alıyorsunuz. Bir de bakıyorsunuz ki iki saat geçmiş ve ödevin tek satırı bile yazılmamış. Bu durumun bir adı var: erteleme.\n\nErteleme genellikle tembellikle karıştırılır. Oysa tembel biri bir işi yapmak istemez ve bundan rahatsızlık da duymaz. Erteleyen kişi ise işi yapmak ister, yapması gerektiğini bilir, ama yine de başlayamaz ve bu yüzden kendini suçlu hisseder. Bu fark önemlidir, çünkü ertelemenin nedeni çoğu zaman zaman yönetimi değil, duygulardır.\n\nPsikologlara göre erteleme, olumsuz duygulardan kaçmanın bir yoludur. Bir iş bize sıkıcı, zor, belirsiz ya da kaygı verici geldiğinde, beynimiz bu rahatsızlıktan kurtulmak ister. Telefona bakmak ya da masayı toplamak gibi küçük kaçışlar, bu rahatsızlığı anında azaltır. Beyin bu anlık rahatlamayı bir ödül gibi algılar ve davranışı tekrarlamaya eğilim gösterir. Ama iş ortada durmaya devam ettiği için kaygı daha sonra daha da büyür.\n\nBazı araştırmacılar ertelemeyi “şimdiki ben” ile “gelecekteki ben” arasındaki bir çekişme olarak da açıklar. Bugün rahat etmek isteyen şimdiki benlik, zor işi geleceğe bırakır. Sanki o işi yapacak olan kişi biz değil de, başka biriymiş gibi davranırız. Ancak gelecek geldiğinde, işi yapmak zorunda kalan yine biz oluruz; üstelik bu kez çok daha az zamanımız vardır.\n\nMükemmeliyetçilik de ertelemenin önemli nedenlerinden biridir. Bir işi kusursuz yapmak zorunda olduğunu düşünen biri, yeterince iyi yapamamaktan korktuğu için başlamayı geciktirebilir. Başlanmamış bir iş, en azından henüz başarısız olmamıştır.\n\nPeki ertelemeyle nasıl başa çıkılabilir? Uzmanların ilk önerisi, işi küçük parçalara bölmektir. “Ödevi yaz” yerine “Ödevin ilk paragrafını yaz” gibi küçük ve somut bir hedef koymak, başlamayı kolaylaştırır. Yalnızca beş dakika çalışmaya söz vermek de işe yarayabilir; çoğu zaman en zor kısım başlamaktır ve bir kez başlanan iş kendiliğinden devam eder. Dikkat dağıtan şeyleri, özellikle de telefonu, çalışma sırasında göz önünden kaldırmak da kaçış yollarını azaltır. Bir başka öneri ise kendine karşı anlayışlı olmaktır. Araştırmalar, daha önce ertelediği için kendini affeden öğrencilerin, bir sonraki sınavda daha az erteleme yaptığını göstermiştir. Kendini sert biçimde suçlamak ise kaygıyı artırarak ertelemeyi besleyebilir.\n\nErtelemeyi tamamen ortadan kaldırmak belki mümkün değildir. Ama nedenini anlamak, onunla mücadele etmenin ilk adımıdır. Bir dahaki sefere ödevin başında kendinizi telefonu elinize alırken bulduğunuzda, bir an durup kendinize sorun: Şu anda neden kaçıyorum?",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Giriş paragrafındaki öğrenci ödeve başlamadan önce neler yapar?",
+    "correct": "Ortalığı toplar, çay demler, telefona bakar",
+    "wrong": [
+     "Kütüphaneye gidip kaynak kitaplar arar",
+     "Arkadaşlarını arayıp ödevi birlikte planlar",
+     "Öğretmenine e-posta yazıp ek süre ister"
+    ],
+    "explanation": "Öğrenci masayı toplar, çay yapar ve telefonuna bakar; iki saat geçer."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre erteleyen kişiyi tembel kişiden ayıran nedir?",
+    "correct": "İsteyip de başlayamamaktan rahatsız olması",
+    "wrong": [
+     "İşi hiç önemsemeyip çok rahat davranması",
+     "Zamanını çok iyi planlayıp düzenlemesi",
+     "Başkalarından sürekli olarak yardım beklemesi"
+    ],
+    "explanation": "Erteleyen kişi işi yapmak ister ama başlayamaz ve kendini suçlu hisseder."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Psikologlara göre erteleme neyin bir yoludur?",
+    "correct": "Hoş olmayan hislerden uzaklaşmanın",
+    "wrong": [
+     "Zamanı daha verimli kullanmanın",
+     "Daha yaratıcı fikirler bulmanın",
+     "İşleri önem sırasına göre dizmenin"
+    ],
+    "explanation": "Erteleme, olumsuz duygulardan kaçmanın bir yoludur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ertelemenin zamanla bir alışkanlığa dönüşmesini metne göre ne açıklar?",
+    "correct": "Kaçışın verdiği anlık rahatlığın ödül sayılması",
+    "wrong": [
+     "İşlerin zamanla kendiliğinden kolaylaşıp bitmesi",
+     "Telefonun dikkatimizi her geçen gün artırması",
+     "Kaygının erteleme sonrasında tümüyle kaybolması"
+    ],
+    "explanation": "Beyin anlık rahatlamayı ödül sayar ve davranışı tekrarlamaya eğilim gösterir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Şimdiki ben” ile “gelecekteki ben” açıklamasına göre erteleyen kişi nasıl davranır?",
+    "correct": "İşi sanki başkası yapacakmış gibi ileriye atar",
+    "wrong": [
+     "Geleceği düşünerek işi hemen bitirmeye çalışır",
+     "İşi başka birine devredip sorumluluktan çıkar",
+     "Gelecekte daha çok zamanı olacağını hesaplar"
+    ],
+    "explanation": "Kişi işi geleceğe bırakır; sanki o işi başkası yapacakmış gibi davranır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mükemmeliyetçi biri bir işe neden geç başlayabilir?",
+    "correct": "Yetersiz kalmaktan çekindiği için",
+    "wrong": [
+     "İşi fazlasıyla kolay bulduğu için",
+     "Zamanının bol olduğunu bildiği için",
+     "Başkasının işi yapmasını beklediği için"
+    ],
+    "explanation": "Kusursuz yapamamaktan korkan kişi başlamayı geciktirir."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre bir sonraki sınavda daha az erteleme yapan öğrenciler hangileridir?",
+    "correct": "Önceki ertelemeleri için kendini bağışlayanlar",
+    "wrong": [
+     "Kendilerini sert biçimde eleştirip suçlayanlar",
+     "Telefonlarını tümüyle kullanmayı bırakanlar",
+     "Sınava yalnızca son gece çalışmaya başlayanlar"
+    ],
+    "explanation": "Ertelediği için kendini affeden öğrencilerin bir sonraki sınavda daha az erteleme yaptığı görülmüştür."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki önerisinin özü nedir?",
+    "correct": "Ertelemenin nedenini fark etmenin ilk adım olduğu",
+    "wrong": [
+     "Telefonların ders sırasında yasaklanması gerektiği",
+     "Ertelemenin kolayca ortadan kaldırılabileceği",
+     "Ödevlerin akşam saatlerinde yapılması gerektiği"
+    ],
+    "explanation": "Yazar ertelemenin nedenini anlamanın onunla mücadelede ilk adım olduğunu söyler."
+   }
+  ]
+ }
+}

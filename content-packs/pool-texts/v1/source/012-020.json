@@ -1,0 +1,1001 @@
+{
+ "12": {
+  "title": "Sekiz Kollu Usta",
+  "category": "Bilgi/Açıklama",
+  "content": "Ahtapot, denizlerin en ilginç canlılarından biridir. Sekiz kolu, kemiksiz yumuşak bir bedeni ve iri gözleri vardır. Kemiği olmadığı için kendi gövdesinden çok daha dar aralıklardan geçebilir. Bir ahtapot, ağzı açık bırakılmış bir şişenin içine bile girip saklanabilir. Üstelik ahtapotun üç kalbi vardır ve kanı, bizimkinden farklı olarak mavi renklidir.\n\nAhtapotun kollarının altında yüzlerce vantuz bulunur. Bu vantuzlar yalnızca tutunmaya yaramaz. Ahtapot vantuzlarıyla dokunduğu şeyin tadını da alabilir. Yani kayaların arasında yiyecek ararken bir anlamda kollarıyla tadına bakar. Kollarının her biri, beyinden gelen komutu beklemeden kendi başına bazı hareketler yapabilir.\n\nAhtapotun en şaşırtıcı yeteneklerinden biri renk değiştirmesidir. Derisindeki küçük renk keseleri genişleyip daralarak birkaç saniye içinde rengini değiştirir. Böylece kumun, taşın ya da yosunun rengine bürünür ve düşmanlarının gözünden kaybolur. Bazı ahtapotlar derilerinin pürüzünü bile değiştirerek kayaya benzeyebilir.\n\nTehlike çok yaklaşırsa ahtapot başka bir yönteme başvurur. Suya koyu renkli bir mürekkep püskürtür. Mürekkep, düşmanın önünde bir bulut oluşturur. Düşman ne olduğunu anlamaya çalışırken ahtapot hızla uzaklaşır. Kaçarken suyu gövdesinden güçlü bir şekilde dışarı iterek ileri fırlar.\n\nBilim insanları ahtapotların çok zeki olduğunu düşünüyor. Akvaryumlarda yapılan gözlemlerde bazı ahtapotların kavanoz kapağı açabildiği, labirentte yolunu bulabildiği görüldü. Hatta bazılarının, bakıcılarını tanıyıp onlara farklı davrandığı anlatılıyor. Sevmedikleri birine su püskürten ahtapotlar bile gözlenmiş.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Ahtapot çok dar aralıklardan nasıl geçebilir?",
+    "correct": "Sert bir iskeleti olmadığı için",
+    "wrong": [
+     "Kollarını koparabildiği için",
+     "Bedenini suyla şişirdiği için",
+     "Kendini iyice küçültüp büzdüğü için"
+    ],
+    "explanation": "Kemiği olmadığı için kendi gövdesinden çok daha dar yerlerden geçebilir."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahtapotun kanı ne renktir?",
+    "correct": "Mavi",
+    "wrong": [
+     "Kırmızı",
+     "Yeşil",
+     "Sarı"
+    ],
+    "explanation": "Ahtapotun kanı bizimkinden farklı olarak mavi renklidir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Vantuzlar tutunmanın yanında hangi işe yarar?",
+    "correct": "Dokunulan şeyin tadını almaya",
+    "wrong": [
+     "Derideki rengi hızla değiştirmeye",
+     "Uzaktaki sesleri duyabilmeye",
+     "Yumurtaları sıcacık tutmaya"
+    ],
+    "explanation": "Ahtapot vantuzlarıyla dokunduğu şeyin tadını alabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Renk değiştirmek ahtapota ne sağlar?",
+    "correct": "Düşmanlarından gizlenmesini",
+    "wrong": [
+     "Avını korkutup kaçırmasını",
+     "Suyun sıcaklığını ölçmesini",
+     "Çok daha hızlı yüzebilmesini"
+    ],
+    "explanation": "Kumun, taşın ya da yosunun rengine bürünerek düşmanlarının gözünden kaybolur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mürekkep bulutu ahtapota nasıl yardım eder?",
+    "correct": "Kaçması için zaman kazandırır",
+    "wrong": [
+     "Düşmanı zehirleyerek uyutur",
+     "Avını yakalamasını kolaylaştırır",
+     "Yuvasını gece daha sıcak tutar"
+    ],
+    "explanation": "Düşman bulutun ne olduğunu anlamaya çalışırken ahtapot hızla uzaklaşır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahtapot kaçarken ileri nasıl fırlar?",
+    "correct": "Suyu bedeninden dışarı iterek",
+    "wrong": [
+     "Kollarını kanat gibi çırparak",
+     "Kumun üstünde hızla zıplayarak",
+     "Akıntıya kendini bırakarak"
+    ],
+    "explanation": "Suyu gövdesinden güçlü biçimde dışarı iterek ileri fırlar."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ahtapotların kavanoz kapağı açabilmesi neyi gösterir?",
+    "correct": "Sorun çözebildiklerini",
+    "wrong": [
+     "Çok güçlü olduklarını",
+     "Kavanozu sevdiklerini",
+     "Karada da yaşadıklarını"
+    ],
+    "explanation": "Kapak açmak ve labirentte yol bulmak, bilim insanlarının onları zeki saymasının nedenlerindendir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metne göre ahtapot için hangisi söylenebilir?",
+    "correct": "Uyum sağlayan, zeki bir canlıdır",
+    "wrong": [
+     "Yalnız kayalarda yaşayan bir balıktır",
+     "Kendini korumayı bilmeyen bir canlıdır",
+     "Karada da avlanan bir hayvandır"
+    ],
+    "explanation": "Renk değiştirmesi, mürekkep kullanması ve sorun çözmesi ahtapotun hem uyumlu hem zeki olduğunu gösterir."
+   }
+  ]
+ },
+ "13": {
+  "title": "Düdük Defne'de",
+  "category": "Hikaye/Kurgu",
+  "content": "Cumartesi sabahı mahalle parkında maç vardı. İki takım da hazırdı ama bir sorun çıktı: Hakem yoktu. Herkes birbirine baktı. Hakemsiz maç oynamak istemiyorlardı, çünkü geçen hafta çıkan bir tartışma maçı yarıda bırakmalarına neden olmuştu. Sonunda çocuklar, bir haftadır ayağı burkuk olduğu için oynayamayan Defne'nin hakem olmasına karar verdi.\n\nDefne önce çekindi. Kuralları biliyordu ama hiç hakemlik yapmamıştı. Ağabeyinin düdüğünü boynuna taktı ve sahanın kenarına geçti. Takımlar sahada yerlerini aldı, kaleciler eldivenlerini giydi. Defne derin bir nefes aldı ve ilk düdüğü çaldı. Maç başladı.\n\nİlk yarı sakin geçti. Defne birkaç kez düdük çaldı, top taç çizgisinden çıkınca hangi takımın atacağını gösterdi. Ama ikinci yarıda zor bir an yaşandı. Defne'nin en yakın arkadaşı Selin, rakip oyuncuya arkadan çarptı ve onu düşürdü. Bütün gözler Defne'ye çevrildi.\n\nDefne bir an durdu. Selin ona bakıyor, sanki düdük çalmamasını istiyordu. Ama Defne ne gördüyse onu söylemesi gerektiğini biliyordu. Düdüğünü çaldı ve rakip takıma serbest vuruş verdi. Selin kaşlarını çattı, bir şey demeden yerine geçti.\n\nMaç bitince Selin, Defne'nin yanına geldi. Önce sessiz kaldılar. Sonra Selin, \"Haklıydın,\" dedi. \"Ben olsam ben de çalardım.\" Defne rahatladı ve gülümsedi. Arkadaşlığının bir düdük yüzünden bozulmasından korkmuştu. Şimdi, doğru olanı yapmanın arkadaşlığı bozmadığını görüyordu.\n\nO günden sonra çocuklar her maçta Defne'ye hakemlik yapmasını teklif etti. Defne'nin ayağı iyileşince de bu iş sırayla herkese verildi. Herkes en az bir kez düdüğü taşıdı ve sahanın kenarından bakmanın ne kadar zor olduğunu öğrendi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Defne neden hakem olmaya seçildi?",
+    "correct": "Ayağı sakatlandığı için",
+    "wrong": [
+     "Kuralları en iyi bildiği için",
+     "Takım kaptanı olduğu için",
+     "Düdüğü onda olduğu için"
+    ],
+    "explanation": "Bir haftadır ayağı burkuk olduğu için oynayamıyordu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çocuklar neden hakemsiz oynamak istemedi?",
+    "correct": "Önceki maçın kavgayla bitmesi",
+    "wrong": [
+     "Parkın görevlisinin istemesi",
+     "Maçın çok uzun sürecek olması",
+     "Kalecilerin sahada eksik olması"
+    ],
+    "explanation": "Geçen hafta çıkan bir tartışma maçı yarıda bırakmalarına neden olmuştu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Defne düdüğü kimden almıştı?",
+    "correct": "Ağabeyinden",
+    "wrong": [
+     "Öğretmeninden",
+     "Annesinden",
+     "Arkadaşından"
+    ],
+    "explanation": "Ağabeyinin düdüğünü boynuna taktı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İkinci yarıda ne oldu?",
+    "correct": "Selin rakibe arkadan çarptı",
+    "wrong": [
+     "Defne düdüğünü yere düşürdü",
+     "Top parkın dışına kaçıp gitti",
+     "Kaleci elini fena incitti"
+    ],
+    "explanation": "Defne'nin en yakın arkadaşı Selin, rakip oyuncuya arkadan çarpıp onu düşürdü."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Defne düdük çalmadan önce neden bir an durdu?",
+    "correct": "Arkadaşlığı ile görevi arasında kaldığı için",
+    "wrong": [
+     "Kuralı tam olarak hatırlayamadığı için",
+     "Ayağı birden ağrımaya başladığı için",
+     "Düdüğün sesinin çıkmayacağından korktuğu için"
+    ],
+    "explanation": "Hatayı yapan en yakın arkadaşıydı ve ondan düdük çalmamasını bekliyor gibiydi."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in maçtan sonra \"Haklıydın\" demesi neyi gösterir?",
+    "correct": "Kararın adil olduğunu kabul ettiğini",
+    "wrong": [
+     "Defne'ye hâlâ çok kızgın olduğunu",
+     "Maçı kendilerinin kazandığını sandığını",
+     "Bir sonraki maçta hakem olmak istediğini"
+    ],
+    "explanation": "\"Ben olsam ben de çalardım,\" diyerek Defne'nin doğru davrandığını kabul etti."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Defne'nin ayağı iyileşince ne oldu?",
+    "correct": "Düdük her maç başka birine geçti",
+    "wrong": [
+     "Defne takımın kaptanı seçildi",
+     "Maçlar artık hakemsiz oynandı",
+     "Selin hakemliği tek başına üstlendi"
+    ],
+    "explanation": "Bu iş sırayla herkese verildi; herkes en az bir kez düdüğü taşıdı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metinden çıkarılabilecek ders hangisidir?",
+    "correct": "Doğru olan, cesaret ister",
+    "wrong": [
+     "Arkadaşlar kayırılmalıdır",
+     "Hakemlik çok kolay bir iştir",
+     "Maçlar hakemsiz oynanmalıdır"
+    ],
+    "explanation": "Defne arkadaşına karşı da doğru kararı verdi; herkes sonra hakemliğin ne kadar zor olduğunu öğrendi."
+   }
+  ]
+ },
+ "14": {
+  "title": "Gökkuşağının Renkleri",
+  "category": "Bilgi/Açıklama",
+  "content": "Yağmurdan hemen sonra güneş açınca gökyüzünde bazen renkli, kocaman bir yay belirir. Buna gökkuşağı deriz. Gökkuşağında yedi renk sayarız: kırmızı, turuncu, sarı, yeşil, mavi, lacivert ve mor. Peki bu renkler nereden gelir?\n\nGüneşin ışığı bize beyaz görünür. Oysa bu beyaz ışık, aslında birçok rengin karışımıdır. Işık havada asılı duran küçük yağmur damlalarının içine girerken yön değiştirir. Bu olaya ışığın kırılması denir. Her renk biraz farklı miktarda kırılır. Böylece beyaz ışığın içindeki renkler birbirinden ayrılır.\n\nDamlanın içine giren ışık, damlanın arka yüzüne çarpıp geri döner. Sonra damladan çıkarken bir kez daha kırılır. Binlerce damla aynı anda bunu yaptığında, gökyüzünde kırmızıdan mora uzanan renkli bir yay görürüz.\n\nGökkuşağını görebilmek için güneşin arkamızda, yağmurun ise önümüzde olması gerekir. Bu yüzden gökkuşakları en çok sabah ya da akşamüstü, güneş alçaktayken görülür. Öğle saatlerinde güneş tepedeyken gökkuşağı genellikle görülmez. Güneşli bir günde bahçede, sırtınızı güneşe verip hortumla ince su püskürterek siz de küçük bir gökkuşağı yapabilirsiniz.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Gökkuşağı genellikle ne zaman görülür?",
+    "correct": "Yağmurdan sonra güneş çıkınca",
+    "wrong": [
+     "Gece yarısı gökyüzü bulutsuzken",
+     "Kar yağarken öğle saatlerinde",
+     "Sis bütün şehri kaplayınca"
+    ],
+    "explanation": "Yağmurdan hemen sonra güneş açınca gökyüzünde renkli bir yay belirir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre beyaz ışık aslında nedir?",
+    "correct": "Pek çok rengin birleşimi",
+    "wrong": [
+     "Tek bir rengin açık tonu",
+     "Güneşin sıcak bir buharı",
+     "Yağmurun yansıyan rengi"
+    ],
+    "explanation": "Beyaz görünen güneş ışığı aslında birçok rengin karışımıdır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Işığın renkleri damlada neden birbirinden ayrılır?",
+    "correct": "Her rengin farklı kırılması",
+    "wrong": [
+     "Damlaların renkli olması",
+     "Bulutların ışığı boyaması",
+     "Rüzgârın ışığı itip dağıtması"
+    ],
+    "explanation": "Her renk biraz farklı miktarda kırıldığı için renkler ayrışır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Damlanın içine giren ışık ne yapar?",
+    "correct": "Arka yüze çarpıp geri döner",
+    "wrong": [
+     "Damlanın içinde kaybolur",
+     "Damlayı ısıtıp buharlaştırır",
+     "Damlanın rengini değiştirir"
+    ],
+    "explanation": "Işık damlanın arka yüzüne çarpıp geri döner ve çıkarken bir kez daha kırılır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gökkuşağını görmek için güneş nerede olmalıdır?",
+    "correct": "Arkamızda",
+    "wrong": [
+     "Önümüzde",
+     "Tepemizde",
+     "Solumuzda"
+    ],
+    "explanation": "Güneşin arkamızda, yağmurun önümüzde olması gerekir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gökkuşağı öğle saatlerinde neden genellikle görülmez?",
+    "correct": "Güneş çok yüksekte olduğu için",
+    "wrong": [
+     "Öğlenleri yağmur yağmadığı için",
+     "Gökyüzü çok aydınlık olduğu için",
+     "Damlalar öğlen kuruduğu için"
+    ],
+    "explanation": "Gökkuşakları güneş alçaktayken görülür; öğlen güneş tepededir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hortumla gökkuşağı yapılabilmesi neyi gösterir?",
+    "correct": "Su damlalarının ışığı ayırdığını",
+    "wrong": [
+     "Gökkuşağının yalnız bahçede çıktığını",
+     "Hortum suyunun renkli olduğunu",
+     "Güneşin hortum suyunu ısıttığını"
+    ],
+    "explanation": "Yağmur damlaları gibi hortumun püskürttüğü damlalar da güneş ışığını renklerine ayırır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Bu metnin amacı nedir?",
+    "correct": "Gökkuşağının oluşumunu açıklamak",
+    "wrong": [
+     "Yağmurun yararlarını anlatmak",
+     "Renklerin adlarını ezberletmek",
+     "Güneşten nasıl korunacağını öğütlemek"
+    ],
+    "explanation": "Metin, ışığın damlalarda kırılıp yansımasıyla gökkuşağının nasıl oluştuğunu anlatır."
+   }
+  ]
+ },
+ "15": {
+  "title": "Mum Akşamı",
+  "category": "Hikaye/Kurgu",
+  "content": "Kasım ayının fırtınalı bir akşamında, Arda'nın yaşadığı kasabada elektrikler birden kesildi. Televizyon sustu, buzdolabının uğultusu kesildi, bütün ev karanlığa gömüldü. Arda'nın küçük kardeşi Nehir korkuyla annesinin koluna sarıldı.\n\nBabası çekmeceden mumları ve el fenerini çıkardı. Mumları tabaklara dikip salonun ortasındaki masaya koydular. Titreyen ışıkta duvarlara uzun gölgeler düştü. Arda telefonuna baktı; şarjı azalmıştı ve internet de çekmiyordu. Ne yapacaklarını bilemediler. Dışarıda rüzgâr pencereleri sarsıyor, yağmur camlara vuruyordu. Nehir her gök gürültüsünde biraz daha büzülüyordu.\n\nBir süre sonra annesi, dedesinin çocukken anlattığı bir oyunu hatırladı. Herkes sırayla bir hikâyenin bir cümlesini söyleyecek, hikâyeyi birlikte tamamlayacaklardı. Babası başladı: \"Bir zamanlar denizin dibinde yaşayan, ama denizden korkan bir balık varmış.\" Nehir güldü ve ikinci cümleyi söyledi. Arda önce çekindi, sonra o da katıldı.\n\nHikâye, balığın yüzmeyi öğrenmek için yaşlı ve bilge bir kaplumbağadan yardım istemesiyle devam etti. Nehir artık gök gürültüsünü duymuyor gibiydi. Kaplumbağa çok yavaştı, balık sabırsızdı. Her cümleyle hikâye biraz daha komikleşti. Bir ara Nehir'in eklediği konuşan bir deniz anası yüzünden herkes kahkahalarla güldü.\n\nSonra babası el fenerini alıp duvarda elleriyle gölgeler yaptı. Bir kuş, bir köpek, bir tavşan belirdi. Nehir de denemek istedi. Parmaklarını nasıl tutacağını babası gösterdi. İlk denemede ortaya çıkan şeyin ne olduğunu kimse anlayamadı ama yine herkes güldü.\n\nElektrikler gece yarısına doğru, fırtına dindikten sonra geldi. Işıklar bir anda yanınca hepsi gözlerini kıstı. Televizyon kendiliğinden açıldı. Ama kimse kalkıp kapatmadı; Nehir, hikâyenin sonunu duymadan yatmayacağını söyledi.\n\nErtesi hafta Arda'nın ailesi, ayda bir akşamı \"mum akşamı\" yapmaya karar verdi. O akşam ekranlar kapanacak, mumlar yanacak ve yeni bir hikâye birlikte yazılacaktı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Elektrikler kesilince Nehir ne yaptı?",
+    "correct": "Hemen annesine sokuldu",
+    "wrong": [
+     "Babasını yardıma çağırdı",
+     "Odasına koşup saklandı",
+     "El fenerini bulup yaktı"
+    ],
+    "explanation": "Nehir korkuyla annesinin koluna sarıldı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arda ne yapacağını neden bilemedi?",
+    "correct": "Bildiği oyalanmalar olmadığı için",
+    "wrong": [
+     "Mumlar odaya az ışık verdiği için",
+     "Annesi ona biraz kızdığı için",
+     "Fırtınadan çok korktuğu için"
+    ],
+    "explanation": "Televizyon sustu, telefonun şarjı azaldı ve internet çekmiyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Annesinin hatırladığı oyun neydi?",
+    "correct": "Sırayla kurulan bir öykü oyunu",
+    "wrong": [
+     "Karanlıkta oynanan saklambaç",
+     "Sırayla sorulan bilmece oyunu",
+     "Toplu hâlde şarkı söyleme oyunu"
+    ],
+    "explanation": "Herkes sırayla bir cümle söyleyerek hikâyeyi birlikte tamamlayacaktı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nehir'in gök gürültüsünü duymaz gibi olmasının nedeni nedir?",
+    "correct": "Kendini oyuna iyice kaptırması",
+    "wrong": [
+     "Fırtınanın birden dinmesi",
+     "Kulaklarını elleriyle kapatması",
+     "Uykusunun gelmek üzere olması"
+    ],
+    "explanation": "Hikâyeye cümle ekleyip gülerken korkusunu unutmuştu; fırtına ise ancak gece dindi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babası el feneriyle ne yaptı?",
+    "correct": "Duvarda gölge figürleri yaptı",
+    "wrong": [
+     "Pencereden dışarıyı aydınlattı",
+     "Sigorta kutusunu kontrol etti",
+     "Komşulara ışıkla işaret verdi"
+    ],
+    "explanation": "Elleriyle duvarda kuş, köpek ve tavşan gölgeleri yaptı."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elektrik gelince Nehir neden yatmak istemedi?",
+    "correct": "Hikâyenin sonunu merak ettiği için",
+    "wrong": [
+     "Televizyonu izlemek istediği için",
+     "Işıklardan rahatsız olduğu için",
+     "Hâlâ dışarıdaki fırtınadan korktuğu için"
+    ],
+    "explanation": "Nehir, hikâyenin sonunu duymadan yatmayacağını söyledi."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Aile ayda bir akşamı nasıl geçirmeye karar verdi?",
+    "correct": "Telefonsuz bir öykü gecesi",
+    "wrong": [
+     "Sinemaya gidilen bir akşam",
+     "Akrabaları ziyaret akşamı",
+     "Erken yatılan bir akşam"
+    ],
+    "explanation": "O akşam ekranlar kapanacak, mumlar yanacak ve birlikte yeni bir hikâye yazılacaktı."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Beklenmedik anlar aileyi yakınlaştırabilir",
+    "wrong": [
+     "Elektrik kesintileri çok tehlikeli olabilir",
+     "Hikâyeler yalnızca çocuklar içindir",
+     "Fırtınalı gecelerde evde kalmak sıkıcıdır"
+    ],
+    "explanation": "Elektrik kesintisi, ailenin birlikte güldüğü bir akşama ve yeni bir alışkanlığa dönüştü."
+   }
+  ]
+ },
+ "16": {
+  "title": "Hörgücün Sırrı",
+  "category": "Bilgi/Açıklama",
+  "content": "Develer, suyun çok az bulunduğu çöllerde yaşayabilen hayvanlardır. Günlerce, hatta bazen birkaç hafta su içmeden yol alabilirler. Pek çok kişi, develerin bu dayanıklılığını sırtlarındaki hörgüçte su saklamalarına bağlar. Oysa bu yaygın düşünce doğru değildir.\n\nDevenin hörgücünde su değil, yağ bulunur. Hayvan yiyecek bulamadığında bu yağı yavaş yavaş kullanarak enerji sağlar. Uzun süre aç kalan bir devenin hörgücü küçülür ve yana doğru sarkar. Deve yeniden beslenince hörgüç zamanla eski hâline döner. Hörgüçteki yağın bir yerde toplanması da işe yarar: Vücudun geri kalanı ince bir yağ tabakasıyla kaplanmadığı için deve sıcakta daha kolay serinler.\n\nPeki develer susuzluğa nasıl dayanır? Bunun birkaç nedeni vardır. Develer çok az terler. Vücut sıcaklıkları gündüz yükselip gece düşebilir; böylece serinlemek için su harcamazlar. Burunları da nefes verirken havadaki nemin bir kısmını geri tutar. Ayrıca develer, uzun süre susuz kaldıktan sonra su bulduklarında çok kısa sürede şaşırtıcı miktarda su içebilir.\n\nDevelerin bedeni çöldeki başka zorluklara da uygundur. Uzun kirpikleri gözlerini kumdan korur. Burun deliklerini kapatabildikleri için kum fırtınalarında nefes almakta zorlanmazlar. Geniş ve yumuşak ayakları, kuma batmalarını önler ve sıcak kumda yürürken onları korur. Kalın tüyleri de gündüzün yakıcı güneşine ve gecenin soğuğuna karşı bir örtü gibi çalışır.\n\nBu özellikler sayesinde develer yüzyıllar boyunca çölde yaşayan insanların en önemli yardımcıları oldu. Kervanlar, develerin sırtında ipek, baharat ve tuz taşıyarak çölleri aştı. Yük taşıdılar, insanları uzak yerlere götürdüler, sütleriyle onları beslediler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Pek çok kişi hörgüç hakkında neyi yanlış bilir?",
+    "correct": "İçinde su sakladığını",
+    "wrong": [
+     "İçinin boş olduğunu",
+     "İçinde süt biriktiğini",
+     "Kemikten yapıldığını"
+    ],
+    "explanation": "Pek çok kişi develerin hörgüçte su sakladığını sanır; oysa bu doğru değildir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hörgüç devenin hangi ihtiyacını karşılar?",
+    "correct": "Açlıkta gereken enerji",
+    "wrong": [
+     "Susadığında içecek su",
+     "Uyurken gereken sıcaklık",
+     "Koşarken gereken denge"
+    ],
+    "explanation": "Hörgüçteki yağ, yiyecek bulunamadığında enerji kaynağı olur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hörgücün küçülüp yana sarkması neyi gösterir?",
+    "correct": "Hayvanın yiyeceksiz kaldığını",
+    "wrong": [
+     "Devenin fazlasıyla su içtiğini",
+     "Devenin ağır hasta olduğunu",
+     "Devenin iyice yaşlandığını"
+    ],
+    "explanation": "Aç kalan deve hörgüçteki yağı kullanır; bu yüzden hörgüç küçülür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yağın hörgüçte toplanmasının yararı nedir?",
+    "correct": "Sıcakta ısının kolay atılması",
+    "wrong": [
+     "Devenin daha hızlı koşabilmesi",
+     "Yükün sırtta daha iyi dengelenmesi",
+     "Suyun hörgüçte biriktirilmesi"
+    ],
+    "explanation": "Vücudun geri kalanı yağ tabakasıyla kaplanmadığı için deve sıcakta daha kolay serinler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Develerin su tasarrufu yollarından biri hangisidir?",
+    "correct": "Çok az terlemek",
+    "wrong": [
+     "Çok sık su içmek",
+     "Hörgüçte su taşımak",
+     "Gölgede uzanmak"
+    ],
+    "explanation": "Develer çok az terler; bu da su kaybını azaltır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Vücut sıcaklığının gündüz yükselmesi deveye neden yarar?",
+    "correct": "Serinlemeye su ayırmadığı için",
+    "wrong": [
+     "Geceleri daha çok uyuduğu için",
+     "Kumda daha hızlı koşabildiği için",
+     "Hörgüçteki yağ eridiği için"
+    ],
+    "explanation": "Sıcaklığı gündüz yükselip gece düşebildiği için serinlemek amacıyla su harcamaz."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzun kirpikler deveyi neye karşı korur?",
+    "correct": "Kuma",
+    "wrong": [
+     "Suya",
+     "Soğuğa",
+     "Böceklere"
+    ],
+    "explanation": "Uzun kirpikleri gözlerini kumdan korur."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metinden hangi sonuç çıkarılabilir?",
+    "correct": "Deve, çöle iyi uyum sağlamış bir canlıdır",
+    "wrong": [
+     "Deve, çölde ancak kısa süre yaşayabilir",
+     "Deve, insanlara hiç yararlı olmamıştır",
+     "Deve, en çok serin ormanlarda yaşamayı sever"
+    ],
+    "explanation": "Hörgücü, terlemesi, kirpikleri ve ayaklarıyla deve çöl koşullarına göre donanmıştır."
+   }
+  ]
+ },
+ "17": {
+  "title": "Arka Sıradaki Gitar",
+  "category": "Hikaye/Kurgu",
+  "content": "Ege, ailesi başka bir şehre taşındığı için dokuzuncu sınıfa yeni bir okulda başladı. İlk gün okul bahçesine girdiğinde kimseyi tanımıyordu. Herkes küçük gruplar hâlinde konuşuyor, gülüşüyordu. Ege kendini bu kalabalığın içinde görünmez gibi hissetti.\n\nSınıfta en arkadaki boş sıraya oturdu. Öğretmen yoklama alırken her öğrencinin kendini kısaca tanıtmasını istedi. Sıra Ege'ye geldiğinde sesi titredi ve bütün sınıfın ona baktığını hissetti. Eski şehrini, en sevdiği dersin fizik olduğunu ve gitar çaldığını söyledi.\n\nTeneffüste ön sıradaki bir çocuk yanına geldi. Adı Mert'ti. Okulun müzik kulübünde bas gitar çalıyordu ve gruplarının bir gitariste ihtiyacı vardı. Ege'yi o hafta provaya çağırdı. Ege, sabahki tanıtımda gitardan söz ettiğine ilk kez gerçekten sevindi. Okuldan çıkarken Mert ona grubun çaldığı şarkıların listesini gönderdi.\n\nAkşam eve döndüğünde annesi ilk günün nasıl geçtiğini sordu. Ege bir süre düşündü. Sabah kendini çok yalnız hissetmişti. Ama kendini tanıtırken kurduğu birkaç cümle, hiç beklemediği bir kapıyı açmıştı. O gece listedeki ilk şarkıyı çalışmaya başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Ege neden yeni bir okula başladı?",
+    "correct": "Ailesi şehir değiştirdiği için",
+    "wrong": [
+     "Eski okulu kapatıldığı için",
+     "Bir yarışmada burs kazandığı için",
+     "Eski okulunda sınıfta kaldığı için"
+    ],
+    "explanation": "Ailesi başka bir şehre taşınmıştı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ege kendini bahçede neden görünmez hissetti?",
+    "correct": "Kimseyi tanımaması",
+    "wrong": [
+     "Çok kısa boylu olması",
+     "Okula geç kalması",
+     "Sesinin kısık olması"
+    ],
+    "explanation": "Herkes gruplar hâlinde konuşurken Ege kimseyi tanımıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ege kendini tanıtırken neler söyledi?",
+    "correct": "Şehrini, sevdiği dersi, gitarı",
+    "wrong": [
+     "Kardeşlerini ve evcil hayvanını",
+     "Eski arkadaşlarını ve takımını",
+     "Hedeflerini ve sevdiği yemekleri"
+    ],
+    "explanation": "Eski şehrini, en sevdiği dersin fizik olduğunu ve gitar çaldığını söyledi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ege'nin sesinin titremesi neyi gösterir?",
+    "correct": "Heyecanlandığını",
+    "wrong": [
+     "Hasta olduğunu",
+     "Sıkıldığını",
+     "Uykusuz kaldığını"
+    ],
+    "explanation": "Bütün sınıfın ona baktığını hissediyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mert, Ege'yi nereye çağırdı?",
+    "correct": "Grubunun provasına",
+    "wrong": [
+     "Müzik kulübünün sınavına",
+     "Akşam evine yemeğe",
+     "Teneffüste kantine"
+    ],
+    "explanation": "Müzik kulübündeki gruplarının gitariste ihtiyacı vardı; Ege'yi provaya çağırdı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ege gitardan söz ettiğine neden sevindi?",
+    "correct": "Bu bilgi bir dostluk başlattığı için",
+    "wrong": [
+     "Öğretmeni ona not verdiği için",
+     "Bütün sınıf onu alkışladığı için",
+     "Gitarını yanında okula getirdiği için"
+    ],
+    "explanation": "Mert onu gitar çaldığı için provaya çağırmıştı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "\"Beklemediği bir kapı\" ifadesiyle anlatılan nedir?",
+    "correct": "Yeni bir arkadaşlık fırsatı",
+    "wrong": [
+     "Okulun arka bahçesinin kapısı",
+     "Bir müzik yarışması daveti",
+     "Yeni bir okula geçiş izni"
+    ],
+    "explanation": "Kendini tanıtırken kurduğu cümleler Mert'le tanışmasına ve gruba katılmasına yol açtı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Paylaşmak yeni dostluklara yol açar",
+    "wrong": [
+     "Yeni okula alışmak hiç mümkün olmaz",
+     "Müzik yalnız yeteneklilere uygundur",
+     "Arka sıralar en güvenli yerlerdir"
+    ],
+    "explanation": "Ege'nin kendinden söz etmesi, yalnızlık hissettiği ilk günde bir arkadaşlık başlattı."
+   }
+  ]
+ },
+ "18": {
+  "title": "İç Saat Kayınca",
+  "category": "Bilgi/Açıklama",
+  "content": "Ergenlik çağındaki pek çok genç, akşamları erken uyuyamadığından, sabahları ise yataktan kalkmakta zorlandığından yakınır. Anne babalar çoğu zaman bunu telefona ya da tembelliğe bağlar. Bu nedenlerin payı olabilir; ama bilim insanları, sorunun önemli bir kısmının bedenin içindeki saatte yattığını söylüyor.\n\nİnsan vücudu, yaklaşık yirmi dört saatlik bir döngüyle çalışan bir iç saate sahiptir. Bu saat, ne zaman uykumuzun geleceğini, ne zaman zinde hissedeceğimizi büyük ölçüde belirler. Akşam karanlığı bastırdığında beyin, uykuya hazırlanmamıza yardım eden melatonin adlı bir hormon salgılamaya başlar.\n\nErgenlikte bu iç saat birkaç saat ileri kayar. Melatonin, çocukluk yıllarına göre daha geç salgılanmaya başlar. Bu yüzden bir genç, saat on birde yatağa girse bile kolayca uyuyamayabilir. Bedenine göre o saat henüz akşamın erken bir vaktidir.\n\nSorun, okul saatlerinin bu kaymayı hesaba katmamasıdır. Gece geç uyuyan bir genç, sabah erkenden kalktığında ihtiyaç duyduğu uykudan saatlerce eksik almış olur. Uzmanlar, gençlerin her gece sekiz ila on saat uyuması gerektiğini söylüyor. Uykusuzluk dikkati, belleği ve ruh hâlini olumsuz etkileyebilir. Hafta sonu öğlene kadar uyumak da çözüm olmaz; iç saati daha da ileri kaydırarak pazartesi sabahını zorlaştırır.\n\nBu kaymayı tamamen ortadan kaldırmak mümkün değildir, ama etkisini azaltmak için bazı şeyler yapılabilir. Yatmadan önce ekranların parlak ışığından uzak durmak, her gün aynı saatte yatıp kalkmak ve sabahları gün ışığına çıkmak, iç saatin daha düzenli çalışmasına yardım eder. Bazı ülkelerde okulların sabah daha geç başlaması da bu nedenle tartışılıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Pek çok genç hangi uyku sorunundan yakınır?",
+    "correct": "Geç uyuyup zor uyanmak",
+    "wrong": [
+     "Gece sık sık uyanmak",
+     "Sık sık kâbus görmek",
+     "Gece boyunca sık uyanmak"
+    ],
+    "explanation": "Akşamları erken uyuyamadıklarından, sabahları zor kalktıklarından yakınırlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Melatonin ne işe yarar?",
+    "correct": "Uykuya hazırlanmayı sağlar",
+    "wrong": [
+     "Sabahları erken uyandırır",
+     "Bedeni gece boyunca ısıtır",
+     "Akşamları iştahı artırır"
+    ],
+    "explanation": "Akşam karanlığında salgılanan melatonin, uykuya hazırlanmamıza yardım eder."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Saat on birde yatan bir genç neden kolayca uyuyamayabilir?",
+    "correct": "İç saatinin ileri kaymış olması",
+    "wrong": [
+     "Yatakta telefonla oynaması",
+     "Akşam fazla yemek yemiş olması",
+     "Odasının sıcak ve ışıklı olması"
+    ],
+    "explanation": "Ergenlikte melatonin daha geç salgılanır; bedenine göre o saat henüz akşamın erken vaktidir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlara göre gençler her gece kaç saat uyumalıdır?",
+    "correct": "8–10 saat",
+    "wrong": [
+     "5–6 saat",
+     "6–7 saat",
+     "11–12 saat"
+    ],
+    "explanation": "Uzmanlar gençlerin her gece sekiz ila on saat uyumasını öneriyor."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hafta sonu öğlene kadar uyumanın sakıncası nedir?",
+    "correct": "İç saati daha da kaydırması",
+    "wrong": [
+     "Uyku süresini fazla kısaltması",
+     "Ders çalışmayı engellemesi",
+     "Aileyle kavgaya yol açması"
+    ],
+    "explanation": "Geç kalkmak iç saati daha da kaydırır ve pazartesi sabahını zorlaştırır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "İç saatin düzenli çalışmasına ne yardım eder?",
+    "correct": "Her gün aynı saatte yatmak",
+    "wrong": [
+     "Yatmadan önce dizi izlemek",
+     "Gece geç saatte spor yapmak",
+     "Sabahları perdeleri kapatmak"
+    ],
+    "explanation": "Ekranlardan uzak durmak, aynı saatte yatıp kalkmak ve sabah gün ışığına çıkmak yardım eder."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Okulların daha geç başlaması neden tartışılıyor?",
+    "correct": "Ergenlerin biyolojisine uyması",
+    "wrong": [
+     "Öğretmenlerin daha geç gelmesi",
+     "Servis ücretlerini azaltması",
+     "Derslerin daha kısa olması"
+    ],
+    "explanation": "Okul saatleri gençlerin ileri kayan iç saatini hesaba katmıyor."
+   },
+   {
+    "p": 1,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın temel savı hangisidir?",
+    "correct": "Sorun yalnız alışkanlık değil, biyolojiktir",
+    "wrong": [
+     "Telefon tek başına bütün sorunun kaynağıdır",
+     "Gençlerin tembel olması uykuyu tümüyle bozar",
+     "Okul saatleri gençlere en uygun saatlerdir"
+    ],
+    "explanation": "Telefon ve alışkanlıkların payını kabul eden yazar, asıl nedeni ergenlikte kayan iç saatte görür."
+   }
+  ]
+ },
+ "19": {
+  "title": "Kaçan Otobüs",
+  "category": "Hikaye/Kurgu",
+  "content": "Can, iş görüşmesine yetişmek için sabah erkenden evden çıktı. Durağa vardığında otobüsün kapıları kapanıyordu. Koştu, el salladı ama şoför onu görmedi. Bir sonraki otobüs yirmi dakika sonraydı ve görüşmeye en az yarım saat geç kalacaktı. Haftalardır beklediği bu görüşmeyi kaçırmak üzere olduğunu düşününce midesi düğümlendi.\n\nİlk aklına gelen, görüşmeyi yapacak kişiye bir mesaj atıp özür dilemek oldu. Sonra durdu. Telefonundaki haritayı açtı ve başka bir yol aradı. Biraz yürürse metroya ulaşabileceğini gördü. Metro durağı on beş dakika uzaklıktaydı. Hızlı adımlarla yürümeye başladı.\n\nMetroya bindiğinde nefes nefeseydi ve gömleğinin yakası terden ıslanmıştı. Yolda görüşmeye girecek şirketin internet sitesine bir kez daha baktı ve sormayı düşündüğü soruları aklından geçirdi. Görüşme yerine, beklenen saatten yalnızca iki dakika sonra vardı. Kapıdaki görevliye geciktiği için kısa bir özür diledi.\n\nGörüşmenin sonunda yönetici, ona zor bir durumla karşılaştığında ne yaptığını sordu. Can biraz düşündü ve o sabahı anlattı. Yönetici gülümsedi. Bu, o gün duyduğu en somut cevaptı. Bir hafta sonra Can'ı arayıp işe başlayıp başlayamayacağını sordular. Can o sabahtan sonra evden her zaman on dakika erken çıkmaya başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Can o sabah neden erkenden evden çıktı?",
+    "correct": "İş görüşmesine yetişmek için",
+    "wrong": [
+     "Okuldaki sınava girmek için",
+     "Arkadaşıyla buluşmak için",
+     "Doktor randevusuna gitmek için"
+    ],
+    "explanation": "İş görüşmesine yetişmek için erken çıkmıştı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Can'ın midesinin düğümlenmesi neyi gösterir?",
+    "correct": "Fırsatı kaçırmaktan korktuğunu",
+    "wrong": [
+     "Sabah hiç kahvaltı etmediğini",
+     "Otobüs şoförüne kızdığını",
+     "Yolculukta midesinin bulandığını"
+    ],
+    "explanation": "Haftalardır beklediği görüşmeyi kaçırmak üzere olduğunu düşünüyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Can'ın mesaj atmaktan vazgeçmesi neyi gösterir?",
+    "correct": "Önce bir çözüm aramayı seçtiğini",
+    "wrong": [
+     "Telefonunun şarjının bittiğini",
+     "Görüşmeden tümüyle vazgeçtiğini",
+     "Yöneticinin numarasını bilmediğini"
+    ],
+    "explanation": "Özür dilemek yerine haritayı açıp başka bir yol aradı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can görüşmeye hangi yolla ulaştı?",
+    "correct": "Biraz yürüyüp metroya binerek",
+    "wrong": [
+     "Hemen bir taksi çağırarak",
+     "Sonraki otobüsü durakta bekleyip",
+     "Bir arkadaşının arabasıyla"
+    ],
+    "explanation": "On beş dakika yürüyüp metroya bindi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can görüşme yerine ne kadar geç vardı?",
+    "correct": "2 dakika",
+    "wrong": [
+     "5 dakika",
+     "10 dakika",
+     "20 dakika"
+    ],
+    "explanation": "Beklenen saatten yalnızca iki dakika sonra vardı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Can'ın metroda şirketin sitesine bakması neyi gösterir?",
+    "correct": "Zamanı hazırlık için kullandığını",
+    "wrong": [
+     "Şirketin adresini bilmediğini",
+     "Görüşme fikrinden sıkıldığını",
+     "Başka ilanlara göz atmaya başladığını"
+    ],
+    "explanation": "Yolda sormayı düşündüğü soruları da gözden geçirdi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yönetici Can'ın cevabını neden en somut buldu?",
+    "correct": "Yeni yaşanmış bir olaya dayandığı için",
+    "wrong": [
+     "Can ezberlenmiş cümleleri tekrarladığı için",
+     "Can gecikmesi için özür dilediği için",
+     "Hikâye uydurma bir öykü olduğu için"
+    ],
+    "explanation": "Can zor durumla nasıl başa çıktığını o sabah yaşadığı bir örnekle anlattı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Paniğe kapılmamak çözüm yolu açar",
+    "wrong": [
+     "Toplu taşımaya güvenilmemelidir",
+     "Görüşmeye geç kalan kişi işe alınmaz",
+     "İş görüşmeleri çok kısa sürmelidir"
+    ],
+    "explanation": "Can vazgeçmek yerine başka bir yol buldu; bu deneyim görüşmede de işine yaradı."
+   }
+  ]
+ },
+ "20": {
+  "title": "Küçülen Ama Kaybolmayan",
+  "category": "Bilgi/Açıklama",
+  "content": "Denize atılan bir plastik şişe, çoğumuzun sandığı gibi zamanla yok olmaz. Plastik, doğada çürüyüp toprağa karışan maddelerden farklıdır. Güneş ışığı, dalgalar ve sıcaklık değişimleri onu yavaş yavaş küçük parçalara ayırır. Ancak bu parçalar kaybolmaz; yalnızca küçülür. Beş milimetreden küçük olan bu parçacıklara mikroplastik denir.\n\nMikroplastiklerin bir kısmı, büyük plastik eşyaların parçalanmasından oluşur. Bir kısmı ise baştan küçük üretilmiştir. Örneğin bazı sentetik kumaşlardan yapılan giysiler, her yıkamada çok sayıda ince lif bırakır. Bu lifler atık suyla birlikte nehirlere, oradan da denizlere taşınabilir. Araç lastiklerinin yolda aşınması da önemli bir kaynak olarak görülüyor. Yağmur, yol kenarında biriken bu ince tozları kanalizasyona ve derelere sürükler.\n\nBu küçük parçacıklar bugün dünyanın hemen her yerinde bulunuyor. Okyanusların yüzeyinde, derin deniz tabanında, kutup buzullarında, hatta yüksek dağların karında mikroplastiklere rastlandı. Deniz canlıları, özellikle midye gibi suyu süzerek beslenen hayvanlar ve küçük balıklar, bu parçacıkları yiyecek sanarak yutabiliyor. Küçük canlılar daha büyükleri tarafından yenince plastik, besin zinciri boyunca ilerleyebiliyor.\n\nMikroplastiklerin insan sağlığına etkisi henüz tam olarak bilinmiyor. Bilim insanları içme suyunda, tuzda ve bazı deniz ürünlerinde mikroplastik buldu. Bunların vücutta ne kadar kaldığı ve ne gibi sonuçlar doğurduğu üzerine araştırmalar sürüyor. Kesin sonuçlara ulaşmak, bu kadar küçük parçacıkları ölçmenin zorluğu yüzünden zaman alıyor.\n\nSorunu azaltmanın en etkili yolu, plastiğin doğaya karışmasını baştan önlemektir. Tek kullanımlık plastikleri azaltmak, atıkları doğru biçimde ayırmak ve geri dönüşüme katkı vermek bunların başında gelir. Bazı ülkeler, çamaşır makinelerine lifleri tutan filtreler takılmasını zorunlu tutmayı tartışıyor. Bir kez denize karışan mikroplastiği geri toplamak ise neredeyse olanaksızdır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Metne göre mikroplastik nedir?",
+    "correct": "Beş milimetreden küçük plastik parça",
+    "wrong": [
+     "Suda tümüyle eriyen bir plastik türü",
+     "Geri dönüştürülmüş şişe hammaddesi",
+     "Denizdeki yosunların ürettiği madde"
+    ],
+    "explanation": "Beş milimetreden küçük plastik parçacıklara mikroplastik denir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Plastiğin denizde yok olmaması ne anlama gelir?",
+    "correct": "Parçalanıp küçülse de varlığını sürdürür",
+    "wrong": [
+     "Dalgalar onu çoğunlukla kıyıya taşır",
+     "Güneş ışığında yavaş yavaş rengini kaybeder",
+     "Balıklar onu yiyip kolayca sindirir"
+    ],
+    "explanation": "Plastik çürümez; güneş ve dalgalarla küçük parçalara ayrılır ama kaybolmaz."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Baştan küçük üretilen mikroplastiklere örnek hangisidir?",
+    "correct": "Sentetik giysilerin lifleri",
+    "wrong": [
+     "Kırılan plastik şişe kapakları",
+     "Denizdeki eski balık ağları",
+     "Rüzgârla dağılan poşet parçaları"
+    ],
+    "explanation": "Sentetik kumaşlardan yapılan giysiler her yıkamada ince lifler bırakır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Lastiklerden aşınan tozlar denize nasıl ulaşır?",
+    "correct": "Yağmurla akarsulara karışarak",
+    "wrong": [
+     "Rüzgârla doğrudan denize uçarak",
+     "Araçlar denize düştüğünde",
+     "Fabrikalardan bilerek dökülerek"
+    ],
+    "explanation": "Yağmur, yol kenarındaki tozları kanalizasyona ve derelere sürükler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Plastik besin zincirinde nasıl ilerler?",
+    "correct": "Yutan canlı başka canlıya yem olunca",
+    "wrong": [
+     "Plastik suda zamanla çoğalınca",
+     "Balıklar plastiği yumurtlayınca",
+     "Kuşlar onu yuvalarına taşıyıp bırakınca"
+    ],
+    "explanation": "Plastiği yutan küçük canlılar daha büyükleri tarafından yenince plastik zincirde yukarı taşınır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mikroplastiklerin insan sağlığına etkisi hakkında ne söylenebilir?",
+    "correct": "Bilimsel yanıtı henüz netleşmedi",
+    "wrong": [
+     "Zararsız olduğu kanıtlandı",
+     "Kansere neden olduğu gösterildi",
+     "Bağışıklığı güçlendirdiği bulundu"
+    ],
+    "explanation": "Etkileri henüz tam bilinmiyor; araştırmalar sürüyor."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bu konudaki araştırmalar neden uzun sürüyor?",
+    "correct": "Parçacıkları ölçmek zor olduğu için",
+    "wrong": [
+     "Araştırmacı sayısı az olduğu için",
+     "Örnek toplamak yasak olduğu için",
+     "Plastik üretimi hızla azaldığı için"
+    ],
+    "explanation": "Bu kadar küçük parçacıkları ölçmenin zorluğu kesin sonuçlara ulaşmayı geciktiriyor."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazara göre sorunu azaltmanın en etkili yolu nedir?",
+    "correct": "Kirliliği daha kaynağında durdurmak",
+    "wrong": [
+     "Denizdeki plastiği tek tek toplamak",
+     "Deniz ürünü tüketimini yasaklamak",
+     "Yeni plastik türleri geliştirmek"
+    ],
+    "explanation": "Denize karışan mikroplastiği geri toplamak neredeyse olanaksızdır; plastiğin doğaya karışmasını baştan önlemek gerekir."
+   }
+  ]
+ }
+}

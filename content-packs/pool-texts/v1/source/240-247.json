@@ -1,0 +1,668 @@
+{
+ "240": {
+  "title": "Bitiş Çizgisi",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulun yıllık kros yarışına iki hafta kalmıştı. Bora, aylardır bu yarışa hazırlanıyordu. Her sabah okuldan önce parkta koşuyor, akşamları da esneme hareketleri yapıyordu. Hedefi belliydi: Bu yıl birinci olmak. Geçen yıl ikinci olmuş, birinciliği son yüz metrede kaçırmıştı. O günden beri, bitiş çizgisini ilk geçen kişinin kendisi olduğu anı hayal ediyordu.\n\nYarış günü hava serindi. Düdük çaldığında Bora hızlı bir başlangıç yaptı ve kısa sürede öne geçti. Arkasında yalnızca sınıf arkadaşı Murat vardı. Parkurun yarısını geçtiklerinde Bora, Murat'ın ayak seslerinin kesildiğini fark etti. Dönüp baktığında Murat'ın yere düştüğünü ve bileğini tuttuğunu gördü. Bileği burkulmuş gibiydi. Yüzü acıdan buruşmuştu ve ayağa kalkmaya çalıştıkça yeniden yere oturuyordu.\n\nBora bir an durdu. Koşmaya devam ederse birinci olacağı kesindi. Hakemler ise parkurun sonundaydı; Murat'ın yanında kimse yoktu. Kafasında birçok düşünce yarıştı. Sonra Bora geri döndü. Murat'ı ayağa kaldırdı ve kolunu omzuna atmasına yardım etti. İkisi yavaş yavaş, aksayarak bitiş çizgisine doğru ilerledi. Bu sırada diğer koşucular onları birer birer geçti.\n\nBitiş çizgisine vardıklarında Bora on beşinci olmuştu. Birincilik kupasını, geçen yıl üçüncü olan bir öğrenci kazanmıştı. Ama seyircilerin hepsi ayağa kalkıp onları alkışladı. Okul müdürü tören sırasında Bora'yı yanına çağırdı ve ona özel bir “Fair Play” ödülü verdi. Bora madalyayı alırken, birincilik kupasından çok daha değerli bir şey kazandığını hissetti. Murat ise topallayarak yanına gelip ona sarıldı ve gelecek yıl birlikte antrenman yapmayı teklif etti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bora'nın bu yıl birinciliği bu kadar istemesinin nedeni nedir?",
+    "correct": "Önceki denemede kıl payı kaybetmesi",
+    "wrong": [
+     "Okul müdürünün ona açıkça söz vermesi",
+     "Ailesinin ondan bunu beklemesi",
+     "Murat'ı yenmeyi çok fazla istemesi"
+    ],
+    "explanation": "Geçen yıl birinciliği son yüz metrede kaçırmıştı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bora yarışa nasıl hazırlanıyordu?",
+    "correct": "Gün doğarken düzenli koşarak",
+    "wrong": [
+     "Yalnızca hafta sonları yüzerek",
+     "Spor salonunda ağırlık kaldırarak",
+     "Akşamları bisiklete binerek"
+    ],
+    "explanation": "Her sabah parkta koşuyor, akşamları esneme yapıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Murat'a ne olmuştu?",
+    "correct": "Bileğini incitmişti",
+    "wrong": [
+     "Yolunu kaybetmişti",
+     "Ayakkabısı kopmuştu",
+     "Yarıştan çekilmişti"
+    ],
+    "explanation": "Murat yere düşmüş, bileği burkulmuştu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hakemlerin parkurun sonunda olması Bora'nın kararını neden zorlaştırır?",
+    "correct": "Murat'a yardım edecek başka kimse yoktu",
+    "wrong": [
+     "Bora'nın hile yapması çok kolaylaşıyordu",
+     "Hakemler Bora'yı hiç göremiyordu",
+     "Yarış birden iptal edilebilirdi"
+    ],
+    "explanation": "Murat'ın yanında kimse yoktu; yardım Bora'ya kalmıştı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bora Murat'a nasıl yardım etti?",
+    "correct": "Onu destekleyerek yürüttü",
+    "wrong": [
+     "Hakemleri çağırmaya koştu",
+     "Ona su verip yanından ayrıldı",
+     "Bileğini sarıp koşmayı sürdürdü"
+    ],
+    "explanation": "Murat'ı kaldırıp kolunu omzuna atmasına yardım etti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bora yarışı kaçıncı bitirdi?",
+    "correct": "On beşinci",
+    "wrong": [
+     "Yirminci",
+     "Onuncu",
+     "On yedinci"
+    ],
+    "explanation": "Bitiş çizgisine vardıklarında Bora on beşinci olmuştu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Seyircilerin ayağa kalkıp alkışlaması neyi gösterir?",
+    "correct": "Davranışının takdir gördüğünü",
+    "wrong": [
+     "Yarışın çok erken bittiğini",
+     "Murat'ın birinci olduğunu",
+     "Hakemlerin büyük hata yaptığını"
+    ],
+    "explanation": "İzleyiciler Bora'nın yardımseverliğine saygı duydu."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri nedir?",
+    "correct": "Dostluk kazanmaktan daha değerlidir",
+    "wrong": [
+     "İyi hazırlanan mutlaka birinci olur",
+     "Yarışlarda kimseye yardım edilmez",
+     "Bilek sakatlıkları çok tehlikelidir"
+    ],
+    "explanation": "Bora birincilikten değerli bir şey kazandığını hisseder."
+   }
+  ]
+ },
+ "241": {
+  "title": "Kahveden Çaya",
+  "category": "Bilgi/Açıklama",
+  "content": "Bugün Türkiye, kişi başına çay tüketiminde dünyada ilk sıralarda yer alıyor. Sabah kahvaltısından iş yerindeki molalara, misafir ağırlamaktan dertleşmeye kadar ince belli bardaklardaki demli çay, gündelik hayatın vazgeçilmez bir parçası. Bu yüzden pek çok kişi çayın bu topraklarda yüzyıllardır içildiğini düşünür. Oysa çayın Türkiye'de yaygın bir içecek hâline gelmesi, sanıldığından çok daha yenidir.\n\nOsmanlı döneminde asıl sevilen içecek kahveydi. On altıncı yüzyıldan itibaren kahvehaneler, insanların bir araya gelip sohbet ettiği önemli mekânlar olmuştu. Çay ise daha çok ilaç gibi görülüyor ve sınırlı bir çevrede içiliyordu. Rusya ve İran'la ticaret yapan bazı kentlerde, özellikle doğu illerinde, çay içme alışkanlığı daha erken başlamıştı; ancak bu alışkanlık ülkenin geri kalanına yayılmamıştı. Yirminci yüzyılın başında durum değişmeye başladı. Birinci Dünya Savaşı ve ardından gelen yıllarda Yemen'in de aralarında bulunduğu toprakların kaybedilmesiyle birlikte eskiden oradan gelen kahve hem azaldı hem de çok pahalı hâle geldi. Yurt dışından alınan kahve için ödenen para, genç Cumhuriyet'in ekonomisi için ağır bir yüktü.\n\nBu nedenle devlet, dışarıya para ödemek yerine ülke içinde yetiştirilebilecek bir içecek arayışına girdi. Bu arayışta gözler, kahve yerine geçebilecek çaya çevrildi. Uzmanlar, Doğu Karadeniz'in bol yağışlı ve ılıman ikliminin çay yetiştirmeye uygun olduğunu belirledi. 1924'te çıkarılan bir yasayla Rize ve çevresinde çay tarımı teşvik edildi. Ancak ilk denemeler beklenen sonucu vermedi. Çiftçiler bu yeni bitkiye alışık değildi ve fidanların yetişmesi yıllar alıyordu. Bir çay bitkisinden ilk verimin alınması için en az dört beş yıl beklemek gerekiyordu. Geçimini fındık ve mısırdan sağlayan köylüler, yıllarca gelir getirmeyecek bir bitkiye toprak ayırmaktan çekiniyordu.\n\nBu süreçte en önemli adımı atanlardan biri, ziraat mühendisi Zihni Derin oldu. Derin, Gürcistan'dan getirtilen tohumlarla fidanlıklar kurdu ve çiftçileri çay yetiştirmeye ikna etmek için yıllarca köy köy dolaştı. 1940'ta çay tarımına yönelik yeni bir yasa çıkarıldı ve 1947'de Rize'de ilk çay fabrikası açıldı. Bundan sonra üretim hızla arttı. Zihni Derin'in çabaları bugün hâlâ anılıyor; Rize'deki bir üniversite yerleşkesi bugün onun adını taşıyor.\n\nÇay, kahveye göre çok daha ucuzdu ve hazırlaması kolaydı. Bir demlikte bir kez demlenen çay, saatlerce birçok bardağa yetiyordu. Kahvehaneler de zamanla menülerine çayı ekledi; adları kahvehane olarak kalsa da müşterilerin çoğu artık çay içiyordu. Bu özellikleri, çayın kısa sürede bütün ülkeye yayılmasını sağladı. İnce belli bardak da bu dönemde yaygınlaştı; çayın rengini göstermesi ve elde kolay tutulması onu kısa sürede vazgeçilmez kıldı. Yaklaşık yarım yüzyıl içinde çay, kahvenin yerini alarak toplumun en sevilen içeceği hâline geldi. Bugün Rize ve çevresindeki yeşil çay bahçeleri, hem binlerce aileye geçim kaynağı oluyor hem de bu değişimin canlı bir tanığı olarak duruyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar ilk paragrafta hangi yaygın yanlışı düzeltmeyi amaçlar?",
+    "correct": "Çayın çok eskiden beri içildiği sanısını",
+    "wrong": [
+     "Çayın sağlığa zararlı olduğu düşüncesini",
+     "Kahvenin daha ucuz olduğu inancını",
+     "İnce belli bardağın yeni olduğunu"
+    ],
+    "explanation": "Çayın yüzyıllardır içildiği sanılır ama yaygınlaşması yenidir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Osmanlı döneminde en sevilen içecek hangisiydi?",
+    "correct": "Kahve",
+    "wrong": [
+     "Ayran",
+     "Şerbet",
+     "Boza"
+    ],
+    "explanation": "Osmanlı döneminde asıl sevilen içecek kahveydi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kahvenin pahalanmasının temel nedeni nedir?",
+    "correct": "Kahve üretilen toprakların kaybı",
+    "wrong": [
+     "Kahvehanelerin birden kapatılması",
+     "Halkın kahveden bıkıp usanması",
+     "Kahvenin bir ilaç sayılması"
+    ],
+    "explanation": "Toprak kayıplarıyla kahve azaldı ve pahalılaştı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çay tarımı için hangi bölge uygun bulundu?",
+    "correct": "Doğu Karadeniz",
+    "wrong": [
+     "Ege kıyıları",
+     "Orta Anadolu",
+     "Güneydoğu Anadolu"
+    ],
+    "explanation": "Doğu Karadeniz'in yağışlı ve ılıman iklimi uygun bulundu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Köylülerin başta çay yetiştirmekten çekinmesinin nedeni nedir?",
+    "correct": "Gelirin yıllar sonra gelecek olması",
+    "wrong": [
+     "Çayın tadını hiç beğenmemeleri",
+     "Devletin çay tarımını yasaklamış olması",
+     "Fındığın son yıllarda çok ucuzlaması"
+    ],
+    "explanation": "İlk verim için dört beş yıl beklemek gerekiyordu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Rize'de ilk çay fabrikası hangi yıl açıldı?",
+    "correct": "1947",
+    "wrong": [
+     "1924",
+     "1940",
+     "1937"
+    ],
+    "explanation": "İlk çay fabrikası 1947'de açıldı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zihni Derin'in çay tarımındaki rolü nedir?",
+    "correct": "Fidanlık kurup köylüyü ikna etmesi",
+    "wrong": [
+     "Yasayı yazıp meclise sunması",
+     "Fabrikanın makinelerini tasarlaması",
+     "Çayı ilk kez Rusya'dan getirmesi"
+    ],
+    "explanation": "Fidanlıklar kurdu ve çiftçileri ikna etmek için köy köy dolaştı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre çayın yayılmasını sağlayan etkenler nelerdir?",
+    "correct": "Ucuzluğu ve kolay hazırlanması",
+    "wrong": [
+     "Yasayla zorunlu hâle getirilmesi",
+     "Yalnızca büyük kentlerde satılması",
+     "Kahveden daha az demlenmesi"
+    ],
+    "explanation": "Çay ucuzdu, hazırlaması kolaydı ve bir demlik saatlerce yetiyordu."
+   }
+  ]
+ },
+ "244": {
+  "title": "Oltaya Takılmamak",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir akşam telefonunuza kısa bir mesaj geliyor: “Kargonuz teslim edilemedi. Adres bilgilerinizi güncellemek için bağlantıya tıklayın.” Ya da bankanızdan geliyormuş gibi görünen bir e-posta, hesabınızın güvenlik nedeniyle askıya alındığını ve hemen giriş yapmanız gerektiğini söylüyor. Bu tür mesajların önemli bir kısmı, kişisel bilgilerinizi ya da paranızı ele geçirmeye çalışan dolandırıcılardan gelir. Bu yönteme “oltalama” denir. Adı, balık tutmak için suya atılan oltadan gelir: Dolandırıcılar da binlerce kişiye aynı mesajı gönderir ve birkaçının yemi yutmasını bekler.\n\nOltalama saldırılarında dolandırıcılar, güvendiğiniz bir kurumun kılığına girer. Banka, kargo şirketi, devlet kurumu ya da tanınmış bir alışveriş sitesi gibi görünen mesajlar gönderirler. Mesajdaki bağlantı, gerçeğine çok benzeyen sahte bir siteye açılır. Bu sitede girdiğiniz şifre, kart numarası ya da telefonunuza gelen doğrulama kodu doğrudan dolandırıcıların eline geçer. Bazı durumlarda bağlantıya tıklamak bile telefona ya da bilgisayara zararlı bir yazılımın yüklenmesine yol açabilir.\n\nBu mesajların çoğunda ortak bazı işaretler vardır. İlki aciliyettir. “Hesabınız yirmi dört saat içinde kapatılacak” ya da “Son fırsat” gibi ifadelerle kişi düşünmeden hareket etmeye zorlanır. İkincisi, alışılmadık bir istekte bulunulmasıdır. Gerçek bir banka sizden şifrenizi ya da telefonunuza gelen tek kullanımlık kodu asla istemez. Üçüncüsü, bağlantının adresidir. Sahte sitelerin adresinde çoğu zaman küçük yazım farkları, fazladan harfler ya da tanıdık olmayan uzantılar bulunur. Yazım ve dil bilgisi hataları da dikkat edilmesi gereken işaretler arasındadır. Son olarak, beklemediğiniz bir ödül ya da piyango kazandığınızı söyleyen mesajlara da kuşkuyla yaklaşmak gerekir.\n\nKorunmak için uzmanların önerileri basittir. Şüpheli bir mesajdaki bağlantıya tıklamak yerine, kurumun resmî internet sitesine ya da uygulamasına kendiniz girin. Emin olamadığınızda, kurumun müşteri hizmetlerini bilinen numarasından arayın; mesajda verilen numarayı kullanmayın. Hesaplarınızda iki adımlı doğrulamayı açmak, şifreniz ele geçirilse bile ek bir koruma sağlar.\n\nDolandırıcılar yalnızca mesajla da yetinmez. Kendini polis, savcı ya da banka görevlisi olarak tanıtan kişiler telefonla arayabilir. Ses tonları resmî ve güven vericidir; bazen arayan numara bile gerçek bir kurumunkine benzer. Bu kişiler genellikle hesabınızın tehlikede olduğunu söyleyip paranızı “güvenli bir hesaba” aktarmanızı ister. Hiçbir resmî kurum telefonla para transferi talep etmez. Böyle bir aramada en doğru davranış, telefonu kapatıp kurumu kendiniz aramaktır.\n\nDolandırıcılığa uğradığınızı fark ederseniz hızlı davranmak önemlidir. Bankanızı hemen arayarak kartınızı kapattırın, şifrelerinizi değiştirin ve durumu ilgili makamlara bildirin. Utanmaya gerek yoktur; bu saldırılar en dikkatli insanları bile hedef alacak şekilde tasarlanır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde anlatılan dolandırıcılık yöntemine ne ad verilir?",
+    "correct": "Oltalama",
+    "wrong": [
+     "Taklitçilik",
+     "Korsanlık",
+     "Sızdırma"
+    ],
+    "explanation": "Bu yönteme oltalama denir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yöntemin adı neden oltayla ilişkilendirilmiştir?",
+    "correct": "Atılan yeme birkaç kişinin kanması",
+    "wrong": [
+     "Dolandırıcıların balıkçı olması",
+     "Mesajların denizden gönderilmesi",
+     "Kurbanların kıyı kentlerinde yaşaması"
+    ],
+    "explanation": "Binlerce kişiye mesaj gönderilir, birkaçının yemi yutması beklenir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sahte sitelerin tehlikeli olmasının temel nedeni nedir?",
+    "correct": "Taklidin çok inandırıcı olması",
+    "wrong": [
+     "Sayfaların çok yavaş açılması",
+     "Reklamlarla dolup taşmaları",
+     "Tümüyle yabancı dilde yazılmaları"
+    ],
+    "explanation": "Bağlantı gerçeğine çok benzeyen bir siteye açılır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gerçek bir banka sizden neyi istemez?",
+    "correct": "Size gelen tek seferlik kodu",
+    "wrong": [
+     "Şubeye gelip imza atmanızı",
+     "Kimlik kartınızı göstermenizi",
+     "Adresinizi güncellemenizi"
+    ],
+    "explanation": "Bankalar şifre ya da tek kullanımlık kod istemez."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mesajlarda aciliyet duygusu yaratılmasının amacı nedir?",
+    "correct": "Kişinin düşünmeden davranmasını sağlamak",
+    "wrong": [
+     "Mesajın daha kısa görünmesini sağlamak",
+     "Bankanın saatlerine uymayı kolaylaştırmak",
+     "Kişiyi ödüllendirmeyi hızlandırmak"
+    ],
+    "explanation": "Aciliyet kişiyi düşünmeden hareket etmeye zorlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şüpheli bir mesaj geldiğinde ne yapılması önerilir?",
+    "correct": "Resmî siteye kendiniz girmek",
+    "wrong": [
+     "Mesajdaki numarayı hemen aramak",
+     "Bağlantıya tıklayıp kontrol etmek",
+     "Mesajı arkadaşlara iletmek"
+    ],
+    "explanation": "Kurumun resmî sitesine ya da uygulamasına kendiniz girin."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Telefonla arayan sahte görevlilerin asıl hedefi nedir?",
+    "correct": "Birikimlerin el değiştirmesi",
+    "wrong": [
+     "Kişinin adresini doğrulaması",
+     "Kişiye büyük bir ödül verilmesi",
+     "Kimlik kartının yenilenmesi"
+    ],
+    "explanation": "Paranızı güvenli bir hesaba aktarmanızı isterler."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın okura tutumu nasıldır?",
+    "correct": "Yatıştırıcı ve öğüt veren",
+    "wrong": [
+     "Suçlayıcı ve son derece sert",
+     "Alaycı ve küçümseyici bir",
+     "Kararsız ve çekingen bir"
+    ],
+    "explanation": "Hızlı davranmayı önerir ve utanmaya gerek olmadığını söyler."
+   }
+  ]
+ },
+ "245": {
+  "title": "Ninemin Bahçesi",
+  "category": "Hikaye/Kurgu",
+  "content": "Uzun yaz tatilinde Eren, ninesinin köydeki evine gitti. Ninesinin evinin arkasında küçük bir bahçe vardı. Bahçede domatesler, biberler ve salatalıklar yetişiyordu. Ninesi her sabah bahçeyi sular, yabani otları tek tek temizlerdi.\n\nBir sabah ninesi Eren'e küçük bir sepet verdi. “Hadi, birlikte sebze toplayalım,” dedi. Eren çok sevindi, çünkü şehirde hiç sebze toplamamıştı. Önce domateslere gittiler. Ninesi ona, kırmızı ve yumuşak olan domateslerin olgunlaştığını, yeşil olanların ise biraz daha beklemesi gerektiğini anlattı.\n\nEren bir domatesi kopardı ama domates yeşildi. Ninesi gülümsedi ve yeşil domatesin de pişirilip yenebileceğini, ama bu kez daha dikkatli seçmesini söyledi. Eren bu kez dikkatle baktı ve kıpkırmızı bir domates seçti. Sonra biberleri ve salatalıkları topladılar. Salatalıkların dikenli kabukları Eren'in elini biraz gıdıkladı. Sepet kısa sürede doldu.\n\nEve dönünce ninesi domatesleri yıkadı, salatalıkları doğradı ve güzel bir salata yaptı. Eren kendi topladığı sebzelerle yapılan salatayı büyük bir iştahla yedi. Hiç bu kadar lezzetli bir salata yemediğini söyledi. Ninesi de ona, bir dahaki yaz kendi küçük bahçesini birlikte kurabileceklerini söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ninenin bahçesinde neler yetişiyordu?",
+    "correct": "Domates, biber ve hıyar",
+    "wrong": [
+     "Patates, soğan ve havuç",
+     "Elma, armut ve ayva",
+     "Lahana, pırasa ve ıspanak"
+    ],
+    "explanation": "Bahçede domates, biber ve salatalık yetişiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Eren sebze toplamaya neden çok sevindi?",
+    "correct": "Bunu ilk kez yapacaktı",
+    "wrong": [
+     "Ninesi ona hediye almıştı",
+     "Sepeti çok güzel buldu",
+     "Okul hemen kapanacaktı"
+    ],
+    "explanation": "Şehirde hiç sebze toplamamıştı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Olgun domates nasıl anlaşılır?",
+    "correct": "Rengi kızıl, kendisi yumuşaktır",
+    "wrong": [
+     "Rengi yeşil, kendisi oldukça serttir",
+     "Rengi sarı, kendisi küçüktür",
+     "Rengi mor, kendisi çok uzundur"
+    ],
+    "explanation": "Kırmızı ve yumuşak domatesler olgunlaşmıştır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ninenin Eren'e kızmayıp gülümsemesi neyi gösterir?",
+    "correct": "Hatasını hoş gördüğünü",
+    "wrong": [
+     "Domatesleri sevmediğini",
+     "Eren'e çok kızdığını",
+     "Bahçeden sıkıldığını"
+    ],
+    "explanation": "Kızmadı, ona nasıl seçeceğini yeniden anlattı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Eren'in elini ne gıdıkladı?",
+    "correct": "Hıyarların dikenli kabuğu",
+    "wrong": [
+     "Domatesin tüylü yaprakları",
+     "Biberlerin ince sapları",
+     "Sepetin kenarındaki ip"
+    ],
+    "explanation": "Salatalıkların dikenli kabukları elini gıdıkladı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nine topladıkları sebzelerle ne yaptı?",
+    "correct": "Bir salata hazırladı",
+    "wrong": [
+     "Bir çorba pişirdi",
+     "Kavanozda turşu kurdu",
+     "Komşulara dağıttı"
+    ],
+    "explanation": "Domatesleri yıkadı, salatalıkları doğradı ve salata yaptı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Eren salatayı neden çok lezzetli buldu?",
+    "correct": "Emeğinin ürünü olduğu için",
+    "wrong": [
+     "İçine çok tuz konduğu için",
+     "Annesi onu çok sevdiği için",
+     "Çok acıkmış olduğu için"
+    ],
+    "explanation": "Kendi topladığı sebzelerle yapılan salatayı iştahla yedi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Ninenin son önerisi Eren'e ne kazandırabilir?",
+    "correct": "Toprakla uğraşma deneyimi",
+    "wrong": [
+     "Şehirde yeni bir ev alma",
+     "Pazarda sebze satma işi",
+     "Okulda birinci olma ödülü"
+    ],
+    "explanation": "Gelecek yaz kendi bahçesini kurabilecekler."
+   }
+  ]
+ },
+ "246": {
+  "title": "Gökyüzüne Uzanan Boyun",
+  "category": "Bilgi/Açıklama",
+  "content": "Zürafalar dünyanın en uzun boylu hayvanlarıdır. Yetişkin bir erkek zürafanın boyu beş metreyi geçebilir. Bu, iki katlı bir evin penceresine bakabilecek kadar uzun demektir. Zürafalar Afrika'nın geniş otlaklarında ve seyrek ağaçlık alanlarında yaşar. Genellikle küçük gruplar hâlinde dolaşırlar. Yeni doğan bir zürafa yavrusu bile yaklaşık iki metre boyundadır ve doğduktan kısa süre sonra ayağa kalkıp yürüyebilir.\n\nZürafanın en dikkat çeken özelliği uzun boynudur. Bu boyun sayesinde başka hayvanların uzanamadığı yüksek dallardaki yapraklara ulaşabilir. En çok sevdiği yiyecek akasya ağacının yapraklarıdır. Akasyanın dallarında sivri dikenler vardır, ama zürafa bundan pek etkilenmez. Yarım metreye kadar uzayabilen mor renkli dilini dikenlerin arasından ustaca uzatır ve yaprakları koparır. Bir zürafa günde otuz kilograma yakın yaprak yiyebilir. Su içmek ise onun için zor bir iştir: Ön bacaklarını iki yana açıp başını yere kadar eğmesi gerekir.\n\nŞaşırtıcı bir bilgi daha: Zürafanın uzun boynunda da insanınki gibi yalnızca yedi kemik vardır. Ancak bu kemiklerin her biri çok uzundur. Bir zürafanın boyun kemiklerinden biri, bir insanın kolu kadar uzun olabilir.\n\nZürafaların derisindeki desenler de çok özeldir. Her zürafanın lekeleri farklıdır; tıpkı insanların parmak izleri gibi. Bilim insanları zürafaları bu desenlerden tanıyabilir ve böylece her birinin nereye gittiğini yıllarca izleyebilir.\n\nZürafalar şaşırtıcı derecede az uyur. Günde toplam yarım saat ile iki saat arası uyurlar ve bunu çoğunlukla ayakta yaparlar. Çünkü yere uzanıp kalkmak onlar için zordur ve bu sırada aslanlara karşı savunmasız kalırlar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yetişkin bir erkek zürafanın boyu ne kadar olabilir?",
+    "correct": "Beş metreden fazla",
+    "wrong": [
+     "İki metreden kısa",
+     "Yaklaşık bir metre",
+     "On metreyi aşan"
+    ],
+    "explanation": "Yetişkin bir erkek zürafanın boyu beş metreyi geçebilir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yeni doğan yavrunun hemen yürüyebilmesi ne işe yarar?",
+    "correct": "Sürüye çabucak ayak uydurmasına",
+    "wrong": [
+     "Annesinden uzaklaşıp yaşamasına",
+     "Yüksek dallara hemen ulaşmasına",
+     "Daha uzun süre uyuyabilmesine"
+    ],
+    "explanation": "Gruplar hâlinde dolaşan zürafalarda yavru hemen yürüyerek gruba katılır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zürafanın en çok sevdiği yiyecek nedir?",
+    "correct": "Akasya yaprakları",
+    "wrong": [
+     "Uzun yeşil otlar",
+     "Muz ağacının meyvesi",
+     "Küçük böcekler"
+    ],
+    "explanation": "En çok akasya yapraklarını sever."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zürafa dikenli dallardan nasıl yaprak koparabilir?",
+    "correct": "Uzun dilini aralardan geçirerek",
+    "wrong": [
+     "Dikenleri dişleriyle kırarak",
+     "Dalları ön ayağıyla eğerek",
+     "Yalnızca yere düşenleri yiyerek"
+    ],
+    "explanation": "Mor dilini dikenlerin arasından ustaca uzatır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Su içmenin zürafa için zor olmasının nedeni nedir?",
+    "correct": "Eğilmek zorunda kalması",
+    "wrong": [
+     "Suyun çok soğuk olması",
+     "Boynunun kısa kalması",
+     "Dilinin çok kısa olması"
+    ],
+    "explanation": "Bacaklarını açıp başını yere eğmesi gerekir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zürafanın boynunda kaç kemik vardır?",
+    "correct": "Yedi",
+    "wrong": [
+     "Yirmi",
+     "Üç",
+     "On"
+    ],
+    "explanation": "Zürafanın boynunda da yalnızca yedi kemik vardır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Lekelerin parmak izine benzetilmesinin nedeni nedir?",
+    "correct": "Her birinin kendine özgü olması",
+    "wrong": [
+     "Çok küçük ve ince olmaları",
+     "Hepsinin kahverengi tonda olması",
+     "Zamanla silinip kaybolması"
+    ],
+    "explanation": "Her zürafanın lekeleri farklıdır."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Zürafaların çoğunlukla ayakta uyumasının nedeni nedir?",
+    "correct": "Tehlikeye hazır olmak",
+    "wrong": [
+     "Yere uzanmayı sevmemek",
+     "Boynunu dinlendirmek",
+     "Daha uzun süre uyumak"
+    ],
+    "explanation": "Yere uzanıp kalkmak zor ve aslanlara karşı savunmasız kalırlar."
+   }
+  ]
+ },
+ "247": {
+  "title": "Unutulan Davetiye",
+  "category": "Hikaye/Kurgu",
+  "content": "Sınıfta herkes cumartesi günü yapılacak doğum günü partisini konuşuyordu. Partiyi Zeynep veriyordu ve sınıftaki neredeyse herkesi davet etmişti. Teneffüste kızlar ne giyeceklerini, erkekler ise hangi oyunları oynayacaklarını tartışıyordu. Zeynep'in evinin bahçesinde bir sihirbazın gösteri yapacağı, kocaman çikolatalı bir pasta kesileceği konuşuluyordu.\n\nAslı ise sessizce sırasında oturuyordu. Ona davetiye gelmemişti. Önce bir yanlışlık olduğunu düşündü. Belki davetiyesi çantasına konmuş ama düşmüştü. Ama çantasını iki kez boşaltıp baktığında hiçbir şey bulamadı. Kendini sınıfta görünmez biri gibi hissetti. Arkadaşlarının parti hakkındaki her sözü, içindeki kırgınlığı biraz daha büyütüyordu. O gün derslerin hiçbirini dinleyemedi.\n\nAslı'nın sıra arkadaşı Mert, onun üzgün olduğunu fark etti. Mert'e de davetiye gelmişti. Teneffüste yanına oturup Aslı'ya ne olduğunu sordu. Aslı önce bir şey olmadığını söyledi, ama sonra gözleri doldu ve anlattı. Mert ne diyeceğini bilemedi. Aslı'yı teselli etmek istiyordu, ama Zeynep de onun arkadaşıydı ve kimseyi kırmak istemiyordu.\n\nAkşam Mert durumu annesine anlattı. Annesi ona, belki Zeynep'in bilerek değil, bir unutkanlık yüzünden Aslı'yı atlamış olabileceğini söyledi. Ama ne olursa olsun, birinin dışarıda bırakılmış hissetmesinin çok acı verici olduğunu ekledi. Mert o gece yatağında uzun süre ne yapabileceğini düşündü. Sessiz kalmak kolaydı, ama doğru gelmiyordu.\n\nErtesi gün Mert, Zeynep'in yanına gitti. Onu suçlamadan, Aslı'nın davetiye alamadığını ve buna çok üzüldüğünü söyledi. Zeynep şaşırdı. Davetiyeleri annesiyle birlikte hazırlamışlardı ve listede Aslı'nın adını yazmayı unuttuklarını fark etti. Zeynep çok utandı; arkadaşını farkında olmadan ne kadar üzdüğünü anlamıştı. Hemen Aslı'nın yanına gitti, özür diledi ve onu partiye davet etti.\n\nCumartesi günü Aslı, en sevdiği elbisesini giyip partiye gitti. Mert de oradaydı. Zeynep ona pastadan ilk dilimi verdi. Aslı o gün, bir arkadaşın küçük bir cesaretinin her şeyi değiştirebileceğini öğrenmişti. Mert ise sorunu kızmadan, nazikçe konuşarak çözmenin ne kadar işe yaradığını görmüştü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Partide neler olacağı konuşuluyordu?",
+    "correct": "Sihirbaz gösterisi ve pasta",
+    "wrong": [
+     "Konser ve büyük dans yarışması",
+     "Sinema ve büyük bir havuz",
+     "Piknik ve uçurtma şenliği"
+    ],
+    "explanation": "Sihirbaz gösteri yapacak, çikolatalı pasta kesilecekti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Aslı davetiyesi olmadığını görünce önce ne düşündü?",
+    "correct": "Bir karışıklık olduğunu",
+    "wrong": [
+     "Zeynep'in ona küstüğünü",
+     "Partinin iptal edildiğini",
+     "Annesinin izin vermediğini"
+    ],
+    "explanation": "Önce bir yanlışlık olduğunu düşündü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Aslı'nın derslere odaklanamamasının nedeni nedir?",
+    "correct": "Dışlanmış hissetmesi",
+    "wrong": [
+     "Gece uykusuz kalması",
+     "Kitabını evde unutması",
+     "Hastalanmış olması"
+    ],
+    "explanation": "Kırgınlığı yüzünden dersleri dinleyemedi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mert neden ne diyeceğini bilemedi?",
+    "correct": "Kimseyi kırmak istemiyordu",
+    "wrong": [
+     "Aslı'yı pek tanımıyordu",
+     "Partiye gitmek istemiyordu",
+     "Zeynep'e karşı öfkeliydi"
+    ],
+    "explanation": "Aslı'yı teselli etmek istiyordu ama Zeynep de arkadaşıydı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annesinin sözleri Mert'e hangi bakış açısını kazandırdı?",
+    "correct": "Peşin yargısız ve duyarlı olmayı",
+    "wrong": [
+     "Zeynep'i herkese açıkça şikâyet etmeyi",
+     "Partiye katılmaktan vazgeçmeyi",
+     "Aslı'dan uzak durmaya çalışmayı"
+    ],
+    "explanation": "Unutkanlık olabileceğini ama dışlanmanın acı verdiğini söyledi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Aslı'nın adı listede neden yoktu?",
+    "correct": "Adı yazılırken atlanmıştı",
+    "wrong": [
+     "Zeynep onu istememişti",
+     "Aslı başka okula geçmişti",
+     "Annesi bunu yasaklamıştı"
+    ],
+    "explanation": "Listede Aslı'nın adını yazmayı unutmuşlardı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Mert'in Zeynep'le konuşurken onu suçlamaması neden önemlidir?",
+    "correct": "Zeynep'in kendini savunmadan dinlemesi",
+    "wrong": [
+     "Mert'in partiden kovulmasını önlemesi",
+     "Öğretmenin olaydan haberdar olmasını sağlaması",
+     "Zeynep'in partiyi ertelemesine yol açması"
+    ],
+    "explanation": "Suçlamadan konuşunca Zeynep hatasını fark edip düzeltti."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün iletisi nedir?",
+    "correct": "Nazik bir adım kırgınlığı giderebilir",
+    "wrong": [
+     "Doğum günü partileri gereksizdir",
+     "Herkes her partiye çağrılmalıdır",
+     "Davetiyeler önceden hazırlanmamalıdır"
+    ],
+    "explanation": "Mert'in nazik cesareti sorunu çözdü."
+   }
+  ]
+ }
+}

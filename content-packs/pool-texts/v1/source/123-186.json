@@ -1,0 +1,668 @@
+{
+ "151": {
+  "title": "Puanınız Sizi Anlatır",
+  "category": "Bilgi/Açıklama",
+  "content": "İlk kredi kartınızı almak, bir telefon tarifesi bağlatmak ya da ileride bir konut kredisine başvurmak istediğinizde, bankalar sizin hakkınızda önemli bir bilgiye bakar: kredi notunuz. Kredi notu, bir kişinin borçlarını ne kadar düzenli ödediğini gösteren bir puandır. Türkiye'de bu puan, bankaların ortak kuruluşu olan Kredi Kayıt Bürosu tarafından hesaplanır ve genellikle bir ile bin dokuz yüz arasında bir sayıyla ifade edilir. Puan yükseldikçe, kişinin borcunu geri ödeme ihtimalinin yüksek olduğu düşünülür. Bankalar bu puana bakarak hem kredi verip vermeyeceklerine hem de hangi faizle vereceklerine karar verir. Yani düşük bir kredi notu, yalnızca başvurunun reddedilmesine değil, onaylansa bile daha yüksek faiz ödenmesine de yol açabilir.\n\nKredi notunu belirleyen en önemli etken, geçmişteki ödeme alışkanlıklarıdır. Kredi kartı borcunu, kredi taksitlerini ya da bazı faturaları zamanında ödeyen birinin puanı zamanla yükselir. Ödemelerin geciktirilmesi ise puanı hızla düşürür. Gecikme ne kadar uzun sürerse ve ne kadar sık tekrarlanırsa, olumsuz etkisi de o kadar büyük olur. Unutulan küçük bir kart borcu bile, uzun süre ödenmezse yıllarca kayıtlarda görünebilir. Bu yüzden ödemeleri hatırlamak için otomatik ödeme talimatı vermek ya da telefona hatırlatıcı kurmak işe yarar.\n\nİkinci önemli etken, kişinin kullanılabilir kredi limitinin ne kadarını kullandığıdır. Kredi kartı limitini sürekli sonuna kadar dolduran biri, borç yükünü taşımakta zorlanıyormuş gibi görünebilir. Uzmanlar, limitin yaklaşık üçte birinden fazlasını sürekli kullanmamayı öneriyor. Kısa sürede çok sayıda kredi ya da kart başvurusu yapmak da puanı olumsuz etkileyebilir, çünkü bu durum kişinin acil bir para sıkıntısı içinde olduğu izlenimini verebilir.\n\nGençlerin sık düştüğü bir yanılgı, hiç kredi kartı kullanmamanın en iyi seçenek olduğunu düşünmektir. Oysa hiç kredi geçmişi olmayan bir kişi hakkında bankaların elinde değerlendirebilecekleri bir bilgi yoktur. Bu durum, ileride büyük bir kredi başvurusunda zorluk yaşanmasına yol açabilir. Küçük bir limitle başlayıp borcu her ay eksiksiz ve zamanında ödemek, sağlıklı bir kredi geçmişi oluşturmanın en güvenli yoludur. Burada önemli olan, kartı yalnızca gerçekten ödeyebileceğiniz harcamalar için kullanmak ve asgari ödeme tutarıyla yetinmemektir. Yalnızca asgari tutarı ödemek, kalan borca yüksek faiz işlemesine neden olur ve borcun hızla büyümesine yol açar.\n\nKredi notunuzu düzenli olarak kontrol etmek de önemlidir. Bu bilgiye resmî kanallardan ulaşılabilir. Böylece hem kendi durumunuzu takip edebilir hem de sizin bilginiz dışında adınıza açılmış bir hesap olup olmadığını fark edebilirsiniz. Kimlik bilgilerinin çalınması yoluyla başkası adına kredi çekilmesi, ne yazık ki nadir görülen bir dolandırıcılık türü değildir. Kredi notu bir anda değil, yıllar içinde oluşur; bu yüzden ona erken yaşta özen göstermek, ileride büyük kolaylık sağlar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Türkiye'de kredi notunu hangi kuruluş hesaplar?",
+    "correct": "Kredi Kayıt Bürosu",
+    "wrong": [
+     "Merkez Bankası",
+     "Vergi dairesi birimi",
+     "Ticaret odası birimi"
+    ],
+    "explanation": "Puan Kredi Kayıt Bürosu tarafından hesaplanır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Düşük kredi notu onaylanan bir krediyi nasıl etkileyebilir?",
+    "correct": "Faizi yükselterek",
+    "wrong": [
+     "Süreyi uzatarak",
+     "Taksiti kaldırarak",
+     "Limiti artırarak"
+    ],
+    "explanation": "Onaylansa bile daha yüksek faiz ödenmesine yol açabilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kredi notunu belirleyen en önemli etken nedir?",
+    "correct": "Vaktinde ödeme alışkanlığı",
+    "wrong": [
+     "Kişinin yaşadığı şehir",
+     "Kişinin aylık harcama türü",
+     "Kişinin kaç kartı olduğu"
+    ],
+    "explanation": "En önemli etken geçmişteki ödeme alışkanlıklarıdır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Otomatik ödeme talimatı neden önerilir?",
+    "correct": "Unutulan ödemeleri önlemek için",
+    "wrong": [
+     "Faizleri sıfıra indirmek için",
+     "Bankadan bir hediye kazanmak için",
+     "Kart limitini artırmak için"
+    ],
+    "explanation": "Unutulan küçük bir borç bile uzun süre kayıtlarda kalabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kısa sürede çok sayıda kredi başvurusu yapmak neden olumsuzdur?",
+    "correct": "Para sıkıntısı izlenimi verdiği için",
+    "wrong": [
+     "Bankaların çalışma saatini aştığı için",
+     "Başvuru ücretleri çok yüksek olduğu için",
+     "Kartların hemen iptal edildiği için"
+    ],
+    "explanation": "Kişinin acil para sıkıntısı içinde olduğu izlenimini verebilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hiç kredi kartı kullanmamanın sakıncası nedir?",
+    "correct": "Geçmiş kaydın boş kalması",
+    "wrong": [
+     "Alışverişlerin pahalıya gelmesi",
+     "Faizlerin her ay biraz artması",
+     "Maaşın her ay geç yatması"
+    ],
+    "explanation": "Kredi geçmişi olmayan kişi hakkında bankaların bilgisi yoktur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yalnızca asgari tutarı ödemek neden sorun yaratır?",
+    "correct": "Kalan tutar büyüdüğü için",
+    "wrong": [
+     "Kart hemen kapatıldığı için",
+     "Limit sıfıra indiği için",
+     "Banka ceza yazdığı için"
+    ],
+    "explanation": "Kalan borca yüksek faiz işler ve borç büyür."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta kredi notunu kontrol etmenin hangi yararı öne çıkarılır?",
+    "correct": "Kimlik hırsızlığını fark edebilmek",
+    "wrong": [
+     "Daha çok kredi kartı edinebilmek",
+     "Faizleri kendi belirleyebilmek",
+     "Bankayı değiştirmek zorunda kalmamak"
+    ],
+    "explanation": "Adınıza açılmış bir hesap olup olmadığını fark edebilirsiniz."
+   }
+  ]
+ },
+ "152": {
+  "title": "Sorulmayan Soru",
+  "category": "Hikaye/Kurgu",
+  "content": "Elif, mimarlık fakültesinin üçüncü sınıfındayken büyük bir mimarlık ofisinde yaz stajı yapma fırsatı yakaladı. İlk gün heyecandan neredeyse hiç uyumamıştı. Ofise herkesten önce vardı ve kendisine gösterilen masaya oturdu. Duvarlarda büyük bina maketleri, masalarda rulo hâlinde planlar vardı. Elif burada çalışan herkesin çok deneyimli olduğunu düşünüyor, onların arasında yetersiz görünmekten korkuyordu.\n\nÖğleden sonra ekip lideri Can Bey ona küçük bir görev verdi: Bir projenin kat planlarını yazdırıp akşamki müşteri toplantısı için dosyalayacaktı. Elif, dosyaları bilgisayardan bulup yazıcıya gönderdi, çıktıları özenle düzenledi ve toplantı odasına bıraktı. Görevi zamanında bitirdiği için kendisiyle gurur duyuyordu. Eve dönerken annesini arayıp ilk gününün çok iyi geçtiğini anlattı.\n\nErtesi sabah Can Bey onu odasına çağırdı. Elif'in yazdırdığı planlar projenin eski bir sürümüne aitti. Müşteri, toplantıda kaldırılmasını istediği bir duvarı planda görünce şaşırmış, ekip de durumu açıklamakta zorlanmıştı. Elif'in yüzü kızardı, boğazı düğümlendi. Dosyaların bulunduğu klasörde iki farklı tarih olduğunu fark etmiş, ama hangisinin güncel olduğunu sormaktan çekinmişti. Stajının ikinci gününde yeni yöneticisine basit bir soru sorarak acemi görünmek istememişti. Şimdi ise o küçük sessizliğin bedelini bütün ekip ödemişti.\n\nElif özür diledi ve hatanın tamamen kendisinden kaynaklandığını söyledi. Bahane uydurmadı, suçu yazıcıya ya da dosya düzenine atmadı. Ne olduğunu açıkça anlattı ve hatayı düzeltmek için ne yapabileceğini sordu. Kovulacağını ya da en azından sert bir uyarı alacağını düşünüyordu. Ama Can Bey'in tepkisi onu şaşırttı. Can Bey, kendi ilk stajında bir maketi yanlış ölçekte yaptığını ve bütün bir haftalık çalışmanın boşa gittiğini anlattı. O günden beri, bir işe başlamadan önce kafasındaki bütün soruları sormayı alışkanlık hâline getirmişti. Sonra ona bir öneride bulundu: Emin olmadığı her durumda sormasını, çünkü bir sorunun beş saniye sürdüğünü, ama yanlış bir işin saatlerce düzeltilmesi gerektiğini söyledi.\n\nElif stajının geri kalanında bu öğüdü hiç unutmadı. İlk günlerde soru sormak ona hâlâ zor geliyordu, ama her seferinde Can Bey'in sabırla yanıt verdiğini gördükçe rahatladı. Anlamadığı her şeyi küçük bir deftere not alıyor, gün sonunda sorularını topluca Can Bey'e götürüyordu. Yaz sonunda ekip, onun çalışkanlığını ve dikkatini övdü. Can Bey, mezun olduğunda ofise başvurmasını bile önerdi. Elif ise o yaz öğrendiği en önemli dersin tasarım programlarında değil, o sabahki konuşmada saklı olduğunu düşünüyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elif'in ilk gün yetersiz görünmekten korkmasının nedeni nedir?",
+    "correct": "Çevresini çok usta sanması",
+    "wrong": [
+     "Okul notlarının düşük olması",
+     "Ofise ilk gün geç kalması",
+     "Can Bey'in ona çok kızması"
+    ],
+    "explanation": "Ofisteki herkesin çok deneyimli olduğunu düşünüyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can Bey Elif'e ilk hangi görevi verdi?",
+    "correct": "Planları yazdırıp dosyalamak",
+    "wrong": [
+     "Yeni bir bina maketi yapmak",
+     "Müşteriyle toplantı ayarlamak",
+     "Ofisin arşivini düzenlemek"
+    ],
+    "explanation": "Kat planlarını yazdırıp toplantı için dosyalayacaktı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Toplantıdaki sorunun kaynağı neydi?",
+    "correct": "Planların güncel olmaması",
+    "wrong": [
+     "Yazıcının sık sık bozulması",
+     "Müşterinin geç gelmesi",
+     "Dosyaların yolda kaybolması"
+    ],
+    "explanation": "Elif'in yazdırdığı planlar eski sürüme aitti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Elif'in soru sormaktan çekinmesinin asıl nedeni nedir?",
+    "correct": "Acemi sanılmaktan çekinmesi",
+    "wrong": [
+     "Can Bey'i hiç sevmemesi",
+     "Ofiste kimseyi bulamaması",
+     "Soruyu tümüyle unutmuş olması"
+    ],
+    "explanation": "Yeni yöneticisine basit bir soru sorarak acemi görünmek istememişti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif hatayı fark ettikten sonra nasıl davrandı?",
+    "correct": "Hatayı üstlendi",
+    "wrong": [
+     "Yazıcıyı suçladı",
+     "Ofisten ayrıldı",
+     "Sesini çıkarmadı"
+    ],
+    "explanation": "Özür diledi, hatanın kendisinden kaynaklandığını söyledi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Can Bey'in kendi hatasını anlatmasının amacı nedir?",
+    "correct": "Hatanın olağan olduğunu göstermek",
+    "wrong": [
+     "Kendi başarısıyla uzun uzun övünmek",
+     "Elif'i stajdan hemen çıkarmak",
+     "Konuyu kapatıp hemen unutmak"
+    ],
+    "explanation": "Benzer bir hata yaptığını anlatarak Elif'i rahatlattı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can Bey'in öğüdü neydi?",
+    "correct": "Kuşkuda kalınca danışmak",
+    "wrong": [
+     "Her işi tek başına yapmak",
+     "Hataları gizli tutmak",
+     "Soruları yazıp saklamak"
+    ],
+    "explanation": "Emin olmadığı her durumda sormasını söyledi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri nedir?",
+    "correct": "Soru sormak hatayı önler",
+    "wrong": [
+     "Staj yapmak gereksizdir",
+     "Mimarlık zor bir meslektir",
+     "Yöneticiler sert olmalıdır"
+    ],
+    "explanation": "Bir soru beş saniye sürer, yanlış iş saatlerce düzeltilir."
+   }
+  ]
+ },
+ "185": {
+  "title": "İnternetteki İzlerimiz",
+  "category": "Bilgi/Açıklama",
+  "content": "İnternette paylaştığımız fotoğraflar, yazdığımız yorumlar, beğendiğimiz gönderiler ve hatta aradığımız sözcükler, arkamızda kalıcı bir iz bırakır. Bu izlerin tümüne “dijital ayak izi” denir. Pek çok genç bu izin ne kadar kalıcı olduğunu ve ileride kimler tarafından görülebileceğini pek düşünmez. Oysa yıllar önce yapılmış bir paylaşım, beklenmedik bir anda karşımıza çıkabilir. On beş yaşında şaka olarak yazılmış bir yorum, yirmi beş yaşında bir iş görüşmesinin konusu olabilir.\n\nDijital ayak izi genel olarak ikiye ayrılır. Bilerek bıraktığımız izler, yani paylaştığımız gönderiler, fotoğraflar ve yorumlar, etkin ayak izimizi oluşturur. Farkında olmadan bıraktığımız izler ise edilgin ayak izimizdir. Ziyaret ettiğimiz siteler, telefonumuzun konum bilgisi ve uygulamaların topladığı kullanım verileri bu gruptadır. Örneğin bir alışveriş sitesinde baktığımız bir ürünün, birkaç gün boyunca başka sitelerde reklam olarak karşımıza çıkması, edilgin ayak izimizin izlendiğini gösterir. Bu bilgiler, kişiye özel reklamlar göstermek amacıyla toplanır ve çoğu zaman şirketler arasında paylaşılır.\n\nAraştırmalar, işverenlerin önemli bir kısmının iş başvurusunda bulunan adayları internette araştırdığını gösteriyor. Bazı işverenler adayın sosyal medya hesaplarına göz atıyor, adını arama motorunda aratıyor. Saygısız ya da ayrımcı ifadeler içeren paylaşımlar, başkalarıyla yapılan sert tartışmalar ya da önceki işverenler hakkında kötü sözler, adayın elenmesine yol açabiliyor. Yalnızca işverenler de değil; burs veren kurumlar, bazı üniversiteler ve hatta ev kiralamak istediğiniz kişiler de internette küçük bir araştırma yapabiliyor. Öte yandan bu araştırmalar her zaman olumsuz sonuç doğurmuyor. Adayın ilgi alanlarını, yaptığı gönüllü çalışmaları ya da ürettiği işleri gösteren paylaşımlar onun lehine de olabiliyor.\n\nÜstelik bir paylaşımı silmek, onun tamamen ortadan kalktığı anlamına gelmez. Başkaları paylaşımın ekran görüntüsünü almış olabilir ya da paylaşım başka sitelerde kopyalanmış olabilir. Bu yüzden uzmanlar, bir şeyi paylaşmadan önce “Bunu beş yıl sonra bir işverenin görmesinden rahatsız olur muyum?” diye düşünmeyi öneriyor. Başkalarının fotoğraflarını paylaşırken de onların iznini almak, hem saygının hem de onların dijital ayak izine özen göstermenin bir gereğidir.\n\nDijital ayak izimizi yönetmek için atabileceğimiz basit adımlar vardır. Zaman zaman kendi adımızı arama motorunda aratıp neler çıktığına bakmak, sosyal medya hesaplarımızın gizlilik ayarlarını gözden geçirmek ve artık kullanmadığımız hesapları kapatmak bunların başında gelir. Uygulamalara verdiğimiz izinleri, örneğin konum, kamera ya da rehber erişimini, gerçekten gerekip gerekmediğini düşünerek sınırlamak da edilgin ayak izimizi küçültür.\n\nDijital ayak izinden tümüyle kaçınmak bugün neredeyse imkânsızdır. Ama bilinçli bir kullanıcı olmak mümkündür. Amaç interneti kullanmaktan korkmak değil, orada bıraktığımız izin bizi doğru ve olumlu biçimde yansıtmasını sağlamaktır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın şaka yorum örneğiyle vurguladığı nedir?",
+    "correct": "Eski paylaşımların sorun olabileceği",
+    "wrong": [
+     "Gençlerin hiç şaka yapmaması gerektiği",
+     "İş görüşmelerinin çok zor olduğu",
+     "Yorumların kısa sürede silindiği"
+    ],
+    "explanation": "Yıllar önceki bir yorum bir iş görüşmesinin konusu olabilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Farkında olmadan bıraktığımız izlere ne ad verilir?",
+    "correct": "Edilgin ayak izi",
+    "wrong": [
+     "Etkin ayak izi",
+     "Gizli kimlik kaydı",
+     "Açık profil bilgisi"
+    ],
+    "explanation": "Farkında olmadan bıraktığımız izler edilgin ayak izimizdir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Baktığımız bir ürünün başka sitelerde reklam olarak çıkması neyi gösterir?",
+    "correct": "Davranışımızın izlendiğini",
+    "wrong": [
+     "İnternetin yavaşladığını",
+     "Ürünün birden çok ucuzladığını",
+     "Bilgisayarın bozulduğunu"
+    ],
+    "explanation": "Edilgin ayak izi izlenir ve kişiye özel reklam için kullanılır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre işverenler adayları nasıl inceliyor?",
+    "correct": "Çevrimiçi tarama yaparak",
+    "wrong": [
+     "Komşularıyla konuşarak",
+     "Okullarını ziyaret ederek",
+     "Ailelerini arayarak"
+    ],
+    "explanation": "İşverenlerin önemli bir kısmı adayları internette araştırıyor."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazara göre internet araştırmasının aday lehine sonuç vermesi nasıl mümkündür?",
+    "correct": "Olumlu yanları gösteren içerikle",
+    "wrong": [
+     "Hiçbir hesabı bulunmamasıyla",
+     "Çok sayıda takipçiye ulaşmış olmakla",
+     "Yalnızca fotoğraf paylaşmakla"
+    ],
+    "explanation": "İlgi alanlarını ve gönüllü işleri gösteren paylaşımlar lehine olabilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Silinen bir paylaşımın yok olmamasının nedeni nedir?",
+    "correct": "Başkalarının elinde kalabilmesi",
+    "wrong": [
+     "Silme tuşunun hiç çalışmaması",
+     "Paylaşımın şifreli tutulması",
+     "Platformların silmeyi yasaklaması"
+    ],
+    "explanation": "Ekran görüntüsü alınmış ya da başka sitelere kopyalanmış olabilir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Edilgin ayak izini küçültmenin bir yolu nedir?",
+    "correct": "Uygulama izinlerini kısmak",
+    "wrong": [
+     "Daha çok fotoğraf paylaşmak",
+     "Yeni yeni hesaplar açmak",
+     "Telefonu sık değiştirmek"
+    ],
+    "explanation": "Konum, kamera gibi izinleri sınırlamak edilgin izi küçültür."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın tutumu nasıldır?",
+    "correct": "Bilinçli kullanımı öneren bir tutum",
+    "wrong": [
+     "İnterneti bütünüyle reddeden bir tutum",
+     "Her paylaşımı coşkuyla öven bir tutum",
+     "Konuyu hiç önemsemeyen bir tutum"
+    ],
+    "explanation": "Amaç korkmak değil, izin bizi doğru yansıtmasını sağlamaktır."
+   }
+  ]
+ },
+ "186": {
+  "title": "Köy Okulunda Bir Dönem",
+  "category": "Hikaye/Kurgu",
+  "content": "Üniversitenin son yılında Barış, bir gönüllülük programı aracılığıyla bir dönem boyunca her cumartesi Kars'ın küçük bir köyündeki okulda çocuklara İngilizce dersi verecekti. İstanbul'da büyümüş, hayatı boyunca hiç köyde yaşamamıştı. Kafasında hazır bir plan vardı: Ders kitabını açacak, kelimeleri tahtaya yazacak, çocuklara tekrar ettirecekti. Yola çıkmadan önce internetten etkinlik sayfaları indirmiş, renkli kartlar hazırlamıştı. Her şeyin kusursuz gideceğinden emindi.\n\nİlk ders tam bir hayal kırıklığıydı. Çocuklar utangaçtı, sorduğu sorulara yanıt vermiyor, birbirlerine bakıp gülüşüyorlardı. Barış tahtaya yazdığı kelimelerin çoğunun çocuklara hiçbir şey ifade etmediğini fark etti. Kitaptaki “metro”, “alışveriş merkezi” ve “asansör” gibi sözcükler, köyde yaşayan çocukların hayatında yoktu. Ders bittiğinde Barış kendini başarısız hissetti. Dönüş yolunda otobüs penceresinden karla kaplı tepelere bakarken, buraya gerçekten bir şey öğretmek için mi yoksa kendini iyi hissetmek için mi geldiğini sorguladı.\n\nO hafta okulun müdürü olan yaşlı öğretmen Hüseyin Bey'le uzun uzun konuştu. Hüseyin Bey ona, çocuklara bir şey öğretmeden önce onları tanıması gerektiğini söyledi. Otuz yıldır bu köyde öğretmenlik yapıyordu ve ilk yıllarında kendisinin de benzer hatalar yaptığını anlattı. Barış ikinci cumartesi kitabı çantasında bıraktı. Çocuklardan ona köylerini gezdirmelerini istedi. Çocuklar onu ahırlara, dereye, okulun arkasındaki tepeye götürdü. Her şeyin adını Türkçe söylediler. Barış da İngilizcesini söyledi. “Cow”, “river”, “hill”, “snow.” Çocuklar kelimeleri gülerek tekrar ettiler, bazıları kendi defterlerine resmini çizdi.\n\nHaftalar geçtikçe dersler değişti. Çocuklar artık onu kapıda karşılıyor, her hafta yeni bir şey göstermek için sabırsızlanıyordu. Barış her hafta çocukların hayatından bir konu seçiyordu: hayvanlar, mevsimler, aileler, köydeki meslekler. Çocuklar da ona köy hayatını öğretiyordu. Barış ilk kez bir ineğin nasıl sağıldığını, karın altında kalan otlara hayvanların nasıl ulaştığını, kışın köy yolunun neden haftalarca kapandığını öğrendi. Bir öğrencisi, babasının arıcılık yaptığını söyleyerek ona bal üretimini anlattı; Barış da karşılığında arının İngilizcesini ve İngilizce bir bal tarifini öğretti. Bu karşılıklı öğrenme, sınıfta daha önce olmayan bir güven yaratmıştı.\n\nDönemin son günü çocuklar ona İngilizce yazılmış küçük bir kart verdi: “Thank you, teacher. Come back in spring.” Barış kartı cüzdanına koydu. Kartın arkasına her çocuk adını yazmış, yanına küçük bir resim çizmişti. Döneme başlarken çocuklara bir şey öğreteceğini sanmıştı. Dönemi bitirirken ise kendisinin ne kadar çok şey öğrendiğini düşünüyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Barış'ın başlangıçtaki yaklaşımının eksiği neydi?",
+    "correct": "Öğrencileri tanımadan gelmesi",
+    "wrong": [
+     "Yeterince kitap götürmemesi",
+     "Derslere her hafta geç gelmesi",
+     "İngilizceyi iyi bilmemesi"
+    ],
+    "explanation": "Hazır bir planla geldi ama çocukların hayatını bilmiyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk derste çocuklar nasıl davrandı?",
+    "correct": "Çekingen davrandılar",
+    "wrong": [
+     "Çok gürültü yaptılar",
+     "Dersten kaçtılar",
+     "Barış'a kızdılar"
+    ],
+    "explanation": "Çocuklar utangaçtı, sorulara yanıt vermiyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kitaptaki sözcüklerin işe yaramamasının nedeni nedir?",
+    "correct": "Çocukların hayatına uzak olmaları",
+    "wrong": [
+     "Çok uzun ve zor sözcükler olmaları",
+     "Kitapta yanlış yazılmış olmaları",
+     "Çocukların zaten çok iyi bilmesi"
+    ],
+    "explanation": "Metro, asansör gibi sözcükler köy hayatında yoktu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hüseyin Bey Barış'a ne önerdi?",
+    "correct": "Öğrencilerle tanışmasını",
+    "wrong": [
+     "Daha sert davranmasını",
+     "Kitabı ezberletmesini",
+     "Okulu tümüyle bırakmasını"
+    ],
+    "explanation": "Bir şey öğretmeden önce onları tanıması gerektiğini söyledi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "İkinci dersteki yöntemin başarılı olmasının nedeni nedir?",
+    "correct": "Öğrenmenin onların dünyasından başlaması",
+    "wrong": [
+     "Barış'ın daha çok ödev verip denetlemesi",
+     "Derslerin çok daha uzun sürmesi",
+     "Çocuklara küçük ödüller dağıtılması"
+    ],
+    "explanation": "Köyde gördükleri şeylerin İngilizcesini öğrenmek çocuklara anlamlı geldi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arıcılık örneği sınıftaki ilişkinin nasıl değiştiğini gösterir?",
+    "correct": "Öğrenmenin karşılıklı olduğunu",
+    "wrong": [
+     "Çocukların balı çok sevdiğini",
+     "Barış'ın arıcı olmak istediğini",
+     "Derslerin iptal edildiğini"
+    ],
+    "explanation": "Bu karşılıklı öğrenme sınıfta güven yarattı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar dönemin sonunda Barış'a ne verdi?",
+    "correct": "İngilizce yazılmış bir kart",
+    "wrong": [
+     "Kendi yaptıkları bir maket",
+     "Bir kavanoz taze köy balı",
+     "Resimli bir İngilizce kitap"
+    ],
+    "explanation": "İngilizce yazılmış küçük bir kart verdiler."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Barış hangi farkındalığa ulaşır?",
+    "correct": "Asıl öğrencinin kendisi olduğuna",
+    "wrong": [
+     "Köye kalıcı olarak yerleşeceğine",
+     "Öğretmenliği bütünüyle bırakacağına",
+     "Çocukların dili öğrenip bitirdiğine"
+    ],
+    "explanation": "Bir şey öğreteceğini sanmıştı, kendisi çok şey öğrendi."
+   }
+  ]
+ },
+ "123": {
+  "title": "Sınırlarını Çizmek",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir arkadaşınız taşınırken yardım istedi, ama o gün sizin de önemli bir sınavınız var. Bir iş arkadaşınız, kendi raporunu yetiştiremediği için sizden yardım istiyor; oysa sizin de masanızda bitmemiş işler bekliyor. Pek çok insan bu tür durumlarda, içinden geçmese bile “tamam” der. “Hayır” demek, karşıdakini kırmak, bencil görünmek ya da ilişkiyi bozmak gibi hissettirir. Ancak sürekli başkalarının isteklerini kendi ihtiyaçlarının önüne koyan biri, bir süre sonra tükenmiş, öfkeli ve değersiz hissedebilir.\n\nPsikologlar bu noktada sıklıkla “kişisel sınırlar” kavramından söz eder. Kişisel sınır, bir insanın kendi zamanını, enerjisini, duygularını ve değerlerini korumak için belirlediği çizgidir. Bu çizgi, başkalarıyla ilişkimizde neyi kabul edip neyi etmediğimizi gösterir. Sağlıklı sınırlar duvar gibi değildir; insanları dışarıda tutmak için değil, ilişkinin iki taraf için de adil olmasını sağlamak için vardır.\n\nSınır koymakta zorlanmanın birkaç nedeni olabilir. Bazı insanlar çocuklukta sürekli uyumlu olmaları gerektiği öğretilerek büyür. Bazıları, reddedilme ya da sevilmeme korkusu taşır. Bazıları da başkalarına yardım etmeyi kendi değerlerinin kaynağı olarak görür. Bu nedenler anlaşılırdır, ama sürekli kendinden ödün vermek uzun vadede hem kişiye hem de ilişkilere zarar verir. Kişi içten içe biriken kırgınlığı, bir gün beklenmedik bir öfke patlamasıyla dışa vurabilir. Üstelik isteksizce verilen her “evet”, karşı tarafa da yanlış bir mesaj iletir; kişi aslında istemediği hâlde her şeye razı olduğunu düşündürür.\n\nUzmanlar, sınır koymanın doğuştan gelen bir yetenek değil, öğrenilebilir bir beceri olduğunu söylüyor. İlk adım, kendi ihtiyaçlarını fark etmektir: Hangi durumlar yoruyor, hangi istekler rahatsız ediyor? İkinci adım, sınırı açık ve sakin bir dille ifade etmektir. Uzun açıklamalar yapmaya ya da özür dilemeye gerek yoktur. “Bu hafta sana yardım edemeyeceğim, çünkü sınavıma çalışmam gerekiyor” gibi kısa ve net bir cümle yeterlidir. Dilerseniz bir alternatif de sunabilirsiniz: “Ama gelecek hafta sonu yardım edebilirim.”\n\nSınırlar yalnızca zaman ve iş konusunda değildir. Günümüzde dijital sınırlar da en az onlar kadar önemlidir. Gece yarısı gelen iş mesajlarına hemen yanıt vermek zorunda hissetmek, sosyal medyada sürekli ulaşılabilir olmak, insanın dinlenmesine fırsat bırakmaz. Telefonun bildirimlerini belirli saatlerde kapatmak ya da mesajlara ne zaman yanıt verileceğini önceden belirlemek, sağlıklı bir dijital sınır olabilir. Aile içinde de, yetişkin bir bireyin kendi kararlarına alan açması, kimi zaman sevgiyle ama kararlılıkla ifade edilmiş sınırlar gerektirir.\n\nSınır koyduğunuzda karşınızdaki kişi ilk anda şaşırabilir ya da hoşnutsuzluğunu gösterebilir. Bu doğaldır ve sizin yanlış bir şey yaptığınız anlamına gelmez. Zamanla insanlar sınırlarınıza alışır, hatta size daha fazla saygı duymaya başlar. Bazı ilişkiler ise koyduğunuz sınırlara hiç uyum sağlamayabilir; bu da o ilişkinin size ne kadar iyi geldiğini düşünmek için önemli bir işarettir. Sınır koymak bencillik değildir; yorgun ve kırgın biri yerine, gerçekten istekli ve dinlenmiş biri olarak başkalarına yardım edebilmenin de yoludur. Unutmamak gerekir ki sınır koymak, başkalarına değil, kendinize gösterilen bir özendir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre sürekli başkalarına öncelik vermenin sonucu ne olabilir?",
+    "correct": "Bitkinlik ve iç küskünlüğü",
+    "wrong": [
+     "Herkesin sevgisini kazanmak",
+     "Daha çok zaman kazanmak",
+     "İş yerinde hızla yükselmek"
+    ],
+    "explanation": "Kişi tükenmiş, öfkeli ve değersiz hissedebilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kişisel sınır nedir?",
+    "correct": "Kendini korumak için çizilen çizgi",
+    "wrong": [
+     "Evin etrafına çekilen bir çit",
+     "Başkalarını uzaklaştıran bir duvar",
+     "İş yerindeki çalışma saatleri"
+    ],
+    "explanation": "Zamanı, enerjiyi, duyguları ve değerleri korumak için belirlenen çizgidir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sağlıklı sınırların duvardan farkı nedir?",
+    "correct": "İlişkiyi adil kılmayı amaçlaması",
+    "wrong": [
+     "İnsanları tümüyle dışarıda tutması",
+     "Hiç değişmeyecek kadar sert olması",
+     "Yalnızca ailede kullanılması"
+    ],
+    "explanation": "Sınırlar insanları dışarıda tutmak için değil, ilişkiyi adil kılmak içindir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "İsteksiz verilen “evet”lerin karşı tarafa etkisi nedir?",
+    "correct": "Yanlış bir izlenim yaratmaları",
+    "wrong": [
+     "Karşı tarafı çok mutlu etmeleri",
+     "İlişkiyi hemen bitirmeleri",
+     "Karşı tarafın özür dilemesi"
+    ],
+    "explanation": "Kişinin her şeye razı olduğu düşünülür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlara göre sınır koymanın ilk adımı nedir?",
+    "correct": "Neye gereksinim duyduğunu görmek",
+    "wrong": [
+     "Karşı tarafı sert biçimde uyarmak",
+     "Uzun bir özür mektubu yazmak",
+     "Herkesle ilişkiyi hemen kesmek"
+    ],
+    "explanation": "İlk adım, kişinin kendi ihtiyaçlarını fark etmesidir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sınırı ifade ederken neden uzun açıklamalar önerilmez?",
+    "correct": "Net bir cümle yettiği için",
+    "wrong": [
+     "Karşı taraf sıkılacağı için",
+     "Zaman kaybı olacağı için",
+     "Özür dilemek ayıp olduğu için"
+    ],
+    "explanation": "Kısa ve net bir cümle yeterlidir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre sağlıklı bir dijital sınır örneği hangisidir?",
+    "correct": "Bildirimleri belli saatlerde kapatmak",
+    "wrong": [
+     "Gece mesajlara hemen yanıt vermek",
+     "Sosyal medyada sürekli çevrimiçi olmak",
+     "Telefonu bütünüyle kullanmamak"
+    ],
+    "explanation": "Bildirimleri belirli saatlerde kapatmak sağlıklı bir sınırdır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar sınır koymayı nasıl tanımlar?",
+    "correct": "Kendine gösterilen bir özen",
+    "wrong": [
+     "Başkalarına karşı bir saldırı",
+     "Bencilce bir davranış biçimi",
+     "Geçici bir öfke tepkisi"
+    ],
+    "explanation": "Sınır koymak kendinize gösterilen bir özendir."
+   }
+  ]
+ },
+ "153": {
+  "title": "Dikkatimizin Peşindekiler",
+  "category": "Bilgi/Açıklama",
+  "content": "Telefonunuzu bir mesajı kontrol etmek için elinize aldınız ve yirmi dakika sonra kendinizi hiç planlamadığınız videoları izlerken buldunuz mu? Bu deneyim çok yaygındır ve büyük olasılıkla bir tesadüf değildir. Bugün kullandığımız uygulamaların pek çoğu, dikkatimizi olabildiğince uzun süre ellerinde tutacak şekilde tasarlanıyor. Bu duruma “dikkat ekonomisi” adı veriliyor. Kavram, bilgi bolluğunun olduğu bir dünyada asıl kıt kaynağın bilgi değil, insanların ona ayırabileceği dikkat olduğu fikrine dayanır. Nobel ödüllü ekonomist Herbert Simon bu düşünceyi daha 1970'lerde dile getirmişti.\n\nDikkat ekonomisinin mantığı aslında oldukça basittir. Ücretsiz sosyal medya platformlarının ve uygulamaların büyük bölümü, gelirlerini reklamlardan elde eder. Bir kullanıcı uygulamada ne kadar uzun süre kalırsa, o kadar çok reklam görür ve şirket o kadar çok para kazanır. Bu yüzden bu platformlar açısından asıl satılan ürün, aslında kullanıcının dikkatidir. Sık sık söylenen bir söz bunu özetler: Bir ürün için para ödemiyorsanız, ürün sizsiniz.\n\nUygulamalar dikkatimizi çekmek ve tutmak için çeşitli, özenle düşünülmüş tasarım yöntemleri kullanır. Bunlardan biri “sonsuz kaydırma”dır. Sayfanın belirli bir sonu olmadığı için, içeriği tüketmeyi bırakmamızı hatırlatan doğal bir durak noktası da yoktur. Bir başka yöntem, gün boyu gelen bildirimlerdir. Kırmızı rozetler ve titreşimler, önemli bir şeyi kaçırıyormuşuz hissi yaratarak telefonu açmamızı sağlar. Videoların ardı ardına kendiliğinden oynatılması da bir sonraki içeriğe geçme kararını bizim yerimize verir.\n\nBu tasarımların bazıları, psikolojideki “değişken ödül” ilkesinden yararlanır. Kumar makinelerinde olduğu gibi, ne zaman ödül alacağımızı bilmediğimizde, o ödülü daha sık ararız. Sayfayı aşağı çekip yenilediğimizde bazen ilginç bir gönderi, bazen yeni bir beğeni, bazen de hiçbir şey çıkmaz. Bu belirsizlik, tekrar tekrar bakma isteğini güçlendirir. Bu tasarımları geliştiren bazı mühendisler ve tasarımcılar, yıllar sonra kendi ürettikleri özelliklerin bağımlılık yaratıcı etkilerinden duydukları rahatsızlığı açıkça dile getirdi. Kimi, kendi çocuklarının bu uygulamaları kullanmasını sınırladığını anlattı.\n\nDikkatin sürekli bölünmesinin ise, çoğu zaman fark edilmeyen bir bedeli vardır. Araştırmalar, bir işi yaparken bölünen kişinin, eski odak düzeyine dönmesinin uzun sürebildiğini gösteriyor. Çalışırken masada duran bir telefonun, kapalı olsa bile, dikkati bir miktar dağıtabildiğini bulan çalışmalar da var. Sürekli bölünen dikkat, derin düşünmeyi, uzun bir metni sonuna kadar okumayı ve yaratıcı çalışmayı zorlaştırır. Gece geç saatlere kadar ekrana bakmak ise uykuyu da olumsuz etkiler.\n\nDikkatimizi geri kazanmak için bazı basit adımlar atabiliriz. Gereksiz bildirimleri kapatmak, uygulamaları ana ekrandan kaldırmak, çalışırken telefonu başka bir odaya koymak ve ekran süresini takip eden araçları kullanmak bunlar arasındadır. Bazı kişiler ekranı siyah beyaz moda almanın bile uygulamaları daha az çekici hâle getirdiğini söylüyor. Günün belirli saatlerini, örneğin yemek ve uyku öncesini, ekransız geçirmek de etkili bir alışkanlıktır. Amaç teknolojiden tamamen uzaklaşmak değil, onu bilinçli biçimde, kendi seçtiğimiz zamanlarda kullanmaktır. Dikkatimiz, sahip olduğumuz en değerli kaynaklardan biridir; onu nereye vereceğimize başkalarının değil, bizim karar vermemiz gerekir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar ilk paragrafta neyi öne sürer?",
+    "correct": "Dağınıklığın tasarım ürünü olduğunu",
+    "wrong": [
+     "Telefonların çabuk bozulduğunu",
+     "Videoların çok kısa olduğunu",
+     "Mesajların çoğunun önemsiz olduğunu"
+    ],
+    "explanation": "Uygulamalar dikkatimizi tutacak şekilde tasarlanıyor."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dikkat ekonomisi fikrini 1970'lerde dile getiren kimdir?",
+    "correct": "Herbert Simon",
+    "wrong": [
+     "Milton Friedman",
+     "Thomas Malthus",
+     "John Keynes"
+    ],
+    "explanation": "Nobel ödüllü ekonomist Herbert Simon bu düşünceyi dile getirmişti."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Ürün sizsiniz” sözü neyi anlatır?",
+    "correct": "Satılan şeyin dikkatimiz olduğunu",
+    "wrong": [
+     "Kullanıcıların uygulama ürettiğini",
+     "Uygulamaların çok pahalı olduğunu",
+     "Reklamların aslında yasak olduğunu"
+    ],
+    "explanation": "Ücretsiz platformlarda asıl satılan kullanıcının dikkatidir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sonsuz kaydırmanın etkisi nedir?",
+    "correct": "Mola anını ortadan kaldırması",
+    "wrong": [
+     "Sayfayı çok yavaşlatması",
+     "Telefonun şarjını bitirmesi",
+     "Reklamları büsbütün kaldırması"
+    ],
+    "explanation": "Sayfanın sonu olmadığı için bırakmamızı hatırlatan bir nokta yoktur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Değişken ödül ilkesinin kumar makineleriyle benzerliği nedir?",
+    "correct": "Belirsiz ödülün tekrarı artırması",
+    "wrong": [
+     "İkisinin de para kazandırması",
+     "İkisinin de sürekli ses çıkarması",
+     "İkisinin de yasalarca yasak olması"
+    ],
+    "explanation": "Ne zaman ödül geleceğini bilmemek daha sık aramaya yol açar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı tasarımcılar sonradan ne yaptı?",
+    "correct": "Kaygılarını açıkça söyledi",
+    "wrong": [
+     "Yeni uygulamalar tasarladı",
+     "Şirketlerinden istifa etmedi",
+     "Reklamları daha da artırdı"
+    ],
+    "explanation": "Ürettikleri özelliklerin etkilerinden duydukları rahatsızlığı dile getirdiler."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kapalı bir telefonun bile dikkati dağıtabilmesi neyi gösterir?",
+    "correct": "Varlığının bile zihni yorduğunu",
+    "wrong": [
+     "Telefonların sürekli ses çıkardığını",
+     "Ekranın kendiliğinden açıldığını",
+     "Çalışmanın gereksiz olduğunu"
+    ],
+    "explanation": "Masada duran telefon kapalıyken bile dikkati dağıtabilir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın asıl önerisi nedir?",
+    "correct": "Araçları seçerek ve ölçülü kullanmak",
+    "wrong": [
+     "Telefonları tümüyle bırakmak",
+     "Bütün uygulamaları telefondan silmek",
+     "Ekran süresini biraz artırmak"
+    ],
+    "explanation": "Amaç teknolojiyi bilinçli biçimde, seçilen zamanlarda kullanmaktır."
+   }
+  ]
+ }
+}

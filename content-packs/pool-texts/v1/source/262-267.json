@@ -1,0 +1,668 @@
+{
+ "262": {
+  "title": "Takas Günü",
+  "category": "Hikaye/Kurgu",
+  "content": "Ece ile kardeşi Kuzey bir cumartesi sabahı yine aynı oyuncak yüzünden kavga ediyorlardı. İkisi de uzaktan kumandalı kırmızı arabayla oynamak istiyordu. Bağırışları duyan babaları odaya geldi. Arabayı alıp rafın üstüne koydu ve ikisine de oturmalarını söyledi. Bu, o hafta aynı araba yüzünden çıkan üçüncü kavgaydı.\n\nBabaları, odadaki oyuncaklara bakmalarını istedi. Dolaplar, kutular, sandıklar oyuncakla doluydu. Ama ikisi de neredeyse her gün aynı birkaç oyuncakla oynuyordu. Geri kalanların çoğu aylardır kutularda bekliyordu. Bazılarını Kuzey hiç hatırlamıyordu bile. Ece de bir kutunun dibinden, doğum gününde hediye edilen ama hiç açılmamış bir boyama setini çıkardı. Babası onlara bir öneride bulundu: Hafta sonu mahallede bir “takas günü” düzenleyeceklerdi.\n\nEce ile Kuzey önce emin olamadılar. Oyuncaklarını başkalarına vermek istemiyorlardı. Ama babaları, takasta bir oyuncak verip karşılığında başka bir çocuğun oyuncağını alacaklarını anlattı. Böylece hem yeni oyuncakları olacak hem de eski oyuncakları başka çocukları sevindirecekti. Bu fikir ikisinin de hoşuna gitti. Birlikte oturup artık oynamadıkları oyuncakları ayırdılar. Bir yapboz, iki pelüş ayı, eski bir tren seti ve renkli bloklar kutuya girdi.\n\nCumartesi günü apartmanın bahçesine masalar kuruldu. Komşu çocukları da oyuncaklarını getirdi. Her çocuk masasına oyuncaklarını dizdi ve diğer masaları dolaşmaya başladı. Bahçe kısa sürede gülüşmelerle doldu. Ece, yapbozunu bir resim kitabıyla değiştirdi. Kuzey ise tren setini, bir çocuğun getirdiği küçük bir teleskopla takas etti. Gün sonunda masada kalan oyuncakları ise mahalledeki bir çocuk yuvasına bağışlamaya karar verdiler. Kuzey, en sevdiği pelüş ayılardan birini de kendi isteğiyle bağış kutusuna koydu.\n\nO akşam eve döndüklerinde, kırmızı araba hâlâ rafın üstündeydi. Ece arabayı indirdi ve Kuzey'e uzattı. “Önce sen oyna,” dedi. Sesi biraz utangaçtı. Kuzey şaşırdı, sonra gülümsedi. “Yarım saat ben, yarım saat sen,” dedi. Babaları kapıdan onları izlerken, takas gününün en değerli kazancının yeni oyuncaklar olmadığını düşündü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babaları kavgayı nasıl durdurdu?",
+    "correct": "Arabayı ulaşılmaz yere koydu",
+    "wrong": [
+     "İkisini ayrı odalara gönderdi",
+     "Yeni bir araba almaya söz verdi",
+     "Arabayı komşu çocuğa verdi"
+    ],
+    "explanation": "Arabayı alıp rafın üstüne koydu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Babanın oyuncaklara bakmalarını istemesinin amacı nedir?",
+    "correct": "Çoğunun boşta durduğunu göstermek",
+    "wrong": [
+     "Oyuncakları kaç tane olduğunu saydırmak",
+     "Odayı hemen toplamalarını sağlamak",
+     "Kırık olanları bulup çöpe atmak"
+    ],
+    "explanation": "Çocuklar her gün yalnızca birkaç oyuncakla oynuyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çocukları takas fikrine ikna eden neydi?",
+    "correct": "Yerine başka oyuncak alacak olmaları",
+    "wrong": [
+     "Babalarından harçlık alacak olmaları",
+     "Okulun bunu ödev olarak vermesi",
+     "Oyuncakların artık bozulmuş olması"
+    ],
+    "explanation": "Bir oyuncak verip karşılığında başka bir çocuğun oyuncağını alacaklardı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kuzey tren setini neyle takas etti?",
+    "correct": "Küçük bir teleskopla",
+    "wrong": [
+     "Bir resim kitabıyla",
+     "Kırmızı bir arabayla",
+     "Renkli bloklarla"
+    ],
+    "explanation": "Tren setini küçük bir teleskopla takas etti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kuzey'in pelüş ayıyı kendi isteğiyle bağışlaması neyi gösterir?",
+    "correct": "Paylaşmayı sevmeye başladığını",
+    "wrong": [
+     "Ayıdan artık hiç hoşlanmadığını",
+     "Babasından çok çekindiğini",
+     "Yepyeni bir ayı istediğini"
+    ],
+    "explanation": "Başka çocukları sevindirmenin değerini anlamaya başladı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ece'nin arabayı önce kardeşine uzatması neyi gösterir?",
+    "correct": "Bir ders çıkardığını",
+    "wrong": [
+     "Arabadan sıkıldığını",
+     "Kardeşinden çekindiğini",
+     "Babasına kızdığını"
+    ],
+    "explanation": "Takas günü ona paylaşmayı öğretmişti."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Babaya göre takas gününün en değerli kazancı nedir?",
+    "correct": "Kardeşlerin paylaşmayı öğrenmesi",
+    "wrong": [
+     "Evin çok daha düzenli hâle gelmesi",
+     "Yeni oyuncakların eve gelmesi",
+     "Komşuların birbirini tanıması"
+    ],
+    "explanation": "Baba, en değerli kazancın yeni oyuncaklar olmadığını düşündü."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Takas kutusuna konan oyuncaklardan biri hangisidir?",
+    "correct": "Eski bir tren seti",
+    "wrong": [
+     "Kırmızı bir araba",
+     "Bir boyama seti",
+     "Küçük bir teleskop"
+    ],
+    "explanation": "Yapboz, pelüş ayılar, tren seti ve bloklar kutuya girdi."
+   }
+  ]
+ },
+ "263": {
+  "title": "Yerin Altındaki Ateş",
+  "category": "Bilgi/Açıklama",
+  "content": "Volkanlar, yerin derinliklerindeki erimiş kayaların yüzeye çıktığı yerlerdir. Dünya'nın içi çok sıcaktır. Yerin onlarca kilometre altında sıcaklık o kadar yüksektir ki kayalar erir ve magma adı verilen koyu, akışkan bir maddeye dönüşür. Magma, çevresindeki katı kayalardan daha hafif olduğu için yavaş yavaş yukarı doğru yükselir ve yer kabuğundaki çatlaklarda birikir.\n\nMagma birikmeye devam ettikçe basınç artar. Bu durumu, çalkalanmış bir gazoz şişesine benzetebiliriz. Kapağı açtığınızda içerideki gaz büyük bir hızla dışarı fışkırır. Magmanın içinde de çözünmüş gazlar bulunur. Basınç yer kabuğunun dayanabileceğinden fazla olduğunda magma yüzeye fışkırır. Yüzeye çıkan magmaya artık lav denir. Lavın sıcaklığı bin derecenin üzerine çıkabilir; bu, demiri bile eritebilecek bir sıcaklıktır.\n\nBütün volkanlar aynı şekilde patlamaz. Bazı volkanlarda lav akıcıdır ve yavaşça yamaçlardan aşağı süzülür. Hawaii adalarındaki volkanlar böyledir. Bazılarında ise magma koyu ve yapışkandır; gazlar kolayca kaçamaz. Bu volkanlar büyük bir gürültüyle patlar, gökyüzüne kül ve kaya parçaları savurur. Türkiye'deki Erciyes, Hasan Dağı ve Ağrı Dağı da geçmişte etkin olmuş volkanlardır. Bilim insanları, volkanların çevresindeki küçük depremleri, yerden yükselen gazları ve dağın şeklindeki çok küçük değişiklikleri izleyerek olası bir patlamayı önceden tahmin etmeye çalışır.\n\nVolkanlar çok tehlikeli olabilse de insanlara yararları da vardır. Volkanik küller zamanla çok verimli topraklara dönüşür; bu yüzden pek çok volkanın eteklerinde tarım yapılır. Bazı ülkeler de yerin altındaki bu sıcaklıktan yararlanarak jeotermal enerji üretir. Kapadokya'nın ünlü peribacaları da milyonlarca yıl önce bölgedeki volkanların püskürttüğü küllerin rüzgâr ve yağmurla aşınmasıyla oluşmuştur.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Magma neden yukarı doğru yükselir?",
+    "correct": "Çevresinden az yoğun olduğu için",
+    "wrong": [
+     "Rüzgâr onu yukarı çektiği için",
+     "Yağmur suyu onu ittiği için",
+     "Güneş onu ısıtıp kabarttığı için"
+    ],
+    "explanation": "Magma çevresindeki katı kayalardan daha hafiftir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gazoz şişesi örneği neyi açıklamak için verilmiştir?",
+    "correct": "Sıkışmış gazın birden çıkışını",
+    "wrong": [
+     "Lavın tadının tatlı olduğunu",
+     "Volkanların cam gibi kırıldığını",
+     "Magmanın aslında soğuk olduğunu"
+    ],
+    "explanation": "Çalkalanmış şişede olduğu gibi gaz basınçla fışkırır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yüzeye çıkan magmaya ne ad verilir?",
+    "correct": "Lav",
+    "wrong": [
+     "Kül",
+     "Taş",
+     "Tuz"
+    ],
+    "explanation": "Yüzeye çıkan magmaya lav denir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hawaii'deki volkanların sakin olmasının nedeni nedir?",
+    "correct": "Lavlarının akıcı olması",
+    "wrong": [
+     "Denizin onları soğutması",
+     "Çok küçük olmaları",
+     "Hiç gaz içermemeleri"
+    ],
+    "explanation": "Lav akıcıdır ve yamaçlardan yavaşça süzülür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bilim insanları patlamayı nasıl önceden kestirmeye çalışır?",
+    "correct": "Sarsıntıları ve gazları izleyerek",
+    "wrong": [
+     "Lavın rengine dikkatle bakarak",
+     "Hayvanların seslerini kaydederek",
+     "Bulutların şekline dikkatle bakarak"
+    ],
+    "explanation": "Küçük depremleri, gazları ve dağdaki değişiklikleri izlerler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre Türkiye'de geçmişte etkin olmuş volkanlardan biri hangisidir?",
+    "correct": "Erciyes",
+    "wrong": [
+     "Uludağ",
+     "Kaçkar",
+     "Palandöken"
+    ],
+    "explanation": "Erciyes, Hasan Dağı ve Ağrı Dağı geçmişte etkin volkanlardır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Volkan eteklerinde tarım yapılmasının nedeni nedir?",
+    "correct": "Küllerin toprağı beslemesi",
+    "wrong": [
+     "Volkanların bol yağmur getirmesi",
+     "Orada hiç böcek bulunmaması",
+     "Arazilerin çok ucuz olması"
+    ],
+    "explanation": "Volkanik küller zamanla verimli topraklara dönüşür."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın amacı nedir?",
+    "correct": "Volkanların yararlarını göstermek",
+    "wrong": [
+     "Patlamalardan korunmayı öğretmek",
+     "Hawaii'yi gezilecek yer olarak tanıtmak",
+     "Lavın sıcaklığını ölçmeyi anlatmak"
+    ],
+    "explanation": "Verimli toprak, jeotermal enerji ve peribacaları anlatılır."
+   }
+  ]
+ },
+ "264": {
+  "title": "Başka Güneşlerin Gezegenleri",
+  "category": "Bilgi/Açıklama",
+  "content": "1995 yılında İsviçreli iki gökbilimci, Michel Mayor ve Didier Queloz, Güneş'e benzeyen bir yıldızın çevresinde dönen bir gezegen keşfettiklerini duyurdu. Bu, Güneş Sistemi dışında, Güneş benzeri bir yıldızın çevresinde bulunan ilk gezegendi. Keşif o kadar önemliydi ki, iki bilim insanı 2019'da Nobel Fizik Ödülü'nü aldı. Güneş Sistemi dışındaki gezegenlere “ötegezegen” adı veriliyor. Bugün bilinen ötegezegen sayısı beş bini aşmış durumda.\n\nPeki milyarlarca kilometre uzaklıktaki bu gezegenleri nasıl görebiliyoruz? Aslında çoğunu doğrudan göremiyoruz. Gezegenler kendi ışıklarını üretmez ve yanlarındaki yıldızın parlaklığı içinde kaybolurlar. Bu, güçlü bir deniz fenerinin yanında uçan küçük bir böceği uzaktan görmeye çalışmak gibidir. Bu yüzden gökbilimciler dolaylı yöntemler kullanır. Gezegeni görmek yerine, onun yıldızı üzerinde bıraktığı izleri ararlar; tıpkı karda görünmeyen bir hayvanın ayak izlerinden geçtiği yolu anlamak gibi.\n\nEn çok kullanılan yöntemlerden biri “geçiş yöntemi”dir. Bir gezegen, yıldızının önünden geçtiğinde yıldızın ışığının çok küçük bir kısmını engeller. Yıldızın parlaklığı birkaç saatliğine çok az azalır. Bu azalma düzenli aralıklarla tekrarlanıyorsa, yıldızın çevresinde dönen bir gezegen olduğu anlaşılır. Parlaklığın ne kadar azaldığı gezegenin büyüklüğünü, tekrarlanma süresi ise gezegenin yıldızının çevresindeki bir turunu ne kadar sürede tamamladığını gösterir. 2009'da uzaya gönderilen Kepler teleskobu bu yöntemle binlerce ötegezegen keşfetti. Teleskop, dokuz yıl boyunca gökyüzünün küçük bir bölgesindeki yüz binlerce yıldızın parlaklığını hiç ara vermeden ölçtü.\n\nBir başka yöntem, yıldızın hafif sallanmasını izlemektir. Gezegen yıldızının çevresinde dönerken, kütle çekimiyle yıldızı da hafifçe kendine çeker. Bu yüzden yıldız yerinde sabit durmaz, küçük bir yay çizerek sallanır. Bu sallanma, yıldızdan gelen ışığın renginde çok küçük değişikliklere yol açar. Mayor ve Queloz ilk ötegezegeni bu yöntemle bulmuştu.\n\nBulunan gezegenler, gökbilimcileri büyük ölçüde şaşırttı. İlk keşfedilenlerin çoğu, Jüpiter büyüklüğünde olduğu hâlde yıldızlarına Merkür'ün Güneş'e olduğundan bile daha yakın dönen dev gezegenlerdi. Bu “sıcak Jüpiterler” bizim Güneş Sistemimizde hiç bulunmayan bir gezegen türüydü. Daha sonra Dünya'dan biraz büyük ama Neptün'den küçük “süper Dünyalar” da bulundu. Bu çeşitlilik, Güneş Sistemi'nin evrendeki tek örnek olmadığını, hatta belki de sıradan bir örnek bile sayılamayacağını gösterdi.\n\nGökbilimcilerin en çok merak ettiği soru, bu gezegenlerden herhangi birinde yaşam olup olmadığıdır. Yaşam için en önemli koşullardan biri, bildiğimiz kadarıyla, sıvı suyun varlığıdır. Çok sıcak bir gezegende su buharlaşıp uçar, çok soğuk bir gezegende ise donup buza dönüşür. Bir gezegenin yüzeyinde sıvı su bulunabilmesi için yıldızına ne çok yakın ne de çok uzak olması gerekir. Bu bölgeye “yaşanabilir bölge” deniyor. Şimdiye kadar bu bölgede onlarca gezegen bulundu. Bunların en ünlülerinden biri, yaklaşık kırk ışık yılı uzaklıktaki TRAPPIST-1 adlı küçük bir yıldızın çevresinde dönen yedi gezegenlik sistemdir. Bu gezegenlerin üçü yaşanabilir bölgede yer alıyor.\n\n2021'de uzaya gönderilen James Webb Uzay Teleskobu, bazı ötegezegenlerin atmosferini inceleyebiliyor. Bir gezegen yıldızının önünden geçerken yıldız ışığının bir kısmı gezegenin atmosferinden süzülür. Bu ışığın incelenmesiyle atmosferde su buharı, karbondioksit ya da metan gibi gazların bulunup bulunmadığı anlaşılabiliyor. Bu tür gazlar tek başına yaşamın kanıtı değildir, ama araştırmacılara nereye daha dikkatli bakmaları gerektiğini gösterir.\n\nOtuz beş yıl önce Güneş Sistemi dışında tek bir gezegen bile bilinmiyordu. Bugün ise gökyüzündeki yıldızların çoğunun en az bir gezegeni olduğu düşünülüyor. Bu durum, “Evrende yalnız mıyız?” sorusunu bilim kurgu olmaktan çıkarıp ciddi bir bilimsel araştırma konusu hâline getirdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mayor ve Queloz Nobel ödülünü hangi yıl aldı?",
+    "correct": "2019",
+    "wrong": [
+     "1995",
+     "2009",
+     "2021"
+    ],
+    "explanation": "İki bilim insanı 2019'da Nobel Fizik Ödülü'nü aldı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz feneri ile böcek benzetmesi neyi anlatır?",
+    "correct": "Yıldızın gezegeni gölgede bırakmasını",
+    "wrong": [
+     "Böceklerin ışığa doğru hızla uçmasını",
+     "Gezegenlerin daha parlak olmasını",
+     "Fenerlerin uzaydan bile görülmesini"
+    ],
+    "explanation": "Gezegenler yıldızın parlaklığı içinde kaybolur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Geçiş yönteminde gezegenin varlığı nasıl anlaşılır?",
+    "correct": "Işığın düzenli aralıklarla azalmasından",
+    "wrong": [
+     "Gezegenin kendi ışığını görmekten",
+     "Yıldızın renginin kırmızıya dönmesinden",
+     "Gezegenden yayılan radyo seslerinden"
+    ],
+    "explanation": "Parlaklık düzenli aralıklarla azalıyorsa bir gezegen vardır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Sallanma yönteminin dayandığı ilke nedir?",
+    "correct": "Gezegenin yıldızı çekip oynatması",
+    "wrong": [
+     "Yıldızın gezegeni ışığıyla itmesi",
+     "Gezegenin yıldızdan ışık çalması",
+     "Yıldızın kendi ekseninde durması"
+    ],
+    "explanation": "Gezegen kütle çekimiyle yıldızı kendine çeker, yıldız sallanır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "İlk bulunan ötegezegenler gökbilimcileri neden şaşırttı?",
+    "correct": "Tanıdık düzene hiç uymamaları",
+    "wrong": [
+     "Dünya'nın tıpatıp aynısı olmaları",
+     "Çok soğuk ve buzlu olmaları",
+     "Yıldızlarından çok uzakta olmaları"
+    ],
+    "explanation": "Sıcak Jüpiterler bizim sistemimizde bulunmayan bir türdü."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yaşanabilir bölge kavramı neye dayanır?",
+    "correct": "Sıvı suyun bulunabilmesine",
+    "wrong": [
+     "Gezegenin çok büyük olmasına",
+     "Gezegenin hızla dönmesine",
+     "Yıldızın çok parlak olmasına"
+    ],
+    "explanation": "Sıvı su için gezegen yıldızına ne çok yakın ne çok uzak olmalıdır."
+   },
+   {
+    "p": 7,
+    "type": 2,
+    "bloom": 5,
+    "text": "Atmosferde bulunan gazlarla ilgili yazarın uyarısı nedir?",
+    "correct": "Canlılığa kesin delil sayılmadığı",
+    "wrong": [
+     "Bu gazların çok zehirli olduğu",
+     "Teleskopun ölçümde sık sık yanıldığı",
+     "Gazların uzayda hiç bulunmadığı"
+    ],
+    "explanation": "Bu gazlar yaşamın kanıtı değildir, nereye bakılacağını gösterir."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta vurgulanan değişim nedir?",
+    "correct": "Yaşam sorusunun bilimsel konu olması",
+    "wrong": [
+     "Bilim kurgu kitaplarının yasaklanması",
+     "Teleskopların artık kullanılmaması",
+     "Bilinen gezegen sayısının azalması"
+    ],
+    "explanation": "Evrende yalnız mıyız sorusu ciddi bir araştırma konusu oldu."
+   }
+  ]
+ },
+ "265": {
+  "title": "Değişen Beyin",
+  "category": "Bilgi/Açıklama",
+  "content": "Ergenlik dönemindeki gençlerin neden daha fazla risk aldığı, ani kararlar verdiği ya da arkadaşlarının yanında farklı davrandığı uzun süre “hormonlar” sözcüğüyle açıklandı. Oysa son otuz yılda beyin görüntüleme tekniklerinde yaşanan gelişmeler, bu dönemde beynin kendisinin büyük bir yeniden yapılanma geçirdiğini ortaya koydu. Bu açıdan bakıldığında ergen beyni, ne çocuk beyninin büyümüş hâlidir ne de tamamlanmamış bir yetişkin beyni; kendine özgü güçlü ve zayıf yanları olan, sürekli değişen bir yapıdır.\n\nBu dönemde beyinde iki önemli süreç birlikte yaşanır. Birincisi “budama” olarak adlandırılır. Çocuklukta beyin hücreleri arasında çok sayıda bağlantı oluşur. Ergenlikte ise sık kullanılan bağlantılar güçlenirken, az kullanılanlar zamanla ortadan kalkar. Bu, bir bahçıvanın ağacın gereksiz dallarını budayarak geri kalanların daha güçlü büyümesini sağlamasına benzer. İkinci süreç, sinir hücrelerinin uzantılarının miyelin adı verilen yağlı bir kılıfla kaplanmasıdır. Bu kılıf, elektrik kablolarının yalıtımı gibi çalışır ve bilginin beyin bölgeleri arasında çok daha hızlı iletilmesini sağlar.\n\nBu yeniden yapılanmanın en önemli özelliklerinden biri, beynin farklı bölgelerinin farklı hızlarda olgunlaşmasıdır. Beynin derinlerinde yer alan ve duygularla, ödül duygusuyla ilişkili bölgeler, ergenliğin başında hızla gelişir ve çok etkin hâle gelir. Buna karşılık alnın hemen arkasında bulunan ve ön alın korteksi olarak adlandırılan bölge çok daha yavaş olgunlaşır. Bu bölge planlama, dürtüleri kontrol etme, sonuçları önceden düşünme ve kararları tartma gibi işlerden sorumludur. Araştırmalar, ön alın korteksinin olgunlaşmasının yirmili yaşların ortasına kadar sürdüğünü gösteriyor.\n\nBazı bilim insanları bu durumu, güçlü bir motoru olan ama frenleri henüz tam ayarlanmamış bir arabaya benzetiyor. Ödül sisteminin bu kadar etkin olması, gençlerin yeni deneyimlere, heyecana ve dikkat çekici şeylere daha fazla ilgi duymasına yol açar. Kontrol sistemi ise henüz bu güçlü isteği her zaman dengeleyemez. Bu durum özellikle duyguların yoğun olduğu, hızlı karar verilmesi gereken anlarda belirginleşir. Sakin bir ortamda, düşünmek için zamanı olan bir genç ise çoğu zaman bir yetişkin kadar akılcı kararlar verebilir.\n\nBu alandaki araştırmaların en ilginç bulgularından biri, arkadaş etkisiyle ilgilidir. Amerikalı psikolog Laurence Steinberg ve ekibi, gençlerden ve yetişkinlerden bir bilgisayarda araba sürme oyunu oynamalarını istedi. Oyunda, sarı yanan trafik ışığında durup durmamaya karar vermek gerekiyordu. Gençler odada tek başına oynadıklarında yetişkinler kadar dikkatli davrandı. Ancak yanlarında arkadaşları izlerken oynadıklarında aldıkları riskler belirgin biçimde arttı. Yetişkinlerde ise izleyicilerin varlığı neredeyse hiçbir fark yaratmadı. Beyin görüntüleri, arkadaşlar izlerken gençlerin ödül sistemiyle ilgili bölgelerinin daha fazla etkinleştiğini gösterdi.\n\nAncak bütün bu bulgular, ergenliğin yalnızca sorunlarla dolu bir dönem olduğu anlamına gelmiyor. Tam tersine, birçok araştırmacı bu özelliklerin insan için önemli bir işlevi olduğunu düşünüyor. Yeni şeyler denemeye ve risk almaya istekli olmak, gençlerin ailelerinin güvenli ortamından çıkıp bağımsız bir hayat kurmasına yardımcı olur. Arkadaşlara verilen önem, ileride kurulacak toplumsal ilişkilerin temelini oluşturur. Üstelik ergen beyni öğrenmeye son derece açıktır; bu dönemde edinilen beceriler ve alışkanlıklar uzun süre kalıcı olur. Bir müzik aletini çalmayı, yeni bir dili ya da bir sporu bu yaşlarda öğrenmek, ileriki yıllara göre çok daha kolaydır. Bazı araştırmacılar bu yüzden ergenliği, erken çocukluktan sonra gelen “ikinci fırsat penceresi” olarak tanımlıyor.\n\nBu bilgiler, gençlere yaklaşımda da yeni fikirler doğurdu. Uzmanlar, gençleri risk almaktan tümüyle uzak tutmaya çalışmak yerine, bu isteği spor, sanat, gönüllülük ya da bilimsel projeler gibi olumlu alanlara yönlendirmenin daha etkili olabileceğini söylüyor. Kendi beyinlerinin nasıl çalıştığını öğrenen gençlerin de kararlarını daha bilinçli verebildiği düşünülüyor. Örneğin bir arkadaş grubunun içindeyken risk alma isteğinin arttığını bilen bir genç, önemli bir karar vermeden önce durup düşünmeyi seçebilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre ergen davranışlarının eski açıklaması neden yetersizdir?",
+    "correct": "Beyindeki değişimi hesaba katmadığı için",
+    "wrong": [
+     "Hormonların var olmadığı anlaşıldığı için",
+     "Gençlerin risk almadığı kanıtlandığı için",
+     "Beyin görüntüleme yasaklandığı için"
+    ],
+    "explanation": "Araştırmalar beynin büyük bir yeniden yapılanma geçirdiğini gösterdi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Budama sürecinin sonucu nedir?",
+    "correct": "Sık kullanılan yolların güçlenmesi",
+    "wrong": [
+     "Bütün bağlantıların aynı kalması",
+     "Beyin hücrelerinin sayısının artması",
+     "Beyindeki ağaçların daha hızlı büyümesi"
+    ],
+    "explanation": "Az kullanılan bağlantılar kalkar, sık kullanılanlar güçlenir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Miyelin kılıfının işlevi nedir?",
+    "correct": "Bilgiyi hızlı iletmek",
+    "wrong": [
+     "Beyni darbelerden korumak",
+     "Hormon üretimini artırmak",
+     "Uykuyu düzene sokmak"
+    ],
+    "explanation": "Miyelin yalıtım gibi çalışarak iletimi hızlandırır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ön alın korteksi hangi işlerden sorumludur?",
+    "correct": "Planlama ve denetim",
+    "wrong": [
+     "Görme ve işitme işleri",
+     "Koku ve tat alma duyusu",
+     "Nefes ve kalp atışı"
+    ],
+    "explanation": "Planlama, dürtü kontrolü ve sonuçları düşünme bu bölgenin işidir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Araba benzetmesindeki “fren” beynin hangi bölgesini temsil eder?",
+    "correct": "Geç olgunlaşan denetim bölgesini",
+    "wrong": [
+     "Hızla gelişen güçlü ödül sistemini",
+     "Beynin arkasındaki görme merkezini",
+     "Uzun süreli hafıza bölgesini"
+    ],
+    "explanation": "Ön alın korteksi kontrol sistemi gibi çalışır ama yavaş olgunlaşır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Steinberg'in deneyi hangi sonucu ortaya koyar?",
+    "correct": "Arkadaşların riski artırdığını",
+    "wrong": [
+     "Gençlerin kötü sürücü olduğunu",
+     "Yetişkinlerin hiç risk almadığını",
+     "Oyunların beyne zarar verdiğini"
+    ],
+    "explanation": "Arkadaşlar izlerken gençlerin aldığı riskler belirgin biçimde arttı."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre risk alma isteğinin insan için işlevi nedir?",
+    "correct": "Bağımsızlığa geçişi kolaylaştırması",
+    "wrong": [
+     "Ailelerin gençleri daha çok sevmesi",
+     "Okul başarısının hemen artması",
+     "Gece uyku süresinin uzaması"
+    ],
+    "explanation": "Yeni şeyler denemek gençlerin bağımsız hayat kurmasına yardım eder."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Uzmanların son paragraftaki önerisinin özü nedir?",
+    "correct": "Risk isteğini olumlu alana yöneltmek",
+    "wrong": [
+     "Gençleri her türlü riskten uzak tutmak",
+     "Arkadaşlarla görüşmeyi yasaklamak",
+     "Ergenlik bitene dek sabırla beklemek"
+    ],
+    "explanation": "Spor, sanat, gönüllülük gibi alanlara yönlendirme önerilir."
+   }
+  ]
+ },
+ "266": {
+  "title": "Görünmeyen Yük",
+  "category": "Bilgi/Açıklama",
+  "content": "Yalnızlık çoğu zaman yalnızca bir duygu olarak görülür. Oysa son yirmi yılda yapılan araştırmalar, uzun süren yalnızlığın beden sağlığı üzerinde de ciddi etkileri olduğunu gösteriyor. ABD'de yapılan ve yüzlerce bin kişinin verilerini bir araya getiren geniş bir değerlendirme, sosyal ilişkileri zayıf olan kişilerde erken ölüm riskinin belirgin biçimde arttığını ortaya koydu. Araştırmacılar bu etkinin büyüklüğünü, günde on beş sigara içmenin yarattığı riske benzetti. Benzetme tartışmalı olsa da, konunun ciddiyetine dikkat çekmek için sık sık kullanılıyor.\n\nBurada çok önemli bir ayrım yapmak gerekiyor: Yalnız olmak ile yalnız hissetmek aynı şey değildir. Tek başına yaşayan, sessiz akşamlardan keyif alan biri kendini yalnız hissetmeyebilir. Buna karşılık kalabalık bir ailenin içinde ya da çok sayıda arkadaşı olan biri, derin bir yalnızlık yaşayabilir. Yani belirleyici olan, çevremizdeki insanların sayısı değil, onlarla kurduğumuz bağın niteliğidir. Psikologlar yalnızlığı, kişinin istediği ilişkiler ile sahip olduğu ilişkiler arasındaki boşluğun yarattığı acı verici duygu olarak tanımlıyor.\n\nPeki yalnızlık bedeni nasıl etkiliyor? Uzmanlara göre insan, binlerce yıl boyunca gruplar hâlinde yaşamış ve hayatta kalmak için başkalarına ihtiyaç duymuş bir canlıdır. Grubundan kopan bir insan, tarih boyunca tehlikeye daha açık olmuştur. Bu yüzden beyin, yalnızlığı bir tehdit işareti olarak algılar. Yalnız hisseden kişinin vücudu sürekli bir tetikte olma hâline geçer. Stres hormonları yükselir, uyku kalitesi düşer, bağışıklık sistemi zayıflar ve vücutta iltihaplanma artar. Bu durum uzun sürdüğünde kalp hastalıkları, yüksek tansiyon ve depresyon riskini artırabilir.\n\nYalnızlık, sanıldığı gibi yalnızca yaşlıların sorunu da değildir. Bazı araştırmalarda kendini en yalnız hisseden grubun genç yetişkinler olduğu görülmüştür. Şehir değiştirmek, iş yoğunluğu ve ilişkilerin giderek ekranlar üzerinden yürütülmesi bu durumun olası nedenleri arasında sayılıyor.\n\nİyi haber şu ki, yalnızlıkla başa çıkmanın yolları var. Uzmanlar, ilişkilerin sayısından çok niteliğinin önemli olduğunu vurguluyor. Gerçekten güvenilen bir ya da iki kişiyle kurulan yakın bağlar, kalabalık ama yüzeysel bir çevreden daha koruyucu olabiliyor. Gönüllü çalışmalara katılmak, ortak ilgi alanlarına sahip insanlarla bir araya gelinen kurslara ya da kulüplere gitmek ve eski arkadaşlarla yeniden iletişim kurmak, atılabilecek somut adımlar arasında yer alıyor. Bazı ülkelerde doktorlar, yalnızlık çeken hastalarına ilaç yerine bir yürüyüş grubuna, koroya ya da bahçe çalışmalarına katılmayı “reçete” olarak yazmaya başladı. Birleşik Krallık 2018'de, bu sorunla mücadele için bir bakanlık görevi bile oluşturdu. Yalnızlık utanılacak bir durum değildir; tıpkı açlık ya da susuzluk gibi, bir ihtiyacın karşılanmadığını haber veren bir işarettir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmacılar yalnızlığın etkisini neye benzetti?",
+    "correct": "Her gün sigara içmeye",
+    "wrong": [
+     "Hiç uyumamaya çalışmaya",
+     "Fazla şekerli yemeye",
+     "Hareketsiz yaşamaya"
+    ],
+    "explanation": "Etki günde on beş sigara içmenin riskine benzetildi."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın sigara benzetmesine yaklaşımı nasıldır?",
+    "correct": "Tartışmalı olduğunu kabul eder",
+    "wrong": [
+     "Tartışmasız biçimde doğrular",
+     "Bütünüyle saçma ve yanlış bulur",
+     "Hiç değinmeden geçip gider"
+    ],
+    "explanation": "Benzetmenin tartışmalı olduğunu ama dikkat çektiğini belirtir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yalnız olmak ile yalnız hissetmek arasındaki fark nedir?",
+    "correct": "Birinin durum, ötekinin duygu olması",
+    "wrong": [
+     "İkisinin de yaşlılarda görülmesi",
+     "Birinin kalıcı, ötekinin geçici olması",
+     "İkisinin de aynı şeyi anlatması"
+    ],
+    "explanation": "Yalnız hissetmek, istenen ile sahip olunan ilişkiler arasındaki boşluktur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Beynin yalnızlığı bir tehdit olarak algılamasının nedeni nedir?",
+    "correct": "Atalarımızın toplulukla var olması",
+    "wrong": [
+     "Yalnız insanların daha az uyuması",
+     "Stres hormonlarının hiç azalmaması",
+     "Kalabalıkların tehlikeli olması"
+    ],
+    "explanation": "Grubundan kopan insan tarih boyunca tehlikeye daha açıktı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yalnızlık uzun sürdüğünde hangi sorunun riski artabilir?",
+    "correct": "Yüksek tansiyon",
+    "wrong": [
+     "Gözlerde bozukluk",
+     "Diş çürümesi",
+     "Saç dökülmesi"
+    ],
+    "explanation": "Kalp hastalıkları, yüksek tansiyon ve depresyon riski artabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre genç yetişkinlerin yalnızlığının olası nedenlerinden biri hangisidir?",
+    "correct": "İlişkilerin ekrana kayması",
+    "wrong": [
+     "Okulların uzun tatil olması",
+     "Spor yapmanın azalması",
+     "Ailelerin kalabalıklaşması"
+    ],
+    "explanation": "Şehir değiştirme, iş yoğunluğu ve ekran ilişkileri sayılır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzmanlar ilişkilerde neyi daha önemli buluyor?",
+    "correct": "Bağların kalitesini",
+    "wrong": [
+     "Arkadaş sayısını",
+     "Tanışıklık süresini",
+     "Görüşme sıklığını"
+    ],
+    "explanation": "İlişkilerin sayısından çok niteliği önemlidir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son cümlede yalnızlığın açlık ve susuzluğa benzetilmesinin amacı nedir?",
+    "correct": "Onu bir ihtiyacın işareti olarak sunmak",
+    "wrong": [
+     "Yalnızlığın beslenmeyle düzeldiğini söylemek",
+     "Yalnız insanların az yediğini anlatmak",
+     "Yalnızlığın kısa süreceğini göstermek"
+    ],
+    "explanation": "Yalnızlık bir ihtiyacın karşılanmadığını haber veren işarettir."
+   }
+  ]
+ },
+ "267": {
+  "title": "Üçüncü Kutu",
+  "category": "Hikaye/Kurgu",
+  "content": "Bahar gelince Ada'nın annesi, “Hadi bugün odanı birlikte düzenleyelim,” dedi. Ada'nın odası oyuncaklarla doluydu. Dolapta, yatağın altında ve raflarda bir sürü oyuncak vardı. Bazen oyuncaklar o kadar çok oluyordu ki, Ada odasında oynayacak yer bulamıyordu.\n\nAnnesi ona üç kutu verdi. Birinci kutuya Ada'nın hâlâ oynadığı oyuncaklar girecekti. İkinci kutuya kırık oyuncaklar konacaktı. Üçüncü kutuya ise Ada'nın artık oynamadığı ama sağlam olan oyuncaklar girecekti.\n\nAda oyuncakları tek tek eline aldı. Bazılarını görünce gülümsedi, çünkü onlarla oynadığı günleri hatırladı. Küçük bir oyuncak bebeği uzun süre elinde tuttu. Bebeği ona ninesi, daha bir yaşındayken almıştı. Bebeğin saçları biraz dağılmış, elbisesi solmuştu. Artık onunla oynamıyordu ama vermeye kıyamadı.\n\nAnnesi, üçüncü kutudaki oyuncakların başka çocukları çok mutlu edeceğini söyledi. Ada biraz düşündü. Bebeğin karanlık bir kutuda beklemesi mi, yoksa başka bir çocukla oynaması mı daha iyiydi? Sonra bebeği öptü ve üçüncü kutuya koydu.\n\nErtesi gün kutuyu birlikte çocuk yuvasına götürdüler. Çocuklar oyuncakları görünce çok sevindi. Küçük bir kız bebeği hemen kucağına aldı. Ada o an kalbinin ısındığını hissetti. Eve dönerken annesine, gelecek bahar da aynı şeyi yapmak istediğini söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Annesi Ada'ya ne önerdi?",
+    "correct": "Odayı birlikte toplamayı",
+    "wrong": [
+     "Parka gidip oyun oynamayı",
+     "Yeni bir oyuncak almayı",
+     "Ninesini ziyaret etmeyi"
+    ],
+    "explanation": "Annesi odasını birlikte düzenlemeyi önerdi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Üçüncü kutuya hangi oyuncaklar girecekti?",
+    "correct": "Sağlam ama unutulanlar",
+    "wrong": [
+     "Kırık olan oyuncaklar",
+     "En çok sevdiği oyuncaklar",
+     "Yeni alınan oyuncaklar"
+    ],
+    "explanation": "Artık oynanmayan ama sağlam oyuncaklar üçüncü kutuya girecekti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ada'nın bazı oyuncakları görünce gülümsemesinin nedeni nedir?",
+    "correct": "Geçmişteki günleri anması",
+    "wrong": [
+     "Oyuncakların komik olması",
+     "Annesinin şaka yapması",
+     "Odanın tertemiz olması"
+    ],
+    "explanation": "Onlarla oynadığı günleri hatırladı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Oyuncak bebeği Ada'ya kim almıştı?",
+    "correct": "Ninesi",
+    "wrong": [
+     "Annesi",
+     "Teyzesi",
+     "Babası"
+    ],
+    "explanation": "Bebeği ona ninesi almıştı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ada'yı bebeği vermeye ikna eden düşünce neydi?",
+    "correct": "Bebeğin bir çocuğu sevindirmesi",
+    "wrong": [
+     "Bebeğin artık çok kırık olması",
+     "Annesinin ona çok kızmış olması",
+     "Yeni bir bebek alacak olması"
+    ],
+    "explanation": "Bebeğin kutuda beklemesi yerine bir çocukla oynamasını istedi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bebeği yuvada kim kucağına aldı?",
+    "correct": "Ufak bir kızcağız",
+    "wrong": [
+     "Yuvadaki öğretmen",
+     "Ada'nın kendisi",
+     "Bir erkek çocuk"
+    ],
+    "explanation": "Küçük bir kız bebeği hemen kucağına aldı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 3,
+    "text": "Ada'nın gelecek bahar da aynı şeyi yapmak istemesi neyi gösterir?",
+    "correct": "Paylaşmaktan hoşlandığını",
+    "wrong": [
+     "Odasını hiç sevmediğini",
+     "Oyuncaklardan sıkıldığını",
+     "Annesine kızgın olduğunu"
+    ],
+    "explanation": "Vermenin verdiği sevinci yaşadı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Annesinin sözlerinden sonra Ada ne yaptı?",
+    "correct": "Bebeği öpüp kutuya bıraktı",
+    "wrong": [
+     "Bebeği yatağının altına sakladı",
+     "Ağlayarak odasından çıktı",
+     "Bebeği ninesine geri verdi"
+    ],
+    "explanation": "Bebeği öptü ve üçüncü kutuya koydu."
+   }
+  ]
+ }
+}

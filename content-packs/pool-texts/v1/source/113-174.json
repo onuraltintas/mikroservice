@@ -1,0 +1,335 @@
+{
+ "113": {
+  "title": "Bitkiler Müzik Sever mi?",
+  "category": "Hikaye/Kurgu",
+  "content": "Defne'nin sınıfı, okul yılının sonunda bir bilim fuarı düzenleyecekti. Her öğrenci ya da grup, merak ettiği bir soruyu seçip onu araştıracak ve sonuçlarını büyük bir afişle sergileyecekti. Defne ve arkadaşı Kaan, günlerce ne seçeceklerini düşündü. Yanardağ yapmayı, mıknatıslarla oynamayı, suyun donmasını incelemeyi konuştular ama hiçbiri içlerine sinmedi. Sonunda Kaan'ın annesinin her sabah balkondaki saksılara söylediği bir sözü hatırladılar: “Bitkiler müziği sever, onlara şarkı söylersen daha iyi büyürler.”\n\nDefne bunun doğru olup olmadığını çok merak etti. Kaan ise annesinin haklı olduğundan emindi; balkondaki çiçekler mahallenin en güzel çiçekleriydi. Birlikte öğretmenleri Elif Hanım'a gittiler. Elif Hanım onlara, bir fikrin doğru olup olmadığını anlamanın en iyi yolunun onu dikkatle tasarlanmış bir deneyle sınamak olduğunu söyledi. Ardından önemli bir kural anlattı: İyi bir deneyde yalnızca tek bir şey değiştirilir, geri kalan her şey aynı tutulur. Yoksa sonuçta görülen farkın neden kaynaklandığını kimse bilemez.\n\nDefne ile Kaan, fidanlıktan aynı boyda altı fasulye fidesi aldılar. Fideleri aynı tür saksılara, aynı torbadan alınmış toprağa diktiler. Üç fideyi bir odaya, üçünü de başka bir odaya yerleştirdiler. İki oda da aynı ölçüde güneş alıyordu ve sıcaklıkları birbirine yakındı. Fidelerin hepsine her gün aynı saatte, aynı ölçü kabıyla su verdiler. Tek fark, birinci odadaki fidelere her gün bir saat boyunca sakin bir müzik dinletmeleriydi. İkinci odadaki fideler ise sessizlik içinde bekledi.\n\nDört hafta boyunca her gün fidelerin boyunu cetvelle ölçtüler ve sonuçları bir deftere yazdılar. Yaprak sayısını da not ettiler, hatta her pazartesi fidelerin fotoğrafını çektiler. Bazı günler ölçüm yapmak sıkıcı geliyordu, ama ikisi de tek bir günü bile atlamamaya söz vermişti. Defne ölçümleri yazarken her sayının yanına o günün tarihini de ekliyordu; böylece daha sonra hangi günün sonucuna baktıklarını karıştırmayacaklardı. Kaan her ölçümden önce heyecanla müzik dinleyen fidelerin öne geçmesini bekliyordu.\n\nDördüncü haftanın sonunda sonuçları bir tabloda karşılaştırdılar. İki gruptaki fidelerin boyları ve yaprak sayıları birbirine çok yakındı. Müzik dinleyen fideler biraz daha uzundu, ama fark yalnızca birkaç milimetreydi. Kaan hayal kırıklığına uğradı. Annesinin yanıldığını mı söyleyeceklerdi? Defne ise bu sonucun da bir şey anlattığını düşünüyordu, sadece ne anlattığından emin değildi.\n\nElif Hanım tabloya dikkatle baktı. Bu kadar küçük bir farkın tesadüf olabileceğini, çünkü aynı koşullarda bile bazı fidelerin doğal olarak diğerlerinden biraz hızlı büyüdüğünü açıkladı. Kesin bir sonuca varmak için çok daha fazla fideyle ve daha uzun süre deney yapmak gerektiğini söyledi. Sonra ikisine gülümseyerek, deneylerinin değerinin beklenen sonucu bulmalarından değil, soruyu dikkatli ve dürüst bir yöntemle sınamalarından geldiğini ekledi.\n\nBilim fuarı günü Defne ile Kaan'ın afişinin önünde kalabalık bir grup toplandı. Afişin başlığı şuydu: “Bitkiler müzik sever mi? Henüz bilmiyoruz, ama nasıl öğrenebileceğimizi biliyoruz.” Afişte tabloları, fotoğrafları ve bir sonraki deney için planları da vardı. Kaan'ın annesi de fuara gelmişti. Afişi okuyunca gülümsedi ve oğluna, bundan sonra da fidelere şarkı söylemeye devam edeceğini, ama bunun belki de en çok kendisine iyi geldiğini söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Defne ile Kaan'a araştırma konusunu ne düşündürdü?",
+    "correct": "Ev halkından birinin inancı",
+    "wrong": [
+     "Öğretmenlerinin verdiği bir ödev",
+     "Gezide izledikleri bir yanardağ",
+     "Okuldaki bir bilim kitabı"
+    ],
+    "explanation": "Konuyu Kaan'ın annesinin bitkilerle ilgili sözünü hatırlayınca seçtiler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elif Hanım'ın tek bir şeyin değiştirilmesi kuralı neden önemlidir?",
+    "correct": "Farkın nedeni ancak böyle belirlenebilir",
+    "wrong": [
+     "Fideler böylece daha hızlı büyüyüp gelişir",
+     "Sonuçlar böylece afişe daha kolay sığar",
+     "Böylece fidanlıktan daha az fide alınır"
+    ],
+    "explanation": "Birden çok şey değişirse farkın hangisinden kaynaklandığı bilinemez."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İki odadaki fideler arasındaki tek fark neydi?",
+    "correct": "Bir grubun her gün melodiyle beklemesi",
+    "wrong": [
+     "Her gün farklı miktarda su almaları",
+     "Farklı torbalardan toprağa dikilmeleri",
+     "Odaların farklı ölçüde güneş alması"
+    ],
+    "explanation": "Diğer koşullar aynıydı; yalnızca bir grup her gün bir saat müzik dinledi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Defne'nin ölçümlerin yanına tarih yazması onun hakkında neyi gösterir?",
+    "correct": "Kayıtlarını özenle tuttuğunu",
+    "wrong": [
+     "Ölçümleri yapmaktan sıkıldığını",
+     "Sonucu önceden tahmin ettiğini",
+     "Arkadaşına güvenmediğini"
+    ],
+    "explanation": "Tarih eklemesi, sonuçları karıştırmamak için özenli kayıt tuttuğunu gösterir."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kaan sonuçları görünce neden hayal kırıklığına uğradı?",
+    "correct": "Umduğu belirgin üstünlük çıkmadığı için",
+    "wrong": [
+     "Müzikli fideler kuruyup öldüğü için",
+     "Defne defteri okulda unuttuğu için",
+     "Bilim fuarı ileri bir tarihe kaldığı için"
+    ],
+    "explanation": "Müzikli fidelerin belirgin biçimde öne geçmesini bekliyordu ama fark çok küçüktü."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Elif Hanım'a göre küçük farktan kesin sonuç çıkarılmamasının nedeni nedir?",
+    "correct": "Bu farkın rastlantı olabilmesi",
+    "wrong": [
+     "Müziğin bitkilere zarar vermesi",
+     "Ölçümlerin yanlış yapılması",
+     "Fidelerin farklı tür olması"
+    ],
+    "explanation": "Aynı koşullarda bile fideler doğal olarak biraz farklı büyüyebilir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öğretmenin son sözlerine göre bir deneyi değerli kılan nedir?",
+    "correct": "Sorunun özenle ve dürüstçe sınanması",
+    "wrong": [
+     "Beklenen sonucun mutlaka bulunması",
+     "Fuarda afişin önünde kalabalık toplanması",
+     "Yüzlerce fideyle çalışılmış olması"
+    ],
+    "explanation": "Elif Hanım değerin, soruyu dikkatli ve dürüst bir yöntemle sınamaktan geldiğini söyler."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Afişin başlığı çocukların deneyden ne öğrendiğini gösterir?",
+    "correct": "Bilmemeyi kabul edip yolunu bilmeyi",
+    "wrong": [
+     "Bitkilerin müzikten hoşlandığını",
+     "Kaan'ın annesinin baştan yanıldığını",
+     "Dört haftanın boşa harcandığını"
+    ],
+    "explanation": "Başlık, sonucu henüz bilmediklerini ama nasıl öğreneceklerini bildiklerini söyler."
+   }
+  ]
+ },
+ "142": {
+  "title": "Karıncaların Görünmez Yolu",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir piknikte yere düşen küçük bir kurabiye kırıntısını düşünün. Birkaç dakika sonra kırıntının çevresinde tek bir karınca dolaşmaya başlar. Biraz daha beklerseniz, uzun bir karınca sırasının yuvadan kırıntıya kadar uzandığını görürsünüz. Peki bu minik hayvanlar, yiyeceğin yerini birbirlerine nasıl haber verir? Karıncaların ne haritası ne de telefonu vardır, ama aralarında şaşırtıcı derecede başarılı bir haberleşme sistemi bulunur.\n\nKarıncaların gözleri çok iyi görmez. Bazı türler neredeyse hiç göremez. Onlar dünyayı daha çok koku yoluyla tanır. Başlarındaki iki ince anten, hem dokunmaya hem de koku almaya yarar. Karıncalar bu antenlerle yerdeki izleri, yiyecekleri ve hatta birbirlerini tanır. İki karınca karşılaştığında antenleriyle birbirine dokunur. Bu dokunuş sayesinde karşısındakinin kendi yuvasından olup olmadığını anlar, çünkü her yuvanın kendine özgü bir kokusu vardır. Yabancı bir yuvadan gelen karınca bu kokuyu taşımadığı için hemen fark edilir ve çoğu zaman uzaklaştırılır. Yani koku, karıncalar için hem bir kimlik kartı hem de bir adres gibidir.\n\nYiyecek arayan karıncaya gözcü karınca denir. Gözcü, yuvadan çıkıp bir süre rastgele dolaşır. Bir yiyecek bulduğunda ondan küçük bir parça alır ve yuvaya döner. Dönerken karnının ucunu ara sıra yere değdirerek arkasında özel bir kimyasal madde bırakır. Bu maddeye feromon denir. Feromon, gözle görülmeyen ama karıncaların kolayca algıladığı bir koku izidir. Yuvaya ulaşan gözcü, diğer karıncaları harekete geçirir. Onlar da koku izini takip ederek yiyeceğe ulaşır.\n\nİşin ilginç yanı, her karıncanın yolda yeni feromon bırakmasıdır. Yiyeceğe giden ve dönen karınca sayısı arttıkça iz güçlenir, güçlü iz de daha çok karıncayı kendine çeker. Yiyecek bittiğinde ise karıncalar artık iz bırakmaz. Feromon kısa sürede havaya karışıp kaybolur ve yol unutulur. Böylece karıncalar boşuna, tükenmiş bir yiyeceğin peşine düşmez.\n\nBilim insanları karıncaların bu yolla çoğu zaman en kısa yolu bulduğunu fark etmiştir. Diyelim ki yuvadan yiyeceğe iki yol çıkıyor: biri kısa, biri uzun. Başta karıncalar iki yola da dağılır. Ancak kısa yolu kullananlar gidip dönmeyi daha çabuk bitirir. Bu yüzden kısa yoldaki iz daha hızlı güçlenir. Zamanla karıncaların çoğu kısa yolu seçer. Tek bir karınca hangi yolun kısa olduğunu aslında bilmez; doğru yolu bütün koloni birlikte bulur.\n\nKarıncalar yalnızca yiyecek için koku kullanmaz. Tehlike anında da özel bir alarm kokusu salgılarlar. Bu kokuyu alan diğer karıncalar ya saldırıya hazırlanır ya da yuvayı korumak için toplanır. Kraliçe karınca da kendine ait kokusuyla koloniye varlığını sürekli hatırlatır. Bazı türlerde işçi karıncalar, yuvadaki görevlerini bile kokulardan öğrenir: Hangi odada yavru bakılacağı, hangisinde yiyecek saklanacağı kokuyla belirlenir. Bir yuvada binlerce karınca yaşadığı hâlde büyük bir karışıklık yaşanmaması, bu sessiz koku dilinin ne kadar etkili olduğunu gösterir.\n\nBugün mühendisler karıncaların bu yöntemini örnek alarak bilgisayar programları geliştiriyor. Bu programlar kargo araçlarının en kısa rotayı bulmasına ya da internet bağlantılarının daha hızlı çalışmasına yardımcı oluyor. Demek ki bir dahaki pikniğinizde kurabiye kırıntısının çevresinde dolaşan karıncalar, size dünyanın en akıllı ekip çalışmalarından birini gösteriyor olabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne piknikteki kırıntı örneğiyle başlayarak ne amaçlar?",
+    "correct": "Okurun merakını tanıdık bir sahneyle uyandırmak",
+    "wrong": [
+     "Pikniklerde dikkat edilecek kuralları sıralamak",
+     "Karıncaların kurabiyeyi sevdiğini kanıtlamak",
+     "Karıncalardan nasıl korunulacağını öğretmek"
+    ],
+    "explanation": "Herkesin gördüğü bir sahneyle başlayıp asıl soruya merak uyandırır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Karıncalar dünyayı en çok hangi yolla tanır?",
+    "correct": "Koku alarak",
+    "wrong": [
+     "Görerek",
+     "Ses duyarak",
+     "Tat alarak"
+    ],
+    "explanation": "Gözleri iyi görmez; dünyayı daha çok koku yoluyla tanırlar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Antenlerle dokunmak karıncaya hangi bilgiyi kazandırır?",
+    "correct": "Aynı topluluktan olup olmadıklarını",
+    "wrong": [
+     "Karşısındakinin kaç yaşında olduğunu",
+     "Yiyeceğin ne kadar uzakta olduğunu",
+     "Yakında yağmur yağıp yağmayacağını"
+    ],
+    "explanation": "Her yuvanın özel kokusu sayesinde kendi yuvasından olup olmadığını anlar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gözcünün yuvaya dönerken yere bıraktığı maddeye ne ad verilir?",
+    "correct": "Feromon",
+    "wrong": [
+     "Propolis",
+     "Nektar",
+     "Polen"
+    ],
+    "explanation": "Bu kimyasal maddeye feromon denir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yiyecek bitince izin kaybolması koloniye ne kazandırır?",
+    "correct": "Boşuna yorulmaktan kurtulmayı",
+    "wrong": [
+     "Hemen yeni bir yuva kurabilmeyi",
+     "Kraliçenin yerini gizlemeyi",
+     "Düşman böceklerden saklanabilmeyi"
+    ],
+    "explanation": "Böylece karıncalar tükenmiş bir yiyeceğin peşine boşuna düşmez."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kısa yoldaki izin daha çabuk güçlenmesinin nedeni nedir?",
+    "correct": "Orada daha çok tur atılabilmesi",
+    "wrong": [
+     "Kısa yolda rüzgârın daha az esmesi",
+     "Gözcünün kısa yolu tarif etmesi",
+     "Kısa yolun toprağının kokulu olması"
+    ],
+    "explanation": "Kısa yolu kullananlar turu daha çabuk bitirdiği için daha sık iz bırakır."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Beşinci paragraftaki asıl vurgu nedir?",
+    "correct": "Çözüme bireylerin değil grubun ulaşması",
+    "wrong": [
+     "Her bir karıncanın en kısa yolu bilmesi",
+     "Uzun yolların aslında daha güvenli olması",
+     "Karıncaların iki yolu da sevmemesi"
+    ],
+    "explanation": "Tek karınca yolu bilmez; doğru yolu koloni birlikte bulur."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mühendisler karıncaların yönteminden nerede yararlanıyor?",
+    "correct": "Rota hesaplayan programlarda",
+    "wrong": [
+     "Hastalıklara karşı ilaç yapımında",
+     "Uçak kanatlarının çiziminde",
+     "Yüksek bina temellerinin yapımında"
+    ],
+    "explanation": "Kargo araçlarının en kısa rotayı bulmasına yardım eden programlarda kullanılır."
+   }
+  ]
+ },
+ "174": {
+  "title": "Bir Avuç Şeker",
+  "category": "Hikaye/Kurgu",
+  "content": "Zeynep, yaz tatilinin ilk haftasını köydeki babaannesinin yanında geçirecekti. Otobüsten indiğinde babaannesi onu kapının önünde, unlu bir önlükle karşıladı. Bütün ev, taze ekmek ve tarçın kokuyordu. Zeynep çantasını odaya bırakır bırakmaz mutfağa koştu, çünkü babaannesinin yaptığı elmalı kurabiyelerin tadını bütün yıl unutamamıştı. Şehirde marketten aldıkları kurabiyeler bir türlü o tadı vermiyordu. Annesi bunun sırrının babaannesinin ellerinde olduğunu söylerdi, ama Zeynep bunun ne demek olduğunu tam anlayamazdı.\n\nMutfak masasının üzerinde eski, kenarları yıpranmış kalın bir defter duruyordu. Kapağı solmuş, sayfaları zamanla sararmıştı. Babaannesi bunun kendi annesinden kalan tarif defteri olduğunu anlattı. Defterde yalnızca yemek tarifleri yoktu. Bazı sayfaların kenarına küçük notlar düşülmüştü: “Bu çorbayı Hasan'ın askerden dönüşünde yaptık.” “Bu kek düğün sabahı için.” Zeynep sayfaları çevirdikçe, tanımadığı akrabalarının hayatından küçük anlar okuyordu.\n\nO gün birlikte elmalı kurabiye yapmaya karar verdiler. Zeynep defterdeki tarifi yüksek sesle okudu. Ama tarif biraz tuhaftı. “Bir avuç şeker, iki parmak tereyağı, kıvamını görünce un” yazıyordu. Zeynep şaşırdı. Okulda yaptıkları deneylerde her şeyi gramla ölçerlerdi. Bir avuç ne kadardı? Kimin avucu? Babaannesi güldü ve ona, eskiden mutfaklarda tartı bulunmadığını, kadınların ölçüyü elleriyle ve gözleriyle öğrendiğini söyledi. Ölçüler kuşaktan kuşağa, anneden kıza, yan yana çalışarak aktarılırmış. Babaannesi de bu tarifi ilk kez, Zeynep'in yaşındayken annesinin yanında, onun ellerini izleyerek öğrenmişti.\n\nZeynep yine de denemek istedi. Kendi küçük avucuyla şekeri ölçtü, tereyağını kesti ve unu azar azar ekledi. Hamur bir türlü istediği gibi olmadı; ya ellerine yapışıyor ya da dağılıyordu. Babaannesi müdahale etmeden onu izledi. Sonra yalnızca bir soru sordu: “Hamur sana ne söylüyor?” Zeynep önce bu soruya güldü. Ama hamura dikkatle dokununca, biraz daha un istediğini anladı. Bir kaşık daha ekledi ve hamur sonunda yumuşacık bir top oldu.\n\nKurabiyeler fırına girdi. Fırının camından içeriyi izlerken ikisi de bir süre hiç konuşmadı; yalnızca kurabiyelerin yavaşça kabarıp kızarmasını seyrettiler. Beklerken Zeynep defterin son sayfalarına baktı ve boş sayfalar olduğunu gördü. Babaannesi, bu sayfaların yeni tariflerin yazılması için beklediğini söyledi. Zeynep'in aklına bir fikir geldi. Bugünkü tarifi yeniden yazacaktı; ama bu kez kendi bulduğu ölçülerle. Hem “bir avuç” yazacak hem de yanına gram karşılığını ekleyecekti. Böylece ileride bu defteri okuyacak biri, iki yolu da öğrenebilecekti.\n\nKurabiyeler fırından çıktığında mutfak yine tarçın kokusuyla doldu. Zeynep'in kurabiyeleri babaannesininkiler kadar düzgün değildi. Bazıları biraz yassı, bazıları kenarlarından yanıktı. Zeynep önce biraz utandı ve tabağı saklamak istedi. Ama babaannesi bir tanesini alıp ısırdı ve gözlerini kapatarak, tadının tıpkı kendi annesinin yaptıkları gibi olduğunu söyledi.\n\nO akşam Zeynep, defterin boş sayfasına özenle yazdı: “Elmalı kurabiye. Bir avuç şeker, yani yaklaşık seksen gram.” Sayfanın kenarına da küçük bir not düştü: “Babaannemle ilk kez birlikte yaptık. Hamur bana ne istediğini söyledi.” Defteri dikkatle kapatırken, artık bu eski sayfaların bir parçası olduğunu hissetti. Belki yıllar sonra başka bir çocuk bu notu okuyacak ve onu tanımadan, o yaz günündeki mutfağın kokusunu hayal edecekti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep eve varınca neden hemen mutfağa koştu?",
+    "correct": "Sevdiği bir tadı özlediği için",
+    "wrong": [
+     "Uzun yolculukta çok acıktığından",
+     "Babaannesi onu çağırdığı için",
+     "Annesine yardım sözü verdiğinden"
+    ],
+    "explanation": "Babaannesinin kurabiyelerinin tadını bütün yıl unutamamıştı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Defterin kenar notları onu sıradan bir tarif kitabından nasıl ayırır?",
+    "correct": "Ailenin anılarını da taşır",
+    "wrong": [
+     "Çok daha fazla tarif içerir",
+     "Renkli resimlerle süslenmiştir",
+     "Yeni basılmış bir kitaptır"
+    ],
+    "explanation": "Notlar akrabaların hayatından anlar anlatır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tarif Zeynep'e neden tuhaf geldi?",
+    "correct": "Ölçüler kesin değildi",
+    "wrong": [
+     "Malzemeler çok pahalıydı",
+     "Tarif yabancı dildeydi",
+     "Sayfası yırtılmıştı"
+    ],
+    "explanation": "Bir avuç, iki parmak gibi kesin olmayan ölçüler yazıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Babaannenin açıklamasına göre eski ölçüler nasıl öğrenilirdi?",
+    "correct": "Usta birinin yanında deneyerek",
+    "wrong": [
+     "Okulda ders alıp sınava girerek",
+     "Kitaplardan dikkatle okuyarak",
+     "Her şeyi tartıyla tartarak"
+    ],
+    "explanation": "Ölçüler yan yana çalışarak, elleri izleyerek aktarılırdı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Babaanne Zeynep'e neden doğrudan yardım etmedi?",
+    "correct": "Kendisi keşfetsin diye",
+    "wrong": [
+     "Mutfakta çok yorulduğu için",
+     "Tarifi hatırlamadığı için",
+     "Zeynep'e kızdığı için"
+    ],
+    "explanation": "Müdahale etmeden izledi ve yalnızca düşündüren bir soru sordu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep defterin boş sayfasına neyi eklemeye karar verdi?",
+    "correct": "Ölçülerin gram değerini",
+    "wrong": [
+     "Kurabiyelerin resmini",
+     "Yeni bir çorba tarifini",
+     "Annesinin telefonunu"
+    ],
+    "explanation": "Bir avucun yanına gram karşılığını da yazacaktı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep'in iki ölçüyü birlikte yazma kararı neyi gösterir?",
+    "correct": "Eskiyle yeniyi buluşturmak istediğini",
+    "wrong": [
+     "Babaannesinin yöntemini yanlış bulduğunu",
+     "Okuldaki dersleri daha çok sevdiğini",
+     "Defteri bir gün satmak istediğini"
+    ],
+    "explanation": "İleride okuyan kişi her iki yolu da öğrenebilecektir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta Zeynep'in duygusu en iyi hangisiyle anlatılır?",
+    "correct": "Bir zincirin halkası olduğunu hissetmek",
+    "wrong": [
+     "Yassı kurabiyeler yüzünden utanç duymak",
+     "Yakında köyden ayrılacağı için üzülmek",
+     "Babaannesinin ustalığını kıskanmak"
+    ],
+    "explanation": "Defterin, dolayısıyla ailenin hikâyesinin bir parçası olduğunu hisseder."
+   }
+  ]
+ }
+}

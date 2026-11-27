@@ -1,0 +1,779 @@
+{
+ "81": {
+  "title": "Pamuk Nerede?",
+  "category": "Hikaye/Kurgu",
+  "content": "Okuldan dönerken Arda ile Ece, apartmanın kapısına yapıştırılmış bir kâğıt gördü. Kâğıtta gri tüylü, beyaz patili bir kedinin fotoğrafı vardı. Altında büyük harflerle “Kayıp kedi! Adı Pamuk. Görenlerin üçüncü kattaki Nermin Teyze'ye haber vermesi rica olunur” yazıyordu.\n\nNermin Teyze, apartmanda yalnız yaşayan yaşlı bir kadındı. Çocuklar onu sık sık balkonda, kucağında kedisiyle otururken görürlerdi. Pamuk onun en yakın arkadaşı gibiydi. Ece, “Çok üzülmüştür” dedi. Arda da başını salladı. Birlikte Pamuk'u aramaya karar verdiler. Çantalarını eve bırakıp hemen aşağı indiler.\n\nÖnce apartmanın bahçesine baktılar. Çalıların altını, çöp kutularının arkasını aradılar ama Pamuk yoktu. Sonra Arda'nın aklına bir fikir geldi. Kediler korktuklarında dar ve karanlık yerlere saklanırdı. Apartmanın bodrum katının küçük bir penceresi vardı ve o gün aralık duruyordu.\n\nÇocuklar kapıcı Hasan Amca'dan yardım istedi. Hasan Amca bodrumun kapısını açtı ve birlikte el feneriyle içeri girdiler. Eski eşyaların arasında iki parlak göz gördüler. Pamuk, bir sandığın arkasına sıkışmış, korkudan titriyordu. Muhtemelen pencereden içeri atlamış ama dışarı çıkamamıştı. Ece yavaşça yaklaştı ve onu yumuşak bir sesle çağırdı. Pamuk önce çekindi, sonra Ece'nin kucağına geldi.\n\nÇocuklar Pamuk'u alıp hemen üçüncü kata çıktılar. Nermin Teyze kapıyı açıp kedisini görünce gözleri yaşardı. Pamuk'u sıkıca kucakladı ve çocuklara defalarca teşekkür etti. Sonra onları içeri davet edip kendi yaptığı kurabiyelerden ikram etti.\n\nO günden sonra Arda ile Ece, okul dönüşü sık sık Nermin Teyze'ye uğramaya başladı. Pamuk da onları her seferinde kapıda karşılıyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar kayıp kediyi nereden öğrendi?",
+    "correct": "Kapıya asılmış bir ilandan",
+    "wrong": [
+     "Kapıcının anlattıklarından",
+     "Bir komşunun telefonundan",
+     "Okuldaki bir duyurudan"
+    ],
+    "explanation": "Apartman kapısına yapıştırılmış kayıp kedi kâğıdını gördüler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ece'nin “Çok üzülmüştür” demesinin nedeni nedir?",
+    "correct": "Kedinin yaşlı kadına çok değerli olması",
+    "wrong": [
+     "Nermin Teyze'nin hasta olduğunu bilmesi",
+     "Kedinin çok pahalı bir cins olması",
+     "Nermin Teyze'nin ilanı ağlayarak asması"
+    ],
+    "explanation": "Nermin Teyze yalnız yaşıyordu ve Pamuk onun en yakın arkadaşı gibiydi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arda'nın bodrumu düşünmesine ne yol açtı?",
+    "correct": "Korkan kedilerin kuytulara saklanması",
+    "wrong": [
+     "Pamuk'un sesini bodrumdan duymuş olması",
+     "Bahçede kedinin izlerini bulması",
+     "Kapıcının onlara ipucu vermesi"
+    ],
+    "explanation": "Arda, kedilerin korktuklarında dar ve karanlık yerlere saklandığını düşündü."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çocuklar bodruma kimin yardımıyla girdi?",
+    "correct": "Kapıcı Hasan Amca'nın",
+    "wrong": [
+     "Komşu Nermin Teyze'nin",
+     "Arda'nın babasının",
+     "Ece'nin büyük ablasının"
+    ],
+    "explanation": "Hasan Amca bodrumun kapısını açtı ve birlikte içeri girdiler."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pamuk bodrumda nasıl bir durumdaydı?",
+    "correct": "Bir sandığın ardında titriyordu",
+    "wrong": [
+     "Rafların üstünde uyuyordu",
+     "Pencerenin önünde miyavlıyordu",
+     "Kapının hemen önünde bekliyordu"
+    ],
+    "explanation": "Pamuk bir sandığın arkasına sıkışmış, korkudan titriyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Pamuk'un bodruma nasıl girdiği düşünülüyor?",
+    "correct": "Aralık kalan pencereden atlayarak",
+    "wrong": [
+     "Kapıcının ardından içeri girerek",
+     "Çalıların altından geçip gelerek",
+     "Bahçedeki çalıların altından geçerek"
+    ],
+    "explanation": "Pamuk muhtemelen aralık duran pencereden içeri atlamış ama çıkamamıştı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nermin Teyze çocuklara nasıl teşekkür etti?",
+    "correct": "Ev yapımı kurabiye ikram ederek",
+    "wrong": [
+     "Onlara yeni bir kedi alarak",
+     "Ailelerine uzun bir mektup yazarak",
+     "Onlara oyuncak hediye ederek"
+    ],
+    "explanation": "Nermin Teyze çocukları içeri davet edip kendi yaptığı kurabiyelerden ikram etti."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonu hangi değişimi anlatır?",
+    "correct": "Çocuklarla komşu arasında dostluk kurulduğunu",
+    "wrong": [
+     "Çocukların kedi sahibi olmaya karar verdiğini",
+     "Nermin Teyze'nin başka bir yere taşındığını",
+     "Pamuk'un bir daha evden çıkmadığını"
+    ],
+    "explanation": "Çocuklar o günden sonra sık sık Nermin Teyze'ye uğramaya başladı."
+   }
+  ]
+ },
+ "82": {
+  "title": "Gökyüzündeki V",
+  "category": "Bilgi/Açıklama",
+  "content": "Sonbaharda gökyüzüne baktığınızda, göç eden kuşların V harfi biçiminde uçtuğunu görebilirsiniz. Kazlar, turnalar ve yaban ördekleri bu biçimde uçan kuşlardandır. Bu kuşlar her yıl binlerce kilometre yol alır. Peki bu kuşlar neden böyle bir düzen kurar? Bilim insanları bu soruyu uzun yıllar araştırdı.\n\nBir kuş kanatlarını çırptığında, kanadının ucunda hava yukarı doğru hareket eder. Arkada ve hafifçe yanda uçan kuş, bu yukarı doğru hareket eden havayı kullanarak daha az güç harcar. Böylece her kuş, önündekinin yardımıyla daha rahat uçar. Bu sayede sürü, tek başına uçan bir kuşa göre çok daha uzun yol alabilir.\n\nEn öndeki kuş ise bu yardımdan yararlanamaz ve en çok o yorulur. Bu yüzden kuşlar sırayla öne geçer. Öndeki kuş yorulunca geriye çekilir ve yerini başka bir kuş alır. Böylece yük, sürüdeki kuşlar arasında paylaşılmış olur.\n\nV biçimi, kuşların birbirini görmesini de kolaylaştırır. Böylece kuşlar birbirine çarpmadan, düzenlerini bozmadan birlikte uçabilir. Kuşların bu akıllı düzeni, uzun yolculukları birlikte başarmalarını sağlar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde V biçiminde uçtuğu belirtilen kuşlardan biri hangisidir?",
+    "correct": "Turna",
+    "wrong": [
+     "Serçe",
+     "Güvercin",
+     "Baykuş"
+    ],
+    "explanation": "Kazlar, turnalar ve yaban ördekleri V biçiminde uçar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Arkadaki kuşun daha az yorulmasının nedeni nedir?",
+    "correct": "Öndekinin kanadından yükselen havayı kullanması",
+    "wrong": [
+     "Kanatlarını hiç çırpmadan rüzgârda süzülüp gitmesi",
+     "Daha alçaktan ve rüzgârsız bir havada uçması",
+     "Öndeki kuşun onu kanadıyla çekip taşıması"
+    ],
+    "explanation": "Öndeki kuşun kanat ucunda yukarı hareket eden hava, arkadakinin daha az güç harcamasını sağlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "V düzeni sürüye ne kazandırır?",
+    "correct": "Daha uzun yol alabilme",
+    "wrong": [
+     "Daha yükseğe çıkabilme",
+     "Daha çok yiyecek bulma",
+     "Geceleri de uçabilme"
+    ],
+    "explanation": "Sürü, tek başına uçan bir kuşa göre çok daha uzun yol alabilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sürüde en çok hangi kuş yorulur?",
+    "correct": "Başta uçan kuş",
+    "wrong": [
+     "En arkadaki kuş",
+     "Ortadaki kuş",
+     "En genç kuş"
+    ],
+    "explanation": "En öndeki kuş yardımdan yararlanamadığı için en çok o yorulur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kuşların sırayla öne geçmesi neyi sağlar?",
+    "correct": "Yorgunluğun herkese bölüşülmesini",
+    "wrong": [
+     "Sürünün yönünü sık sık değiştirmesini",
+     "En güçlü kuşun sürekli önde kalmasını",
+     "Kuşların birbiriyle yarışmasını"
+    ],
+    "explanation": "Öndeki kuş yorulunca geri çekilir; böylece yük paylaşılır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "V biçiminin bir başka yararı nedir?",
+    "correct": "Kuşların birbirini görebilmesi",
+    "wrong": [
+     "Kuşların daha az ses çıkarması",
+     "Avcı kuşları korkutup kaçırması",
+     "Kuşların yağmurdan korunması"
+    ],
+    "explanation": "V biçimi kuşların birbirini görmesini ve çarpışmamasını kolaylaştırır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Metne göre kuşların V düzeni en çok neye benzetilebilir?",
+    "correct": "Görevini paylaşan bir takıma",
+    "wrong": [
+     "Tek başına koşan bir sporcuya",
+     "Birbiriyle yarışan arabalara",
+     "Rastgele dağılan bir kalabalığa"
+    ],
+    "explanation": "Kuşlar birbirine yardım eder ve öndeki görevi sırayla üstlenir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Ortak bir düzen uzun yolu kolaylaştırır",
+    "wrong": [
+     "Göçmen kuşlar yalnızca sonbahar aylarında uçar",
+     "Bütün kuşlar V biçiminde uçmayı sever",
+     "Öndeki kuş sürünün tek yöneticisi olur"
+    ],
+    "explanation": "Kuşlar V düzeniyle güç harcamasını azaltır ve uzun yolu birlikte tamamlar."
+   }
+  ]
+ },
+ "83": {
+  "title": "Yer Sarsıldığında",
+  "category": "Bilgi/Açıklama",
+  "content": "Yeryüzünün en dış katmanı, yer kabuğu, tek parça değildir. Dev bir yapbozun parçalarına benzeyen büyük kaya kütlelerinden oluşur. Bu parçalara levha denir. Levhalar, altlarındaki sıcak ve yumuşak katmanın üzerinde çok yavaş hareket eder. Bu hareket o kadar yavaştır ki yılda yalnızca birkaç santimetre kadardır; yani tırnaklarımızın uzama hızına yakındır.\n\nLevhaların kenarları birbirine sürtünürken bazen takılır. Levhalar hareket etmeye devam ettikçe bu takılan yerlerde büyük bir gerilim birikir. Gerilim çok artınca kayalar aniden kırılır ve kayar. Bu sırada açığa çıkan enerji, dalgalar hâlinde her yöne yayılır ve yeri sarsar. İşte bu sarsıntıya deprem denir. Depremin başladığı yere odak, odağın tam üstündeki yeryüzü noktasına ise merkez üssü adı verilir.\n\nTürkiye, birkaç levhanın birbirine yakın olduğu bir bölgede yer alır. Bu yüzden ülkemizde sık sık deprem olur. Bunların çoğunu hissetmeyiz bile; ama zaman zaman büyük ve yıkıcı depremler de yaşanır. Depremi önceden tahmin etmek bugün için mümkün değildir. Ama depreme hazırlıklı olmak, can kayıplarını büyük ölçüde azaltabilir.\n\nHazırlığın ilk adımı evimizi güvenli hâle getirmektir. Dolaplar ve kitaplıklar duvara sabitlenmeli, ağır eşyalar yüksek raflara konmamalıdır. Her evde su, el feneri, düdük ve ilk yardım malzemesi bulunan bir deprem çantası olmalıdır. Aile bireyleri, deprem sonrasında nerede buluşacaklarını önceden konuşmalıdır. Ayrıca evin hangi köşelerinin daha güvenli olduğu birlikte belirlenmelidir.\n\nDeprem sırasında yapılacaklar da önemlidir. Sarsıntıyı hissettiğimizde hemen sağlam bir masanın yanına ya da altına çömelmeli, başımızı ve boynumuzu kollarımızla korumalıyız. Buna “çök, kapan, tutun” denir. Pencerelerden ve devrilebilecek eşyalardan uzak durmalı, merdivenleri ve asansörleri kullanmamalıyız.\n\nOkullarda yapılan deprem tatbikatları, bu davranışları alışkanlık hâline getirmek içindir. Tatbikatlarda öğrendiklerimizi ciddiye almak, bir gün hayatımızı kurtarabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Levhaların hareket hızı neye benzetilmiştir?",
+    "correct": "Tırnakların büyüme hızına",
+    "wrong": [
+     "Bir kaplumbağanın yürüyüşüne",
+     "Bir nehrin akış hızına",
+     "Saçların dökülme hızına"
+    ],
+    "explanation": "Levhalar yılda birkaç santimetre hareket eder; bu tırnakların uzama hızına yakındır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Depremin ortaya çıkmasında hangi durum belirleyicidir?",
+    "correct": "Biriken gerilimin kayaları kırması",
+    "wrong": [
+     "Levhaların hiç hareket etmeden durması",
+     "Yer kabuğunun tek parça hâline gelmesi",
+     "Yeraltındaki suyun aniden donması"
+    ],
+    "explanation": "Takılan yerlerde gerilim birikir; çok artınca kayalar aniden kırılır ve kayar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Depremin başladığı yerin tam üstündeki yeryüzü noktasına ne denir?",
+    "correct": "Merkez üssü",
+    "wrong": [
+     "Odak noktası",
+     "Fay hattı",
+     "Levha sınırı"
+    ],
+    "explanation": "Depremin başladığı yere odak, tam üstündeki yeryüzü noktasına merkez üssü denir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Türkiye'de depremlerin sık yaşanmasının nedeni nedir?",
+    "correct": "Birden çok levhanın buluştuğu bir yerde olması",
+    "wrong": [
+     "Ülkenin çok sayıda yüksek dağa sahip olması",
+     "Ülkenin denizlerle çevrili bir yarımada olması",
+     "Ülkede çok sayıda büyük şehir bulunması"
+    ],
+    "explanation": "Türkiye birkaç levhanın birbirine yakın olduğu bir bölgededir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Depremin önceden bilinemediği düşünülürse, metne göre en akılcı tutum hangisidir?",
+    "correct": "Hazırlıkla olası zararı azaltmak",
+    "wrong": [
+     "Deprem tahminlerini beklemek",
+     "Yalnızca küçük depremleri izlemek",
+     "Depremi önlemenin yollarını aramak"
+    ],
+    "explanation": "Deprem tahmin edilemez ama hazırlıklı olmak can kayıplarını azaltır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deprem çantasında hangisinin bulunması önerilir?",
+    "correct": "Düdük",
+    "wrong": [
+     "Radyo",
+     "Ders kitabı",
+     "Oyuncak"
+    ],
+    "explanation": "Deprem çantasında su, el feneri, düdük ve ilk yardım malzemesi bulunmalıdır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sarsıntı sırasında ne yapılmalıdır?",
+    "correct": "Sağlam eşya yanında baş korunmalı",
+    "wrong": [
+     "Hemen asansörle aşağıya inilmeli",
+     "Pencereden dışarıya bakılmalı",
+     "Merdivenlerden koşarak aşağı inilmeli"
+    ],
+    "explanation": "Sağlam bir masanın yanına çömelip baş ve boyun kollarla korunmalıdır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Okullarda tatbikat yapılmasının asıl amacı nedir?",
+    "correct": "Doğru davranışların alışkanlık olması",
+    "wrong": [
+     "Öğrencilerin dersten biraz dinlenmesi",
+     "Binanın sağlamlığını ölçmek ve izlemek",
+     "Depremin ne zaman olacağını kestirmek"
+    ],
+    "explanation": "Tatbikatlar, deprem anındaki davranışları alışkanlık hâline getirmek içindir."
+   }
+  ]
+ },
+ "84": {
+  "title": "Sınıf Gazetesi",
+  "category": "Hikaye/Kurgu",
+  "content": "Beşinci sınıflar, dönem başında öğretmenleri Selma Hanım'dan ilginç bir görev aldı: Sınıfın kendi gazetesini çıkaracaklardı. Gazete ayda bir kez basılacak ve okulun panosuna asılacaktı.\n\nİlk toplantıda herkes çok heyecanlıydı. Ama kısa süre sonra tartışmalar başladı. Herkes kendi yazısının ilk sayfada olmasını istiyordu. Kerem spor haberleri, Elif okulun bahçesindeki ağaçlar, Mert ise yeni çıkan bir bilgisayar oyunu hakkında yazmak istiyordu. Toplantının sonunda ortada tek bir karar bile yoktu ve bazı öğrenciler birbirine küsmüştü.\n\nSelma Hanım ertesi gün onlara gerçek gazetelerin nasıl çalıştığını anlattı. Bir gazetede herkesin bir görevi vardı. Muhabirler haber toplar, yazarlar yazıları yazar, editörler yazıları okuyup düzeltir, tasarımcılar da sayfaları düzenlerdi. Öğrenciler bu görevleri aralarında paylaştı. Hangi yazının ilk sayfaya çıkacağına ise okurlar için en önemli haberin hangisi olduğuna bakarak birlikte karar vereceklerdi.\n\nBu düzen işe yaradı. Muhabirler okul müdürüyle, kantin görevlisiyle ve diğer sınıflardaki öğrencilerle konuştu. Editörler yazım yanlışlarını düzeltti ve uzun yazıları kısalttı. Tasarımcılar sayfalara resimler ve renkli başlıklar ekledi. İlk sayı ay sonunda panoya asıldığında, önünde küçük bir kalabalık oluştu. İlk sayfada, okul bahçesine yeni dikilecek fidanlarla ilgili Elif'in haberi vardı.\n\nKerem ilk başta biraz bozulmuştu, ama spor köşesini okuyan öğrencilerin ona sorular sorduğunu görünce keyfi yerine geldi. Sınıf, gazete sayesinde birlikte çalışmanın ne demek olduğunu öğrenmişti. Ertesi ay ikinci sayı için ilk toplantıda kimse tartışmadı; herkes kendi görevini biliyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gazete ne sıklıkla çıkarılacaktı?",
+    "correct": "Her ay bir",
+    "wrong": [
+     "Haftada bir",
+     "Gün aşırı",
+     "Yılda bir"
+    ],
+    "explanation": "Gazete ayda bir kez basılıp panoya asılacaktı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "İlk toplantının sonuçsuz kalmasının nedeni nedir?",
+    "correct": "Herkesin kendi yazısını öne koyma isteği",
+    "wrong": [
+     "Öğrencilerin yazacak konu bulamaması",
+     "Öğrencilerin yazacak bir konu bulamaması",
+     "Selma Hanım'ın toplantıya hiç katılmaması"
+    ],
+    "explanation": "Herkes kendi yazısının ilk sayfada olmasını istediği için karar alınamadı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gerçek gazetelerde yazıları okuyup düzelten kişilere ne ad verilir?",
+    "correct": "Editör",
+    "wrong": [
+     "Muhabir",
+     "Tasarımcı",
+     "Okur"
+    ],
+    "explanation": "Editörler yazıları okuyup düzeltir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Öğrenciler ilk sayfadaki haberi hangi ölçüte göre seçecekti?",
+    "correct": "Okurlar açısından taşıdığı öneme göre",
+    "wrong": [
+     "Yazanın sınıftaki başarısına göre",
+     "Yazının uzunluğuna ve resmine göre",
+     "Öğretmenin en çok beğendiği yazıya göre"
+    ],
+    "explanation": "Okurlar için en önemli haberin hangisi olduğuna bakarak karar vereceklerdi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Muhabirler kimlerle konuştu?",
+    "correct": "Müdür, kantinci ve öğrencilerle",
+    "wrong": [
+     "Yalnızca kendi sınıf arkadaşlarıyla",
+     "Gazeteciler ve kitap yazarlarıyla",
+     "Veliler ve diğer öğretmenlerle"
+    ],
+    "explanation": "Muhabirler okul müdürü, kantin görevlisi ve diğer sınıflardaki öğrencilerle konuştu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk sayının birinci sayfasında hangi haber vardı?",
+    "correct": "Bahçeye dikilecek fidanlar",
+    "wrong": [
+     "Okulun yeni kurulan takımı",
+     "Yeni kantin fiyat listesi",
+     "Yeni çıkan bir bilgisayar oyunu"
+    ],
+    "explanation": "İlk sayfada Elif'in okul bahçesine dikilecek fidanlarla ilgili haberi vardı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kerem'in keyfinin yerine gelmesini sağlayan nedir?",
+    "correct": "Yazdığı bölümün ilgi görmesi",
+    "wrong": [
+     "İlk sayfaya yazısının konması",
+     "Öğretmeninin onu sınıfta övmesi",
+     "Gazetenin bir ay ertelenmesi"
+    ],
+    "explanation": "Spor köşesini okuyan öğrencilerin ona sorular sorması Kerem'i sevindirdi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öyküden çıkarılabilecek ders hangisidir?",
+    "correct": "İş bölümü ortak bir işi başarıya taşır",
+    "wrong": [
+     "Gazete çıkarmak çocuklar için uygun değildir",
+     "İlk sayfada olmayan yazılar okunmaz",
+     "Tartışmalar çoğu zaman küslükle biter"
+    ],
+    "explanation": "Görevler paylaşılınca sınıf uyum içinde çalıştı ve gazete başarılı oldu."
+   }
+  ]
+ },
+ "87": {
+  "title": "Bambunun Hızı",
+  "category": "Bilgi/Açıklama",
+  "content": "Bambu, dünyanın en hızlı büyüyen bitkileri arasında yer alır. Bazı bambu türlerinin bir günde neredeyse bir metre uzadığı görülmüştür. Bu hızla büyüyen bir bitkinin boyundaki değişimi, dikkatle bakan biri neredeyse gözüyle izleyebilir.\n\nBambunun bu kadar hızlı büyümesinin bir sırrı vardır. Pek çok ağaç, gövdesini yıllar içinde hem uzatarak hem de kalınlaştırarak büyütür. Bambunun gövdesi ise topraktan çıktığı andaki kalınlığını korur. Gövde, iç içe geçmiş bölümlerden oluşur ve bu bölümlerin her biri aynı anda uzar. Bu yüzden bambu, kalınlaşmaya enerji harcamadan hızla boy atar. Birkaç ay içinde son boyuna ulaşan bambu, sonraki yıllarda daha çok sertleşip güçlenir.\n\nGörünüşü ağaca benzese de bambu aslında bir ottur; buğday ve mısır gibi bitkilerle aynı aileden gelir. Gövdesi hafif ama çok sağlamdır. Bu yüzden Asya'nın birçok ülkesinde ev yapımından inşaat iskelelerine ve mobilyaya kadar pek çok alanda kullanılır. Hızlı büyüdüğü için kesildikten sonra kısa sürede yeniden yetişebilmesi, onu çevre dostu bir malzeme hâline getirir. Pandaların en sevdiği yiyecek olması ise bambunun bilinen bir başka özelliğidir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı bambu türleri bir günde ne kadar uzayabilir?",
+    "correct": "Neredeyse 1 metre",
+    "wrong": [
+     "Yaklaşık 1 santimetre",
+     "Yaklaşık 10 santimetre",
+     "Yaklaşık 5 metre"
+    ],
+    "explanation": "Bazı bambu türlerinin bir günde neredeyse bir metre uzadığı görülmüştür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bambuyu ağaçlardan ayıran büyüme özelliği nedir?",
+    "correct": "Enine genişlemeden yalnızca boyca uzaması",
+    "wrong": [
+     "Yıllar boyunca gövdesini kalınlaştırması",
+     "Yalnızca köklerinin büyümeye devam etmesi",
+     "Gövdesinin tek bir parçadan oluşması"
+    ],
+    "explanation": "Bambu, gövdesinin kalınlığını koruyarak yalnızca boy atar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bambunun gövdesi nasıl bir yapıdadır?",
+    "correct": "İç içe geçmiş bölümlerden oluşur",
+    "wrong": [
+     "Tek ve düz bir gövdeden oluşur",
+     "Ağaç gibi halkalar hâlinde büyür",
+     "İçi su dolu bir borudan oluşur"
+    ],
+    "explanation": "Gövde iç içe geçmiş ve aynı anda uzayan bölümlerden oluşur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bambu son boyuna ulaştıktan sonra ne olur?",
+    "correct": "Zamanla daha dayanıklı hâle gelir",
+    "wrong": [
+     "Kısa sürede kuruyup çürümeye başlar",
+     "Gövdesi hızla kalınlaşmaya başlar",
+     "Yeniden hızla boy atmayı sürdürür"
+    ],
+    "explanation": "Son boyuna ulaşan bambu sonraki yıllarda sertleşip güçlenir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bambu hangi bitkilerle aynı ailedendir?",
+    "correct": "Buğday, mısır",
+    "wrong": [
+     "Meşe ve kayın",
+     "Gül ve papatya",
+     "Elma ve ayva"
+    ],
+    "explanation": "Bambu aslında bir ottur ve buğday ile mısırla aynı ailedendir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bambunun çevre dostu bir malzeme sayılmasının nedeni nedir?",
+    "correct": "Kesilince kısa sürede yeniden yetişmesi",
+    "wrong": [
+     "Yalnızca Asya'da kullanılıyor olması",
+     "Yalnızca Asya ülkelerinde kullanılıyor olması",
+     "Gövdesinin çok ağır ve kalın olması"
+    ],
+    "explanation": "Hızlı büyüdüğü için kesildikten sonra kısa sürede yeniden yetişir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre bambu hangi alanda kullanılır?",
+    "correct": "İnşaat iskelelerinde",
+    "wrong": [
+     "İlaç üretiminde",
+     "Cam eşya yapımında",
+     "Metal para basımında"
+    ],
+    "explanation": "Bambu ev yapımından inşaat iskelelerine ve mobilyaya kadar kullanılır."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Bambu hızla büyüyen, işe yarar bir bitkidir",
+    "wrong": [
+     "Bambu yalnızca pandalar için yetiştirilir",
+     "Bambu ağaçların en yaşlı türlerinden biridir",
+     "Bambu soğuk iklimlerde hiç yaşayamaz"
+    ],
+    "explanation": "Metin bambunun hızlı büyümesini ve kullanım alanlarını anlatır."
+   }
+  ]
+ },
+ "105": {
+  "title": "Bahçedeki Salyangoz",
+  "category": "Hikaye/Kurgu",
+  "content": "Dedemin bahçesinde yağmurdan sonra çok salyangoz çıkar. Bir sabah dedemle birlikte elimizde sepetle bahçeye çıktık. Marulların yaprağında küçük bir salyangoz gördüm. Sırtında kahverengi, kıvrım kıvrım bir kabuk vardı. Dedem bu kabuğun salyangozun evi olduğunu söyledi. Salyangoz korkunca kabuğunun içine saklanırmış.\n\nSalyangozu dikkatle izledim. Çok yavaş ilerliyordu. Yaprağın bir ucundan öbür ucuna gitmesi uzun sürdü. Arkasında ince, parlak bir iz bırakıyordu. Dedem bu izin salyangozun kendi yaptığı yapışkan bir sıvı olduğunu söyledi. Salyangoz bu sıvı sayesinde kolayca kayıyor, yapraklara tutunabiliyormuş.\n\nSalyangozun başında iki çift boynuz vardı. Parmağımı yaklaştırınca boynuzlarını hemen içeri çekti. Dedem, uzun boynuzların ucunda gözleri olduğunu anlattı. Biraz bekleyince salyangoz boynuzlarını yeniden çıkardı ve yoluna devam etti.\n\nDedem salyangozun marulları yediğini, ama ona zarar vermememiz gerektiğini söyledi. Salyangozu yavaşça alıp bahçenin ucundaki otların arasına bıraktık. Orada istediği kadar ot yiyebilirdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Salyangoz nerede görüldü?",
+    "correct": "Bir marul yaprağında",
+    "wrong": [
+     "Bir ağacın dalında",
+     "Bahçe kapısının üstünde",
+     "Bir taşın altında"
+    ],
+    "explanation": "Çocuk salyangozu marulların yaprağında gördü."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dedeye göre salyangozun kabuğu ne işe yarar?",
+    "correct": "Ona ev ve sığınak olur",
+    "wrong": [
+     "Hızlı gitmesini sağlar",
+     "Yemek bulmasını sağlar",
+     "Suda yüzmesini sağlar"
+    ],
+    "explanation": "Kabuk salyangozun evidir; korkunca içine saklanır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Salyangozun bıraktığı parlak iz ne işe yarar?",
+    "correct": "Kayıp tutunmasına",
+    "wrong": [
+     "Yolunu bulmasına",
+     "Düşmanı korkutmaya",
+     "Bitkiyi sulamaya"
+    ],
+    "explanation": "Yapışkan sıvı sayesinde salyangoz kolayca kayar ve yapraklara tutunur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 1,
+    "text": "Salyangoz nasıl ilerliyordu?",
+    "correct": "Ağır ağır",
+    "wrong": [
+     "Zıplayarak",
+     "Koşarak",
+     "Uçarak"
+    ],
+    "explanation": "Salyangoz çok yavaş ilerliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Salyangoz boynuzlarını neden içeri çekti?",
+    "correct": "Ürktüğü için",
+    "wrong": [
+     "Uyuduğu için",
+     "Acıktığı için",
+     "Üşüdüğü için"
+    ],
+    "explanation": "Çocuk parmağını yaklaştırınca salyangoz boynuzlarını hemen içeri çekti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 1,
+    "text": "Salyangozun gözleri nerededir?",
+    "correct": "Uzun boynuzlarının ucunda",
+    "wrong": [
+     "Kabuğunun üst kısmında",
+     "Ağzının hemen yanında",
+     "Kısa boynuzlarının dibinde"
+    ],
+    "explanation": "Dede, uzun boynuzların ucunda gözler olduğunu anlattı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Salyangozu otların arasına bırakmaları neyi gösterir?",
+    "correct": "Canlıya özen gösterdiklerini",
+    "wrong": [
+     "Salyangozdan korktuklarını",
+     "Marulu hiç sevmediklerini",
+     "Salyangozu saklamak istediğini"
+    ],
+    "explanation": "Dede salyangoza zarar vermemeleri gerektiğini söyledi ve onu güvenli bir yere bıraktılar."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Bu öykü bize ne anlatır?",
+    "correct": "Küçük canlılara saygı duyulmalı",
+    "wrong": [
+     "Salyangozlar bahçeye zarar vermez",
+     "Marullar yalnız yağmurda büyür",
+     "Dedeler bahçede çalışmayı sevmez"
+    ],
+    "explanation": "Salyangoz marulları yese de ona zarar verilmedi."
+   }
+  ]
+ },
+ "106": {
+  "title": "Buzların Babaları",
+  "category": "Bilgi/Açıklama",
+  "content": "Penguenler kuştur ama uçamazlar. Karada paytak paytak yürürler ve bazen karınlarının üstünde buzda kayarlar. Kanatları, uçmak için değil yüzmek için biçimlenmiştir. Suyun içinde kanatlarını kürek gibi kullanarak çok hızlı yüzerler. Bazı penguenler balık avlamak için yüzlerce metre derine dalabilir.\n\nPenguenlerin çoğu Dünya'nın güneyinde yaşar. En büyük penguen türü olan imparator penguenleri, Antarktika'nın buzlu kıyılarında yaşar. Orada kışın sıcaklık sıfırın çok altına düşer ve sert rüzgârlar eser. Penguenleri soğuktan, sık tüyleri ve derilerinin altındaki kalın yağ tabakası korur.\n\nİmparator penguenlerinin yavru büyütme biçimi çok ilginçtir. Dişi penguen yumurtasını bıraktıktan sonra beslenmek için denize gider. Yumurtayı erkek penguen korur. Erkek, yumurtayı ayaklarının üstüne koyar ve karnındaki tüylü bir deri katmanıyla üstünü örter. Aylarca hiçbir şey yemeden, soğukta yumurtasını sıcak tutar.\n\nErkek penguenler, soğuğa karşı birbirlerine sıkıca sokularak büyük gruplar oluşturur. Grubun dışında kalanlar sırayla ortaya geçer. Böylece hiçbiri uzun süre soğukta kalmaz. Bu, penguenlerin birbirine nasıl yardım ettiğini gösteren güzel bir örnektir. Yavru yumurtadan çıktıktan kısa süre sonra dişi geri döner ve yavruyu beslemeye başlar. Artık sıra erkektedir; o da aylardır aç olduğu için hemen denize gidip beslenir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Penguenler kanatlarını ne için kullanır?",
+    "correct": "Yüzmek için",
+    "wrong": [
+     "Uçmak için",
+     "Yürümek için",
+     "Isınmak için"
+    ],
+    "explanation": "Penguenlerin kanatları yüzmek için biçimlenmiştir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Penguenlerin derine dalabilmesi onlara ne kazandırır?",
+    "correct": "Besin bulmalarını kolaylaştırır",
+    "wrong": [
+     "Soğuktan korunmalarını sağlar",
+     "Yuva yapmalarına yardım eder",
+     "Yavrularını saklamalarını sağlar"
+    ],
+    "explanation": "Bazı penguenler balık avlamak için yüzlerce metre derine dalar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İmparator penguenler nerede yaşar?",
+    "correct": "Antarktika kıyılarında",
+    "wrong": [
+     "Kuzey Kutbu'nun buzlarında",
+     "Sıcak ada kıyılarında",
+     "Yüksek dağ başlarında"
+    ],
+    "explanation": "İmparator penguenleri Antarktika'nın buzlu kıyılarında yaşar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Penguenleri soğuktan koruyan nedir?",
+    "correct": "Sık tüyler ve yağ tabakası",
+    "wrong": [
+     "Kalın ve uzun kanatları",
+     "Durmadan hareket etmeleri",
+     "Buzun altında saklanmaları"
+    ],
+    "explanation": "Sık tüyleri ve derilerinin altındaki kalın yağ tabakası onları korur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yumurtayı kim korur?",
+    "correct": "Baba penguen",
+    "wrong": [
+     "Anne penguen",
+     "Yaşlı penguenler",
+     "Bütün sürü"
+    ],
+    "explanation": "Dişi denize gider; yumurtayı erkek penguen korur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Erkek penguen yumurtayı neden ayaklarının üstünde taşır?",
+    "correct": "Buza değip donmasın diye",
+    "wrong": [
+     "Daha hızlı yürüsün diye",
+     "Dişiye gösterebilmek için",
+     "Yumurtayı kırmak için"
+    ],
+    "explanation": "Yumurta ayakların üstünde ve deri katmanının altında sıcak kalır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Penguenlerin sırayla grubun ortasına geçmesi neyi sağlar?",
+    "correct": "Soğuğun herkese bölüşülmesini",
+    "wrong": [
+     "En güçlünün sürekli ortada kalmasını",
+     "Grubun daha hızlı yürümesini",
+     "Yumurtaların birbirine karışmasını"
+    ],
+    "explanation": "Böylece hiçbir penguen uzun süre soğukta kalmaz."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin son paragrafı penguenlerle ilgili neyi vurgular?",
+    "correct": "Zorluğa birlikte göğüs gerdiklerini",
+    "wrong": [
+     "Yavruların yalnız başına büyüdüğünü",
+     "Dişilerin bir daha geri dönmediğini",
+     "Erkeklerin aylarca hiç acıkmadığını"
+    ],
+    "explanation": "Penguenler birbirine sokularak ve sırayla ortaya geçerek soğuğa birlikte dayanır."
+   }
+  ]
+ }
+}

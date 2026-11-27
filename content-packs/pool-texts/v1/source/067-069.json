@@ -1,0 +1,224 @@
+{
+ "67": {
+  "title": "İçimizdeki Kalabalık",
+  "category": "Bilgi/Açıklama",
+  "content": "Vücudumuzda yaşayan bakteri sayısının, kendi hücrelerimizin sayısıyla aşağı yukarı aynı olduğunu biliyor muydunuz? Bu küçük canlıların büyük bölümü bağırsaklarımızda yaşar. Bilim insanları, bağırsaklarımızdaki bakteri, mantar ve diğer mikroskobik canlıların oluşturduğu bu topluluğa bağırsak mikrobiyotası adını verir. Bu topluluğun toplam ağırlığı yaklaşık bir ile iki kilogram arasındadır. Bağırsaklarımızda yüzlerce farklı bakteri türü yaşar ve bunların bir kısmı ancak son yıllarda gelişen genetik yöntemlerle tanımlanabilmiştir; çünkü pek çoğu laboratuvarda üretilemez.\n\nBakteri denince çoğumuzun aklına hastalıklar ve onlardan korunmak için kullandığımız temizlik ürünleri gelir. Oysa bağırsaklarımızdaki bakterilerin büyük çoğunluğu bize zarar vermez, hatta yaşamımız için gereklidir. Bu bakteriler, kendi başımıza sindiremediğimiz bazı lifleri parçalar ve bu sırada bağırsak hücrelerimizin beslenmesine yardım eden maddeler üretir. Bazı vitaminlerin üretiminde de rol oynarlar. Ayrıca zararlı mikropların bağırsakta yerleşmesini zorlaştırarak bizi hastalıklara karşı korurlar. Bunu, hem besin ve yer için onlarla rekabet ederek hem de onların büyümesini engelleyen maddeler üreterek yaparlar.\n\nMikrobiyotanın bağışıklık sistemiyle de yakın bir ilişkisi vardır. Bağışıklık sistemimizin önemli bir bölümü bağırsak çevresinde bulunur. Bu yakınlık tesadüf değildir; çünkü bağırsak, yediğimiz her şeyle birlikte dış dünyadan gelen sayısız mikrobun karşılaştığı ilk yerlerden biridir. Araştırmalar, bağırsak bakterilerinin bağışıklık sisteminin neye tepki göstermesi, neye göstermemesi gerektiğini öğrenmesine katkıda bulunduğunu gösteriyor. Son yıllarda bilim insanları, mikrobiyota ile ruh hâlimiz arasındaki olası bağlantıları da inceliyor. Ancak bu alandaki araştırmalar henüz başlangıç aşamasındadır ve kesin sonuçlara ulaşmak için daha çok çalışmaya ihtiyaç vardır.\n\nHer insanın mikrobiyotası, parmak izi gibi kendine özgüdür. Bebek, mikrobiyotasının ilk üyeleriyle doğum sırasında ve doğumdan hemen sonra tanışır. Doğum biçimi, bebeklikte beslenme, yaşadığımız yer, kullandığımız ilaçlar ve en çok da beslenme alışkanlıklarımız mikrobiyotamızı biçimlendirir. Antibiyotikler, hastalığa yol açan bakterilerle birlikte yararlı bakterileri de öldürebilir. Bu yüzden antibiyotik kullandıktan sonra mikrobiyotanın eski hâline dönmesi zaman alabilir. Bu, antibiyotiklerin yalnızca gerçekten gerektiğinde ve doktorun önerdiği biçimde kullanılmasının nedenlerinden biridir.\n\nPeki mikrobiyotamızı nasıl destekleyebiliriz? Uzmanlar, çeşitli bitkisel besinler tüketmenin önemli olduğunu vurgular. Sebzeler, meyveler, baklagiller ve tam tahıllar, bağırsak bakterilerinin sevdiği lifleri içerir. Yoğurt ve kefir gibi fermente yiyecekler de yararlı bakteriler barındırır. Beslenmedeki çeşitlilik arttıkça, mikrobiyotadaki bakteri türlerinin çeşitliliği de artar. Pek çok araştırmacı, bu çeşitliliğin sağlıklı bir bağırsağın göstergelerinden biri olduğunu düşünüyor. Buna karşılık, lif bakımından fakir ve aşırı işlenmiş gıdalara dayanan bir beslenme biçiminin bakteri çeşitliliğini azaltabileceği öne sürülüyor.\n\nMikrobiyota araştırmaları hızla ilerliyor ve her yıl yeni bulgular ortaya çıkıyor. Kısacası, yediğimiz her öğün yalnızca bizi değil, içimizde yaşayan milyarlarca küçük canlıyı da besliyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bağırsak mikrobiyotası nedir?",
+    "correct": "Bağırsakta yaşayan küçük canlıların topluluğu",
+    "wrong": [
+     "Bağırsak duvarını kaplayan ince bir zar tabakası",
+     "Sindirimi sağlayan özel bir salgı ve sıvı",
+     "Bağışıklık sistemine bağlı ayrı bir organ"
+    ],
+    "explanation": "Bağırsaklardaki bakteri, mantar ve diğer mikroskobik canlıların topluluğuna mikrobiyota denir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bazı bakteri türlerinin ancak yakın zamanda tanımlanabilmesinin nedeni nedir?",
+    "correct": "Çoğunun laboratuvar koşullarında üretilememesi",
+    "wrong": [
+     "Bağırsakta yalnızca çok az sayıda bulunmaları",
+     "Hastalıklara yol açtıkları için yasaklanmaları",
+     "Mikroskopla görülemeyecek kadar büyük olmaları"
+    ],
+    "explanation": "Pek çoğu laboratuvarda üretilemediği için genetik yöntemler gelişene kadar tanımlanamadı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre bağırsak bakterileri hangi işi görür?",
+    "correct": "Bizim çözemediğimiz bitkisel lifleri ayrıştırır",
+    "wrong": [
+     "Kanın vücutta dolaşmasını sağlar ve hızlandırır",
+     "Yediğimiz besinlerdeki şekeri ortadan kaldırır",
+     "Mide duvarını asitten koruyan bir katman oluşturur"
+    ],
+    "explanation": "Bu bakteriler kendi başımıza sindiremediğimiz bazı lifleri parçalar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yararlı bakteriler zararlı mikroplara karşı bizi nasıl korur?",
+    "correct": "Onlarla rekabet edip çoğalmalarını önleyerek",
+    "wrong": [
+     "Onları kana karıştırarak vücuttan uzaklaştırarak",
+     "Bağışıklık sisteminin işini tümüyle üstlenerek",
+     "Bağırsağın sıcaklığını hızla yükselterek"
+    ],
+    "explanation": "Besin ve yer için rekabet ederler ve büyümelerini engelleyen maddeler üretirler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bağışıklık sisteminin büyük bölümünün bağırsak çevresinde bulunması nasıl açıklanır?",
+    "correct": "Bağırsağın mikroplarla ilk buluşma noktası olması",
+    "wrong": [
+     "Bağırsağın vücuttaki en sıcak ve nemli bölge olması",
+     "Tüm bağışıklık hücrelerinin bağırsakta üretilmesi",
+     "Bağırsakta yalnızca çok az sayıda bakteri yaşaması"
+    ],
+    "explanation": "Bağırsak, yediğimiz her şeyle gelen mikropların karşılaştığı ilk yerlerdendir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazarın mikrobiyota ile ruh hâli arasındaki bağlantıya yaklaşımı nasıldır?",
+    "correct": "İhtiyatlı; kesin yargı için erken olduğunu belirtir",
+    "wrong": [
+     "Bu bağlantının artık kesin biçimde kanıtlandığını söyler",
+     "Bu konunun araştırılmasına tümüyle karşı çıkar",
+     "Bağlantının bulunamayacağını kesin dille savunur"
+    ],
+    "explanation": "Yazar bu araştırmaların başlangıç aşamasında olduğunu ve kesin sonuç için daha çok çalışma gerektiğini söyler."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Antibiyotiklerin mikrobiyota üzerindeki etkisi nedir?",
+    "correct": "Faydalı türleri de yok edebilmesi",
+    "wrong": [
+     "Bakteri çeşitliliğini hızla artırması",
+     "Yalnızca mantarları hedef alması",
+     "Mikrobiyotayı saatler içinde yenilemesi"
+    ],
+    "explanation": "Antibiyotikler zararlı bakterilerle birlikte yararlı bakterileri de öldürebilir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesinde vurgulanan düşünce nedir?",
+    "correct": "Öğünlerimizin mikrobiyotayı da beslediği",
+    "wrong": [
+     "Bakterilerin bizden daha çok yemek yediği",
+     "Az yemek yemenin bağırsağı güçlendirdiği",
+     "Mikrobiyota araştırmalarının artık durduğu"
+    ],
+    "explanation": "Yediğimiz her öğün içimizde yaşayan milyarlarca canlıyı da besler."
+   }
+  ]
+ },
+ "69": {
+  "title": "Sıkılmanın Yararları",
+  "category": "Deneme",
+  "content": "Bir otobüs durağında beklerken, bir doktorun bekleme salonunda otururken ya da bir arkadaşımızı beklerken ilk yaptığımız şey nedir? Çoğumuz neredeyse düşünmeden telefonumuzu çıkarırız. Birkaç dakikalık boşluk bile bize katlanılmaz gelir. Oysa yalnızca birkaç on yıl önce insanlar bu anları pencereden dışarı bakarak, etrafı izleyerek ya da yalnızca düşünerek geçirirdi. Bugün sıkılmak, mümkün olduğunca kaçınılması gereken bir durum gibi görülüyor. Peki sıkılmak gerçekten bu kadar kötü bir şey mi?\n\nPsikologlar sıkılmayı, kişinin dikkatini verebileceği anlamlı bir uğraş bulamadığında ortaya çıkan, hoş olmayan bir duygu olarak tanımlar. Bu duygu bize bir şeylerin değişmesi gerektiğini söyler. Bu yönüyle sıkılma, açlık ya da yorgunluk gibi bir uyarı işlevi görür. Bizi yeni bir şey aramaya, içinde bulunduğumuz durumu değiştirmeye yöneltir. Yani sıkılma, insanı harekete geçiren bir itici güç olabilir. Çocuklukta sıkılan bir çocuğun kendi oyununu icat etmesi ya da boş bir öğleden sonrayı bir resim çizerek doldurması, bu gücün günlük hayattaki örnekleridir.\n\nBazı araştırmacılar, sıkılmanın yaratıcılığı da besleyebileceğini öne sürüyor. İngiltere'de yapılan bir deneyde, katılımcıların bir kısmından önce on beş dakika boyunca telefon rehberindeki numaraları kâğıda kopyalamaları istendi. Bu, bilerek seçilmiş son derece sıkıcı bir görevdi. Ardından tüm katılımcılardan, bir plastik bardağın olabildiğince farklı kullanım alanını bulmaları istendi. Sıkıcı görevi yapan katılımcıların, bu görevi yapmayanlara göre ortalamada daha fazla ve daha yaratıcı fikir ürettiği görüldü. Bir başka grupta ise katılımcılardan numaraları kopyalamak yerine yalnızca okumaları istendi; bu daha da sıkıcı görevi yapanların fikirleri, ortalamada en yaratıcı olanlardı. Elbette tek bir deney kesin bir kanıt sayılmaz, ama sonuçlar ilgi çekiciydi.\n\nAraştırmacılar bu sonucu, sıkılan zihnin kendi iç dünyasına yönelmesiyle açıklıyor. Dışarıdan ilgi çekici bir uyaran gelmediğinde zihin hayal kurmaya, farklı fikirleri birbirine bağlamaya başlar. Bu serbest dolaşım, yeni fikirlerin doğması için uygun bir ortam yaratır. Pek çok yazar ve sanatçı, en iyi fikirlerinin yürürken, duş alırken ya da hiçbir şey yapmadan otururken aklına geldiğini anlatır.\n\nElbette sıkılmanın her türü yararlı değildir. Uzun süre devam eden, kişinin hayatında anlam bulamamasından kaynaklanan bir sıkılmışlık hâli, mutsuzluğa ve sağlıksız davranışlara yol açabilir. Burada söz edilen, kısa süreli ve geçici sıkılma anlarıdır. Uzun süreli ve derin bir sıkıntı yaşayan birinin, bu duyguyu tek başına taşımak yerine destek araması önemlidir.\n\nSorun, bugün bu kısa anları bile neredeyse hiç yaşamamamızdır. Telefonlarımız, her boşluğu anında doldurabilecek sonsuz bir uyaran kaynağı sunar. Bu kolaylık, zihnimizin kendi kendine düşünmeye fırsat bulduğu anları ortadan kaldırıyor olabilir. Üstelik ekranda gördüğümüz içerikler çoğu zaman bizi gerçekten doyurmaz; bir videodan ötekine geçerken zaman akıp gider, ama sonunda kendimizi daha dinlenmiş değil, daha yorgun hissederiz.\n\nBelki de bir dahaki sefere durakta beklerken telefonu cebimizde bırakmayı deneyebiliriz. Birkaç dakika sıkılmak, zihnimize ihtiyaç duyduğu küçük bir boşluğu verebilir. Kim bilir, belki de o boşlukta aklımıza uzun zamandır aradığımız bir fikir gelir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın metnin başında durak ve bekleme salonu örneklerini vermesinin amacı nedir?",
+    "correct": "Kısa boşluklara bile dayanamadığımızı göstermek",
+    "wrong": [
+     "Toplu ulaşımdaki aksaklıkları eleştirmek",
+     "Doktorların randevuları geciktirdiğini anlatmak",
+     "Telefonların ne kadar pahalı olduğunu anlatmak"
+    ],
+    "explanation": "Birkaç dakikalık boşluk bile bize katlanılmaz gelir ve hemen telefonu çıkarırız."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Psikologlara göre sıkılma nasıl bir duygudur?",
+    "correct": "Anlamlı bir uğraş bulunamadığında doğan nahoş his",
+    "wrong": [
+     "Çok çalışmaktan kaynaklanan bir bitkinlik hâli",
+     "Yeni bir şey öğrenirken duyulan coşku ve heyecan",
+     "Başkalarıyla tartışırken duyulan öfke ve kızgınlık"
+    ],
+    "explanation": "Sıkılma, dikkat verilecek anlamlı bir uğraş bulunamadığında ortaya çıkan hoş olmayan bir duygudur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar sıkılmayı neden açlık ve yorgunluğa benzetir?",
+    "correct": "Bir değişiklik gereğine işaret ettiği için",
+    "wrong": [
+     "Bu duyguların yalnızca uyuyunca geçtiği için",
+     "Bu duyguların bedende ağrı yarattığı için",
+     "Bu duyguların yemekle sona erdiği için"
+    ],
+    "explanation": "Sıkılma da bir uyarıdır; bir şeylerin değişmesi gerektiğini söyler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deneyde sıkıcı görev olarak katılımcılardan ne istendi?",
+    "correct": "Rehberdeki numaraları kopyalamaları",
+    "wrong": [
+     "Bardağın kullanımlarını sıralamaları",
+     "Uzun bir metni sesli okumaları",
+     "Bir resmi renk renk boyamaları"
+    ],
+    "explanation": "Katılımcılardan on beş dakika telefon rehberindeki numaraları kopyalamaları istendi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Numaraları yalnızca okuyan grubun sonucu hangi düşünceyi güçlendirir?",
+    "correct": "Sıkıntı arttıkça yaratıcılığın da artabileceğini",
+    "wrong": [
+     "Okumanın yazmaktan çok daha yorucu bir iş olduğunu",
+     "Plastik bardağın çok kullanışlı olduğunu",
+     "Deneyin hiçbir anlamlı sonuç vermediğini"
+    ],
+    "explanation": "Daha da sıkıcı görevi yapanların fikirleri ortalamada en yaratıcıydı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Araştırmacılara göre sıkılan zihin neden daha yaratıcı olur?",
+    "correct": "Dış uyarı gelmeyince hayal kurmaya başlaması",
+    "wrong": [
+     "Sıkılınca daha fazla uyuyup dinlenmeye çekilmesi",
+     "Telefonda daha fazla zaman harcayıp oyalanması",
+     "Başkalarının fikirlerini aynen alması"
+    ],
+    "explanation": "Dışarıdan uyaran gelmeyince zihin hayal kurar ve fikirleri birbirine bağlar."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yazara göre hangi tür sıkılma zararlı olabilir?",
+    "correct": "Anlamsızlıktan doğan uzun süreli sıkıntı",
+    "wrong": [
+     "Otobüs durağında birkaç dakika beklemek",
+     "Rehberden numaraları kopyalarken sıkılmak",
+     "Yürüyüşte ya da duş alırken sıkılmak"
+    ],
+    "explanation": "Uzun süre devam eden ve anlam bulamamaktan kaynaklanan sıkılmışlık mutsuzluğa yol açabilir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki önerisinin özü nedir?",
+    "correct": "Kısa boşlukları ekranla doldurmamayı denemek",
+    "wrong": [
+     "Telefonları bütünüyle hayatımızdan atmak",
+     "Durakta beklerken kitap okumayı alışkanlık yapmak",
+     "Hiç sıkılmamak için sürekli bir işle uğraşmak"
+    ],
+    "explanation": "Telefonu cepte bırakıp birkaç dakika sıkılmak zihne gereken boşluğu verebilir."
+   }
+  ]
+ }
+}

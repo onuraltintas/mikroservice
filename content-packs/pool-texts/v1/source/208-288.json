@@ -1,0 +1,668 @@
+{
+ "280": {
+  "title": "Ağaran Resifler",
+  "category": "Bilgi/Açıklama",
+  "content": "Mercan resifleri, okyanus tabanının yalnızca yüzde birinden daha azını kaplar. Buna rağmen deniz canlılarının yaklaşık dörtte biri, yaşamının en az bir döneminde bu resiflere bağımlıdır. Rengârenk balıklar, deniz kaplumbağaları, ahtapotlar ve sayısız küçük canlı burada beslenir, saklanır ve ürer. Bu zengin yaşam yüzünden mercan resifleri sık sık “denizlerin yağmur ormanları” olarak anılır.\n\nPek çok kişi mercanları rengârenk taşlar ya da deniz bitkileri sanır. Oysa mercanlar, polip adı verilen küçük hayvanlardan oluşan kolonilerdir. Her polip, denizanasının uzak bir akrabasıdır ve çevresinde kireçten bir iskelet oluşturur. Milyonlarca polipin binlerce yıl boyunca biriktirdiği bu iskeletler, devasa resiflere dönüşür. Avustralya kıyılarındaki Büyük Set Resifi, uzaydan bile görülebilecek kadar büyüktür. Mercanlar çok yavaş büyür; bazı türler bir yılda ancak birkaç milimetre uzar. Bu yüzden bugün gördüğümüz büyük resiflerin oluşması binlerce yıl almıştır ve zarar gören bir resifin yeniden eski hâline dönmesi de çok uzun sürer.\n\nMercanların asıl sırrı, dokularında yaşayan mikroskobik alglerdir. Bu algler, bitkiler gibi güneş ışığından yararlanarak besin üretir ve bu besinin büyük kısmını mercanla paylaşır. Karşılığında mercan, alglere güvenli bir yaşam alanı ve büyümeleri için gerekli maddeleri sağlar. Mercanlara o canlı renklerini veren de bu alglerdir. Bu ilişki, iki canlının birbirine yarar sağladığı en başarılı ortaklıklardan biridir. Mercanlar besinlerinin büyük bölümünü bu alglerden aldığı için, çoğunlukla güneş ışığının ulaşabildiği sığ, berrak ve ılık sularda yaşar. Bulanık ya da çok derin sularda algler yeterince ışık alamaz ve ortaklık sürdürülemez.\n\nNe var ki bu ortaklık çok hassastır. Deniz suyunun sıcaklığı uzun süre normalin yalnızca bir iki derece üstüne çıktığında, mercanlar strese girer ve dokularındaki algleri dışarı atar. Algleri kaybeden mercanların beyaz iskeleti saydam dokularının arasından görünmeye başlar. Bu olaya “mercan ağarması” denir. Ağaran mercan hemen ölmez, ama en önemli besin kaynağını kaybettiği için zayıf düşmüştür. Sıcaklık kısa sürede normale dönerse algler geri gelebilir ve mercan toparlanabilir. Sıcaklık haftalarca yüksek kalırsa mercanlar açlıktan ölür.\n\nSon yıllarda dünyanın dört bir yanında büyük ağarma olayları yaşanıyor. Bilim insanları bunun temel nedeninin, iklim değişikliğiyle birlikte ısınan okyanuslar olduğunu söylüyor. Büyük Set Resifi'nde son on yılda birkaç kez büyük çaplı ağarma görüldü. Ağarmaların arasındaki süre kısaldıkça, mercanların toparlanmaya vakti kalmıyor. Bazı araştırmalar, dünyadaki mercan resiflerinin önemli bir kısmının son birkaç on yılda kaybolduğunu gösteriyor.\n\nAncak okyanusların ısınması tek sorun değil. Atmosfere salınan karbondioksitin bir kısmı okyanuslar tarafından emiliyor ve deniz suyunu daha asidik hâle getiriyor. Bu durum, mercanların kireçten iskeletlerini oluşturmasını zorlaştırıyor. Bunlara ek olarak aşırı avlanma, kıyılardaki kirlilik ve dikkatsiz turizm de resiflere zarar veriyor.\n\nResiflerin kaybı yalnızca deniz canlılarını değil, insanları da doğrudan etkiliyor. Dünyada yüz milyonlarca insan, besinini ya da geçimini resiflerdeki balıkçılıktan ve turizmden sağlıyor. Resifler ayrıca kıyıların doğal bir kalkanı gibi çalışır; dalgaların gücünü kırarak fırtınalarda kıyı kentlerini ve köyleri korur. Bilim insanları, mercanlarda ve resiflerde yaşayan canlılarda bulunan bazı maddelerin yeni ilaçların geliştirilmesinde de kullanılabileceğini düşünüyor. Yani bir resifin yok olması, henüz keşfedilmemiş bir ilacın da kaybolması anlamına gelebilir.\n\nBilim insanları resifleri korumak için farklı yollar deniyor. Bazı araştırmacılar, sıcağa daha dayanıklı mercan türlerini fidanlıklarda yetiştirip zarar görmüş resiflere yerleştiriyor. Koruma alanları oluşturmak ve kıyılardaki kirliliği azaltmak da resiflerin dayanıklılığını artırıyor. Ancak uzmanlar, mercan resiflerinin uzun vadede ayakta kalabilmesi için en önemli adımın, sera gazı salımlarını azaltarak küresel ısınmayı sınırlamak olduğunu vurguluyor. Resifleri ziyaret eden turistlerin mercanlara dokunmaması ve mercanlara zarar vermeyen güneş kremlerini tercih etmesi gibi küçük davranışlar da bu çabaya katkı sağlayabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mercan resiflerine “denizlerin yağmur ormanları” denmesinin nedeni nedir?",
+    "correct": "Çok sayıda canlıya yuva olmaları",
+    "wrong": [
+     "Ormanlar gibi yemyeşil görünmeleri",
+     "Yağmur yağınca hızla büyümeleri",
+     "Kıyılarda ağaç gibi yükselmeleri"
+    ],
+    "explanation": "Deniz canlılarının yaklaşık dörtte biri resiflere bağımlıdır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mercanlar aslında nedir?",
+    "correct": "Minik hayvan toplulukları",
+    "wrong": [
+     "Deniz dibindeki renkli bitkiler",
+     "Sertleşmiş deniz kumları",
+     "Kayalarda biten yosunlar"
+    ],
+    "explanation": "Mercanlar polip adı verilen küçük hayvanlardan oluşan kolonilerdir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mercanların çoğunlukla sığ ve berrak sularda yaşamasının nedeni nedir?",
+    "correct": "Ortaklarının ışığa muhtaç olması",
+    "wrong": [
+     "Derin suların aşırı tuzlu olması",
+     "Balıkların derinde yaşamaması",
+     "Sığ suların daha serin olması"
+    ],
+    "explanation": "Algler besin üretmek için güneş ışığına ihtiyaç duyar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mercan ağarması nedir?",
+    "correct": "Alglerini atıp renksizleşmesi",
+    "wrong": [
+     "Kumun altında kalıp kaybolması",
+     "Güneşte kurumaya başlaması",
+     "Yepyeni bir renge bürünmesi"
+    ],
+    "explanation": "Algleri kaybeden mercanın beyaz iskeleti görünür."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ağarmalar arasındaki sürenin kısalması neden tehlikelidir?",
+    "correct": "Toparlanmaya vakit kalmaması",
+    "wrong": [
+     "Balıkların resiften uzaklaşması",
+     "Turistlerin bölgeye gelmemesi",
+     "Suyun giderek bulanıklaşması"
+    ],
+    "explanation": "Ağarmalar sıklaştıkça mercanlar toparlanamıyor."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Karbondioksit emilimi mercanları nasıl etkiler?",
+    "correct": "İskelet oluşumunu güçleştirir",
+    "wrong": [
+     "Alglerin sayısını hızla artırır",
+     "Suyun sıcaklığını epey düşürür",
+     "Balıkların çoğalmasını sağlar"
+    ],
+    "explanation": "Asitlenen su kireçten iskelet yapımını zorlaştırır."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Resiflerin kıyı kentleri için önemi nedir?",
+    "correct": "Doğal set gibi kıyıyı korumaları",
+    "wrong": [
+     "Kentlere temiz içme suyu sağlamaları",
+     "Kıyıları yazın serin tutmaları",
+     "Gemilere doğal liman olmaları"
+    ],
+    "explanation": "Resifler dalgaların gücünü kırarak kıyıları korur."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Uzmanlara göre resifleri korumanın en önemli yolu nedir?",
+    "correct": "Gezegenin ısınmasını frenlemek",
+    "wrong": [
+     "Resiflere çok balık bırakmak",
+     "Resifleri tümüyle turizme açmak",
+     "Mercanları akvaryumlara taşımak"
+    ],
+    "explanation": "En önemli adım sera gazı salımlarını azaltmaktır."
+   }
+  ]
+ },
+ "284": {
+  "title": "Örneklerden Öğrenen Makineler",
+  "category": "Bilgi/Açıklama",
+  "content": "Telefonunuz yüzünüzü tanıyıp kilidi açtığında, bir uygulama sesinizi yazıya döktüğünde ya da bir müzik platformu beğenebileceğiniz şarkıları önerdiğinde, arka planda çoğu zaman “makine öğrenmesi” adı verilen bir yöntem çalışır. Bu yöntem, yapay zekâ alanındaki son yıllardaki gelişmelerin büyük bölümünün temelinde yer alıyor. Peki bir bilgisayar nasıl “öğrenir”?\n\nBu soruyu yanıtlamak için önce geleneksel programlara bakalım. Geleneksel bilgisayar programlarında programcı, bilgisayara ne yapacağını adım adım söyleyen kurallar yazar. Örneğin bir e-postanın istenmeyen bir reklam olup olmadığını anlamak için “Konu satırında ‘bedava’ sözcüğü geçiyorsa bu bir reklamdır” gibi kurallar koyabilir. Ancak gerçek dünya bu kadar basit değildir. Bir fotoğraftaki kediyi tanımak için gereken bütün kuralları tek tek yazmak neredeyse imkânsızdır. Kediler farklı renklerde, farklı açılardan, farklı ışıklarda görünebilir; bazen yalnızca kuyrukları görünür.\n\nMakine öğrenmesinde ise yaklaşım tersine çevrilir. Programcı kuralları yazmak yerine bilgisayara çok sayıda örnek verir. Örneğin her birinin üzerinde “kedi var” ya da “kedi yok” yazan yüz binlerce fotoğraf gösterilir. Bilgisayar bu örneklere bakarak, kedili fotoğrafları kedisizlerden ayıran özellikleri kendisi bulmaya çalışır. Başlangıçta tahminleri çoğunlukla yanlıştır, hatta rastgeledir. Ancak her yanlış tahminde, kullandığı iç ayarları biraz değiştirir. Bu süreç, bir çocuğun çok sayıda kedi görerek kediyi tanımayı öğrenmesine benzetilebilir. Milyonlarca kez tekrarlanan bu düzeltmelerin sonunda, daha önce hiç görmediği bir fotoğrafta bile kedi olup olmadığını büyük bir doğrulukla tahmin edebilir hâle gelir.\n\nBu işlemlerde sık kullanılan yapılardan biri “yapay sinir ağları”dır. Adını beyindeki sinir hücrelerinden alan bu yapılar, birbirine bağlı çok sayıda basit hesaplama biriminden oluşur. Her bağlantının bir ağırlığı vardır; öğrenme dediğimiz şey de aslında bu ağırlıkların küçük adımlarla ayarlanmasıdır. Çok katmanlı sinir ağlarıyla yapılan öğrenmeye “derin öğrenme” denir.\n\nSohbet edebilen yapay zekâ uygulamalarının arkasında da benzer bir ilke vardır. Bu sistemler, internetteki kitaplardan, makalelerden ve sitelerden toplanan çok büyük miktarda metinle eğitilir. Eğitim sırasında temel görevleri, bir cümlede sıradaki sözcüğün ne olabileceğini tahmin etmektir. Bu basit görevin milyarlarca kez tekrarlanması sonucunda sistemler, dilin kurallarını, kavramlar arasındaki ilişkileri ve pek çok konudaki bilgiyi şaşırtıcı ölçüde yakalayabilir. Ancak bu sistemler bazen kendinden emin bir dille yanlış bilgiler de üretebilir; bu yüzden verdikleri yanıtların doğruluğunu kontrol etmek önemlidir.\n\nMakine öğrenmesinin gücü, büyük ölçüde verilere dayanır. Ancak bu durum önemli sorunları da beraberinde getirir. Bir sistem yalnızca kendisine gösterilen örneklerden öğrenir. Örnekler eksik ya da tek yanlıysa, sistem de o eksikliği ve önyargıyı öğrenir. Uzmanlar bu durumu kısaca “çöp girerse çöp çıkar” diye özetler. Örneğin çoğunlukla açık tenli kişilerin fotoğraflarıyla eğitilen bir yüz tanıma sistemi, koyu tenli kişileri tanımakta daha fazla hata yapabilir. Bu tür hataların gerçek hayatta, örneğin işe alımda ya da kredi başvurularında kullanılan sistemlerde ciddi adaletsizliklere yol açabileceği konusunda uyarılar yapılıyor.\n\nBir başka sorun da açıklanabilirliktir. Çok büyük sinir ağları milyarlarca ağırlık içerebilir. Sistem doğru bir sonuca ulaşsa bile, bu sonuca neden ve nasıl vardığını anlamak çoğu zaman çok zordur. Bu yüzden araştırmacılar, yapay zekâ sistemlerinin kararlarını daha anlaşılır hâle getirmeye çalışıyor. Özellikle tıp ya da hukuk gibi alanlarda, bir kararın gerekçesinin bilinmesi en az kararın kendisi kadar önemlidir.\n\nMakine öğrenmesi, hastalıkların erken teşhisinden iklim tahminlerine kadar pek çok alanda büyük umut vaat ediyor. Örneğin bazı sistemler, göz ya da deri fotoğraflarından hastalık belirtilerini deneyimli uzmanlar kadar doğru biçimde fark edebiliyor. Bilim insanları da bu araçları, yeni ilaç adaylarını bulmak ya da proteinlerin yapısını tahmin etmek için kullanıyor. Ancak bu araçların bilinçli, adil ve sorumlu biçimde kullanılması, onları geliştiren ve kullanan insanların elinde.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne gündelik teknoloji örnekleriyle başlayarak ne amaçlar?",
+    "correct": "Konunun hayatımızdaki yerini göstermek",
+    "wrong": [
+     "Telefonların fiyatlarını karşılaştırmak",
+     "Müzik platformlarının reklamını yapmak",
+     "Okuru yeni bir uygulamaya yönlendirmek"
+    ],
+    "explanation": "Makine öğrenmesinin gündelik hayatta yaygın olduğunu gösterir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kedi örneği geleneksel programların hangi sınırını gösterir?",
+    "correct": "Her şeyi kurala dökmenin zorluğunu",
+    "wrong": [
+     "Kedilerin bilgisayardan korkmasını",
+     "Fotoğrafların çok pahalı olmasını",
+     "Programcıların kedi sevmemesini"
+    ],
+    "explanation": "Bir kediyi tanımak için gereken bütün kuralları yazmak neredeyse imkânsızdır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Makine öğrenmesinde bilgisayara ne verilir?",
+    "correct": "Çok sayıda etiketli örnek",
+    "wrong": [
+     "Adım adım yazılmış kurallar",
+     "Yalnızca bir tek fotoğraf",
+     "Programcının kişisel notları"
+    ],
+    "explanation": "Programcı kural yerine çok sayıda örnek verir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yapay sinir ağlarında öğrenme aslında neyin ayarlanmasıdır?",
+    "correct": "Bağlantı ağırlıklarının",
+    "wrong": [
+     "Ekranın ışık düzeyinin",
+     "Kabloların uzunluğunun",
+     "İşlemcinin sıcaklığının"
+    ],
+    "explanation": "Öğrenme ağırlıkların küçük adımlarla ayarlanmasıdır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sohbet edebilen sistemlerin temel eğitim görevi nedir?",
+    "correct": "Gelecek sözcüğü tahmin etmek",
+    "wrong": [
+     "Metinleri başka dile çevirmek",
+     "Yazım hatalarını tek tek bulmak",
+     "Kitapları özetleyip saklamak"
+    ],
+    "explanation": "Bir cümlede sıradaki sözcüğü tahmin etmeyi öğrenirler."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yüz tanıma örneği hangi sorunu açıklar?",
+    "correct": "Eksik verinin önyargı doğurması",
+    "wrong": [
+     "Kameraların çok pahalı olması",
+     "Fotoğrafların yavaş işlenmesi",
+     "İnternetin yetersiz ve yavaş olması"
+    ],
+    "explanation": "Tek yanlı örneklerle eğitilen sistem o önyargıyı öğrenir."
+   },
+   {
+    "p": 7,
+    "type": 1,
+    "bloom": 2,
+    "text": "Açıklanabilirlik sorunu neden ortaya çıkar?",
+    "correct": "Milyarlarca ağırlık barındırması",
+    "wrong": [
+     "Programcıların kod yazmayı bilmemesi",
+     "Bilgisayarların yavaş çalışması",
+     "Sonuçların genelde yanlış çıkması"
+    ],
+    "explanation": "Sistemin bir sonuca nasıl vardığını anlamak çok zordur."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesi hangi düşünceyi vurgular?",
+    "correct": "Sorumluluğun insanlarda olduğunu",
+    "wrong": [
+     "Makinelerin kendini yönettiğini",
+     "Teknolojinin durdurulması gerektiğini",
+     "Yapay zekânın her şeyi bildiğini"
+    ],
+    "explanation": "Araçların adil ve sorumlu kullanımı insanların elindedir."
+   }
+  ]
+ },
+ "288": {
+  "title": "Yıkılmaz Minikler",
+  "category": "Bilgi/Açıklama",
+  "content": "Boyları yarım milimetreden küçük, sekiz bacaklı, tombul ve yavaş hareket eden bu canlılara bilim insanları “tardigrad” adını veriyor. Ama onları en iyi tanıtan ad, mikroskop altında yürüyüşleri küçük bir ayıyı andırdığı için verilen “su ayısı”dır. Bu küçük hayvanlar, dünyanın neredeyse her yerinde yaşar: yüksek dağların tepelerinde, okyanusların dibinde, kutup buzullarında, tropik ormanlarda ve hatta bir apartmanın çatısındaki yosunların arasında. Ama onları asıl ünlü yapan, neredeyse hiçbir canlının dayanamayacağı koşullara dayanabilmeleridir.\n\nSu ayıları ilk kez 1773 yılında Alman bir rahip ve doğa bilimci olan Johann Goeze tarafından tanımlandı. Goeze, mikroskopla incelediği bu canlıları “küçük su ayıları” olarak adlandırdı. O günden bu yana bin üç yüzden fazla tür tanımlandı. Çoğu, bitki hücrelerini ağızlarındaki iğne benzeri küçük dişlerle delip içlerindeki sıvıyı emerek beslenir; bazı türler ise kendilerinden küçük canlıları avlar. Bir avuç ıslak yosunun içinde, gözümüzle göremediğimiz yüzlerce su ayısı yaşıyor olabilir.\n\nAdlarından da anlaşılacağı gibi, su ayıları yaşamak için çevrelerinde ince bir su tabakasına ihtiyaç duyar. Yaşadıkları yosun ya da toprak kuruduğunda ise şaşırtıcı bir şey yaparlar. Bacaklarını ve başlarını içeri çeker, vücutlarındaki suyun neredeyse tamamını kaybeder ve küçük, kuru bir fıçıya benzeyen bir şekle girerler. Bu duruma “tun” hâli denir. Tun hâlindeyken metabolizmaları, yani vücutlarındaki yaşam faaliyetleri, ölçülemeyecek kadar yavaşlar. Adeta yaşamla ölüm arasında bir bekleme durumundadırlar. Su yeniden geldiğinde ise birkaç saat içinde şişer, bacaklarını çıkarır ve hiçbir şey olmamış gibi yürümeye başlarlar. Bazı su ayılarının bu durumda on yıldan uzun süre bekledikten sonra yeniden canlandığı bildiriliyor.\n\nTun hâlindeki su ayıları, laboratuvar deneylerinde olağanüstü bir dayanıklılık gösterdi. Mutlak sıfıra yakın, eksi iki yüz derecenin altındaki sıcaklıklarda ve yüz elli derecenin üstündeki sıcaklıklarda kısa süre hayatta kalabildikleri görüldü. İnsanı öldürecek dozun yüzlerce katı radyasyona ve okyanusun en derin noktasındakinden kat kat yüksek basınca dayanabildiler.\n\n2007 yılında Avrupa Uzay Ajansı, su ayılarını bir uydu ile uzaya gönderdi. Hayvanlar on gün boyunca uzayın boşluğunda, havasız ve aşırı soğuk ortamda, güneşten gelen zararlı ışınlara maruz kaldı. Dünya'ya döndüklerinde bir kısmı yeniden canlandı ve hatta yumurtlayarak yavrular dünyaya getirdi. Böylece su ayıları, uzayın çıplak ortamında hayatta kalabildiği bilinen ilk hayvanlar oldu. 2019'da ise İsrail'e ait bir uzay aracı Ay'a inmeye çalışırken düştü. Aracın içinde, bir arşiv projesi kapsamında kuru hâlde su ayıları da bulunuyordu. Bu canlıların Ay yüzeyine dağılıp dağılmadığı tartışıldı; ancak sonradan yapılan deneyler, çarpmanın şiddetine büyük olasılıkla dayanamadıklarını gösterdi.\n\nBilim insanları uzun yıllardır su ayılarının bu olağanüstü dayanıklılığının sırrını çözmeye çalışıyor. Araştırmalar, su kaybettiklerinde hücrelerinin içinde özel proteinler ürettiklerini gösteriyor. Bu proteinler, hücrenin içinde camsı bir yapı oluşturarak önemli molekülleri korur ve su geri geldiğinde çözünür. Su ayılarında bulunan bir başka proteinin ise radyasyonun DNA'ya verdiği zararı azalttığı düşünülüyor.\n\nBu bulgular yalnızca merak giderici değil, pek çok alanda kullanılabilecek fikirler de sunuyor. Araştırmacılar, su ayılarının koruyucu proteinlerinden esinlenerek aşıların ve bazı ilaçların buzdolabı olmadan saklanabilmesini sağlayacak yöntemler geliştirmeye çalışıyor. Uzun uzay yolculuklarında astronotları radyasyondan korumak da düşünülen olası kullanım alanlarından biri. Bazı araştırmacılar ise bu proteinlerin, kuraklığa dayanıklı tarım bitkileri geliştirmek için kullanılıp kullanılamayacağını inceliyor. İklim değişikliğiyle birlikte kuraklıkların arttığı bir dünyada bu, çok değerli bir çözüm olabilir.\n\nYine de su ayılarının “ölümsüz” olmadığını belirtmek gerekir. Aşırı koşullara ancak tun hâlindeyken ve çoğunlukla kısa süre dayanabilirler. Normal, aktif yaşamlarında ise ortalama birkaç ay yaşarlar ve pek çok başka canlı gibi çevrelerindeki değişikliklerden etkilenirler. Yani onların asıl ustalığı ölümü yenmek değil, kötü zamanları uyuyarak beklemeyi bilmektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Tardigradlara neden “su ayısı” denir?",
+    "correct": "Ayıyı andırarak yürüdükleri için",
+    "wrong": [
+     "Ayılarla aynı yerde yaşadıkları için",
+     "Kış uykusuna yattıkları için",
+     "Tüylü bir bedenleri olduğu için"
+    ],
+    "explanation": "Mikroskop altında yürüyüşleri küçük bir ayıyı andırır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Su ayılarını ilk kim tanımladı?",
+    "correct": "Johann Goeze",
+    "wrong": [
+     "Charles Darwin",
+     "Gregor Mendel",
+     "Robert Hooke"
+    ],
+    "explanation": "1773'te Johann Goeze tanımladı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tun hâlinin su ayısına sağladığı yarar nedir?",
+    "correct": "Kuraklığı uyuyarak atlatmak",
+    "wrong": [
+     "Daha hızlı hareket edebilmek",
+     "Avlarını kolayca yakalamak",
+     "Hızla çoğalıp her yere yayılmak"
+    ],
+    "explanation": "Kuruyunca tun hâline girer, su gelince canlanır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Laboratuvarda su ayılarının dayanabildiği koşullardan biri hangisidir?",
+    "correct": "Çok yüksek radyasyon",
+    "wrong": [
+     "Uzun süre ateşte kalma",
+     "Tuzlu suda boğulma",
+     "Aylarca güneşte bekleme"
+    ],
+    "explanation": "İnsanı öldürecek dozun yüzlerce katı radyasyona dayandılar."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "2007 uzay deneyinin önemi nedir?",
+    "correct": "Uzayda yaşayan ilk hayvanı göstermesi",
+    "wrong": [
+     "Ay'da ilk kez yaşam izi bulması",
+     "Uzayda ilk bitkiyi yetiştirmesi",
+     "Su ayılarının uçabildiğini kanıtlaması"
+    ],
+    "explanation": "Su ayıları uzayın çıplak ortamında hayatta kalan ilk hayvanlar oldu."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 5,
+    "text": "Camsı yapı oluşturan proteinlerin işlevi nedir?",
+    "correct": "Hücre parçalarını korumak",
+    "wrong": [
+     "Hücreyi hızla büyütüp bölmek",
+     "Suyu dışarı pompalamak",
+     "Hayvanı sıcacık tutmak"
+    ],
+    "explanation": "Bu proteinler önemli molekülleri korur, su gelince çözünür."
+   },
+   {
+    "p": 7,
+    "type": 2,
+    "bloom": 4,
+    "text": "Su ayısı araştırmalarının aşı saklamaya katkısı ne olabilir?",
+    "correct": "Soğutmasız saklamayı sağlaması",
+    "wrong": [
+     "Aşıları çok daha ucuza üretmek",
+     "Aşıların tadını iyileştirmek",
+     "Aşıları daha hızlı dağıtmak"
+    ],
+    "explanation": "Aşıların buzdolabı olmadan saklanmasını sağlayabilir."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazar hangi yanlış algıyı düzeltir?",
+    "correct": "Su ayılarının ölümsüz sanılmasını",
+    "wrong": [
+     "Su ayılarının çok büyük olduğu sanısını",
+     "Su ayılarının yalnız denizde yaşadığını",
+     "Su ayılarının zehirli olduğunu"
+    ],
+    "explanation": "Su ayıları ölümsüz değildir; aktif hâlde birkaç ay yaşar."
+   }
+  ]
+ },
+ "281": {
+  "title": "Mozart Gerçekten Zeki Yapar mı?",
+  "category": "Bilgi/Açıklama",
+  "content": "1993 yılında saygın bilim dergisi Nature'da yayımlanan kısa bir makale, kısa sürede dünyanın dört bir yanında manşetlere taşındı. Kaliforniya Üniversitesi'nden Frances Rauscher ve arkadaşları, otuz altı üniversite öğrencisiyle küçük bir deney yapmıştı. Öğrencilerin bir kısmı on dakika boyunca Mozart'ın iki piyano için yazdığı bir sonatı dinlemiş, bir kısmı rahatlama talimatları içeren bir kayıt dinlemiş, bir kısmı da sessizlik içinde beklemişti. Ardından hepsine, kâğıt katlama ve kesme gibi işlemleri zihinde canlandırmayı gerektiren uzamsal akıl yürütme soruları sorulmuştu. Mozart dinleyen grup bu testlerde biraz daha başarılı olmuştu. Ancak etki küçüktü ve yalnızca on ila on beş dakika sürüyordu.\n\nBu sınırlı bulgu, kamuoyuna ulaştığında bambaşka bir hâl aldı. Gazeteler ve televizyonlar, Mozart dinlemenin insanları “daha zeki” yaptığını duyurdu. Kısa sürede “Mozart etkisi” adı verilen bu fikir bir ticari ürüne dönüştü. Bebekleri daha zeki yapacağı iddia edilen klasik müzik CD'leri milyonlarca adet satıldı. ABD'nin Georgia eyaletinin valisi, eyalette doğan her bebeğin ailesine bir klasik müzik CD'si gönderilmesi için bütçe ayrılmasını önerdi. Oysa özgün araştırmada bebekler üzerinde hiçbir deney yapılmamıştı ve “zekâ” değil, yalnızca belirli bir tür görevdeki kısa süreli performans ölçülmüştü.\n\nAraştırmayı yapan Rauscher, sonraki yıllarda verdiği röportajlarda bulgularının yanlış anlaşıldığını defalarca dile getirdi. Mozart dinlemenin insanları daha zeki yapmadığını, deneyin yalnızca belirli bir becerideki geçici bir değişimi gösterdiğini vurguladı. Ancak bu açıklamalar, ilk haberler kadar ilgi görmedi. Fikrin bu kadar hızlı yayılmasının bir nedeni, ailelerin çocukları için en iyisini isteme duygusuydu. Birkaç dakikalık müzikle zekâyı artırmak, kolay ve çekici bir vaatti. Böyle basit ve iyimser bir mesajın yanında, ayrıntılı ve temkinli bilimsel açıklamalar kolayca gözden kaçıyordu.\n\nSonraki yıllarda pek çok araştırmacı aynı deneyi tekrarlamaya çalıştı. Sonuçlar karışıktı; bazı çalışmalar küçük bir etki buldu, pek çoğu ise hiçbir etki bulamadı. 1999'da Harvard Üniversitesi'nden Christopher Chabris, o güne kadar yapılmış çalışmaların sonuçlarını bir araya getirdi ve Mozart dinlemenin etkisinin, eğer varsa, çok küçük olduğu sonucuna vardı. 2010'da Viyana Üniversitesi'nden bir ekibin yaptığı, binlerce katılımcıyı kapsayan geniş bir değerlendirme de benzer bir sonuca ulaştı.\n\nPeki bazı çalışmalarda görülen küçük iyileşme nereden kaynaklanıyordu? Araştırmacılar, bunun Mozart'a özgü olmadığını düşünüyor. Kişinin hoşuna giden, onu canlandıran ve neşelendiren herhangi bir uyaran, kısa süreliğine dikkati ve ruh hâlini iyileştirerek test performansını artırabilir. Bir deneyde, popüler bir grubun şarkılarını dinleyen çocukların da benzer bir artış gösterdiği görüldü. Kısacası etkinin kaynağı müziğin kendisinden çok, dinleyende yarattığı uyanıklık ve keyif olabilir. Hatta bir deneyde, Mozart yerine sesli okunan bir öyküyü dinleyen ve öyküden hoşlanan katılımcıların da benzer biçimde daha iyi sonuç aldığı görüldü. Önemli olan, kişinin dinlediği şeyden zevk alıp zihinsel olarak canlanmasıydı.\n\nAncak bu, müziğin zihinsel gelişime hiçbir katkısı olmadığı anlamına gelmiyor. Müzik dinlemek ile müzik yapmak çok farklı şeylerdir. Uzun süre düzenli olarak bir çalgı çalmayı öğrenen çocuklarla ilgili araştırmalar, dikkat, bellek ve dil becerileriyle ilgili bazı alanlarda olumlu etkiler bildiriyor. Bir çalgı çalmak, notaları okumayı, el ve parmak hareketlerini koordine etmeyi, ritmi takip etmeyi ve sürekli pratik yapmayı gerektirir. Ancak araştırmacılar burada da dikkatli olmak gerektiğini hatırlatıyor; çalgı çalan çocukların ailelerinin farklı özellikleri de sonuçları etkileyebilir. Bunun yanında müzik yapmak, birlikte çalma ve dinleme alışkanlığı kazandırarak sosyal becerileri de geliştirebilir.\n\nMozart etkisinin hikâyesi, bilimsel bir bulgunun nasıl abartılabileceğine dair öğretici bir örnek olarak sık sık anılır. Küçük bir deneyin sınırlı sonucu, defalarca aktarılırken genişletilmiş ve sonunda araştırmacıların hiç söylemediği bir iddiaya dönüşmüştür. Bu yüzden bir haberde “bilim kanıtladı” ifadesini gördüğümüzde, araştırmanın kimlerle yapıldığını, neyi ölçtüğünü ve sonuçların başka çalışmalarla doğrulanıp doğrulanmadığını sormak önemlidir. Müzik ise, zekâmızı artırsın ya da artırmasın, hayatımıza kattığı güzellik ve keyif için dinlenmeye fazlasıyla değer.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Rauscher'in deneyinde öğrencilere hangi tür sorular soruldu?",
+    "correct": "Uzamsal düşünmeyi ölçen sorular",
+    "wrong": [
+     "Genel kültür ve tarih soruları",
+     "Matematik ve geometri problemleri",
+     "Müzik bilgisini ölçen sorular"
+    ],
+    "explanation": "Kâğıt katlama gibi uzamsal akıl yürütme soruları soruldu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deneyin sonucu hakkında hangisi söylenebilir?",
+    "correct": "Etkinin ufak ve kısa süreli olduğu",
+    "wrong": [
+     "Zekânın kalıcı olarak arttığı",
+     "Bebeklerin daha akıllı olduğu",
+     "Bütün öğrencilerin aynı puanı aldığı"
+    ],
+    "explanation": "Etki küçüktü ve on ila on beş dakika sürüyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Valinin önerisi bulgunun nasıl ele alındığını gösterir?",
+    "correct": "Sınırlı sonucun fazla genellendiğini",
+    "wrong": [
+     "Bilim insanlarının çok güvenildiğini",
+     "Bebeklerin müziği çok sevdiğini",
+     "Devletin bilime para ayırdığını"
+    ],
+    "explanation": "Bebeklerle hiç deney yapılmadığı hâlde öneri getirildi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Fikrin hızla yayılmasının nedenlerinden biri nedir?",
+    "correct": "Ailelere kolay bir umut sunması",
+    "wrong": [
+     "Bilim dergilerinin ucuz olması",
+     "Mozart'ın ününün yeni yeni artması",
+     "CD'lerin ücretsiz dağıtılması"
+    ],
+    "explanation": "Birkaç dakikalık müzikle zekâyı artırmak çekici bir vaatti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Chabris'in vardığı sonuç neydi?",
+    "correct": "Etkinin varsa bile küçük olduğu",
+    "wrong": [
+     "Etkinin kesin biçimde kanıtlandığı",
+     "Mozart'ın aslında zararlı olduğu",
+     "Yalnızca çocukların etkilendiği"
+    ],
+    "explanation": "Etkinin, eğer varsa, çok küçük olduğu sonucuna vardı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Öykü dinleyenlerin de daha iyi sonuç alması neyi gösterir?",
+    "correct": "Etkinin keyiften doğduğunu",
+    "wrong": [
+     "Mozart'ın öykü yazdığını",
+     "Öykülerin daha zararlı olduğunu",
+     "Testlerin hatalı olduğunu"
+    ],
+    "explanation": "Önemli olan kişinin dinlediğinden zevk alıp canlanmasıdır."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yazar müzik dinlemek ile müzik yapmak arasında hangi farkı vurgular?",
+    "correct": "Çalgı çalmanın çok yönlü olduğunu",
+    "wrong": [
+     "Dinlemenin çok daha pahalı olduğunu",
+     "Müzik yapmanın zararlı olduğunu",
+     "İkisinin aynı etkiyi yaptığını"
+    ],
+    "explanation": "Çalgı çalmak nota okuma, koordinasyon ve pratik gerektirir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin okura asıl önerisi nedir?",
+    "correct": "Haberleri sorgulayarak okumak",
+    "wrong": [
+     "Her gün düzenli Mozart dinlemek",
+     "Klasik müziği tümden bırakmak",
+     "Bilim dergilerine hiç güvenmemek"
+    ],
+    "explanation": "Araştırmanın kimlerle, neyle yapıldığını sormak önemlidir."
+   }
+  ]
+ },
+ "285": {
+  "title": "Buharla Değişen Dünya",
+  "category": "Bilgi/Açıklama",
+  "content": "On sekizinci yüzyılın ortalarına kadar insanlar, iş yapmak için büyük ölçüde kendi kas güçlerine, hayvanlara, rüzgâra ve akan suya dayanıyordu. Kumaşlar evlerde el tezgâhlarında dokunuyor, değirmenler nehir kenarlarında kuruluyor, yükler at arabalarıyla ya da yelkenli gemilerle taşınıyordu. Bu enerji kaynakları hem sınırlı hem de güvenilmezdi. Rüzgâr her zaman esmiyor, nehirler kuraklıkta azalıyor, atlar yoruluyordu. Bu durumu kökünden değiştiren buluş, buhar makinesi oldu.\n\nBuharın gücünden yararlanma fikri aslında çok eskiydi. Ancak ilk kullanışlı buhar makinesi, 1712'de İngiliz demirci Thomas Newcomen tarafından yapıldı. Newcomen'in makinesi, kömür madenlerine dolan suyu dışarı pompalamak için kullanılıyordu. Makine işini görüyordu, ama son derece verimsizdi. Her çalışma döngüsünde silindir ısıtılıp soğutulduğu için büyük miktarda kömür harcıyordu.\n\n1760'larda İskoç mühendis James Watt, Glasgow Üniversitesi'nde bir Newcomen makinesinin modelini onarırken bu soruna bir çözüm buldu. Watt, buharın ana silindirden ayrı bir bölmede yoğunlaştırılmasını sağladı. Böylece silindir sürekli sıcak kalabiliyor, aynı iş çok daha az kömürle yapılabiliyordu. Watt daha sonra makineye, gidip gelen hareketi dönme hareketine çeviren düzenekler ekledi. Bu yenilikler sayesinde buhar makinesi yalnızca su pompalamakla kalmayıp fabrikalardaki makineleri döndürebilir hâle geldi. Bugün güç birimi olarak kullanılan “vat”, onun adından gelir. Watt'ın başarısında, Birmingham'lı iş insanı Matthew Boulton ile kurduğu ortaklığın da büyük payı vardı. Boulton, Watt'ın fikirlerini gerçeğe dönüştürecek parayı, atölyeleri ve usta işçileri sağladı. İkisinin ürettiği makineler kısa sürede madenlerde, dökümhanelerde, bira fabrikalarında ve dokuma atölyelerinde çalışmaya başladı.\n\nBuhar makinesinin en büyük etkisi, fabrikaların kuruluş yerini değiştirmesi oldu. Artık fabrikaların nehir kenarında olması gerekmiyordu; kömür getirilebilen her yere kurulabiliyorlardı. İngiltere'de Manchester gibi kentler kısa sürede dokuma fabrikalarının merkezi hâline geldi. Tek bir fabrika, yüzlerce el tezgâhının üretebileceğinden çok daha fazla kumaş üretebiliyordu. Bu da kumaşın fiyatını düşürdü ve bir zamanlar lüks sayılan pamuklu giysiler sıradan insanların da ulaşabileceği ürünlere dönüştü. Öte yandan evinde dokumacılık yaparak geçinen pek çok aile işini kaybetti.\n\nUlaşım da büyük bir dönüşüm geçirdi. 1825'te İngiltere'de, buharlı lokomotiflerin çektiği ilk halka açık demiryolu hattı açıldı. Kısa süre içinde demiryolları kentleri, limanları ve madenleri birbirine bağladı. Demiryolu, bölgeler arasındaki saat farklarını bile sorun hâline getirdi; tren tarifelerinin karışmaması için kentler ortak bir saat düzenine geçmek zorunda kaldı. Buharlı gemiler de rüzgâra bağımlı olmadan okyanusları aşmaya başladı. Önceden günler süren yolculuklar saatlere indi; mallar, insanlar ve haberler hiç olmadığı kadar hızlı dolaşır oldu.\n\nAncak bu dönüşümün ağır bedelleri de vardı. Köylerden kentlere akın eden insanlar, sağlıksız ve kalabalık mahallelerde yaşamak zorunda kaldı. Fabrikalarda çalışma saatleri günde on dört, on altı saati bulabiliyordu ve küçük çocuklar bile tehlikeli makinelerin başında çalıştırılıyordu. Kömür dumanı kentlerin havasını kirletti. Bu ağır koşullar, dönemin yazarlarının romanlarına da konu oldu. Zamanla bu durum işçilerin örgütlenmesine, çalışma saatlerini sınırlayan ve çocuk işçiliğini kısıtlayan yasaların çıkarılmasına yol açtı.\n\nTarihçiler, Sanayi Devrimi'nin neden ilk olarak İngiltere'de başladığını da tartışır. Ülkenin kolayca çıkarılabilen zengin kömür ve demir yatakları, gelişmiş bir ticaret ağı, yeni girişimlere para yatırmaya hazır tüccarları ve buluşları koruyan patent yasaları, öne sürülen nedenler arasındadır. Ücretlerin görece yüksek, kömürün ise ucuz olması, işi insan yerine makineye yaptırmayı daha kârlı hâle getiriyordu.\n\nSanayi Devrimi'nin bir başka uzun vadeli sonucu da bugün yeni yeni tam olarak anlaşılıyor. Buhar makinelerinde ve fabrikalarda yakılan kömür, atmosfere büyük miktarda karbondioksit salmaya başladı. Bilim insanları, iklim değişikliğinin başlangıç noktası olarak çoğunlukla bu dönemi alıyor ve bugünkü ısınmayı “sanayi öncesi döneme göre” ölçüyor.\n\nBuhar makinesiyle başlayan süreç, tarihçilerin “Sanayi Devrimi” adını verdiği büyük değişimin başlangıcıydı. Bugün yaşadığımız dünyanın pek çok özelliği, kentlerin büyüklüğünden çalışma düzenine, ulaşım ağlarından fosil yakıtlara bağımlılığımıza kadar, bu dönemde atılan temellere dayanıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "İlk paragrafta eski enerji kaynaklarının hangi özelliği vurgulanır?",
+    "correct": "Yetersiz ve güvenilmez olmaları",
+    "wrong": [
+     "Çok pahalı ve zararlı olmaları",
+     "Çevreyi ciddi biçimde kirletmeleri",
+     "Yalnızca kentlerde bulunmaları"
+    ],
+    "explanation": "Rüzgâr hep esmiyor, nehirler azalıyor, atlar yoruluyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Newcomen'in makinesi ne amaçla kullanılıyordu?",
+    "correct": "Madenden su almak",
+    "wrong": [
+     "Kumaşları dokumak",
+     "Vagonları çekmek",
+     "Gemiyi yürütmek"
+    ],
+    "explanation": "Kömür madenlerine dolan suyu dışarı pompalamak için kullanılıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Watt'ın ayrı yoğunlaştırma bölmesi hangi sorunu çözdü?",
+    "correct": "Gereksiz yakıt harcanmasını",
+    "wrong": [
+     "Makinenin gürültülü olmasını",
+     "Silindirin sık sık kırılmasını",
+     "İşçilerin sık yaralanmasını"
+    ],
+    "explanation": "Silindir sıcak kaldığı için aynı iş daha az kömürle yapıldı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Watt'ın fikirlerini hayata geçirmesine kim yardım etti?",
+    "correct": "Matthew Boulton",
+    "wrong": [
+     "Thomas Newcomen",
+     "Robert Stephenson",
+     "Josiah Wedgwood"
+    ],
+    "explanation": "Boulton para, atölye ve usta işçi sağladı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Buhar makinesi fabrikaların yerini nasıl etkiledi?",
+    "correct": "Akarsuya bağlılığı kaldırdı",
+    "wrong": [
+     "Fabrikaları köylere taşıdı",
+     "Fabrikaları birer birer kapattı",
+     "Fabrikaları kıyıya sabitledi"
+    ],
+    "explanation": "Fabrikalar kömür getirilebilen her yere kurulabildi."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Çalışma koşullarının ağırlığı zamanla neye yol açtı?",
+    "correct": "İşçiyi koruyan yasalara",
+    "wrong": [
+     "Fabrikaların kapanmasına",
+     "Kentlerin boşalmasına",
+     "Kömürün yasaklanmasına"
+    ],
+    "explanation": "Örgütlenme ve çalışma saatini sınırlayan yasalar doğdu."
+   },
+   {
+    "p": 8,
+    "type": 2,
+    "bloom": 5,
+    "text": "Bilim insanlarının ısınmayı sanayi öncesine göre ölçmesinin nedeni nedir?",
+    "correct": "Salımların o dönem hızlanması",
+    "wrong": [
+     "O dönemde termometre bulunması",
+     "Kömürün o dönemde tükenmesi",
+     "Havanın o dönemde temiz olması"
+    ],
+    "explanation": "Kömür yakımı büyük miktarda karbondioksit salmaya başladı."
+   },
+   {
+    "p": 9,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın ana düşüncesi nedir?",
+    "correct": "Bugünün o döneme dayandığı",
+    "wrong": [
+     "Buhar makinelerinin sürdüğü",
+     "İngiltere'nin dünyayı yönettiği",
+     "Fosil yakıtların tükendiği"
+    ],
+    "explanation": "Kentlerden ulaşıma pek çok özellik bu döneme dayanır."
+   }
+  ]
+ },
+ "208": {
+  "title": "Gümüş Yapraklı Miras",
+  "category": "Bilgi/Açıklama",
+  "content": "Akdeniz kıyılarının en tanıdık manzaralarından biri, gümüşi yapraklarıyla rüzgârda hafifçe titreyen zeytin ağaçlarıdır. Zeytin, insanlık tarihinin en eski kültür bitkilerinden biridir. Arkeolojik bulgular, insanların bundan en az altı bin yıl önce, bugünkü Türkiye, Suriye, Lübnan ve İsrail'i kapsayan Doğu Akdeniz bölgesinde yabani zeytin ağaçlarını evcilleştirmeye başladığını gösteriyor. Zeytin buradan Fenikeli ve Yunan tüccarların gemileriyle Yunanistan'a, İtalya'ya, Kuzey Afrika'ya ve İspanya'ya yayıldı. Akdeniz'in ticaret yolları bir bakıma zeytinyağı küpleriyle örülmüştü.\n\nZeytin ağacı, Akdeniz'in zorlu koşullarına şaşırtıcı biçimde uyum sağlamıştır. Uzun, kurak ve sıcak yazlara, taşlı ve verimsiz topraklara dayanabilir. Kalın, deri gibi yaprakları ve yaprakların altındaki gümüşi tüyler, su kaybını azaltır. Derinlere ve geniş alanlara yayılan kökleri, toprağın en ince nemini bile bulabilir. Zeytin ağacı aynı zamanda çok uzun yaşar. Akdeniz'in pek çok yerinde yaşı binlerce yıl olarak tahmin edilen zeytin ağaçları vardır. Gövde zamanla içten çürüyüp oyulsa bile, ağaç yeni sürgünler vererek yaşamaya ve meyve vermeye devam edebilir.\n\nZeytin, Akdeniz halklarının hayatında yalnızca bir besin olmadı. Zeytinyağı yüzyıllar boyunca kandillerde yakılarak evleri aydınlattı, sabun yapımında kullanıldı, ilaç ve güzellik ürünlerine katıldı. Antik Yunan'da olimpiyat oyunlarının kazananlarının başına zeytin dallarından yapılmış taçlar takılırdı. Zeytin dalı, bugün hâlâ dünyanın pek çok yerinde barışın simgesi olarak kullanılıyor; Birleşmiş Milletler'in bayrağında da dünya haritasını çevreleyen zeytin dalları yer alıyor.\n\nDalından yeni toplanan zeytin olduğu gibi yenmez; çok acıdır. Bu acılığı veren, zeytinin içindeki oleuropein adlı maddedir. Bu yüzden sofralık zeytinler, salamura, yani tuzlu suda bekletme ya da kuru tuzlama gibi yöntemlerle haftalarca, hatta aylarca işlenir. Zeytinyağı elde etmek için ise zeytinler ezilerek hamur hâline getirilir ve yağ bu hamurdan ayrılır. Herhangi bir ısıl ya da kimyasal işlem görmeden, yalnızca mekanik yöntemlerle elde edilen kaliteli yağa “natürel sızma zeytinyağı” denir. Kaliteli bir zeytinyağı genellikle hafif acı ve yakıcı bir tat bırakır; bu tat, yağdaki yararlı maddelerin bir göstergesi sayılır.\n\nZeytinyağı, Akdeniz mutfağının temel taşlarından biridir. Bilim insanları uzun yıllar boyunca Akdeniz kıyılarında yaşayan insanların beslenme alışkanlıklarını incelemiştir. Sebze, meyve, baklagil, tam tahıl ve balık ağırlıklı, temel yağ olarak zeytinyağının kullanıldığı bu beslenme biçimine “Akdeniz tipi beslenme” deniyor. Araştırmalar, bu beslenme düzeninin kalp ve damar hastalıkları riskini azaltabildiğini gösteriyor. Bunun bir nedeninin, zeytinyağında bol bulunan sağlıklı yağlar ve hücreleri koruyan maddeler olduğu düşünülüyor.\n\nTürkiye, dünyanın en büyük zeytin ve zeytinyağı üreticileri arasında yer alıyor. Ege ve Marmara kıyıları, Akdeniz bölgesi ve Güneydoğu Anadolu'nun bazı kesimleri önemli zeytin yetiştirme alanlarıdır. Zeytinlikler, yüz binlerce aile için geçim kaynağıdır. Hasat genellikle sonbahar sonunda ve kışın yapılır. Bazı bölgelerde zeytinler hâlâ elle ya da uzun sırıklarla dallara vurularak, ağacın altına serilen örtülere düşürülerek toplanıyor. Yeni dikilen bir zeytin fidanının bol meyve vermesi için ise yıllarca beklemek gerekiyor; bu yüzden halk arasında zeytin, “torunlar için dikilen ağaç” olarak da anılır.\n\nAncak zeytin ağaçları bugün yeni tehditlerle karşı karşıya. İklim değişikliğiyle birlikte artan sıcak hava dalgaları ve kuraklık, verimi düşürüyor. Güney İtalya'da son yıllarda bir bakteri hastalığı milyonlarca zeytin ağacının kurumasına neden oldu. Bazı bölgelerde ise zeytinlikler, maden ve inşaat projeleri nedeniyle tartışma konusu oluyor. Binlerce yıllık bir kültürün taşıyıcısı olan bu ağaçların korunması, hem doğa hem de kültürel miras açısından büyük önem taşıyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeytinin ilk kez evcilleştirildiği bölge neresidir?",
+    "correct": "Doğu Akdeniz",
+    "wrong": [
+     "Kuzey Avrupa",
+     "Orta Asya",
+     "Güney Amerika"
+    ],
+    "explanation": "Doğu Akdeniz bölgesinde evcilleştirilmeye başlandı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yapraklardaki gümüşi tüylerin işlevi nedir?",
+    "correct": "Nemi içeride tutmak",
+    "wrong": [
+     "Böcekleri çekmek",
+     "Meyveyi saklamak",
+     "Sert rüzgârı kesmek"
+    ],
+    "explanation": "Kalın yapraklar ve tüyler su kaybını azaltır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Gövdesi oyulan ağacın yaşamayı sürdürmesi neyi gösterir?",
+    "correct": "Kendini yenileme gücünü",
+    "wrong": [
+     "Çok hızlı büyüdüğünü",
+     "Çok az su istediğini",
+     "Böceklere dayanıklılığını"
+    ],
+    "explanation": "Yeni sürgünler vererek yaşamaya ve meyve vermeye devam eder."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Antik olimpiyatlarda kazananlara ne verilirdi?",
+    "correct": "Zeytin dalından taç",
+    "wrong": [
+     "Altın bir madalya",
+     "Zeytinyağı dolu küp",
+     "Gümüş bir kupa"
+    ],
+    "explanation": "Başlarına zeytin dallarından taç takılırdı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Taze zeytinin acı olmasının nedeni nedir?",
+    "correct": "İçerdiği oleuropein",
+    "wrong": [
+     "Yüksek tuz oranı",
+     "Fazla yağ miktarı",
+     "Suyunun çok az olması"
+    ],
+    "explanation": "Acılığı oleuropein adlı madde verir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Akdeniz tipi beslenmenin kalbe yararının olası nedeni nedir?",
+    "correct": "İçindeki dost bileşenler",
+    "wrong": [
+     "Etin bolca tüketilmesi",
+     "Şekerin çok bol olması",
+     "Gün boyu çok az su içilmesi"
+    ],
+    "explanation": "Zeytinyağındaki sağlıklı yağlar ve koruyucu maddeler etkili olabilir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeytinin “torunlar için dikilen ağaç” olarak anılmasının nedeni nedir?",
+    "correct": "Ürün vermesinin yıllar alması",
+    "wrong": [
+     "Çok kısa ömürlü bir ağaç olması",
+     "Yalnız çocukların toplaması",
+     "Meyvesinin çok tatlı olması"
+    ],
+    "explanation": "Yeni fidanın bol meyve vermesi için yıllarca beklemek gerekir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın amacı nedir?",
+    "correct": "Korunma gereğine dikkat çekmek",
+    "wrong": [
+     "Zeytin hasadını uzunca anlatmak",
+     "İtalya'yı ayrıntılı tanıtmak",
+     "Zeytinyağı tarifleri vermek"
+    ],
+    "explanation": "Zeytin ağaçlarının yeni tehditlerden korunmasının önemini vurgular."
+   }
+  ]
+ }
+}

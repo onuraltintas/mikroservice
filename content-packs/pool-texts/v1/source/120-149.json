@@ -1,0 +1,668 @@
+{
+ "120": {
+  "title": "Ceylan Derisindeki Dünya",
+  "category": "Bilgi/Açıklama",
+  "content": "1929 yılında, İstanbul'daki Topkapı Sarayı'nın eski bölümlerinde çalışma yapan araştırmacılar, ceylan derisi üzerine çizilmiş bir harita parçası buldu. Haritanın üzerinde Osmanlı denizcisi Piri Reis'in adı ve 1513 tarihi yazıyordu. Bu bulgu kısa sürede dünyanın dikkatini çekti, çünkü harita Amerika kıtasını gösteren en eski haritalardan biriydi. Kolomb'un Amerika'ya ilk yolculuğundan yalnızca yirmi yıl kadar sonra çizilmişti.\n\nPiri Reis, Osmanlı donanmasında görev yapmış deneyimli bir denizciydi. Akdeniz'de yıllarca yelken açmış, limanları, kıyıları ve adaları yakından tanımıştı. Haritanın kenarındaki notlarda, onu hazırlarken yaklaşık yirmi farklı kaynaktan yararlandığını anlatır. Bu kaynaklar arasında eski Yunan haritaları, Arap ve Portekiz haritaları ve Kristof Kolomb'un kayıp bir haritası da vardı. Kolomb'un bu haritası bugün kayıp olduğu için, Piri Reis'in haritası onun izlerini taşıyan ender belgelerden biri olarak da değerli sayılıyor.\n\nHarita, Avrupa ve Afrika'nın batı kıyılarını, Atlas Okyanusu'nu ve Güney Amerika'nın doğu kıyılarını gösterir. Bugün elimizde haritanın yalnızca bir parçası bulunur; tamamının dünyanın daha büyük bir bölümünü gösterdiği düşünülüyor. Haritada yalnızca kıyılar değil, hayvan resimleri ve denizcilere yönelik açıklamalar da yer alır.\n\nPiri Reis'in bir başka önemli eseri, Kitab-ı Bahriye adlı denizcilik kitabıdır. Bu kitapta Akdeniz'in kıyıları, limanları, rüzgârları ve tehlikeli kayalıkları ayrıntılı biçimde anlatılır. Kitap, yüzyıllar boyunca denizciler için önemli bir rehber oldu. Eserin pek çok el yazması kopyası günümüze ulaşmış ve dünyanın çeşitli kütüphanelerinde saklanıyor.\n\nPiri Reis'in haritası bugün Topkapı Sarayı Müzesi'nde korunuyor. Ceylan derisi çok hassas olduğu için harita yalnızca özel durumlarda sergileniyor. Haritanın beş yüzüncü yılı olan 2013, UNESCO tarafından Piri Reis'i anma yılı olarak kabul edilmişti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Piri Reis haritası hangi malzemeye çizilmiştir?",
+    "correct": "Bir hayvanın derisine",
+    "wrong": [
+     "Kalın bir bez parçasına",
+     "İnce bir bakır levhaya",
+     "Uzun bir kâğıt ruloya"
+    ],
+    "explanation": "Harita ceylan derisi üzerine çizilmiştir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Haritanın dünyanın dikkatini çekmesinin nedeni nedir?",
+    "correct": "Amerika'yı gösteren ilk çizimlerden olması",
+    "wrong": [
+     "Üzerinin altın yaldızla süslenmiş olması",
+     "Sarayın duvarına doğrudan çizilmiş olması",
+     "Dünyanın tamamını eksiksiz biçimde göstermesi"
+    ],
+    "explanation": "Harita Amerika kıtasını gösteren en eski haritalardan biriydi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Piri Reis haritayı hazırlarken kaç kaynaktan yararlanmıştır?",
+    "correct": "Yaklaşık 20",
+    "wrong": [
+     "Yalnızca 2",
+     "Yaklaşık 5",
+     "100'den fazla"
+    ],
+    "explanation": "Kenardaki notlarda yaklaşık yirmi kaynaktan yararlandığını anlatır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Haritanın Kolomb açısından da değerli sayılmasının nedeni nedir?",
+    "correct": "Kayıp bir çizimin izlerini taşıması",
+    "wrong": [
+     "Kolomb'un kendi eliyle çizilmiş olması",
+     "Kolomb'un gemisinde bulunmuş olması",
+     "Üzerinde Kolomb'un imzası bulunması"
+    ],
+    "explanation": "Kolomb'un haritası kayıp olduğu için Piri Reis haritası onun izlerini taşıyan ender belgelerdendir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Elimizde haritanın yalnızca bir parçası bulunur” ifadesinden ne anlaşılır?",
+    "correct": "Özgün haritanın çok daha geniş olduğu",
+    "wrong": [
+     "Piri Reis'in haritayı yarım bıraktığı",
+     "Haritanın parçalara ayrılıp satıldığı",
+     "Haritanın yalnız Akdeniz'i gösterdiği"
+    ],
+    "explanation": "Tamamının dünyanın daha büyük bir bölümünü gösterdiği düşünülüyor."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kitab-ı Bahriye'de neler anlatılır?",
+    "correct": "Akdeniz kıyılarının ayrıntılı tarifi",
+    "wrong": [
+     "Osmanlı sarayının günlük yaşamı",
+     "Amerika'daki bitki ve hayvan türleri",
+     "Gemi yapımının teknik aşamaları"
+    ],
+    "explanation": "Kitapta Akdeniz'in kıyıları, limanları, rüzgârları ve kayalıkları anlatılır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Haritanın yalnızca özel durumlarda sergilenmesinin nedeni nedir?",
+    "correct": "Malzemesinin kolay zarar görebilmesi",
+    "wrong": [
+     "Müze ziyaretçilerinin ilgisini çekmemesi",
+     "Müzede sergilemek için yer olmaması",
+     "Gizli bilgiler içerdiğinin düşünülmesi"
+    ],
+    "explanation": "Ceylan derisi çok hassas olduğu için yalnızca özel durumlarda sergilenir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin bütününden Piri Reis hakkında hangi yargıya varılabilir?",
+    "correct": "Bilgiyi titizlikle derleyen bir denizci olduğu",
+    "wrong": [
+     "Amerika kıtasını ilk bulan denizci olduğu",
+     "Sadece saray için resim çizen bir sanatçı olduğu",
+     "Hayatı boyunca denize hiç açılmamış bir bilgin olduğu"
+    ],
+    "explanation": "Yıllarca denizde deneyim kazanmış ve pek çok kaynağı birleştirmiştir."
+   }
+  ]
+ },
+ "139": {
+  "title": "Raftaki Not",
+  "category": "Hikaye/Kurgu",
+  "content": "Okul kütüphanesinde gönüllü olarak çalışan Nil, bir gün en üst raftaki eski kitapları tozlarken, kalın ciltli bir masal kitabı buldu. Kitabın kapağı solmuş, sayfaları sararmıştı. Kitabın kütüphane kartına bakınca, yıllardır kimsenin onu ödünç almadığını fark etti. Nil kitabı açınca içinden katlanmış küçük bir kâğıt düştü.\n\nKâğıtta eğri büğrü bir el yazısıyla şunlar yazıyordu: “Bu kitabı benim kadar sevecek kişiye. Lütfen sonundaki masalı okumadan bırakma.” Altında bir isim ve kırk yıl önceki bir tarih vardı: Selma, 4-B sınıfı.\n\nNil çok meraklandı. Kitabı eve götürüp okumaya başladı. Masallar çok güzeldi; her birini bitirince bir sonrakini okumadan duramıyordu. Ama en çok sonuncusunu sevdi. Bir kız çocuğunun, köyündeki herkese kitap okumayı öğrettiği bir masaldı bu. Masalın sonunda köyün bütün evlerinde birer kitaplık vardı.\n\nErtesi gün Nil, kütüphaneci Şükran Hanım'a kâğıdı gösterdi. Şükran Hanım kâğıda bakınca gülümsedi. Şükran Hanım bu ismi çok iyi tanıyordu. Selma, okulun eski öğrencilerinden biriydi ve şimdi okulun yakınındaki halk kütüphanesinde müdür olarak çalışıyordu!\n\nHafta sonu Nil ve Şükran Hanım, kitabı yanlarına alıp Selma Hanım'ı ziyarete gittiler. Selma Hanım kitabı görünce gözleri doldu. Kitabı çocukken kütüphaneye kendisinin bağışladığını, ama yıllar içinde unuttuğunu anlattı. O masalın, kütüphaneci olmayı seçmesinde etkisi olduğunu söyledi. Notu yazdığı günü hatırlayınca güldü; kitabı okuyacak kişinin kim olacağını çok merak ettiğini anlattı.\n\nSelma Hanım, Nil'e kâğıdın arkasına kendi notunu eklemesini önerdi. Nil de kâğıda şunu yazdı: “Ben de okudum ve çok sevdim. Sıra sende.” Sonra kitabı kütüphanedeki rafına geri koydu. Ama bu kez en üst rafa değil, herkesin görebileceği ön sıraya.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kitabın kütüphane kartı neyi gösteriyordu?",
+    "correct": "Uzun süredir okunmadığını",
+    "wrong": [
+     "Çok sık ödünç alındığını",
+     "Kütüphaneye yeni geldiğini",
+     "Daha önce kaybolduğunu"
+    ],
+    "explanation": "Kart, yıllardır kimsenin onu ödünç almadığını gösteriyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nottaki isteğe göre okuyucu ne yapmalıydı?",
+    "correct": "Son masalı da mutlaka okumalıydı",
+    "wrong": [
+     "Kitabı ertesi gün geri vermeliydi",
+     "Not sahibine mektup yazmalıydı",
+     "Kitabı bir arkadaşına vermeliydi"
+    ],
+    "explanation": "Notta sonundaki masalı okumadan bırakmaması isteniyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nil'in en sevdiği masal neyi anlatıyordu?",
+    "correct": "Herkese okuma öğreten bir kızı",
+    "wrong": [
+     "Ormanda kaybolan iki kardeşi",
+     "Konuşabilen sihirli bir kediyi",
+     "Denizde yaşayan bir prensi"
+    ],
+    "explanation": "Masal, köyündeki herkese kitap okumayı öğreten bir kız çocuğunu anlatıyordu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selma şimdi ne iş yapıyordu?",
+    "correct": "Bir kütüphane müdürü",
+    "wrong": [
+     "Okulda sınıf öğretmeni",
+     "Bir yayınevinde editör",
+     "Bir kitapçıda satıcı"
+    ],
+    "explanation": "Selma, halk kütüphanesinde müdür olarak çalışıyordu."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selma Hanım'ın gözlerinin dolmasının nedeni nedir?",
+    "correct": "Unuttuğu bir anısını yeniden bulması",
+    "wrong": [
+     "Kitabın yıpranmasına çok üzülmesi",
+     "Nil'in kitabı geç getirmesine kızması",
+     "Eski okulunu hiç ziyaret etmemiş olması"
+    ],
+    "explanation": "Kitabı çocukken bağışlamış ama unutmuştu; onu yeniden görmek duygulandırdı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Masalın Selma Hanım'ın hayatındaki yeri nedir?",
+    "correct": "Mesleğine yön vermiş olması",
+    "wrong": [
+     "Ona okumayı öğretmiş olması",
+     "Onun yazar olmasını sağlaması",
+     "Ona ödül kazandırmış olması"
+    ],
+    "explanation": "O masalın kütüphaneci olmayı seçmesinde etkisi olduğunu söyledi."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nil'in kitabı ön sıraya koymasının amacı nedir?",
+    "correct": "Başkalarının da kitabı fark etmesi",
+    "wrong": [
+     "Kitabın yeniden tozlanmasını önlemek",
+     "Kitabı kendisi kolayca bulmak",
+     "Kütüphaneciyi memnun etmek istemesi"
+    ],
+    "explanation": "Kitabın herkesin görebileceği bir yerde durmasını istedi."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Nil'in nota eklediği cümle öykünün hangi düşüncesini yansıtır?",
+    "correct": "Kitap sevgisinin elden ele geçmesi",
+    "wrong": [
+     "Eski kitapların atılması gerektiği",
+     "Kitapların yalnız okulda okunması",
+     "Kitaplara not yazmanın yasak olduğu"
+    ],
+    "explanation": "Nil de bir sonraki okura seslenerek okuma sevgisini aktardı."
+   }
+  ]
+ },
+ "140": {
+  "title": "Şimşek ve Gök Gürültüsü",
+  "category": "Bilgi/Açıklama",
+  "content": "Fırtınalı bir havada önce gökyüzünde parlak bir şimşek çakar, birkaç saniye sonra da gök gürültüsü duyulur. Peki şimşek nasıl oluşur ve gürültü neden ondan sonra gelir?\n\nFırtına bulutlarının içinde güçlü rüzgârlar eser. Bu rüzgârlar, bulutun içindeki küçük buz parçacıklarını ve su damlacıklarını hızla birbirine çarptırır. Bu çarpışmalar sırasında elektrik yükleri oluşur. Bulutun üst kısmında bir tür yük, alt kısmında ise başka bir tür yük birikir. Yükler çok fazla biriktiğinde, bulutun içinde, iki bulut arasında ya da bulut ile yer arasında büyük bir elektrik boşalması olur. İşte bu boşalma şimşektir. Bir şimşek, saniyenin çok küçük bir bölümünde gerçekleşir; ama taşıdığı enerji çok büyüktür.\n\nŞimşek, içinden geçtiği havayı bir anda çok yüksek sıcaklığa kadar ısıtır. Şimşeğin geçtiği yerdeki hava, güneşin yüzeyinden bile daha sıcak hâle gelebilir. Isınan hava çok hızlı genişler ve güçlü bir ses dalgası oluşturur. Bu ses, gök gürültüsüdür. Uzaktaki şimşeklerin gürültüsü ise yolda yankılanarak uzun bir gümbürtü gibi duyulur.\n\nŞimşeği gök gürültüsünden önce görürüz, çünkü ışık sesten çok daha hızlı yol alır. Şimşeği gördükten sonra gök gürültüsünü duyana kadar geçen saniyeleri sayarak fırtınanın ne kadar uzakta olduğunu tahmin edebiliriz. Ses, havada her üç saniyede yaklaşık bir kilometre yol alır. Örneğin şimşekten dokuz saniye sonra gürültü duyulursa, fırtına yaklaşık üç kilometre uzaktadır. Gök gürültüsünü duyabiliyorsanız şimşek sizin için de tehlikeli olabilir; bu yüzden fırtınada açık alanlardan ve yüksek ağaçların altından uzak durmak gerekir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fırtınada önce hangisi fark edilir?",
+    "correct": "Işık çakması",
+    "wrong": [
+     "Gürültü sesi",
+     "Yağmur damlası",
+     "Rüzgâr uğultusu"
+    ],
+    "explanation": "Önce şimşek çakar, birkaç saniye sonra gök gürültüsü duyulur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bulutta elektrik yükü oluşmasının nedeni nedir?",
+    "correct": "Parçacıkların rüzgârla çarpışması",
+    "wrong": [
+     "Güneşin bulutu yukarıdan ısıtması",
+     "Yağmur damlalarının yere çarpması",
+     "Bulutların çok yükseklere çıkması"
+    ],
+    "explanation": "Rüzgârlar buz parçacıklarını ve damlacıkları çarpıştırır; bu sırada yük oluşur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şimşek ne zaman oluşur?",
+    "correct": "Yükler aşırı birikince",
+    "wrong": [
+     "Bulut yere değdiği anda",
+     "Güneş batarken hemen",
+     "Yağmur birden kesilince"
+    ],
+    "explanation": "Yükler çok fazla biriktiğinde büyük bir elektrik boşalması olur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gök gürültüsünün oluşmasında ne rol oynar?",
+    "correct": "Havanın aniden ısınıp genleşmesi",
+    "wrong": [
+     "Bulutların gökte birbirine çarpması",
+     "Yağmur damlalarının buluta sürtünmesi",
+     "Sert rüzgârın ağaçları sallaması"
+    ],
+    "explanation": "Şimşek havayı çok ısıtır; hava hızla genişler ve ses dalgası oluşur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzaktaki şimşeklerin gürültüsü neden uzun bir gümbürtü gibi duyulur?",
+    "correct": "Sesin yolda yankılanması yüzünden",
+    "wrong": [
+     "Çok daha yavaş meydana geldiği için",
+     "Çok daha az enerji taşıdığı için",
+     "Yağmurun sesine karıştığı için"
+    ],
+    "explanation": "Uzaktaki gürültü yolda yankılanarak uzun bir gümbürtü gibi duyulur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Şimşeği gürültüden önce görmemizin nedeni nedir?",
+    "correct": "Işığın sese göre çok hızlı olması",
+    "wrong": [
+     "Gözlerin kulaklardan güçlü olması",
+     "Sesin bir süre bulutun içinde kalması",
+     "Şimşeğin gürültüden daha yakında olması"
+    ],
+    "explanation": "Işık sesten çok daha hızlı yol alır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şimşekten 9 saniye sonra gürültü duyulursa fırtına yaklaşık ne kadar uzaktadır?",
+    "correct": "3 kilometre",
+    "wrong": [
+     "1 kilometre",
+     "9 kilometre",
+     "30 kilometre"
+    ],
+    "explanation": "Ses üç saniyede yaklaşık bir kilometre gider; dokuz saniye yaklaşık üç kilometredir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraftaki güvenlik önerisinin dayanağı nedir?",
+    "correct": "Gürültü duyuluyorsa tehlikenin yakın olabilmesi",
+    "wrong": [
+     "Yüksek ağaçların şimşeği büyük ölçüde durdurması",
+     "Açık alanlarda gürültünün daha az duyulması",
+     "Fırtınaların sadece şehir merkezlerinde görülmesi"
+    ],
+    "explanation": "Gök gürültüsü duyulabiliyorsa şimşek de tehlikeli olabilir."
+   }
+  ]
+ },
+ "145": {
+  "title": "Kaptan",
+  "category": "Hikaye/Kurgu",
+  "content": "Okulun basketbol takımı için yeni kaptan seçilecekti. Takımdaki herkes, en iyi oyuncu olan Barış'ın kaptan olacağından emindi. Barış en çok sayı atan, en hızlı koşan oyuncuydu. Ama antrenör Ayla Hanım, kaptanı oyuncuların kendilerinin seçmesini istedi ve herkesin oyunu gizli olarak bir kâğıda yazmasını söyledi.\n\nOylar sayıldığında herkes şaşırdı. Kaptan seçilen Barış değil, takımın yedek oyuncularından Deniz'di. Barış önce çok bozuldu. Haksızlığa uğradığını düşündü. Soyunma odasında kimseyle konuşmadı, eşyalarını toplayıp hızla çıktı. Antrenmandan sonra arkadaşı Can'a, “Ben bu takımın en iyi oyuncusuyum, neden beni seçmediler?” diye sordu.\n\nCan bir süre düşündü, sonra dürüstçe cevap verdi. Barış'ın sahada çok iyi oynadığını ama topu nadiren paylaştığını, bir arkadaşı hata yaptığında ona kızdığını söyledi. Deniz ise yedek kulübesinde otururken bile herkese moral veriyor, kaybettikleri maçlardan sonra takımı toparlıyor, yeni gelen oyunculara yardım ediyordu. “Kaptan, en iyi oynayan değil, takımı bir arada tutan kişidir” dedi Can. Barış bu sözlere önce itiraz etmek istedi ama söyleyecek bir şey bulamadı; çünkü Can'ın anlattığı her şeyin doğru olduğunu biliyordu.\n\nBarış o gece bu sözleri düşündü. Ertesi antrenmanda Deniz'in yanına gidip onu tebrik etti. Sonraki maçlarda topu daha sık paylaşmaya, arkadaşları hata yaptığında onları cesaretlendirmeye çalıştı. Deniz de takımla ilgili kararları alırken Barış'ın fikrini sormaya başladı. Sezon sonunda takım, ilk kez ilçe finaline yükseldi. Final maçından sonra Ayla Hanım, takımı bu sezon kazanan şeyin tek bir oyuncunun yeteneği değil, birlikte oynamayı öğrenmeleri olduğunu söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Antrenör kaptanın nasıl seçilmesini istedi?",
+    "correct": "Takımın gizli oyuyla",
+    "wrong": [
+     "Kendisinin seçmesiyle",
+     "Kurayla belirlenerek",
+     "En çok sayı atana göre"
+    ],
+    "explanation": "Herkesin oyunu gizli olarak bir kâğıda yazmasını istedi."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Takımın Barış'ı kaptan sanmasının nedeni nedir?",
+    "correct": "Oyuncu olarak en iyisi olması",
+    "wrong": [
+     "Antrenörün ona söz vermiş olması",
+     "Takımın en yaşlı oyuncusu olması",
+     "Geçen yıl da kaptan olması"
+    ],
+    "explanation": "Barış en çok sayı atan, en hızlı koşan oyuncuydu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Barış'ın soyunma odasındaki davranışı neyi gösterir?",
+    "correct": "Seçimden dolayı alındığını",
+    "wrong": [
+     "Deniz için çok sevindiğini",
+     "Antrenmana geç kaldığını",
+     "Kendini hasta hissettiğini"
+    ],
+    "explanation": "Barış kimseyle konuşmadı ve hızla çıktı; kırgındı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can'a göre Barış'ın eksik yanı neydi?",
+    "correct": "Topu az paylaşıp hatalara kızması",
+    "wrong": [
+     "Yeterince hızlı koşamıyor olması",
+     "Maçlarda çok az sayı atıyor olması",
+     "Antrenmanlara düzenli gelmemesi"
+    ],
+    "explanation": "Barış topu nadiren paylaşıyor, arkadaşları hata yapınca kızıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Can'ın sözüne göre iyi bir kaptanın asıl özelliği nedir?",
+    "correct": "Ekibi birbirine bağlayabilmesi",
+    "wrong": [
+     "Her maçta en çok sayıyı atması",
+     "Sahadaki en hızlı oyuncu olması",
+     "Antrenörün sevgisini kazanması"
+    ],
+    "explanation": "Kaptan, en iyi oynayan değil, takımı bir arada tutan kişidir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Barış'ın Can'a itiraz edememesinin nedeni nedir?",
+    "correct": "Eleştirinin haklı olması",
+    "wrong": [
+     "Can'dan çekinip korkması",
+     "Antrenmandan çok yorgun çıkması",
+     "Bağırmaktan sesinin kısılması"
+    ],
+    "explanation": "Can'ın anlattıklarının doğru olduğunu biliyordu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Barış ertesi antrenmanda ne yaptı?",
+    "correct": "Deniz'i tebrik etti",
+    "wrong": [
+     "Takımdan ayrıldı",
+     "Antrenöre şikâyet etti",
+     "Yeniden oylama istedi"
+    ],
+    "explanation": "Deniz'in yanına gidip onu tebrik etti."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Ayla Hanım'ın final sonrası sözleri öykünün hangi ana fikrini vurgular?",
+    "correct": "Başarının birlikte hareket etmekten geldiği",
+    "wrong": [
+     "En iyi oyuncunun kaptan olması gerektiği",
+     "Yedeklerin maçlarda oynatılmaması gerektiği",
+     "Final maçının yalnızca şansla kazanıldığı"
+    ],
+    "explanation": "Takımı kazandıran tek bir oyuncunun yeteneği değil, birlikte oynamayı öğrenmeleriydi."
+   }
+  ]
+ },
+ "144": {
+  "title": "Hapşırık",
+  "category": "Bilgi/Açıklama",
+  "content": "Burnumuzu kaşındıran bir toz, keskin bir koku ya da birden yüzümüze vuran güneş ışığı... Birkaç saniye sonra kendimizi tutamaz ve hapşırırız. Hapşırma, vücudumuzun burnu temizlemek için kullandığı güçlü bir savunma tepkisidir.\n\nBurnumuzun içi, solunan havadaki toz, polen ve mikropları yakalayan ince tüyler ve yapışkan bir sıvıyla kaplıdır. Bu yapı çoğu zaman işini sessizce yapar. Ama burna rahatsız edici bir madde girdiğinde, burundaki sinirler beyne bir uyarı gönderir. Beyin de hapşırmayı başlatır. Önce derin bir nefes alınır, ardından göğüs ve karın kasları kasılır. Hava, ağızdan ve burundan büyük bir hızla dışarı atılır ve rahatsız eden madde de onunla birlikte burundan uzaklaşır.\n\nBazı insanlar parlak bir ışığa baktıklarında da hapşırır. Bilim insanları bunun nedenini tam olarak bilmiyor; bu özelliğin aileden aileye geçebildiği düşünülüyor. Hapşırma sırasında havanın burundan çıkış hızı çok yüksektir ve küçük damlacıklar birkaç metre uzağa kadar ulaşabilir. Hapşırırken mikroplar da havaya yayılabilir. Bu yüzden hapşırırken ağzımızı ve burnumuzu bir mendille ya da dirseğimizin iç kısmıyla kapatmamız önemlidir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre hapşırmanın görevi nedir?",
+    "correct": "Burnu yabancı maddelerden arındırmak",
+    "wrong": [
+     "Vücudun sıcaklığını hızla düşürmek",
+     "Akciğerleri daha çok büyütmek",
+     "Kalbin atışlarını iyice hızlandırmak"
+    ],
+    "explanation": "Hapşırma burnu temizlemek için kullanılan bir savunma tepkisidir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Burnun içindeki yapı neyi yakalar?",
+    "correct": "Havadaki kirleticileri",
+    "wrong": [
+     "Yalnızca güneş ışığını",
+     "Havadaki oksijeni yalnız",
+     "Yalnızca keskin kokuları"
+    ],
+    "explanation": "İnce tüyler ve yapışkan sıvı toz, polen ve mikropları yakalar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hapşırmayı başlatan süreç nasıl işler?",
+    "correct": "Beyin gelen uyarıyla devreye girer",
+    "wrong": [
+     "Kaslar kendiliğinden kasılmaya başlar",
+     "Burun suyu akınca öksürük başlar",
+     "Akciğerler kendiliğinden boşalır"
+    ],
+    "explanation": "Burundaki sinirler beyne uyarı gönderir, beyin hapşırmayı başlatır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hapşırırken hava nereden dışarı atılır?",
+    "correct": "Ağızdan ve burundan",
+    "wrong": [
+     "Yalnızca burundan",
+     "Yalnızca kulaklardan",
+     "Sadece gözlerden"
+    ],
+    "explanation": "Hava ağızdan ve burundan büyük bir hızla dışarı atılır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Parlak ışıkta hapşırmayla ilgili metinde ne söylenir?",
+    "correct": "Sebebinin henüz çözülmediği",
+    "wrong": [
+     "Bütün insanlarda görüldüğü",
+     "Bir hastalık belirtisi olduğu",
+     "Güneş gözlüğüyle önlenebildiği"
+    ],
+    "explanation": "Bilim insanları bunun nedenini tam olarak bilmiyor."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hapşırma sırasında damlacıklar ne kadar uzağa ulaşabilir?",
+    "correct": "Birkaç metreye kadar",
+    "wrong": [
+     "Birkaç santimetre",
+     "Yüz metreden fazla",
+     "Kilometrelerce uzağa"
+    ],
+    "explanation": "Küçük damlacıklar birkaç metre uzağa kadar ulaşabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Hapşırırken ağzı dirsekle kapatmanın amacı nedir?",
+    "correct": "Mikrop saçılmasını azaltmak",
+    "wrong": [
+     "Hapşırığı tümüyle engellemek",
+     "Hapşırık sesini yükseltmek",
+     "Burnu daha iyi temizlemek"
+    ],
+    "explanation": "Hapşırırken mikroplar havaya yayılabilir; kapatmak bunu azaltır."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Hapşırma bedenin bir savunmasıdır",
+    "wrong": [
+     "Hapşırma genellikle hastalık işaretidir",
+     "Hapşırmak yalnız ışıkla ilgilidir",
+     "Hapşırmak isteyerek durdurulabilir"
+    ],
+    "explanation": "Hapşırma burnu temizleyen bir savunma tepkisidir; mikrop yaymamaya dikkat edilmelidir."
+   }
+  ]
+ },
+ "149": {
+  "title": "Termosun Sırrı",
+  "category": "Bilgi/Açıklama",
+  "content": "Sabah hazırladığınız çay, termosta akşama kadar sıcak kalır. Yazın termosa koyduğunuz buzlu su ise saatler sonra bile soğuktur. Termos, bunu ısının yayılma yollarını engelleyerek başarır; yani termos aslında ısıtmaz ya da soğutmaz, yalnızca içindekinin sıcaklığını korur.\n\nIsı, üç yolla bir yerden başka bir yere geçer. İletim, ısının birbirine dokunan maddeler arasında geçmesidir; sıcak bir bardağı tuttuğunuzda elinizin ısınması buna örnektir. Taşınım, ısının sıvı ya da gaz gibi akışkanların hareketiyle taşınmasıdır. Işıma ise ısının, güneşten gelen sıcaklık gibi, ışık benzeri dalgalarla yayılmasıdır.\n\nTermosun içinde, iç içe geçmiş iki ince duvar bulunur. Bu iki duvarın arasındaki havanın büyük bölümü boşaltılmıştır. Boşlukta ısıyı taşıyacak madde neredeyse bulunmadığı için iletim ve taşınım büyük ölçüde engellenir. Duvarların yüzeyi de genellikle parlatılmış ya da gümüş renkli bir katmanla kaplanmıştır. Bu parlak yüzey ışımayla kaçmaya çalışan ısıyı geri yansıtır. Termosun kapağı da sıkıca kapanarak ısının üstten kaçmasını önler.\n\nİlk termos benzeri kap, on dokuzuncu yüzyılın sonunda İskoç bilim insanı James Dewar tarafından laboratuvarda soğuk sıvıları saklamak için geliştirildi. Dewar buluşunun patentini almadı. Birkaç yıl sonra iki Alman cam ustası, bu kabı günlük kullanım için üreterek satmaya başladı ve termos kısa sürede evlerde yer almaya başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre termos aslında ne yapar?",
+    "correct": "İçindekinin sıcaklığını korur",
+    "wrong": [
+     "İçindekini ısıtıp sıcak tutar",
+     "İçindekini soğutup serin tutar",
+     "İçindekini hem ısıtır hem soğutur"
+    ],
+    "explanation": "Termos ısıtmaz ya da soğutmaz; yalnızca içindekinin sıcaklığını korur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sıcak bir bardağı tutunca elin ısınması ısının hangi yayılma yoluna örnektir?",
+    "correct": "İletim",
+    "wrong": [
+     "Taşınım",
+     "Işıma",
+     "Buharlaşma"
+    ],
+    "explanation": "Birbirine dokunan maddeler arasında ısı geçişi iletimdir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Taşınım ile iletim arasındaki fark nedir?",
+    "correct": "Taşınımda ısıyı akışkanın hareketi taşır",
+    "wrong": [
+     "Taşınım yalnızca katı maddelerde görülür",
+     "Taşınımda ısı ışık dalgaları gibi yayılır",
+     "İletim yalnızca boşlukta gerçekleşir"
+    ],
+    "explanation": "Taşınım, ısının sıvı ya da gaz gibi akışkanların hareketiyle taşınmasıdır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Termosun iki duvarı arasında ne vardır?",
+    "correct": "Havası alınmış bir boşluk",
+    "wrong": [
+     "Sıkıştırılmış kalın pamuk",
+     "İnce bir su tabakası",
+     "Isıtılmış sıcak hava"
+    ],
+    "explanation": "İki duvarın arasındaki havanın büyük bölümü boşaltılmıştır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Boşluğun iletim ve taşınımı engellemesinin nedeni nedir?",
+    "correct": "Aracı bir ortamın bulunmaması",
+    "wrong": [
+     "Boşluğun ışığı geri yansıtması",
+     "Boşluğun içinin buz gibi olması",
+     "Duvarların çok kalın olması"
+    ],
+    "explanation": "Boşlukta ısıyı taşıyacak madde neredeyse bulunmaz."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Termostaki parlak yüzeyin görevi nedir?",
+    "correct": "Işımayla kaçan ısıyı geri yansıtmak",
+    "wrong": [
+     "Termosun dışını süslü göstermek",
+     "İçindeki sıvının kokusunu korumak",
+     "Kapağın daha kolay açılmasını sağlamak"
+    ],
+    "explanation": "Parlak yüzey ışımayla kaçmaya çalışan ısıyı geri yansıtır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk termos benzeri kap ne amaçla geliştirildi?",
+    "correct": "Deneylerde soğuk sıvıları korumak için",
+    "wrong": [
+     "Askerlerin sıcak çorbasını taşımak için",
+     "Evlerde kahvaltı çayını saklamak için",
+     "Uzun yolculukta su depolamak için"
+    ],
+    "explanation": "Dewar onu laboratuvarda soğuk sıvıları saklamak için geliştirdi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragraftan Dewar'ın buluşu hakkında ne çıkarılabilir?",
+    "correct": "Ticari yararı başkalarının sağladığı",
+    "wrong": [
+     "Dewar'ın buluşundan çok para kazandığı",
+     "Termosun kimsenin ilgisini çekmediği",
+     "Termosun ilk Alman'da icat edildiği"
+    ],
+    "explanation": "Dewar patent almadı; kabı satarak yaygınlaştıranlar Alman cam ustaları oldu."
+   }
+  ]
+ }
+}

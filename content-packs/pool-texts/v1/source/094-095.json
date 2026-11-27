@@ -1,0 +1,224 @@
+{
+ "94": {
+  "title": "Sessizliğin Değeri",
+  "category": "Bilgi/Açıklama",
+  "content": "Şehirde yaşayan biri için sessizlik giderek daha nadir bulunan bir şey hâline geliyor. Sabah trafiğin uğultusuyla uyanıyor, gün boyunca korna, inşaat ve siren seslerinin arasında yaşıyor, gece de komşunun televizyonu ya da sokaktaki kalabalık yüzünden uykuya dalmakta zorlanıyoruz. Çoğumuz bu seslere o kadar alıştık ki artık fark etmiyoruz bile. Oysa fark etmememiz, onların bizi etkilemediği anlamına gelmiyor.\n\nGürültü, istenmeyen ve rahatsız eden ses olarak tanımlanır. Sesin şiddeti desibel adı verilen bir birimle ölçülür. Sessiz bir kütüphanede ses düzeyi yaklaşık otuz desibel, normal bir konuşmada altmış desibel civarındadır. Yoğun bir trafikte bu değer seksen desibele, bir inşaat makinesinin yanında ise yüz desibelin üzerine çıkabilir. Desibel ölçeği doğrusal değildir; ses düzeyindeki her on desibellik artış, kulağımıza sesin yaklaşık iki kat yüksek gelmesi demektir. Uzun süre seksen beş desibelin üzerindeki seslere maruz kalmak, işitmede kalıcı hasara yol açabilir. Bu hasar çoğu zaman yavaş ilerlediği için kişi onu ancak geç fark eder.\n\nAma gürültünün zararı yalnızca kulaklarla sınırlı değil. Dünya Sağlık Örgütü, trafik gürültüsünü Avrupa'da sağlığı en çok etkileyen çevresel etkenler arasında sayıyor. Araştırmalar, sürekli gürültüye maruz kalan kişilerde stres hormonlarının arttığını, kan basıncının yükseldiğini ve kalp hastalıkları riskinin arttığını gösteriyor. Vücut, uyurken bile gürültüye tepki verir. Kişi uyanmasa da gece duyulan sesler uykunun derinliğini bozar ve ertesi gün yorgunluğa yol açar.\n\nGürültünün etkisi herkese aynı biçimde yansımaz. İşlek bir cadde üzerinde oturan ya da gece vardiyasında çalışıp gündüz uyumak zorunda kalan kişiler, bu yükü çok daha ağır biçimde taşır.\n\nGürültü çocukları da etkiler. Havalimanı ya da işlek yollar yakınındaki okullarda yapılan bazı çalışmalar, öğrencilerin okuma ve dikkat becerilerinin, sessiz bölgelerdeki akranlarına göre daha zayıf olabileceğini göstermiştir. Sürekli gürültü, öğretmenin sesini duymayı zorlaştırır ve dikkatin dağılmasına neden olur.\n\nGürültüyle mücadele için şehirlerde çeşitli önlemler alınabilir. Yolların kenarına ses perdeleri yapmak, sesi daha az yansıtan yol kaplamaları kullanmak, binalarda yalıtımlı pencereler tercih etmek ve şehir içinde daha çok yeşil alan oluşturmak bunlardan bazılarıdır. Ağaçlar ve bitkiler sesi bir ölçüde emer; ama belki daha önemlisi, yeşil alanlar insanlara gürültüden uzaklaşabilecekleri sakin yerler sunar. Bazı şehirler gece belirli saatlerden sonra inşaat çalışmalarını yasaklayarak ya da gürültü haritaları hazırlayarak sorunun en yoğun olduğu bölgeleri belirliyor. Elektrikli araçların yaygınlaşması da özellikle düşük hızlarda trafik gürültüsünü azaltabilir.\n\nBireyler olarak da yapabileceklerimiz var. Kulaklıkla müziği çok yüksek sesle dinlememek, gece geç saatlerde komşuları düşünerek sesimizi kısmak ve gereksiz yere korna çalmamak bunlardan bazıları. Sessizliğin değerini fark etmek, belki de ilk adımdır. Çünkü sessizlik bir boşluk değil, dinlenmek, düşünmek ve birbirimizi duymak için ihtiyaç duyduğumuz bir alandır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre gürültüyü fark etmememiz ne anlama gelir?",
+    "correct": "Etkisinin sürdüğü gerçeğini değiştirmez",
+    "wrong": [
+     "Gürültünün artık zararsız hâle geldiğini",
+     "Şehirlerin her geçen gün sessizleştiğini",
+     "Kulaklarımızın eskisinden iyi duyduğunu"
+    ],
+    "explanation": "Seslere alışmış olmamız, onların bizi etkilemediği anlamına gelmez."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Normal bir konuşmanın ses düzeyi yaklaşık kaç desibeldir?",
+    "correct": "60",
+    "wrong": [
+     "30",
+     "85",
+     "100"
+    ],
+    "explanation": "Normal bir konuşmada ses düzeyi altmış desibel civarındadır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "İşitme hasarının çoğu zaman geç fark edilmesinin nedeni nedir?",
+    "correct": "Kaybın belirti vermeden ağır ağır gelişmesi",
+    "wrong": [
+     "Desibel ölçeğinin doğrusal bir ölçek olması",
+     "Hasarın yalnızca uykuda ortaya çıkması",
+     "Gürültünün kulak yerine kalbi etkilemesi"
+    ],
+    "explanation": "Hasar çoğu zaman yavaş ilerlediği için kişi onu geç fark eder."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre uyurken duyulan gürültünün etkisi nedir?",
+    "correct": "Uykuyu bölerek ertesi gün yorgunluk yaratır",
+    "wrong": [
+     "Kişiyi her ses duyduğunda mutlaka uyandırır",
+     "Uyuyan beden seslere karşı tepkisiz kalır",
+     "Uykunun daha derin ve uzun olmasını sağlar"
+    ],
+    "explanation": "Kişi uyanmasa da gece sesleri uykunun derinliğini bozar ve yorgunluğa yol açar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Gece vardiyasında çalışanlar örneği hangi düşünceyi destekler?",
+    "correct": "Gürültünün yükünün herkese eşit dağılmadığını",
+    "wrong": [
+     "Gece çalışmanın gürültüyü azaltan bir yol olduğunu",
+     "Gündüz uyumanın gece uyumaktan sağlıklı olduğunu",
+     "İşlek caddelerin geceleri sessiz kaldığını"
+    ],
+    "explanation": "İşlek caddede oturanlar ya da gündüz uyumak zorunda kalanlar bu yükü daha ağır taşır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Havalimanı yakınındaki okullarla ilgili çalışmalar ne göstermiştir?",
+    "correct": "Dikkat ve okuma becerilerinin gerilediğini",
+    "wrong": [
+     "Öğrencilerin derslerde daha sessiz kaldığını",
+     "Öğretmenlerin sesini daha iyi duyduklarını",
+     "Bu okullarda başarının daha yüksek olduğunu"
+    ],
+    "explanation": "Bu okullardaki öğrencilerin okuma ve dikkat becerileri daha zayıf olabilir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre yeşil alanların gürültüye karşı belki de daha önemli katkısı nedir?",
+    "correct": "İnsanlara sakin kalabilecekleri yerler sunması",
+    "wrong": [
+     "Sesleri büyük ölçüde emip ortadan kaldırması",
+     "Elektrikli araçların kullanımını yaygınlaştırması",
+     "İnşaat çalışmalarını geceleri tümüyle yasaklaması"
+    ],
+    "explanation": "Yeşil alanlar insanlara gürültüden uzaklaşabilecekleri sakin yerler sunar."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son cümlede sessizliğe yüklediği anlam nedir?",
+    "correct": "Dinlenme ve iletişim için gerekli bir ortam",
+    "wrong": [
+     "Doldurulması gereken anlamsız bir boşluk",
+     "Sadece kütüphanelerde bulunan bir durum",
+     "Şehir hayatında artık hiç bulunmayan bir şey"
+    ],
+    "explanation": "Sessizlik dinlenmek, düşünmek ve birbirimizi duymak için ihtiyaç duyduğumuz bir alandır."
+   }
+  ]
+ },
+ "95": {
+  "title": "Ekranın Öbür Yanı",
+  "category": "Hikaye/Kurgu",
+  "content": "Zeynep, yeni taşındığı apartmanda karşı dairede yaşayan Rıza Amca'yla merdivenlerde tanıştı. Rıza Amca seksen yaşındaydı ve yıllar önce eşini kaybetmişti. Tek oğlu ise ailesiyle birlikte yurt dışında yaşıyordu. Bir gün Zeynep alışverişten dönerken, Rıza Amca'nın kapısının önünde elinde yeni bir akıllı telefonla durduğunu gördü. Yaşlı adam telefonu çaresizce evirip çeviriyordu.\n\nTelefonu oğlu göndermişti. Torunlarıyla görüntülü konuşabilsin diye. Ama Rıza Amca telefonu açmayı bile beceremediğini söyledi. “Bizim zamanımızda telefonun bir tuşu vardı, açardın, konuşurdun” dedi gülümseyerek. Ama sesindeki hüzün belliydi. Torunlarını en son iki yıl önce görmüştü. Oğlu her hafta telefonla arıyordu, ama Rıza Amca çocukların sesini duymakla yetinmek zorunda kalıyordu; küçük torunu telefonda konuşmaktan çabuk sıkılıyordu.\n\nZeynep ona yardım etmeyi teklif etti. Rıza Amca önce çekindi, kimseye yük olmak istemediğini söyledi; ama sonunda kabul etti. İlk ders hiç kolay geçmedi. Rıza Amca ekrana fazla bastırıyor, uygulamaları yanlışlıkla kapatıyor, bir şey ters gidince telefonu bozacağından korkuyordu. Zeynep bir süre sonra bir şeyi fark etti: Her şeyi aynı anda anlatmaya çalışıyordu. Oysa Rıza Amca için her yeni bilgi bir öncekini unutturuyordu. Üstelik Zeynep'in kullandığı “uygulama”, “simge”, “kaydır” gibi sözcükler ona yabancı geliyordu. Zeynep, kendisi için çok basit olan şeylerin aslında ne kadar çok ön bilgi gerektirdiğini ilk kez fark etti.\n\nErtesi gün farklı bir yol denedi. Yalnızca tek bir şey öğretti: Telefonu açmak ve oğlunun adına dokunup aramak. Bir kâğıda büyük harflerle adımları yazdı ve kâğıdı telefonun yanına koydu. Rıza Amca adımları birkaç kez tekrarladı. Zeynep ona, bir şeyi yanlış yapmasının telefonu bozmayacağını, en kötü ihtimalle başa dönüp yeniden deneyebileceğini anlattı. Bu sözler yaşlı adamı rahatlattı. Bozma korkusu azaldıkça, denemekten çekinmemeye başladı.\n\nBir hafta sonra Zeynep kapıyı çaldığında Rıza Amca onu heyecanla içeri aldı. Telefonun ekranında, okyanusun öbür yakasındaki torunları el sallıyordu. Rıza Amca görüntülü aramayı kendi başına yapmıştı. Konuşma bittiğinde gözleri dolmuştu. “İki yıl sonra yüzlerini gördüm” dedi.\n\nAylar içinde Rıza Amca fotoğraf göndermeyi, sesli mesaj bırakmayı ve haberleri okumayı da öğrendi. Artık her pazar torunlarıyla konuşuyordu. Küçük torunu ona resimlerini gösteriyor, Rıza Amca da ona gençliğinden hikâyeler anlatıyordu. Zeynep ise bu süreçte kendisinin de bir şey öğrendiğini düşündü: Sabırla ve adım adım anlatıldığında, hiçbir şey öğrenilmeyecek kadar zor değildi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Rıza Amca'nın oğlu nerede yaşıyordu?",
+    "correct": "Başka bir ülkede",
+    "wrong": [
+     "Başka bir şehirde",
+     "Bir köy evinde",
+     "Bitişik dairede"
+    ],
+    "explanation": "Tek oğlu ailesiyle birlikte yurt dışında yaşıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Oğlunun telefon göndermesinin amacı neydi?",
+    "correct": "Rıza Amca'nın torunlarını görebilmesi",
+    "wrong": [
+     "Rıza Amca'nın her gün haber okuması",
+     "Zeynep'le daha kolay iletişim kurması",
+     "Eski telefonunun artık çalışmaması"
+    ],
+    "explanation": "Telefonu torunlarıyla görüntülü konuşabilsin diye göndermişti."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Rıza Amca'nın yalnızca sesli konuşmakla yetinmek istememesinin nedeni nedir?",
+    "correct": "Torununun sesli görüşmeden çabuk bıkması",
+    "wrong": [
+     "Oğlunun onu haftalarca hiç aramaması",
+     "Telefon faturalarının çok yüksek gelmesi",
+     "Sesli aramanın daha pahalıya gelmesi"
+    ],
+    "explanation": "Küçük torunu telefonda konuşmaktan çabuk sıkılıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Zeynep ilk derste hangi hatayı yaptığını fark etti?",
+    "correct": "Hepsini bir arada anlatmaya çalıştığını",
+    "wrong": [
+     "Telefonu Rıza Amca'nın elinden aldığını",
+     "Rıza Amca'yı yeterince dinlemediğini",
+     "Yanlış bir telefon modeli seçtiğini"
+    ],
+    "explanation": "Zeynep her şeyi aynı anda anlatmaya çalıştığını fark etti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Zeynep'in “ön bilgi” ile ilgili fark ettiği şey neyi gösterir?",
+    "correct": "Bize basit gelenin başkasına zor gelebildiğini",
+    "wrong": [
+     "Rıza Amca'nın teknolojiye hiç ilgi duymadığını",
+     "Akıllı telefonların herkes için çok zor olduğunu",
+     "Teknik sözcüklerin gereksiz ve anlamsız olduğunu"
+    ],
+    "explanation": "Kendisi için basit olan şeyler aslında çok ön bilgi gerektiriyordu."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Zeynep ikinci gün öğretim yöntemini nasıl değiştirdi?",
+    "correct": "Tek adımı öğretip yönergeyi kâğıda yazdı",
+    "wrong": [
+     "Rıza Amca için kalın bir kılavuz getirdi",
+     "Rıza Amca'nın oğluyla saatlerce konuştu",
+     "Telefonu sıfırlayıp baştan yeniden kurdu"
+    ],
+    "explanation": "Yalnızca arama yapmayı öğretti ve adımları büyük harflerle kâğıda yazdı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yanlış yapmanın telefonu bozmayacağını öğrenmek Rıza Amca'yı nasıl etkiledi?",
+    "correct": "Denemekten korkmamasını sağladı",
+    "wrong": [
+     "Telefonu bırakmasına yol açtı",
+     "Zeynep'e kırılmasına neden oldu",
+     "Telefonu satmayı düşündürdü"
+    ],
+    "explanation": "Bozma korkusu azaldıkça denemekten çekinmemeye başladı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Zeynep'in vardığı sonuç öykünün hangi ana fikrini yansıtır?",
+    "correct": "Sabırla ve adım adım her şeyin öğrenilebileceği",
+    "wrong": [
+     "Yaşlıların yeni teknolojiyi hiç öğrenemeyeceği",
+     "Görüntülü aramanın sesliden çok daha iyi olduğu",
+     "Komşuluk ilişkilerinin artık önemini yitirdiği"
+    ],
+    "explanation": "Sabırla ve adım adım anlatıldığında hiçbir şey öğrenilmeyecek kadar zor değildir."
+   }
+  ]
+ }
+}

@@ -1,0 +1,668 @@
+{
+ "193": {
+  "title": "Fikirler Yürürken Gelir",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir sorunun çözümünü masa başında saatlerce aradıktan sonra kısa bir yürüyüşe çıkıp aklınıza birden parlak bir fikir geldiğini hiç yaşadınız mı? Bu deneyim sanıldığı gibi bir tesadüf olmayabilir. Yürümenin yaratıcı düşünceyi desteklediği, uzun süredir pek çok yazar ve düşünürün dile getirdiği bir gözlemdir. Son yıllarda yapılan araştırmalar da bu gözlemi destekleyen bulgular ortaya koydu. Filozof Nietzsche, değerli düşüncelerin ancak yürürken akla geldiğini yazmıştı; Charles Darwin de evinin yakınında her gün aynı patikada düşünme yürüyüşleri yapardı.\n\nStanford Üniversitesi'nde yapılan bir dizi deneyde katılımcılardan, sıradan bir nesnenin olabildiğince farklı kullanım alanlarını bulmaları istendi. Örneğin bir tuğlayla neler yapılabileceğini düşüneceklerdi. Katılımcıların bir kısmı bu görevi otururken, bir kısmı ise koşu bandında ya da açık havada yürürken yaptı. Yürüyen katılımcıların ürettiği özgün fikir sayısı, oturanlarınkinden belirgin biçimde fazlaydı. Üstelik etki, yürüyüş bittikten kısa bir süre sonra bile devam ediyordu. İlginç bir şekilde, yürüyüşün dört duvar arasında, boş bir odadaki koşu bandında yapılması da sonucu pek değiştirmedi. Yani etkinin asıl kaynağı manzara değil, hareketin kendisi gibi görünüyordu.\n\nAraştırmacılar, yürümenin neden bu etkiyi yarattığını henüz kesin olarak açıklayamıyor. Bir görüşe göre hafif fiziksel hareket, zihnin bir konuya kilitlenmesini gevşetiyor ve düşüncelerin daha serbestçe dolaşmasına izin veriyor. Ancak aynı araştırmalar, yürümenin her tür düşünme işini kolaylaştırmadığını da gösterdi. Tek bir doğru cevabı olan sorularda yürüyenler, oturanlardan daha başarılı değildi.\n\nBu bulgular zamanla iş hayatına da yansımaya başladı. Bazı şirketler, özellikle yeni fikirlerin konuşulacağı toplantılarını masa başında değil, yürüyerek yapmayı deniyor. Gündelik hayatta ise öneri basit: Yeni fikirlere ihtiyaç duyduğunuzda ekrandan kalkıp birkaç dakikalık bir yürüyüşe çıkmak, beklenmedik bir çözümün kapısını aralayabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nietzsche ve Darwin örneklerinin metindeki işlevi nedir?",
+    "correct": "Gözlemin eskiye dayandığını göstermek",
+    "wrong": [
+     "İki ünlü düşünürün arkadaşlığını anlatmak",
+     "Stanford deneylerinin yöntemini tanıtmak",
+     "Yürüyüşün sağlığa yararını anlatmak"
+    ],
+    "explanation": "Yürüme ile düşünme arasındaki bağın eski bir gözlem olduğunu gösterir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deneydeki katılımcılardan ne istendi?",
+    "correct": "Bir eşyaya yeni işlevler bulmak",
+    "wrong": [
+     "Kısa sürede bir tuğla duvar örmek",
+     "Matematik sorularını çözmek",
+     "Koşu bandında en hızlı koşmak"
+    ],
+    "explanation": "Sıradan bir nesnenin farklı kullanım alanlarını bulmaları istendi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Koşu bandı bulgusu hangi olasılığı zayıflatır?",
+    "correct": "Sonucun dış ortamdan doğduğunu",
+    "wrong": [
+     "Yürümenin insanı çok yorduğunu",
+     "Katılımcıların yalan söylediğini",
+     "Oturmanın sağlıklı olduğunu"
+    ],
+    "explanation": "Boş odada yürümek de işe yaradığına göre etki manzaradan değil hareketten gelir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yürüyüşün etkisi ne zaman sona eriyordu?",
+    "correct": "Hareket bitince biraz sonra",
+    "wrong": [
+     "Yürüyüşe başlanır başlanmaz",
+     "Yürüyüş yarılandığı anda",
+     "Ancak ertesi sabah uyanınca"
+    ],
+    "explanation": "Etki yürüyüş bittikten kısa bir süre sonra bile devam ediyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Tek doğru cevaplı sorulara ilişkin bulgu metindeki iddiayı nasıl etkiler?",
+    "correct": "Etkinin kapsamını sınırlar",
+    "wrong": [
+     "Bütün bulguları geçersiz kılar",
+     "Yürümenin etkisini katlar",
+     "Deneyin yanlış olduğunu gösterir"
+    ],
+    "explanation": "Yürüme yaratıcı düşünceyi destekler ama tek cevaplı sorularda üstünlük sağlamaz."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmacıların öne sürdüğü olası açıklama nedir?",
+    "correct": "Hareketin zihinsel kilidi açması",
+    "wrong": [
+     "Kanın beyne daha az gitmesi",
+     "Yürürken daha az konuşulması",
+     "Temiz havanın insanı serinletmesi"
+    ],
+    "explanation": "Hafif hareket zihnin bir konuya kilitlenmesini gevşetir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı şirketler bu bulgulardan nasıl yararlanıyor?",
+    "correct": "Bazı toplantıları yürüyerek yaparak",
+    "wrong": [
+     "Çalışanlar için spor salonu açarak",
+     "Mesai süresini iki saat kısaltarak",
+     "Ofislerdeki bütün masaları kaldırarak"
+    ],
+    "explanation": "Toplantılarını yürüyerek yapmayı deniyorlar."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın son paragraftaki önerisi hangi durum için geçerlidir?",
+    "correct": "Özgün fikre ihtiyaç duyulduğunda",
+    "wrong": [
+     "Kesin bir hesap yapılması gerektiğinde",
+     "Aşırı yorgunluk hissedildiğinde",
+     "Bilgisayar ekranı bozulduğunda"
+    ],
+    "explanation": "Öneri, yeni fikirlere ihtiyaç duyulan durumlar içindir."
+   }
+  ]
+ },
+ "200": {
+  "title": "Bay Havuç",
+  "category": "Hikaye/Kurgu",
+  "content": "Sabah Elif pencereden baktığında her yer bembeyazdı. Gece boyunca sessizce kar yağmıştı. Ağaçların dalları, arabaların üstü ve bahçe duvarı kalın bir kar örtüsüyle kaplanmıştı. Elif hemen kalın montunu, atkısını ve beresini giydi. Küçük kardeşi Mert de onunla birlikte bahçeye koştu.\n\nİkisi birlikte bir kardan adam yapmaya karar verdiler. Önce küçük bir kar topu yaptılar. Sonra onu karda yuvarladılar. Top yuvarlandıkça büyüdü. Bu büyük top kardan adamın gövdesi oldu. Sonra yeniden yuvarlayarak daha küçük bir top yaptılar. Bu küçük topu da baş olarak gövdenin üstüne koydular.\n\nElif kardan adama iki siyah düğme ile göz yaptı. Mert mutfaktan bir havuç getirdi ve onu burun olarak taktı. Anneleri de eski bir atkıyı kardan adamın boynuna doladı. Elif ona bir ad bile koydu: Bay Havuç. Mert bu ada çok güldü.\n\nÖğleden sonra bulutlar dağıldı ve güneş açtı. Kar yavaş yavaş erimeye başladı. Kardan adamın başı biraz yana eğildi. Mert buna çok üzüldü, ama Elif ona gülümsedi. Yarın yeniden kar yağarsa, birlikte yeni bir kardan adam yapabileceklerdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif sabah pencereden bakınca ne gördü?",
+    "correct": "Dışarının bembeyaz olduğunu",
+    "wrong": [
+     "Dışarıda yağmur yağdığını",
+     "Güneşin pırıl pırıl parladığını",
+     "Ağaçların çiçeklendiğini"
+    ],
+    "explanation": "Gece kar yağmış, her yer bembeyaz olmuştu."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elif bahçeye çıkmadan önce neler giydi?",
+    "correct": "Mont, atkı ve bere",
+    "wrong": [
+     "Yağmurluk ve çizme",
+     "İnce tişört ve şort",
+     "Eldiven ve gözlük"
+    ],
+    "explanation": "Kalın montunu, atkısını ve beresini giydi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kar topu yuvarlandıkça ne oldu?",
+    "correct": "Büyüdü",
+    "wrong": [
+     "Eridi",
+     "Dağıldı",
+     "Küçüldü"
+    ],
+    "explanation": "Top yuvarlandıkça büyüdü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kardan adamın gövdesi ile başı arasındaki fark neydi?",
+    "correct": "Baş, gövdeye göre ufaktı",
+    "wrong": [
+     "Baş, gövdeye göre iriydi",
+     "İkisi de aynı boydaydı",
+     "Başı kardan yapılmamıştı"
+    ],
+    "explanation": "Gövde büyük toptan, baş daha küçük toptan yapıldı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kardan adamın burnu neyden yapıldı?",
+    "correct": "Havuçtan",
+    "wrong": [
+     "Düğmeden",
+     "Taştan",
+     "Daldan"
+    ],
+    "explanation": "Mert mutfaktan bir havuç getirip burun yaptı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kardan adamın adı neden Mert'i güldürdü?",
+    "correct": "Adı, burnundaki sebzeden geliyordu",
+    "wrong": [
+     "Adı, Mert'in kendi adına benziyordu",
+     "Adı söylenmesi zor bir addı",
+     "Adı annelerinin adıyla aynıydı"
+    ],
+    "explanation": "Bay Havuç adı burnundaki havuçtan geliyordu ve komikti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kardan adamın başının yana eğilmesinin nedeni nedir?",
+    "correct": "Sıcakta yavaşça erimesi",
+    "wrong": [
+     "Rüzgârın onu yana itmesi",
+     "Mert'in ona yaslanması",
+     "Bir kedinin tırmanması"
+    ],
+    "explanation": "Güneş açınca kar erimeye başladı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Elif'in son düşüncesi onun hakkında ne söyler?",
+    "correct": "İyimser bir çocuk olduğunu",
+    "wrong": [
+     "Çok çabuk sinirlendiğini",
+     "Kardan hiç hoşlanmadığını",
+     "Kardeşine çok kızgın olduğunu"
+    ],
+    "explanation": "Kardeşini yeni bir kardan adam yapabilecekleri umuduyla teselli eder."
+   }
+  ]
+ },
+ "201": {
+  "title": "Ormanın Unutkan Bahçıvanı",
+  "category": "Bilgi/Açıklama",
+  "content": "Sonbahar geldiğinde ve yapraklar sararmaya başladığında parklarda ve ormanlarda sincaplar çok hareketli olur. Ağaçtan ağaca atlar, yere iner, ağızlarında bir fındık ya da meşe palamuduyla bir yerlere koştururlar. Peki sincaplar bu kadar telaşla ne yapar? Cevap basit: Kışa hazırlanırlar. Birçok hayvan kışı uyuyarak geçirir, ama sincapların çoğu kış uykusuna yatmaz. Soğuk günlerde yuvalarında dinlenseler de karınları acıktığında dışarı çıkmak zorundadırlar.\n\nKışın yerler karla kaplanır ve yiyecek bulmak zorlaşır. Bu yüzden sincaplar sonbaharda bulabildikleri kadar tohum ve yemiş toplar. Topladıklarının bir kısmını hemen yer, geri kalanını saklar. Saklarken de çok ilginç bir yol izler. Yiyeceklerin hepsini tek bir yere koymazlar. Toprakta küçük çukurlar kazar, her birine bir ya da birkaç yemiş gömer ve üstünü kapatırlar. Bu yöntem çok akıllıcadır, çünkü bir zula bulunup yağmalansa bile diğerleri güvende kalır. Bir sincap, bir sonbaharda binlerce farklı yere yemiş saklayabilir.\n\nKış gelince sincaplar sakladıkları yiyecekleri bulmak için hem hafızalarını hem de keskin koku alma duyularını kullanır. Karın altındaki bir fındığın kokusunu bile alabilirler. Bazı bilim insanları, sincapların yemişleri türlerine göre ayrı bölgelere gömdüğünü, böylece onları daha kolay hatırladığını düşünüyor. Yine de gömdükleri yemişlerin hepsini bulamazlar. Bazılarını unuturlar, bazılarını da başka hayvanlar onlardan önce bulup yer.\n\nUnutulan bu tohumlar boşa gitmez. İlkbaharda toprakta filizlenir ve zamanla yeni ağaçlara dönüşür. Yani sincaplar, farkında olmadan ormanın bahçıvanlığını yapar. Bugün gördüğümüz bazı büyük meşe ağaçları, belki de yıllar önce bir sincabın unuttuğu küçük bir palamuttan büyümüştür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sincaplar sonbaharda neden telaşlıdır?",
+    "correct": "Soğuk mevsime hazırlandıkları için",
+    "wrong": [
+     "Kendilerine yeni yuva aradıkları için",
+     "Sıcak ülkelere göç edecekleri için",
+     "Birbirleriyle oyun oynadıkları için"
+    ],
+    "explanation": "Kışa hazırlanmak için yiyecek toplarlar."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Sincapların kış uykusuna yatmaması onları nasıl etkiler?",
+    "correct": "Kışın da beslenmeleri gerekir",
+    "wrong": [
+     "Bütün kış boyunca aç kalırlar",
+     "Kış boyu günlerce uyurlar",
+     "Sıcak yerlere göç ederler"
+    ],
+    "explanation": "Acıktıklarında dışarı çıkıp yiyecek bulmak zorundadırlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sincaplar yemişleri nasıl saklar?",
+    "correct": "Pek çok yere ayrı ayrı gömerek",
+    "wrong": [
+     "Hepsini tek bir yuvaya taşıyarak",
+     "Büyük bir ağaç kovuğunda toplayarak",
+     "Büyük taşların altına dizerek"
+    ],
+    "explanation": "Toprakta çukurlar kazıp her birine birkaç yemiş gömerler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yemişleri farklı yerlere saklamanın yararı nedir?",
+    "correct": "Bir zula bulunsa da ötekiler kalır",
+    "wrong": [
+     "Yemişler toprakta çabuk olgunlaşır",
+     "Sincap daha az koşturup yorulur",
+     "Yemişler daha lezzetli olur"
+    ],
+    "explanation": "Bir zula bulunup yağmalansa da diğerleri güvende kalır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sincaplar kışın yiyeceklerini bulmak için neleri kullanır?",
+    "correct": "Bellek ve koku",
+    "wrong": [
+     "Göz ve kulak",
+     "Kuyruk ve pati",
+     "Ses ve ışık"
+    ],
+    "explanation": "Hem hafızalarını hem koku alma duyularını kullanırlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yemişleri türlerine göre gömmenin sincaba ne kazandırdığı düşünülüyor?",
+    "correct": "Saklanan yerleri anımsamayı",
+    "wrong": [
+     "Yemişlerin bozulmadan kalmasını",
+     "Başka hayvanları kandırmayı",
+     "Daha çok ağaç yetiştirmeyi"
+    ],
+    "explanation": "Bilim insanları bunun hatırlamayı kolaylaştırdığını düşünüyor."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sincaplara “ormanın bahçıvanı” denmesinin nedeni nedir?",
+    "correct": "Unutulan tohumların ağaç olması",
+    "wrong": [
+     "Ağaçların dallarını budamaları",
+     "Ağaçlara su taşıyıp sulamaları",
+     "Ormandaki çiçekleri toplamaları"
+    ],
+    "explanation": "Unutulan tohumlar filizlenip yeni ağaçlara dönüşür."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Metnin son cümlesi okura nasıl bir düşünce kazandırmayı amaçlar?",
+    "correct": "Ufak işlerin geniş sonuçlarını",
+    "wrong": [
+     "Meşelerin kısa ömürlü olduğunu",
+     "Sincapların tehlikeli olduğunu",
+     "Palamudun yenmemesi gerektiğini"
+    ],
+    "explanation": "Bir sincabın unuttuğu palamut koca bir meşeye dönüşebilir."
+   }
+  ]
+ },
+ "202": {
+  "title": "Çitin Öbür Yanı",
+  "category": "Hikaye/Kurgu",
+  "content": "Kerem'in kırmızı bir topu vardı. Bu topu ona dedesi doğum gününde hediye etmişti. Her gün okuldan sonra onunla bahçede oynardı. Bir gün topa çok sert vurdu. Top çitin üstünden uçup komşunun bahçesine düştü.\n\nKerem çok korktu. Top artık kocaman çitin öbür tarafındaydı. Komşu Nermin Teyze'yi pek tanımıyordu. Kapıyı çalmak istemedi. Teyzenin kızacağını düşünüyordu. Bir süre çitin önünde bekledi ve topun belki kendiliğinden geri geleceğini umdu.\n\nSonunda cesaretini topladı ve kapıyı çaldı. Nermin Teyze kapıyı gülümseyerek açtı. Elinde Kerem'in kırmızı topu vardı. “Bunu sen mi arıyorsun?” diye sordu. Kerem utanarak başını salladı ve topun bahçesine düştüğü için özür diledi.\n\nNermin Teyze ona topu verdi. Sonra da bahçesinde yetiştirdiği çileklerden bir avuç uzattı. Çilekler çok tatlıydı. Kerem ona teşekkür etti. O gün hem topunu hem de yepyeni bir arkadaş bulmuştu. Ertesi gün Nermin Teyze'ye kendi çizdiği bir resmi götürdü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kerem'e kırmızı topu kim hediye etmişti?",
+    "correct": "Büyükbabası",
+    "wrong": [
+     "Annesi ve babası",
+     "Yan komşusu",
+     "Büyük ablası"
+    ],
+    "explanation": "Topu ona dedesi doğum gününde hediye etmişti."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Top nereye düştü?",
+    "correct": "Yandaki evin bahçesine",
+    "wrong": [
+     "Okulun arka bahçesine",
+     "Arabaların geçtiği yola",
+     "Bir ağacın tepesine"
+    ],
+    "explanation": "Top çitin üstünden komşunun bahçesine düştü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kerem kapıyı çalmaya neden hemen cesaret edemedi?",
+    "correct": "Azar işitmekten çekindiği için",
+    "wrong": [
+     "Kapının zili bozuk olduğu için",
+     "Annesi izin vermediği için",
+     "Topu artık istemediği için"
+    ],
+    "explanation": "Teyzeyi tanımıyordu ve kızacağını düşünüyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kerem'in topun kendiliğinden geri gelmesini ummasından ne anlaşılır?",
+    "correct": "Kapıyı çalmaya çekindiği",
+    "wrong": [
+     "Topunu hiç sevmediği",
+     "Herkesten cesur olduğu",
+     "Teyzeyi çok iyi tanıdığı"
+    ],
+    "explanation": "Kapıyı çalmak yerine topun kendiliğinden dönmesini umdu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nermin Teyze kapıyı nasıl açtı?",
+    "correct": "Güler yüzle",
+    "wrong": [
+     "Bağırarak",
+     "Ağlayarak",
+     "Uykulu hâlde"
+    ],
+    "explanation": "Kapıyı gülümseyerek açtı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kerem'in özür dilemesi onun hakkında ne gösterir?",
+    "correct": "Hatasını kabul ettiğini",
+    "wrong": [
+     "Teyzeden çok korktuğunu",
+     "Topunu sevmediğini",
+     "Çok acele ettiğini"
+    ],
+    "explanation": "Topun bahçeye düşmesine neden olduğu için özür dileyerek sorumluluk aldı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nermin Teyze Kerem'e topun yanında ne verdi?",
+    "correct": "Bir avuç çilek",
+    "wrong": [
+     "Bir tabak kurabiye",
+     "Kırmızı bir elma",
+     "Bir avuç şeker"
+    ],
+    "explanation": "Bahçesindeki çileklerden bir avuç uzattı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öykünün sonunda Kerem neyi öğrenmiş olabilir?",
+    "correct": "Korkunun yersiz çıkabileceğini",
+    "wrong": [
+     "Top oynamanın yasak olduğunu",
+     "Komşuların çoğunun kızgın olduğunu",
+     "Çileklerin çok ekşi olduğunu"
+    ],
+    "explanation": "Korktuğu teyze ona iyi davrandı ve arkadaş oldular."
+   }
+  ]
+ },
+ "203": {
+  "title": "İribaştan Kurbağaya",
+  "category": "Bilgi/Açıklama",
+  "content": "Bahar geldiğinde göletlerin ve küçük derelerin kıyısında, suyun içinde jöleye benzeyen kümeler görebilirsiniz. Bu kümeler kurbağa yumurtalarıdır. Her yumurtanın ortasında küçük siyah bir nokta vardır. Bu nokta, büyüyecek olan yavrudur. Yumurtaları saran jöle gibi madde, onları hem darbelere karşı korur hem de güneşin sıcaklığını tutarak yavruların gelişmesine yardım eder. Bu yüzden yumurtalar çoğunlukla suyun sığ ve güneş alan kısımlarına bırakılır. Kurbağanın hayatı, bu küçük siyah noktadan başlayarak birbirinden çok farklı aşamalardan geçer.\n\nBirkaç gün ya da hafta sonra yumurtalardan iribaş denen yavrular çıkar. İribaşlar kurbağaya hiç benzemez. Bacakları yoktur, uzun bir kuyrukları vardır. Balıklar gibi solungaçlarla suyun içinde nefes alırlar. Yosun ve küçük bitki parçalarıyla beslenirler. Bu dönemde birçok iribaş balıklara, kuşlara ve böceklere yem olur. Bu yüzden bir kurbağa binlerce yumurta bırakır; ancak bunların küçük bir kısmı yetişkin olabilir. Bazı iribaşlar, tehlikeyi sezdiklerinde kardeşleriyle birlikte küme oluşturarak avcıları şaşırtmaya çalışır.\n\nİribaşlar büyüdükçe vücutlarında şaşırtıcı değişiklikler olur. Önce arka bacakları, sonra ön bacakları çıkar. Solungaçları kaybolur ve yerine akciğerleri gelişir. Artık nefes almak için suyun yüzeyine çıkmaları gerekir. Uzun kuyrukları da günler içinde yavaş yavaş küçülür. Bu sırada vücut kuyruğu besin olarak kullanır. Ağızları genişler ve bitki yerine böcek yemeye başlarlar.\n\nBu değişimin süresi türe ve suyun sıcaklığına göre değişir. Çoğu türde yaklaşık üç ay sonra küçük bir kurbağa sudan karaya çıkar. Artık hem karada hem suda yaşayabilir. Bu yüzden kurbağalara iki yaşamlı canlılar da denir. Yetişkin kurbağalar, akciğerlerinin yanında nemli derileri aracılığıyla da nefes alabilir. Yetişkin olduğunda o da bahar gelince aynı gölete döner ve yumurtalarını bırakır. Böylece hayat döngüsü yeniden başlar. Bu değişim sürecine bilim dilinde başkalaşım denir. Kelebekler de benzer bir değişim geçirir. Ancak kurbağa, bu değişimi bir kozanın içinde saklanarak değil, suyun içinde herkesin gözü önünde yaşar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yumurtanın ortasındaki siyah nokta nedir?",
+    "correct": "İleride büyüyecek yavru",
+    "wrong": [
+     "Yavrunun besin deposu",
+     "Küçük bir yosun parçası",
+     "Suya karışmış bir taş"
+    ],
+    "explanation": "Bu nokta büyüyecek olan yavrudur."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yumurtaların sığ ve güneşli yerlere bırakılmasının nedeni nedir?",
+    "correct": "Sıcaklığın gelişimi desteklemesi",
+    "wrong": [
+     "Balıkların orada daha çok bulunması",
+     "Suyun orada daha temiz olması",
+     "Kuşların oraya pek uğramaması"
+    ],
+    "explanation": "Jöle güneşin sıcaklığını tutarak gelişmeye yardım eder."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İribaşlar suda nasıl nefes alır?",
+    "correct": "Solungaçlarla",
+    "wrong": [
+     "Akciğerleriyle",
+     "Kuyruklarıyla",
+     "Ağızlarıyla"
+    ],
+    "explanation": "Balıklar gibi solungaçlarla nefes alırlar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bir kurbağanın binlerce yumurta bırakmasının nedeni nedir?",
+    "correct": "Pek azının büyüyebilmesi",
+    "wrong": [
+     "Göletin çok büyük olması",
+     "Yumurtaların küçük olması",
+     "İribaşların yosun yemesi"
+    ],
+    "explanation": "İribaşların çoğu başka hayvanlara yem olur."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İribaşta ilk hangi bacaklar çıkar?",
+    "correct": "Arka bacaklar",
+    "wrong": [
+     "Ön bacaklar",
+     "Dördü aynı anda",
+     "Sağ bacaklar"
+    ],
+    "explanation": "Önce arka, sonra ön bacaklar çıkar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kuyruk küçülürken vücutta ne olur?",
+    "correct": "Kuyruk enerjiye dönüşür",
+    "wrong": [
+     "Kuyruk kopup suya düşer",
+     "Kuyruk ön bacağa dönüşür",
+     "Kuyruk akciğere dönüşür"
+    ],
+    "explanation": "Vücut kuyruğu besin olarak kullanır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kurbağalara “iki yaşamlı” denmesinin nedeni nedir?",
+    "correct": "İki ayrı ortamda yaşayabilmeleri",
+    "wrong": [
+     "İki kez yumurtadan çıkmaları",
+     "Yalnızca iki yıl yaşamaları",
+     "İki ayrı kuyruklarının bulunması"
+    ],
+    "explanation": "Hem karada hem suda yaşayabildikleri için bu ad verilir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar kurbağayı kelebekle karşılaştırırken hangi farkı öne çıkarır?",
+    "correct": "Dönüşümün açıkta yaşanması",
+    "wrong": [
+     "Kurbağanın daha hızlı uçması",
+     "Kelebeğin de suda yaşaması",
+     "Kurbağanın kendine koza örmesi"
+    ],
+    "explanation": "Kurbağa bu değişimi kozada değil suyun içinde herkesin gözü önünde yaşar."
+   }
+  ]
+ },
+ "204": {
+  "title": "İleriye Bak",
+  "category": "Hikaye/Kurgu",
+  "content": "Deniz'in bütün arkadaşları bisiklete binebiliyordu, ama o daha hiç binmemişti. Babası bir cumartesi sabahı ona mavi bir bisiklet aldı. Deniz hem çok sevindi hem de biraz korktu. Ya düşerse? Ya arkadaşları ona gülerse?\n\nÖğleden sonra birlikte mahalledeki büyük parka gittiler. Babası bisikletin arkasını tuttu, Deniz de pedal çevirmeye başladı. Ama birkaç metre sonra bisiklet sallandı ve Deniz yere düştü. Dizi biraz sıyrılmıştı ve yanıyordu. Yakındaki bankta oturan iki çocuk ona bakıyordu. Gözleri doldu ve eve dönmek istedi.\n\nBabası yanına oturdu. Ona, kendisinin de çocukken bisiklet öğrenirken defalarca düştüğünü anlattı. Sonra bir sır verdi: Bisiklette dengede kalmanın yolu yere değil, ileriye bakmaktı. Deniz dizine baktı, sonra bisiklete baktı. Biraz düşündü ve yeniden denemeye karar verdi.\n\nBu kez yere bakmadı. Gözlerini parkın sonundaki büyük ağaca dikti ve pedal çevirdi. Babası arkadan koşuyor ve onu yüreklendiriyordu. Bir süre sonra Deniz arkasına baktığında babasının çok geride durup el salladığını gördü. Artık kendi başına gidiyordu! Akşam eve dönerken dizindeki sıyrık hâlâ acıyordu, ama Deniz bunu hiç umursamıyordu. O gün Deniz, düşmenin öğrenmenin bir parçası olduğunu anladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz bisiklet alınca neden hem sevindi hem korktu?",
+    "correct": "İstekliydi ama düşmekten korkuyordu",
+    "wrong": [
+     "Bisikletin mavi rengini sevmemişti",
+     "Babasının ona kızacağından korkuyordu",
+     "Bisiklet boyuna göre küçük kalmıştı"
+    ],
+    "explanation": "Bisikleti istiyordu ama düşmekten ve gülünmekten korkuyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk denemede ne oldu?",
+    "correct": "Deniz düşüp dizini sıyırdı",
+    "wrong": [
+     "Bisikletin zinciri koptu",
+     "Deniz parkı bir tur attı",
+     "Babası yorulup banka oturdu"
+    ],
+    "explanation": "Birkaç metre sonra bisiklet sallandı ve Deniz düştü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bankta oturan çocukların anılması Deniz'in hangi duygusunu güçlendirir?",
+    "correct": "Mahcup olma duygusunu",
+    "wrong": [
+     "Babasına karşı öfkeyi",
+     "Bisiklete karşı merakı",
+     "Başarıdan doğan gururu"
+    ],
+    "explanation": "Önceden gülünmekten korkuyordu; çocukların bakması utancını artırır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babanın verdiği sır neydi?",
+    "correct": "İleriye doğru bakmak",
+    "wrong": [
+     "Hızlı pedal çevirmek",
+     "Gözleri sıkıca kapatmak",
+     "Ön tekerleğe bakmak"
+    ],
+    "explanation": "Dengede kalmanın yolu yere değil ileriye bakmaktı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Babanın kendi düşüşlerini anlatmasının amacı nedir?",
+    "correct": "Düşmenin olağan olduğunu göstermek",
+    "wrong": [
+     "Deniz'i bisiklete binmekten caydırmak",
+     "Kendi çocukluk yıllarını övmek",
+     "Deniz'i ikna edip eve götürmek"
+    ],
+    "explanation": "Düşmenin öğrenen herkesin yaşadığı bir şey olduğunu gösterir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deniz gözlerini neye dikti?",
+    "correct": "Parkın sonundaki ağaca",
+    "wrong": [
+     "Babasının gülen yüzüne",
+     "Bisikletin ön tekerleğine",
+     "Bankta oturan çocuklara"
+    ],
+    "explanation": "Gözlerini parkın sonundaki büyük ağaca dikti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Deniz'in sıyrığı umursamaması neyi gösterir?",
+    "correct": "Sevincin acıyı bastırdığını",
+    "wrong": [
+     "Dizinin aslında acımadığını",
+     "Sıyrığın çoktan iyileştiğini",
+     "Babasına hâlâ kızdığını"
+    ],
+    "explanation": "Sıyrık acısa da başarmanın sevinci daha büyüktür."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öyküde vurgulanan ana düşünce nedir?",
+    "correct": "Hatalar öğrenme sürecine dahildir",
+    "wrong": [
+     "Bisiklet çocuklar için tehlikelidir",
+     "Babalar her konuyu iyi bilir",
+     "Parklarda dikkatli olunmalıdır"
+    ],
+    "explanation": "Deniz düşmenin öğrenmenin bir parçası olduğunu anlar."
+   }
+  ]
+ }
+}

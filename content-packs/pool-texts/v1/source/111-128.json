@@ -1,0 +1,446 @@
+{
+ "111": {
+  "title": "Kuzeyi Gösteren İğne",
+  "category": "Bilgi/Açıklama",
+  "content": "Yüzlerce yıl önce denizciler, uçsuz bucaksız denizlerde yönlerini bulmak için yıldızlara ve güneşe bakardı. Ama bulutlu havalarda ya da sisli günlerde bu yöntem işe yaramazdı. Pusulanın icadı, denizcilerin bu sorununu büyük ölçüde çözdü. Artık gökyüzü kapalı olsa bile hangi yöne gittiklerini bilebiliyorlardı.\n\nPusulanın içinde, serbestçe dönebilen ince bir mıknatıs iğne bulunur. Bu iğnenin bir ucu her zaman kuzeyi, öbür ucu ise güneyi gösterir. Peki iğne neden hep aynı yönü gösterir? Çünkü Dünya'nın kendisi de dev bir mıknatıs gibi davranır. Dünya'nın derinliklerindeki erimiş demirin hareketi, gezegenin çevresinde görünmez bir manyetik alan oluşturur. Pusulanın iğnesi bu alanın etkisiyle kendini kuzey-güney doğrultusunda sıralar.\n\nPusulanın gösterdiği kuzey, haritalardaki coğrafi kuzey kutbuyla tam olarak aynı yer değildir. Pusula, manyetik kuzey kutbunu gösterir. Bu iki nokta arasında bir fark vardır ve manyetik kutup zamanla yavaş yavaş yer değiştirir. Uzun yolculuk yapan denizciler ve pilotlar bu farkı hesaba katar. Ayrıca pusulanın yakınında bulunan demir ya da çelik eşyalar, hatta bazı elektronik aletler iğneyi saptırabilir. Bu yüzden pusula kullanırken bu tür eşyalardan uzak durmak gerekir.\n\nPusulanın ilk kez Çin'de kullanıldığı bilinir. İlk pusulalar, mıknatıslı bir taşın su dolu bir kaba konmasıyla yapılıyordu. Zamanla ticaret yollarıyla başka ülkelere de yayıldı. Bugün telefonlarımızda bile pusula uygulamaları vardır. Ama yürüyüşe ya da kampa giden pek çok kişi, pili hiç bitmeyen gerçek bir pusulayı yanında taşımayı tercih eder.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Pusulanın icadı denizcilerin hangi sorununu çözdü?",
+    "correct": "Gök kapalıyken yön bulamamalarını",
+    "wrong": [
+     "Fırtınalarda gemilerin batmasını",
+     "Denizde yiyeceklerin bozulmasını",
+     "Gemilerin denizde çok yavaş gitmesini"
+    ],
+    "explanation": "Bulutlu ve sisli havalarda yıldız ve güneşle yön bulunamıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pusulanın içinde ne bulunur?",
+    "correct": "Dönen bir mıknatıs iğne",
+    "wrong": [
+     "İçi su dolu küçük bir kap",
+     "Küçük bir pil ve ampul",
+     "Yıldız haritası çizili kâğıt"
+    ],
+    "explanation": "Pusulanın içinde serbestçe dönebilen ince bir mıknatıs iğne vardır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "İğnenin hep kuzey-güney doğrultusunda durmasının nedeni nedir?",
+    "correct": "Gezegenimizin bir mıknatıs gibi davranması",
+    "wrong": [
+     "Rüzgârın iğneyi her an kuzeye doğru itmesi",
+     "Güneşin ışığıyla iğneyi kendine çekmesi",
+     "Deniz dalgalarının iğneyi sürekli çevirmesi"
+    ],
+    "explanation": "Dünya dev bir mıknatıs gibi davranır; iğne manyetik alanla hizalanır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pusula hangi kuzeyi gösterir?",
+    "correct": "Manyetik kuzeyi",
+    "wrong": [
+     "Coğrafi kuzeyi",
+     "Haritadaki kuzeyi",
+     "Kutup yıldızını"
+    ],
+    "explanation": "Pusula manyetik kuzey kutbunu gösterir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Pusula kullanırken demir eşyalardan uzak durmak neden gerekir?",
+    "correct": "İğnenin yönünü şaşırtabildikleri için",
+    "wrong": [
+     "Pusulayı paslandırıp bozdukları için",
+     "Pusulayı çok ağırlaştırdıkları için",
+     "Pilin çabuk bitmesine yol açtıkları için"
+    ],
+    "explanation": "Yakındaki demir ya da çelik eşyalar iğneyi saptırabilir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk pusulalar nasıl yapılıyordu?",
+    "correct": "Mıknatıslı taş su kabına konarak",
+    "wrong": [
+     "İnce ağaç dalları toprağa dikilerek",
+     "Gökteki yıldızlar kâğıda çizilerek",
+     "Kum saatleri art arda çevrilerek"
+    ],
+    "explanation": "İlk pusulalar mıknatıslı bir taşın su dolu bir kaba konmasıyla yapılıyordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Doğada yürüyüş yapanların gerçek pusulayı tercih etmesinin nedeni nedir?",
+    "correct": "Çalışmak için enerjiye gerek duymaması",
+    "wrong": [
+     "Telefondan çok daha ucuza satılması",
+     "Yalnızca deniz kenarında çalışabilmesi",
+     "Yıldızları ve gezegenleri göstermesi"
+    ],
+    "explanation": "Gerçek pusulanın pili hiç bitmez."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Pusula, gezegenin manyetizmasıyla yön gösterir",
+    "wrong": [
+     "Pusula yalnızca Çin'de kullanılmış bir alettir",
+     "Telefonlar artık pusulayı gereksiz kılmıştır",
+     "Denizciler bugün yalnızca yıldızlara bakar"
+    ],
+    "explanation": "Metin pusulanın Dünya'nın manyetik alanıyla nasıl yön gösterdiğini anlatır."
+   }
+  ]
+ },
+ "114": {
+  "title": "Yarım Uyku",
+  "category": "Bilgi/Açıklama",
+  "content": "Biz uyurken beynimizin büyük bölümü dinlenme moduna geçer. Peki sürekli nefes almak için su yüzeyine çıkması gereken yunuslar nasıl uyur? Bu soru, bilim insanlarını uzun süre meraklandırdı. Yunusların beyin dalgaları kaydedilerek yapılan araştırmalar ilginç bir cevap ortaya çıkardı.\n\nYunuslar da biz gibi akciğerleriyle nefes alır. Ama bizden farklı olarak nefes almak onlar için kendiliğinden olan bir şey değildir; her nefesi bilinçli olarak almaları gerekir. Bu yüzden tamamen uykuya dalarlarsa boğulabilirler.\n\nYunuslar bu soruna şaşırtıcı bir çözüm bulmuştur. Beyinlerinin iki yarısı sırayla uyur. Bir yarı uyurken öbür yarı uyanık kalır ve nefes almayı, çevreyi izlemeyi sürdürür. Bu sırada yunusun bir gözü açık, bir gözü kapalıdır. Kapalı göz, uyuyan beyin yarısının karşı tarafındadır. Birkaç saat sonra iki yarı yer değiştirir.\n\nBu yarım uyku sayesinde yunuslar hem dinlenir hem de köpekbalıkları gibi tehlikelere karşı uyanık kalabilir. Benzer bir uyku biçimi, bazı kuşlarda da görülür. Örneğin bir sürünün kenarında uyuyan ördekler, açık tuttukları gözlerini sürünün dışına, yani tehlikenin gelebileceği yöne çevirir.",
+  "questions": [
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yunuslar nefes almayı nasıl gerçekleştirir?",
+    "correct": "Nefeslerini bilinçli olarak alırlar",
+    "wrong": [
+     "Suyun içinden solungaçla alırlar",
+     "Biz gibi kendiliğinden nefes alırlar",
+     "Günde yalnızca bir kez nefes alırlar"
+    ],
+    "explanation": "Nefes almak onlar için kendiliğinden değildir; her nefesi bilinçli alırlar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yunusların tamamen uykuya dalmaları neden tehlikelidir?",
+    "correct": "Soluksuz kalma tehlikesi olduğu için",
+    "wrong": [
+     "Akıntıya kapılıp kaybolacakları için",
+     "Sürülerini bir daha bulamayacakları için",
+     "Uyurken çok derinlere batacakları için"
+    ],
+    "explanation": "Her nefesi bilinçli aldıkları için tamamen uyurlarsa boğulabilirler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yunusun beyninin bir yarısı uyurken öbür yarısı ne yapar?",
+    "correct": "Uyanık kalıp solunumu sürdürür",
+    "wrong": [
+     "Yunusun yüzmesini tümüyle durdurur",
+     "Derin bir rüyaya dalarak dinlenir",
+     "Yemek bulmak için ses çıkarır"
+    ],
+    "explanation": "Bir yarı uyurken öbür yarı uyanık kalır ve nefes almayı sürdürür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yunusun kapalı gözü hangi taraftadır?",
+    "correct": "Uyuyan yarının karşı tarafında",
+    "wrong": [
+     "Uyanık beyin yarısıyla aynı tarafta",
+     "Daima vücudun sağ tarafında",
+     "Suyun yüzeyine bakan tarafta"
+    ],
+    "explanation": "Kapalı göz, uyuyan beyin yarısının karşı tarafındadır."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bilim insanları yunusların uykusunu hangi yolla araştırdı?",
+    "correct": "Beyin etkinliğini ölçüp kaydederek",
+    "wrong": [
+     "Yunusları dar havuzlarda uyutarak",
+     "Yunusların çıkardığı sesleri dinleyerek",
+     "Denizde uyuyan yunusları tek tek sayarak"
+    ],
+    "explanation": "Yunusların beyin dalgaları kaydedilerek yapılan araştırmalar cevabı ortaya çıkardı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yarım uykunun yunuslara sağladığı iki yarar hangisidir?",
+    "correct": "Dinlenirken aynı anda korunabilmek",
+    "wrong": [
+     "Daha hızlı yüzüp daha çok avlanmak",
+     "Daha az yemek yiyip uzun yaşamak",
+     "Daha derine dalarak vücudu ısıtmak"
+    ],
+    "explanation": "Yunuslar hem dinlenir hem de tehlikelere karşı uyanık kalır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ördekler sürünün kenarında uyurken açık gözlerini nereye çevirir?",
+    "correct": "Sürünün dış tarafına",
+    "wrong": [
+     "Sürünün tam ortasına",
+     "Yukarıya, gökyüzüne doğru",
+     "Gölün derin sularına doğru"
+    ],
+    "explanation": "Açık tuttukları gözlerini sürünün dışına, tehlikenin gelebileceği yöne çevirirler."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Bazı hayvanlar uyurken bile tetikte kalabilir",
+    "wrong": [
+     "Yunuslar hayatları boyunca hiç uyumadan yaşar",
+     "Kuşların uykusu yunuslarınkinden daha kısadır",
+     "Köpekbalıkları da yunuslar gibi yarım uyur"
+    ],
+    "explanation": "Yunuslar beyinlerinin yarılarını sırayla uyutarak hem dinlenir hem korunur."
+   }
+  ]
+ },
+ "119": {
+  "title": "Boncuk",
+  "category": "Hikaye/Kurgu",
+  "content": "Üniversitenin ilk yılında Eren, kampüse yakın bir hayvan barınağında gönüllü olarak çalışmaya başladı. Aslında başka bir şey arıyordu; okul dışında yapabileceği, kendisini iyi hissettirecek bir uğraş. Bir arkadaşı barınağın gönüllü aradığını söyleyince bir cumartesi sabahı oraya gitti.\n\nİlk gün ona köpeklerin kulübelerini temizleme ve mamalarını dağıtma işi verildi. Eren biraz hayal kırıklığına uğradı. Hayvanlarla oynayacağını, onları gezdireceğini sanıyordu. Ama barınak sorumlusu ona, hayvanların güvenini kazanmanın zaman aldığını, önce her gün aynı saatte orada olmanın önemli olduğunu anlattı.\n\nHaftalar geçtikçe Eren, köşede hep tek başına duran yaşlı bir köpeği fark etti. Adı Boncuk'tu. Diğer köpekler gönüllülerin yanına koşarken Boncuk yerinden kıpırdamıyordu. Eren her gün onun yanına oturdu, ona dokunmaya çalışmadan sadece bekledi. Barınak sorumlusu, Boncuk'un eski sahibi tarafından sokağa bırakıldığını ve o günden beri insanlara güvenmediğini anlattı. Bir ay sonra bir sabah Boncuk yavaşça yanına geldi ve başını Eren'in dizine koydu.\n\nBirkaç ay sonra yaşlı bir çift Boncuk'u sahiplendi. Eren, onu yeni ailesinin arabasına bindirirken hem üzüldü hem sevindi. Ertesi hafta Eren yine barınaktaydı; bu kez köşede tek başına duran başka bir köpeğin yanına oturdu. O gün sabrın bazen en büyük yardım olduğunu düşünmüştü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Eren'in barınağa gitmesinin asıl nedeni nedir?",
+    "correct": "Kendine iyi gelecek bir uğraş araması",
+    "wrong": [
+     "Okulun gönüllülüğü zorunlu tutması",
+     "Kendisine bir köpek sahiplenmek istemesi",
+     "Barınakta ücretli bir iş bulması"
+    ],
+    "explanation": "Okul dışında yapabileceği, kendisini iyi hissettirecek bir uğraş arıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Eren'e ilk gün hangi iş verildi?",
+    "correct": "Kulübe temizliği ve yemek dağıtımı",
+    "wrong": [
+     "Köpekleri parkta uzun süre gezdirmek",
+     "Barınağa yeni gelen köpekleri yıkamak",
+     "Ziyaretçileri karşılayıp gezdirmek"
+    ],
+    "explanation": "İlk gün kulübeleri temizleme ve mamaları dağıtma işi verildi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Barınak sorumlusunun sözlerine göre hayvanların güveni nasıl kazanılır?",
+    "correct": "Düzenli olarak orada bulunarak",
+    "wrong": [
+     "Onlara bol bol oyuncak getirerek",
+     "Onları sık sık sevip kucaklayarak",
+     "Onlara ödül maması vererek"
+    ],
+    "explanation": "Güven zaman alır; önce her gün aynı saatte orada olmak önemlidir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Boncuk'u diğer köpeklerden ayıran davranış neydi?",
+    "correct": "Gönüllülere yaklaşmaması",
+    "wrong": [
+     "Sürekli havlayıp durması",
+     "Mamasına hiç dokunmaması",
+     "Diğer köpeklerle kavga etmesi"
+    ],
+    "explanation": "Diğer köpekler gönüllülere koşarken Boncuk yerinden kıpırdamıyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Boncuk'un insanlardan uzak durmasının nedeni nedir?",
+    "correct": "Eski sahibinin onu terk etmesi",
+    "wrong": [
+     "Yaşlandığı için çok yorulması",
+     "Diğer köpeklerden korkması",
+     "Eren'den hiç hoşlanmamış olması"
+    ],
+    "explanation": "Eski sahibi onu sokağa bırakmıştı ve o günden beri insanlara güvenmiyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Eren'in Boncuk'a dokunmaya çalışmadan beklemesi hangi tutumu gösterir?",
+    "correct": "Sabırla onun hazır olmasını beklediğini",
+    "wrong": [
+     "Köpeklerden korktuğunu ve onlardan çekindiğini",
+     "Boncuk'la hiç ilgilenmek istemediğini",
+     "Barınaktaki kuralları hiç bilmediğini"
+    ],
+    "explanation": "Eren zorlamadan bekledi ve bir ay sonra Boncuk kendiliğinden yanına geldi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Boncuk'u kim sahiplendi?",
+    "correct": "Yaşlı bir çift",
+    "wrong": [
+     "Eren'in ailesi",
+     "Barınak sorumlusu",
+     "Genç bir öğrenci"
+    ],
+    "explanation": "Birkaç ay sonra yaşlı bir çift Boncuk'u sahiplendi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Eren'in ertesi hafta başka bir köpeğin yanına oturması neyi gösterir?",
+    "correct": "Edindiği deneyimi sürdürmek istediğini",
+    "wrong": [
+     "Boncuk'u hemen unutmaya çalıştığını",
+     "Barınaktaki işten sıkılmaya başladığını",
+     "Yeni bir köpek sahiplenmek istediğini"
+    ],
+    "explanation": "Eren sabırla yardım etmeyi başka bir köpek için de sürdürdü."
+   }
+  ]
+ },
+ "128": {
+  "title": "Zamanı Ölçmek",
+  "category": "Bilgi/Açıklama",
+  "content": "İnsanlar binlerce yıldır zamanı ölçmenin yollarını arıyor. İlk saatler, güneşin gökyüzündeki hareketinden yararlanıyordu. Güneş saatinde, yere dik olarak yerleştirilen bir çubuğun gölgesi gün boyunca yer değiştirir. Gölgenin düştüğü yer, günün hangi saatinde olunduğunu gösterir. Antik Mısır'da ve Babil'de bu tür saatler yaygın olarak kullanılıyordu. Ama güneş saatinin önemli bir eksiği vardı: Geceleri ve bulutlu havalarda işe yaramıyordu.\n\nBu sorunu çözmek için su saatleri geliştirildi. Su saatinde, bir kaptaki su küçük bir delikten düzenli olarak akar. Kaptaki su seviyesinin ne kadar düştüğüne bakılarak geçen süre hesaplanır. Benzer bir mantıkla çalışan kum saati ise özellikle denizcilikte kullanıldı, çünkü geminin sallanmasından su saatleri kadar etkilenmiyordu.\n\nOrta Çağ'da Avrupa'da ağırlıklarla çalışan ilk mekanik saatler ortaya çıktı. Bu saatler genellikle kiliselerin ve kale kulelerinin tepesine yerleştiriliyor, saatleri çan sesleriyle duyuruyordu. Sonraki yüzyıllarda sarkaçlı saatlerin icadıyla saatler çok daha doğru hâle geldi. İlk mekanik saatler günde dakikalarca şaşabilirken, sarkaçlı saatlerle bu hata birkaç saniyeye indi.\n\nBugün kullandığımız kuvars saatler, elektrik verildiğinde çok düzenli titreşen küçük bir kristal sayesinde çalışır. Bilim insanlarının kullandığı atom saatleri ise o kadar doğrudur ki milyonlarca yılda ancak bir saniye şaşar. Telefonlarımızdaki ve bilgisayarlarımızdaki saatler de çoğu zaman bu atom saatlerine göre ayarlanır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Güneş saatinde saat neye bakılarak anlaşılır?",
+    "correct": "Gölgenin düştüğü noktaya",
+    "wrong": [
+     "Kaptaki suyun seviyesine",
+     "Akan kumun miktarına",
+     "Çan seslerinin sayısına"
+    ],
+    "explanation": "Gölgenin düştüğü yer günün saatini gösterir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Güneş saatinin en önemli eksiği neydi?",
+    "correct": "Işık olmadığında çalışmaması",
+    "wrong": [
+     "Çok ağır ve büyük olması",
+     "Yalnız Mısır'da işe yaraması",
+     "Saatleri çan sesiyle duyurması"
+    ],
+    "explanation": "Geceleri ve bulutlu havalarda işe yaramıyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Su saatinde geçen süre nasıl hesaplanır?",
+    "correct": "Akan sudaki azalmaya bakılarak",
+    "wrong": [
+     "Suyun sıcaklığı her saat ölçülerek",
+     "Çubuğun gölgesinin yerine bakılarak",
+     "Sarkacın vuruşları sayılarak"
+    ],
+    "explanation": "Kaptaki su seviyesinin ne kadar düştüğüne bakılır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Denizcilerin kum saatini tercih etmesinin nedeni nedir?",
+    "correct": "Sallantıdan daha az etkilenmesi",
+    "wrong": [
+     "Su saatinden daha ucuz olması",
+     "Karanlıkta ışık saçıp parlaması",
+     "Saati çan sesiyle duyurması"
+    ],
+    "explanation": "Kum saati geminin sallanmasından su saatleri kadar etkilenmiyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk mekanik saatler genellikle nereye yerleştirilirdi?",
+    "correct": "Kule ve kiliselerin tepesine",
+    "wrong": [
+     "Büyük gemilerin direklerine",
+     "Evlerin oturma odalarına",
+     "Pazar yerlerinin tam ortasına"
+    ],
+    "explanation": "Bu saatler kiliselerin ve kale kulelerinin tepesine yerleştiriliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sarkaçlı saatlerin icadı ne sağladı?",
+    "correct": "Saatlerin çok daha isabetli olmasını",
+    "wrong": [
+     "Saatlerin elektrikle çalışmasını",
+     "Saatlerin küçülüp cebe sığmasını",
+     "Kule çanlarının daha yüksek çalmasını"
+    ],
+    "explanation": "Sarkaçlı saatlerle günlük hata birkaç saniyeye indi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kuvars saatler neyin sayesinde çalışır?",
+    "correct": "Düzenli titreşen bir kristalin",
+    "wrong": [
+     "Kaptan damla damla akan suyun",
+     "Güneşte uzayan çubuğun gölgesinin",
+     "İleri geri sallanan ağır bir sarkacın"
+    ],
+    "explanation": "Elektrik verildiğinde çok düzenli titreşen küçük bir kristal sayesinde çalışır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin bütününde anlatılan süreç nasıl özetlenebilir?",
+    "correct": "Zaman ölçümü giderek daha kesin hâle geldi",
+    "wrong": [
+     "İnsanlar zamanı ölçmekten zamanla vazgeçti",
+     "En doğru saat bugün hâlâ güneş saatidir",
+     "Saatler her dönemde aynı biçimde çalıştı"
+    ],
+    "explanation": "Güneş saatinden atom saatine kadar zaman ölçümü giderek daha kesinleşti."
+   }
+  ]
+ }
+}

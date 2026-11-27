@@ -1,0 +1,113 @@
+{
+ "75": {
+  "title": "Çöpe Giden Sofralar",
+  "category": "Bilgi/Açıklama",
+  "content": "Buzdolabının arka rafında unutulmuş bir kap yemek, son kullanma tarihi geçtiği için atılan bir paket yoğurt, pazardan fazla alınıp çürüyen domatesler... Bunlar her evde zaman zaman yaşanan küçük kayıplar gibi görünür. Ama milyonlarca evde, lokantada ve markette her gün tekrarlanan bu küçük kayıplar bir araya geldiğinde ortaya devasa bir tablo çıkar.\n\nBirleşmiş Milletler Gıda ve Tarım Örgütü'nün yaptığı tahminlere göre, dünyada insan tüketimi için üretilen gıdanın yaklaşık üçte biri tarladan sofraya uzanan yolda kaybolmakta ya da israf edilmektedir. Uzmanlar burada iki kavramı birbirinden ayırır. Gıda kaybı, ürünün hasat, depolama ve taşıma aşamalarında, yani henüz tüketiciye ulaşmadan bozulması ya da kullanılamaz hâle gelmesidir. Gıda israfı ise tüketime hazır gıdanın marketlerde, lokantalarda ve evlerde çöpe gitmesidir. Bu ayrım önemlidir, çünkü iki sorunun nedenleri ve çözümleri birbirinden farklıdır.\n\nGelişmekte olan ülkelerde kayıplar çoğunlukla üretim ve depolama aşamasında yaşanır. Soğuk hava depolarının yetersizliği, kötü yollar ve uygun ambalaj bulunmaması, ürünlerin daha pazara ulaşmadan bozulmasına yol açar. Gelişmiş ülkelerde ise sorunun büyük bölümü tüketim aşamasındadır. İhtiyaçtan fazla alışveriş yapmak, tabağa fazla yemek koymak ve yiyecekleri doğru saklamamak israfın başlıca nedenleri arasındadır. Marketlerde ise görünüşü kusurlu, örneğin eğri büğrü ya da küçük kalmış sebze ve meyveler, tadı ve besin değeri yerinde olduğu hâlde çoğu zaman raflara hiç çıkmaz. Tüketicilerin kusursuz görünen ürünleri tercih etmesi, bu durumu besler.\n\nGıda israfının yalnızca bir para kaybı olmadığını anlamak önemlidir. Çöpe giden her gıdanın üretimi için harcanan su, toprak, gübre, enerji ve emek de boşa gitmiş olur. Üstelik çöp alanlarında çürüyen gıdalar, güçlü bir sera gazı olan metan açığa çıkarır. Bu yüzden gıda israfı, iklim değişikliğine katkıda bulunan etkenler arasında sayılıyor. Bazı hesaplamalara göre, israf edilen gıda bir ülke olsaydı, sera gazı salımında dünyanın en büyük ülkeleri arasında yer alırdı. Öte yandan dünyada hâlâ yüz milyonlarca insanın yeterli gıdaya ulaşamadığını düşündüğümüzde, sorunun ahlaki boyutu da açıkça ortaya çıkar.\n\nİsrafın önemli bir nedeni de tarih etiketlerinin yanlış anlaşılmasıdır. Pek çok üründe iki farklı ifade kullanılır. “Son tüketim tarihi”, özellikle et ve süt gibi çabuk bozulan ürünlerde, o tarihten sonra ürünün güvenli olmayabileceğini belirtir. “Tavsiye edilen tüketim tarihi” ise ürünün en iyi kalitesini hangi tarihe kadar koruyacağını gösterir; bu tarih geçtikten sonra da ürün, uygun koşullarda saklanmışsa çoğu zaman tüketilebilir. Bu farkı bilmeyen tüketiciler, hâlâ yenebilir durumdaki pek çok ürünü atabilir.\n\nEvde israfı azaltmak için basit ama etkili yollar vardır. Alışverişe çıkmadan önce bir liste hazırlamak, buzdolabındaki ürünleri kontrol etmek ve haftalık yemek planı yapmak, gereksiz alımları önler. Yeni alınan ürünleri buzdolabının arkasına, eskileri öne koymak, unutulup bozulmalarını engeller. Artan yemekler başka yemeklerde değerlendirilebilir; bayatlamış ekmek galeta ya da tirit olabilir. Bazı şehirlerde lokantaların ve marketlerin satamadığı yiyecekleri ihtiyaç sahiplerine ulaştıran gıda bankaları da kuruluyor. Ayrıca bazı uygulamalar, günün sonunda satılamayan ürünleri indirimli fiyatla tüketicilere sunarak bu ürünlerin çöpe gitmesini önlüyor. Yenemeyecek durumdaki sebze ve meyve artıkları da kompost yapılarak toprağa geri kazandırılabilir.\n\nGıda israfıyla mücadele, devletlerin ve şirketlerin alacağı önlemler kadar, her birimizin günlük alışkanlıklarına da bağlıdır. Tabağımıza yalnızca yiyebileceğimiz kadar yemek almak bile, küçük ama anlamlı bir başlangıçtır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne evlerdeki küçük kayıp örnekleriyle başlayarak neyi vurgular?",
+    "correct": "Bireysel israfın toplamda dev boyuta ulaştığını",
+    "wrong": [
+     "Buzdolaplarının yeterince büyük olmadığını",
+     "Pazarlarda satılan domateslerin kalitesiz olduğunu",
+     "Yoğurt gibi ürünlerin çok çabuk bozulduğunu"
+    ],
+    "explanation": "Her gün tekrarlanan küçük kayıplar bir araya gelince devasa bir tablo ortaya çıkar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gıda kaybı ile gıda israfı arasındaki fark nedir?",
+    "correct": "Biri tüketiciden önce, öbürü tüketimde yaşanır",
+    "wrong": [
+     "Kayıp evlerde, israf ise tarlada yaşanır",
+     "İkisi de sadece lokantalarda ortaya çıkar",
+     "Kayıp sebzeleri, israf ise yalnızca eti kapsar"
+    ],
+    "explanation": "Kayıp, ürün tüketiciye ulaşmadan; israf ise tüketime hazır gıdanın çöpe gitmesidir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gelişmekte olan ülkelerdeki kayıpların başlıca nedeni hangisidir?",
+    "correct": "Depolama ve ulaşım altyapısının eksikliği",
+    "wrong": [
+     "Tüketicilerin çok fazla alışveriş yapması",
+     "Lokantalarda tabaklara fazla yemek konması",
+     "Marketlerde etiketlerin yanlış basılması"
+    ],
+    "explanation": "Soğuk hava depolarının yetersizliği, kötü yollar ve uygun ambalaj eksikliği ürünlerin bozulmasına yol açar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Görünüşü kusurlu sebze ve meyvelerin rafa çıkmamasında kimin tercihlerinin payı vardır?",
+    "correct": "Alıcıların",
+    "wrong": [
+     "Çiftçilerin",
+     "Aşçıların",
+     "Şoförlerin"
+    ],
+    "explanation": "Tüketicilerin kusursuz görünen ürünleri tercih etmesi bu durumu besler."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazara göre gıda israfının yalnızca bir para kaybı olmamasının nedeni nedir?",
+    "correct": "Üretimde kullanılan kaynakların da heba olması",
+    "wrong": [
+     "Çöpe atılan gıdaların hemen yeniden satılabilmesi",
+     "Gıdaların fiyatlarının her ülkede aynı olması",
+     "Gıdaların yalnızca evlerde israf edilmesi"
+    ],
+    "explanation": "Çöpe giden gıdayla birlikte su, toprak, gübre, enerji ve emek de boşa gider."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Çöp alanlarında çürüyen gıdalar hangi gazı açığa çıkarır?",
+    "correct": "Metan",
+    "wrong": [
+     "Oksijen",
+     "Azot",
+     "Helyum"
+    ],
+    "explanation": "Çürüyen gıdalar güçlü bir sera gazı olan metan açığa çıkarır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Tavsiye edilen tüketim tarihi” geçmiş bir ürün hakkında metne göre ne söylenebilir?",
+    "correct": "Uygun saklandıysa genellikle hâlâ yenebilir",
+    "wrong": [
+     "Tarih geçince mutlaka ve hemen atılmalıdır",
+     "Yalnızca et ve süt ürünlerinde kullanılır",
+     "Ürünün artık sağlığa zararlı olduğunu gösterir"
+    ],
+    "explanation": "Bu tarih kaliteyi gösterir; uygun saklanmışsa ürün çoğu zaman tüketilebilir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son paragrafında vurgulanan düşünce hangisidir?",
+    "correct": "Değişimin herkesin günlük davranışlarıyla başladığı",
+    "wrong": [
+     "Sorunun yalnızca devletlerce çözülebileceği",
+     "Gıda israfından yalnızca şirketlerin sorumlu olduğu",
+     "Tabağı doldurmanın hiçbir sakıncası olmadığı"
+    ],
+    "explanation": "Mücadele, devletlerin ve şirketlerin önlemleri kadar bireylerin alışkanlıklarına da bağlıdır."
+   }
+  ]
+ }
+}

@@ -1,0 +1,668 @@
+{
+ "248": {
+  "title": "Dalgaların Yolculuğu",
+  "category": "Bilgi/Açıklama",
+  "content": "Sahilde durup denize baktığınızda dalgaların hiç durmadan kıyıya geldiğini görürsünüz. Peki bu dalgaları kim ya da ne oluşturur? Denizdeki dalgaların büyük çoğunluğunun kaynağı rüzgârdır. Dalgaların bir kısmı ise çok daha farklı nedenlerle oluşur; örneğin deniz tabanında meydana gelen büyük depremler, tsunami denen dev dalgalara yol açabilir.\n\nRüzgâr denizin yüzeyinde estiğinde suyu iter ve küçük kıpırtılar oluşturur. Rüzgâr ne kadar güçlü eserse, ne kadar uzun süre eserse ve ne kadar geniş bir alanda eserse, dalgalar da o kadar büyür. Bu yüzden açık okyanuslarda, binlerce kilometre boyunca esen rüzgârların yarattığı dalgalar metrelerce yüksekliğe ulaşabilir. Küçük bir göldeki dalgalar ise genellikle küçük kalır, çünkü rüzgârın suyu itebileceği mesafe kısadır. Bazen sakin bir günde bile kıyıya büyük dalgalar gelir; bunlar, çok uzaklardaki bir fırtınanın günler önce yarattığı ve okyanusu aşarak gelen dalgalardır.\n\nİlginç olan, dalgalarla birlikte suyun yolculuk etmemesidir. Dalga aslında suyun içinde ilerleyen bir enerjidir. Suyun kendisi ise olduğu yerde, küçük daireler çizerek yukarı aşağı hareket eder. Bunu, denizde yüzen bir topu izleyerek görebilirsiniz: Dalga geçerken top yükselir ve alçalır, ama dalgayla birlikte kıyıya sürüklenmez.\n\nDalga kıyıya yaklaştığında deniz sığlaşır. Dalganın alt kısmı deniz dibine sürtünerek yavaşlar, üst kısmı ise hızla ilerlemeye devam eder. Sonunda üst kısım öne doğru devrilir ve dalga köpükler içinde kırılır. Sörfçülerin beklediği an da tam olarak budur. Kıyıdaki kumun, kayaların ve koyların şekli de dalgaların nasıl kırılacağını belirler. Bu yüzden bazı sahiller sörf için ünlüyken, bazıları yüzmek için daha uygundur.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Denizdeki dalgaların çoğunu ne oluşturur?",
+    "correct": "Esen hava akımı",
+    "wrong": [
+     "Ay'ın çekim gücü",
+     "Deniz canlıları",
+     "Gemilerin hareketi"
+    ],
+    "explanation": "Dalgaların büyük çoğunluğunun kaynağı rüzgârdır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tsunamiyi sıradan dalgalardan ayıran nedir?",
+    "correct": "Deniz dibindeki depremlerden doğması",
+    "wrong": [
+     "Yalnızca göllerde görülüp küçük kalması",
+     "Sadece hafif rüzgârlarla oluşması",
+     "Kıyıya varmadan sönüp kaybolması"
+    ],
+    "explanation": "Tsunamiye deniz tabanındaki büyük depremler yol açar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Göldeki dalgaların küçük kalmasının nedeni nedir?",
+    "correct": "Rüzgârın itebileceği yolun kısalığı",
+    "wrong": [
+     "Göl suyunun tatlı ve çok hafif olması",
+     "Göllerde hiç balık bulunmaması",
+     "Göllerin genellikle çok sığ olması"
+    ],
+    "explanation": "Rüzgârın suyu itebileceği mesafe kısadır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Sakin bir günde kıyıya büyük dalgaların gelmesi nasıl açıklanır?",
+    "correct": "Uzaktaki bir fırtınadan gelmeleri",
+    "wrong": [
+     "Kıyıdaki kumun dalgayı büyütmesi",
+     "Ay'ın o gün Dünya'ya yaklaşması",
+     "Gemilerin kıyıya hızla yaklaşması"
+    ],
+    "explanation": "Uzaklardaki fırtınanın yarattığı dalgalar okyanusu aşarak gelir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dalga geçerken denizdeki top ne yapar?",
+    "correct": "Yükselip alçalır",
+    "wrong": [
+     "Kıyıya sürüklenir",
+     "Hızla dibe batar",
+     "Açığa doğru kaçar"
+    ],
+    "explanation": "Top yükselir ve alçalır ama kıyıya sürüklenmez."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Top örneği hangi bilgiyi kanıtlamak için verilmiştir?",
+    "correct": "Asıl ilerleyenin enerji olduğunu",
+    "wrong": [
+     "Topların suyun üstünde kaldığını",
+     "Dalgaların çok güçlü olduğunu",
+     "Rüzgârın topu kıyıya ittiğini"
+    ],
+    "explanation": "Dalga suyun içinde ilerleyen bir enerjidir; su yerinde kalır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dalganın kıyıda devrilmesinin nedeni nedir?",
+    "correct": "Altının yavaşlayıp üstünün sürmesi",
+    "wrong": [
+     "Kıyıda esen rüzgârın birden dinmesi",
+     "Suyun kıyıda birden ısınması",
+     "Kumun dalgayı içine çekmesi"
+    ],
+    "explanation": "Alt kısım dibe sürtünüp yavaşlar, üst kısım öne devrilir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafa göre bir sahili sörfe uygun kılan nedir?",
+    "correct": "Kıyının dalgayı kırma biçimi",
+    "wrong": [
+     "Kumun rengi ve sıcaklığı",
+     "Sahildeki kafelerin sayısı",
+     "Denizin çoğunlukla durgunluğu"
+    ],
+    "explanation": "Kum, kaya ve koyların şekli dalgaların nasıl kırılacağını belirler."
+   }
+  ]
+ },
+ "249": {
+  "title": "Bir Hayat, Bir Dönem",
+  "category": "Hikaye/Kurgu",
+  "content": "Tarih öğretmenleri, dönem projesi olarak her öğrenciden ailesinin büyüklerinden biriyle röportaj yapmasını istedi. Konu, “Bir hayat, bir dönem” olacaktı. Doruk önce bu ödevi sıkıcı buldu. Arkadaşlarının bazıları ödevi birkaç dakikalık bir telefon görüşmesiyle geçiştirmeyi planlıyordu. Dedesi Hasan'ın anlatacakları ona çok uzak ve eski geliyordu. Yine de istemeye istemeye, bir pazar öğleden sonra telefonundaki ses kayıt uygulamasını açıp dedesinin karşısına oturdu.\n\nDedesi, 1964 yılında yirmi yaşındayken Almanya'ya işçi olarak gittiğini anlattı. Köyde iş yoktu; bir arkadaşının mektubu üzerine başvurmuş, İstanbul'da sağlık kontrollerinden geçmiş ve trenle üç gün süren bir yolculuğun ardından Münih'e varmıştı. Doruk şaşırdı. Dedesinin bir zamanlar yurt dışında yaşadığını biliyordu, ama ayrıntıları hiç sormamıştı. Dedesi, trende yanında yalnızca bir bavul, annesinin ördüğü bir kazak ve köyden getirdiği bir torba kuru yemiş olduğunu anlattı. İstasyonda onları karşılayan görevlilerin, her birinin yakasına üzerinde numara yazan bir kart taktığını hatırlıyordu.\n\nDedesi ilk yıllarını bir otomobil fabrikasında, gece vardiyalarında geçirmişti. Almanca bilmiyordu. Fabrikadaki ustalarla el kol hareketleriyle anlaşıyor, akşamları yurt odasında bir sözlükle kelime ezberliyordu. En zoru yalnızlıktı. Köydeki annesine her hafta mektup yazıyor, cevabın gelmesi bazen bir ayı buluyordu. Doruk, her gün dakikalar içinde mesajlaştığı arkadaşlarını düşündü ve bir aylık bekleyişi hayal etmeye çalıştı. Dedesi, mektupları o kadar çok okurdu ki, kâğıtların katlandığı yerlerden yırtıldığını söyledi. Bazı akşamlar fabrikadan dönerken yolda durup köyün seslerini, çeşmenin şırıltısını, koyunların çan seslerini hatırlamaya çalışırmış.\n\nRöportaj sırasında dedesi eski bir ayakkabı kutusundan sararmış fotoğraflar çıkardı. Fabrikanın önünde çekilmiş bir fotoğrafta genç bir adam, yanındaki arkadaşlarıyla gülümsüyordu. Doruk bu adamın dedesi olduğunu ancak dikkatle bakınca anlayabildi. Dedesi her fotoğrafın arkasındaki hikâyeyi tek tek anlattı: ilk maaşla alınan radyo, Almanca öğrendiği yaşlı komşu kadın, köye ilk izne geldiğinde bütün köyün onu karşılaması.\n\nGörüşme planlanandan çok uzun sürdü. Bir ara babaannesi çay getirdi ve o da konuşmaya katıldı; dedesi Almanya'dayken köyde onu nasıl beklediğini anlattı. Doruk iki saatlik bir kayıtla ve bir deftere aldığı uzun notlarla eve döndü. Projesini hazırlarken dedesinin hikâyesinin yalnızca kendi ailesine ait olmadığını fark etti. Aynı yıllarda yüz binlerce insan benzer bir yolculuğa çıkmıştı. Bazıları birkaç yıl çalışıp geri dönmüş, bazıları ise ailelerini de yanlarına alarak oraya yerleşmişti. Dedesi ise on yıl sonra köye dönmeyi seçmişti. Ödevini, dedesinin fotoğraflarını ve ses kaydından kısa bölümleri içeren bir sunum olarak hazırladı.\n\nSunumdan sonra sınıftaki birkaç öğrenci, kendi büyüklerinin de benzer hikâyeleri olduğunu söyledi. Doruk için ise en önemli sonuç başkaydı: Artık dedesini, yalnızca bayramlarda elini öptüğü yaşlı bir adam olarak değil, cesaretle yepyeni bir hayata başlamış genç bir adam olarak da görüyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Doruk'un ödeve başlangıçtaki tutumu nasıldı?",
+    "correct": "İsteksiz ve önyargılı",
+    "wrong": [
+     "Heyecanlı ve çok meraklı",
+     "Kaygılı ve korkmuş",
+     "Kızgın ve çok öfkeli"
+    ],
+    "explanation": "Ödevi sıkıcı buldu, dedesinin anlatacakları ona eski geliyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dede Almanya'ya hangi yıl gitmişti?",
+    "correct": "1964",
+    "wrong": [
+     "1974",
+     "1954",
+     "1984"
+    ],
+    "explanation": "Dedesi 1964 yılında Almanya'ya gitmişti."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yakaya takılan numaralı kartlar o dönemin hangi özelliğini yansıtır?",
+    "correct": "Göçün düzenli ve kalabalık oluşunu",
+    "wrong": [
+     "Yolculuğun çok kısa sürmesini",
+     "İşçilerin turist gibi ağırlanmasını",
+     "Trenlerin bomboş yola çıkmasını"
+    ],
+    "explanation": "Yüz binlerce işçi düzenli gruplar hâlinde götürülüyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dede ilk yıllarda Almanca'yı nasıl öğrenmeye çalıştı?",
+    "correct": "Geceleri sözlükle çalışarak",
+    "wrong": [
+     "Fabrikadaki kurslara giderek",
+     "Alman televizyonunu izleyerek",
+     "Okula yazılıp ders alarak"
+    ],
+    "explanation": "Akşamları yurt odasında sözlükle kelime ezberliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Doruk'un kendi mesajlaşmalarını düşünmesi neyi sağlar?",
+    "correct": "Bekleyişin zorluğunu kavramasını",
+    "wrong": [
+     "Arkadaşlarına mesaj atmayı unutmasını",
+     "Telefonunu kapatmaya karar vermesini",
+     "Almanca öğrenmeye başlamasını"
+    ],
+    "explanation": "Karşılaştırma bir aylık bekleyişin ne kadar zor olduğunu anlamasını sağlar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dede fotoğrafları nereden çıkardı?",
+    "correct": "Eski bir ayakkabı kutusundan",
+    "wrong": [
+     "Duvardaki çerçevelerden",
+     "Bilgisayarındaki dosyalardan",
+     "Eski gazetelerin arasından"
+    ],
+    "explanation": "Eski bir ayakkabı kutusundan sararmış fotoğraflar çıkardı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Doruk dedesinin hikâyesinin yalnız ailesine ait olmadığını neden düşündü?",
+    "correct": "Birçok kişinin aynı yolu izlemesi",
+    "wrong": [
+     "Dedesinin çok ünlü biri olması",
+     "Hikâyenin gazetede yayımlanmış olması",
+     "Öğretmeninin ona bunu söylemesi"
+    ],
+    "explanation": "Aynı yıllarda yüz binlerce insan benzer bir yolculuk yapmıştı."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonunda Doruk'ta ne değişmiştir?",
+    "correct": "Dedesine bakışı iyice derinleşmiştir",
+    "wrong": [
+     "Tarih dersini sevmemeye başlamıştır",
+     "Almanya'ya taşınmaya karar vermiştir",
+     "Projeden çok düşük not almıştır"
+    ],
+    "explanation": "Dedesini cesaretle yeni bir hayata başlamış genç bir adam olarak da görür."
+   }
+  ]
+ },
+ "252": {
+  "title": "Saksıdaki Efsane",
+  "category": "Bilgi/Açıklama",
+  "content": "Ev bitkileri satan mağazalarda ve çiçekçilerde sık sık şu iddiayla karşılaşırsınız: “Bu bitki evinizin havasını temizler.” İnternette de hangi saksı bitkisinin havadaki zararlı maddeleri en iyi temizlediğini sıralayan listeler dolaşır. Bu inancın kaynağı, 1989 yılında Amerikan uzay ajansı NASA'nın desteklediği bir araştırmadır. Peki bu araştırma gerçekte ne söylüyordu ve sonuçları evlerimize ne kadar uyarlanabilir?\n\nAraştırmacılar, o dönemde uzay istasyonlarında havayı temizlemenin ucuz ve doğal yollarını arıyordu. Bu amaçla, yaklaşık bir metreküplük küçük, sızdırmaz kapalı odacıkların içine saksı bitkileri koydular. Sonra odacıklara benzen ve formaldehit gibi zararlı maddeler verdiler. Birkaç gün içinde bu maddelerin miktarının belirgin biçimde azaldığını gördüler. Sonuç, bitkilerin havayı temizleyebildiğini gösteriyor gibiydi. Araştırmada barış çiçeği, paşa kılıcı ve sarmaşık gibi yaygın ev bitkileri kullanılmıştı. Bu bitkilerin adları, o günden sonra “hava temizleyen bitkiler” listelerinin vazgeçilmezi oldu. İlginç bir ayrıntı da, zararlı maddelerin bir kısmını bitkilerin yapraklarının değil, saksı toprağındaki mikroorganizmaların temizlediğinin anlaşılmasıydı.\n\nAncak sonraki yıllarda bilim insanları bu deneyin gerçek bir evle karşılaştırılamayacağını belirtti. Bir ev, küçük bir kapalı kutudan çok daha büyüktür. Ayrıca evlerde hava, pencerelerden, kapılardan ve havalandırma sistemlerinden sürekli olarak dışarıyla yer değiştirir. Yani bir evin havası, bir saat içinde birkaç kez kendiliğinden yenilenir. Bu yenilenme, bitkilerin yaratabileceği küçük etkiyi büyük ölçüde gölgede bırakır. 2019 yılında yapılan ve onlarca çalışmayı bir araya getiren bir değerlendirme, ortalama bir evde NASA deneyindeki etkiyi elde etmek için metrekare başına onlarca, hatta yüzlerce bitki gerektiğini hesapladı. Oysa birkaç dakika pencere açmak, havayı bitkilerin günler içinde yapabileceğinden çok daha hızlı yeniler.\n\nYine de bu, ev bitkilerinin hiçbir işe yaramadığı anlamına gelmez. Araştırmalar, bitkilerle dolu ortamlarda insanların kendini daha sakin hissettiğini, stresin azaldığını ve odaklanmanın kolaylaştığını gösteriyor. Hastane odalarında bitki bulunan hastaların kendilerini daha iyi hissettiğini bildiren çalışmalar da var. Bitki bakmak da pek çok kişi için rahatlatıcı bir uğraştır. Sulamak, yaprakları silmek ya da yeni bir filizin çıkışını izlemek, gün içinde küçük bir mola gibidir.\n\nBilimsel bir bulgunun, koşulları göz ardı edilerek gündelik hayata taşınması sık görülen bir durumdur; ev bitkileri efsanesi de bunun en bilinen örneklerinden biridir. Kısacası ev bitkilerini evinize güzellik ve huzur kattıkları için almak yerinde bir karar olabilir. Ama evinizin havasını gerçekten temizlemek istiyorsanız, en etkili yöntemler hâlâ düzenli havalandırma, yemek pişirirken aspiratör kullanmak ve iç mekânda sigara içmemektir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bitkilerin havayı temizlediği inancı hangi araştırmaya dayanır?",
+    "correct": "NASA destekli bir çalışmaya",
+    "wrong": [
+     "Bir çiçekçinin kendi deneyine",
+     "Bir yüksek lisans tezine",
+     "Bir gazetenin okur anketine"
+    ],
+    "explanation": "İnancın kaynağı 1989'da NASA'nın desteklediği araştırmadır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deney nasıl bir ortamda yapıldı?",
+    "correct": "Küçük ve kapalı odacıklarda",
+    "wrong": [
+     "Gerçek evlerin salonlarında",
+     "Açık havadaki seralarda",
+     "Uzay istasyonunun içinde"
+    ],
+    "explanation": "Yaklaşık bir metreküplük sızdırmaz odacıklarda yapıldı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Toprak mikroorganizmalarıyla ilgili bulgu neyi gösterir?",
+    "correct": "Yaprakların tek temizleyici olmadığını",
+    "wrong": [
+     "Bitkilerin aslında hiç işe yaramadığını",
+     "Toprağın odadaki havayı kirlettiğini",
+     "Deneyin aslında uzayda yapıldığını"
+    ],
+    "explanation": "Maddelerin bir kısmını toprak mikroorganizmaları temizliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deneyin evlere uyarlanamamasının bir nedeni nedir?",
+    "correct": "Evde havanın sürekli yenilenmesi",
+    "wrong": [
+     "Evlerde bitkilerin hızla kuruması",
+     "Evlerin çok karanlık olması",
+     "Evde zararlı madde bulunmaması"
+    ],
+    "explanation": "Evlerde hava sürekli dışarıyla yer değiştirir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "2019 değerlendirmesinin hesabı hangi sonucu destekler?",
+    "correct": "Etkinin pratikte önemsiz olduğunu",
+    "wrong": [
+     "Bitkilerin aslında çok pahalı olduğunu",
+     "Pencerelerin sağlığa zararlı olduğunu",
+     "NASA'nın bilerek hile yaptığını"
+    ],
+    "explanation": "Aynı etki için metrekareye yüzlerce bitki gerekir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Araştırmalara göre bitkilerin insanlar üzerindeki etkisi nedir?",
+    "correct": "Huzur verip stresi azaltmaları",
+    "wrong": [
+     "Uykuyu belirgin biçimde kaçırmaları",
+     "Alerjileri sık sık artırmaları",
+     "İştahı belirgin biçimde azaltmaları"
+    ],
+    "explanation": "Bitkilerle dolu ortamlarda insanlar daha sakin hisseder."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar ev bitkisi efsanesini hangi genel duruma örnek gösterir?",
+    "correct": "Bulguların koşulsuz genellenmesi",
+    "wrong": [
+     "Bilim insanlarının yanılması",
+     "Çiçekçilerin fiyatları yükseltmesi",
+     "Uzay araştırmalarının gereksizliği"
+    ],
+    "explanation": "Bulgunun koşulları göz ardı edilerek gündelik hayata taşınması."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın havayı temizlemek için asıl önerisi nedir?",
+    "correct": "Düzenli havalandırma yapmak",
+    "wrong": [
+     "Her odaya on tane bitki koymak",
+     "Bol hava spreyi kullanmak",
+     "Pencereleri kapalı tutmak"
+    ],
+    "explanation": "En etkili yöntem düzenli havalandırmadır."
+   }
+  ]
+ },
+ "253": {
+  "title": "Kar Tatili",
+  "category": "Hikaye/Kurgu",
+  "content": "Sabah Bulut uyandığında annesi ona güzel bir haber verdi: Kar yüzünden okullar tatil olmuştu! Bulut sevinçle yataktan fırladı. Pencereden baktığında bahçenin bembeyaz olduğunu gördü. Ağaçların dalları karın ağırlığıyla eğilmiş, arabalar beyaz birer tepeye dönüşmüştü.\n\nKahvaltıdan sonra Bulut kalın montunu, eldivenlerini ve beresini giyerek sıkıca hazırlandı. Babası depodan eski tahta kızağı çıkardı. Kızak, babasının çocukken kullandığı kızaktı. Biraz eskiydi ama hâlâ sağlamdı. Birlikte mahallenin arkasındaki küçük tepeye gittiler. Tepede başka çocuklar da vardı. Hepsi kızaklarıyla aşağı kayıyor, neşeyle bağırıyordu.\n\nBulut kızağa oturdu. Babası onu arkadan hafifçe itti. Kızak hızla aşağı kaydı. Bulut'un yanakları soğuktan kızardı ama o hiç aldırmadı. Aşağıya varınca kızağı çekerek yeniden tepeye tırmandı. Bu böyle defalarca devam etti. Bir keresinde kızak devrildi ve Bulut karın içine yuvarlandı. Ama kalkıp gülerek üstündeki karları silkeledi.\n\nÖğleye doğru Bulut hem çok yoruldu hem de acıktı. Eve döndüklerinde annesi onlara sıcak çorba hazırlamıştı. Bulut çorbasını içerken babasına, onun çocukluğunda da kar tatilleri olup olmadığını sordu. Babası gülümseyerek, aynı kızakla aynı tepeden kaydığı günleri anlatmaya başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Okullar neden tatil olmuştu?",
+    "correct": "Yoğun kar yağışı yüzünden",
+    "wrong": [
+     "Bayram tatili olduğu için",
+     "Öğretmenler hasta olduğu için",
+     "Okulda tamirat olduğu için"
+    ],
+    "explanation": "Kar yüzünden okullar tatil olmuştu."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Bulut'un yataktan fırlaması neyi gösterir?",
+    "correct": "Neşelendiğini",
+    "wrong": [
+     "Çok korktuğunu",
+     "Okula geç kaldığını",
+     "Çok üşüdüğünü"
+    ],
+    "explanation": "Tatil haberine sevinçle fırladı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kızak kime aitti?",
+    "correct": "Bulut'un babasına",
+    "wrong": [
+     "Komşunun büyük oğluna",
+     "Okulun spor odasına",
+     "Bulut'un ablasına"
+    ],
+    "explanation": "Babasının çocukken kullandığı kızaktı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bulut ve babası nereye gittiler?",
+    "correct": "Ardındaki bir yamaca",
+    "wrong": [
+     "Şehrin büyük parkına",
+     "Ninesinin köy evine",
+     "Okulun geniş bahçesine"
+    ],
+    "explanation": "Mahallenin arkasındaki küçük tepeye gittiler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Bulut'un yanakları neden kızardı?",
+    "correct": "Soğuk hava yüzünden",
+    "wrong": [
+     "Çok utandığı için",
+     "Çok koştuğu için",
+     "Ağlamış olduğu için"
+    ],
+    "explanation": "Yanakları soğuktan kızardı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Kızak devrilince Bulut'un gülmesi ne gösterir?",
+    "correct": "Kazayı dert etmediğini",
+    "wrong": [
+     "Çok canının yandığını",
+     "Babasına çok kızdığını",
+     "Eve dönmek istediğini"
+    ],
+    "explanation": "Kalkıp gülerek karları silkeledi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Eve dönünce annesi onlara ne hazırlamıştı?",
+    "correct": "Dumanı tüten çorba",
+    "wrong": [
+     "Fırından çıkmış kek",
+     "Sıcak sütlü kakao",
+     "Taze pişmiş börek"
+    ],
+    "explanation": "Annesi sıcak çorba hazırlamıştı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öykünün sonunda baba ile oğul arasında nasıl bir bağ kurulur?",
+    "correct": "Anılarla güçlenen yakınlık",
+    "wrong": [
+     "Kızak yüzünden bir tartışma",
+     "Çorba yüzünden bir küslük",
+     "Okul yüzünden bir kaygı"
+    ],
+    "explanation": "Baba aynı kızakla aynı tepeden kaydığı günleri anlatır."
+   }
+  ]
+ },
+ "254": {
+  "title": "Hilalden Dolunaya",
+  "category": "Bilgi/Açıklama",
+  "content": "Ay'a birkaç gece üst üste bakarsanız, şeklinin her gece biraz değiştiğini görürsünüz. Bazen ince bir hilal, bazen yarım bir daire, bazen de kocaman yuvarlak bir dolunay görürüz. Peki Ay gerçekten şekil mi değiştirir? Hayır. Ay, tıpkı bir top gibi yuvarlaktır ve şekli hiç değişmez. Değişen, onun güneş ışığı alan yüzünün ne kadarını gördüğümüzdür.\n\nAy kendi ışığını üretmez. Geceleri parlak görünmesinin nedeni, üzerine düşen güneş ışığını yansıtmasıdır. Güneş, Ay'ın her zaman bir yarısını aydınlatır. Öbür yarısı ise karanlıkta kalır. Ay, yaklaşık bir ay süren bir yolculukla Dünya'nın çevresinde döner. Bu yolculuk sırasında Ay'ın aydınlık yarısını bazen tamamen, bazen bir kısmını, bazen de hiç göremeyiz.\n\nAy, Dünya ile Güneş'in arasına geldiğinde aydınlık yüzü bize dönük olmaz. O gece Ay'ı neredeyse hiç göremeyiz. Buna yeni ay denir. Sonraki günlerde ince bir hilal belirir ve her gece biraz daha büyür. Yaklaşık bir hafta sonra Ay'ın yarısını görürüz. İki hafta sonra Ay, Dünya'nın Güneş'e göre öbür tarafına geçer ve bütün aydınlık yüzü bize döner. Bu dolunaydır. Sonra Ay yeniden küçülmeye başlar. Bu kez aydınlık kısım öbür taraftan azalır ve yaklaşık iki hafta sonra Ay yeniden görünmez olur. Bütün bu döngü yaklaşık yirmi dokuz buçuk gün sürer.\n\nİnsanlar binlerce yıldır Ay'ın bu düzenli değişimini takvim yapmak için kullanmıştır. Hicri takvim gibi bazı takvimler, ayları Ay'ın evrelerine göre hesaplar. Bu yüzden Ramazan Bayramı gibi bazı bayramlar her yıl yaklaşık on bir gün önce gelir. Eski çağlarda çiftçiler de ekim ve hasat zamanlarını belirlerken Ay'ı izlerdi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'ın şekli gerçekten değişir mi?",
+    "correct": "Hayır, biçimi aynıdır",
+    "wrong": [
+     "Evet, küçülüp büyür",
+     "Evet, her gece kırılır",
+     "Evet, ikiye bölünür"
+    ],
+    "explanation": "Ay bir top gibi yuvarlaktır; şekli değişmez."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay geceleri neden parlak görünür?",
+    "correct": "Güneş ışığını geri yansıttığı için",
+    "wrong": [
+     "Kendi içinde bir ateş yandığı için",
+     "Yıldızlar onu aydınlattığı için",
+     "Dünya'nın ışığını ürettiği için"
+    ],
+    "explanation": "Ay üzerine düşen güneş ışığını yansıtır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ay'ın görünüşünün değişmesinin nedeni nedir?",
+    "correct": "Aydınlık yüzü farklı açıdan görmemiz",
+    "wrong": [
+     "Ay'ın kendi kendine küçülüp büyümesi",
+     "Bulutların Ay'ı her gece örtmesi",
+     "Güneş'in bazı geceler sönmesi"
+    ],
+    "explanation": "Dünya çevresinde dönerken aydınlık yarısının farklı kısımlarını görürüz."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'ın neredeyse hiç görünmediği evreye ne denir?",
+    "correct": "Yeni ay",
+    "wrong": [
+     "Dolunay",
+     "Hilal",
+     "Yarım ay"
+    ],
+    "explanation": "Ay'ı neredeyse göremediğimiz evre yeni aydır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dolunayda Ay nerededir?",
+    "correct": "Güneş'e göre Dünya'nın ardında",
+    "wrong": [
+     "Dünya ile Güneş'in tam arasında",
+     "Güneş'in hemen arka tarafında",
+     "Dünya'ya en yakın noktasında"
+    ],
+    "explanation": "Ay Dünya'nın Güneş'e göre öbür tarafına geçer."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bütün evreler yaklaşık kaç gün sürer?",
+    "correct": "Yirmi dokuz buçuk",
+    "wrong": [
+     "On dört buçuk",
+     "Kırk beş buçuk",
+     "Yetmiş dokuz buçuk"
+    ],
+    "explanation": "Döngü yaklaşık yirmi dokuz buçuk gün sürer."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bazı bayramların her yıl öne kaymasının nedeni nedir?",
+    "correct": "Takvimin Ay döngüsüne dayanması",
+    "wrong": [
+     "Bayramların yasayla değiştirilmesi",
+     "Güneş'in her yıl yavaşlaması",
+     "Ay'ın Dünya'dan uzaklaşması"
+    ],
+    "explanation": "Hicri takvim ayları Ay'ın evrelerine göre hesaplar."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Son paragraf neyi vurgular?",
+    "correct": "Ay'ın zaman ölçmeye yardım ettiğini",
+    "wrong": [
+     "Ay'a yolculuk yapmanın kolay olduğunu",
+     "Çiftçilerin Ay'dan korktuğunu",
+     "Takvimlerin gereksiz olduğunu"
+    ],
+    "explanation": "İnsanlar Ay'ın düzenli değişimini takvim için kullanmıştır."
+   }
+  ]
+ },
+ "255": {
+  "title": "Ellerin Dili",
+  "category": "Hikaye/Kurgu",
+  "content": "Ekim ayının başında Pınar'ın sınıfına Deniz adında yeni bir öğrenci geldi. Öğretmenleri Hande Hanım, Deniz'in doğuştan işitme engelli olduğunu, kulağında bir işitme cihazı taşıdığını ve dudak okumayı bildiğini anlattı. Sınıftan da ona yardımcı olmalarını, onunla konuşurken yüzlerini ona dönmelerini istedi.\n\nİlk günlerde sınıftakiler Deniz'le nasıl konuşacaklarını bilemedi. Bazıları çok yüksek sesle bağırıyor, bazıları ise hiç konuşmaya cesaret edemiyordu. Deniz teneffüslerde genellikle yalnız kalıyor, bir köşede kitap okuyordu. Kalabalık ve gürültülü ortamlarda dudak okumak onun için çok zordu, çünkü herkes aynı anda konuşuyordu. Pınar onun kalabalık bahçede biraz şaşkın göründüğünü fark etti.\n\nBir gün Pınar, Deniz'in annesiyle okul çıkışında işaret diliyle konuştuğunu gördü. Elleri o kadar hızlı ve güzel hareket ediyordu ki, sanki dans ediyorlardı. Pınar bunu görünce çok merak etti. Ertesi gün Deniz'e işaret dilini ona öğretip öğretemeyeceğini sordu. Deniz önce biraz şaşırdı, sonra yüzünde kocaman bir gülümseme belirdi.\n\nDeniz, Pınar'a ilk olarak “merhaba”, “teşekkür ederim” ve “arkadaş” işaretlerini öğretti. Pınar evde ayna karşısında çalıştı. Öğrendiklerini akşam yemeğinde ailesine de gösterdi; küçük kardeşi bile “teşekkür ederim” işaretini hemen kaptı. Birkaç gün sonra sınıftaki başka çocuklar da onlara katılmak istedi. Hande Hanım bu isteği duyunca bir öneride bulundu: Her cuma son ders, Deniz sınıfa birkaç yeni işaret öğretecekti.\n\nHaftalar geçtikçe bütün sınıf, renkleri, hayvanları ve günleri işaret diliyle söyleyebilir hâle geldi. Deniz artık teneffüslerde yalnız değildi. Arkadaşları onunla oyun oynarken işaretler ve sözcükleri birlikte kullanıyordu.\n\nYıl sonunda okulun gösterisinde Pınar'ın sınıfı bir şarkıyı hem söyleyerek hem de işaret diliyle seslendirdi. Salondaki herkes ayakta alkışladı. Bazı veliler alkış yerine, Deniz'in öğrettiği gibi ellerini havada sallayarak sessizce alkış yaptı. Deniz'in annesinin gözleri doldu. Pınar o gün, birini anlamak için önce onun dilini öğrenmeye istekli olmanın ne kadar önemli olduğunu düşündü.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hande Hanım sınıftan ne istedi?",
+    "correct": "Deniz'e bakarak konuşmalarını",
+    "wrong": [
+     "Deniz'e yüksek sesle seslenmelerini",
+     "Deniz'le hiç konuşmamalarını",
+     "Deniz'e yazıyla not vermelerini"
+    ],
+    "explanation": "Onunla konuşurken yüzlerini ona dönmelerini istedi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz'in kalabalık bahçede zorlanmasının nedeni nedir?",
+    "correct": "Seslerin birbirine karışması",
+    "wrong": [
+     "Bahçenin kışın çok soğuk olması",
+     "Kitabını bahçede kaybetmesi",
+     "Arkadaşlarının ona kızması"
+    ],
+    "explanation": "Herkes aynı anda konuşunca dudak okumak çok zordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pınar işaret dilini ilk kez nerede gördü?",
+    "correct": "Çıkışta, Deniz'le annesinde",
+    "wrong": [
+     "Sınıfta, öğretmenin ellerinde",
+     "Televizyonda, bir haberde",
+     "Bahçede, iki öğretmende"
+    ],
+    "explanation": "Deniz'in annesiyle okul çıkışında işaretle konuştuğunu gördü."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Pınar'ın Deniz'den işaret dilini öğrenmek istemesi neyi gösterir?",
+    "correct": "Onu anlamak istediğini",
+    "wrong": [
+     "Ona yalnızca acıdığını",
+     "Öğretmenden korktuğunu",
+     "Bir ödül beklediğini"
+    ],
+    "explanation": "Pınar merak etti ve Deniz'in dilini öğrenmek istedi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deniz Pınar'a ilk olarak hangi işaretleri öğretti?",
+    "correct": "Selam, teşekkür ve arkadaş",
+    "wrong": [
+     "Renkler, hayvanlar, günler",
+     "Sayılar, harfler, isimler",
+     "Okul, ev ve aile üyeleri"
+    ],
+    "explanation": "İlk olarak merhaba, teşekkür ederim ve arkadaş işaretlerini öğretti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Hande Hanım'ın önerisi Deniz'in sınıftaki rolünü nasıl değiştirdi?",
+    "correct": "Onu öğretmen konumuna taşıdı",
+    "wrong": [
+     "Onu sınıftan ayrı bir derse aldı",
+     "Onu her cuma derse sokmadı",
+     "Onu sınıf başkanı seçtirdi"
+    ],
+    "explanation": "Her cuma Deniz sınıfa yeni işaretler öğretecekti."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Deniz'in teneffüslerde artık yalnız olmamasının nedeni nedir?",
+    "correct": "Ortak bir dil kurulması",
+    "wrong": [
+     "Okulun yeni bahçe açması",
+     "Annesinin okula gelmesi",
+     "Kitap okumayı bırakması"
+    ],
+    "explanation": "Arkadaşları işaretleri ve sözcükleri birlikte kullanıyordu."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri nedir?",
+    "correct": "Anlamak için öğrenmeye açık olmak",
+    "wrong": [
+     "Okul gösterileri çok önemlidir",
+     "İşaret dili çok zor bir dildir",
+     "Yeni öğrenciler yalnız kalmalıdır"
+    ],
+    "explanation": "Birini anlamak için onun dilini öğrenmeye istekli olmak önemlidir."
+   }
+  ]
+ }
+}

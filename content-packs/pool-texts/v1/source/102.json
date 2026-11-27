@@ -1,0 +1,113 @@
+{
+ "102": {
+  "title": "Birlikte Gülmek",
+  "category": "Bilgi/Açıklama",
+  "content": "Gülmenin en çok komik bir şey duyduğumuzda ortaya çıktığını düşünürüz. Oysa gülme üzerine yapılan araştırmalar, bu düşüncenin büyük ölçüde yanlış olduğunu gösteriyor. Amerikalı psikolog ve sinirbilimci Robert Provine, gülmenin gündelik hayatta nasıl ortaya çıktığını anlamak için öğrencileriyle birlikte alışveriş merkezlerinde, kafelerde ve sokaklarda yüzlerce kendiliğinden gülme anını not etti. Kimin güldüğünü, gülmeden hemen önce ne söylendiğini ve ortamda kimlerin bulunduğunu kaydettiler. Bu yöntemle bin iki yüzden fazla gülme anı topladılar.\n\nSonuçlar şaşırtıcıydı. Gülmeden hemen önce söylenen sözlerin çok küçük bir kısmı gerçekten espri ya da şakaydı. Çoğu, “Görüşürüz” ya da “Bunu ben de duydum” gibi sıradan cümlelerdi. Gülmelerin yalnızca yaklaşık beşte biri, gerçekten komik sayılabilecek bir sözün ardından geliyordu. Provine'e göre insanlar çoğunlukla komik bir şeye değil, birbirlerine gülüyordu. Gülme, her şeyden önce bir iletişim aracıydı. Üstelik insanlar konuşurken gülmeyi rastgele yerlere değil, çoğunlukla cümlelerin sonuna, tıpkı bir noktalama işareti gibi yerleştiriyordu.\n\nBu görüşü destekleyen başka bulgular da var. Provine'in çalışmalarına göre insanlar, başkalarıyla birlikteyken yalnız olduklarından yaklaşık otuz kat daha fazla güler. Tek başına komik bir video izlerken bile gülmemiz, aynı videoyu bir arkadaşımızla izlediğimizden daha seyrektir. Ayrıca konuşan kişi, kendi söylediğine dinleyenlerden daha sık güler. Bu da gülmenin, karşımızdakine bir mesaj göndermenin yolu olduğunu düşündürür: “Seninle aynı taraftayım”, “Bu konuşma dostça” ya da “Bunu ciddiye alma”.\n\nGülmenin bu sosyal işlevi, onun neden bu kadar bulaşıcı olduğunu da açıklayabilir. Başkalarının güldüğünü duymak, bizim de gülmemizi kolaylaştırır. Televizyon programlarında yıllarca kullanılan kayıtlı kahkaha sesleri de bu etkiye dayanır; araştırmalar, bu seslerin izleyicilerin gülme olasılığını artırdığını göstermiştir.\n\nGülme yalnızca insanlara özgü değildir. Şempanzeler, goriller ve orangutanlar gibi insansı maymunlar da oyun sırasında, özellikle de birbirlerini gıdıklarken, kesik kesik soluk alıp vermeye dayanan bir ses çıkarır. Bilim insanları bu sesin, insan gülmesinin evrimsel kökeni olabileceğini düşünüyor. Hatta bazı araştırmacılar, oyun oynarken gıdıklanan sıçanların insan kulağının duyamayacağı yüksek frekanslı sesler çıkardığını ve bu sesleri bir tür gülme olarak yorumlamak gerektiğini öne sürdü. Bu bulgular, gülmenin dilden çok daha eski bir iletişim biçimi olabileceğini gösteriyor.\n\nGülmenin evrensel olduğunu gösteren bir başka çalışma da Afrika'da yapıldı. Batı kültürüyle neredeyse hiç teması olmayan, Namibya'da yaşayan bir topluluğun üyelerine, farklı duyguları ifade eden ses kayıtları dinletildi. Katılımcılar, Avrupalı kişilerin kahkahalarını kolayca tanıdı. Avrupalı dinleyiciler de aynı topluluktan gelen kahkahaları tanıyabildi. Oysa öfke ya da şaşkınlık gibi bazı duyguları ifade eden sesler, kültürler arasında bu kadar kolay anlaşılmadı.\n\nGülmenin bedenimiz üzerindeki etkileri de araştırılıyor. Bazı çalışmalar, birlikte gülmenin insanların ağrıya daha dayanıklı hâle gelmesiyle ilişkili olabileceğini öne sürüyor. Araştırmacılar bunu, gülmenin vücuttaki doğal ağrı kesicilerin salgılanmasını artırmasıyla açıklıyor. Ancak gülmenin sağlığa etkileri konusundaki bazı iddiaların abartıldığını, bu alanda daha dikkatli araştırmalara ihtiyaç olduğunu belirten bilim insanları da var.\n\nBütün bu bulgular, gülmeye farklı bir gözle bakmamızı sağlıyor. Gülme, bir esprinin karşılığından çok, insanları birbirine bağlayan, ilişkileri güçlendiren ve gerginliği azaltan bir yapıştırıcı gibi görünüyor. Belki de bu yüzden en çok, sevdiğimiz insanlarla birlikteyken güleriz. Bir dahaki sefere birlikte kahkahaya boğulduğunuzda, aslında karşınızdakine sözcüklerden çok daha eski bir dilde bir şey söylediğinizi düşünebilirsiniz.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Provine gülmeyi incelemek için hangi yöntemi kullandı?",
+    "correct": "Gündelik yerlerde doğal gülüşleri not almak",
+    "wrong": [
+     "Katılımcılara laboratuvarda komedi filmi izletmek",
+     "İnsanlara gülmeyle ilgili anket doldurtmak",
+     "Beyin görüntüleme cihazlarıyla ölçüm yapmak"
+    ],
+    "explanation": "Alışveriş merkezlerinde, kafelerde ve sokaklarda kendiliğinden gülme anlarını not ettiler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gülmeden önce söylenen sözlerin çoğunun sıradan olması neyi gösterir?",
+    "correct": "Gülmenin esprilerden çok ilişkiyle ilgili olduğunu",
+    "wrong": [
+     "İnsanların şakaları anlamakta güçlük çektiğini",
+     "Gündelik cümlelerin gerçekte çok eğlenceli olduğunu",
+     "Araştırmanın yanlış yerlerde yapıldığını"
+    ],
+    "explanation": "İnsanlar çoğunlukla komik bir şeye değil, birbirlerine gülüyordu; gülme bir iletişim aracıydı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre insanlar konuşurken gülmeyi çoğunlukla nereye yerleştirir?",
+    "correct": "Tümcelerin sonlarına",
+    "wrong": [
+     "Cümlelerin tam ortasına",
+     "Konuşmanın en başına",
+     "Soruların hemen önüne"
+    ],
+    "explanation": "Gülme çoğunlukla cümlelerin sonuna, bir noktalama işareti gibi yerleştirilir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İnsanlar başkalarıyla birlikteyken yalnız olduklarına göre yaklaşık ne kadar fazla güler?",
+    "correct": "30 kat",
+    "wrong": [
+     "2 kat",
+     "5 kat",
+     "100 kat"
+    ],
+    "explanation": "İnsanlar başkalarıyla birlikteyken yalnız olduklarından yaklaşık otuz kat daha fazla güler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Konuşan kişinin dinleyenlerden daha sık gülmesi hangi düşünceyi destekler?",
+    "correct": "Gülmenin karşıya ileti gönderme yolu olduğunu",
+    "wrong": [
+     "Konuşanların kendilerini çok komik bulduğunu",
+     "Dinleyenlerin konuşulanı hiç anlamadığını",
+     "Konuşmanın gülmeyi her seferinde bastırdığını"
+    ],
+    "explanation": "Gülme, karşımızdakine dostluk gibi mesajlar göndermenin bir yoludur."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Televizyonlarda kayıtlı kahkaha kullanılmasının dayandığı ilke nedir?",
+    "correct": "Gülme sesinin dinleyene geçmesi",
+    "wrong": [
+     "İzleyicilerin yalnız izlemeyi sevmesi",
+     "Programların daha uzun sürmesi",
+     "Sesin görüntüyü daha net göstermesi"
+    ],
+    "explanation": "Başkalarının güldüğünü duymak bizim de gülmemizi kolaylaştırır."
+   },
+   {
+    "p": 6,
+    "type": 1,
+    "bloom": 2,
+    "text": "Namibya'daki çalışmada hangi sonuç elde edildi?",
+    "correct": "Kahkahanın kültürler arasında kolayca tanınması",
+    "wrong": [
+     "Öfke seslerinin her kültürde kolay tanınması",
+     "Dinleyenlerin seslerin hiçbirini ayırt edememesi",
+     "Avrupalı dinleyicilerin gülmeyi tanıyamaması"
+    ],
+    "explanation": "Katılımcılar Avrupalıların kahkahalarını kolayca tanıdı; aynısı tersine de geçerliydi."
+   },
+   {
+    "p": 8,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazar gülmeyi neden bir “yapıştırıcı”ya benzetir?",
+    "correct": "Kişiler arasında bağ kurduğu için",
+    "wrong": [
+     "Espriler kolayca unutulduğu için",
+     "Yüz kaslarını gerip yorduğu için",
+     "Yalnızken daha çok güldüğümüz için"
+    ],
+    "explanation": "Gülme insanları birbirine bağlar, ilişkileri güçlendirir ve gerginliği azaltır."
+   }
+  ]
+ }
+}

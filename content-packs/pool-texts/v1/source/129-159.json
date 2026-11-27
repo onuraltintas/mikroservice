@@ -1,0 +1,668 @@
+{
+ "129": {
+  "title": "Pedallı Şehir",
+  "category": "Bilgi/Açıklama",
+  "content": "Danimarka'nın başkenti Kopenhag'da sabahın erken saatlerinde sokaklara bakan biri, şaşırtıcı bir manzarayla karşılaşır. Yağmur ya da soğuk demeden, takım elbiseli iş insanları, çocuklarını önlerindeki sepetlerde okula götüren anne babalar ve yaşlılar, binlerce bisikletle şehrin yollarında akar. Kopenhag'da işe ve okula gidenlerin önemli bir bölümü bisiklet kullanır. Kışın kar yağdığında bile bisiklet yolları ilk temizlenen yollar arasındadır. Şehirde yük taşımak için öne geniş bir kasa takılmış bisikletler de yaygındır; bunlarla market alışverişi, hatta küçük taşımalar yapılır.\n\nBu tablo kendiliğinden ortaya çıkmadı; onlarca yıllık bilinçli bir planlamanın ürünüdür. 1970'lerde Kopenhag da otomobil trafiğinin giderek arttığı bir şehirdi. Petrol krizinin etkisiyle yakıt fiyatları yükselince, şehir yönetimi ve halk ulaşımda farklı çözümler aramaya başladı. Zamanla bisiklet için ayrılmış, otomobil yolundan kaldırımla ayrılmış güvenli yollar yapıldı. Kavşaklarda bisikletlilere özel trafik ışıkları kuruldu. Bazı ana caddelerde trafik ışıkları, belirli bir hızla giden bisikletlinin art arda yeşil ışığa denk gelmesini sağlayacak biçimde ayarlandı.\n\nUzmanlar, insanların bisiklete binmesinin en önemli koşulunun kendilerini güvende hissetmeleri olduğunu söylüyor. Yalnızca çevre bilinci, insanları kalabalık bir trafikte bisiklete bindirmeye yetmez. Ama güvenli ve kesintisiz bir yol ağı kurulduğunda, bisiklet pek çok kişi için en hızlı ve en pratik seçenek hâline gelir.\n\nBisikletin yaygınlaşmasının yararları da çoktur. Trafik sıkışıklığı ve hava kirliliği azalır, insanlar günlük hayatlarında daha fazla hareket ettiği için sağlıkları olumlu etkilenir. Ayrıca bisiklet yolu yapmak, geniş otomobil yolları ve otoparklar yapmaktan çok daha az yer ve para gerektirir. Pek çok şehir bugün Kopenhag'ı örnek alarak benzer adımlar atmaya çalışıyor. Ancak uzmanlar, birkaç kopuk bisiklet yolu yapmanın yetmeyeceğini, bütün şehri saran bağlantılı bir ağın gerektiğini vurguluyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kopenhag'da kar yağdığında bisiklet yollarına ne yapılır?",
+    "correct": "Öncelikle temizlenir",
+    "wrong": [
+     "Kış boyunca kapatılır",
+     "Otomobillere açılır",
+     "Tuzla kaplanıp bırakılır"
+    ],
+    "explanation": "Kar yağdığında bisiklet yolları ilk temizlenen yollar arasındadır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kopenhag'ın bisiklete yönelmesinde 1970'lerdeki hangi gelişme etkili oldu?",
+    "correct": "Petrol krizinin akaryakıtı pahalılaştırması",
+    "wrong": [
+     "Şehirde otomobil üretiminin tümüyle yasaklanması",
+     "Şehrin nüfusunun birden hızla azalması",
+     "Şehrin yollarının sel sularıyla kaplanması"
+    ],
+    "explanation": "Petrol krizinin etkisiyle yakıt fiyatları yükselince farklı çözümler arandı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bazı caddelerdeki trafik ışıkları nasıl ayarlanmıştır?",
+    "correct": "Uygun hızdaki bisikletliyi durdurmayacak biçimde",
+    "wrong": [
+     "Otomobillerin hiç durmadan geçebilmesi için",
+     "Yayaları her kavşakta uzun süre bekletecek biçimde",
+     "Bisikletlilerin her kavşakta durması için"
+    ],
+    "explanation": "Işıklar belirli hızla giden bisikletlinin art arda yeşile denk gelmesini sağlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzmanlara göre insanların bisiklete binmesinin en önemli koşulu nedir?",
+    "correct": "Güvende olduklarını hissetmeleri",
+    "wrong": [
+     "Çevre bilincinin yüksek olması",
+     "Bisikletlerin çok ucuza satılması",
+     "Havanın çoğunlukla güneşli olması"
+    ],
+    "explanation": "En önemli koşul, insanların kendilerini güvende hissetmeleridir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yazarın “Yalnızca çevre bilinci yetmez” görüşü neye dayanır?",
+    "correct": "Güvensiz yolların iyi niyeti gölgede bırakması",
+    "wrong": [
+     "İnsanların çevreye karşı hiç duyarlı olmaması",
+     "Bisikletin her durumda otomobilden yavaş olması",
+     "Kopenhaglıların çevre konusunda bilinçsiz olması"
+    ],
+    "explanation": "Güvenli yol ağı yoksa çevre bilinci insanları kalabalık trafikte bisiklete bindirmeye yetmez."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre bisiklet yolu yapmanın otomobil yollarına göre avantajı nedir?",
+    "correct": "Daha az yer ve para gerektirmesi",
+    "wrong": [
+     "Şehre daha fazla otopark kazandırması",
+     "Yapıldıktan sonra hiç bakım istememesi",
+     "Kış aylarında hiç kullanılmaması"
+    ],
+    "explanation": "Bisiklet yolu yapmak daha az yer ve para gerektirir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzmanların “bağlantılı bir ağ” vurgusunun nedeni nedir?",
+    "correct": "Parça parça yolların işe yaramaması",
+    "wrong": [
+     "Bağlantılı yolların daha ucuz olması",
+     "Bisikletlerin uzun mesafe gidememesi",
+     "Otomobillerin bu yolları kullanması"
+    ],
+    "explanation": "Birkaç kopuk bisiklet yolu yetmez; bütün şehri saran bir ağ gerekir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana fikri hangisidir?",
+    "correct": "Doğru altyapıyla bisiklet ana ulaşım olabilir",
+    "wrong": [
+     "Bisiklet yalnızca soğuk ülkelerde kullanılabilir",
+     "Bütün otomobiller şehirlerden kaldırılmalıdır",
+     "Kopenhag'da artık hiç otomobil bulunmamaktadır"
+    ],
+    "explanation": "Kopenhag örneği, planlı ve güvenli altyapının bisikleti yaygınlaştırdığını gösterir."
+   }
+  ]
+ },
+ "158": {
+  "title": "Güneşi İzleyen Çiçek",
+  "category": "Bilgi/Açıklama",
+  "content": "Ayçiçeği denince çoğumuzun aklına, başını gün boyunca güneşe doğru çeviren çiçekler gelir. Bu inanış kısmen doğrudur. Ancak güneşi izleyen, aslında açmış çiçekler değil, henüz büyümekte olan genç bitkilerdir.\n\nGenç ayçiçekleri sabahları başlarını doğuya, yani güneşin doğduğu yöne çevirir. Gün boyunca güneşle birlikte yavaş yavaş batıya döner. Gece ise yeniden doğuya dönerek sabahı beklerler. Bu hareketin nasıl gerçekleştiği uzun süre merak konusu oldu. 2016'da yayımlanan bir araştırmada bilim insanları, hareketin bitkinin iç saatiyle bağlantılı olduğunu gösterdi. Bilim insanları bu hareketin, gövdenin iki yanının farklı hızlarda büyümesiyle gerçekleştiğini buldu. Gündüz gövdenin doğuya bakan yüzü daha hızlı büyür ve bitki batıya eğilir. Gece ise batıya bakan yüz daha hızlı büyüyerek bitkiyi yeniden doğuya çevirir.\n\nBitki olgunlaşıp çiçek açtığında bu hareket durur. Olgun ayçiçeklerinin çoğu artık hep doğuya bakar. Araştırmacılar bunun bir nedenini de buldu: Doğuya bakan çiçekler sabah güneşiyle daha erken ısınır. Sıcak çiçekleri arılar daha çok ziyaret eder. Böylece doğuya bakan çiçekler daha iyi tozlaşır. Araştırmacılar bunu sınamak için bazı çiçekleri yapay olarak ısıttı; ısıtılan batıya bakan çiçeklerin de arıları daha çok çektiğini gördüler.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre ayçiçeğiyle ilgili yaygın inanış nasıldır?",
+    "correct": "Yarı yarıya doğrudur",
+    "wrong": [
+     "Bütünüyle yanlıştır",
+     "Kanıtlanmış bir bilgidir",
+     "Yalnız çiçeklere uyar"
+    ],
+    "explanation": "İnanış kısmen doğrudur; güneşi izleyen genç bitkilerdir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Genç ayçiçekleri geceleri ne yapar?",
+    "correct": "Tekrar doğu yönüne döner",
+    "wrong": [
+     "Batıya bakarak kalır",
+     "Başını yere doğru eğer",
+     "Gece boyu hiç kıpırdamaz"
+    ],
+    "explanation": "Gece yeniden doğuya dönerek sabahı beklerler."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bitkinin gün içinde batıya eğilmesinin nedeni nedir?",
+    "correct": "Gündoğusu yanının daha çabuk büyümesi",
+    "wrong": [
+     "Batıdan esen rüzgârın bitkiyi itmesi",
+     "Köklerin toprakta batıya doğru yönelmesi",
+     "Yaprakların suyla ağırlaşıp sarkması"
+    ],
+    "explanation": "Gündüz gövdenin doğuya bakan yüzü daha hızlı büyür ve bitki batıya eğilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "2016 araştırması hareketin neyle bağlantılı olduğunu gösterdi?",
+    "correct": "Bitkinin iç saatiyle",
+    "wrong": [
+     "Toprağın nemiyle",
+     "Rüzgârın yönüyle",
+     "Arıların uçuş yönüyle"
+    ],
+    "explanation": "Araştırmada hareketin bitkinin iç saatiyle bağlantılı olduğu gösterildi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Olgun ayçiçeklerinin çoğu hangi yöne bakar?",
+    "correct": "Doğuya",
+    "wrong": [
+     "Batıya",
+     "Güneye",
+     "Kuzeye"
+    ],
+    "explanation": "Olgun ayçiçeklerinin çoğu hep doğuya bakar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Doğuya bakan çiçeklerin daha iyi tozlaşmasının nedeni nedir?",
+    "correct": "Erken ısınıp arıları çekmeleri",
+    "wrong": [
+     "Daha büyük çiçekler açmaları",
+     "Çok daha fazla tohum üretmeleri",
+     "Sert rüzgârlardan korunabilmeleri"
+    ],
+    "explanation": "Doğuya bakan çiçekler sabah daha erken ısınır; arılar sıcak çiçekleri daha çok ziyaret eder."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Araştırmacıların bazı çiçekleri yapay olarak ısıtmasının amacı nedir?",
+    "correct": "Asıl etkenin ısı olup olmadığını denemek",
+    "wrong": [
+     "Çiçeklerin büyümesini hızlandırmak",
+     "Çiçekleri gece soğuğundan korumak",
+     "Tohumların erken olgunlaşmasını sağlamak"
+    ],
+    "explanation": "Isıtılan batıya bakan çiçeklerin de arıları daha çok çektiği görüldü."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin ana düşüncesi hangisidir?",
+    "correct": "Bu davranışın bilimsel bir açıklaması olduğu",
+    "wrong": [
+     "Bütün çiçeklerin gün boyu güneşi izlediği",
+     "Ayçiçeklerinin geceleri hiç büyümediği",
+     "Arıların sadece batıya bakan çiçeklere gittiği"
+    ],
+    "explanation": "Genç bitkilerin hareketi büyümeyle, olgun çiçeklerin doğuya bakması tozlaşmayla açıklanır."
+   }
+  ]
+ },
+ "146": {
+  "title": "Renklerin Dünyası",
+  "category": "Bilgi/Açıklama",
+  "content": "Kırmızı bir elmaya baktığımızda, elmanın kendisinin kırmızı olduğunu düşünürüz. Oysa renk, aslında nesnenin içinde değil, ışığın, nesnenin ve gözümüzle beynimizin birlikte oluşturduğu bir deneyimdir. Aynı elmaya karanlık bir odada baktığımızda, kırmızılığı neredeyse tamamen kaybolur.\n\nGüneşten gelen beyaz ışık, aslında gökkuşağındaki bütün renklerin karışımıdır. Bu ışık bir nesneye çarptığında, nesne bazı renkleri emer, bazılarını ise geri yansıtır. Elma, kırmızı dışındaki renklerin çoğunu emer ve kırmızıyı yansıtır. Gözümüze ulaşan bu yansıyan ışıktır. Beyaz bir nesne ışığın neredeyse tamamını yansıtırken, siyah bir nesne çoğunu emer. Bu yüzden yazın siyah giysiler güneşte daha çok ısınır.\n\nGözümüzün arka kısmında, retina adı verilen ince bir tabaka bulunur. Retinada ışığa duyarlı iki tür hücre vardır: çubuk hücreler ve koni hücreler. Çubuk hücreler loş ışıkta görmemizi sağlar ama renkleri ayırt edemez. Bu yüzden karanlıkta her şey gri tonlarında görünür. Renkleri ise koni hücreler algılar. İnsanlarda üç tür koni hücre bulunur; bunlar en çok kırmızıya, yeşile ve maviye duyarlıdır. Beyin, bu üç tür hücreden gelen sinyalleri karşılaştırarak gördüğümüz binlerce rengi oluşturur.\n\nBazı insanlarda koni hücrelerden biri eksik ya da farklı çalışır. Bu durumda kişi bazı renkleri birbirinden ayırt etmekte zorlanır. Buna renk körlüğü denir. En yaygın türünde, kişi kırmızı ile yeşili karıştırır. Renk körlüğü erkeklerde kadınlara göre çok daha sık görülür; çünkü bu özellik çoğunlukla anneden oğula geçen genlerle aktarılır. Renk körlüğü olan pek çok kişi, durumunu ancak bir göz muayenesinde ya da renkli noktalardan oluşan özel bir testte fark eder.\n\nHayvanların renk dünyası da bizimkinden farklıdır. Arılar, bizim göremediğimiz morötesi ışığı görebilir. Bazı çiçeklerin yapraklarında, yalnızca arıların görebildiği morötesi desenler vardır. Bu desenler, arılara nektarın yerini gösteren bir tür yol haritası gibidir. Bazı kuşlar ve balıklar da morötesi ışığı görebilir; hatta bazı kuşların tüylerinde yalnızca bu ışıkta fark edilen desenler bulunur. Köpekler ise bizden daha az renk görür; dünyayı daha çok mavi ve sarı tonlarında algıladıkları düşünülür. Kısacası gördüğümüz renkler, dünyanın kendisinden çok, onu algılama biçimimizin bir yansımasıdır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre renk nasıl bir şeydir?",
+    "correct": "Işığın, cismin ve beynin ortak ürünü",
+    "wrong": [
+     "Nesnenin içinde saklı duran bir boya",
+     "Yalnızca güneşin yaydığı bir özellik",
+     "Gözün kendi başına ürettiği bir ışık"
+    ],
+    "explanation": "Renk; ışığın, nesnenin, gözün ve beynin birlikte oluşturduğu bir deneyimdir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Elmanın kırmızı görünmesinin nedeni nedir?",
+    "correct": "Kırmızıyı geri göndermesi",
+    "wrong": [
+     "Bütün renkleri yansıtması",
+     "Kırmızıyı içine çekmesi",
+     "Kendi içinden ışık saçması"
+    ],
+    "explanation": "Elma kırmızı dışındaki renklerin çoğunu emer ve kırmızıyı yansıtır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Siyah giysilerin güneşte daha çok ısınmasının nedeni nedir?",
+    "correct": "Gelen ışığın büyük kısmını emmeleri",
+    "wrong": [
+     "Işığın tamamını yansıtmaları",
+     "Daha kalın kumaştan olmaları",
+     "Diğer giysilerden daha ağır olmaları"
+    ],
+    "explanation": "Siyah bir nesne ışığın çoğunu emer."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Loş ışıkta görmemizi sağlayan hücreler hangileridir?",
+    "correct": "Çubuk hücreler",
+    "wrong": [
+     "Koni hücreler",
+     "Kırmızı hücreler",
+     "Sinir hücreleri"
+    ],
+    "explanation": "Çubuk hücreler loş ışıkta görmemizi sağlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Karanlıkta nesnelerin gri görünmesinin nedeni nedir?",
+    "correct": "Loşta çalışan hücrelerin renk ayıramaması",
+    "wrong": [
+     "Koni hücrelerin karanlıkta çoğalması",
+     "Nesnelerin karanlıkta gerçekten griye dönmesi",
+     "Göz kapaklarının gelen ışığı kesmesi"
+    ],
+    "explanation": "Loş ışıkta çalışan çubuk hücreler renkleri ayırt edemez."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Renk körlüğünün en yaygın türünde hangi renkler karıştırılır?",
+    "correct": "Kırmızı ile yeşil",
+    "wrong": [
+     "Mavi ile sarı",
+     "Siyah ile beyaz",
+     "Pembe ile turuncu"
+    ],
+    "explanation": "En yaygın türünde kişi kırmızı ile yeşili karıştırır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Renk körlüğünün erkeklerde daha sık görülmesi nasıl açıklanır?",
+    "correct": "Özelliğin anneden oğula aktarılmasıyla",
+    "wrong": [
+     "Erkeklerin gözlerinin çok küçük olmasıyla",
+     "Erkeklerin kadınlardan daha az uyumasıyla",
+     "Erkeklerin daha çok ekrana bakmasıyla"
+    ],
+    "explanation": "Bu özellik çoğunlukla anneden oğula geçen genlerle aktarılır."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son cümlesinde vurgulanan düşünce nedir?",
+    "correct": "Renklerin algımızın bir yansıması olduğu",
+    "wrong": [
+     "Her canlının renkleri tıpatıp aynı gördüğü",
+     "Köpeklerin hiçbir rengi göremediği",
+     "Arıların renkleri bizden az gördüğü"
+    ],
+    "explanation": "Gördüğümüz renkler, dünyayı algılama biçimimizin bir yansımasıdır."
+   }
+  ]
+ },
+ "148": {
+  "title": "Elle mi, Klavyeyle mi?",
+  "category": "Deneme",
+  "content": "Derslerde not almak için dizüstü bilgisayar mı yoksa kâğıt kalem mi kullanmak daha iyidir? Pek çok öğrenci bilgisayarla not almayı tercih eder, çünkü daha hızlı yazar ve öğretmenin söylediği hemen her şeyi kaydedebilir. İlk bakışta bu bir avantaj gibi görünür; daha çok not, daha çok bilgi demek gibidir. Üstelik bilgisayardaki notları düzenlemek ve paylaşmak da daha kolaydır. Ancak bazı araştırmalar, hızlı yazmanın her zaman daha iyi öğrenmek anlamına gelmediğini gösteriyor.\n\n2014 yılında Amerikalı iki psikolog, bu soruyu sınamak için bir deney yaptı. Öğrencilerden bir grubu kısa konuşma videolarını izlerken elle, diğer grubu ise bilgisayarla not aldı. Ardından, aradan bir süre geçtikten sonra öğrencilere izledikleri konuşmalarla ilgili sorular soruldu. Olgulara dayalı, ezber gerektiren sorularda iki grup arasında büyük bir fark çıkmadı. Ama konuyu anlamayı ve yorumlamayı gerektiren sorularda, elle not alan öğrenciler daha başarılı oldu.\n\nAraştırmacılar bu sonucu, iki grubun not alma biçimlerindeki farkla açıkladı. Bilgisayarla not alan öğrenciler, duydukları cümleleri neredeyse kelimesi kelimesine yazma eğilimindeydi. Elle not alanlar ise daha yavaş yazdıkları için her şeyi yazamıyordu. Bu yüzden duyduklarını özetlemek, kendi kelimeleriyle yeniden ifade etmek ve önemli noktaları seçmek zorundaydılar. İşte bu seçme ve özetleme süreci, bilginin daha derin işlenmesini sağlıyordu.\n\nBu çalışma büyük ilgi gördü, ancak sonraki bazı araştırmalar benzer sonuçları her zaman bulamadı. Bu yüzden konu hâlâ tartışılıyor. Yine de pek çok uzman, önemli olanın kullanılan araçtan çok, not alırken zihnin ne yaptığı olduğu konusunda hemfikir. Bilgisayarla not alan biri de duyduklarını aynen yazmak yerine özetlemeye çalışırsa benzer bir yarar sağlayabilir.\n\nBilgisayarla not almanın bir başka riski de dikkat dağınıklığıdır. Açık olan ekran, ders sırasında başka sekmelere, mesajlara ve bildirimlere bakma isteğini kolaylaştırır. Bazı araştırmalar, derste ekranında başka işlerle uğraşan bir öğrencinin, yalnızca kendisinin değil, ekranı gören yakınındaki arkadaşlarının da dikkatini dağıtabildiğini gösteriyor.\n\nSonuç olarak, not almanın en iyi yolu herkes için aynı olmayabilir. Ama hangi aracı kullanırsak kullanalım, duyduğumuzu yalnızca kaydetmek yerine üzerinde düşünmek, onu kendi sözcüklerimizle yeniden kurmak, öğrenmenin asıl anahtarı gibi görünüyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Pek çok öğrencinin bilgisayarla not almayı tercih etmesinin nedeni nedir?",
+    "correct": "Daha çabuk yazıp çok şey kaydedebilmesi",
+    "wrong": [
+     "Elle yazmayı hiç öğrenmemiş olması",
+     "Öğretmenlerin bilgisayarı zorunlu tutması",
+     "Kâğıt ve kalemin çok pahalı olması"
+    ],
+    "explanation": "Daha hızlı yazar ve hemen her şeyi kaydedebilir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Deneyde iki grup arasında hangi tür sorularda belirgin fark çıkmadı?",
+    "correct": "Ezbere dayalı bilgi sorularında",
+    "wrong": [
+     "Yorum ve anlama gerektiren sorularda",
+     "Matematik ve hesap sorularında",
+     "Şekil çizmeyi gerektiren sorularda"
+    ],
+    "explanation": "Olgulara dayalı, ezber gerektiren sorularda büyük fark çıkmadı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elle not alanlar hangi sorularda daha başarılı oldu?",
+    "correct": "Kavrayış ve yorum isteyenlerde",
+    "wrong": [
+     "Tarih ve sayı bilgisi soranlarda",
+     "Yalnızca ezber isteyenlerde",
+     "Hızlı yazma becerisini ölçenlerde"
+    ],
+    "explanation": "Konuyu anlamayı ve yorumlamayı gerektiren sorularda daha başarılı oldular."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Araştırmacılara göre elle not almanın üstünlüğü nereden kaynaklanıyordu?",
+    "correct": "Yavaşlığın seçip özetlemeye zorlaması",
+    "wrong": [
+     "Kalemin klavyeden daha rahat tutulması",
+     "Kâğıdın ekrandan daha az göz yorması",
+     "Elle not alanların daha çok uyuması"
+    ],
+    "explanation": "Daha yavaş yazdıkları için seçmek ve özetlemek zorundaydılar; bu derin işlemeyi sağladı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın çalışmaya yaklaşımı nasıldır?",
+    "correct": "Bulguyu aktarıp tartışmalı olduğunu belirtir",
+    "wrong": [
+     "Bulguyu kesin ve tartışmasız bir gerçek sayar",
+     "Çalışmanın baştan sona hatalı olduğunu söyler",
+     "Derslerde bilgisayarın yasaklanmasını önerir"
+    ],
+    "explanation": "Sonraki araştırmalar benzer sonuçları her zaman bulamadı; konu hâlâ tartışılıyor."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Uzmanlara göre not alırken asıl önemli olan nedir?",
+    "correct": "Zihnin bilgiyi nasıl işlediği",
+    "wrong": [
+     "Kullanılan aracın markası",
+     "Yazının ne kadar güzel olduğu",
+     "Notların kaç sayfa tuttuğu"
+    ],
+    "explanation": "Önemli olan kullanılan araçtan çok, not alırken zihnin ne yaptığıdır."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bilgisayarla not almanın metinde belirtilen bir başka riski nedir?",
+    "correct": "Dikkatin kolayca dağılması",
+    "wrong": [
+     "Pilin çok çabuk bitmesi",
+     "Notların silinip kaybolması",
+     "Ekranın gözleri yorması"
+    ],
+    "explanation": "Açık ekran başka sekmelere ve bildirimlere bakma isteğini kolaylaştırır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın vardığı sonuç hangisidir?",
+    "correct": "Bilgiyi kendi sözlerimizle işlemenin önemli olduğu",
+    "wrong": [
+     "Herkesin yalnızca kalemle not alması gerektiği",
+     "Not tutmanın öğrenmeye hiçbir yararı olmadığı",
+     "Bilgisayarın derste mutlaka kullanılması gerektiği"
+    ],
+    "explanation": "Duyduğumuzu kendi sözcüklerimizle yeniden kurmak öğrenmenin asıl anahtarıdır."
+   }
+  ]
+ },
+ "150": {
+  "title": "Konuşmaya Cesaret",
+  "category": "Hikaye/Kurgu",
+  "content": "Lara, İspanyolca öğrenmeye başladığı ikinci yılın sonunda, bir yaz programı için Madrid'e gitti. Derslerde başarılıydı; dilbilgisi sınavlarından hep yüksek not almış, yüzlerce kelime ezberlemişti. Ama uçaktan inip ilk kez bir taksiye bindiğinde, şoförün hızlı konuşmasından tek bir cümle bile anlayamadı. Ders kitaplarındaki yavaş ve net diyaloglarla sokaktaki gerçek konuşma arasında büyük bir fark vardı.\n\nİlk günler çok zor geçti. Akşamları odasına kapanıp ders kitaplarını yeniden okuyor, sorunun yeterince çalışmamak olduğunu düşünüyordu. Bir kafede sipariş vermek bile ona büyük bir sınav gibi geliyordu. Ağzını açmadan önce cümleyi kafasında defalarca kuruyor, bir hata yapmaktan korktuğu için çoğu zaman hiç konuşmuyordu. Garson ona bir şey sorduğunda, anlamadığı hâlde başını sallıyor ve sonunda istemediği bir şeyi sipariş etmiş oluyordu.\n\nBir akşam, kaldığı evin sahibi yaşlı kadın Carmen, Lara'nın sessizliğini fark etti. Onu mutfağa çağırdı ve birlikte yemek yapmayı önerdi. Carmen yavaş konuşuyor, elindeki malzemeleri göstererek adlarını söylüyordu. Lara hata yaptığında gülümsüyor, doğrusunu tekrar ediyor ama hiç düzeltme yapar gibi davranmıyordu. Lara o akşam, iki yıl boyunca sınıfta konuştuğundan daha fazla konuştu. Yemekten sonra Carmen ona, kendisinin de gençken Fransızca öğrenirken aynı korkuyu yaşadığını anlattı ve “Hata yapmayan kimse bir dil öğrenemez” dedi.\n\nO günden sonra Lara, hata yapmaktan korkmamaya karar verdi. Pazarda satıcılarla sohbet etti, otobüste yol sordu, yanlış anladığında bir daha sordu. Bir ayın sonunda hâlâ pek çok hata yapıyordu, ama artık konuşmaktan çekinmiyordu. Eve dönerken uçakta yanındaki yolcuyla İspanyolca sohbet ettiğini fark ettiğinde, bir dili bilmekle onu konuşabilmenin aynı şey olmadığını anladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Lara'nın taksideki deneyimi neyi ortaya koyar?",
+    "correct": "Sınav başarısının konuşmaya yetmediğini",
+    "wrong": [
+     "Şoförün başka bir dil konuştuğunu",
+     "Lara'nın tek bir kelime bile bilmediğini",
+     "Madrid'e yanlış zamanda gittiğini"
+    ],
+    "explanation": "Ders kitaplarındaki diyaloglarla sokaktaki gerçek konuşma arasında büyük fark vardı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk günlerde Lara sorunun kaynağını neye bağlıyordu?",
+    "correct": "Yeterince çalışmamış olmasına",
+    "wrong": [
+     "Hocalarının iyi öğretmemesine",
+     "Madrid halkının kaba olmasına",
+     "Kitaplarının eski olmasına"
+    ],
+    "explanation": "Lara sorunun yeterince çalışmamak olduğunu düşünüyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Lara'nın kafede istemediği bir şeyi sipariş etmesinin nedeni nedir?",
+    "correct": "Anlamadığı hâlde başını sallayıp onaylaması",
+    "wrong": [
+     "Menüdeki bütün yiyecekleri denemek istemesi",
+     "Garsonun bilerek yanlış ürün getirmesi",
+     "Cebindeki paranın sadece ona yetmesi"
+    ],
+    "explanation": "Anlamadığı hâlde başını sallıyor ve istemediği şeyi sipariş etmiş oluyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Carmen, Lara'ya nasıl yardım etti?",
+    "correct": "Birlikte yemek pişirerek konuşturdu",
+    "wrong": [
+     "Ona dilbilgisi dersleri verdi",
+     "Onu bir dil kursuna yazdırdı",
+     "Ona çok sayıda İspanyolca kitap aldı"
+    ],
+    "explanation": "Carmen onu mutfağa çağırıp birlikte yemek yapmayı önerdi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Carmen'in hataları açıkça düzeltmemesinin Lara üzerindeki etkisi ne olabilir?",
+    "correct": "Yanlış yapma kaygısının azalması",
+    "wrong": [
+     "Hatalarını hiç fark etmemesi",
+     "Carmen'e karşı kırgınlık duyması",
+     "Mutfakta daha az konuşması"
+    ],
+    "explanation": "Rahat bir ortamda hata korkusu azaldı ve Lara çok daha fazla konuştu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Carmen gençken hangi dili öğrenirken benzer korkular yaşamıştı?",
+    "correct": "Fransızca",
+    "wrong": [
+     "İtalyanca",
+     "Almanca",
+     "Portekizce"
+    ],
+    "explanation": "Carmen gençken Fransızca öğrenirken aynı korkuyu yaşamıştı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Lara'nın hata yapmaktan korkmamaya karar vermesinin sonucu ne oldu?",
+    "correct": "Hatalara rağmen rahatça konuştu",
+    "wrong": [
+     "Bir ayda hiç hata yapmaz oldu",
+     "İspanyolca öğrenmeyi tümüyle bıraktı",
+     "Sadece Carmen'le konuşmaya devam etti"
+    ],
+    "explanation": "Hâlâ hata yapıyordu ama artık konuşmaktan çekinmiyordu."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Lara'nın uçakta vardığı sonuç öykünün hangi ana fikrini yansıtır?",
+    "correct": "Bilmekle kullanabilmenin farklı olduğu",
+    "wrong": [
+     "Dil öğrenmenin yalnızca sınıfta olduğu",
+     "Uçakta sohbet etmenin yasak olduğu",
+     "Hata yapmanın öğrenmeyi engellediği"
+    ],
+    "explanation": "Bir dili bilmekle onu konuşabilmek aynı şey değildir."
+   }
+  ]
+ },
+ "159": {
+  "title": "Armut Ağacı",
+  "category": "Hikaye/Kurgu",
+  "content": "Ahmet Bey ile komşusu Nuri Bey'in bahçelerini alçak bir duvar ayırıyordu. Nuri Bey'in bahçesindeki yaşlı armut ağacının dalları duvarın üstünden aşıp Ahmet Bey'in bahçesine uzanıyordu. Her sonbahar armutlar olgunlaştığında, bir kısmı Ahmet Bey'in tarafına düşüyordu.\n\nYıllarca kimse bunu sorun etmedi; Ahmet Bey düşen armutları zaman zaman Nuri Bey'e götürür, birlikte çay içerlerdi. Ama bir sonbahar, Ahmet Bey'in torunları bahçeye düşen armutları toplayıp yediğinde, Nuri Bey'in eşi pencereden buna kızdı. Ertesi gün Nuri Bey, armutların kendi ağacına ait olduğunu, toplanmaması gerektiğini söyledi. Ahmet Bey de dalların kendi bahçesine uzandığını, düşen meyvelerin bahçesini kirlettiğini, temizlemekten yorulduğunu söyledi. Konuşma kısa sürede tartışmaya dönüştü.\n\nHaftalarca iki komşu birbirine selam vermedi; sokakta karşılaştıklarında başlarını çevirip geçtiler. Ahmet Bey dalları kesmeyi düşündü, Nuri Bey ise duvarın üstüne bir çit yaptırmaktan söz etti. Mahalledeki herkes bu küslükten haberdardı. Torunlar bile birbirleriyle oynamayı bırakmıştı; yıllardır süren dostluk, birkaç armut yüzünden zedelenmişti.\n\nSonunda mahallenin muhtarı iki komşuyu çay içmeye çağırdı. Muhtar önce ikisini de dikkatle dinledi ve hiçbirine haklı ya da haksız demedi. Sonra her birine, diğerinin neden üzüldüğünü anlatmasını istedi. Ahmet Bey, Nuri Bey'in ağacına ne kadar değer verdiğini, ağacı babasının diktiğini o zaman öğrendi. Nuri Bey ise Ahmet Bey'in her sonbahar düşen meyveleri temizlemek için saatlerce uğraştığını fark etti.\n\nBu iki küçük öğrenme, aralarındaki buzları eritti. Birlikte bir çözüm buldular. Armut zamanı geldiğinde, ağacı iki aile birlikte toplayacak ve armutları paylaşacaktı. O sonbahar iki aile, bahçede birlikte armut topladı. Akşam da Nuri Bey'in eşinin yaptığı armut tatlısını birlikte yediler. Torunlar yeniden duvarın iki yanında koşturmaya başlamıştı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Armut ağacı kimin bahçesindeydi?",
+    "correct": "Nuri Bey'in",
+    "wrong": [
+     "Ahmet Bey'in",
+     "Muhtarın",
+     "Komşu çocuğun"
+    ],
+    "explanation": "Yaşlı armut ağacı Nuri Bey'in bahçesindeydi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Anlaşmazlık neyle başladı?",
+    "correct": "Torunların düşen meyveleri yemesiyle",
+    "wrong": [
+     "Ağacın bir gece aniden kesilmesiyle",
+     "Bahçe duvarının bir gün yıkılmasıyla",
+     "Muhtarın izinsiz bahçeye girmesiyle"
+    ],
+    "explanation": "Torunlar armutları toplayıp yiyince Nuri Bey'in eşi kızdı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahmet Bey'in şikâyeti neydi?",
+    "correct": "Dökülen armutları temizlemekten bıkması",
+    "wrong": [
+     "Ağacın gölgesinin evini karartması",
+     "Armutların tatsız ve kuru olması",
+     "Dalların penceresini kırıp zarar vermesi"
+    ],
+    "explanation": "Dalların bahçesine uzandığını, düşen meyvelerin bahçesini kirlettiğini söyledi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Küslüğün etkisi nasıl anlatılmıştır?",
+    "correct": "Çocukların bile oyunu bırakması",
+    "wrong": [
+     "Bütün mahallenin başka yere taşınması",
+     "Armut ağacının tümüyle kuruması",
+     "Bahçe duvarının yükseltilmesi"
+    ],
+    "explanation": "Torunlar bile birbirleriyle oynamayı bırakmıştı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Muhtarın her birine diğerinin neden üzüldüğünü anlattırmasının amacı nedir?",
+    "correct": "Karşı tarafı anlamalarını sağlamak",
+    "wrong": [
+     "Kimin haklı olduğuna karar vermek",
+     "Tartışmayı uzatıp sonucu ertelemek",
+     "Armut ağacının kesilmesini sağlamak"
+    ],
+    "explanation": "Her biri diğerinin duygularını öğrendi; Ahmet Bey ağacın değerini, Nuri Bey temizlik yükünü fark etti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ahmet Bey muhtardaki konuşmada neyi öğrendi?",
+    "correct": "Ağacın aile yadigârı olduğunu",
+    "wrong": [
+     "Ağacın yüz yaşında olduğunu",
+     "Armutların pazarda satılacağını",
+     "Muhtarın da bu ağacı çok sevdiğini"
+    ],
+    "explanation": "Ağacı Nuri Bey'in babasının diktiğini o zaman öğrendi."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "İki komşu hangi çözümde anlaştı?",
+    "correct": "Armutları birlikte toplayıp bölüşmekte",
+    "wrong": [
+     "Armut ağacını tümüyle kesmekte",
+     "Duvarın üstüne yüksek bir çit çekmekte",
+     "Armutları pazarda satıp parayı bölmekte"
+    ],
+    "explanation": "Ağacı iki aile birlikte toplayacak ve armutları paylaşacaktı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri hangisidir?",
+    "correct": "Karşılıklı anlayış çatışmayı çözebilir",
+    "wrong": [
+     "Komşular arasında sınırlar kesin olmalıdır",
+     "Meyve ağaçları bahçeye dikilmemelidir",
+     "Muhtarlar her tartışmaya karışmalıdır"
+    ],
+    "explanation": "Birbirlerinin duygularını anlayan komşular ortak bir çözüm buldu."
+   }
+  ]
+ }
+}

@@ -1,0 +1,668 @@
+{
+ "232": {
+  "title": "Unutmanın Eğrisi",
+  "category": "Bilgi/Açıklama",
+  "content": "Sınavdan önceki gece saatlerce ders çalışıp bir hafta sonra öğrendiklerinizin çoğunu unuttuğunuzu fark ettiniz mi? Bu durum yalnızca size özgü değil. On dokuzuncu yüzyılın sonlarında Alman psikolog Hermann Ebbinghaus, unutmanın nasıl gerçekleştiğini ilk kez bilimsel olarak incelemeye karar verdi. O döneme kadar bellek, deneylerle ölçülemeyecek kadar karmaşık bir konu olarak görülüyordu. Ebbinghaus ise hatırlamanın da tıpkı fizikteki olaylar gibi ölçülebileceğini düşünüyordu.\n\nEbbinghaus, deneylerinde kendini denek olarak kullandı. Önceden bilinen sözcüklerin etkisini ortadan kaldırmak için “dax”, “bok”, “yat” gibi anlamsız heceler oluşturdu. Bu hecelerden oluşan listeleri ezberledi ve belirli aralıklarla ne kadarını hatırladığını ölçtü. Sonuçlar şaşırtıcıydı. Öğrendiklerinin büyük bölümünü ilk birkaç saat içinde unutuyordu. Bir gün sonra listelerin yarısından fazlası aklından çıkmıştı. Ancak bundan sonra unutma hızı yavaşlıyor, kalan bilgi daha uzun süre korunuyordu. Bu bulguyu gösteren grafik bugün “unutma eğrisi” olarak bilinir. Eğri, başta dik bir yokuş gibi aşağı iner, sonra giderek düzleşir. Daha sonra yapılan pek çok araştırma, Ebbinghaus'un bulgularının farklı insanlarda ve farklı türden bilgilerde de büyük ölçüde geçerli olduğunu doğruladı.\n\nEbbinghaus'un bir başka önemli keşfi, tekrarın zamanlamasıyla ilgiliydi. Aynı listeyi tek seferde uzun uzun tekrar etmek yerine, tekrarları günlere yaydığında çok daha kalıcı öğrendiğini fark etti. Her tekrar, unutma eğrisini biraz daha yatay hâle getiriyordu. Yani her tekrardan sonra bilgi daha yavaş unutuluyordu.\n\nBugün bu yöntem “aralıklı tekrar” adıyla biliniyor. Yöntemin mantığı basittir: Yeni bir bilgiyi öğrendikten sonra, onu unutmak üzereyken yeniden gözden geçirirsiniz. İlk tekrar bir gün sonra, ikincisi birkaç gün sonra, üçüncüsü bir hafta sonra yapılabilir. Aralıklar giderek uzar. Pek çok dil öğrenme uygulaması bu ilkeye göre çalışır. Uygulama, kullanıcının hangi sözcükleri zorlanarak hatırladığını kaydeder ve bu sözcükleri daha sık, kolayca hatırladıklarını ise daha seyrek karşısına çıkarır.\n\nAraştırmacılar, tekrarın biçiminin de önemli olduğunu buldu. Notları yeniden okumak, bilginin tanıdık gelmesini sağlar ama bu tanıdıklık hissi yanıltıcı olabilir. Kişi bilgiyi bildiğini sanır, oysa sınavda onu hatırlayamaz. Buna karşılık kitabı kapatıp konuyu kendi kendine anlatmaya çalışmak ya da kendine sorular sormak, beyni bilgiyi geri çağırmaya zorlar. Bu çaba, ilk anda zor gelse de bilginin çok daha sağlam yerleşmesini sağlar.\n\nAraştırmalar, aralıklı tekrarın son gece yapılan yoğun çalışmadan çok daha etkili olduğunu tekrar tekrar göstermiştir. Son gece çalışması ertesi günkü sınavda işe yarayabilir, ama bilgi birkaç gün içinde büyük ölçüde kaybolur. Eğer amaç yalnızca sınavı geçmek değil, öğrendiğini gerçekten kalıcı kılmaksa, çalışmayı günlere yaymak çok daha akıllıca bir seçimdir. Üstelik günde yalnızca yirmi otuz dakikalık düzenli tekrar, sınav öncesindeki uykusuz ve stresli gecelerin de önüne geçer. Kısacası unutmak kaçınılmazdır; ama ne zaman ve nasıl tekrar edeceğimizi bilirsek, onu yavaşlatmak bizim elimizdedir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ebbinghaus'un çalışmasını kendi döneminde yenilikçi kılan nedir?",
+    "correct": "Anımsamayı sayılarla incelemeye çalışması",
+    "wrong": [
+     "Deneylerini kalabalık gruplarla yürütmesi",
+     "Yalnızca hayvanlarla deney yapması",
+     "İlk kez anlamlı sözcüklerle deney yapması"
+    ],
+    "explanation": "O döneme kadar bellek ölçülemez sanılıyordu; o bunu ölçmeye çalıştı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ebbinghaus neden anlamsız heceler kullandı?",
+    "correct": "Eski bilgiler sonucu bozmasın diye",
+    "wrong": [
+     "Hecelerin daha kolay ezberlenmesi için",
+     "Almancayı daha iyi öğrenebilmek için",
+     "Deneyi başkalarından gizlemek için"
+    ],
+    "explanation": "Önceden bilinen sözcüklerin etkisini ortadan kaldırmak istedi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir gün sonra listelerin ne kadarı unutulmuştu?",
+    "correct": "Yarıdan çoğu",
+    "wrong": [
+     "Dörtte biri",
+     "Neredeyse tamamı",
+     "Onda biri kadar"
+    ],
+    "explanation": "Bir gün sonra listelerin yarısından fazlası unutulmuştu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Unutma eğrisinin biçimi hakkında hangisi doğrudur?",
+    "correct": "Önce hızla iner, sonra düzleşir",
+    "wrong": [
+     "Düz bir çizgi hâlinde iner",
+     "Önce yavaş, sonra çok hızlı iner",
+     "Zamanla yeniden yukarı çıkar"
+    ],
+    "explanation": "Eğri başta dik iner, sonra giderek düzleşir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Tekrarları günlere yaymanın etkisi nedir?",
+    "correct": "Öğrenilenin akılda kalması",
+    "wrong": [
+     "Öğrenmenin daha kısa sürmesi",
+     "Hecelerin anlam kazanması",
+     "Listelerin giderek kısalması"
+    ],
+    "explanation": "Her tekrar eğriyi yataylaştırır, bilgi daha yavaş unutulur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dil öğrenme uygulamaları zor hatırlanan sözcükleri nasıl gösterir?",
+    "correct": "Onları daha çok yineleyerek",
+    "wrong": [
+     "Listeden çıkarıp silerek",
+     "Yalnızca sınavda sorarak",
+     "Kırmızı renkle büyük yazarak"
+    ],
+    "explanation": "Zorlanılan sözcükler daha sık gösterilir."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Notları yeniden okumanın yanıltıcı olmasının nedeni nedir?",
+    "correct": "Tanıdıklığın bilmek sanılması",
+    "wrong": [
+     "Notların çoğu zaman eksik olması",
+     "Okumanın gözleri çok yorması",
+     "El yazısının okunaksız olması"
+    ],
+    "explanation": "Tanıdıklık hissi kişiye bildiğini sandırır ama hatırlamayı garantilemez."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın metindeki temel önerisi nedir?",
+    "correct": "Çalışmayı günlere yayıp tekrar etmek",
+    "wrong": [
+     "Sınavdan önceki gece hiç uyumamak",
+     "Yalnızca anlamsız hecelerle çalışmak",
+     "Notları olabildiğince çok kez okumak"
+    ],
+    "explanation": "Aralıklı ve düzenli tekrar kalıcı öğrenme sağlar."
+   }
+  ]
+ },
+ "233": {
+  "title": "Söz ve Güven",
+  "category": "Hikaye/Kurgu",
+  "content": "Sekizinci sınıfın ilk haftasında öğretmenleri, sınıf başkanlığı seçiminin bir hafta sonra yapılacağını duyurdu. Aday olmak isteyenler, seçimden önce sınıfa kısa bir konuşma yapacaktı. Uzun süre düşündükten sonra Nehir aday olmaya karar verdi. Rakibi, sınıfın en popüler öğrencisi Kaan'dı. Kaan futbol takımının kaptanıydı, herkesle şakalaşır, her ortamda ilgi odağı olurdu. Nehir ise daha sessiz bir öğrenciydi, ama sınıfın sorunlarını dikkatle izlerdi.\n\nKaan'ın kampanyası çok gösterişliydi. Teneffüslerde arkadaşlarına renkli şekerler dağıtıyor, seçilirse ödevlerin azaltılmasını sağlayacağını, sınıfa bir oyun konsolu getireceğini söylüyordu. Sınıftakilerin çoğu bu vaatlere çok sevinmişti. Nehir'in en yakın arkadaşı Defne bile Kaan'a oy vermeyi düşündüğünü itiraf etti.\n\nNehir bir akşam yemekten sonra annesine, kendisinin de büyük vaatlerde bulunması gerekip gerekmediğini sordu. Annesi onu dikkatle dinledi. Sonra ona, yerine getiremeyeceği sözler vermenin seçimi kazandırsa bile güveni kaybettireceğini söyledi. Ödevleri öğretmenler belirliyordu; bir sınıf başkanının oyun konsolu getirmesi de mümkün değildi. Annesi, insanların bunu er ya da geç fark edeceğini ekledi.\n\nNehir konuşmasını hazırlarken önce sınıftaki arkadaşlarına neyin onları rahatsız ettiğini sordu. Kitaplığın sürekli dağınık durduğunu, teneffüste topun yetmediğini ve sınıfın camının aylardır kırık olduğunu öğrendi. Konuşmasında yalnızca bunlardan söz etti ve gerçekleştirebileceği şeyleri tek tek anlattı. Kitaplık için bir düzen önerdi, top için okul aile birliğine bir dilekçe yazacağını, cam için de müdürle görüşeceğini söyledi.\n\nSeçim günü oylar tek tek sayıldı ve Kaan yalnızca bir oy farkla kazandı. Nehir çok üzüldü, ama yine de Kaan'ın yanına gidip onu içtenlikle tebrik etti. Kaybetmek canını yaksa da, verdiği sözlerin arkasında durmaya kararlıydı. Birkaç hafta geçti. Ne ödevler azaldı ne de konsol geldi. Sınıfta söylenmeler başladı. Kaan, vaatlerinin neden gerçekleşmediğini soran arkadaşlarına cevap vermekte zorlanıyordu. Bu arada Nehir başkan olmasa da söz verdiği dilekçeyi yazdı ve müdürle görüştü. Ay sonunda sınıfın kırık camı değişti ve bahçeye iki yeni top geldi.\n\nDönem sonunda yapılan ikinci seçimde Nehir'e rakip çıkmadı. Defne, oy pusulasını sandığa atarken Nehir'e göz kırptı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nehir'in seçimdeki rakibi kimdi?",
+    "correct": "Sınıfın gözdesi Kaan",
+    "wrong": [
+     "En yakın arkadaşı Defne",
+     "Sınıf öğretmenleri",
+     "Futbol takımının koçu"
+    ],
+    "explanation": "Rakibi sınıfın en popüler öğrencisi Kaan'dı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kaan'ın vaatleri neden sorunluydu?",
+    "correct": "Yerine getirilmesi olanaksızdı",
+    "wrong": [
+     "Çok pahalı ödüller içeriyordu",
+     "Sadece futbolcuları ilgilendiriyordu",
+     "Öğretmenlere zarar veriyordu"
+    ],
+    "explanation": "Ödevleri öğretmenler belirler; konsol getirmek de mümkün değildi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annenin uyarısının özü nedir?",
+    "correct": "Tutulmayan söz güveni bozar",
+    "wrong": [
+     "Seçimi kazanmak her şeydir",
+     "Büyük vaatler oy getirir",
+     "Rakibe hiç güvenilmemelidir"
+    ],
+    "explanation": "Yerine getirilemeyecek sözler seçim kazandırsa da güveni kaybettirir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Nehir konuşmasını hazırlamadan önce ne yaptı?",
+    "correct": "Arkadaşlarına sorunlarını sordu",
+    "wrong": [
+     "Kaan'ın konuşmasını kopyaladı",
+     "Ailesinden yeni bir konsol istedi",
+     "Sınıfa renkli şekerler dağıttı"
+    ],
+    "explanation": "Önce arkadaşlarına neyin onları rahatsız ettiğini sordu."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Nehir'in kampanyasını Kaan'ınkinden ayıran temel özellik nedir?",
+    "correct": "Gerçek ihtiyaçlara dayanması",
+    "wrong": [
+     "Daha eğlenceli bir dili olması",
+     "Pahalı ödüller vaat etmesi",
+     "Çok daha uzun süre devam etmesi"
+    ],
+    "explanation": "Arkadaşlarının gerçek sorunlarından yola çıktı."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Seçimi kim kazandı?",
+    "correct": "Kaan, tek oy farkla",
+    "wrong": [
+     "Nehir, tek oy farkla",
+     "Kaan, büyük farkla",
+     "Nehir, büyük farkla"
+    ],
+    "explanation": "Kaan bir oy farkla kazandı."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Nehir'in seçimi kaybettikten sonra da sözlerini tutması neyi gösterir?",
+    "correct": "Güvenilir biri olduğunu",
+    "wrong": [
+     "Kaan'ı çok kıskandığını",
+     "Okul müdürünü tanıdığını",
+     "Seçimi hiç önemsemediğini"
+    ],
+    "explanation": "Başkan olmasa da verdiği sözlerin arkasında durdu."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son seçimde Nehir'e rakip çıkmaması neyi gösterir?",
+    "correct": "Sınıfın artık ona inandığını",
+    "wrong": [
+     "Kaan'ın okuldan ayrıldığını",
+     "Seçimin tümden iptal edildiğini",
+     "Herkesin seçimden sıkıldığını"
+    ],
+    "explanation": "Sözlerini tutması sınıfın güvenini kazandırdı."
+   }
+  ]
+ },
+ "236": {
+  "title": "Mutfaktan Toprağa",
+  "category": "Bilgi/Açıklama",
+  "content": "Mutfakta her gün sebze kabukları, meyve artıkları, çay posası ve yumurta kabukları gibi organik atıklar biriktiririz. Türkiye'de evsel atıkların neredeyse yarısı bu tür organik atıklardan oluşur. Bu atıklar çöpe atıldığında çoğunlukla çöp depolama alanlarına gider. Orada havasız ortamda çürürken, sera etkisi yaratan ve iklim değişikliğine katkıda bulunan metan gazı açığa çıkar. Oysa aynı atıklar, doğru şekilde değerlendirildiğinde bahçeler için değerli bir gübreye dönüşebilir. Bu işleme kompost denir. Kompost yapmak hem çöp miktarını azaltır hem de bahçe ve saksılar için satın alınan kimyasal gübre ihtiyacını düşürür.\n\nKompost, aslında doğanın kendi döngüsünün evde taklit edilmesidir. Ormanda yere düşen yapraklar, toprakta yaşayan bakteriler, mantarlar ve solucanlar tarafından parçalanır ve zamanla verimli bir toprağa dönüşür. Ev kompostunda da aynı küçük canlılar çalışır. Onların işini iyi yapabilmesi için ise doğru karışım, nem ve hava gerekir.\n\nİyi bir kompostun sırrı, “yeşil” ve “kahverengi” malzemeleri dengelemektir. Yeşil malzemeler sebze ve meyve artıkları, kahve telvesi ve taze çim gibi nemli, azotça zengin atıklardır. Kahverengi malzemeler ise kuru yapraklar, karton parçaları, gazete kâğıdı ve küçük dallar gibi kuru, karbonca zengin atıklardır. Genel öneri, her bir ölçü yeşil malzemeye iki ölçü kahverengi malzeme eklemektir. Yığın çok ıslak olursa kötü kokar; çok kuru olursa çürüme yavaşlar. Kompostun nemi, sıkılmış bir sünger kadar olmalıdır.\n\nBazı atıklar komposta konmamalıdır. Et, balık, süt ürünleri ve yağlı yiyecekler kötü koku yaratır ve haşereleri çeker. Hastalıklı bitkiler ve evcil hayvan dışkıları da kompostun dışında tutulmalıdır. Parlak baskılı dergi kâğıtları ve plastik kaplı kartonlar da uygun değildir, çünkü içerdikleri maddeler kolayca çürümez.\n\nYığının bir kürek ya da çatalla haftada bir kez karıştırılması, içeriye hava girmesini sağlar ve çürümeyi hızlandırır. Koşullar uygun olduğunda, birkaç ay içinde atıklar koyu renkli, toprak kokulu ve ufalanan bir malzemeye dönüşür. Bu kompost saksılarda, bahçede ya da balkondaki sebzelerde kullanılabilir. Bahçesi olmayanlar için balkonda kullanılabilecek kapalı kompost kutuları ve solucanlı kompost sistemleri de bulunuyor. Solucanlı sistemlerde özel bir kırmızı solucan türü kullanılır; bu solucanlar atıkları hızla yiyerek çok verimli bir gübre üretir ve doğru kurulduğunda kötü koku yaratmaz.\n\nBazı belediyeler de bu konuda adım atıyor. Kimi ilçelerde organik atıklar ayrı kutularda toplanıyor ve büyük kompost tesislerinde işleniyor. Elde edilen kompost, parkların ve yeşil alanların bakımında kullanılıyor. Kısacası mutfaktaki küçük bir alışkanlık değişikliği, hem çevreye hem de cebimize katkı sağlayabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Depolama alanlarında çürüyen organik atıklar hangi gazı üretir?",
+    "correct": "Metan",
+    "wrong": [
+     "Oksijen",
+     "Helyum",
+     "Azot"
+    ],
+    "explanation": "Havasız ortamda çürürken metan gazı açığa çıkar."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kompostun ekonomik yararı nedir?",
+    "correct": "Gübre için harcanan parayı azaltması",
+    "wrong": [
+     "Çöplerin daha pahalıya toplanması",
+     "Belediyelere ek vergi kazandırması",
+     "Pazardaki sebze fiyatlarını yükseltmesi"
+    ],
+    "explanation": "Kimyasal gübre ihtiyacını düşürür."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar kompostu neden doğanın döngüsüne benzetir?",
+    "correct": "Benzer küçük yaratıkların iş görmesi",
+    "wrong": [
+     "Ormanların evlerden daha temiz olması",
+     "Yaprakların hiç çürümeden kalması",
+     "Kompostun yalnız ormanda yapılabilmesi"
+    ],
+    "explanation": "Ormanda olduğu gibi bakteri, mantar ve solucanlar atıkları parçalar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hangisi kahverengi malzemelere örnektir?",
+    "correct": "Kurumuş yapraklar",
+    "wrong": [
+     "Kahve telvesi",
+     "Taze biçilmiş çim",
+     "Muz kabukları"
+    ],
+    "explanation": "Kuru yapraklar kahverengi malzemedir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kompost kötü kokuyorsa en olası neden nedir?",
+    "correct": "Yığının fazla nemli olması",
+    "wrong": [
+     "Yığına çok karton katılması",
+     "Yığının sık karıştırılması",
+     "Yığının fazla kuru kalması"
+    ],
+    "explanation": "Yığın çok ıslak olursa kötü kokar."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Et ve süt ürünlerinin komposta konmamasının nedeni nedir?",
+    "correct": "Kokup zararlıları çekmeleri",
+    "wrong": [
+     "Çok hızlı çürüyüp bitmeleri",
+     "Toprağı fazla nemli yapmaları",
+     "Solucanların onları sevmesi"
+    ],
+    "explanation": "Kötü koku yaratır ve haşereleri çekerler."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kompost yığını neden haftada bir karıştırılır?",
+    "correct": "Yığının nefes alması için",
+    "wrong": [
+     "Yığın daha hızlı kurusun diye",
+     "Solucanlar dışarı çıksın diye",
+     "Renk daha açık olsun diye"
+    ],
+    "explanation": "Karıştırma hava girmesini sağlar ve çürümeyi hızlandırır."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazar kompostu hangi açıdan değerlendirir?",
+    "correct": "Kişisel alışkanlığın toplumsal yararı",
+    "wrong": [
+     "Belediyelerin ihmalinin sert eleştirisi",
+     "Parkların bakım masraflarının artışı",
+     "Kompost tesislerinin tehlikeleri"
+    ],
+    "explanation": "Küçük bir alışkanlık hem çevreye hem cebe katkı sağlar."
+   }
+  ]
+ },
+ "237": {
+  "title": "Pazar Kahvaltısı",
+  "category": "Hikaye/Kurgu",
+  "content": "Pazar sabahıydı. Defne erkenden uyandı. Mutfaktan gelen seslere doğru yürüdü. Babası ocağın başında duruyordu. “Bugün birlikte krep yapalım mı?” diye sordu. Defne sevinçle zıpladı. Krep onun en sevdiği kahvaltıydı. Hemen ellerini yıkadı ve önlüğünü taktı.\n\nÖnce malzemeleri hazırladılar. Bir kaseye un, süt ve yumurta koydular. Defne bunları çırpma teliyle karıştırdı. Karışım biraz topaklı oldu, ama babası onu daha uzun çırpmasını söyledi. Defne kolu yorulana kadar çırptı ve karışım pürüzsüz oldu.\n\nBabası tavayı ısıttı ve içine biraz tereyağı koydu. Sonra bir kepçe karışımı tavaya döktü. Krep yavaş yavaş pişti ve kenarları altın rengine döndü. Mutfağı güzel bir koku sardı. Babası onu ustaca havaya atıp çevirdi. Defne de denemek istedi. İlk krebi çevirirken krep tavanın dışına düştü! İkisi de kahkahalarla güldü. Babası düşen krebi yere düşmeden yakalamaya çalışmıştı ama yetişememişti.\n\nİkinci denemede Defne krebi başarıyla çevirdi. Kreplerin üstüne bal ve muz koydular. Kokuyu alan annesi ve küçük kardeşi de uykulu gözlerle mutfağa geldi. Hep birlikte keyifli bir kahvaltı yaptılar. Defne her pazar krep yapmak istediğini söyledi.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Babası Defne'ye ne yapmayı önerdi?",
+    "correct": "Birlikte krep pişirmeyi",
+    "wrong": [
+     "Parka gidip top oynamayı",
+     "Birlikte kek yapmayı",
+     "Pazardan meyve almayı"
+    ],
+    "explanation": "Babası birlikte krep yapmayı önerdi."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Defne'nin zıplamasının nedeni nedir?",
+    "correct": "Sevdiği yemeği yapacakları için",
+    "wrong": [
+     "Okula gitmeyecek olduğu için",
+     "Babasının erkenden kalktığı için",
+     "Yeni bir önlük aldığı için"
+    ],
+    "explanation": "Krep onun en sevdiği kahvaltıydı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Karışım topaklı olunca ne yapıldı?",
+    "correct": "Daha uzun çırpıldı",
+    "wrong": [
+     "İçine su eklendi",
+     "Hemen tavaya döküldü",
+     "Ocakta ısıtıldı"
+    ],
+    "explanation": "Babası daha uzun çırpmasını söyledi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Defne'nin kolu yorulana kadar çırpması onun hakkında ne gösterir?",
+    "correct": "Sabırlı olduğunu",
+    "wrong": [
+     "Acele ettiğini",
+     "Çabuk sıkıldığını",
+     "Babasına kızdığını"
+    ],
+    "explanation": "Karışım pürüzsüz olana kadar vazgeçmedi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Defne'nin ilk denemesinde ne oldu?",
+    "correct": "Krep tavadan dışarı fırladı",
+    "wrong": [
+     "Krep tavada yanıp kömürleşti",
+     "Krep tavanın dibine yapıştı",
+     "Krep ortadan ikiye yırtıldı"
+    ],
+    "explanation": "İlk krebi çevirirken krep tavanın dışına düştü."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Krep düşünce ikisinin gülmesi ne gösterir?",
+    "correct": "Bu küçük kazayı dert etmediklerini",
+    "wrong": [
+     "Kreplerin tadını beğenmediklerini",
+     "Mutfağı temizlemek istemediklerini",
+     "Birbirlerine çok kızdıklarını"
+    ],
+    "explanation": "Kazayı eğlenceli buldular, üzülmediler."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kreplerin üstüne ne konuldu?",
+    "correct": "Bal ile muz dilimleri",
+    "wrong": [
+     "Reçel ile ceviz içi",
+     "Peynir ile siyah zeytin",
+     "Çikolata ile çilek"
+    ],
+    "explanation": "Üstüne bal ve muz koydular."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Defne'nin her pazar krep yapmak istemesi neyi gösterir?",
+    "correct": "Bu sabahı çok sevdiğini",
+    "wrong": [
+     "Başka yemek bilmediğini",
+     "Okula gitmek istemediğini",
+     "Annesine kızgın olduğunu"
+    ],
+    "explanation": "Babasıyla geçirdiği sabah onu çok mutlu etti."
+   }
+  ]
+ },
+ "238": {
+  "title": "Gövdedeki Takvim",
+  "category": "Bilgi/Açıklama",
+  "content": "Bir ağacın kesilmiş gövdesine baktığınızda iç içe geçmiş halkalar görürsünüz. Bu halkalar, ağacın kaç yaşında olduğunu anlatır. Ağaçlar her yıl gövdelerine yeni bir katman ekleyerek kalınlaşır. Bu katmanların her biri bir halka oluşturur. En içteki halka ağacın fidan olduğu ilk yılı, en dıştaki halka ise son yılı gösterir. Yani gövdenin ortasından kabuğa doğru gitmek, ağacın hayatında geçmişten bugüne yolculuk yapmak gibidir.\n\nBir halkanın içinde iki farklı renk vardır. İlkbaharda ve yaz başında ağaç hızlı büyür. Bu dönemde oluşan odun açık renkli ve geniştir. Yaz sonunda ve sonbaharda büyüme yavaşlar. Bu dönemde oluşan odun daha koyu ve dardır. Bir açık ve bir koyu bant birlikte bir yılı gösterir. Bu yüzden koyu çizgileri sayarak ağacın yaşını bulabiliriz.\n\nHalkalar yalnızca ağacın yaşını değil, geçmişte yaşadıklarını da anlatır. Yağmurlu ve ılık bir yılda ağaç çok büyür ve halka kalın olur. Kurak ya da çok soğuk bir yılda ise halka incecik kalır. Gövdedeki kararmış bir iz, ağacın bir zamanlar orman yangını geçirdiğini gösterebilir. Bazı halkaların bir yanının kalın, öbür yanının ince olması da ağacın eğik büyüdüğünü ya da bir yanının daha çok güneş aldığını anlatır.\n\nBilim insanları ağaç halkalarını inceleyerek yüzlerce yıl önceki havanın nasıl olduğunu öğrenebilir. Bu bilim dalına dendrokronoloji denir. Bir ağacın yaşını öğrenmek için onu kesmek de gerekmez; bu ağaçlar için çok iyi bir haberdir. Özel bir burgu ile gövdeden ince bir kalem kadar örnek alınır ve ağaç zarar görmeden halkalar sayılır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ağacın gövdesindeki halkalar neyi gösterir?",
+    "correct": "Ağacın kaç yıllık olduğunu",
+    "wrong": [
+     "Ağacın ne kadar uzun olduğunu",
+     "Ağacın hangi ülkede yetiştiğini",
+     "Ağacın kaç dalı olduğunu"
+    ],
+    "explanation": "Halkalar ağacın yaşını anlatır."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "En dıştaki halka hangi dönemi anlatır?",
+    "correct": "Ağacın en son geçen yılını",
+    "wrong": [
+     "Ağacın fidan olduğu ilk yılı",
+     "Ormanın ilk kurulduğu yılı",
+     "Ağacın tohum olduğu dönemi"
+    ],
+    "explanation": "En dıştaki halka son yılı gösterir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bahar aylarında oluşan odun nasıldır?",
+    "correct": "Açık tonlu, geniş",
+    "wrong": [
+     "Koyu renkli ve dar",
+     "Siyah ve çok sert",
+     "Kırmızı ve incecik"
+    ],
+    "explanation": "Bu dönemde oluşan odun açık renkli ve geniştir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yaşı bulmak için koyu çizgilerin sayılmasının nedeni nedir?",
+    "correct": "Her birinin bir yılı bitirmesi",
+    "wrong": [
+     "Açık çizgilerin hiç görünmemesi",
+     "Koyu çizgilerin daha güzel olması",
+     "Ağacın yalnız kışın büyümesi"
+    ],
+    "explanation": "Bir açık ve bir koyu bant birlikte bir yılı gösterir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "İnce bir halka ağacın o yılı hakkında ne düşündürür?",
+    "correct": "Zor bir yıl geçirdiğini",
+    "wrong": [
+     "Çok bol yağmur aldığını",
+     "Kesilmek üzere olduğunu",
+     "Yeni dikilmiş olduğunu"
+    ],
+    "explanation": "Kurak ya da soğuk yıllarda halka incecik kalır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Halkanın bir yanının kalın olması neyi gösterebilir?",
+    "correct": "O yanın daha çok ışık almasını",
+    "wrong": [
+     "Ağacın iki kez yangın geçirdiğini",
+     "O yıl hiç yağmur yağmadığını",
+     "Ağacın henüz çok genç olduğunu"
+    ],
+    "explanation": "Bir yanın daha çok güneş alması halkayı orada kalınlaştırır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ağaç halkalarını inceleyen bilim dalının adı nedir?",
+    "correct": "Dendrokronoloji",
+    "wrong": [
+     "Paleontoloji",
+     "Meteoroloji",
+     "Paleoklimatoloji"
+    ],
+    "explanation": "Bu bilim dalına dendrokronoloji denir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta vurgulanan yöntemin önemi nedir?",
+    "correct": "Ağaca zarar vermeden bilgi edinilmesi",
+    "wrong": [
+     "Ağacın daha hızlı büyümesinin sağlanması",
+     "Ormanların daha kolay kesilebilmesi",
+     "Halkaların sayısının azaltılması"
+    ],
+    "explanation": "Burguyla ince örnek alınır, ağaç kesilmez."
+   }
+  ]
+ },
+ "239": {
+  "title": "Yırtık Sayfa",
+  "category": "Hikaye/Kurgu",
+  "content": "Ozan, okul kütüphanesinden uzay hakkında kocaman resimli bir kitap ödünç almıştı. Kitapta gezegenlerin, yıldızların ve astronotların renkli fotoğrafları vardı. Ozan her akşam yatmadan önce kitaba bakıyor, en sevdiği sayfa olan Satürn'ün halkalarını uzun uzun inceliyordu. Büyüyünce astronot olmayı hayal ediyordu. Kitabı iki hafta sonra geri vermesi gerekiyordu ve her gün biraz daha okumaya çalışıyordu.\n\nBir akşam küçük kardeşi Elif, Ozan odada yokken kitabı aldı. Elif de resimlere bakmak istemişti. Ama sayfayı çevirirken heyecanla çekiştirdi ve Satürn sayfası kenarından yırtıldı. Elif korkup kitabı Ozan'ın yatağının üstüne bıraktı ve odasına kaçtı.\n\nOzan odasına dönüp yırtığı görünce önce çok kızdı. Kimin yaptığını hemen tahmin etti, çünkü evde o kitaba bakan başka kimse yoktu. Kitap onun değildi; kütüphaneye geri vermesi gerekiyordu. Ne yapacağını düşündü. Yırtılan sayfayı kimseye göstermeden kitabı kütüphanenin rafına bırakabilirdi. Belki kimse fark etmezdi. Böylece ne kendisi ne de kardeşi başını derde sokardı. Ama bu doğru olur muydu? Bir sonraki okuyucu yırtık sayfayı gördüğünde, kitabı kendisinin yırttığını düşünebilirdi.\n\nErtesi gün Ozan, Elif'le konuştu. Elif ağlayarak özür diledi. Ozan da ona kızgın olmadığını, ama kütüphaneciye gerçeği söylemeleri gerektiğini anlattı. Birlikte, el ele kütüphaneye gittiler. Yol boyunca Elif'in kalbi küt küt atıyordu. Ozan kütüphaneci Gül Hanım'a olanları anlattı. Gül Hanım sessizce dinledi, sonra gülümsedi ve dürüstlükleri için onlara teşekkür etti. Kitapların zamanla yıpranabileceğini, önemli olanın onlara özen göstermek ve bir sorun olduğunda saklamamak olduğunu söyledi. Sonra çekmecesinden özel bir şeffaf bant çıkardı ve sayfanın nasıl onarılacağını adım adım gösterdi. Elif bandı yırtığın üstüne kendi elleriyle, büyük bir dikkatle yapıştırdı. Onarılan sayfa neredeyse yeni gibi olmuştu.\n\nO günden sonra Elif, ağabeyinin eşyalarına izin almadan dokunmamayı ve kitapları dikkatle tutmayı öğrendi. Ozan da kütüphanede ayda bir gün Gül Hanım'a yıpranmış kitapları onarmasında yardım etmeye başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ozan'ın kitapta en sevdiği sayfa hangisiydi?",
+    "correct": "Satürn'ün halkaları",
+    "wrong": [
+     "Ay'ın kraterli yüzeyi",
+     "Astronotların aracı",
+     "Mars'ın kızıl kumları"
+    ],
+    "explanation": "En sevdiği sayfa Satürn'ün halkalarıydı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Elif'in kitabı bırakıp kaçmasının nedeni nedir?",
+    "correct": "Korkuya kapılması",
+    "wrong": [
+     "Kitabı beğenmemesi",
+     "Annesinin çağırması",
+     "Uykusunun gelmesi"
+    ],
+    "explanation": "Sayfayı yırtınca korkup kaçtı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ozan yırtığı görünce ilk olarak ne hissetti?",
+    "correct": "Öfke ve kırgınlık",
+    "wrong": [
+     "Merak duygusu",
+     "Sevinç duygusu",
+     "Utanç ve mahcubiyet"
+    ],
+    "explanation": "Yırtığı görünce önce çok kızdı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ozan'ın kitabı sessizce rafa bırakmaktan vazgeçmesinin nedeni nedir?",
+    "correct": "Başkasının suçlanabilecek olması",
+    "wrong": [
+     "Kütüphanecinin onu izlediğini görmesi",
+     "Kitabın raftaki yerini bilmemesi",
+     "Kitabı kendine saklamak istemesi"
+    ],
+    "explanation": "Sonraki okuyucu suçlanabilirdi; bu doğru olmazdı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gül Hanım sayfayı onarmak için ne kullandı?",
+    "correct": "Saydam yapışkan şerit",
+    "wrong": [
+     "Sıvı bir yapıştırıcı",
+     "İğne ile kalın iplik",
+     "Renkli bir kâğıt parçası"
+    ],
+    "explanation": "Çekmecesinden özel bir şeffaf bant çıkardı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gül Hanım'ın tepkisinden hangi sonuç çıkarılabilir?",
+    "correct": "Dürüstlüğe hatadan çok önem verdiği",
+    "wrong": [
+     "Kitapların yıpranmadığını sandığı",
+     "Çocuklara ceza vermeyi sevdiği",
+     "Kütüphaneyi hemen kapatmak istediği"
+    ],
+    "explanation": "Teşekkür etti ve önemli olanın saklamamak olduğunu söyledi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Elif'in bandı kendi elleriyle yapıştırması ona ne kazandırır?",
+    "correct": "Kendi hatasını onarmayı",
+    "wrong": [
+     "Kütüphaneci olma fırsatını",
+     "Yeni bir kitap almayı",
+     "Ağabeyini kızdırmayı"
+    ],
+    "explanation": "Elif hatasını onarma sorumluluğunu üstlenir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün sonu karakterler hakkında ne anlatır?",
+    "correct": "Yaşadıklarından ders çıkardıklarını",
+    "wrong": [
+     "Kütüphaneye bir daha gitmediklerini",
+     "Birbirleriyle hiç konuşmadıklarını",
+     "Kitap okumaktan vazgeçtiklerini"
+    ],
+    "explanation": "Elif dikkatli olmayı, Ozan kitap onarmayı öğrendi."
+   }
+  ]
+ }
+}

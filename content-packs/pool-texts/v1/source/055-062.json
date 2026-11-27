@@ -1,0 +1,557 @@
+{
+ "55": {
+  "title": "Taşa Dönüşen Kemikler",
+  "category": "Bilgi/Açıklama",
+  "content": "Müzelerde gördüğümüz dev dinozor iskeletleri, milyonlarca yıl önce yaşamış canlılardan geriye kalan izlerdir. Bu izlere fosil denir. Peki bir hayvanın kemikleri nasıl olur da bu kadar uzun süre bozulmadan kalabilir?\n\nBir canlı öldüğünde vücudu genellikle kısa sürede çürür ve kaybolur. Ama bazen hayvan bir gölün ya da nehrin kenarında ölür ve vücudu hızla çamur ya da kumla örtülür. Çamur, vücudu havadan ve onu yiyebilecek hayvanlardan korur. Yumuşak kısımlar yine de çürür, ama kemikler ve dişler gibi sert kısımlar kalır.\n\nYıllar geçtikçe üstte yeni çamur katmanları birikir. Bu katmanlar zamanla sıkışarak taşa dönüşür. Bu sırada toprağın içindeki sular, kemiklerin içindeki küçük boşluklara sızar. Suyun taşıdığı mineraller bu boşluklara yerleşir ve kemik yavaş yavaş taşlaşır. Bu iş binlerce, hatta milyonlarca yıl sürer. Sonunda kemiğin biçimi korunur, ama içi artık taştan oluşur. Bu yüzden fosiller, gerçek kemikten çok daha ağırdır.\n\nFosiller genellikle toprak hareketleri ya da rüzgâr ve yağmurun kayaları aşındırmasıyla yeniden yüzeye çıkar. Fosil bilimciler bu kayaları dikkatle kazar. Küçük fırçalar ve ince aletlerle fosilleri taşın içinden çıkarırlar. Bir iskeleti tamamen çıkarmak bazen yıllar alabilir.\n\nFosiller bize çok şey anlatır. Bir hayvanın ne kadar büyük olduğunu, ne yediğini, hatta nasıl yürüdüğünü fosillerden öğrenebiliriz. Ayak izi fosilleri de dinozorların sürüler hâlinde dolaşıp dolaşmadığını gösterir. Her yeni fosil, geçmişin bilmecesine eklenen küçük bir parça gibidir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Metne göre fosil nedir?",
+    "correct": "Çok eski canlılardan kalan iz",
+    "wrong": [
+     "Müzelerde yapılan bir heykel",
+     "Dinozorların yediği bir bitki",
+     "Kayalarda biriken bir maden"
+    ],
+    "explanation": "Milyonlarca yıl önce yaşamış canlılardan geriye kalan izlere fosil denir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hayvanın vücudunun hızla çamurla örtülmesi neden önemlidir?",
+    "correct": "Kalıntıyı dışarıdan korur",
+    "wrong": [
+     "Yumuşak kısımları korur",
+     "Kemiklerin rengini açık tutar",
+     "Hayvanı daha büyük gösterir"
+    ],
+    "explanation": "Çamur, vücudu havadan ve onu yiyebilecek hayvanlardan korur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fosil olarak kalabilen kısımlar hangileridir?",
+    "correct": "Kemikler ve dişler",
+    "wrong": [
+     "Deri ve kıl kökleri",
+     "Kaslar ve deriler",
+     "Gözler ve tüyler"
+    ],
+    "explanation": "Yumuşak kısımlar çürür, kemikler ve dişler gibi sert kısımlar kalır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kemiğin taşlaşmasını sağlayan nedir?",
+    "correct": "Suyla gelen minerallerin boşlukları doldurması",
+    "wrong": [
+     "Güneşin kemikleri uzun süre ısıtıp kurutması",
+     "Rüzgârın kemiklerin üstüne kum taşıyıp yığması",
+     "Hayvanların kemikleri çiğneyip küçük parçalaması"
+    ],
+    "explanation": "Sızan suyun taşıdığı mineraller kemikteki boşluklara yerleşir ve kemik taşlaşır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Fosillerin gerçek kemikten daha ağır olmasının nedeni nedir?",
+    "correct": "İçlerinin taş maddesiyle dolmuş olması",
+    "wrong": [
+     "Üzerlerinde kalın çamur kalmış olması",
+     "Dinozorların çok büyük hayvanlar olması",
+     "Müzelerde metal parçalarla birleşmeleri"
+    ],
+    "explanation": "Fosilde kemiğin biçimi korunur ama içi artık taştan oluşur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fosil bilimciler fosilleri taşın içinden nasıl çıkarır?",
+    "correct": "İnce uçlu araçlarla özenle",
+    "wrong": [
+     "Büyük kepçelerle hızlıca",
+     "Suyla yıkayarak eriterek",
+     "Taşı ısıtıp kırarak çabucak"
+    ],
+    "explanation": "Fosil bilimciler küçük fırçalar ve ince aletlerle fosilleri dikkatle çıkarır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ayak izi fosilleri dinozorların hangi özelliği hakkında bilgi verir?",
+    "correct": "Topluluk hâlinde yaşayıp yaşamadıkları",
+    "wrong": [
+     "Kemiklerinin ne kadar ağır olduğu",
+     "Hangi bitkilerle beslendikleri",
+     "Hangi bitkilerle beslendikleri bilgisi"
+    ],
+    "explanation": "Ayak izleri dinozorların sürüler hâlinde dolaşıp dolaşmadığını gösterir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son cümlede fosillerin bilmece parçasına benzetilmesi neyi anlatır?",
+    "correct": "Her yeni bulgunun geçmişi biraz daha açtığını",
+    "wrong": [
+     "Fosillerin çocuk oyuncağı diye kullanıldığını",
+     "Fosil bulmanın bir bilmece kadar kolay olduğunu",
+     "Dinozorların bilmece gibi küçük canlılar olduğunu"
+    ],
+    "explanation": "Her yeni fosil geçmişe ait bilgiyi tamamlayan küçük bir parça gibidir."
+   }
+  ]
+ },
+ "56": {
+  "title": "Kaybedilen Maç",
+  "category": "Hikaye/Kurgu",
+  "content": "Can, okulun satranç kulübüne geçen yıl katılmıştı. Bu yıl ilk kez ilçedeki turnuvaya gidecekti. Günlerce çalıştı. Akşamları babasıyla oynadı, öğretmeninin verdiği bulmacaları çözdü. Turnuva sabahı çok heyecanlıydı. Kahvaltıda bir şey yiyemedi, yol boyunca da hiç konuşmadı. Salona girdiğinde onlarca masa ve yüzlerce satranç taşı gördü.\n\nİlk maçı kolay kazandı. İkinci maçta ise karşısına kendisinden bir yaş küçük bir kız çıktı. Can, kendinden küçük biriyle oynadığı için maçı rahat kazanacağını düşündü. Hızlı hızlı oynamaya başladı. Ama birkaç hamle sonra atını kaybetti, ardından da kalesini. Kız çok sakin oynuyordu ve hiç acele etmiyordu. Her hamleden önce uzun uzun düşünüyordu. Sonunda Can'ın şahı köşeye sıkıştı. Can maçı kaybetmişti.\n\nCan masadan kalkarken gözleri doldu. Öğretmeninin yanına gidip “Ben satrançta iyi değilim” dedi. Öğretmeni gülümsedi ve onu biraz dinlenmeye çağırdı. Sonra maçın hamlelerini birlikte tahtaya dizdiler. Öğretmeni, Can'ın nerede acele ettiğini gösterdi. “Bu maçı kaybetmen, iyi olmadığın anlamına gelmez. Bugün sana bir şey öğretti” dedi.\n\nKalan maçlarda Can her hamleden önce durup düşündü. Rakibinin ne yapmak istediğini tahmin etmeye çalıştı. Elini taşa uzatmadan önce kendine “Acele etme” dedi. Bir maçı kazandı, bir maçı berabere bitirdi. Berabere biten maçta rakibi ona elini uzatıp “Çok iyi savundun” dedi. Turnuvada derece alamadı ama eve dönerken kendini iyi hissediyordu. O akşam babasına, kaybettiği maçtan neler öğrendiğini anlattı. Babası, en çok da onun pes etmemesine sevindiğini söyledi. Bir sonraki turnuva için de şimdiden hazırlanmaya başladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Can turnuvaya nasıl hazırlandı?",
+    "correct": "Ailesiyle oyun ve bulmaca çalıştı",
+    "wrong": [
+     "Kulüpteki arkadaşlarıyla yarıştı",
+     "Satranç kitaplarını ezberleyip okudu",
+     "İnternetten maç videoları izledi"
+    ],
+    "explanation": "Can akşamları babasıyla oynadı ve öğretmeninin verdiği bulmacaları çözdü."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Can'ın kahvaltı yapamaması ve yolda konuşmaması neyi gösterir?",
+    "correct": "Gergin ve tedirgin olduğunu",
+    "wrong": [
+     "Babasına çok kırgın olduğunu",
+     "Hasta ve yorgun olduğunu",
+     "Turnuvayı önemsemediğini"
+    ],
+    "explanation": "Can turnuva sabahı çok heyecanlıydı; bu yüzden yiyemedi ve konuşmadı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Can ikinci maçı kaybetmesinde hangi düşüncesinin payı vardır?",
+    "correct": "Rakibini yaşı yüzünden hafife almasının",
+    "wrong": [
+     "Kızın kuralları bilmediğini sanmasının",
+     "Turnuvanın çok uzun süreceğini düşünmesinin",
+     "Öğretmeninin onu izlediğini fark etmesinin"
+    ],
+    "explanation": "Can, rakibi küçük olduğu için rahat kazanacağını düşündü ve acele etti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can'ın rakibi nasıl oynuyordu?",
+    "correct": "Düşünerek ve yavaşça",
+    "wrong": [
+     "Hızlı ve dikkatsizce",
+     "Sinirli ve gürültülü",
+     "Gülerek ve şakayla"
+    ],
+    "explanation": "Kız çok sakin oynuyor, her hamleden önce uzun uzun düşünüyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Öğretmen Can'a ne gösterdi?",
+    "correct": "Aceleci davrandığı yerleri",
+    "wrong": [
+     "Rakibinin yaptığı hataları",
+     "Turnuvadaki derece listesini",
+     "Bir sonraki maçın masasını"
+    ],
+    "explanation": "Öğretmen maçın hamlelerini dizip Can'ın nerede acele ettiğini gösterdi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Öğretmenin “Bugün sana bir şey öğretti” sözüyle anlatmak istediği nedir?",
+    "correct": "Yenilginin bir öğrenme fırsatı olduğu",
+    "wrong": [
+     "Can'ın satrancı bırakması gerektiği",
+     "Kazanmanın her şeyden daha önemli olduğu",
+     "Rakibin şans eseri kazanmış olduğu"
+    ],
+    "explanation": "Öğretmen, kaybetmenin yetersizlik değil, öğrenme fırsatı olduğunu anlatmak istedi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can kalan maçlarda ne yaptı?",
+    "correct": "Hamle öncesi bir süre durdu",
+    "wrong": [
+     "Tüm maçları çabucak bitirdi",
+     "Rakiplerine sürekli soru sordu",
+     "Öğretmeninden yardım istedi"
+    ],
+    "explanation": "Can her hamleden önce durup düşündü ve kendine acele etmemesini söyledi."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri hangisidir?",
+    "correct": "Kaybetmek de öğrenmenin bir parçasıdır",
+    "wrong": [
+     "Küçük rakipler genellikle kolay yenilir",
+     "Turnuvada derece almak en önemli şeydir",
+     "Satranç yalnızca hızlı oynanmalıdır"
+    ],
+    "explanation": "Can kaybettiği maçtan ders çıkardı ve pes etmeden hazırlanmaya devam etti."
+   }
+  ]
+ },
+ "57": {
+  "title": "Ay'ın Değişen Yüzü",
+  "category": "Bilgi/Açıklama",
+  "content": "Geceleri gökyüzüne baktığımızda Ay'ı her zaman aynı biçimde görmeyiz. Bazen tam yuvarlaktır, bazen ince bir hilaldir, bazen de hiç görünmez. Ay'ın biçimi değişiyormuş gibi görünür ama aslında Ay hep aynıdır.\n\nAy kendi kendine ışık saçmaz. Gökyüzünde parlak görünmesinin nedeni, Güneş'ten gelen ışığı yansıtmasıdır. Ay, Dünya'nın çevresinde dönerken Güneş her zaman onun bir yarısını aydınlatır. Biz ise Dünya'dan bu aydınlık yarının bazen tamamını, bazen bir kısmını görürüz.\n\nAy, Güneş ile Dünya'nın arasına geldiğinde aydınlık yüzü bize dönük olmaz. Bu yüzden Ay'ı göremeyiz. Buna yeni ay denir. Sonraki günlerde aydınlık kısım yavaş yavaş büyür ve önce hilal, sonra yarım ay görünür. Yaklaşık iki hafta sonra Ay'ın aydınlık yüzünün tamamı bize döner ve dolunayı görürüz. Ardından aydınlık kısım yeniden küçülmeye başlar.\n\nAy'ın aydınlık kısmının küçüldüğü bu döneme son dördün denir. Bu döngü yaklaşık bir ay sürer ve sonra yeniden başlar. Eski insanlar zamanı ölçmek için Ay'ın evrelerinden yararlanmışlardır. Pek çok eski takvim de bu döngüye göre hazırlanmıştır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazara göre Ay'ın biçimi gerçekten değişir mi?",
+    "correct": "Değişmez, sadece öyle görünür",
+    "wrong": [
+     "Değişir, her gece küçülür",
+     "Değişir, ayda bir kez büyür",
+     "Değişmez, ancak rengi değişir"
+    ],
+    "explanation": "Ay'ın biçimi değişiyormuş gibi görünür ama aslında Ay hep aynıdır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay neden parlak görünür?",
+    "correct": "Güneş'in ışığını geri yansıttığı için",
+    "wrong": [
+     "Kendi içinden ışık yaydığı için",
+     "Dünya'nın ışığını içinde tuttuğu için",
+     "Yıldızlara çok yakın olduğu için"
+    ],
+    "explanation": "Ay kendi ışığını saçmaz; Güneş'ten gelen ışığı yansıtır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Güneş Ay'ın ne kadarını aydınlatır?",
+    "correct": "Yarısını",
+    "wrong": [
+     "Tamamını",
+     "Dörtte birini",
+     "Hiçbir yerini"
+    ],
+    "explanation": "Güneş her zaman Ay'ın bir yarısını aydınlatır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'ın hiç görünmediği evreye ne ad verilir?",
+    "correct": "Yeni ay",
+    "wrong": [
+     "Dolunay",
+     "Hilal",
+     "Yarım ay"
+    ],
+    "explanation": "Ay, Güneş ile Dünya arasına gelince aydınlık yüzü bize dönmez; buna yeni ay denir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yeni aydan yaklaşık iki hafta sonra ne görülür?",
+    "correct": "Tam yuvarlak Ay",
+    "wrong": [
+     "İnce bir hilal",
+     "Yarım bir Ay",
+     "Hiç Ay görünmez"
+    ],
+    "explanation": "Yaklaşık iki hafta sonra aydınlık yüzün tamamı bize döner ve dolunay görülür."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yeni ay sırasında Ay'ı görememizin nedeni nedir?",
+    "correct": "Işıklı yüzünün bize dönük olmaması",
+    "wrong": [
+     "Güneş'in Ay'ı o gece aydınlatmaması",
+     "Bulutların Ay'ın önünü kapatması",
+     "Ay'ın Dünya'dan çok uzaklaşması"
+    ],
+    "explanation": "Ay, Güneş ile Dünya arasındayken aydınlık yüzü Güneş'e, karanlık yüzü bize dönüktür."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'ın evreleri döngüsü yaklaşık ne kadar sürer?",
+    "correct": "Bir ay",
+    "wrong": [
+     "Bir hafta",
+     "Bir yıl",
+     "On gün"
+    ],
+    "explanation": "Ay'ın evreleri yaklaşık bir ayda tamamlanıp yeniden başlar."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Son paragrafa göre Ay'ın evreleri insanlar için neden önemli olmuştur?",
+    "correct": "Zamanı hesaplamaya yaradığı için",
+    "wrong": [
+     "Geceleri yolu aydınlattığı için",
+     "Denizleri gece boyunca ısıttığı için",
+     "Hava durumunu önceden bildirdiği için"
+    ],
+    "explanation": "Eski insanlar zamanı ölçmek için Ay'ın evrelerinden yararlanmıştır."
+   }
+  ]
+ },
+ "61": {
+  "title": "Kral Kelebeklerinin Yolculuğu",
+  "category": "Bilgi/Açıklama",
+  "content": "Her sonbahar milyonlarca kral kelebeği, Kanada ve Kuzey Amerika'nın kuzeyinden yola çıkarak Meksika'nın dağlarındaki ormanlara uçar. Bazıları bu yolculukta dört bin kilometreden fazla yol alır. Turuncu ve siyah kanatlarıyla tanınan bu küçük böcekler için bu, inanılmaz bir yolculuktur.\n\nYolculuğun en şaşırtıcı yanı, kelebeklerin gidecekleri yeri daha önce hiç görmemiş olmalarıdır. Bir kral kelebeği yalnızca birkaç hafta yaşar. Ama sonbaharda doğan kuşak farklıdır; bu kelebekler sekiz aya kadar yaşayabilir. Meksika'ya ulaşan kelebekler, bir önceki yıl oradan ayrılanların torunlarının torunlarıdır.\n\nBilim insanları kelebeklerin yolu nasıl bulduğunu uzun süre araştırdı. Bugünkü bilgilere göre kelebekler, güneşin gökyüzündeki konumunu bir pusula gibi kullanır. Antenlerindeki bir tür iç saat, günün hangi saatinde olduklarını hesaplamalarına yardım eder. Böylece güneş yer değiştirse de güneye doğru yönlerini korurlar.\n\nKelebekler kışı Meksika'daki köknar ormanlarında, ağaçların üzerinde sıkı kümeler oluşturarak geçirir. İlkbaharda yeniden kuzeye doğru yola çıkarlar. Ancak bu kez yolculuğu tek bir kuşak tamamlamaz; yol boyunca yeni kuşaklar doğar ve yolculuğu onlar sürdürür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Kral kelebekleri sonbaharda nereye göç eder?",
+    "correct": "Meksika'daki dağ ormanlarına",
+    "wrong": [
+     "Kanada'nın kuzey ormanlarına",
+     "Kuzey Amerika'nın kıyılarına",
+     "Güney Amerika'daki ovalara"
+    ],
+    "explanation": "Kelebekler sonbaharda Meksika'nın dağlarındaki ormanlara uçar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar yolculuğun en şaşırtıcı yanını neden kelebeklerin o yeri görmemiş olması olarak açıklar?",
+    "correct": "Yolu hiç bilmeden bulmaları hayret verici olduğu için",
+    "wrong": [
+     "Kelebeklerin yolda sık sık kaybolup geri döndüğü için",
+     "Bir kral kelebeğinin ancak birkaç gün yaşadığı için",
+     "Meksika'daki ormanların her yıl yer değiştirdiği için"
+    ],
+    "explanation": "Kelebekler gidecekleri yeri daha önce hiç görmeden doğru yere ulaşır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Sonbaharda doğan kuşağın diğerlerinden farkı nedir?",
+    "correct": "Ömrünün aylarca uzun sürmesi",
+    "wrong": [
+     "Kanatlarının daha büyük olması",
+     "Yalnızca geceleri uçması",
+     "Hiç beslenmeden yaşaması"
+    ],
+    "explanation": "Sonbaharda doğan kelebekler sekiz aya kadar yaşayabilir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Meksika'ya ulaşan kelebeklerle bir önceki yıl oradan ayrılanlar arasındaki ilişki nedir?",
+    "correct": "Aynı soyun birkaç kuşak sonraki üyeleri",
+    "wrong": [
+     "Birbirinin aynısı kelebeklerden bir sürü",
+     "Farklı ormanlardan gelen yabancı türler",
+     "Yolculuk sırasında birbirine katılan gruplar"
+    ],
+    "explanation": "Meksika'ya varanlar, önceki yıl ayrılanların torunlarının torunlarıdır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kelebekler yön bulmak için neyi kullanır?",
+    "correct": "Güneşin gökteki yerini",
+    "wrong": [
+     "Rüzgârın estiği yönü",
+     "Dağların yüksekliğini",
+     "Yıldızların dizilişini"
+    ],
+    "explanation": "Kelebekler güneşin gökyüzündeki konumunu bir pusula gibi kullanır."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Antenlerdeki iç saatin yön bulmadaki görevi nedir?",
+    "correct": "Güneşin konumundaki kaymayı hesaba katmak",
+    "wrong": [
+     "Kelebeklerin ne zaman uyuyacağını belirlemek",
+     "Kışın ne kadar soğuk olacağını önceden bilmek",
+     "Yol boyunca çiçeklerin yerini hatırlamak"
+    ],
+    "explanation": "İç saat günün saatini bildirir; böylece güneş yer değiştirse de yön korunur."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kelebekler kışı nasıl geçirir?",
+    "correct": "Ağaçlarda topluca kümelenerek",
+    "wrong": [
+     "Toprağın altına gömülerek",
+     "Mağaralarda ayrı ayrı uyuyarak",
+     "Sürekli dolaşarak beslenerek"
+    ],
+    "explanation": "Kelebekler kışı köknar ormanlarında ağaçların üzerinde sıkı kümeler oluşturarak geçirir."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Kuzeye dönüş yolculuğunun güneye gidişten farkı nedir?",
+    "correct": "Dönüşü birkaç kuşağın sırayla tamamlaması",
+    "wrong": [
+     "Dönüş yolculuğunun yalnızca birkaç gün sürmesi",
+     "Kelebeklerin dönüşte başka bir ülkeye gitmesi",
+     "Dönüşte kelebeklerin güneşi kullanmaması"
+    ],
+    "explanation": "Kuzeye dönüşte yol boyunca yeni kuşaklar doğar ve yolculuğu onlar sürdürür."
+   }
+  ]
+ },
+ "62": {
+  "title": "Telefonsuz Bir Hafta",
+  "category": "Hikaye/Kurgu",
+  "content": "Sınıf öğretmenimiz Pazartesi günü bize ilginç bir öneride bulundu: Bir hafta boyunca okul dışında da telefonu yalnızca ailemizle konuşmak ve ödev için kullanacaktık. Sosyal medya, oyun ve video yoktu. İsteyen katılacaktı. Sınıfta kimse ses çıkarmadı ama çoğumuz bunun imkânsız olduğunu düşünüyorduk. Yine de ben dahil on iki kişi katılmaya karar verdi.\n\nİlk iki gün gerçekten zordu. Elim farkında olmadan sürekli cebime gidiyordu. Arkadaşlarımın neler paylaştığını kaçırıyormuşum gibi bir huzursuzluk duyuyordum. Akşamları ne yapacağımı bilemedim; odamda bir aşağı bir yukarı dolaştım. Kardeşim bana gülüp “Telefonsuz kalınca şaşırdın” dedi. Bir an pes edip telefonu açmayı bile düşündüm.\n\nÜçüncü gün bir şeyler değişmeye başladı. Yarım bıraktığım bir kitabı yeniden elime aldım ve bir oturuşta yüz sayfa okudum. Annemle mutfakta uzun uzun sohbet ettik. Babamla da yıllardır oynamadığımız tavlayı çıkardık. Uykuya daha erken daldım ve sabahları daha dinç uyandım. Ödevlerimi de eskisinden çok daha kısa sürede bitirdim, çünkü sık sık bölünmüyordum.\n\nHafta sonunda öğretmenimiz deneyimlerimizi paylaşmamızı istedi. Bazı arkadaşlarım haftayı tamamlayamamıştı ve bunu açıkça söyledi. Çoğumuz ise benzer şeyler yaşamıştık: başta sıkıntı, sonra rahatlama. Bir arkadaşım, telefona ne kadar zaman harcadığını ilk kez fark ettiğini söyledi. Öğretmenimiz kimseyi yargılamadı; amacının telefonu yasaklamak değil, onu nasıl kullandığımızı görmemizi sağlamak olduğunu anlattı.\n\nErtesi hafta telefonum yeniden elimdeydi. Ama artık bildirimlerin çoğunu kapattım ve yatmadan önce telefonu odamın dışında bırakıyorum. Telefonu tamamen bırakmadım; yalnızca onu ne zaman elime alacağıma artık ben karar veriyorum.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Öğretmenin önerisine göre öğrenciler telefonu ne için kullanabilecekti?",
+    "correct": "Aile görüşmeleri ve okul işleri",
+    "wrong": [
+     "Yalnızca oyun ve müzik dinleme",
+     "Video izleme ve haberleri okuma",
+     "Sosyal medya ve arkadaş mesajı"
+    ],
+    "explanation": "Telefon yalnızca aileyle konuşmak ve ödev için kullanılacaktı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Öneri ilk duyulduğunda sınıfın çoğunun düşüncesi neydi?",
+    "correct": "Bunun başarılamayacağı",
+    "wrong": [
+     "Bunun eğlenceli olacağı",
+     "Öğretmenin şaka yaptığı",
+     "Herkesin katılacağı"
+    ],
+    "explanation": "Çoğu öğrenci bunun imkânsız olduğunu düşünüyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Anlatıcı ilk iki gün hangi huzursuzluğu yaşadı?",
+    "correct": "Olup bitenden geri kalacağını sanmak",
+    "wrong": [
+     "Ödevlerini yetiştirememekten korkmak",
+     "Kardeşiyle sürekli tartışmak zorunda kalmak",
+     "Ailesinin onu dinlemediğini düşünmek"
+    ],
+    "explanation": "Anlatıcı, arkadaşlarının paylaşımlarını kaçırıyormuş gibi huzursuzluk duyuyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Üçüncü günden sonra anlatıcının uykusunda ne değişti?",
+    "correct": "Erkenden dalıp dinç kalktı",
+    "wrong": [
+     "Geç saatlere kadar uyumadı",
+     "Gece sık sık uyanmaya başladı",
+     "Öğleden sonra uyumaya başladı"
+    ],
+    "explanation": "Anlatıcı uykuya daha erken daldı ve sabahları daha dinç uyandı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Anlatıcının ödevlerini daha kısa sürede bitirmesinin nedeni nedir?",
+    "correct": "Dikkatinin daha az dağılması",
+    "wrong": [
+     "Ödevlerin daha kolay olması",
+     "Annesinin ödevlere yardım etmesi",
+     "Okulda ödev sayısının azalması"
+    ],
+    "explanation": "Anlatıcı sık sık bölünmediği için ödevleri hızlı bitirdi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hafta sonundaki paylaşımda öğrencilerin çoğu ne yaşadığını anlattı?",
+    "correct": "Önce sıkılıp sonra rahatladığını",
+    "wrong": [
+     "Haftayı hiç zorlanmadan bitirdiğini",
+     "İlk günde deneyi bıraktığını",
+     "Sonunda daha çok huzursuzlandığını"
+    ],
+    "explanation": "Çoğu öğrenci başta sıkıntı, sonra rahatlama yaşadığını söyledi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Öğretmenin bu deneyle asıl amacı neydi?",
+    "correct": "Öğrencilerin alışkanlığını görmesi",
+    "wrong": [
+     "Telefonları okulda tümüyle yasaklamak",
+     "Haftayı tamamlayamayanları belirlemek",
+     "Öğrencilere daha fazla ödev vermek"
+    ],
+    "explanation": "Öğretmen telefonu yasaklamak değil, nasıl kullanıldığını görmelerini istediğini söyledi."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Anlatıcının deneyden çıkardığı sonuç hangisidir?",
+    "correct": "Telefon kullanımını kendisinin yönetmesi",
+    "wrong": [
+     "Telefonu bir daha eline almaması gerektiği",
+     "Bildirimlerin tümünü açık tutmak gerektiği",
+     "Telefon kullanmanın uykuyu etkilemediği"
+    ],
+    "explanation": "Anlatıcı telefonu bırakmadı ama ne zaman kullanacağına artık kendisi karar veriyor."
+   }
+  ]
+ }
+}

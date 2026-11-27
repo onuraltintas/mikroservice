@@ -1,0 +1,668 @@
+{
+ "282": {
+  "title": "Yıldızlı Gece Lambası",
+  "category": "Hikaye/Kurgu",
+  "content": "Cuma akşamı Lale, kuzeni Esra'nın evinde ilk kez yatıya kaldı. Akşam yemeğinden sonra iki kuzen pijamalarını giydi, yere yastıklar ve battaniyeler serdi. Birlikte masal okudular, fener ışığıyla duvara gölge hayvanları yaptılar ve kahkahalarla güldüler.\n\nAma ışıklar söndüğünde Lale'nin içi biraz ürperdi. Esra'nın odası ona çok yabancı geldi. Dolabın gölgesi duvarda kocaman bir canavara benziyordu. Perdenin arkasından da tuhaf sesler geliyordu. Lale battaniyeyi başına kadar çekti. Evini, kendi yatağını ve annesini özlemişti.\n\nEsra, Lale'nin korktuğunu fark etti. Hemen kalkıp masa lambasını yaktı. Lale'ye duvardaki canavarın aslında dolabın gölgesi olduğunu gösterdi. Sonra perdeyi açtı. Tuhaf sesler, rüzgârda sallanan ağacın dallarından geliyordu.\n\nEsra çekmeceden küçük, yıldız şeklinde bir gece lambası çıkardı ve fişe taktı. Odayı yumuşak, mavi bir ışık doldurdu. Lale rahatladı ve derin bir nefes aldı. Artık oda ona hiç de korkutucu gelmiyordu. İki kuzen bir süre daha fısıldaşıp güldü. Sonra Lale, yıldızlı ışığa bakarken yavaş yavaş uykuya daldı. Ertesi sabah Esra'ya, bir dahaki sefere onun da kendi evinde yatıya kalmasını teklif etti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Lale kimin evinde yatıya kaldı?",
+    "correct": "Akrabasının",
+    "wrong": [
+     "Ninesinin",
+     "Komşusunun",
+     "Büyükannesinin"
+    ],
+    "explanation": "Lale kuzeni Esra'nın evinde yatıya kaldı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "İki kuzen fener ışığıyla ne yaptı?",
+    "correct": "Gölgeden hayvan figürü",
+    "wrong": [
+     "Kâğıttan kuş ve uçak",
+     "Hamurdan kurabiyeler",
+     "Boyayla küçük resimler"
+    ],
+    "explanation": "Fener ışığıyla duvara gölge hayvanları yaptılar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Işıklar sönünce Lale neden ürperdi?",
+    "correct": "Odayı yadırgadığı için",
+    "wrong": [
+     "Karnı çok acıktığı için",
+     "Esra ona kızdığı için",
+     "Hava çok sıcak olduğu için"
+    ],
+    "explanation": "Esra'nın odası ona yabancı gelmişti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Duvardaki canavar aslında neydi?",
+    "correct": "Bir eşyanın silueti",
+    "wrong": [
+     "Pelüş bir oyuncak ayı",
+     "Esra'nın kedisi",
+     "Asılı bir resim"
+    ],
+    "explanation": "Duvardaki canavar dolabın gölgesiydi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Perdenin arkasındaki seslerin kaynağı neydi?",
+    "correct": "Rüzgârdaki ağaç",
+    "wrong": [
+     "Bahçedeki bir kedi",
+     "Yağan yağmur",
+     "Üst kattakiler"
+    ],
+    "explanation": "Sesler rüzgârda sallanan ağaç dallarından geliyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Esra'nın lambayı yakması neyi gösterir?",
+    "correct": "Kuzenine destek olduğunu",
+    "wrong": [
+     "Kitap okumak istediğini",
+     "Hiç uykusu olmadığını",
+     "Annesini yanına çağırdığını"
+    ],
+    "explanation": "Lale'nin korktuğunu fark edip ona yardım etti."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gece lambası ne şekildeydi?",
+    "correct": "Yıldız biçiminde",
+    "wrong": [
+     "Hilal biçiminde",
+     "Kalp biçiminde",
+     "Bulutçuk biçiminde"
+    ],
+    "explanation": "Çekmeceden yıldız şeklinde bir gece lambası çıkardı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Lale'nin ertesi sabahki teklifi neyi gösterir?",
+    "correct": "O geceden memnun kaldığını",
+    "wrong": [
+     "Kuzenine çok kırıldığını",
+     "Bir daha gelmek istemediğini",
+     "Evini hiç özlemediğini"
+    ],
+    "explanation": "Esra'yı kendi evine davet ederek mutlu olduğunu gösterir."
+   }
+  ]
+ },
+ "286": {
+  "title": "Emir'in Ağacı",
+  "category": "Hikaye/Kurgu",
+  "content": "Bir pazar sabahı Emir, dedesiyle birlikte köydeki bahçeye gitti. Dedesi yanına bir kürek, bir kova su ve küçük bir elma fidanı almıştı. “Bugün seninle bir ağaç dikeceğiz,” dedi. Emir çok heyecanlandı. Daha önce hiç ağaç dikmemişti.\n\nÖnce bahçede dolaşıp uygun bir yer seçtiler. Dedesi, fidanın bol güneş alan bir yere dikilmesi gerektiğini söyledi. Sonra Emir küreği aldı ve toprağı kazmaya başladı. Toprak oldukça sertti. Emir çok terledi ama hiç vazgeçmedi. Dedesi de ona yardım etti ve toprağı yumuşatmak için biraz su döktü.\n\nÇukur yeterince derin ve geniş olunca fidanı içine yerleştirdiler. Emir köklerin üstünü toprakla örttü ve küçük elleriyle toprağı sıkıca bastırdı. Ellerinin çamura bulanması hiç umurunda değildi. Sonra kovadaki suyla fidanı bolca suladı. Dedesi, ilk suyun fidan için çok önemli olduğunu söyledi.\n\nDedesi, bu fidanın birkaç yıl sonra elma vereceğini anlattı. Emir çok sevindi. Kendi diktiği ağacın elmalarını yemeyi şimdiden hayal etti. Fidanın yanına düz, beyaz bir taş koydu ve üstüne kalemle adını yazdı. Artık her hafta dedesiyle gelip ağacını sulayacaktı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dedesi bahçeye neler getirmişti?",
+    "correct": "Bel küreği, su, fide",
+    "wrong": [
+     "Tırmık, makas ve tohum",
+     "Hortum, sepet ve gübre",
+     "Balta, ip ve tahta"
+    ],
+    "explanation": "Bir kürek, bir kova su ve bir elma fidanı almıştı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Emir neden çok heyecanlandı?",
+    "correct": "İlk kez ağaç dikecekti",
+    "wrong": [
+     "Dedesi ona hediye aldı",
+     "Okul tatile girmişti",
+     "Bahçede oyun oynayacaktı"
+    ],
+    "explanation": "Daha önce hiç ağaç dikmemişti."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fidan için nasıl bir yer seçilmeliydi?",
+    "correct": "Aydınlık bir",
+    "wrong": [
+     "Gölgede kalan",
+     "Suya çok yakın",
+     "Rüzgârlı bir"
+    ],
+    "explanation": "Fidan bol güneş alan bir yere dikilmeliydi."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Emir'in terlediği hâlde vazgeçmemesi neyi gösterir?",
+    "correct": "Kararlı olduğunu",
+    "wrong": [
+     "Hiç yorulmadığını",
+     "Acele ettiğini",
+     "Çok sıkıldığını"
+    ],
+    "explanation": "Toprak sert olsa da kazmaya devam etti."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fidanı diktikten sonra ne yaptılar?",
+    "correct": "Toprağı ıslattılar",
+    "wrong": [
+     "Hemen eve döndüler",
+     "Çitle çevirdiler",
+     "Gübre serpiştirdiler"
+    ],
+    "explanation": "Kovadaki suyla fidanı bolca suladı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Ellerinin çamura bulanmasını umursamaması neyi gösterir?",
+    "correct": "İşe dalıp gittiğini",
+    "wrong": [
+     "Temizliği sevmediğini",
+     "Dedesine kızdığını",
+     "Eve gitmek istediğini"
+    ],
+    "explanation": "Ağaç dikmenin keyfine varmıştı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Emir taşın üstüne ne yazdı?",
+    "correct": "Kendi ismini",
+    "wrong": [
+     "Dedenin adını",
+     "Ağacın adını",
+     "Günün tarihi"
+    ],
+    "explanation": "Taşın üstüne kalemle adını yazdı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Emir'in her hafta gelme kararı neyi gösterir?",
+    "correct": "Ağaca bakmayı üstlendiğini",
+    "wrong": [
+     "Köyde yaşamak istediğini",
+     "Bütün elmaları yiyeceğini",
+     "Dedesini çok fazla özlediğini"
+    ],
+    "explanation": "Diktiği ağacın sorumluluğunu aldı."
+   }
+  ]
+ },
+ "289": {
+  "title": "Kayıp Ayakkabı",
+  "category": "Hikaye/Kurgu",
+  "content": "Pazartesi sabahı Yiğit, alarmı duymadığı için geç uyandı. Annesi mutfaktan, “Hadi çabuk ol, servis on dakika sonra gelecek!” diye seslendi. Yiğit hemen yataktan fırladı, yüzünü yıkadı ve okul kıyafetlerini giydi. Kahvaltısını da ayakta, aceleyle yaptı.\n\nAma bir sorun vardı. Spor ayakkabısının bir teki ortada yoktu. Yiğit yatağın altına, kapının arkasına ve dolabın içine baktı. Ayakkabı hiçbir yerde değildi. Annesi de aramaya katıldı ama o da bulamadı. Saat ilerliyordu. Yiğit'in kalbi hızla çarpmaya başladı. Servisi kaçırırsa okula geç kalacaktı.\n\nO sırada küçük köpekleri Karamel salona doğru koştu. Yiğit merakla onun peşinden gitti. Karamel, kanepenin arkasına saklanmış, ağzında Yiğit'in ayakkabısıyla kuyruğunu sallıyordu! Yiğit hem kızdı hem de güldü. Karamel bunu bir oyun sanmıştı. Ayakkabıyı Karamel'in ağzından nazikçe aldı. Neyse ki ayakkabı ıslanmıştı ama yırtılmamıştı.\n\nTam o anda dışarıdan servisin kornası duyuldu. Yiğit ayakkabısını giydi, çantasını kaptı ve kapıya koştu. Serviste nefes nefese oturduğunda bir karar verdi: Bundan sonra her akşam ayakkabılarını kapının yanındaki dolaba koyacaktı. Böylece ne kendisi ne de Karamel onları kaybedebilecekti.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yiğit neden geç uyandı?",
+    "correct": "Saati duymadığı için",
+    "wrong": [
+     "Biraz hasta olduğu için",
+     "Geç saatte yattığı için",
+     "Tatil sandığı için"
+    ],
+    "explanation": "Alarmı duymadığı için geç uyandı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yiğit'in kahvaltıyı ayakta yapması neyi gösterir?",
+    "correct": "Çok acelesi olduğunu",
+    "wrong": [
+     "Sandalye bulamadığını",
+     "İştahsız olduğunu",
+     "Annesine kızdığını"
+    ],
+    "explanation": "Servise yetişmek için acele ediyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yiğit ayakkabıyı ilk nerelerde aradı?",
+    "correct": "Yatak altında, dolapta",
+    "wrong": [
+     "Bahçede ve sokak başında",
+     "Okulda ve serviste",
+     "Mutfakta ve balkonda"
+    ],
+    "explanation": "Yatağın altına, kapının arkasına ve dolaba baktı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yiğit'in kalbinin hızla çarpmasının nedeni nedir?",
+    "correct": "Geç kalmaktan korkması",
+    "wrong": [
+     "Köpekten çok korkması",
+     "Annesinin bağırması",
+     "Ayakkabının yırtılması"
+    ],
+    "explanation": "Servisi kaçırırsa okula geç kalacaktı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ayakkabı nerede çıktı?",
+    "correct": "Köpeğin ağzında",
+    "wrong": [
+     "Dolabın üstünde",
+     "Yatağın altında",
+     "Servisin içinde"
+    ],
+    "explanation": "Karamel kanepenin arkasında, ağzında ayakkabıyla duruyordu."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yiğit'in hem kızıp hem gülmesinin nedeni nedir?",
+    "correct": "Hem kızdıran hem güldüren bir olay",
+    "wrong": [
+     "Köpeğin onu hafifçe ısırması",
+     "Annesinin ona gülüp şaka yapması",
+     "Ayakkabının çok eskiyip yırtılması"
+    ],
+    "explanation": "Gecikmesine yol açan durum aynı zamanda komikti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yiğit'in kararı neyi önlemeye yöneliktir?",
+    "correct": "Sorunun yinelenmesini",
+    "wrong": [
+     "Köpeğin evden kaçmasını",
+     "Okula hiç gitmemesini",
+     "Ayakkabının eskimesini"
+    ],
+    "explanation": "Ayakkabıları dolaba koyarak bir daha kaybolmalarını önleyecek."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öykünün sonunda Yiğit ne öğrenmiştir?",
+    "correct": "Hatadan ders çıkarmayı",
+    "wrong": [
+     "Köpeklerden korkmayı",
+     "Servise hiç binmemeyi",
+     "Geç uyanmanın iyi olduğunu"
+    ],
+    "explanation": "Yaşadığından ders alıp yeni bir alışkanlık edinir."
+   }
+  ]
+ },
+ "283": {
+  "title": "Parmak Uçlarındaki İmza",
+  "category": "Bilgi/Açıklama",
+  "content": "Parmaklarınızın ucuna dikkatle bakarsanız, derinizde ince, kıvrımlı çizgiler görürsünüz. Bu çizgilerin oluşturduğu desene parmak izi denir. Dünyada yaşayan sekiz milyardan fazla insanın her birinin parmak izi farklıdır. Hatta aynı genlere sahip tek yumurta ikizlerinin bile parmak izleri birbirinden ayrıdır. Bir insanın kendi on parmağının izleri de birbirine benzemez. Bu desenler genel olarak üç ana gruba ayrılır: yaylar, döngüler ve girdaplar. İnsanların çoğunda en sık görülen desen döngüdür.\n\nParmak izleri, bebek daha anne karnındayken, yaklaşık on ila on altıncı haftalar arasında oluşur. Bu dönemde parmak uçlarındaki derinin katmanları farklı hızlarda büyür. Katmanlar büyüdükçe birbirini iter ve deri kıvrılarak çizgiler oluşturur. Bebeğin anne karnındaki konumu, çevresindeki sıvının hareketi ve parmağın kemiğe göre büyüme hızı gibi küçük farklılıklar, desenin nasıl şekilleneceğini etkiler. Bu etkenler rastlantısal olduğu için, aynı genlere sahip olsalar bile hiçbir iki kişide tamamen aynı desen ortaya çıkmaz. Bir kez oluşan parmak izi, bir yara izi bırakacak kadar derin bir yaralanma olmadıkça hayat boyunca değişmez.\n\nParmak izlerinin bilinen bir işlevi, nesneleri kavramamızı kolaylaştırmaktır. Bazı araştırmalar, parmak izlerinin dokunma duyusunu güçlendirdiğini, özellikle pürüzlü yüzeyleri hissetmemize yardımcı olduğunu gösteriyor. Çizgiler, parmak ucundaki sinirlerin titreşimleri daha iyi algılamasını sağlıyor. Parmak izlerindeki çizgilerin üzerinde ter bezlerinin ağızları da bulunur. Bu yüzden dokunduğumuz cam ya da parlak bir yüzeyde, gözle zor görülen yağlı ve terli bir iz bırakırız. Polislerin suç yerinde ince bir tozla ortaya çıkardığı izler de bunlardır.\n\nParmak izlerinin benzersiz olması, onları kimlik belirlemede çok değerli kılmıştır. On dokuzuncu yüzyılın sonlarından itibaren polis, suç yerlerinde bulunan parmak izlerini şüphelilerin izleriyle karşılaştırmaya başladı. Bu yöntemin yaygınlaşmasında, Arjantinli polis memuru Juan Vucetich ve İngiliz bilim insanı Francis Galton gibi isimlerin çalışmaları önemli rol oynadı. Bugün ise telefonlarımızın kilidini açmak, pasaport işlemlerini yapmak ya da bazı ülkelerde sınır kapılarından geçmek için de parmak izimizi kullanıyoruz. İlginçtir ki koalaların da insanlarınkine şaşırtıcı derecede benzeyen parmak izleri vardır; öyle ki uzmanlar bile bazen ikisini ayırt etmekte zorlanabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre en sık görülen parmak izi deseni hangisidir?",
+    "correct": "Döngü",
+    "wrong": [
+     "Yay",
+     "Girdap",
+     "Dalga"
+    ],
+    "explanation": "İnsanların çoğunda en sık görülen desen döngüdür."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "İkiz örneği hangi düşünceyi güçlendirir?",
+    "correct": "Kalıtımın her şeyi açıklamadığını",
+    "wrong": [
+     "İkizlerin birbirine hiç benzemediğini",
+     "Genlerin hiçbir önemi olmadığını",
+     "İkizlerin aynı izi taşıdığını"
+    ],
+    "explanation": "Aynı genlere sahip ikizlerin bile izleri farklıdır."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Parmak izleri ne zaman oluşur?",
+    "correct": "Doğumdan önce",
+    "wrong": [
+     "Doğumdan sonra",
+     "Okul çağında",
+     "Ergenlikte"
+    ],
+    "explanation": "Yaklaşık on ila on altıncı haftalar arasında oluşur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Desenlerin benzersiz olmasının temel nedeni nedir?",
+    "correct": "Doğum öncesi küçük tesadüfler",
+    "wrong": [
+     "Annenin beslenme alışkanlıkları",
+     "Bebeğin kaç parmağının olduğu",
+     "Doğumun gerçekleştiği mevsim"
+    ],
+    "explanation": "Konum, sıvı hareketi gibi rastlantısal farklılıklar deseni etkiler."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Parmak izlerinin dokunma duyusuna katkısı nedir?",
+    "correct": "Dokunuşu daha hassas kılması",
+    "wrong": [
+     "Isıyı tümüyle dışarıda tutması",
+     "Terin dışarı çıkmasını önlemesi",
+     "Derinin rengini değiştirmesi"
+    ],
+    "explanation": "Çizgiler sinirlerin titreşimleri algılamasını sağlar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Cam yüzeyde iz kalmasının nedeni nedir?",
+    "correct": "Ter ve yağ kalıntısı",
+    "wrong": [
+     "Parmağın sıcaklığı",
+     "Camın aşırı soğukluğu",
+     "Derinin aşırı kuruluğu"
+    ],
+    "explanation": "Ter bezlerinin ağızları çizgilerin üzerindedir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metinde parmak iziyle tanımada adı geçen kişilerden biri kimdir?",
+    "correct": "Juan Vucetich",
+    "wrong": [
+     "Isaac Newton",
+     "Louis Pasteur",
+     "Marie Curie"
+    ],
+    "explanation": "Vucetich ve Galton'un çalışmaları önemli rol oynadı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Koala bilgisinin metindeki işlevi nedir?",
+    "correct": "İlginç bir ayrıntıyla konuyu tamamlamak",
+    "wrong": [
+     "Koalaların suçlu olduğunu göstermek",
+     "İnsanların koala soyundan geldiğini söylemek",
+     "Parmak izlerinin önemsiz olduğunu anlatmak"
+    ],
+    "explanation": "Şaşırtıcı bir örnekle metni ilginç biçimde bitirir."
+   }
+  ]
+ },
+ "287": {
+  "title": "Hık!",
+  "category": "Bilgi/Açıklama",
+  "content": "Hıçkırık, neredeyse herkesin yaşadığı ama çoğu zaman pek düşünmediğimiz ilginç bir vücut tepkisidir. Bir anda başlar, bazen dakikalarca sürer ve çoğunlukla kendiliğinden geçer. Peki hıçkırığa ne neden olur ve neden bu kadar tuhaf bir ses çıkarırız?\n\nHıçkırığın kaynağı, göğüs boşluğunu karın boşluğundan ayıran diyafram adlı kubbe şeklindeki kastır. Diyafram, nefes almamızda en önemli rolü oynar. Nefes alırken kasılıp aşağı iner ve akciğerlerin havayla dolmasını sağlar. Hıçkırık sırasında ise diyafram, bizim kontrolümüz dışında ani ve istemsiz bir şekilde kasılır. Bu ani kasılmayla birlikte akciğerlere hızla hava girer. Hemen ardından, gırtlağımızdaki ses tellerinin arasındaki aralık kapanır. Hızla içeri giren hava bu kapanan aralığa çarpar ve bildiğimiz “hık” sesi ortaya çıkar.\n\nHıçkırığı başlatan pek çok neden olabilir. Çok hızlı yemek yemek, gazlı içecekler içmek, çok sıcak ya da çok soğuk bir şey yutmak, aşırı heyecan ya da birden gülmek bunlardan bazılarıdır. Bu durumlar, diyaframı kontrol eden sinirleri uyararak kasılmayı tetikleyebilir.\n\nHıçkırığı durdurmak için halk arasında pek çok yöntem anlatılır: nefesi tutmak, bir bardak suyu ters taraftan içmek, birini aniden korkutmak ya da bir kaşık şeker yutmak. Bu yöntemlerin bazıları gerçekten işe yarayabilir, çünkü nefes düzenini değiştirerek ya da sinirleri farklı bir şekilde uyararak diyaframın ritmini bozabilirler. Örneğin nefesi tutmak, kandaki karbondioksit miktarını artırır; bu da diyaframın kasılmalarını yavaşlatabilir. Ancak hiçbirinin her zaman işe yaradığı bilimsel olarak kanıtlanmamıştır.\n\nBilim insanlarının hâlâ yanıtını aradığı bir soru da hıçkırığın neden var olduğudur. Bazı araştırmacılar, hıçkırığın anne karnındaki bebeğin nefes kaslarını çalıştırmasına yardımcı olduğunu düşünüyor. Gerçekten de bebekler doğmadan önce sık sık hıçkırır. Bazı bilim insanları ise hıçkırığın, bebeklerin midesine süt emerken kaçan havayı dışarı atmasına yardım eden eski bir refleks olduğunu öne sürüyor.\n\nHıçkırık çoğu zaman zararsızdır. Ancak iki günden uzun süren hıçkırıklar başka bir sağlık sorununun işareti olabilir. Böyle durumlarda bir doktora başvurmak gerekir. Tarihte bilinen en uzun hıçkırık nöbeti ise Amerikalı bir çiftçide görülmüş ve tam altmış sekiz yıl sürmüştür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre hıçkırık çoğu zaman nasıl sona erer?",
+    "correct": "Yardımsız olarak",
+    "wrong": [
+     "İlaç kullanarak",
+     "Ameliyat olarak",
+     "Uyuyup dinlenince"
+    ],
+    "explanation": "Hıçkırık çoğunlukla kendiliğinden geçer."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hıçkırığın kaynağı olan kas hangisidir?",
+    "correct": "Diyafram",
+    "wrong": [
+     "Kalp kası",
+     "Mide kası",
+     "Dil kası"
+    ],
+    "explanation": "Hıçkırığın kaynağı diyafram kasıdır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "“Hık” sesi nasıl oluşur?",
+    "correct": "Havanın kapalı aralığa çarpmasıyla",
+    "wrong": [
+     "Midenin dışarı gaz çıkarmasıyla",
+     "Dişlerin birbirine sertçe vurmasıyla",
+     "Dilin damağa sertçe değmesiyle"
+    ],
+    "explanation": "Hızla giren hava kapanan ses telleri aralığına çarpar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hıçkırığı başlatabilecek etkenlerden biri hangisidir?",
+    "correct": "Aceleyle beslenmek",
+    "wrong": [
+     "Uzun süre uyumak",
+     "Uzun kitap okumak",
+     "Yavaş yavaş yürümek"
+    ],
+    "explanation": "Çok hızlı yemek yemek hıçkırığı tetikleyebilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Nefes tutmanın işe yarayabilmesi nasıl açıklanır?",
+    "correct": "Kandaki karbondioksit artışı",
+    "wrong": [
+     "Kalbin çok hızlı çarpması",
+     "Midenin bütünüyle boşalması",
+     "Ses tellerinin genişçe açılması"
+    ],
+    "explanation": "Karbondioksit artışı diyaframı yavaşlatabilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazarın halk yöntemleri hakkındaki görüşü nedir?",
+    "correct": "Bazen işe yarar ama kanıtsızdır",
+    "wrong": [
+     "Tümü bilimsel olarak doğrudur",
+     "Tümü sağlık için tehlikelidir",
+     "Yalnızca küçük çocuklarda etkilidir"
+    ],
+    "explanation": "Bazıları işe yarayabilir ama her zaman işe yaradığı kanıtlanmamıştır."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bebeklerin doğmadan önce hıçkırması hangi görüşü destekler?",
+    "correct": "Nefes kaslarının çalıştığı görüşünü",
+    "wrong": [
+     "Bebeklerin hasta olduğu görüşünü",
+     "Annenin çok hızlı yediği görüşünü",
+     "Diyaframın gereksiz olduğu görüşünü"
+    ],
+    "explanation": "Hıçkırık bebeğin nefes kaslarını çalıştırmasına yardım edebilir."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta okura verilen asıl öneri nedir?",
+    "correct": "Uzun sürerse doktora gitmek",
+    "wrong": [
+     "Hıçkırığı hiç mi hiç önemsememek",
+     "Şeker yiyerek tedavi etmek",
+     "Nefesi saatlerce tutmaya çalışmak"
+    ],
+    "explanation": "İki günden uzun süren hıçkırıkta doktora başvurulmalıdır."
+   }
+  ]
+ },
+ "290": {
+  "title": "Kendi Notum",
+  "category": "Hikaye/Kurgu",
+  "content": "Matematik sınavına bir gün kalmıştı. Ece bütün hafta ders çalışmış, ama denklem konusunu bir türlü tam anlayamamıştı. Sınav sabahı, zil çalmadan hemen önce okulun koridorunda sınıf arkadaşı Burak yanına yaklaştı. Burak, sınavda Ece'nin yanında oturacağını ve isterse cevaplarını ona göstereceğini fısıldadı. Burak sınıfın en başarılı öğrencilerinden biriydi ve bu teklifi yalnızca arkadaşına yardım etmek için yaptığını söylüyordu.\n\nEce bir an duraksadı. Bu teklif ona çok kolay bir çıkış yolu gibi geldi. Düşük bir not alırsa annesinin üzüleceğini biliyordu. Ama aynı zamanda içinde bir rahatsızlık hissetti. Kopya çekerek alacağı not gerçekten onun olmayacaktı. Üstelik denklemleri yine anlamamış olacaktı ve bir sonraki konuda daha da zorlanacaktı. Bir de yakalanma ihtimali vardı; o zaman hem kendisi hem Burak büyük bir sorun yaşardı. Ece, kendi kararının sonuçlarını başkasıyla paylaşmak istemiyordu.\n\nEce, Burak'a teşekkür etti ama teklifi kibarca geri çevirdi. Burak omuz silkti ve sınıfa girdi. Sınav başladığında Ece bazı soruları çözdü, bazılarında ise takıldı. Bildiği kadarını dürüstçe yazdı ve kâğıdını teslim etti. Sınavdan çıkarken içi hafifti; sonuç ne olursa olsun, bu sınavdaki her cevap kendisine aitti.\n\nBir hafta sonra sonuçlar açıklandı. Ece'nin notu ortalamanın biraz altındaydı. Ece eve dönerken biraz üzgündü, ama annesine durumu olduğu gibi anlattı. Annesi kızmadı; tersine, dürüst davrandığı için onunla gurur duyduğunu söyledi.\n\nErtesi gün Ece, matematik öğretmeni Kemal Bey'e gitti ve denklemleri anlamadığını, yardım istediğini söyledi. Kemal Bey yardım istediği için onu takdir etti ve ona her salı okul çıkışında yarım saat ek çalışma yapmayı önerdi. Ece haftalar boyunca bu çalışmalara hiç aksatmadan katıldı. Kemal Bey ona denklemleri günlük hayattan örneklerle anlattı; Ece de anlamadığı her noktada soru sormaktan çekinmedi. Zamanla konu ona korkutucu gelmemeye başladı. Bir sonraki sınavda denklem sorularının hepsini kendi başına çözdü ve sınıfın en yüksek notlarından birini aldı.\n\nNot kâğıdına bakarken Ece, bu kez gurur duyduğu şeyin yalnızca not olmadığını fark etti. Bu notu baştan sona kendi emeğiyle, dürüstçe kazanmıştı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Burak Ece'ye ne teklif etti?",
+    "correct": "Sınavda ona kopya vermeyi",
+    "wrong": [
+     "Birlikte ders çalışmayı",
+     "Sınavı başka güne almayı",
+     "Öğretmene hemen haber vermeyi"
+    ],
+    "explanation": "Cevaplarını Ece'ye göstereceğini fısıldadı."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Burak'ın teklifinin altında yatan niyet neydi?",
+    "correct": "Ece'nin işini kolaylaştırmak",
+    "wrong": [
+     "Ece'yi zor durumda bırakmak",
+     "Öğretmeni kandırıp ödül almak",
+     "Kendi notunu yükseltmek"
+    ],
+    "explanation": "Teklifi yalnızca yardım etmek için yaptığını söylüyordu."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Ece'nin teklifi reddetmesinin en önemli nedeni nedir?",
+    "correct": "Notun aslında onun olmayacağı",
+    "wrong": [
+     "Burak'ı hiç ama hiç sevmemesi",
+     "Sınavın çok kolay görünmesi",
+     "Annesinin buna izin vermemesi"
+    ],
+    "explanation": "Kopyayla alınan not gerçekten onun olmayacaktı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ece'nin sonuçları başkasıyla paylaşmak istememesi neyi gösterir?",
+    "correct": "Sorumluluğunu bildiğini",
+    "wrong": [
+     "Burak'tan korktuğunu",
+     "Öğretmene kızdığını",
+     "Sınavı hiç umursamadığını"
+    ],
+    "explanation": "Kendi kararının yükünü başkasına yüklemek istemedi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ece sınavda nasıl davrandı?",
+    "correct": "Kendi bilgisiyle cevapladı",
+    "wrong": [
+     "Bütün soruları boş bıraktı",
+     "Burak'ın kâğıdına göz attı",
+     "Sınavın ortasında çıktı"
+    ],
+    "explanation": "Bildiği kadarını dürüstçe yazıp teslim etti."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annenin tepkisi neyi gösterir?",
+    "correct": "Dürüstlüğü nottan üstün tuttuğunu",
+    "wrong": [
+     "Ece'nin kötü notuna öfkelendiğini",
+     "Okulu değiştirmek istediğini",
+     "Öğretmeni haksız yere suçladığını"
+    ],
+    "explanation": "Kızmadı, dürüst davrandığı için gurur duydu."
+   },
+   {
+    "p": 5,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kemal Bey Ece'ye ne önerdi?",
+    "correct": "Okul sonrası destek",
+    "wrong": [
+     "Özel bir dershane",
+     "Yeni bir kitap",
+     "Sınavı tekrar almak"
+    ],
+    "explanation": "Her salı yarım saat ek çalışma önerdi."
+   },
+   {
+    "p": 6,
+    "type": 3,
+    "bloom": 5,
+    "text": "Öykünün ana fikri nedir?",
+    "correct": "Emekle gelen başarı daha değerlidir",
+    "wrong": [
+     "Kopya çekmek bazen gereklidir",
+     "Matematik herkes için zor bir derstir",
+     "Arkadaş teklifleri reddedilmelidir"
+    ],
+    "explanation": "Ece notu kendi emeğiyle kazanmanın gururunu yaşadı."
+   }
+  ]
+ }
+}

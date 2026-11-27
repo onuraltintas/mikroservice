@@ -1,0 +1,668 @@
+{
+ "256": {
+  "title": "Kaçırılan Durak",
+  "category": "Hikaye/Kurgu",
+  "content": "On üç yaşındaki Selin, ilk kez tek başına otobüsle dedesinin evine gidecekti. Annesi bir gün önce ona hangi hatta bineceğini, kaç durak sonra ineceğini ve yolda bir sorun olursa ne yapacağını defalarca anlatmıştı. Selin ise annesini sabırsızlıkla dinlemiş, “Ben artık küçük değilim” demişti. Aslında içten içe biraz endişeliydi, ama bunu kimseye belli etmek istemiyordu.\n\nErtesi sabah durağa vardığında içini hafif bir heyecan kapladı. Otobüs geldiğinde kartını okuttu ve pencere kenarına oturdu. Dedesinin evine on iki durak vardı. Selin durakları tek tek saymaya başladı. Ama altıncı durakta yanına oturan yaşlı bir kadınla sohbete dalınca saymayı unuttu.\n\nBir süre sonra pencereden baktığında hiç tanımadığı bir mahallede olduğunu fark etti. Kalbi hızla çarpmaya başladı. Durağı kaçırmıştı. Önce panikledi ve hemen inmek istedi. Sonra annesinin sözlerini hatırladı: “Kaybolursan önce sakin ol, sonra yardım iste.”\n\nSelin derin bir nefes aldı ve şoföre gitti. Dedesinin oturduğu durağın adını söyledi. Şoför ona gülümseyerek, bir sonraki durakta inip karşıdaki durağa geçmesini ve ters yöne giden aynı hatta binmesini söyledi. Selin dediğini yaptı. Karşı durakta beklerken saatine baktı ve dedesinin onu merak edeceğini düşündü. Bu arada annesine kısa bir mesaj atarak durumu anlattı.\n\nYarım saat geç de olsa dedesinin kapısını çaldı. Dedesi onu kocaman bir gülümsemeyle karşıladı. Annesinin mesajı sayesinde neler olduğunu biliyordu ve Selin'e, kendisinin de gençken otobüste uyuyakalıp son durağa kadar gittiğini anlattı. Selin o gün, büyümenin hiç hata yapmamak değil, hata yaptığında ne yapacağını bilmek olduğunu anladı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in annesine “Ben artık küçük değilim” demesi neyi gösterir?",
+    "correct": "Bağımsız görünmek istediğini",
+    "wrong": [
+     "Annesine çok kızgın olduğunu",
+     "Yolu çok iyi bildiğini",
+     "Gitmekten vazgeçtiğini"
+    ],
+    "explanation": "Endişesini gizleyip büyüdüğünü göstermek istiyordu."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selin durakları saymayı neden unuttu?",
+    "correct": "Yolcuyla sohbete daldığı için",
+    "wrong": [
+     "Telefonunda oyuna daldığı için",
+     "Otobüste uyuyakaldığı için",
+     "Kitabına iyice gömüldüğü için"
+    ],
+    "explanation": "Yanına oturan yaşlı bir kadınla sohbete daldı."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Selin durağı kaçırdığını nasıl anladı?",
+    "correct": "Tanımadığı bir semti görünce",
+    "wrong": [
+     "Şoför son durağı anons edince",
+     "Annesi onu telefonla arayınca",
+     "Otobüs birden fren yapınca"
+    ],
+    "explanation": "Pencereden bakınca tanımadığı bir mahallede olduğunu fark etti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Annesinin sözünü hatırlamak Selin'e ne kazandırdı?",
+    "correct": "Paniği bırakıp düşünebilmeyi",
+    "wrong": [
+     "Otobüsten hemen inme cesaretini",
+     "Yolu kendi başına bulmayı",
+     "Annesini hemen arama fikrini"
+    ],
+    "explanation": "Önce sakin olup sonra yardım istemesi gerektiğini hatırladı."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Şoför Selin'e ne yapmasını söyledi?",
+    "correct": "Karşıdan aksi yöne binmesini",
+    "wrong": [
+     "Son durağa kadar hiç inmemesini",
+     "Yürüyerek geri dönmesini",
+     "Durakta taksi beklemesini"
+    ],
+    "explanation": "Bir sonraki durakta inip ters yöne giden aynı hatta binmesini söyledi."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Selin'in annesine mesaj atması onun hangi özelliğini gösterir?",
+    "correct": "Sorumluluk sahibi olduğunu",
+    "wrong": [
+     "Annesinden çok çekindiğini",
+     "Telefonunu çok sevdiğini",
+     "Yolunu iyi bildiğini"
+    ],
+    "explanation": "Gecikmeyi haber vererek ailesini endişelendirmemek istedi."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 5,
+    "text": "Dedenin kendi anısını anlatmasının amacı nedir?",
+    "correct": "Selin'i teselli edip rahatlatmak",
+    "wrong": [
+     "Selin'i otobüse binmekten soğutmak",
+     "Şoförleri sert dille eleştirmek",
+     "Kendi gençliğiyle övünüp durmak"
+    ],
+    "explanation": "Herkesin bu tür hatalar yapabileceğini göstererek onu rahatlatır."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Selin'in vardığı sonuç hangisidir?",
+    "correct": "Hatayı yönetmek olgunluktur",
+    "wrong": [
+     "Tek başına yolculuk tehlikelidir",
+     "Yaşlılarla konuşulmamalıdır",
+     "Taksi otobüsten daha iyidir"
+    ],
+    "explanation": "Büyümek hata yaptığında ne yapacağını bilmektir."
+   }
+  ]
+ },
+ "257": {
+  "title": "Raflardaki Tarla",
+  "category": "Bilgi/Açıklama",
+  "content": "Dünya nüfusu hızla artarken, tarım için kullanılabilecek toprak miktarı aynı hızla artmıyor. Üstelik kentler büyüdükçe verimli tarım arazilerinin bir kısmı binalara ve yollara dönüşüyor. Bu sorunlara çözüm arayan bilim insanları ve girişimciler, son yıllarda dikkatlerini ilginç bir yönteme çevirdi: bitkileri topraksız, üst üste raflarda, kapalı binaların içinde yetiştirmek. Bu yönteme dikey tarım deniyor. Kulağa bilim kurgu gibi gelse de, bugün Japonya'dan Hollanda'ya, Singapur'dan Amerika Birleşik Devletleri'ne kadar pek çok ülkede bu şekilde çalışan büyük tesisler bulunuyor. Türkiye'de de bazı girişimler, şehir içindeki depolarda ve eski fabrika binalarında yeşillik yetiştirmeye başladı.\n\nDikey tarımın temelinde hidroponik adı verilen bir teknik yatar. Hidroponik sistemlerde bitkiler toprağa değil, içinde besin maddeleri çözünmüş suya yerleştirilir. Kökler, bitkinin ihtiyaç duyduğu azot, fosfor ve potasyum gibi maddeleri doğrudan bu sudan alır. Güneş ışığının yerini ise bitkilerin en çok ihtiyaç duyduğu renklerde ışık yayan LED lambalar alır. Sıcaklık, nem ve ışık süresi bilgisayarlarla sürekli denetlenir. Sensörler her bitkinin ne kadar büyüdüğünü ölçer ve gerektiğinde suyun içindeki besin oranını kendiliğinden ayarlar. Böylece bitkiler, en uygun koşullarda ve tarladakinden çoğu zaman daha hızlı büyür.\n\nBu yöntemin önemli avantajları vardır. Raflar üst üste dizildiği için aynı alanda geleneksel tarıma göre çok daha fazla ürün yetiştirilebilir. Su, sistemin içinde dolaşıp yeniden kullanıldığı için tarlada sulamaya göre yüzde doksana varan oranda su tasarrufu sağlanabilir. Kapalı ortamda zararlı böcekler olmadığından tarım ilacına neredeyse hiç gerek kalmaz. Ayrıca hava koşullarından etkilenmediği için yılın her mevsimi ürün alınabilir. Dikey çiftlikler şehirlerin içine kurulabildiğinden, ürünlerin tüketiciye ulaşması için uzun yollar katetmesi de gerekmez.\n\nAncak yöntemin önemli sınırlılıkları da var. En büyük sorun enerjidir. Güneşin ücretsiz sağladığı ışığı lambalarla üretmek, çok fazla elektrik harcar. Bu da hem maliyeti artırır hem de elektrik fosil yakıtlardan üretiliyorsa çevreye zarar verir. Bu nedenle bugün dikey çiftliklerde çoğunlukla marul, fesleğen, ıspanak gibi hızlı büyüyen ve pahalıya satılabilen yapraklı sebzeler yetiştiriliyor. Buğday, mısır ya da pirinç gibi insanlığın temel besinlerini bu yolla üretmek şimdilik ekonomik değil. Bu ürünlerin geniş tarlalarda güneş altında yetiştirilmesi hâlâ çok daha ucuz. Bazı eleştirmenler ayrıca, sistemlerin kurulum maliyetinin yüksek olduğunu ve teknik bir arızanın kısa sürede bütün ürünü yok edebileceğini hatırlatıyor.\n\nUzmanlar, dikey tarımın geleneksel tarımın yerini alamayacağını, ama onu tamamlayabileceğini düşünüyor. Özellikle kurak bölgelerde, çöl ülkelerinde ya da kışların uzun ve sert geçtiği kuzey ülkelerinde, taze sebzeye ulaşmanın önemli bir yolu olabileceğini vurguluyorlar. Uzay ajansları da gelecekte Ay'da ya da Mars'ta kurulacak üslerde benzer sistemlerle yiyecek yetiştirmeyi planlıyor. Yenilenebilir enerji kaynakları ucuzladıkça, kentlerin ortasındaki bu cam kuleler, sofralarımıza gelen sebzelerin önemli bir kısmını üretebilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Dikey tarıma yönelmenin nedenleri nelerdir?",
+    "correct": "Nüfus artarken arazi daralması",
+    "wrong": [
+     "Toprakların daha verimli olması",
+     "Şehirlerin giderek küçülmesi",
+     "Sebze fiyatlarının düşmesi"
+    ],
+    "explanation": "Nüfus artıyor, verimli araziler binalara dönüşüyor."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Hidroponik sistemlerde bitkiler besinlerini nereden alır?",
+    "correct": "Mineralli sıvıdan",
+    "wrong": [
+     "Kumdan ve çakıldan",
+     "Gübreli topraktan",
+     "Havadaki nemden"
+    ],
+    "explanation": "Bitkiler besin maddeleri çözünmüş suya yerleştirilir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Sensörlerin sistemdeki işlevi nedir?",
+    "correct": "Ortamı en uygun hâlde tutmak",
+    "wrong": [
+     "Bitkileri böceklerden korumak",
+     "Ürünleri satışa hazırlamak",
+     "Binalara elektrik üretmek"
+    ],
+    "explanation": "Büyümeyi ölçüp besin oranını ayarlarlar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Dikey tarımda su tasarrufu neden mümkündür?",
+    "correct": "Su sistemde yeniden dolaştığı için",
+    "wrong": [
+     "Bitkiler hiç su istemediği için",
+     "Yalnız yağmur suyu kullanıldığı için",
+     "Raflar çok küçük olduğu için"
+    ],
+    "explanation": "Su sistem içinde dolaşıp yeniden kullanılır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kapalı ortamın tarım ilacı ihtiyacını azaltmasının nedeni nedir?",
+    "correct": "İçeride zararlı böcek bulunmaması",
+    "wrong": [
+     "Bitkilerin kendi ilacını üretmesi",
+     "Işığın böcekleri öldürmesi",
+     "İlaçların çok pahalı olması"
+    ],
+    "explanation": "Kapalı ortamda zararlı böcekler olmaz."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "Dikey çiftliklerde neden çoğunlukla yapraklı sebzeler yetiştirilir?",
+    "correct": "Hızla büyüyüp pahalı satılmaları",
+    "wrong": [
+     "Buğdayın raflara bir türlü sığmaması",
+     "Yapraklıların ışık istememesi",
+     "Yasaların bunu zorunlu kılması"
+    ],
+    "explanation": "Enerji maliyeti yüksek olduğundan hızlı büyüyen pahalı ürünler seçilir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Eleştirmenlerin arızayla ilgili kaygısı neye dayanır?",
+    "correct": "Ürünün tümden yok olabilmesi",
+    "wrong": [
+     "Bilgisayarların pahalıya gelmesi",
+     "Sensörlerin sık sık bozulması",
+     "Çalışan sayısının az olması"
+    ],
+    "explanation": "Teknik bir arıza kısa sürede bütün ürünü yok edebilir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta uzmanların dikey tarıma bakışı nasıldır?",
+    "correct": "Destekleyici ama kısıtlı bir yol",
+    "wrong": [
+     "Geleneksel tarımın tek alternatifi",
+     "Başarısız ve gereksiz bir deneme",
+     "Yalnızca uzayda işe yarayan fikir"
+    ],
+    "explanation": "Geleneksel tarımın yerini alamaz ama onu tamamlayabilir."
+   }
+  ]
+ },
+ "258": {
+  "title": "Fleming'in Uyarısı",
+  "category": "Bilgi/Açıklama",
+  "content": "1928 yılında İskoç bilim insanı Alexander Fleming, laboratuvarında bakteri üretmek için kullandığı bir kabın küflendiğini fark etti. Dikkatini çeken şey, küfün çevresindeki bakterilerin ölmüş olmasıydı. Fleming, küfün bakterileri öldüren bir madde ürettiğini anladı ve bu maddeye penisilin adını verdi. Penisilinin ilaç olarak yaygın biçimde kullanılması ancak 1940'larda mümkün oldu, ama bu keşif tıp tarihinin dönüm noktalarından biri sayılır. Antibiyotikler sayesinde, eskiden ölümcül olan zatürre, verem ve yara enfeksiyonları gibi hastalıklar tedavi edilebilir hâle geldi. Yalnızca sıradan bir kesik ya da diş çekimi yüzünden insanların hayatını kaybedebildiği bir dönem sona erdi. Antibiyotikler aynı zamanda ameliyatları, kanser tedavilerini ve organ nakillerini çok daha güvenli hâle getirdi, çünkü bu işlemlerden sonra gelişebilecek enfeksiyonlar artık kontrol altına alınabiliyordu.\n\nNe var ki Fleming, 1945'te Nobel Ödülü'nü alırken yaptığı konuşmada önemli bir uyarıda bulundu. Penisilinin gereğinden az ya da yanlış kullanılması durumunda bakterilerin bu ilaca direnç kazanabileceğini söyledi. Aradan geçen yıllar, Fleming'i haklı çıkardı. Penisiline dirençli ilk bakteriler, ilacın yaygınlaşmasından yalnızca birkaç yıl sonra hastanelerde görülmeye başladı. Bilim insanları yeni antibiyotikler buldukça, bakteriler de kısa süre içinde bunlara karşı direnç geliştirdi. Bu durum, tıp dünyasında hiç bitmeyen bir yarışa benzetiliyor.\n\nAntibiyotik direnci, evrimin gözümüzün önünde gerçekleşen bir örneğidir. Bir hastalığa yol açan milyonlarca bakterinin arasında, rastlantısal değişimler sonucunda antibiyotiğe biraz daha dayanıklı olan birkaç tane bulunabilir. Antibiyotik kullanıldığında dayanıksız bakteriler ölür, ama bu dayanıklı birkaç tanesi hayatta kalır ve çoğalır. Zamanla bütün bakteri topluluğu, ilaca karşı dirençli hâle gelir. Bakteriler çok hızlı çoğaldığı için bu süreç birkaç yıl gibi kısa bir sürede yaşanabilir. Üstelik bazı bakteriler, direnç sağlayan genleri başka bakterilerle paylaşabilir.\n\nDirencin yayılmasını hızlandıran en önemli etkenlerden biri, antibiyotiklerin yanlış kullanımıdır. Soğuk algınlığı ve grip gibi hastalıkların çoğu virüslerden kaynaklanır. Antibiyotikler ise virüslere karşı hiçbir işe yaramaz. Buna rağmen pek çok kişi bu hastalıklarda antibiyotik kullanır. Bir başka yaygın hata da, kendini iyi hisseden hastanın ilacı doktorun önerdiği süreden önce bırakmasıdır. Bu durumda en dayanıklı bakteriler vücutta kalabilir. Hayvancılıkta, hayvanların daha hızlı büyümesi için antibiyotiklerin yem içinde kullanılması da sorunu büyütmektedir.\n\nDünya Sağlık Örgütü, antibiyotik direncini insanlığın karşı karşıya olduğu en büyük sağlık tehditlerinden biri olarak tanımlıyor. Bazı enfeksiyonlar bugün bilinen neredeyse hiçbir antibiyotikle tedavi edilemiyor. Basında “süper bakteri” olarak anılan bu mikroplar, özellikle hastanelerde, bağışıklığı zayıf hastalar için büyük tehlike oluşturuyor. Yeni antibiyotik geliştirmek ise uzun yıllar alan ve çok pahalı bir süreç. Üstelik bir ilaç şirketi için, kısa süre kullanılan ve direnç gelişmesin diye idareli yazılması gereken bir antibiyotik, her gün kullanılan bir kronik hastalık ilacı kadar kârlı değildir. Bu yüzden son kırk yılda geliştirilen yeni antibiyotik türü sayısı oldukça azdır.\n\nBilim insanları farklı çözümler üzerinde de çalışıyor. Bunlardan biri, yalnızca bakterileri enfekte eden ve fajlar adı verilen virüslerin tedavide kullanılmasıdır. Bir başka yaklaşım, yapay zekâ yardımıyla milyonlarca kimyasal bileşiği tarayarak yeni antibiyotik adayları bulmaktır. Bu yöntemle umut verici bazı maddeler keşfedildi, ancak bunların ilaç olarak kullanılabilmesi için daha yıllarca test edilmesi gerekiyor.\n\nUzmanlar, bu tehdide karşı herkesin üzerine düşeni yapması gerektiğini vurguluyor. Antibiyotikleri yalnızca doktor önerdiğinde kullanmak, önerilen süreye uymak, artan ilaçları başkalarına vermemek ve ellerimizi düzenli yıkayarak enfeksiyonların yayılmasını önlemek, bu mücadelenin en basit ama en etkili adımlarıdır.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fleming penisilini nasıl keşfetti?",
+    "correct": "Küflü kapta bakterilerin öldüğünü görüp",
+    "wrong": [
+     "Yıllarca süren pahalı bir deneyle",
+     "Eski bir tıp kitabını okurken dikkat edip",
+     "Bir hastayı tedavi ederken fark edip"
+    ],
+    "explanation": "Küflenen kapta küfün çevresindeki bakterilerin öldüğünü fark etti."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Antibiyotikler ameliyatları neden daha güvenli hâle getirdi?",
+    "correct": "Sonraki enfeksiyonlar önlenebildiği için",
+    "wrong": [
+     "Ameliyatlar çok daha kısa ve kolay sürdüğü için",
+     "Doktorlar ağrıyı bütünüyle yok edebildiği için",
+     "Hastaneler çok büyüyüp geliştiği için"
+    ],
+    "explanation": "İşlemlerden sonra gelişebilecek enfeksiyonlar kontrol altına alındı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fleming Nobel konuşmasında neye karşı uyardı?",
+    "correct": "Yanlış kullanımın direnç doğurmasına",
+    "wrong": [
+     "Penisilinin çok pahalı olacağına",
+     "Küfün insanlara kolayca bulaşacağına",
+     "İlacın acı tadının sevilmeyeceğine"
+    ],
+    "explanation": "Yanlış kullanımda bakterilerin direnç kazanabileceğini söyledi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Direnç neden evrimin bir örneği sayılır?",
+    "correct": "Dayanıklıların kalıp çoğalması",
+    "wrong": [
+     "Bakterilerin bilerek ilaca alışması",
+     "İnsan vücudunun zamanla değişmesi",
+     "İlacın zamanla bozulup gitmesi"
+    ],
+    "explanation": "Dayanıksızlar ölür, dayanıklılar çoğalır; topluluk dirençli hâle gelir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gribe karşı antibiyotik kullanmanın anlamsız olmasının nedeni nedir?",
+    "correct": "Gribin virüs kaynaklı olması",
+    "wrong": [
+     "Gribin çok kısa ve hafif olması",
+     "Antibiyotiklerin pahalı olması",
+     "Gribin bulaşıcı olmaması"
+    ],
+    "explanation": "Antibiyotikler virüslere karşı işe yaramaz."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 5,
+    "text": "İlacı erken bırakmak direnci nasıl artırır?",
+    "correct": "Dirençli mikropları geride bırakarak",
+    "wrong": [
+     "Vücutta ciddi bir alerjiye yol açarak",
+     "Ateşi birden çok yükseltip uzatarak",
+     "İlacın kanda birikmesine yol açarak"
+    ],
+    "explanation": "Erken bırakınca en dayanıklı bakteriler hayatta kalabilir."
+   },
+   {
+    "p": 6,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yeni antibiyotiklerin az geliştirilmesinin bir nedeni nedir?",
+    "correct": "Şirketlere yeterince kâr getirmemesi",
+    "wrong": [
+     "Bakterilerin büsbütün yok olması",
+     "Bilim insanlarının ilgisiz kalması",
+     "Yasakların her yıl biraz daha artması"
+    ],
+    "explanation": "Kısa süre ve idareli kullanılan ilaçlar kârlı değildir."
+   },
+   {
+    "p": 7,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın temel iletisi nedir?",
+    "correct": "Direnci önlemek herkesin görevidir",
+    "wrong": [
+     "Sorunu yalnızca doktorlar çözebilir",
+     "Antibiyotikler yasaklanmalıdır",
+     "El yıkamak artık gereksizdir"
+    ],
+    "explanation": "Herkesin üzerine düşeni yapması gerekir."
+   }
+  ]
+ },
+ "259": {
+  "title": "Fincandaki Uyarıcı",
+  "category": "Bilgi/Açıklama",
+  "content": "Pek çok kişi güne bir fincan kahveyle başlamadan kendine gelemediğini söyler. Kahvenin bizi uyandıran etkisinin arkasında kafein adlı bir madde bulunur. Kafein yalnızca kahvede değil, çayda, kolalı içeceklerde, enerji içeceklerinde ve çikolatada da bulunur. Dünyada en çok tüketilen uyarıcı maddedir. Bir fincan filtre kahvede ortalama yüz miligram, bir bardak demli çayda ise bunun yaklaşık yarısı kadar kafein bulunur. Bitkiler kafeini aslında kendilerini korumak için üretir; yüksek miktarda kafein, yapraklarını yemeye çalışan böcekler için zehirlidir.\n\nKafeinin nasıl çalıştığını anlamak için beyindeki adenozin adlı maddeyi tanımak gerekir. Gün boyunca uyanık kaldıkça beyinde adenozin birikir. Adenozin, beyindeki belirli alıcılara bağlanarak yorgunluk ve uyku hissi yaratır. Kafeinin molekül yapısı adenozine çok benzer. Bu yüzden kafein, adenozinin bağlanması gereken alıcılara yerleşir ve onları adeta kapatır. Adenozin mesajını iletemez; biz de kendimizi daha uyanık ve dinç hissederiz. Yani kafein aslında enerji vermez, yorgunluk sinyalini geçici olarak susturur. Kafeinin etkisi geçtiğinde, bu süre boyunca birikmiş olan adenozin alıcılara bir anda bağlanır; bu yüzden bazı insanlar kahvenin etkisi geçince kendini birden çok yorgun hisseder.\n\nKafeinin etkisi genellikle içtikten yaklaşık yarım saat sonra başlar. Vücut kafeinin yarısını ortalama beş ila altı saatte atar. Bu, öğleden sonra saat dörtte içilen bir kahvenin etkisinin bir kısmının gece yatma saatinde hâlâ sürdüğü anlamına gelir. Bu nedenle uzmanlar, uyku sorunu yaşayanların öğleden sonra kafein almamasını öneriyor. Kafeinin vücuttan atılma hızı kişiden kişiye büyük farklılık gösterir. Bazı insanlar akşam kahvesinden sonra rahatça uyuyabilirken, bazıları sabah içtiği tek fincan yüzünden bile gece uyuyamaz.\n\nDüzenli kafein tüketen kişilerde vücut zamanla bu maddeye alışır. Beyin, kapatılan alıcıları telafi etmek için daha fazla alıcı üretir. Bu yüzden aynı etkiyi elde etmek için daha fazla kafein gerekebilir. Kafeini birden bırakan kişiler ise baş ağrısı, yorgunluk ve dikkat dağınıklığı gibi yoksunluk belirtileri yaşayabilir. Bu belirtiler genellikle birkaç gün içinde geçer. Kafeini azaltmak isteyenlere, birden bırakmak yerine miktarı günler içinde yavaş yavaş düşürmeleri önerilir.\n\nAraştırmalar, sağlıklı yetişkinler için günde dört yüz miligrama kadar kafeinin genellikle güvenli olduğunu gösteriyor. Bu miktar yaklaşık dört fincan filtre kahveye denk gelir. Ölçülü tüketildiğinde kafein dikkati artırabilir ve tepki süresini kısaltabilir. Enerji içeceklerinde ise kafeinin yanında yüksek miktarda şeker de bulunduğu için, bu içeceklerin sık tüketilmesi ayrıca dikkat gerektirir. Ancak hamileler, kalp rahatsızlığı olanlar ve çocuklar için önerilen miktarlar çok daha düşüktür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bitkiler kafeini ne amaçla üretir?",
+    "correct": "Haşereleri uzak tutmak için",
+    "wrong": [
+     "Daha güçlü büyümek için",
+     "Arıları kendine çekmek için",
+     "Suyu içinde tutmak için"
+    ],
+    "explanation": "Yüksek miktarda kafein yaprak yiyen böcekler için zehirlidir."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Bir bardak demli çayda filtre kahveye göre ne kadar kafein bulunur?",
+    "correct": "Aşağı yukarı yarı miktar",
+    "wrong": [
+     "Neredeyse iki katı kadar",
+     "Hiç denecek kadar az",
+     "Tam olarak aynı miktar"
+    ],
+    "explanation": "Demli çayda kahvenin yaklaşık yarısı kadar kafein bulunur."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kafeinin bizi uyanık tutmasının nedeni nedir?",
+    "correct": "Yorgunluk iletisini engellemesi",
+    "wrong": [
+     "Vücuda doğrudan yeni enerji eklemesi",
+     "Kan şekerini hızla artırması",
+     "Kalbi daha yavaş çalıştırması"
+    ],
+    "explanation": "Kafein adenozinin alıcılarına yerleşip yorgunluk mesajını engeller."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Kahvenin etkisi geçince ani yorgunluk hissedilmesi nasıl açıklanır?",
+    "correct": "Bekleyen sinyalin birden ulaşması",
+    "wrong": [
+     "Kafeinin vücutta zehre dönüşmesi",
+     "Kalbin aniden ve iyice yavaşlaması",
+     "Midenin boşalıp birden acıkılması"
+    ],
+    "explanation": "Bekleyen adenozin alıcılara bir anda bağlanır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Vücut kafeinin yarısını ortalama ne kadar sürede atar?",
+    "correct": "Beş ila altı saatte",
+    "wrong": [
+     "Yarım saat içinde",
+     "Tam iki gün içinde",
+     "Bir buçuk saat içinde"
+    ],
+    "explanation": "Vücut kafeinin yarısını ortalama beş ila altı saatte atar."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Uzmanların öğleden sonra kafein önermemesinin nedeni nedir?",
+    "correct": "Etkisinin geceye kadar sürmesi",
+    "wrong": [
+     "Kahvenin öğleden sonra pahalanması",
+     "Akşam yemeğinin tadını bozması",
+     "Midede uzun süre ağırlık yapması"
+    ],
+    "explanation": "Etkinin bir kısmı yatma saatinde hâlâ sürer."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Düzenli tüketicilerin zamanla daha fazla kafeine ihtiyaç duymasının nedeni nedir?",
+    "correct": "Beynin yeni alıcılar üretmesi",
+    "wrong": [
+     "Kahvenin giderek zayıflaması",
+     "Midenin kafeini hiç emmemesi",
+     "Uykunun büsbütün kaçıp kaybolması"
+    ],
+    "explanation": "Beyin kapatılan alıcıları telafi etmek için daha fazla alıcı üretir."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafta yazarın kafeine yaklaşımı nasıldır?",
+    "correct": "Ölçülü tüketimi destekleyen ve uyaran",
+    "wrong": [
+     "Tümüyle yasaklanmasını açıkça isteyen",
+     "Sınırsız tüketimi rahatça öneren",
+     "Konuya karşı bütünüyle ilgisiz kalan"
+    ],
+    "explanation": "Ölçülü tüketimin yararlarını sayar, risk gruplarını uyarır."
+   }
+  ]
+ },
+ "260": {
+  "title": "Balkondaki Misafir",
+  "category": "Hikaye/Kurgu",
+  "content": "Bir sabah İpek balkona çıktığında saksıların arasında bir güvercin gördü. Güvercin, kurumuş çiçeklerin arasına küçük dallardan bir yuva yapmıştı. Yuvada iki tane beyaz yumurta vardı. Güvercin İpek'i görünce biraz huzursuzlandı ama yumurtalarının üstünden kalkmadı.\n\nİpek hemen annesini çağırdı. Annesi, güvercini korkutmamaları gerektiğini, yoksa yumurtalarını bırakıp gidebileceğini söyledi. O günden sonra balkona çıkarken çok sessiz olmaya dikkat ettiler. İpek her gün perdenin arkasından güvercini izledi. Güvercin yumurtaların üstünde sabırla oturuyordu. Bazen eşi geliyor, yumurtaların başında o bekliyordu.\n\nBirkaç hafta sonra İpek, yuvadan ince sesler geldiğini duydu. Yumurtalar çatlamış, içinden iki küçük yavru çıkmıştı. Yavruların tüyleri sarımsı ve kabarıktı. Gözleri henüz açılmamıştı. Anne ve baba güvercin onları sırayla besliyordu. İpek yavruları her gün resim defterine çiziyordu.\n\nYavrular gün geçtikçe büyüdü. Tüyleri griye döndü ve kanatlarını çırpmaya başladılar. Bir sabah İpek balkona baktığında yuvanın boş olduğunu gördü. Önce biraz üzüldü ve yuvaya baktı. Sonra karşıdaki çatıda yan yana oturan iki genç güvercin gördü. Onlara el salladı. Belki gelecek bahar onlar da gelip balkona yuva yaparlardı.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Güvercin yuvasını nereye yapmıştı?",
+    "correct": "Çiçek kapları arasına",
+    "wrong": [
+     "Çatının en uç kenarına",
+     "Ağacın ince dalına",
+     "Pencerenin önüne"
+    ],
+    "explanation": "Saksıların arasına, kuru çiçeklerin içine yuva yapmıştı."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yuvada kaç yumurta vardı?",
+    "correct": "İki",
+    "wrong": [
+     "Üç",
+     "Beş",
+     "Bir"
+    ],
+    "explanation": "Yuvada iki beyaz yumurta vardı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Annesi neden sessiz olmalarını istedi?",
+    "correct": "Kuş yuvayı bırakıp gitmesin diye",
+    "wrong": [
+     "Komşular rahatsız olmasın diye",
+     "Küçük kardeşi uyanmasın diye",
+     "Kuş onları gagalayıp kaçmasın diye"
+    ],
+    "explanation": "Korkarsa yumurtalarını bırakıp gidebilirdi."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "İpek güvercini nereden izliyordu?",
+    "correct": "Tülün ardından gizlice",
+    "wrong": [
+     "Balkon kapısından",
+     "Aşağıdaki bahçeden",
+     "Okulunun penceresinden"
+    ],
+    "explanation": "İpek her gün perdenin arkasından güvercini izledi."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yeni çıkan yavruların tüyleri nasıldı?",
+    "correct": "Soluk sarı, pofuduk",
+    "wrong": [
+     "Simsiyah ve çok parlak",
+     "Bembeyaz ve uzun",
+     "Mavimsi ve incecik"
+    ],
+    "explanation": "Yavruların tüyleri sarımsı ve kabarıktı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yavruları anne ve babanın sırayla beslemesi neyi gösterir?",
+    "correct": "Ebeveynlerin iş birliğini",
+    "wrong": [
+     "Yavruların çok az yediğini",
+     "Kuşların kavga ettiğini",
+     "Yemeğin bitmek üzere olduğunu"
+    ],
+    "explanation": "Anne ve baba görevi paylaşır."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yuvanın boş olmasının nedeni nedir?",
+    "correct": "Yavruların büyüyüp uçması",
+    "wrong": [
+     "Bir kedinin yuvayı bozması",
+     "Rüzgârın yuvayı düşürmesi",
+     "İpek'in yuvayı kaldırması"
+    ],
+    "explanation": "Yavrular büyüyüp uçmuş, karşı çatıya konmuştu."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öykünün sonunda İpek'in duyguları nasıldır?",
+    "correct": "Hüznü umuda dönüşür",
+    "wrong": [
+     "Öfkesi giderek artar",
+     "Korkusu hiç geçmez",
+     "Bütünüyle umursamaz olur"
+    ],
+    "explanation": "Önce üzülür, sonra yavruları görüp gelecek bahar için umutlanır."
+   }
+  ]
+ },
+ "261": {
+  "title": "Dikenli Bahçıvan",
+  "category": "Bilgi/Açıklama",
+  "content": "Kirpiler, sırtları dikenlerle kaplı küçük memelilerdir. Bir yetişkin kirpinin sırtında beş binden fazla diken bulunabilir. Bu dikenler aslında sertleşmiş tüylerdir. Kirpi tehlike sezdiğinde başını ve bacaklarını içeri çekip top gibi kıvrılır. Böylece sadece dikenleri dışarıda kalır ve düşmanları ona kolayca saldıramaz. Yavru kirpiler doğduklarında dikenleri yumuşak ve beyazdır; böylece anneleri doğum sırasında zarar görmez. Birkaç saat içinde bu dikenler sertleşmeye başlar.\n\nKirpiler, gündüz değil geceleri ortaya çıkan hayvanlardır. Gündüzleri çalıların altında ya da yaprak yığınlarının arasında uyurlar. Akşam olunca yiyecek aramaya başlarlar. En sevdikleri yiyecekler böcekler, solucanlar ve salyangozlardır. Görme duyuları çok iyi değildir, ama koku alma ve işitme duyuları çok gelişmiştir. Bu sayede toprağın altındaki bir solucanı bile bulabilirler. Yiyecek ararken burunlarıyla toprağı eşeler ve küçük domuz sesine benzeyen homurtular çıkarırlar. Bir kirpi bir gecede birkaç kilometre yürüyebilir.\n\nKirpiler, bahçeler için de çok yararlı hayvanlardır. Bitkilere zarar veren böcekleri ve salyangozları yiyerek bahçıvanlara yardım ederler. Bu yüzden bazı insanlar bahçelerinde kirpiler için küçük kulübeler yapar ve bahçe çitlerinin altında kirpilerin geçebileceği küçük delikler bırakır. Ancak kirpilere süt verilmemelidir, çünkü süt onların midesine zarar verir.\n\nSonbahar gelip havalar soğuyunca kirpiler kış uykusuna hazırlanır. Kışa girmeden önce bolca yiyip vücutlarında yağ depolarlar; uyku boyunca bu yağla yaşayacaklardır. Sonra yapraklardan bir yuva yapıp içine kıvrılırlar. Kış boyunca kalp atışları ve nefes alıp vermeleri çok yavaşlar. İlkbaharda havalar ısınınca uyanırlar ve hemen yiyecek aramaya koyulurlar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kirpinin dikenleri aslında nedir?",
+    "correct": "Sertleşmiş kıllar",
+    "wrong": [
+     "Uzamış tırnaklar",
+     "Kemik parçaları",
+     "Sertleşmiş pullar"
+    ],
+    "explanation": "Dikenler aslında sertleşmiş tüylerdir."
+   },
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yavruların dikenlerinin doğumda yumuşak olmasının yararı nedir?",
+    "correct": "Annenin hiç zarar görmemesi",
+    "wrong": [
+     "Yavruların hızla koşabilmesi",
+     "Yavruların daha az üşümesi",
+     "Dikenlerin hiç dökülmemesi"
+    ],
+    "explanation": "Böylece anne doğum sırasında zarar görmez."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kirpiler gündüzleri nerede bulunur?",
+    "correct": "Bitki yığınları altında",
+    "wrong": [
+     "Yüksek ağaç tepelerinde",
+     "Derelerin kenarlarında",
+     "Mağaraların derininde"
+    ],
+    "explanation": "Gündüzleri çalıların altında ya da yaprak yığınlarında uyurlar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kirpilerin toprak altındaki solucanı bulabilmesi neye bağlıdır?",
+    "correct": "Keskin burun ve kulaklarına",
+    "wrong": [
+     "Keskin görme yeteneklerine",
+     "Uzun ve esnek kuyruklarına",
+     "Dikenlerinin hafif titreşimine"
+    ],
+    "explanation": "Koku alma ve işitme duyuları çok gelişmiştir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Bahçıvanların kirpileri sevmesinin nedeni nedir?",
+    "correct": "Zararlıları azaltmaları",
+    "wrong": [
+     "Çiçekleri sık sulamaları",
+     "Toprağı kazımamaları",
+     "Meyveleri korumaları"
+    ],
+    "explanation": "Bitkilere zarar veren böcek ve salyangozları yerler."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kirpilere neden süt verilmemelidir?",
+    "correct": "Midelerine zarar verdiği için",
+    "wrong": [
+     "Sütün tadını sevmedikleri için",
+     "Dikenlerini dökeceği için",
+     "Süt çok pahalı olduğu için"
+    ],
+    "explanation": "Süt kirpilerin midesine zarar verir."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Kirpilerin sonbaharda bolca yemesinin nedeni nedir?",
+    "correct": "Kış için bol yağ biriktirmek",
+    "wrong": [
+     "Yavrularını bol bol beslemek",
+     "Dikenlerini uzatıp sertleştirmek",
+     "Daha hızlı ve çevik koşabilmek"
+    ],
+    "explanation": "Uyku boyunca depoladıkları yağla yaşarlar."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 4,
+    "text": "Son paragraf kirpilerin hangi özelliğini anlatır?",
+    "correct": "Soğuğa uyum biçimini",
+    "wrong": [
+     "Avlanma yöntemlerini",
+     "Yavrularına bakımını",
+     "Bahçelere olan yararını"
+    ],
+    "explanation": "Kış uykusu hazırlığı ve kış boyunca yaşananlar anlatılır."
+   }
+  ]
+ }
+}

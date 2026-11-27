@@ -1,0 +1,668 @@
+{
+ "166": {
+  "title": "Doğum Günü Sürprizi",
+  "category": "Hikaye/Kurgu",
+  "content": "Pazar sabahı Mira erkenden uyandı. O gün annesinin doğum günüydü ve Mira bunu haftalardır bekliyordu. Mira, babası ve küçük kardeşi Can, annelerine bir sürpriz hazırlamaya karar vermişlerdi. Bir gün önce babasıyla birlikte markete gidip gerekenleri almışlardı. Annesi daha uyurken üçü parmak uçlarında, sessizce mutfağa girdi.\n\nBabası un, yumurta, süt ve şekeri tezgâhın üstüne koydu. Mira yumurtaları kırdı, Can da unu kaba döktü. Biraz un yere döküldü ve Can'ın burnu bembeyaz oldu. Hepsi gülmemek için ellerini ağızlarına kapattı. Babası karışımı karıştırdı ve kek kalıbını fırına koydu. Mutfağı tatlı bir koku sardı. Can her beş dakikada bir fırının camından bakıp “Pişti mi?” diye soruyordu.\n\nKek pişerken Mira renkli kâğıtlardan bir kart hazırladı. Kartın üstüne kocaman bir kalp çizdi ve içine “Seni çok seviyoruz anneciğim” yazdı. Can da karta sarı bir güneş, mavi bir gökyüzü ve dört kişilik bir aile çizdi. Çizdiği ailenin en büyüğü annesiydi, çünkü Can'a göre annesi evin en önemli kişisiydi.\n\nKek fırından çıkınca babası üstüne çilek dizdi. Mira bir mum dikti. Sonra üçü yavaşça annesinin odasına gittiler. Can heyecandan kıkırdamaya başlayınca Mira onu susturdu. Kapıyı açıp hep birlikte “İyi ki doğdun!” diye bağırdılar.\n\nAnnesi gözlerini açınca çok şaşırdı. Kekle kartı görünce gözleri doldu. Mumu üfledi ve hepsine tek tek sıkıca sarıldı. Sonra mutfağa gidip dağınıklığa baktı ve güldü. “En güzel hediye, hepinizin birlikte çalışması” dedi. Kahvaltıdan sonra mutfağı da hep birlikte topladılar.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "O gün kimin doğum günüydü?",
+    "correct": "Mira'nın annesinin",
+    "wrong": [
+     "Mira'nın babasının",
+     "Mira'nın kendisinin",
+     "Kardeşi Can'ın"
+    ],
+    "explanation": "O gün annesinin doğum günüydü."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Hepsi neden ellerini ağızlarına kapattı?",
+    "correct": "Sesleri anneyi uyandırmasın diye",
+    "wrong": [
+     "Unun kokusundan hoşlanmadıkları için",
+     "Bütün yumurtalar kırıldığı için",
+     "Fırının içi çok sıcak olduğu için"
+    ],
+    "explanation": "Sürpriz bozulmasın diye sessiz kalmaya çalışıyorlardı."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Can'ın burnu neden bembeyaz oldu?",
+    "correct": "Burnuna un bulaştığı için",
+    "wrong": [
+     "Üstüne süt döküldüğü için",
+     "Gizlice şeker yediği için",
+     "Soğuktan üşüdüğü için"
+    ],
+    "explanation": "Biraz un yere döküldü ve Can'ın burnu bembeyaz oldu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mira kartın içine ne yazdı?",
+    "correct": "Annesini sevdiklerini",
+    "wrong": [
+     "Kekin bütün tarifini",
+     "Sadece kendi adını",
+     "Kısa ve güzel bir şiir"
+    ],
+    "explanation": "Kartın içine “Seni çok seviyoruz anneciğim” yazdı."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Can'ın resimde annesini en büyük çizmesi neyi gösterir?",
+    "correct": "Annesine çok değer verdiğini",
+    "wrong": [
+     "Hiç resim yapmayı bilmediğini",
+     "Annesinin uzun boylu olduğunu",
+     "Babasına çok kızgın olduğunu"
+    ],
+    "explanation": "Can'a göre annesi evin en önemli kişisiydi."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Kekin üstüne ne konuldu?",
+    "correct": "Çilekler ve bir mum",
+    "wrong": [
+     "Çikolata ile fındık",
+     "Krema ile muz dilimleri",
+     "Pudra şekeri ve tarçın"
+    ],
+    "explanation": "Babası üstüne çilek dizdi, Mira bir mum dikti."
+   },
+   {
+    "p": 5,
+    "type": 2,
+    "bloom": 3,
+    "text": "Annesinin gözlerinin dolmasının nedeni nedir?",
+    "correct": "Hazırlanan sürprize duygulanması",
+    "wrong": [
+     "Uykusunun henüz açılmamış olması",
+     "Mutfağın çok dağınık olması",
+     "Kekin fırında yanmış olması"
+    ],
+    "explanation": "Kekle kartı görünce duygulandı."
+   },
+   {
+    "p": 5,
+    "type": 3,
+    "bloom": 3,
+    "text": "Annesine göre en güzel hediye neydi?",
+    "correct": "Birlikte çalışmaları",
+    "wrong": [
+     "Çilekli ve mumlu bir kek",
+     "Renkli kâğıttan kart",
+     "Mutfağın temizlenmesi"
+    ],
+    "explanation": "“En güzel hediye, hepinizin birlikte çalışması” dedi."
+   }
+  ]
+ },
+ "167": {
+  "title": "Tarçın'ın Yavruları",
+  "category": "Hikaye/Kurgu",
+  "content": "Kedimiz Tarçın'ın karnı günden güne büyüyordu. Annem, Tarçın'ın yakında yavrulayacağını söyledi. Çok heyecanlandım. Birlikte bir karton kutu hazırladık. İçine yumuşak, eski bir battaniye koyduk. Kutuyu odanın sessiz bir köşesine yerleştirdik. Tarçın kutuyu kokladı ve içine girip yattı.\n\nBir sabah kutuya baktığımda gözlerime inanamadım. Tarçın'ın yanında dört minik yavru vardı! Yavruların gözleri kapalıydı. Hep annelerinin yanına sokuluyorlardı. Tarçın onları tek tek yalıyor, sıcak tutuyordu.\n\nAnnem, yavruların gözlerinin birkaç gün sonra açılacağını anlattı. Onlara dokunmamamızı, Tarçın'ı rahat bırakmamızı istedi. Ben de her gün uzaktan onları izledim. Yavrulara isim bile koydum: Fıstık, Pamuk, Duman ve Zeytin.\n\nOn gün sonra yavruların gözleri açıldı ve etraflarına merakla bakmaya başladılar. Mavi mavi, kocaman gözlerle bakıyorlardı. Birkaç hafta sonra kutudan çıkıp odada koşmaya başladılar. Birbirleriyle oynuyor, perdelerin arkasına saklanıyorlardı. Tarçın da onları gururla izliyordu.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 1,
+    "text": "Tarçın için ne hazırladılar?",
+    "correct": "İçi battaniyeli bir kutu",
+    "wrong": [
+     "Kocaman yeni bir mama kabı",
+     "Renkli bir oyuncak top",
+     "Demirden küçük bir kafes"
+    ],
+    "explanation": "Bir karton kutu hazırlayıp içine yumuşak bir battaniye koydular."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 1,
+    "text": "Tarçın'ın kaç yavrusu oldu?",
+    "correct": "4",
+    "wrong": [
+     "2",
+     "3",
+     "6"
+    ],
+    "explanation": "Tarçın'ın yanında dört minik yavru vardı."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 3,
+    "text": "Yavrular neden annelerine sokuluyordu?",
+    "correct": "Sıcak ve güvende kalmak için",
+    "wrong": [
+     "Oyun oynamak istedikleri için",
+     "Kutudan dışarı kaçmak için",
+     "Hiç süt istemedikleri için"
+    ],
+    "explanation": "Gözleri kapalı yavrular sıcaklık ve güven için annelerine sokuluyordu."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Annesi çocuktan ne istedi?",
+    "correct": "Yavruları rahat bırakmasını",
+    "wrong": [
+     "Yavruları her gün beslemesini",
+     "Kutuyu başka odaya taşımasını",
+     "Tarçın'ı her gün yıkamasını"
+    ],
+    "explanation": "Annesi yavrulara dokunmamalarını, Tarçın'ı rahat bırakmalarını istedi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Çocuğun yavruları uzaktan izlemesi neyi gösterir?",
+    "correct": "Annesinin sözünü dinlediğini",
+    "wrong": [
+     "Yavrulardan çok korktuğunu",
+     "Kedilerden hiç hoşlanmadığını",
+     "Kutuyu hiç göremediğini"
+    ],
+    "explanation": "Annesi dokunmamalarını istemişti; çocuk uzaktan izledi."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 3,
+    "text": "Çocuğun yavrulara tek tek isim koyması neyi gösterir?",
+    "correct": "Onları çok sevip benimsediğini",
+    "wrong": [
+     "Yavruları satmak istediğini",
+     "İsimleri ezberlemek istediğini",
+     "Annesine çok kızgın olduğunu"
+    ],
+    "explanation": "Yavrulara isim koyması, onlara bağlandığını gösterir."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Yavruların gözleri kaç gün sonra açıldı?",
+    "correct": "10",
+    "wrong": [
+     "2",
+     "5",
+     "20"
+    ],
+    "explanation": "On gün sonra yavruların gözleri açıldı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 3,
+    "text": "Öykünün sonunda Tarçın'ın yavruları gururla izlemesi neyi anlatır?",
+    "correct": "Annenin yavrularına sevgisini",
+    "wrong": [
+     "Tarçın'ın yorgunluktan uyuduğunu",
+     "Yavruların evden gideceğini",
+     "Tarçın'ın da oynamak istediğini"
+    ],
+    "explanation": "Tarçın büyüyen yavrularını sevgiyle izliyordu."
+   }
+  ]
+ },
+ "169": {
+  "title": "Okyanusun Devi",
+  "category": "Bilgi/Açıklama",
+  "content": "Mavi balina, yeryüzünde yaşamış en büyük hayvandır. Boyu otuz metreye yaklaşabilir. Bu, üç otobüsün arka arkaya dizilmesi kadar uzun demektir. Ağırlığı ise yaklaşık otuz filin ağırlığına eşittir. Sadece dilinin ağırlığı bile bir filinki kadar olabilir. Kalbi ise küçük bir otomobil büyüklüğündedir.\n\nBu kadar büyük bir hayvanın çok büyük avlar yediğini düşünebilirsiniz. Oysa mavi balina, kril adı verilen küçük, karides benzeri canlılarla beslenir. Bir kril, parmağınızın boyu kadardır. Mavi balina ağzını kocaman açıp içine tonlarca su ve kril alır. Ağzındaki ince, tarak gibi yapılar suyu dışarı süzerken krilleri içeride tutar. Bir mavi balina bir günde milyonlarca kril yiyebilir.\n\nMavi balinalar dünyanın en gürültülü hayvanları arasındadır. Çıkardıkları alçak sesler, suyun altında yüzlerce kilometre uzağa ulaşabilir. Bilim insanları balinaların bu seslerle birbirleriyle haberleştiğini düşünüyor. Bu seslerin bir kısmı o kadar alçaktır ki insan kulağı onları duyamaz.\n\nBir zamanlar okyanuslarda çok sayıda mavi balina vardı. Ancak yüzyıllar boyunca yapılan avcılık yüzünden sayıları çok azaldı. Bugün mavi balinaları avlamak yasaktır ve sayıları yavaş yavaş artmaktadır. Ancak gemilerle çarpışmalar ve denizlerdeki kirlilik, bu dev hayvanlar için hâlâ tehlike oluşturuyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mavi balinanın boyu neye benzetilmiştir?",
+    "correct": "Art arda dizilmiş üç otobüse",
+    "wrong": [
+     "Yan yana duran beş otomobile",
+     "Kocaman, iki katlı bir eve",
+     "Uzun bir yolcu treni vagonuna"
+    ],
+    "explanation": "Boyu üç otobüsün arka arkaya dizilmesi kadar uzundur."
+   },
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Metne göre mavi balinanın kalbi ne büyüklüktedir?",
+    "correct": "Ufak bir araba büyüklüğünde",
+    "wrong": [
+     "Bir futbol topu büyüklüğünde",
+     "Koca bir otobüs büyüklüğünde",
+     "Yetişkin bir insan boyunda"
+    ],
+    "explanation": "Kalbi küçük bir otomobil büyüklüğündedir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar kril bilgisiyle hangi beklentiyi çürütür?",
+    "correct": "İri bir hayvanın büyük avlar yediği sanısını",
+    "wrong": [
+     "Balinanın hiçbir şey yemediği sanısını",
+     "Krillerin dev canlılar olduğu yönündeki sanıyı",
+     "Balinanın karada beslendiği yönündeki düşünceyi"
+    ],
+    "explanation": "Büyük olmasına rağmen küçük krillerle beslenir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Ağızdaki tarak gibi yapıların görevi nedir?",
+    "correct": "Suyu süzüp krilleri ağızda bırakmak",
+    "wrong": [
+     "Avını küçük parçalara ayırıp çiğnemek",
+     "Dişlerini temizleyip güçlendirmek",
+     "Alçak sesler çıkarıp haberleşmek"
+    ],
+    "explanation": "Bu yapılar suyu dışarı süzer, krilleri içeride tutar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mavi balinaların sesleri suyun altında ne kadar uzağa ulaşabilir?",
+    "correct": "Yüzlerce kilometre",
+    "wrong": [
+     "Yalnızca birkaç metre",
+     "Birkaç yüz metre",
+     "En fazla on kilometre"
+    ],
+    "explanation": "Sesler suyun altında yüzlerce kilometre uzağa ulaşabilir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Balina seslerinin bir kısmını neden duyamayız?",
+    "correct": "Duyamayacağımız kadar kalın olmaları",
+    "wrong": [
+     "Suyun bütün sesleri tümüyle yutması",
+     "Balinaların kıyıdan çok uzakta yaşaması",
+     "Seslerin bir saniyeden kısa sürmesi"
+    ],
+    "explanation": "Bu seslerin bir kısmı insan kulağının duyamayacağı kadar alçaktır."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mavi balinaların sayısının azalmasının nedeni neydi?",
+    "correct": "Yüzyıllarca süren avcılık",
+    "wrong": [
+     "Okyanus sularının ısınması",
+     "Kril sayısının artması",
+     "Köpekbalığı saldırıları"
+    ],
+    "explanation": "Yüzyıllar boyunca yapılan avcılık yüzünden sayıları azaldı."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin son paragrafına göre mavi balinaların durumu nasıl özetlenebilir?",
+    "correct": "Sayıları artsa da hâlâ risk altındalar",
+    "wrong": [
+     "Bugün hiçbir tehlike altında değiller",
+     "Nesilleri hızla tükenmeye devam ediyor",
+     "Avlanmaları yeniden serbest bırakıldı"
+    ],
+    "explanation": "Sayıları yavaş yavaş artıyor ama çarpışmalar ve kirlilik hâlâ tehlike."
+   }
+  ]
+ },
+ "172": {
+  "title": "Gökyüzünün Rengi",
+  "category": "Bilgi/Açıklama",
+  "content": "Güneşli bir günde başımızı kaldırdığımızda gökyüzünü masmavi görürüz. Peki gökyüzü neden mavidir? Uzay karanlık olduğuna göre bu mavilik nereden gelir? Bu sorunun cevabı, güneş ışığının havayla karşılaşmasında saklıdır.\n\nGüneşin ışığı beyaz görünür, ama aslında içinde gökkuşağının bütün renkleri vardır. Bu ışık havaya girdiğinde, havadaki çok küçük gaz parçacıklarına çarpar. Bu çarpışmalar sırasında ışık her yöne saçılır. Ancak bütün renkler aynı ölçüde saçılmaz. Mavi ışık, kırmızı ve sarı ışığa göre çok daha fazla saçılır. Saçılan mavi ışık gökyüzünün her yerinden gözümüze ulaşır. Bu yüzden gökyüzünü mavi görürüz. Hangi yöne bakarsak bakalım, o yönden saçılan mavi ışık gözümüze gelir.\n\nAkşamüstü güneş batarken ise gökyüzü turuncu ve kırmızıya döner. Çünkü güneş ufka yaklaştığında ışığı bize ulaşmak için havada çok daha uzun bir yol alır. Bu uzun yolda mavi ışığın büyük bölümü saçılıp yoldan çıkar. Gözümüze daha çok kırmızı ve turuncu ışık ulaşır.\n\nAy'da ışığı saçacak hava olmadığı için gökyüzü gündüz bile kapkaradır. Astronotlar Ay'da güneşi parlak bir top gibi, çevresini ise simsiyah görmüştür.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yazar metne “Uzay karanlık olduğuna göre” diyerek hangi merakı uyandırır?",
+    "correct": "Mavi rengin nereden geldiğini",
+    "wrong": [
+     "Uzayın neden soğuk olduğunu",
+     "Yıldızların neden parladığını",
+     "Güneşin neden sarı olduğunu"
+    ],
+    "explanation": "Uzay karanlık olduğuna göre gökyüzünün mavisi nereden gelir sorusu sorulur."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Güneş ışığının içinde neler bulunur?",
+    "correct": "Gökkuşağının tüm renkleri",
+    "wrong": [
+     "Sadece beyaz bir renk tonu",
+     "Yalnızca sarı ve kırmızı",
+     "Hiçbir renk yer almaz"
+    ],
+    "explanation": "Güneş ışığında gökkuşağının bütün renkleri vardır."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Gökyüzünün mavi görünmesinin nedeni nedir?",
+    "correct": "Mavinin havada en çok saçılan renk olması",
+    "wrong": [
+     "Denizlerin rengini gökyüzüne yansıtması",
+     "Havanın aslında mavi renkli bir gaz olması",
+     "Güneşin yalnızca mavi ışık yayması"
+    ],
+    "explanation": "Mavi ışık diğer renklere göre çok daha fazla saçılır ve her yerden gözümüze gelir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Gün batımında gökyüzü hangi renklere döner?",
+    "correct": "Turuncu ve kırmızıya",
+    "wrong": [
+     "Mor ile koyu maviye",
+     "Yeşil ile sarıya",
+     "Siyah ile koyu griye"
+    ],
+    "explanation": "Güneş batarken gökyüzü turuncu ve kırmızıya döner."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Gün batımında maviliğin kaybolmasının nedeni nedir?",
+    "correct": "Uzun yolda mavinin saçılıp gitmesi",
+    "wrong": [
+     "Güneşin rengini değiştirmesi",
+     "Havanın akşamları birden ısınması",
+     "Bulutların mavi ışığı içine çekmesi"
+    ],
+    "explanation": "Güneş ufka yaklaşınca ışık uzun yol alır; mavinin büyük kısmı saçılıp yoldan çıkar."
+   },
+   {
+    "p": 4,
+    "type": 1,
+    "bloom": 2,
+    "text": "Ay'da gökyüzü gündüz neden kapkaradır?",
+    "correct": "Işığı saçacak hava bulunmadığı için",
+    "wrong": [
+     "Güneşin ışığı Ay'a hiç ulaşmadığı için",
+     "Ay'ın toprağı simsiyah olduğu için",
+     "Ay'da sürekli gece yaşandığı için"
+    ],
+    "explanation": "Ay'da ışığı saçacak hava olmadığı için gökyüzü kapkaradır."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Metnin bütününden çıkan sonuç hangisidir?",
+    "correct": "Göğün rengini ışık ile hava belirler",
+    "wrong": [
+     "Gökyüzünün rengi hiçbir koşulda değişmez",
+     "Gökyüzünün rengini denizler belirler",
+     "Uzayın kendisi aslında mavi bir boşluktur"
+    ],
+    "explanation": "Gökyüzünün rengi, güneş ışığının havada saçılmasıyla oluşur."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Akşam güneş ışığının bize ulaşmak için daha uzun yol almasının nedeni nedir?",
+    "correct": "Güneşin alçalıp ufka inmesi",
+    "wrong": [
+     "Dünya'nın güneşten uzaklaşması",
+     "Havanın akşam yoğunlaşması",
+     "Bulutların ışığı yolda bekletmesi"
+    ],
+    "explanation": "Güneş ufka yaklaştığında ışığı havada çok daha uzun yol alır."
+   }
+  ]
+ },
+ "178": {
+  "title": "Hafızası Güçlü Devler",
+  "category": "Bilgi/Açıklama",
+  "content": "Filler, karada yaşayan en büyük hayvanlardır. Ama onları özel kılan yalnızca büyüklükleri değildir. Filler, çok güçlü bir belleğe ve karmaşık bir sosyal yaşama sahiptir. Hortumlarıyla su içer, yiyecek toplar ve birbirlerini selamlarlar.\n\nBir fil yetmiş yıla kadar yaşayabilir. Fil sürülerine genellikle yaşlı ve deneyimli bir dişi fil önderlik eder. Bu önder fil, sürünün yıllar içinde biriktirdiği bilgiyi taşır. Kurak dönemlerde su kaynaklarının nerede olduğunu, tehlikeli bölgelerin hangileri olduğunu hatırlar. Bazen yıllar önce yalnızca bir kez gittiği bir su kaynağına sürüyü yeniden götürebilir. Araştırmalar, yaşlı bir önderin bulunduğu sürülerin zor zamanlarda daha başarılı olduğunu gösteriyor.\n\nFiller birbirleriyle de yakın bağlar kurar. Sürünün üyeleri yavrulara birlikte bakar. Genç dişiler, annelerine yardım ederek yavru bakmayı öğrenir. Bir fil hastalandığında ya da yaralandığında, diğerleri onun yanında kalır. Hatta filler, ölmüş sürü üyelerinin kemiklerinin başında durup onlara hortumlarıyla dokunur. Bilim insanları bu davranışın ne anlama geldiğini hâlâ tartışıyor; bazıları bunun bir tür yas olabileceğini düşünüyor.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 1,
+    "bloom": 2,
+    "text": "Filler hortumlarını ne için kullanır?",
+    "correct": "Su içip birbirini karşılamak için",
+    "wrong": [
+     "Yalnızca etrafı koklamak için",
+     "Uyurken başlarını koymak için",
+     "Yalnızca suda dengede kalmak için"
+    ],
+    "explanation": "Hortumlarıyla su içer, yiyecek toplar ve birbirlerini selamlarlar."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Fil sürülerine genellikle kim önderlik eder?",
+    "correct": "Deneyimli yaşlı bir dişi",
+    "wrong": [
+     "Sürüdeki en genç erkek",
+     "Sürüdeki en iri erkek",
+     "Sürünün en küçük yavrusu"
+    ],
+    "explanation": "Sürülere genellikle yaşlı ve deneyimli bir dişi fil önderlik eder."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Yaşlı bir önderin sürüye en büyük katkısı nedir?",
+    "correct": "Geçmiş deneyimlerini sürüye aktarması",
+    "wrong": [
+     "Sürünün en hızlı koşan fili olması",
+     "Yavruların hepsini kendi başına beslemesi",
+     "Başka sürülerle sürekli savaşması"
+    ],
+    "explanation": "Önder fil suyun yerini ve tehlikeli bölgeleri hatırlar."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 5,
+    "text": "Yıllar önce bir kez gidilen su kaynağının bulunması filler hakkında neyi gösterir?",
+    "correct": "Uzun süre hatırlayabildiklerini",
+    "wrong": [
+     "Koku alma duyularının zayıf olduğunu",
+     "Her yıl aynı yerde kaldıklarını",
+     "Suya çok az ihtiyaç duyduklarını"
+    ],
+    "explanation": "Bu, fillerin çok güçlü bir belleğe sahip olduğunu gösterir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Genç dişi filler yavru bakmayı nasıl öğrenir?",
+    "correct": "Büyüklerine destek olarak",
+    "wrong": [
+     "Başka fil sürülerini izleyerek",
+     "Önder filden ders alarak",
+     "Sürüden ayrılıp yalnız kalarak"
+    ],
+    "explanation": "Genç dişiler annelerine yardım ederek öğrenir."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 4,
+    "text": "Hasta bir filin yanında kalınması neyi gösterir?",
+    "correct": "Aralarındaki güçlü bağı",
+    "wrong": [
+     "Fillerin yorgun olduğunu",
+     "Yiyecek aradıklarını",
+     "Önderden korktuklarını"
+    ],
+    "explanation": "Filler birbirleriyle yakın bağlar kurar."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Filler ölmüş sürü üyelerinin kemiklerine ne yapar?",
+    "correct": "Uzun burunlarıyla onlara değer",
+    "wrong": [
+     "Kemikleri toprağın altına gömer",
+     "Kemikleri alıp uzağa taşır",
+     "Kemiklerin yanına hiç yaklaşmaz"
+    ],
+    "explanation": "Ölmüş üyelerin kemiklerinin başında durup hortumlarıyla dokunurlar."
+   },
+   {
+    "p": 3,
+    "type": 3,
+    "bloom": 5,
+    "text": "Yazarın kemiklere dokunma davranışını anlatırken yaklaşımı nasıldır?",
+    "correct": "Anlamının henüz kesinleşmediğini belirtir",
+    "wrong": [
+     "Bunun kesin bir yas olduğunu söyler",
+     "Davranışın anlamsız olduğunu söyler",
+     "Bunun sadece bir oyun olduğunu ileri sürer"
+    ],
+    "explanation": "Bilim insanları bu davranışın anlamını hâlâ tartışıyor."
+   }
+  ]
+ },
+ "183": {
+  "title": "Mikrodalganın Sırrı",
+  "category": "Bilgi/Açıklama",
+  "content": "Mikrodalga fırın, bir tabak yemeği birkaç dakika içinde ısıtabilir. Peki bu kadar hızlı ısınma nasıl gerçekleşir? Sıradan bir fırın, havayı ısıtarak yemeği dıştan içe doğru pişirir. Mikrodalga fırın ise yemeğin içindeki su moleküllerini doğrudan harekete geçirir.\n\nFırının içinde magnetron adı verilen bir parça, mikrodalga denilen görünmez dalgalar üretir. Bu dalgalar yemeğin içine girer ve oradaki su moleküllerinin çok hızlı biçimde dönüp titreşmesine neden olur. Bu hızlı hareket, yemeğin içinde ısıya dönüşür. Yani yemeği aslında kendi içindeki su ısıtır.\n\nMikrodalga fırınların icadı bir rastlantıya dayanır. 1945 yılında Percy Spencer adlı Amerikalı bir mühendis, radar cihazları üzerinde çalışırken cebindeki çikolatanın eridiğini fark etti. Bu gözlem, mikrodalgaların yiyecekleri ısıtabileceği fikrinin doğmasını sağladı. Spencer daha sonra mısır taneleri koyarak deneyler yaptı ve taneler patlayarak patlamısıra dönüştü. İlk mikrodalga fırınlar bir buzdolabı büyüklüğündeydi ve çok pahalıydı; evlere girmesi yıllar aldı.\n\nMikrodalgada ısıtılan yemeklerin bazı bölümleri sıcak, bazıları soğuk kalabilir. Bunun nedeni, dalgaların fırının içinde her noktaya eşit ulaşmamasıdır. Pek çok fırındaki dönen tabla bu sorunu azaltmak içindir. Yine de yemeği ara sıra karıştırmak iyi bir fikirdir. Ayrıca metal kaplar fırına konmamalıdır, çünkü kıvılcım çıkarabilir.",
+  "questions": [
+   {
+    "p": 1,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mikrodalga fırını sıradan fırından ayıran temel fark nedir?",
+    "correct": "İçerideki suyu titreştirerek ısıtması",
+    "wrong": [
+     "Havayı daha yüksek sıcaklığa çıkarması",
+     "Yemeği dışından içine doğru pişirmesi",
+     "Doğrudan ateş kullanarak çalışması"
+    ],
+    "explanation": "Mikrodalga fırın yemeğin içindeki su moleküllerini doğrudan harekete geçirir."
+   },
+   {
+    "p": 2,
+    "type": 1,
+    "bloom": 2,
+    "text": "Mikrodalgaları fırının hangi parçası üretir?",
+    "correct": "Magnetron",
+    "wrong": [
+     "Termostat",
+     "Pervane",
+     "Transistör"
+    ],
+    "explanation": "Magnetron adı verilen parça mikrodalga üretir."
+   },
+   {
+    "p": 2,
+    "type": 2,
+    "bloom": 4,
+    "text": "Mikrodalga fırında yemeği asıl ısıtan nedir?",
+    "correct": "İçerideki suyun titreşimi",
+    "wrong": [
+     "Fırının ısınan duvarları",
+     "Dönen tablanın sürtünmesi",
+     "Fırına üflenen sıcak hava"
+    ],
+    "explanation": "Yemeği aslında kendi içindeki su ısıtır."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "Spencer'ın dikkatini çeken olay neydi?",
+    "correct": "Cebindeki çikolatanın erimesi",
+    "wrong": [
+     "Radar cihazının bozulması",
+     "Laboratuvarın birden ısınması",
+     "Elinin hafifçe yanıp kızarması"
+    ],
+    "explanation": "Radar üzerinde çalışırken cebindeki çikolatanın eridiğini fark etti."
+   },
+   {
+    "p": 3,
+    "type": 2,
+    "bloom": 5,
+    "text": "Mikrodalga fırının icadı hakkında metinden hangi sonuç çıkar?",
+    "correct": "Rastlantıyla gözlemin birleştiği",
+    "wrong": [
+     "Uzun bir plan sonucu tasarlandığı",
+     "Bir aşçı tarafından bulunduğu",
+     "Kısa sürede her eve girdiği"
+    ],
+    "explanation": "İcat bir rastlantıya dayanır ama gözlemin değerlendirilmesiyle gerçekleşmiştir."
+   },
+   {
+    "p": 3,
+    "type": 1,
+    "bloom": 2,
+    "text": "İlk mikrodalga fırınlar nasıldı?",
+    "correct": "İri ve maliyetli",
+    "wrong": [
+     "Ufak ve çok ucuz",
+     "Hafif ve taşınabilir",
+     "Rengârenk ve süslü"
+    ],
+    "explanation": "İlk fırınlar buzdolabı büyüklüğünde ve çok pahalıydı."
+   },
+   {
+    "p": 4,
+    "type": 2,
+    "bloom": 4,
+    "text": "Döner tablanın amacı nedir?",
+    "correct": "Isınmanın daha eşit olması",
+    "wrong": [
+     "Yemeğin daha güzel görünmesi",
+     "Fırının çıkardığı sesi azaltmak",
+     "Kıvılcım çıkmasını önlemek"
+    ],
+    "explanation": "Dalgalar her noktaya eşit ulaşmadığı için tabla ısınmayı eşitler."
+   },
+   {
+    "p": 4,
+    "type": 3,
+    "bloom": 5,
+    "text": "Son paragrafın amacı nedir?",
+    "correct": "Doğru kullanım için uyarılar yapmak",
+    "wrong": [
+     "Mikrodalgayı tarihçesiyle tanıtmak",
+     "Okuru yeni bir fırın almaya ikna etmek",
+     "Metal kapların yararlarını anlatmak"
+    ],
+    "explanation": "Son paragraf yemeği karıştırmayı ve metal kap kullanmamayı öğütler."
+   }
+  ]
+ }
+}
